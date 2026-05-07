@@ -1,6 +1,6 @@
 {
 	"name": "borges-bibliography-builder",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "A WordPress block plugin that transforms pasted scholarly citations (DOIs, BibTeX) into a semantically rich, auto-sorted bibliography list.",
 	"author": "Dan Knauss",
 	"license": "GPL-2.0-or-later",

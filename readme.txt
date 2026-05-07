@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/paypalme/DanKnauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -102,6 +102,11 @@ This plugin connects to the **CrossRef REST API** (https://api.crossref.org/) wh
 * CrossRef terms of service: https://www.crossref.org/terms/
 
 == Changelog ==
+
+= 1.1.1 =
+* Fix Block Accessibility Checks (BAC) integration shipped in 1.1.0: register against the current BAC API, harden the soft opt-in, and load validation checks reliably so the `empty_bibliography` error and `heading_missing` warning fire as documented when the BAC plugin is active.
+* Fix editor focus-ring regression so keyboard focus on entry actions remains visible.
+* Fix Playground demo blueprint to install from the latest release zip rather than a stale path.
 
 = 1.1.0 =
 * Add optional Block Accessibility Checks (BAC) integration: when Troy Chaplin's Block Accessibility Checks plugin is active, the bibliography block registers two authoring-time checks — an error if no citations have been added, and a warning if no heading is set so screen reader users navigating by heading can find the section.

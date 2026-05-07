@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 No changes yet.
 
+## [1.1.1] - 2026-05-07
+
+### Fixed
+
+- Block Accessibility Checks (BAC) integration shipped in 1.1.0 was registered against an outdated Block Accessibility Checks API and did not load reliably. The plugin now registers against the current BAC API, hardens the soft opt-in, and loads validation checks reliably so the `empty_bibliography` error and `heading_missing` warning checks fire as documented when the BAC plugin is active.
+- Editor focus-ring regression in `editor.scss` is corrected so keyboard focus on entry actions remains visible.
+- Playground demo blueprint installs the plugin from the latest release zip rather than a path that could become stale.
+
+### Internal
+
+- Test infrastructure improvements for BAC and a11y Playwright suites: deterministic setup, robust selectors, fixed strict-mode violations, and extended Tier 2/3 audit coverage. No functional change.
+- Added internal sort-conformance development plan to `docs/planning/sort-conformance-plan.md` for upcoming sort-correctness work.
+
 ## [1.1.0] - 2026-05-04
 
 ### Added
