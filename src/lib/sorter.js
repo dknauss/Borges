@@ -89,6 +89,60 @@ function compareYears(a, b) {
 	return getSortableYear(a.csl) - getSortableYear(b.csl);
 }
 
+function normalizeContributorKey(contributor = {}) {
+	const family = (contributor.family || '').trim().toLowerCase();
+	const given = (contributor.given || '').trim().toLowerCase();
+	const literal = (contributor.literal || '').trim().toLowerCase();
+
+	return family ? `${family}|${given}` : literal;
+}
+
+function getAuthorChain(csl = {}) {
+	const primaryContributors = getPrimaryContributors(csl) || [];
+	return primaryContributors.map(normalizeContributorKey);
+}
+
+function compareAuthorChains(chainA, chainB) {
+	const firstCmp = (chainA[0] || '').localeCompare(
+		chainB[0] || '',
+		undefined,
+		{
+			sensitivity: 'base',
+		}
+	);
+
+	if (firstCmp !== 0) {
+		return firstCmp;
+	}
+
+	if (chainA.length !== chainB.length) {
+		if (chainA.length === 1) {
+			return -1;
+		}
+
+		if (chainB.length === 1) {
+			return 1;
+		}
+	}
+
+	const chainLength = Math.min(chainA.length, chainB.length);
+	for (let index = 1; index < chainLength; index++) {
+		const contributorCmp = chainA[index].localeCompare(
+			chainB[index],
+			undefined,
+			{
+				sensitivity: 'base',
+			}
+		);
+
+		if (contributorCmp !== 0) {
+			return contributorCmp;
+		}
+	}
+
+	return chainA.length - chainB.length;
+}
+
 function compareNotes(a, b) {
 	const authorCmp = compareAuthors(a, b);
 	if (authorCmp !== 0) {
@@ -104,6 +158,21 @@ function compareNotes(a, b) {
 }
 
 function compareAuthorDate(a, b) {
+	const chainA = getAuthorChain(a.csl);
+	const chainB = getAuthorChain(b.csl);
+
+	if (chainA.length && chainB.length) {
+		const chainCmp = compareAuthorChains(chainA, chainB);
+		if (chainCmp !== 0) {
+			return chainCmp;
+		}
+	} else {
+		const authorCmp = compareAuthors(a, b);
+		if (authorCmp !== 0) {
+			return authorCmp;
+		}
+	}
+
 	const authorCmp = compareAuthors(a, b);
 	if (authorCmp !== 0) {
 		return authorCmp;
