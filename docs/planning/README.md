@@ -21,6 +21,7 @@ Forward-looking engineering plans, sprint roadmaps, and area-specific specificat
 
 | Document | Status | Owner |
 | --- | --- | --- |
+| [performance-stability-remediation-plan.md](./performance-stability-remediation-plan.md) | Drafted 2026-05-08; ready for sprint planning | TBD |
 | [sort-conformance-plan.md](./sort-conformance-plan.md) | Drafted 2026-05-07; revised 2026-05-07 with Codex review feedback; ready for sprint planning | TBD |
 
 ## Conventions
