@@ -17,12 +17,27 @@ import { SUPPORTED_INPUT_MESSAGE } from './input-support';
 const DOI_ONLY_REGEX =
 	/^(?:(?:https?:\/\/)?(?:dx\.)?doi\.org\/|(?:https?:\/\/)?doi:)?10\.\d{4,}\/[^\s]+$/i;
 const BIBTEX_REGEX = /@\w+\{/;
+const PMID_REGEX = /^PMID:\s*(\d{1,8})$/i;
+const NCBI_CSL_API =
+	'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=';
 const MAX_ENTRIES_PER_PASTE = 50;
 const MAX_INPUT_SIZE = 1024 * 1024; // 1 MB
 const PARSE_CONCURRENCY = 4;
 const LATEX_DOCUMENT_PATTERN =
 	/\\documentclass\b|\\begin\{document\}|\\printbibliography\b|\\addbibresource\b|\\(?:auto|foot|paren|text)?cite\w*\{/u;
 export { validateAndSanitizeCsl };
+
+function normalizePmidInput(value) {
+	return value.replace(/^PMID:\s*/iu, '').trim();
+}
+
+function getDefaultFetchFn() {
+	if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
+		return window.fetch.bind(window);
+	}
+
+	return undefined;
+}
 
 function normalizeDoiInput(value) {
 	return value
@@ -170,6 +185,10 @@ function normalizeResolvedCsl(csl, inputFormat) {
  * @return {Object|null} { format: 'doi'|'bibtex', value: string } or null.
  */
 function detectFormat(chunk) {
+	if (PMID_REGEX.test(chunk)) {
+		return { format: 'pmid', value: chunk };
+	}
+
 	if (DOI_ONLY_REGEX.test(chunk)) {
 		return { format: 'doi', value: chunk };
 	}
@@ -196,7 +215,9 @@ function looksLikeStandaloneCitationLine(line) {
 		return false;
 	}
 
-	if (detectFormat(normalizedLine).format === 'doi') {
+	const format = detectFormat(normalizedLine).format;
+
+	if (format === 'doi' || format === 'pmid') {
 		return true;
 	}
 
@@ -221,12 +242,17 @@ function splitChunkIntoDetectedItems(chunk) {
 		return [];
 	}
 
-	const allLinesAreDois =
+	const allLinesAreIdentifiers =
 		lines.length > 1 &&
-		lines.every((line) => detectFormat(line).format === 'doi');
+		lines.every((line) =>
+			['doi', 'pmid'].includes(detectFormat(line).format)
+		);
 
-	if (allLinesAreDois) {
-		return lines.map((line) => createDetectedItem('doi', line, line));
+	if (allLinesAreIdentifiers) {
+		return lines.map((line) => {
+			const detected = detectFormat(line);
+			return createDetectedItem(detected.format, line, line);
+		});
 	}
 
 	const allLinesLookStandalone =
@@ -256,6 +282,24 @@ function splitChunkIntoDetectedItems(chunk) {
 }
 
 const PARSER_BACKENDS = {
+	pmid: async (value, { fetchFn } = {}) => {
+		if (typeof fetchFn !== 'function') {
+			throw new Error('Fetch API unavailable for PMID resolution');
+		}
+
+		const pmid = normalizePmidInput(value);
+		const response = await fetchFn(`${NCBI_CSL_API}${pmid}`);
+
+		if (!response.ok) {
+			throw new Error(
+				`NCBI API returned ${response.status} for PMID ${pmid}`
+			);
+		}
+
+		const csl = await response.json();
+
+		return { cslItems: [csl] };
+	},
 	doi: async (value) => {
 		const cite = await Cite.async(normalizeDoiInput(value));
 
@@ -342,6 +386,10 @@ function formatBackendParseError(format, err) {
 		return err.message;
 	}
 
+	if (format === 'pmid') {
+		return "Couldn't resolve the PMID. Check the number and try again.";
+	}
+
 	if (format === 'doi') {
 		return "Couldn't parse the DOI. Check it and try again.";
 	}
@@ -356,15 +404,17 @@ function formatBackendParseError(format, err) {
 /**
  * Parse pasted input into an array of CSL-JSON citation objects.
  *
- * @param {string}  input                     Raw pasted text.
- * @param {string}  styleKey                  Style key for derived formatting.
- * @param {Object}  [options={}]              Parse options.
- * @param {boolean} [options.deferFormatting] When true (default), leave
- *                                            `formattedText` empty so callers
- *                                            can decide if and when to format.
- *                                            When false, format entries inside
- *                                            the parser for legacy/explicit
- *                                            call sites.
+ * @param {string}   input                     Raw pasted text.
+ * @param {string}   styleKey                  Style key for derived formatting.
+ * @param {Object}   [options={}]              Parse options.
+ * @param {boolean}  [options.deferFormatting] When true (default), leave
+ *                                             `formattedText` empty so callers
+ *                                             can decide if and when to format.
+ *                                             When false, format entries inside
+ *                                             the parser for legacy/explicit
+ *                                             call sites.
+ * @param {Function} [options.fetchFn]         Fetch implementation for PMID
+ *                                             resolution.
  * @return {Promise<Object>} { entries: Array, errors: Array, truncated: boolean }
  *
  * @since 0.1.0
@@ -372,7 +422,7 @@ function formatBackendParseError(format, err) {
 export async function parsePastedInput(
 	input,
 	styleKey = DEFAULT_CITATION_STYLE,
-	{ deferFormatting = true } = {}
+	{ deferFormatting = true, fetchFn = getDefaultFetchFn() } = {}
 ) {
 	const errors = [];
 	let truncated = false;
@@ -428,7 +478,8 @@ export async function parsePastedInput(
 		async (item) => {
 			try {
 				const { cslItems } = await PARSER_BACKENDS[item.format](
-					item.value
+					item.value,
+					{ fetchFn }
 				);
 
 				return {

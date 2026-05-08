@@ -54,9 +54,12 @@ describe('REST-backed citation formatting', () => {
 		expect(apiFetch).not.toHaveBeenCalled();
 	});
 
-	it('deduplicates equivalent uncached CSL items within a single formatter request', async () => {
+	it('formats the full bibliography payload including duplicate-looking entries', async () => {
 		apiFetch.mockResolvedValueOnce({
-			entries: [{ index: 0, text: 'Shared formatted' }],
+			entries: [
+				{ index: 0, text: 'Shared formatted first' },
+				{ index: 1, text: 'Shared formatted second' },
+			],
 		});
 
 		const results = await formatBibliographyEntries(
@@ -75,8 +78,11 @@ describe('REST-backed citation formatting', () => {
 			'apa-7'
 		);
 
-		expect(results).toEqual(['Shared formatted', 'Shared formatted']);
-		expect(apiFetch.mock.calls[0][0].data.cslItems).toHaveLength(1);
+		expect(results).toEqual([
+			'Shared formatted first',
+			'Shared formatted second',
+		]);
+		expect(apiFetch.mock.calls[0][0].data.cslItems).toHaveLength(2);
 	});
 
 	it('formats a single entry through the same batch boundary', async () => {

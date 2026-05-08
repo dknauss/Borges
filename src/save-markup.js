@@ -1,4 +1,5 @@
 import { useBlockProps } from '@wordpress/block-editor';
+import { __ } from '@wordpress/i18n';
 import { buildCoins } from './lib/coins';
 import {
 	getDisplaySegments,
@@ -77,15 +78,23 @@ export function renderBibliographySave(
 						>
 							<EntryTag className="bibliography-builder-entry-text">
 								{displaySegments.map((segment, index) => {
+									const linkLabel =
+										citation.csl.title ||
+										citation.csl['container-title'] ||
+										__(
+											'Link to publication',
+											'borges-bibliography-builder'
+										);
 									const content = linkVisibleUrls
-										? splitTextIntoLinkParts(
-												segment.text
-										  ).map((part, partIndex) =>
+										? splitTextIntoLinkParts(segment.text, {
+												linkLabel,
+										  }).map((part, partIndex) =>
 												part.link ? (
 													<a
 														key={`${citation.id}-${index}-${partIndex}`}
 														href={part.href}
 														rel="nofollow noopener noreferrer"
+														aria-label={`${part.label} — ${part.href}`}
 													>
 														{part.text}
 													</a>

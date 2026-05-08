@@ -1,5 +1,6 @@
 import {
 	DEFAULT_CITATION_STYLE,
+	getDefaultHeadingText,
 	getListSemantics,
 	getSelectableStyles,
 	getStyleDefinition,
@@ -70,5 +71,25 @@ describe('style registry', () => {
 				value: 'abnt',
 			},
 		]);
+	});
+
+	it('returns the correct default heading text for each registered style', () => {
+		expect(getDefaultHeadingText('chicago-notes-bibliography')).toBe(
+			'Bibliography'
+		);
+		expect(getDefaultHeadingText('chicago-author-date')).toBe('References');
+		expect(getDefaultHeadingText('apa-7')).toBe('References');
+		expect(getDefaultHeadingText('mla-9')).toBe('Works Cited');
+		expect(getDefaultHeadingText('harvard')).toBe('References');
+		expect(getDefaultHeadingText('ieee')).toBe('References');
+		expect(getDefaultHeadingText('vancouver')).toBe('References');
+		expect(getDefaultHeadingText('oscola')).toBe('Bibliography');
+		expect(getDefaultHeadingText('abnt')).toBe('Referências');
+	});
+
+	it('returns the default style heading when no argument is given', () => {
+		expect(getDefaultHeadingText()).toBe(
+			getDefaultHeadingText(DEFAULT_CITATION_STYLE)
+		);
 	});
 });

@@ -84,6 +84,10 @@ PHP 7.4+ and WordPress 6.4+. Borges Bibliography Builder is tested up to WordPre
 4. Paste DOIs, BibTeX entries, or supported citation text into the import form; the sidebar controls citation style, visible heading, and metadata output (JSON-LD, COinS, CSL-JSON).
 5. Switch to Manual Entry to build a citation field by field — Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL.
 
+== Known Limitations ==
+
+**OSCOLA grouped bibliography** — OSCOLA convention requires the bibliography to be divided into source-type groups (cases, legislation, books, articles, online sources). Borges currently renders a single alphabetized list regardless of style. A dismissible notice in the editor explains this when OSCOLA is selected. Grouped-bibliography support is planned for a future release.
+
 == Development ==
 
 Full developer documentation, source code, issue tracker, and contribution guidelines are on GitHub:

@@ -31,6 +31,8 @@ jest.mock('../lib/wp-icons', () => {
 		ReactLocal.createElement('span', { 'aria-hidden': 'true' });
 
 	return {
+		ChevronDownIcon: MockIcon,
+		ChevronUpIcon: MockIcon,
 		CopyIcon: MockIcon,
 		DeleteIcon: MockIcon,
 		EditIcon: MockIcon,

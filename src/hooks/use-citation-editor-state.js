@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from '@wordpress/element';
 import {
 	getAutoFormattedText,
+	getDefaultHeadingText,
 	getDisplayText,
 	getStyleDefinition,
 } from '../lib/formatting';
@@ -82,6 +83,7 @@ export function useCitationEditorState({
 	citationStyle,
 	citationsRef,
 	clearNotice,
+	headingText,
 	queueFocus,
 	setAttributes,
 }) {
@@ -316,7 +318,7 @@ export function useCitationEditorState({
 			delete updatedCsl.issued;
 		}
 
-		const { formatBibliographyEntry } = await import(
+		const { formatBibliographyEntries } = await import(
 			'../lib/formatting/csl'
 		);
 
@@ -335,9 +337,19 @@ export function useCitationEditorState({
 			return;
 		}
 
+		const nextEntries = citationsRef.current.map((entry) =>
+			entry.id === activeStructuredEditingId
+				? {
+						...entry,
+						csl: updatedCsl,
+						displayOverride: null,
+						parseWarnings: [],
+				  }
+				: entry
+		);
 		let formatterFallback = false;
-		const formattedText = await formatBibliographyEntry(
-			updatedCsl,
+		const formattedTexts = await formatBibliographyEntries(
+			nextEntries.map((entry) => entry.csl),
 			citationStyle,
 			{
 				onFallback: () => {
@@ -346,24 +358,17 @@ export function useCitationEditorState({
 			}
 		);
 
-		// Second cancel guard: a cancel that arrives during formatBibliographyEntry
+		// Second cancel guard: a cancel that arrives during formatBibliographyEntries
 		// would set structuredEditingIdRef.current to null — don't commit stale data.
 		if (structuredEditingIdRef.current !== activeStructuredEditingId) {
 			return;
 		}
 
 		const updated = sortCitations(
-			citationsRef.current.map((entry) =>
-				entry.id === activeStructuredEditingId
-					? {
-							...entry,
-							csl: updatedCsl,
-							formattedText,
-							displayOverride: null,
-							parseWarnings: [],
-					  }
-					: entry
-			),
+			nextEntries.map((entry, index) => ({
+				...entry,
+				formattedText: formattedTexts[index],
+			})),
 			citationStyle
 		);
 
@@ -422,9 +427,15 @@ export function useCitationEditorState({
 			}
 
 			const nextStyleLabel = getStyleDefinition(nextStyle).label;
+			const prevDefaultHeading = getDefaultHeadingText(citationStyle);
+			const nextDefaultHeading = getDefaultHeadingText(nextStyle);
+			const headingUpdate =
+				headingText === prevDefaultHeading
+					? { headingText: nextDefaultHeading }
+					: {};
 
 			if (!citationsRef.current.length) {
-				setAttributes({ citationStyle: nextStyle });
+				setAttributes({ citationStyle: nextStyle, ...headingUpdate });
 				announce('success', `Style changed to ${nextStyleLabel}.`, {
 					type: 'snackbar',
 				});
@@ -456,6 +467,7 @@ export function useCitationEditorState({
 			setAttributes({
 				citationStyle: nextStyle,
 				citations: updated,
+				...headingUpdate,
 			});
 			clearNotice();
 			resetEditingState();
@@ -477,6 +489,7 @@ export function useCitationEditorState({
 			citationStyle,
 			citationsRef,
 			clearNotice,
+			headingText,
 			queueFocus,
 			resetEditingState,
 			setAttributes,

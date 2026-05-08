@@ -90,6 +90,10 @@ A new test file runs a curated fixture set through `sortCitations` for every reg
 
 The test itself is the deliverable. No additional manual QA required beyond reviewing the initial snapshot for sanity.
 
+### Baseline reference
+
+The committed baseline snapshot for this requirement is `src/lib/__snapshots__/sorter.snapshot.test.js.snap`, generated from the reusable fixture set in `src/lib/__fixtures__/sort-fixtures.js`. The existing CI unit-test step (`npm test -- --runInBand --silent`) runs this snapshot suite on every pull request.
+
 ### Definition of done
 
 Snapshots committed; CI green; review confirmation that snapshot diffs are visible and meaningful in subsequent PRs.
@@ -1203,17 +1207,43 @@ REQ-S4 does not just rely on the assumption — it includes:
 
 ---
 
-## Appendix C — Locale and canonicalization parity audit (placeholder)
+## Appendix C — Locale and canonicalization parity audit
 
-To be completed during REQ-S4 execution. Will record:
+Status: **completed for Sprint 4 Option D scope**, with explicit deferred items documented below.
 
-- Per-locale leading-article lists (English: a, an, the; check pt-BR, en-GB)
-- Unicode normalization form used (target: NFC on both sides)
-- Case-folding behavior of `localeCompare` vs. citeproc-php's title-sort
-- Treatment of titles starting with numerals or punctuation
-- Handling of titles with embedded HTML tags (italics in formatted titles)
+### Confirmed aligned
 
-When completed, this appendix moves the assumed parities of REQ-S4 from "implicit" to "audited and documented."
+1. **Primary sort key shape**
+   - JS uses `author/editor -> year -> title` for `author-date` family and `author/editor -> title -> year` for `notes`.
+   - PHP (citeproc-php) formatting order used in coordination fixtures is consistent with the same tie-break structure for the covered fixtures.
+
+2. **Locale threading**
+   - JS sorter now threads `style.locale` into all `localeCompare()` calls via `sortCitations()` comparator construction.
+   - PHP formatter threads locale via `new \Seboettg\CiteProc\CiteProc( $style_xml, $style['locale'], ... )`.
+   - Coordination fixtures exercise `en-US` and `pt-BR` styles (e.g., ABNT).
+
+3. **Harness drift detection**
+   - JS coordination suite includes an intentional desync check that uses a mismatched style and asserts a loud mismatch error.
+   - PHPUnit coordination suite includes a matching sanity check that proves fixture expectations fail under style drift.
+
+### Explicitly deferred (known non-goals for this ticket)
+
+1. **Per-locale article stripping parity**
+   - JS `stripArticles()` currently strips only English leading articles (`a`, `an`, `the`).
+   - Locale-specific article lists (for example Portuguese variants) are deferred; this is tracked as future parity hardening if production data shows drift.
+
+2. **Unicode normalization form guarantees (NFC/NFD)**
+   - No explicit normalization step is applied in JS sorter before comparisons.
+   - citeproc-php normalization internals are treated as opaque for now.
+   - Current fixtures cover mixed case and diacritics where practical; full normalization guarantees remain deferred.
+
+3. **Title canonicalization for particles and punctuation-heavy edge cases**
+   - Cross-runner conformance currently excludes a small set of known divergent fixtures (particle surnames and one leading-article tie case) documented in `src/lib/sorter.conformance.test.js`.
+   - These remain tracked for post-S4 conformance refinement.
+
+### Escalation path (if parity fails in production)
+
+If coordination drift appears in real-world data despite this audit and fixture coverage, escalate to **Option C**: have PHP emit canonical `sortKey` metadata that JS consumes directly instead of inferring canonicalization locally.
 
 ---
 

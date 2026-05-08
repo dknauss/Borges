@@ -264,6 +264,10 @@ borges-bibliography-builder/
 
 See [SPEC.md](SPEC.md) for the authoritative behavior specification and future plans.
 
+## Known Limitations
+
+- **OSCOLA grouped bibliography** — OSCOLA convention requires the bibliography to be divided into source-type groups (cases, legislation, books, articles, online sources). Borges currently renders a single alphabetized list regardless of style. This limitation is displayed as a dismissible notice in the editor when OSCOLA is selected. Grouped-bibliography support is tracked as Epic-OSCOLA in [`docs/planning/sort-conformance-plan.md`](docs/planning/sort-conformance-plan.md).
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, coding standards, and PR process.

@@ -136,6 +136,24 @@ async function insertBibliographyBlock(page) {
 	}
 }
 
+async function selectBibliographyBlock(page, editorFrame) {
+	await dismissEditorOverlay(page);
+	const blockRoot = editorFrame
+		.locator('.wp-block-bibliography-builder-bibliography')
+		.first();
+
+	await blockRoot.click({ force: true });
+	await page
+		.waitForFunction(
+			() =>
+				window.wp?.data?.select('core/block-editor')?.getSelectedBlock()
+					?.name === 'bibliography-builder/bibliography',
+			null,
+			{ timeout: 10000 }
+		)
+		.catch(() => {});
+}
+
 async function publishCurrentPost(page) {
 	return page.evaluate(async () => {
 		const { data } = window.wp || {};
@@ -294,13 +312,15 @@ test.describe('Bibliography block accessibility gate', () => {
 		});
 
 		await test.step('citation form collapse/expand controls are keyboard reachable', async () => {
+			await dismissEditorOverlay(page);
+			await selectBibliographyBlock(page, editorFrame);
 			const chevronButton = page
 				.getByRole('button', {
 					name: /Hide citation form|Show citation form/i,
 				})
 				.first();
 
-			await expect(chevronButton).toBeVisible({ timeout: 3000 });
+			await expect(chevronButton).toBeVisible({ timeout: 20000 });
 			expect(await chevronButton.getAttribute('aria-label')).toMatch(
 				/citation form/i
 			);

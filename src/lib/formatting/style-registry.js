@@ -85,6 +85,9 @@ export const STYLE_DEFINITIONS = {
 		inlineCitationMode: 'numeric',
 		headingPlaceholder: 'References',
 	},
+	// TODO(Epic-OSCOLA): OSCOLA convention requires bibliographies grouped by source type
+	// (cases, legislation, books, articles, online). Currently rendered as a single
+	// alphabetized list. See docs/planning/sort-conformance-plan.md Epic-OSCOLA section.
 	oscola: {
 		key: 'oscola',
 		label: 'OSCOLA',
@@ -159,6 +162,8 @@ export function getListSemantics(styleKey = DEFAULT_CITATION_STYLE) {
 export function getHeadingPlaceholder(styleKey = DEFAULT_CITATION_STYLE) {
 	return getStyleDefinition(styleKey).headingPlaceholder || 'Bibliography';
 }
+
+export const getDefaultHeadingText = getHeadingPlaceholder;
 
 /**
  * Get selectable styles for the inspector dropdown.

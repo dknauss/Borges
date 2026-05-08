@@ -384,7 +384,7 @@ describe('save', () => {
 		);
 
 		expect(markup).toContain(
-			'<a href="https://example.com/resource" rel="nofollow noopener noreferrer">https://example.com/resource</a>.'
+			'<a href="https://example.com/resource" rel="nofollow noopener noreferrer" aria-label="Example resource — https://example.com/resource">https://example.com/resource</a>.'
 		);
 	});
 
@@ -545,6 +545,101 @@ describe('save', () => {
 		expect(markup).toContain('class="Z3988"');
 		expect(markup).toContain(
 			'<ol class="bibliography-builder-list bibliography-builder-list-numeric bibliography-builder-list-ieee">'
+		);
+	});
+
+	it('adds aria-label to URL anchors in saved output using citation title', () => {
+		const markup = renderToStaticMarkup(
+			save({
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					citations: [
+						createCitation({
+							formattedText:
+								'Smith, Ada. Example Article. https://example.org/article.',
+							csl: {
+								type: 'article-journal',
+								title: 'Example Article',
+							},
+						}),
+					],
+				},
+			})
+		);
+
+		expect(markup).toContain(
+			'aria-label="Example Article — https://example.org/article"'
+		);
+	});
+
+	it('falls back to container-title for aria-label when citation title is absent', () => {
+		const markup = renderToStaticMarkup(
+			save({
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					citations: [
+						createCitation({
+							formattedText:
+								'Smith, Ada. Journal of Examples. https://example.org/article.',
+							csl: {
+								type: 'article-journal',
+								'container-title': 'Journal of Examples',
+							},
+						}),
+					],
+				},
+			})
+		);
+
+		expect(markup).toContain(
+			'aria-label="Journal of Examples — https://example.org/article"'
+		);
+	});
+
+	it('falls back to localized label when title and container-title are absent', () => {
+		const markup = renderToStaticMarkup(
+			save({
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					citations: [
+						createCitation({
+							formattedText: 'See https://example.org/resource.',
+							csl: {
+								type: 'webpage',
+							},
+						}),
+					],
+				},
+			})
+		);
+
+		expect(markup).toContain(
+			'aria-label="Link to publication — https://example.org/resource"'
+		);
+	});
+
+	it('includes the visible URL in the aria-label to satisfy label-in-name requirement', () => {
+		const markup = renderToStaticMarkup(
+			save({
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					citations: [
+						createCitation({
+							formattedText:
+								'Smith. My Work. https://example.org/work.',
+							csl: {
+								type: 'book',
+								title: 'My Work',
+							},
+						}),
+					],
+				},
+			})
+		);
+
+		expect(markup).toContain('https://example.org/work');
+		expect(markup).toContain(
+			'aria-label="My Work — https://example.org/work"'
 		);
 	});
 });

@@ -307,4 +307,29 @@ describe('formatting helpers', () => {
 
 		expect(segments.every((s) => !s.italic)).toBe(true);
 	});
+
+	it('includes a label field on link segments when linkLabel is provided', () => {
+		const parts = splitTextIntoLinkParts('See https://example.org/foo', {
+			linkLabel: 'Some Title',
+		});
+		const linkPart = parts.find((p) => p.link);
+		expect(linkPart).toBeDefined();
+		expect(linkPart.label).toBe('Some Title');
+	});
+
+	it('omits the label field when no linkLabel option is provided (backward-compatible)', () => {
+		const parts = splitTextIntoLinkParts('See https://example.org/foo');
+		const linkPart = parts.find((p) => p.link);
+		expect(linkPart).toBeDefined();
+		expect(linkPart.label).toBeUndefined();
+	});
+
+	it('does not add label field to non-link segments', () => {
+		const parts = splitTextIntoLinkParts(
+			'Prefix https://example.org/foo suffix',
+			{ linkLabel: 'My Title' }
+		);
+		const nonLink = parts.filter((p) => !p.link);
+		expect(nonLink.every((p) => !('label' in p))).toBe(true);
+	});
 });

@@ -827,7 +827,7 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'Paste a DOI, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
+			'Paste a DOI, PMID (PubMed ID), BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 		]);
 		expect(result.remainingInput).toBe(
 			'This input is not a parseable citation.'
@@ -1080,5 +1080,164 @@ Ginsberg, J. P. (2009). The war comes home: Washington's battle against America'
 				],
 			},
 		});
+	});
+});
+
+describe('PMID input resolution', () => {
+	const SAMPLE_CSL = {
+		type: 'article-journal',
+		title: 'CRISPR–Cas9 for medical genetic screens: applications and future perspectives',
+		'container-title': 'Nature Reviews Genetics',
+		author: [{ family: 'Anzalone', given: 'Andrew V.' }],
+		issued: { 'date-parts': [[2023]] },
+		DOI: '10.1038/s41576-022-00557-5',
+		PMID: '36658352',
+	};
+
+	function makeFetchFn(status = 200, body = SAMPLE_CSL) {
+		return jest.fn().mockResolvedValue({
+			ok: status >= 200 && status < 300,
+			status,
+			json: jest.fn().mockResolvedValue(body),
+		});
+	}
+
+	it('detects PMID: prefixed input and fetches from NCBI API', async () => {
+		const fetchFn = makeFetchFn();
+
+		const result = await parsePastedInput('PMID:36658352', 'apa', {
+			fetchFn,
+		});
+
+		expect(fetchFn).toHaveBeenCalledWith(
+			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=36658352'
+		);
+		expect(result.entries).toHaveLength(1);
+		expect(result.errors).toHaveLength(0);
+	});
+
+	it('accepts lowercase pmid: prefix', async () => {
+		const fetchFn = makeFetchFn();
+
+		const result = await parsePastedInput('pmid:36658352', 'apa', {
+			fetchFn,
+		});
+
+		expect(fetchFn).toHaveBeenCalledWith(
+			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=36658352'
+		);
+		expect(result.entries).toHaveLength(1);
+	});
+
+	it('accepts PMID: with a space before the number', async () => {
+		const fetchFn = makeFetchFn();
+
+		const result = await parsePastedInput('PMID: 36658352', 'apa', {
+			fetchFn,
+		});
+
+		expect(fetchFn).toHaveBeenCalledWith(
+			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=36658352'
+		);
+		expect(result.entries).toHaveLength(1);
+	});
+
+	it('maps NCBI CSL-JSON to a citation entry with inputFormat pmid', async () => {
+		const fetchFn = makeFetchFn();
+
+		const result = await parsePastedInput('PMID:36658352', 'apa', {
+			fetchFn,
+		});
+
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'pmid',
+			csl: {
+				type: 'article-journal',
+				title: 'CRISPR–Cas9 for medical genetic screens: applications and future perspectives',
+			},
+		});
+	});
+
+	it('uses window.fetch for PMID resolution when no fetch override is supplied', async () => {
+		const originalFetch = window.fetch;
+		const fetchFn = makeFetchFn();
+		window.fetch = fetchFn;
+
+		try {
+			const result = await parsePastedInput('PMID:36658352', 'apa');
+
+			expect(fetchFn).toHaveBeenCalledWith(
+				'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=36658352'
+			);
+			expect(result.entries).toHaveLength(1);
+			expect(result.errors).toHaveLength(0);
+		} finally {
+			window.fetch = originalFetch;
+		}
+	});
+
+	it('returns an error when NCBI returns a non-OK status', async () => {
+		const fetchFn = makeFetchFn(404);
+
+		const result = await parsePastedInput('PMID:99999999', 'apa', {
+			fetchFn,
+		});
+
+		expect(result.entries).toHaveLength(0);
+		expect(result.errors).toHaveLength(1);
+		expect(result.errors[0]).toMatch(/PMID/i);
+	});
+
+	it('returns a PMID error when the Fetch API is unavailable', async () => {
+		const originalFetch = window.fetch;
+		delete window.fetch;
+
+		try {
+			const result = await parsePastedInput('PMID:36658352', 'apa');
+
+			expect(result.entries).toHaveLength(0);
+			expect(result.errors).toEqual([
+				"Couldn't resolve the PMID. Check the number and try again.",
+			]);
+		} finally {
+			window.fetch = originalFetch;
+		}
+	});
+
+	it('does not call Cite.async for PMID inputs', async () => {
+		const fetchFn = makeFetchFn();
+		Cite.async.mockClear();
+
+		await parsePastedInput('PMID:36658352', 'apa', { fetchFn });
+
+		expect(Cite.async).not.toHaveBeenCalled();
+	});
+
+	it('resolves multiple PMID lines when pasted together', async () => {
+		const fetchFn = jest
+			.fn()
+			.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				json: jest
+					.fn()
+					.mockResolvedValue({ ...SAMPLE_CSL, PMID: '11111111' }),
+			})
+			.mockResolvedValueOnce({
+				ok: true,
+				status: 200,
+				json: jest
+					.fn()
+					.mockResolvedValue({ ...SAMPLE_CSL, PMID: '22222222' }),
+			});
+
+		const result = await parsePastedInput(
+			'PMID:11111111\nPMID:22222222',
+			'apa',
+			{ fetchFn }
+		);
+
+		expect(result.entries).toHaveLength(2);
+		expect(result.errors).toHaveLength(0);
 	});
 });

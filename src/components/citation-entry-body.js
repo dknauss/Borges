@@ -8,6 +8,7 @@ import {
 } from '../lib/wp-icons';
 import { getDisplaySegments } from '../lib/formatting';
 import { StructuredCitationEditor } from './structured-citation-editor';
+import { CitationReorderControls } from './citation-reorder-controls';
 
 export function CitationEntryBody({
 	citation,
@@ -27,8 +28,13 @@ export function CitationEntryBody({
 	handleStructuredEditSave,
 	handleStructuredEditStart,
 	handleStructuredFieldChange,
+	isNumericFamily = false,
 	isStructuredEditable,
 	onEditTextChange,
+	onMoveDown,
+	onMoveUp,
+	canMoveDown = false,
+	canMoveUp = false,
 	structuredEditingId,
 	structuredFields,
 }) {
@@ -99,6 +105,15 @@ export function CitationEntryBody({
 				</span>
 			</button>
 			<span className="bibliography-builder-actions">
+				{isNumericFamily && (
+					<CitationReorderControls
+						label={getEntryLabel(citation)}
+						canMoveUp={canMoveUp}
+						canMoveDown={canMoveDown}
+						onMoveUp={onMoveUp}
+						onMoveDown={onMoveDown}
+					/>
+				)}
 				{isStructuredEditable && (
 					<Button
 						label={`Edit fields for ${getEntryLabel(citation)}`}

@@ -5,9 +5,23 @@ import Edit from './edit';
 import save from './save';
 import { deprecated } from './deprecated';
 import metadata from '../block.json';
+import {
+	DEFAULT_CITATION_STYLE,
+	getDefaultHeadingText,
+} from './lib/formatting';
 
 registerBlockType(metadata.name, {
 	edit: Edit,
 	deprecated,
 	save,
+	variations: [
+		{
+			name: 'default',
+			isDefault: true,
+			attributes: {
+				citationStyle: DEFAULT_CITATION_STYLE,
+				headingText: getDefaultHeadingText(DEFAULT_CITATION_STYLE),
+			},
+		},
+	],
 });

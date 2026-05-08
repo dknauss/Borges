@@ -106,11 +106,12 @@ Completed:
 1. **CSL-JSON export**
 2. **BibTeX export**
 3. **RIS export**
+4. **BibLaTeX export** — ships as "Download BibLaTeX" in the inspector Exports panel; uses `@citation-js/plugin-bibtex` `biblatex` format; outputs `date`, `journaltitle`, and full Unicode natively; filename is `bibliography.biblatex.bib` to distinguish from the BibTeX download.
 
 Planned:
 
-4. **Frontend Cite / Export affordances** — add optional Scholar-like controls on the public bibliography output so readers can open/copy/download citation data as BibTeX, RIS, and CSL-JSON. Preserve static save output and keep the no-JS bibliography readable; use progressive enhancement or REST export variants only where they do not undermine plugin-deactivation resilience.
-5. **BibLaTeX export/import** — high priority because `@citation-js/plugin-bibtex` already supports BibLaTeX input/output, and BibLaTeX is valuable for LaTeX/Biber users with better Unicode semantics than legacy BibTeX.
+5. **Frontend Cite / Export affordances** — add optional Scholar-like controls on the public bibliography output so readers can open/copy/download citation data as BibTeX, RIS, and CSL-JSON. Preserve static save output and keep the no-JS bibliography readable; use progressive enhancement or REST export variants only where they do not undermine plugin-deactivation resilience.
+6. **BibLaTeX import** — `@citation-js/plugin-bibtex` already parses BibLaTeX; wire into the parser/paste flow for completeness.
 6. **PMID input/resolution** — prioritize before native NBIB; biomedical users usually need PubMed lookup first, and PMID can resolve into the existing CSL source-of-truth model.
 
 Deferred / demand-gated:

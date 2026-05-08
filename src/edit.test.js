@@ -13,6 +13,7 @@ import { parsePastedInput } from './lib/parser';
 import {
 	buildPlainTextBibliographyContent,
 	downloadBibtexExport,
+	downloadBiblatexExport,
 	downloadCslJsonExport,
 	downloadRisExport,
 } from './lib/export';
@@ -182,13 +183,13 @@ jest.mock(
 					},
 					children || 'icon'
 				),
-			TextControl: ({ label, value, disabled }) =>
+			TextControl: ({ label, value, disabled, onChange }) =>
 				ReactLocal.createElement('input', {
 					'aria-label': label,
 					value,
 					disabled,
-					readOnly: true,
-					onChange: () => {},
+					readOnly: !onChange,
+					onChange: (event) => onChange?.(event.target.value),
 				}),
 			ToggleControl: ({ label, checked, onChange, help }) =>
 				ReactLocal.createElement(
@@ -284,6 +285,7 @@ jest.mock('./lib/export', () => ({
 		() => 'Alpha citation\nBeta citation\n'
 	),
 	downloadBibtexExport: jest.fn(),
+	downloadBiblatexExport: jest.fn(),
 	downloadCslJsonExport: jest.fn(),
 	downloadRisExport: jest.fn(),
 }));
@@ -328,21 +330,60 @@ jest.mock('./lib/formatting', () => ({
 		},
 	]),
 	getStyleDefinition: jest.fn((styleKey) => {
-		const labels = {
-			'chicago-notes-bibliography': 'Chicago Notes-Bibliography',
-			'chicago-author-date': 'Chicago Author-Date',
-			'apa-7': 'APA 7',
-			'mla-9': 'MLA 9',
-			harvard: 'Harvard',
-			ieee: 'IEEE',
-			vancouver: 'Vancouver',
-			oscola: 'OSCOLA',
-			abnt: 'ABNT',
+		const definitions = {
+			'chicago-notes-bibliography': {
+				label: 'Chicago Notes-Bibliography',
+				family: 'notes',
+				listType: 'ul',
+			},
+			'chicago-author-date': {
+				label: 'Chicago Author-Date',
+				family: 'author-date',
+				listType: 'ul',
+			},
+			'apa-7': {
+				label: 'APA 7',
+				family: 'author-date',
+				listType: 'ul',
+			},
+			'mla-9': {
+				label: 'MLA 9',
+				family: 'author-date',
+				listType: 'ul',
+			},
+			harvard: {
+				label: 'Harvard',
+				family: 'author-date',
+				listType: 'ul',
+			},
+			ieee: {
+				label: 'IEEE',
+				family: 'numeric',
+				listType: 'ol',
+			},
+			vancouver: {
+				label: 'Vancouver',
+				family: 'numeric',
+				listType: 'ol',
+			},
+			oscola: {
+				label: 'OSCOLA',
+				family: 'notes',
+				listType: 'ul',
+			},
+			abnt: {
+				label: 'ABNT',
+				family: 'author-date',
+				listType: 'ul',
+			},
 		};
+
+		const resolved =
+			definitions[styleKey] || definitions['chicago-notes-bibliography'];
 
 		return {
 			key: styleKey,
-			label: labels[styleKey] || 'Chicago Notes-Bibliography',
+			...resolved,
 		};
 	}),
 	getSelectableStyles: jest.fn(() => [
@@ -398,6 +439,23 @@ jest.mock('./lib/formatting', () => ({
 
 		return placeholders[styleKey] || 'Bibliography';
 	}),
+	getDefaultHeadingText: jest.fn(
+		(styleKey = 'chicago-notes-bibliography') => {
+			const placeholders = {
+				'chicago-notes-bibliography': 'Bibliography',
+				'chicago-author-date': 'References',
+				'apa-7': 'References',
+				'mla-9': 'Works Cited',
+				harvard: 'References',
+				ieee: 'References',
+				vancouver: 'References',
+				oscola: 'Bibliography',
+				abnt: 'Referências',
+			};
+
+			return placeholders[styleKey] || 'Bibliography';
+		}
+	),
 	getListSemantics: jest.fn((styleKey) =>
 		['ieee', 'vancouver'].includes(styleKey) ? 'ol' : 'ul'
 	),
@@ -507,6 +565,7 @@ describe('Edit focus management', () => {
 			'Alpha citation\nBeta citation\n'
 		);
 		downloadBibtexExport.mockReset();
+		downloadBiblatexExport.mockReset();
 		downloadCslJsonExport.mockReset();
 		downloadRisExport.mockReset();
 		copyTextToClipboard.mockReset();
@@ -535,7 +594,7 @@ describe('Edit focus management', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
 
 		expect(await screen.findByRole('status')).toHaveTextContent(
-			'Paste a DOI, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.'
+			'Paste a DOI, PMID (PubMed ID), BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.'
 		);
 	});
 
@@ -543,7 +602,7 @@ describe('Edit focus management', () => {
 		parsePastedInput.mockResolvedValue({
 			entries: [],
 			errors: [
-				'Paste a DOI, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
+				'Paste a DOI, PMID (PubMed ID), BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 			],
 			truncated: false,
 			remainingInput: 'Private Draft Citation',
@@ -560,7 +619,7 @@ describe('Edit focus management', () => {
 		const status = await screen.findByRole('status');
 
 		expect(status).toHaveTextContent(
-			'Paste a DOI, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.'
+			'Paste a DOI, PMID (PubMed ID), BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.'
 		);
 		expect(status).not.toHaveTextContent('Private Draft Citation');
 		expect(screen.getByLabelText('Add citations')).toHaveValue(
@@ -579,7 +638,7 @@ describe('Edit focus management', () => {
 				}),
 			],
 			errors: [
-				'Paste a DOI, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
+				'Paste a DOI, PMID (PubMed ID), BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 			],
 			truncated: false,
 			remainingInput: 'Unparsed citation chunk',
@@ -599,6 +658,54 @@ describe('Edit focus management', () => {
 		expect(screen.getByLabelText('Add citations')).toHaveValue(
 			'Unparsed citation chunk'
 		);
+	});
+
+	it('reformats the full bibliography when parsed entries are appended', async () => {
+		parsePastedInput.mockResolvedValue({
+			entries: [
+				createCitation({
+					id: 'entry-b',
+					family: 'Alpha',
+					year: 2023,
+					title: 'Alpha citation',
+				}),
+			],
+			errors: [],
+			truncated: false,
+			remainingInput: '',
+		});
+
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.type(
+			screen.getByLabelText('Add citations'),
+			'10.1234/context-aware'
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		await waitFor(() => {
+			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+				[
+					expect.objectContaining({ title: 'Zulu citation' }),
+					expect.objectContaining({ title: 'Alpha citation' }),
+				],
+				'chicago-notes-bibliography',
+				expect.objectContaining({
+					onFallback: expect.any(Function),
+				})
+			);
+		});
 	});
 
 	it('keeps fallback and truncation details in the parse result notice', async () => {
@@ -714,6 +821,308 @@ describe('Edit focus management', () => {
 		expect(entries[1]).toHaveTextContent('The Book by Design');
 	});
 
+	it('preserves numeric-family order on load and re-sorts when switching to author-date', async () => {
+		render(
+			<EditHarness
+				initialStyle="ieee"
+				initialCitations={[
+					createCitation({
+						id: 'zulu',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+					createCitation({
+						id: 'alpha',
+						family: 'Alpha',
+						year: 2023,
+						title: 'Alpha citation',
+					}),
+				]}
+			/>
+		);
+
+		let entries = screen.getAllByRole('listitem');
+		expect(entries[0]).toHaveTextContent('Zulu citation');
+		expect(entries[1]).toHaveTextContent('Alpha citation');
+
+		await userEvent.selectOptions(
+			screen.getByLabelText('Citation Style'),
+			'chicago-author-date'
+		);
+
+		await waitFor(() => {
+			entries = screen.getAllByRole('listitem');
+			expect(entries[0]).toHaveTextContent('Alpha citation');
+			expect(entries[1]).toHaveTextContent('Zulu citation');
+		});
+	});
+
+	it('does not re-sort when switching from author-date to numeric', async () => {
+		render(
+			<EditHarness
+				initialStyle="chicago-author-date"
+				initialCitations={[
+					createCitation({
+						id: 'a',
+						family: 'Alpha',
+						year: 2024,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'z',
+						family: 'Zulu',
+						year: 2020,
+						title: 'Zulu citation',
+					}),
+				]}
+			/>
+		);
+
+		const beforeSwitch = screen
+			.getAllByRole('listitem')
+			.map((entry) => entry.textContent);
+
+		await userEvent.selectOptions(
+			screen.getByLabelText('Citation Style'),
+			'ieee'
+		);
+
+		await waitFor(() => {
+			const afterSwitch = screen
+				.getAllByRole('listitem')
+				.map((entry) => entry.textContent);
+			expect(afterSwitch).toEqual(beforeSwitch);
+		});
+	});
+
+	it('shows numeric reorder controls and inspector guidance for IEEE', () => {
+		render(
+			<EditHarness
+				initialStyle="ieee"
+				initialCitations={[
+					createCitation({
+						id: 'zulu',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+					createCitation({
+						id: 'alpha',
+						family: 'Alpha',
+						year: 2023,
+						title: 'Alpha citation',
+					}),
+				]}
+			/>
+		);
+
+		expect(
+			screen.getByText(
+				"IEEE/Vancouver: arrange entries to match the order they're first cited in your text."
+			)
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole('button', { name: "Move 'Zulu 2024' up" })
+		).toBeDisabled();
+		expect(
+			screen.getByRole('button', { name: "Move 'Zulu 2024' down" })
+		).toBeEnabled();
+		expect(
+			screen.getByRole('button', { name: "Move 'Alpha 2023' up" })
+		).toBeEnabled();
+		expect(
+			screen.getByRole('button', { name: "Move 'Alpha 2023' down" })
+		).toBeDisabled();
+	});
+
+	it('does not render numeric reorder controls for author-date styles', () => {
+		render(
+			<EditHarness
+				initialStyle="chicago-author-date"
+				initialCitations={[
+					createCitation({
+						id: 'alpha',
+						family: 'Alpha',
+						year: 2023,
+						title: 'Alpha citation',
+					}),
+				]}
+			/>
+		);
+
+		expect(
+			screen.queryByRole('button', { name: /Move '.*' up/ })
+		).not.toBeInTheDocument();
+		expect(
+			screen.queryByText(
+				"IEEE/Vancouver: arrange entries to match the order they're first cited in your text."
+			)
+		).not.toBeInTheDocument();
+	});
+
+	it('reorders numeric citations with arrow controls and keeps focus on moved entry', async () => {
+		render(
+			<EditHarness
+				initialStyle="ieee"
+				initialCitations={[
+					createCitation({
+						id: 'zulu',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+					createCitation({
+						id: 'alpha',
+						family: 'Alpha',
+						year: 2023,
+						title: 'Alpha citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getByRole('button', { name: "Move 'Zulu 2024' down" })
+		);
+
+		await waitFor(() => {
+			const entries = screen.getAllByRole('listitem');
+			expect(entries[0]).toHaveTextContent('Alpha citation');
+			expect(entries[1]).toHaveTextContent('Zulu citation');
+			expect(entries[1]).toHaveFocus();
+		});
+	});
+
+	it('moves numeric citations up with arrow controls', async () => {
+		render(
+			<EditHarness
+				initialStyle="ieee"
+				initialCitations={[
+					createCitation({
+						id: 'zulu',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+					createCitation({
+						id: 'alpha',
+						family: 'Alpha',
+						year: 2023,
+						title: 'Alpha citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getByRole('button', { name: "Move 'Alpha 2023' up" })
+		);
+
+		await waitFor(() => {
+			const entries = screen.getAllByRole('listitem');
+			expect(entries[0]).toHaveTextContent('Alpha citation');
+			expect(entries[1]).toHaveTextContent('Zulu citation');
+			expect(entries[0]).toHaveFocus();
+		});
+	});
+
+	it('supports Alt+ArrowDown reorder shortcut for numeric styles', async () => {
+		render(
+			<EditHarness
+				initialStyle="ieee"
+				initialCitations={[
+					createCitation({
+						id: 'zulu',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+					createCitation({
+						id: 'alpha',
+						family: 'Alpha',
+						year: 2023,
+						title: 'Alpha citation',
+					}),
+				]}
+			/>
+		);
+
+		const firstEntry = screen.getAllByRole('listitem')[0];
+		firstEntry.focus();
+		fireEvent.keyDown(firstEntry, { key: 'ArrowDown', altKey: true });
+
+		await waitFor(() => {
+			const entries = screen.getAllByRole('listitem');
+			expect(entries[0]).toHaveTextContent('Alpha citation');
+			expect(entries[1]).toHaveTextContent('Zulu citation');
+		});
+	});
+
+	it('supports Alt+ArrowUp reorder shortcut for numeric styles', async () => {
+		render(
+			<EditHarness
+				initialStyle="ieee"
+				initialCitations={[
+					createCitation({
+						id: 'alpha',
+						family: 'Alpha',
+						year: 2023,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'zulu',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+				]}
+			/>
+		);
+
+		const secondEntry = screen.getAllByRole('listitem')[1];
+		secondEntry.focus();
+		fireEvent.keyDown(secondEntry, { key: 'ArrowUp', altKey: true });
+
+		await waitFor(() => {
+			const entries = screen.getAllByRole('listitem');
+			expect(entries[0]).toHaveTextContent('Zulu citation');
+			expect(entries[1]).toHaveTextContent('Alpha citation');
+		});
+	});
+
+	it('ignores Alt+ArrowDown reorder shortcut for non-numeric styles', async () => {
+		render(
+			<EditHarness
+				initialStyle="chicago-author-date"
+				initialCitations={[
+					createCitation({
+						id: 'alpha',
+						family: 'Alpha',
+						year: 2023,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'zulu',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+				]}
+			/>
+		);
+
+		const firstEntry = screen.getAllByRole('listitem')[0];
+		firstEntry.focus();
+		fireEvent.keyDown(firstEntry, { key: 'ArrowDown', altKey: true });
+
+		await waitFor(() => {
+			const entries = screen.getAllByRole('listitem');
+			expect(entries[0]).toHaveTextContent('Alpha citation');
+			expect(entries[1]).toHaveTextContent('Zulu citation');
+		});
+	});
+
 	it('allows selecting APA style before any citations are added', async () => {
 		render(<EditHarness />);
 
@@ -726,6 +1135,19 @@ describe('Edit focus management', () => {
 			'Style changed to APA 7.'
 		);
 		expect(screen.getByLabelText('Citation Style')).toHaveValue('apa-7');
+	});
+
+	it('updates the visible bibliography heading from inspector settings', async () => {
+		render(<EditHarness />);
+
+		await userEvent.type(
+			screen.getByLabelText('Visible Heading'),
+			'Works Cited'
+		);
+
+		expect(screen.getByLabelText('Visible Heading')).toHaveValue(
+			'Works Cited'
+		);
 	});
 
 	it('renders notices inline within the block UI', async () => {
@@ -946,6 +1368,74 @@ describe('Edit focus management', () => {
 
 		expect(await screen.findByRole('status')).toHaveTextContent(
 			'Could not download RIS export in this browser.'
+		);
+	});
+
+	it('downloads a BibLaTeX export from the inspector when citations are present', async () => {
+		downloadBiblatexExport.mockResolvedValue('blob:biblatex');
+
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'citation-1',
+						family: 'Alpha',
+						year: 2024,
+						title: 'Alpha citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Download BibLaTeX' })
+		);
+
+		await waitFor(() => {
+			expect(downloadBiblatexExport).toHaveBeenCalledWith(
+				expect.arrayContaining([
+					expect.objectContaining({ id: 'citation-1' }),
+				]),
+				'chicago-notes-bibliography'
+			);
+		});
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Downloaded BibLaTeX export.'
+		);
+	});
+
+	it('disables the BibLaTeX export button when there are no citations', () => {
+		render(<EditHarness />);
+
+		expect(
+			screen.getByRole('button', { name: 'Download BibLaTeX' })
+		).toBeDisabled();
+	});
+
+	it('shows an error notice when BibLaTeX export fails', async () => {
+		downloadBiblatexExport.mockRejectedValueOnce(
+			new Error('download failed')
+		);
+
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'citation-1',
+						family: 'Alpha',
+						year: 2024,
+						title: 'Alpha citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Download BibLaTeX' })
+		);
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Could not download BibLaTeX export in this browser.'
 		);
 	});
 
@@ -1184,11 +1674,75 @@ describe('Edit focus management', () => {
 		expect(screen.getByLabelText('Title')).toHaveValue('');
 	});
 
+	it('reformats the full bibliography when adding a manual citation', async () => {
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'existing',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+		);
+		await userEvent.selectOptions(
+			screen.getByLabelText('Publication Type'),
+			'book'
+		);
+		await userEvent.type(screen.getByLabelText('Author(s)'), 'Alpha, Ada');
+		await userEvent.type(screen.getByLabelText('Title'), 'Alpha citation');
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		await waitFor(() => {
+			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+				[
+					expect.objectContaining({ title: 'Zulu citation' }),
+					expect.objectContaining({ title: 'Alpha citation' }),
+				],
+				'chicago-notes-bibliography',
+				expect.objectContaining({
+					onFallback: expect.any(Function),
+				})
+			);
+		});
+	});
+
 	it('keeps a persistent notice when manual citation formatting falls back', async () => {
 		formatBibliographyEntry.mockImplementationOnce(
 			(csl, style, options) => {
 				options.onFallback();
 				return Promise.resolve('Fallback manual citation');
+			}
+		);
+
+		render(<EditHarness />);
+
+		await userEvent.click(
+			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+		);
+		await userEvent.selectOptions(
+			screen.getByLabelText('Publication Type'),
+			'book'
+		);
+		await userEvent.type(screen.getByLabelText('Title'), 'Manual Book');
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Added 1 citation. Formatter unavailable; added fallback citation text.'
+		);
+	});
+
+	it('keeps a persistent notice when manual bibliography reformatting falls back', async () => {
+		formatBibliographyEntries.mockImplementationOnce(
+			(cslItems, style, options) => {
+				options.onFallback();
+				return cslItems.map((item) => item.title);
 			}
 		);
 
@@ -1629,6 +2183,116 @@ describe('Edit focus management', () => {
 		});
 	});
 
+	it('reformats remaining citations after deletion in author-date styles', async () => {
+		render(
+			<EditHarness
+				initialStyle="chicago-author-date"
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'entry-b',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Beta citation',
+					}),
+				]}
+			/>
+		);
+
+		const deleteButtons = screen.getAllByRole('button', {
+			name: 'Delete citation: Alpha 2020',
+		});
+		await userEvent.click(deleteButtons[0]);
+
+		await waitFor(() => {
+			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+				[expect.objectContaining({ title: 'Beta citation' })],
+				'chicago-author-date',
+				expect.objectContaining({
+					onFallback: expect.any(Function),
+				})
+			);
+		});
+	});
+
+	it('keeps a persistent notice when deletion reformatting falls back', async () => {
+		formatBibliographyEntries.mockImplementationOnce(
+			(cslItems, style, options) => {
+				options.onFallback();
+				return cslItems.map((item) => item.title);
+			}
+		);
+
+		render(
+			<EditHarness
+				initialStyle="chicago-author-date"
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'entry-b',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Beta citation',
+					}),
+				]}
+			/>
+		);
+
+		const deleteButtons = screen.getAllByRole('button', {
+			name: 'Delete citation: Alpha 2020',
+		});
+		await userEvent.click(deleteButtons[0]);
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Citation removed. Formatter unavailable; added fallback citation text.'
+		);
+	});
+
+	it('keeps a persistent notice when deletion reformatting throws', async () => {
+		formatBibliographyEntries.mockRejectedValueOnce(
+			new Error('format failed')
+		);
+
+		render(
+			<EditHarness
+				initialStyle="chicago-author-date"
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'entry-b',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Beta citation',
+					}),
+				]}
+			/>
+		);
+
+		const deleteButtons = screen.getAllByRole('button', {
+			name: 'Delete citation: Alpha 2020',
+		});
+		await userEvent.click(deleteButtons[0]);
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Citation removed. Formatter unavailable; added fallback citation text.'
+		);
+	});
+
 	it('moves focus back to the add-citations textarea after deleting the last citation', async () => {
 		render(
 			<EditHarness
@@ -1855,13 +2519,15 @@ describe('Edit focus management', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
 		await waitFor(() => {
-			expect(formatBibliographyEntry).toHaveBeenCalledWith(
-				expect.objectContaining({
-					author: [
-						{ family: 'Smith', given: 'Ada' },
-						{ family: 'Scholar', given: 'Jane' },
-					],
-				}),
+			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+				[
+					expect.objectContaining({
+						author: [
+							{ family: 'Smith', given: 'Ada' },
+							{ family: 'Scholar', given: 'Jane' },
+						],
+					}),
+				],
 				'chicago-notes-bibliography',
 				expect.objectContaining({
 					onFallback: expect.any(Function),
@@ -2151,5 +2817,37 @@ describe('Edit focus management', () => {
 				screen.getByText('Learning Blocks Revised').closest('li')
 			).toHaveFocus();
 		});
+	});
+});
+
+describe('OSCOLA inspector notice', () => {
+	it('shows OSCOLA limitation notice when OSCOLA style is selected', () => {
+		render(<EditHarness initialStyle="oscola" />);
+
+		expect(
+			screen.getByText(/OSCOLA convention groups bibliographies/i)
+		).toBeInTheDocument();
+	});
+
+	it('does not show OSCOLA notice for non-OSCOLA styles', () => {
+		render(<EditHarness initialStyle="chicago-notes-bibliography" />);
+
+		expect(
+			screen.queryByText(/OSCOLA convention groups bibliographies/i)
+		).not.toBeInTheDocument();
+	});
+
+	it('hides OSCOLA notice after dismissal', () => {
+		render(<EditHarness initialStyle="oscola" />);
+
+		expect(
+			screen.getByText(/OSCOLA convention groups bibliographies/i)
+		).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
+
+		expect(
+			screen.queryByText(/OSCOLA convention groups bibliographies/i)
+		).not.toBeInTheDocument();
 	});
 });

@@ -83,7 +83,7 @@ describe('parse → store → render integration', () => {
 
 		expect(markup).toContain('Smith. <i>Example Resource</i>.');
 		expect(markup).toContain(
-			'<a href="https://example.com/resource" rel="nofollow noopener noreferrer">https://example.com/resource</a>'
+			'<a href="https://example.com/resource" rel="nofollow noopener noreferrer" aria-label="Example Resource — https://example.com/resource">https://example.com/resource</a>'
 		);
 		expect(markup).toContain('<script type="application/ld+json">');
 		expect(markup).toContain('class="Z3988"');

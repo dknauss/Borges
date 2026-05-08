@@ -1,6 +1,6 @@
 import apiFetch from '@wordpress/api-fetch';
 
-const FORMAT_CACHE = new Map();
+const BIBLIOGRAPHY_CACHE = new Map();
 const MAX_FORMAT_CACHE_ENTRIES = 500;
 const FORMAT_ENDPOINT = 'bibliography/v1/format';
 
@@ -9,41 +9,46 @@ function emitFormattingWarning(...args) {
 	console?.warn?.(...args);
 }
 
-function getFormatCacheKey(csl, styleKey) {
-	return `${styleKey}::${stableStringify(csl)}`;
+function getBibliographyCacheKey(cslItems, styleKey, locale = '') {
+	return stableStringify({
+		styleKey,
+		locale,
+		cslItems,
+	});
 }
 
-function getCachedFormat(cacheKey) {
-	if (!FORMAT_CACHE.has(cacheKey)) {
+function getCachedBibliography(cacheKey) {
+	if (!BIBLIOGRAPHY_CACHE.has(cacheKey)) {
 		return undefined;
 	}
 
-	const formatted = FORMAT_CACHE.get(cacheKey);
+	const formattedEntries = BIBLIOGRAPHY_CACHE.get(cacheKey);
 
 	// Refresh insertion order on access so Map behaves as a simple LRU cache.
-	FORMAT_CACHE.delete(cacheKey);
-	FORMAT_CACHE.set(cacheKey, formatted);
+	BIBLIOGRAPHY_CACHE.delete(cacheKey);
+	BIBLIOGRAPHY_CACHE.set(cacheKey, formattedEntries);
 
-	return formatted;
+	return [...formattedEntries];
 }
 
-function setCachedFormat(cacheKey, formatted) {
-	if (FORMAT_CACHE.has(cacheKey)) {
-		FORMAT_CACHE.delete(cacheKey);
+function setCachedBibliography(cacheKey, formattedEntries) {
+	if (BIBLIOGRAPHY_CACHE.has(cacheKey)) {
+		BIBLIOGRAPHY_CACHE.delete(cacheKey);
 	}
 
-	while (FORMAT_CACHE.size >= MAX_FORMAT_CACHE_ENTRIES) {
-		const leastRecentlyUsedCacheKey = FORMAT_CACHE.keys().next().value;
+	while (BIBLIOGRAPHY_CACHE.size >= MAX_FORMAT_CACHE_ENTRIES) {
+		const leastRecentlyUsedCacheKey =
+			BIBLIOGRAPHY_CACHE.keys().next().value;
 
 		if (!leastRecentlyUsedCacheKey) {
 			break;
 		}
 
-		FORMAT_CACHE.delete(leastRecentlyUsedCacheKey);
+		BIBLIOGRAPHY_CACHE.delete(leastRecentlyUsedCacheKey);
 	}
 
-	FORMAT_CACHE.set(cacheKey, formatted);
-	return formatted;
+	BIBLIOGRAPHY_CACHE.set(cacheKey, [...formattedEntries]);
+	return [...formattedEntries];
 }
 
 function getFallbackText(csl) {
@@ -77,7 +82,7 @@ async function requestFormattedEntries(cslItems, styleKey) {
  * @since 0.1.0
  */
 export function clearFormattingCache() {
-	FORMAT_CACHE.clear();
+	BIBLIOGRAPHY_CACHE.clear();
 }
 
 /**
@@ -99,66 +104,35 @@ export async function formatBibliographyEntries(
 		return [];
 	}
 
-	const results = new Array(cslItems.length);
-	const uncachedItems = new Map();
+	const cacheKey = getBibliographyCacheKey(
+		cslItems,
+		styleKey,
+		options.locale || ''
+	);
+	const cachedEntries = getCachedBibliography(cacheKey);
 
-	cslItems.forEach((csl, index) => {
-		const cacheKey = getFormatCacheKey(csl, styleKey);
-
-		const cachedFormat = getCachedFormat(cacheKey);
-
-		if (cachedFormat !== undefined) {
-			results[index] = cachedFormat;
-			return;
-		}
-
-		const pendingItem = uncachedItems.get(cacheKey);
-
-		if (pendingItem) {
-			pendingItem.indices.push(index);
-			return;
-		}
-
-		uncachedItems.set(cacheKey, {
-			csl,
-			indices: [index],
-		});
-	});
-
-	const uncachedEntries = Array.from(uncachedItems.entries());
-
-	if (uncachedEntries.length) {
-		let formattedTexts;
-
-		try {
-			formattedTexts = await requestFormattedEntries(
-				uncachedEntries.map(([, { csl }]) => csl),
-				styleKey
-			);
-		} catch (error) {
-			emitFormattingWarning(
-				`Falling back to raw citation text for style "${styleKey}".`,
-				error
-			);
-			options.onFallback?.(error);
-			formattedTexts = uncachedEntries.map(([, { csl }]) =>
-				getFallbackText(csl)
-			);
-		}
-
-		uncachedEntries.forEach(([cacheKey, { indices }], batchIndex) => {
-			const formatted = setCachedFormat(
-				cacheKey,
-				formattedTexts[batchIndex] || ''
-			);
-
-			for (const index of indices) {
-				results[index] = formatted;
-			}
-		});
+	if (cachedEntries !== undefined) {
+		return cachedEntries;
 	}
 
-	return results;
+	let formattedTexts;
+
+	try {
+		formattedTexts = await requestFormattedEntries(cslItems, styleKey);
+	} catch (error) {
+		emitFormattingWarning(
+			`Falling back to raw citation text for style "${styleKey}".`,
+			error
+		);
+		options.onFallback?.(error);
+		formattedTexts = cslItems.map((csl) => getFallbackText(csl));
+	}
+
+	const normalizedEntries = cslItems.map(
+		(_, index) => formattedTexts[index] || ''
+	);
+
+	return setCachedBibliography(cacheKey, normalizedEntries);
 }
 
 /**

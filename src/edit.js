@@ -11,6 +11,7 @@ import {
 import {
 	BaseControl,
 	Button,
+	Notice,
 	PanelBody,
 	Placeholder,
 	SelectControl,
@@ -31,6 +32,7 @@ import { CitationEntryBody } from './components/citation-entry-body';
 import { useBlockNotices } from './hooks/use-block-notices';
 import { useCitationEditorState } from './hooks/use-citation-editor-state';
 import { useEntryFocus } from './hooks/use-entry-focus';
+import { useCitationReorder } from './hooks/use-citation-reorder';
 import { copyTextToClipboard } from './lib/clipboard';
 import {
 	getDisplayText,
@@ -54,6 +56,7 @@ import {
 import {
 	buildPlainTextBibliographyContent,
 	downloadBibtexExport,
+	downloadBiblatexExport,
 	downloadCslJsonExport,
 	downloadRisExport,
 } from './lib/export';
@@ -154,12 +157,14 @@ export default function Edit({ attributes, setAttributes }) {
 	const blockProps = useBlockProps();
 	const headingPlaceholder = getHeadingPlaceholder(citationStyle);
 	const listStyleDefinition = getStyleDefinition(citationStyle);
+	const isNumericFamily = listStyleDefinition.family === 'numeric';
 	const ListTag = getListSemantics(citationStyle);
 	const listClassName = `bibliography-builder-list bibliography-builder-list-${
 		listStyleDefinition.listType === 'ol' ? 'numeric' : 'unordered'
 	} bibliography-builder-list-${citationStyle}`;
 	const [inputValue, setInputValue] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
+	const [oscolaNoticeDismissed, setOscolaNoticeDismissed] = useState(false);
 	const [isFormOpen, setIsFormOpen] = useState(true);
 	const [activeAddMode, setActiveAddMode] = useState('paste');
 	const [manualFields, setManualFields] = useState(() =>
@@ -198,6 +203,13 @@ export default function Edit({ attributes, setAttributes }) {
 		citationStyle,
 		citationsRef,
 		clearNotice,
+		headingText,
+		queueFocus,
+		setAttributes,
+	});
+	const { moveCitationDown, moveCitationUp } = useCitationReorder({
+		announce,
+		citationsRef,
 		queueFocus,
 		setAttributes,
 	});
@@ -207,6 +219,10 @@ export default function Edit({ attributes, setAttributes }) {
 	}, [citations]);
 
 	useEffect(() => {
+		if (isNumericFamily) {
+			return;
+		}
+
 		const sortedIds = sortedCitations.map((citation) => citation.id);
 		const currentIds = citations.map((citation) => citation.id);
 
@@ -219,7 +235,7 @@ export default function Edit({ attributes, setAttributes }) {
 
 		citationsRef.current = sortedCitations;
 		setAttributes({ citations: sortedCitations });
-	}, [citations, setAttributes, sortedCitations]);
+	}, [citations, isNumericFamily, setAttributes, sortedCitations]);
 
 	const updatePasteInput = useCallback(
 		(nextValue, { syncDom = false } = {}) => {
@@ -262,9 +278,13 @@ export default function Edit({ attributes, setAttributes }) {
 				const { formatBibliographyEntries } = await import(
 					'./lib/formatting/csl'
 				);
+				const mergedEntries = [
+					...citationsRef.current,
+					...uniqueEntries,
+				];
 				let formatterFallback = false;
 				const formattedTexts = await formatBibliographyEntries(
-					uniqueEntries.map((citation) => citation.csl),
+					mergedEntries.map((citation) => citation.csl),
 					citationStyle,
 					{
 						onFallback: () => {
@@ -272,23 +292,21 @@ export default function Edit({ attributes, setAttributes }) {
 						},
 					}
 				);
-				const formattedUniqueEntries = uniqueEntries.map(
+				const formattedMergedEntries = mergedEntries.map(
 					(entry, index) => ({
 						...entry,
 						formattedText: formattedTexts[index],
 					})
 				);
 				const updated = sortCitations(
-					[...citationsRef.current, ...formattedUniqueEntries],
+					formattedMergedEntries,
 					citationStyle
 				);
 				const reviewWarningCount = uniqueEntries.filter(
 					(entry) => (entry.parseWarnings || []).length > 0
 				).length;
 				const firstNewEntry = updated.find((citation) =>
-					formattedUniqueEntries.some(
-						(entry) => entry.id === citation.id
-					)
+					uniqueEntries.some((entry) => entry.id === citation.id)
 				);
 
 				citationsRef.current = updated;
@@ -374,20 +392,54 @@ export default function Edit({ attributes, setAttributes }) {
 	]);
 
 	const handleDelete = useCallback(
-		(id) => {
+		async (id) => {
 			const currentCitations = citationsRef.current;
 			const deletedIndex = currentCitations.findIndex((c) => c.id === id);
 			const entry = currentCitations[deletedIndex];
+			let formatterFallback = false;
 
 			if (!entry) {
 				return;
 			}
 
-			const updated = currentCitations.filter((c) => c.id !== id);
+			let updated = currentCitations.filter((c) => c.id !== id);
+
+			if (updated.length > 0 && !isNumericFamily) {
+				try {
+					const { formatBibliographyEntries } = await import(
+						'./lib/formatting/csl'
+					);
+					const formattedTexts = await formatBibliographyEntries(
+						updated.map((citation) => citation.csl),
+						citationStyle,
+						{
+							onFallback: () => {
+								formatterFallback = true;
+							},
+						}
+					);
+
+					updated = sortCitations(
+						updated.map((citation, index) => ({
+							...citation,
+							formattedText: formattedTexts[index] || '',
+						})),
+						citationStyle
+					);
+				} catch (error) {
+					formatterFallback = true;
+				}
+			}
+
 			citationsRef.current = updated;
 			setAttributes({ citations: updated });
-
-			announce('success', 'Citation removed.', { type: 'snackbar' });
+			announce(
+				formatterFallback ? 'warning' : 'success',
+				formatterFallback
+					? `Citation removed. ${FORMATTER_FALLBACK_MESSAGE}`
+					: 'Citation removed.',
+				formatterFallback ? {} : { type: 'snackbar' }
+			);
 
 			if (!updated.length) {
 				queueFocus({ type: 'paste' });
@@ -401,7 +453,7 @@ export default function Edit({ attributes, setAttributes }) {
 				queueFocus({ type: 'entry', id: nextEntry.id });
 			}
 		},
-		[setAttributes, announce, queueFocus]
+		[setAttributes, announce, queueFocus, isNumericFamily, citationStyle]
 	);
 
 	const handleInputChange = useCallback(
@@ -504,8 +556,24 @@ export default function Edit({ attributes, setAttributes }) {
 					},
 				}
 			);
+			const { formatBibliographyEntries } = await import(
+				'./lib/formatting/csl'
+			);
+			const mergedEntries = [...citationsRef.current, entry];
+			const formattedTexts = await formatBibliographyEntries(
+				mergedEntries.map((citation) => citation.csl),
+				citationStyle,
+				{
+					onFallback: () => {
+						formatterFallback = true;
+					},
+				}
+			);
 			const updated = sortCitations(
-				[...citationsRef.current, entry],
+				mergedEntries.map((citation, index) => ({
+					...citation,
+					formattedText: formattedTexts[index] || '',
+				})),
 				citationStyle
 			);
 
@@ -592,6 +660,25 @@ export default function Edit({ attributes, setAttributes }) {
 		}
 	}, [announce, citationStyle, queueFocus]);
 
+	const handleDownloadBiblatex = useCallback(async () => {
+		if (!citationsRef.current.length) {
+			return;
+		}
+
+		try {
+			await downloadBiblatexExport(citationsRef.current, citationStyle);
+			announce('success', 'Downloaded BibLaTeX export.', {
+				type: 'snackbar',
+			});
+		} catch (error) {
+			announce(
+				'error',
+				'Could not download BibLaTeX export in this browser.'
+			);
+			queueFocus({ type: 'notice' });
+		}
+	}, [announce, citationStyle, queueFocus]);
+
 	const handleDownloadRis = useCallback(() => {
 		if (!citationsRef.current.length) {
 			return;
@@ -666,6 +753,32 @@ export default function Edit({ attributes, setAttributes }) {
 			isStructuredEditable,
 			structuredEditingId,
 		]
+	);
+
+	const handleEntryReorderKeyDown = useCallback(
+		(event, citation) => {
+			if (
+				!isNumericFamily ||
+				event.target !== event.currentTarget ||
+				!event.altKey
+			) {
+				return;
+			}
+
+			const label = getEntryLabel(citation);
+
+			if (event.key === 'ArrowUp') {
+				event.preventDefault();
+				moveCitationUp(citation.id, label);
+				return;
+			}
+
+			if (event.key === 'ArrowDown') {
+				event.preventDefault();
+				moveCitationDown(citation.id, label);
+			}
+		},
+		[getEntryLabel, isNumericFamily, moveCitationDown, moveCitationUp]
 	);
 
 	const getEntryClassName = (citation) => {
@@ -747,6 +860,10 @@ export default function Edit({ attributes, setAttributes }) {
 		</>
 	);
 
+	const formToggleLabel = isFormOpen
+		? __('Hide citation form', 'borges-bibliography-builder')
+		: __('Show citation form', 'borges-bibliography-builder');
+
 	const manualFieldDefinitions = useMemo(
 		() => [
 			{
@@ -790,31 +907,27 @@ export default function Edit({ attributes, setAttributes }) {
 			<BlockControls>
 				<ToolbarGroup>
 					<ToolbarButton
+						aria-label={PASTE_IMPORT_TAB_LABEL}
 						icon={PasteImportIcon}
 						label={PASTE_IMPORT_TAB_LABEL}
+						title={PASTE_IMPORT_TAB_LABEL}
 						isPressed={isFormOpen && activeAddMode === 'paste'}
 						onClick={() => handleAddModeChange('paste')}
 					/>
 					<ToolbarButton
+						aria-label={MANUAL_ENTRY_TAB_LABEL}
 						icon={ManualEntryIcon}
 						label={MANUAL_ENTRY_TAB_LABEL}
+						title={MANUAL_ENTRY_TAB_LABEL}
 						isPressed={isFormOpen && activeAddMode === 'manual'}
 						onClick={() => handleAddModeChange('manual')}
 					/>
 					{citations.length > 0 && (
 						<ToolbarButton
+							aria-label={formToggleLabel}
 							icon={isFormOpen ? ChevronUpIcon : ChevronDownIcon}
-							label={
-								isFormOpen
-									? __(
-											'Hide citation form',
-											'borges-bibliography-builder'
-									  )
-									: __(
-											'Show citation form',
-											'borges-bibliography-builder'
-									  )
-							}
+							label={formToggleLabel}
+							title={formToggleLabel}
 							onClick={() => setIsFormOpen((open) => !open)}
 						/>
 					)}
@@ -849,11 +962,30 @@ export default function Edit({ attributes, setAttributes }) {
 						value={citationStyle}
 						options={selectableStyles}
 						onChange={handleCitationStyleChange}
-						help={__(
-							'Changing styles reformats auto-generated citations and keeps manual overrides intact.',
-							'borges-bibliography-builder'
-						)}
+						help={
+							isNumericFamily
+								? __(
+										"IEEE/Vancouver: arrange entries to match the order they're first cited in your text.",
+										'borges-bibliography-builder'
+								  )
+								: __(
+										'Changing styles reformats auto-generated citations and keeps manual overrides intact.',
+										'borges-bibliography-builder'
+								  )
+						}
 					/>
+					{citationStyle === 'oscola' && !oscolaNoticeDismissed && (
+						<Notice
+							status="info"
+							isDismissible
+							onRemove={() => setOscolaNoticeDismissed(true)}
+						>
+							{__(
+								'OSCOLA convention groups bibliographies by source type (cases, legislation, books, articles, online). Borges currently renders a single alphabetized list. See Epic-OSCOLA for tracking.',
+								'borges-bibliography-builder'
+							)}
+						</Notice>
+					)}
 					<TextControl
 						label={__(
 							'Visible Heading',
@@ -954,6 +1086,19 @@ export default function Edit({ attributes, setAttributes }) {
 					</p>
 					<Button
 						variant="secondary"
+						onClick={handleDownloadBiblatex}
+						disabled={!citations.length}
+					>
+						{__('Download BibLaTeX', 'borges-bibliography-builder')}
+					</Button>
+					<p>
+						{__(
+							'Downloads the current bibliography as BibLaTeX for LaTeX/Biber workflows with full Unicode support.',
+							'borges-bibliography-builder'
+						)}
+					</p>
+					<Button
+						variant="secondary"
 						onClick={handleDownloadRis}
 						disabled={!citations.length}
 					>
@@ -1007,12 +1152,16 @@ export default function Edit({ attributes, setAttributes }) {
 			{/* Citation list */}
 			{sortedCitations.length > 0 && (
 				<ListTag className={listClassName} aria-busy={isLoading}>
-					{sortedCitations.map((citation) => (
+					{sortedCitations.map((citation, index) => (
+						/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */
 						<li
 							key={citation.id}
 							ref={(node) => setEntryRef(citation.id, node)}
 							className={getEntryClassName(citation)}
 							tabIndex={-1}
+							onKeyDown={(event) =>
+								handleEntryReorderKeyDown(event, citation)
+							}
 						>
 							<CitationEntryBody
 								citation={citation}
@@ -1041,6 +1190,21 @@ export default function Edit({ attributes, setAttributes }) {
 								}
 								handleStructuredFieldChange={
 									handleStructuredFieldChange
+								}
+								isNumericFamily={isNumericFamily}
+								canMoveUp={index > 0}
+								canMoveDown={index < sortedCitations.length - 1}
+								onMoveUp={() =>
+									moveCitationUp(
+										citation.id,
+										getEntryLabel(citation)
+									)
+								}
+								onMoveDown={() =>
+									moveCitationDown(
+										citation.id,
+										getEntryLabel(citation)
+									)
 								}
 								isStructuredEditable={isStructuredEditable(
 									citation

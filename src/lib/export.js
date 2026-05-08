@@ -7,6 +7,8 @@ export const CSL_JSON_EXPORT_MIME_TYPE =
 	'application/vnd.citationstyles.csl+json;charset=utf-8';
 export const BIBTEX_EXPORT_FILENAME = 'bibliography.bib';
 export const BIBTEX_EXPORT_MIME_TYPE = 'text/x-bibtex;charset=utf-8';
+export const BIBLATEX_EXPORT_FILENAME = 'bibliography.biblatex.bib';
+export const BIBLATEX_EXPORT_MIME_TYPE = 'text/x-bibtex;charset=utf-8';
 export const RIS_EXPORT_FILENAME = 'bibliography.ris';
 export const RIS_EXPORT_MIME_TYPE =
 	'application/x-research-info-systems;charset=utf-8';
@@ -273,6 +275,68 @@ export async function downloadBibtexExport(
 			}),
 			filename: BIBTEX_EXPORT_FILENAME,
 			mimeType: BIBTEX_EXPORT_MIME_TYPE,
+		},
+		downloadDependencies
+	);
+}
+
+/**
+ * Build BibLaTeX export content.
+ *
+ * BibLaTeX uses richer field semantics than legacy BibTeX: `date` instead of
+ * `year`, `journaltitle` instead of `journal`, and full Unicode support without
+ * TeX ligatures. The same @citation-js/plugin-bibtex package provides the
+ * `biblatex` format string.
+ *
+ * @param {Array}  citations          Array of citation objects.
+ * @param {string} citationStyle      Citation style key.
+ * @param {Object} [options]          Options.
+ * @param {Object} [options.CiteCtor] Test injection for Cite constructor.
+ * @return {Promise<string>} BibLaTeX formatted string.
+ *
+ * @since 1.2.0
+ */
+export async function buildBiblatexExportContent(
+	citations,
+	citationStyle,
+	{ CiteCtor } = {}
+) {
+	const sortedCitations = sortCitations(citations, citationStyle);
+	const cslArray = sortedCitations.map((citation) => citation.csl);
+	const CiteClass = CiteCtor || (await getCiteConstructor());
+	const cite = new CiteClass(cslArray);
+
+	return `${cite.format('biblatex')}\n`;
+}
+
+/**
+ * Trigger download of BibLaTeX export file.
+ *
+ * @param {Array}  citations      Array of citation objects.
+ * @param {string} citationStyle  Citation style key.
+ * @param {Object} [dependencies] Test injection for dependencies.
+ * @return {Promise<void>}
+ *
+ * @since 1.2.0
+ */
+export async function downloadBiblatexExport(
+	citations,
+	citationStyle,
+	dependencies
+) {
+	const { CiteCtor, ...downloadDependencies } = dependencies || {};
+
+	return downloadTextExport(
+		{
+			content: await buildBiblatexExportContent(
+				citations,
+				citationStyle,
+				{
+					CiteCtor,
+				}
+			),
+			filename: BIBLATEX_EXPORT_FILENAME,
+			mimeType: BIBLATEX_EXPORT_MIME_TYPE,
 		},
 		downloadDependencies
 	);
