@@ -1,6 +1,19 @@
 # Roadmap
 
-## Active phases
+## Phase tracks
+
+The roadmap uses two distinct phase numbering schemes:
+
+-   **Pre-launch product phases (1-7)** — historical product roadmap that
+    delivered the `1.0.0` WordPress.org release on 2026-05-04. All complete.
+-   **Post-launch GSD phases (`01-`, `02-`, ...)** — milestone-relative phase
+    plans tracked under `.planning/phases/`. These are the executable units
+    used by `/gsd:plan-phase` and `/gsd:execute-phase`.
+
+When a doc says "Phase 2" without qualifier, it refers to the current
+post-launch GSD phase (`02-performance-stability-remediation`).
+
+### Pre-launch product phases (complete)
 
 1. MVP stabilization and spec alignment
 2. Enhanced input support
@@ -9,7 +22,12 @@
 5. Remaining specialized style support
 6. Structured editing
 7. In-text citation integration
-8. Performance and stability remediation
+
+### Post-launch GSD phases
+
+-   **Phase 01** — post-launch cleanup and documentation polish (complete)
+-   **Phase 02** — performance and stability remediation (complete, committed
+    in `3d5d3de` and `539b6b3`)
 
 ## Phase detail
 
@@ -229,7 +247,9 @@ Current planning is grounded in
 and executed through
 `/Users/danknauss/Developer/GitHub/wp-bibliography-block/.planning/phases/02-performance-stability-remediation/02-PLAN.md`.
 
-Implementation status: stabilized pending review/commit.
+Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
+workflows", `539b6b3` "address stabilization review notes"). HEAD is 8 commits
+ahead of `v1.2.0`.
 
 Completed Phase 2 outcomes:
 
@@ -252,15 +272,13 @@ Completed Phase 2 outcomes:
 
 Current fix priority:
 
-1. Review the Phase 2 diff and commit the stabilization work.
+1. Cut a fresh release (recommended `1.3.0`) so the explicit 50-citation
+   policy, async stale guards, smaller release zip, and PMID/DOI hardening
+   reach WordPress.org users.
 2. Keep optional deeper splits as follow-up only if review finds a concrete
    blocker.
-3. Resume new development after Phase 2 commit: frontend Cite/Export controls,
-   writable REST/Abilities design, and language-pack expansion.
-
-Feature work such as frontend Cite/Export controls, writable API/Abilities, and
-language-pack expansion should wait until the Phase 2 stabilization diff is
-reviewed and committed.
+3. Resume new development after the release tag: frontend Cite/Export
+   controls, writable REST/Abilities design, and language-pack expansion.
 
 ## WordPress.org asset follow-up
 
@@ -327,17 +345,18 @@ Current operational note (2026-05-04):
 
 ## Immediate next-task priorities (2026-05-10)
 
-1. **Review and commit Phase 2 performance/stability remediation**
-    - verify the explicit 50-total-citation policy, cache semantics, async
-      guards, network hardening, package pruning, and maintainability splits
-      as one stabilization diff
+1. **Cut release `1.3.0`** — bump `package.json`, `bibliography-builder.php`
+    plugin header, `readme.txt` Stable tag, and add a `1.3.0` changelog entry
+    covering the explicit 50-citation policy, async stale guards, manual-entry
+    single-format path, smaller release zip, and PMID/DOI hardening. Tag
+    `v1.3.0` to trigger the WordPress.org SVN deploy.
 2. **Keep CI/runtime compatibility hygiene green**
     - monitor release-package output, WordPress.org artifact alignment, PHP
       deprecations in citeproc-php, and runtime smoke lanes
-3. **Resume interoperability enhancements after Phase 2 is committed**
+3. **Resume interoperability enhancements after `1.3.0` ships**
     - frontend Cite/Export affordances are the next feature track
     - writable REST/Abilities needs a design memo before implementation
-4. **Defer low-priority expansion work until hardening is merged**
+4. **Defer low-priority expansion work until hardening release is live**
     - language-pack expansion, optional accessibility tooling integration, and
       localized banner variants remain backlog items
 
@@ -634,4 +653,40 @@ Plans:
 
 Plans:
 
--   [ ] 02-PLAN.md — performance and stability remediation
+-   [x] 02-PLAN.md — performance and stability remediation (committed in
+    `3d5d3de`, `539b6b3`)
+
+### Phase 3: 1.3.0 release prep
+
+-   **Goal:** Ship the Phase 2 stabilization work as a versioned release so
+    WordPress.org users receive the explicit 50-citation total cap, async
+    stale-result guards, manual-entry single-format path, smaller release zip,
+    and PMID/DOI network hardening.
+-   **Requirements:** bump version to `1.3.0` in `package.json`,
+    `bibliography-builder.php` plugin header, and `readme.txt` Stable tag;
+    write `1.3.0` changelog entry; commit planning-doc updates; tag `v1.3.0`
+    to trigger the `wp-deploy.yml` WordPress.org SVN deploy.
+-   **Depends on:** Phase 2 committed to `main`.
+-   **Plans:** 1 plan.
+
+Plans:
+
+-   [ ] 03-01-PLAN.md — bump version to 1.3.0, write changelog, commit planning docs, tag v1.3.0
+
+### Phase 4: Frontend Cite/Export affordances
+
+-   **Goal:** Add optional Scholar-style citation and export controls to the
+    public bibliography output so readers can copy or download individual
+    citations as BibTeX, RIS, and CSL-JSON without requiring plugin activation
+    on the frontend. Preserve the static-save, zero-JS architecture as the
+    baseline; enhancements are progressive.
+-   **Requirements:** per-entry Cite and Export affordances visible on the
+    saved bibliography; at minimum BibTeX, RIS, and CSL-JSON download targets;
+    no JS required for the readable bibliography itself; no regression in
+    plugin-deactivation resilience or static-save contract.
+-   **Depends on:** Phase 3 released.
+-   **Plans:** TBD.
+
+Plans:
+
+-   [ ] TBD
