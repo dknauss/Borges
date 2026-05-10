@@ -751,10 +751,10 @@ describe('Edit focus management', () => {
 		expect(formatBibliographyEntries).not.toHaveBeenCalled();
 	});
 
-	it('does not parse when the bibliography already has 50 citations', async () => {
+	it('does not parse when the bibliography already has 200 citations', async () => {
 		render(
 			<EditHarness
-				initialCitations={Array.from({ length: 50 }, (_, index) =>
+				initialCitations={Array.from({ length: 200 }, (_, index) =>
 					createCitation({
 						id: `entry-${index}`,
 						family: `Author ${index}`,
@@ -772,28 +772,24 @@ describe('Edit focus management', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
 
 		expect(await screen.findByRole('status')).toHaveTextContent(
-			'This bibliography already has the maximum of 50 citations. Remove a citation before adding another.'
+			'This bibliography already has the maximum of 200 citations. Remove a citation before adding another.'
 		);
 		expect(parsePastedInput).not.toHaveBeenCalled();
 		expect(formatBibliographyEntries).not.toHaveBeenCalled();
 	});
 
-	it('does not append parsed entries that would exceed the 50 citation total limit', async () => {
+	it('does not append parsed entries that would exceed the 200 citation total limit', async () => {
+		// 201 entries returned by the mock — only 199 slots are available (200 - 1 existing).
+		// Use 1 initial entry so the test renders quickly and stays below the soft cap.
 		parsePastedInput.mockResolvedValue({
-			entries: [
+			entries: Array.from({ length: 201 }, (_, index) =>
 				createCitation({
-					id: 'entry-new-a',
-					family: 'New',
+					id: `entry-new-${index}`,
+					family: `New ${index}`,
 					year: 2024,
-					title: 'New citation A',
-				}),
-				createCitation({
-					id: 'entry-new-b',
-					family: 'New',
-					year: 2025,
-					title: 'New citation B',
-				}),
-			],
+					title: `New citation ${index}`,
+				})
+			),
 			errors: [],
 			truncated: false,
 			remainingInput: '',
@@ -801,28 +797,28 @@ describe('Edit focus management', () => {
 
 		render(
 			<EditHarness
-				initialCitations={Array.from({ length: 49 }, (_, index) =>
+				initialCitations={[
 					createCitation({
-						id: `entry-${index}`,
-						family: `Author ${index}`,
+						id: 'entry-0',
+						family: 'Existing',
 						year: 2024,
-						title: `Citation ${index}`,
-					})
-				)}
+						title: 'Existing citation',
+					}),
+				]}
 			/>
 		);
 
 		await userEvent.type(
 			screen.getByLabelText('Add citations'),
-			'10.1234/a\n10.1234/b'
+			'10.1234/overflow'
 		);
 		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
 
 		expect(await screen.findByRole('status')).toHaveTextContent(
-			'Adding 2 citations would exceed the supported limit of 50 citations per bibliography. 1 slot remains; add fewer items or remove citations first.'
+			'Adding 201 citations would exceed the supported limit of 200 citations per bibliography. 199 slots remain; add fewer items or remove citations first.'
 		);
 		expect(formatBibliographyEntries).not.toHaveBeenCalled();
-		expect(screen.queryByText('New citation A')).not.toBeInTheDocument();
+		expect(screen.queryByText('New citation 0')).not.toBeInTheDocument();
 	});
 
 	it('keeps fallback and truncation details in the parse result notice', async () => {
@@ -2092,7 +2088,7 @@ describe('Edit focus management', () => {
 	it('does not reformat legacy over-limit bibliographies on style change', async () => {
 		render(
 			<EditHarness
-				initialCitations={Array.from({ length: 51 }, (_, index) =>
+				initialCitations={Array.from({ length: 201 }, (_, index) =>
 					createCitation({
 						id: `legacy-${index}`,
 						family: `Legacy ${index}`,
@@ -2109,7 +2105,7 @@ describe('Edit focus management', () => {
 		);
 
 		expect(await screen.findByRole('status')).toHaveTextContent(
-			'This bibliography has 51 citations, which exceeds the supported limit of 50. Remove citations until it is within the supported limit before reformatting.'
+			'This bibliography has 201 citations, which exceeds the supported limit of 200. Remove citations until it is within the supported limit before reformatting.'
 		);
 		expect(formatBibliographyEntries).not.toHaveBeenCalled();
 	});
@@ -3069,6 +3065,71 @@ describe('OSCOLA inspector notice', () => {
 
 		expect(
 			screen.queryByText(/OSCOLA convention groups bibliographies/i)
+		).not.toBeInTheDocument();
+	});
+});
+
+describe('soft-cap notice', () => {
+	it('shows warning when citation count is at or above 100 but below 200', () => {
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 100 }, (_, index) =>
+					createCitation({
+						id: `entry-${index}`,
+						family: `Author ${index}`,
+						year: 2024,
+						title: `Citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		expect(
+			screen.getByText(/above the 100-entry threshold/i)
+		).toBeInTheDocument();
+	});
+
+	it('does not show warning when citation count is below 100', () => {
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 99 }, (_, index) =>
+					createCitation({
+						id: `entry-${index}`,
+						family: `Author ${index}`,
+						year: 2024,
+						title: `Citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		expect(
+			screen.queryByText(/above the 100-entry threshold/i)
+		).not.toBeInTheDocument();
+	});
+
+	it('hides warning after dismissal', () => {
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 100 }, (_, index) =>
+					createCitation({
+						id: `entry-${index}`,
+						family: `Author ${index}`,
+						year: 2024,
+						title: `Citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		expect(
+			screen.getByText(/above the 100-entry threshold/i)
+		).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
+
+		expect(
+			screen.queryByText(/above the 100-entry threshold/i)
 		).not.toBeInTheDocument();
 	});
 });

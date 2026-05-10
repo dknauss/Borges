@@ -1,5 +1,6 @@
 export const MAX_ENTRIES_PER_PASTE = 50;
-export const MAX_CITATIONS_PER_BIBLIOGRAPHY = 50;
+export const SOFT_CAP_CITATIONS_PER_BIBLIOGRAPHY = 100;
+export const MAX_CITATIONS_PER_BIBLIOGRAPHY = 200;
 
 export function getBibliographyLimitReachedMessage(
 	limit = MAX_CITATIONS_PER_BIBLIOGRAPHY
@@ -25,4 +26,12 @@ export function getBibliographyOverLimitMessage(
 	limit = MAX_CITATIONS_PER_BIBLIOGRAPHY
 ) {
 	return `This bibliography has ${count} citations, which exceeds the supported limit of ${limit}. Remove citations until it is within the supported limit before reformatting.`;
+}
+
+export function getBibliographySoftCapWarningMessage(
+	count,
+	softCap = SOFT_CAP_CITATIONS_PER_BIBLIOGRAPHY,
+	hardCap = MAX_CITATIONS_PER_BIBLIOGRAPHY
+) {
+	return `This bibliography has ${count} citations — above the ${softCap}-entry threshold. Formatting may be slower on shared hosting. The hard limit is ${hardCap} citations.`;
 }

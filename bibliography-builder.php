@@ -28,7 +28,7 @@ if ( ! defined( 'BIBLIOGRAPHY_BUILDER_PLUGIN_DIR' ) ) {
 /**
  * Maximum number of citations that may be formatted in one request.
  */
-const BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS = 50;
+const BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS = 200;
 
 /**
  * Maximum formatter request payload size.

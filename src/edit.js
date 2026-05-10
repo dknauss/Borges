@@ -46,7 +46,9 @@ import { SUPPORTED_INPUT_MESSAGE } from './lib/input-support';
 import { sortCitations } from './lib/sorter';
 import {
 	MAX_CITATIONS_PER_BIBLIOGRAPHY,
+	SOFT_CAP_CITATIONS_PER_BIBLIOGRAPHY,
 	getBibliographyOverLimitMessage,
+	getBibliographySoftCapWarningMessage,
 } from './lib/citation-limits';
 import { StructuredCitationEditor } from './components/structured-citation-editor';
 import {
@@ -98,6 +100,10 @@ export default function Edit({ attributes, setAttributes }) {
 	const [inputValue, setInputValue] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
 	const [oscolaNoticeDismissed, setOscolaNoticeDismissed] = useState(false);
+	const [softCapNoticeDismissed, setSoftCapNoticeDismissed] = useState(false);
+	const atSoftCap =
+		citations.length >= SOFT_CAP_CITATIONS_PER_BIBLIOGRAPHY &&
+		citations.length < MAX_CITATIONS_PER_BIBLIOGRAPHY;
 	const [isFormOpen, setIsFormOpen] = useState(true);
 	const [activeAddMode, setActiveAddMode] = useState('paste');
 	const sortedCitations = useMemo(
@@ -361,6 +367,12 @@ export default function Edit({ attributes, setAttributes }) {
 			event.stopPropagation();
 		}
 	}, []);
+
+	useEffect(() => {
+		if (citations.length < SOFT_CAP_CITATIONS_PER_BIBLIOGRAPHY) {
+			setSoftCapNoticeDismissed(false);
+		}
+	}, [citations.length]);
 
 	const handleAddModeChange = useCallback(
 		(mode) => {
@@ -771,6 +783,17 @@ export default function Edit({ attributes, setAttributes }) {
 					</>
 				)}
 			</div>
+
+			{/* Soft-cap warning */}
+			{atSoftCap && !softCapNoticeDismissed && (
+				<Notice
+					status="warning"
+					isDismissible
+					onRemove={() => setSoftCapNoticeDismissed(true)}
+				>
+					{getBibliographySoftCapWarningMessage(citations.length)}
+				</Notice>
+			)}
 
 			{/* Citation list */}
 			{sortedCitations.length > 0 && (
