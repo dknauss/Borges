@@ -15,7 +15,11 @@ jest.mock('@wordpress/api-fetch', () => jest.fn());
 
 import { Cite } from '@citation-js/core';
 import apiFetch from '@wordpress/api-fetch';
-import { parsePastedInput, validateAndSanitizeCsl } from './parser';
+import {
+	clearDoiMetadataCache,
+	parsePastedInput,
+	validateAndSanitizeCsl,
+} from './parser';
 import { formatBibliographyEntries } from './formatting/csl';
 
 describe('validateAndSanitizeCsl', () => {
@@ -163,6 +167,7 @@ describe('parsePastedInput', () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks();
+		clearDoiMetadataCache();
 		apiFetch.mockReset();
 		originalCrypto = global.crypto;
 		Object.defineProperty(global, 'crypto', {
@@ -490,6 +495,64 @@ describe('parsePastedInput', () => {
 			'Resolved 10.1000/d',
 			'Resolved 10.1000/e',
 		]);
+	});
+
+	it('reuses DOI metadata for duplicate DOI values within one paste', async () => {
+		Cite.async.mockResolvedValue({
+			get: () => [
+				{
+					type: 'article-journal',
+					title: 'Shared DOI metadata',
+					DOI: '10.1234/shared',
+				},
+			],
+		});
+
+		const result = await parsePastedInput(
+			`https://doi.org/10.1234/shared\n10.1234/shared`
+		);
+
+		expect(Cite.async).toHaveBeenCalledTimes(1);
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(2);
+		expect(result.entries[0].csl.title).toBe('Shared DOI metadata');
+		expect(result.entries[1].csl.title).toBe('Shared DOI metadata');
+	});
+
+	it('reuses successful DOI metadata across parser calls in the same session', async () => {
+		Cite.async.mockResolvedValue({
+			get: () => [
+				{
+					type: 'article-journal',
+					title: 'Session cached DOI metadata',
+					DOI: '10.1234/session-cache',
+				},
+			],
+		});
+
+		await parsePastedInput('10.1234/session-cache');
+		const second = await parsePastedInput(
+			'https://doi.org/10.1234/session-cache'
+		);
+
+		expect(Cite.async).toHaveBeenCalledTimes(1);
+		expect(second.entries).toHaveLength(1);
+		expect(second.entries[0].csl.title).toBe('Session cached DOI metadata');
+	});
+
+	it('skips DOI resolution for DOI values already present in the bibliography', async () => {
+		const result = await parsePastedInput(
+			'https://doi.org/10.1234/already-present',
+			'apa-7',
+			{
+				existingDoiValues: ['10.1234/already-present'],
+			}
+		);
+
+		expect(Cite.async).not.toHaveBeenCalled();
+		expect(result.entries).toEqual([]);
+		expect(result.errors).toEqual([]);
+		expect(result.skippedDuplicateCount).toBe(1);
 	});
 
 	it('normalizes common BibTeX entry-type aliases like @artikel before parsing', async () => {

@@ -153,6 +153,80 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertStringNotContainsString( '<script>', $data['entries'][0]['text'] );
 	}
 
+	public function test_formatter_endpoint_reads_successful_responses_from_persistent_object_cache(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_use_ext_object_cache( true );
+
+		$csl_items = array(
+			array(
+				'type'  => 'book',
+				'title' => 'Cached formatter response',
+			),
+		);
+		$style_key = 'apa-7';
+		$cache_key = bibliography_builder_get_formatter_cache_key( $csl_items, $style_key );
+
+		wp_cache_set(
+			$cache_key,
+			array( 'Cached object-cache entry' ),
+			BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_GROUP,
+			BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
+		);
+
+		$request = new WP_REST_Request( 'POST', '/bibliography/v1/format' );
+		$request->set_body_params(
+			array(
+				'style'    => $style_key,
+				'cslItems' => $csl_items,
+			)
+		);
+
+		$response = bibliography_builder_rest_format_citations( $request );
+		$data     = $response->get_data();
+
+		$this->assertSame( 'Cached object-cache entry', $data['entries'][0]['text'] );
+	}
+
+	public function test_formatter_endpoint_caches_successful_responses_only_when_persistent_object_cache_is_enabled(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_use_ext_object_cache( true );
+
+		$csl_items = array(
+			array(
+				'type'   => 'book',
+				'title'  => 'Cacheable formatter response',
+				'author' => array(
+					array(
+						'family' => 'Cache',
+						'given'  => 'Ada',
+					),
+				),
+			),
+		);
+		$style_key = 'chicago-author-date';
+
+		$request = new WP_REST_Request( 'POST', '/bibliography/v1/format' );
+		$request->set_body_params(
+			array(
+				'style'    => $style_key,
+				'cslItems' => $csl_items,
+			)
+		);
+
+		$response = bibliography_builder_rest_format_citations( $request );
+		$cache_key = bibliography_builder_get_formatter_cache_key( $csl_items, $style_key );
+		$cached    = wp_cache_get( $cache_key, BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_GROUP );
+
+		$this->assertInstanceOf( WP_REST_Response::class, $response );
+		$this->assertIsArray( $cached );
+		$this->assertSame(
+			$response->get_data()['entries'][0]['text'],
+			$cached[0]
+		);
+	}
+
 	public function test_pmid_endpoint_requires_editor_capability(): void {
 		$forbidden = bibliography_builder_rest_pmid_permissions_check();
 
@@ -199,6 +273,33 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertStringContainsString( 'id=26673779', $requests[0]['url'] );
 		$this->assertSame( 3, $requests[0]['args']['redirection'] );
 		$this->assertArrayNotHasKey( 'headers', $requests[0]['args'] );
+	}
+
+	public function test_pmid_endpoint_caches_successful_csl_json(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode(
+					array(
+						'id'    => 'pmid:26673779',
+						'type'  => 'article-journal',
+						'title' => 'Cached PubMed Record',
+					)
+				),
+			)
+		);
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/pmid/26673779' );
+		$request['pmid'] = '26673779';
+
+		$first  = bibliography_builder_rest_resolve_pmid( $request )->get_data();
+		$second = bibliography_builder_rest_resolve_pmid( $request )->get_data();
+
+		$this->assertSame( 'Cached PubMed Record', $first['title'] );
+		$this->assertSame( $first, $second );
+		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
 	}
 
 	public function test_formatter_endpoint_supports_all_registered_styles(): void {

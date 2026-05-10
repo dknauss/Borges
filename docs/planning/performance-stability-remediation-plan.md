@@ -16,7 +16,7 @@ minimal rewriting.
 -   **Drafted:** 2026-05-08
 -   **Revised:** 2026-05-09 — incorporated deep-dive performance/stability
     findings
--   **State:** Ready for sprint planning after stakeholder review
+-   **State:** Phase 2 implementation stabilized; final review/commit pending
 -   **Owner:** TBD
 -   **Stakeholders:** Plugin maintainers, performance reviewer, release
     engineering
@@ -42,17 +42,20 @@ can fall back to weak raw-title formatting.
 
 The highest-return near-term work is now:
 
-1. Make the **benchmark harness authoritative** so fallback timings cannot
-   masquerade as real formatter timings
-2. Define and enforce a **total bibliography size policy** so 50+ existing
+1. Define and enforce a **total bibliography size policy** so 50+ existing
    entries cannot hit a hidden formatter cliff
-3. Stop **caching fallback formatter output** as if it were successful formatted
+2. Stop **caching fallback formatter output** as if it were successful formatted
    output
-4. Remove **manual-entry double formatting**
-5. Add **stale async-result guards** across all editor mutation paths
+3. Remove **manual-entry double formatting**
+4. Add **stale async-result guards** across all editor mutation paths
+5. Make the **benchmark harness authoritative** so fallback timings cannot
+   masquerade as real formatter timings
 6. **Prune release-package dead weight**
 7. Cache **PMID resolution** responses and pre-dedupe/cache DOI lookups where
    safe
+
+The benchmark work remains P0 because budgets are currently unreliable, but the
+51-entry cliff is the first product-facing fix to plan and implement.
 
 Longer-term work should reduce whole-bibliography reformatting only where
 style-context correctness is preserved, replace expensive cache-key generation,
@@ -282,8 +285,12 @@ authoritative.
 | 4     | Editor efficiency refactors            | E1, E2, E3         | Reduced unnecessary work with style-context correctness preserved |
 | 5     | Maintainability hardening              | M1, M2, M3, M4     | Lower fragility in core modules and dependencies                  |
 
-Recommended execution order: **B1 → C1 → C2 → C3 → C4 → S1 → N1 → N2 → P1 → P2 →
-P3 → E1/E2/E3 → M1/M2/M3/M4**
+Recommended execution order: **C1 → C2 → C3 → S1 → B1 → C4 → P1 → N1 → N2 → P2 →
+P3 → E3/E1/E2 → M1/M2/M3/M4**
+
+C1 leads because the hidden 51-entry cliff is the clearest current product
+reliability issue. B1 should run as early as practical, and can run in parallel
+with C1/C2, but it should not delay adding an explicit total-size policy.
 
 ---
 
@@ -618,13 +625,13 @@ behavior around that constraint:
 
 ### Acceptance criteria
 
--   [ ] duplicate DOI pastes do not trigger avoidable network resolution before
+-   [x] duplicate DOI pastes do not trigger avoidable network resolution before
         duplicate feedback
--   [ ] repeated DOI resolution in the same editor session can reuse cached
+-   [x] repeated DOI resolution in the same editor session can reuse cached
         metadata
--   [ ] tests cover duplicate DOI against existing citations and duplicate DOI
+-   [x] tests cover duplicate DOI against existing citations and duplicate DOI
         within one paste
--   [ ] CrossRef polite-pool decision is implemented or documented
+-   [x] CrossRef polite-pool decision is implemented or documented
 
 ### Files affected
 
@@ -664,13 +671,14 @@ to:
 
 ### Acceptance criteria
 
--   [ ] `composer.lock` is not present in the staged release directory
--   [ ] known non-runtime vendor docs/examples/images are removed
--   [ ] release zip is reduced from ~588 KB to **< 450 KB**
--   [ ] unpacked release is reduced materially, with any retained language
-        assets counted separately in reporting
--   [ ] release smoke checks remain green
--   [ ] required license/notice files remain present
+-   [x] `composer.lock` is not present in the staged release directory
+-   [x] known non-runtime vendor docs/examples/images are removed
+-   [x] release zip is reduced from ~588 KB to **< 450 KB**; latest local zip is
+        ~386 KB
+-   [x] unpacked release is reduced materially; latest local staging directory
+        is ~1.5 MB with retained translation assets counted as product assets
+-   [x] release smoke checks remain green
+-   [x] required license/notice files remain present
 
 ### Files affected
 
@@ -706,19 +714,21 @@ In
 -   make transient fallback explicitly size-limited, short-lived, filterable, or
     opt-in
 -   do not cache formatter failures as successful responses
--   default TTL: **1 hour** for successful object-cache entries; shorter or
-    disabled by default for transient fallback unless explicitly accepted
+-   default TTL: short-lived for successful object-cache entries (currently 5
+    minutes); transient fallback stays disabled unless explicitly accepted
 
 ### Acceptance criteria
 
--   [ ] identical repeat formatting requests hit cache when caching is available
--   [ ] cache miss path still returns identical output to current behavior
+-   [x] identical repeat formatting requests hit cache when caching is available
+-   [x] cache miss path still returns identical output to current behavior
 -   [ ] warm-path formatter requests are measurably faster than cold-path
         requests in an authoritative benchmark
--   [ ] failures and too-many-items responses are not cached as success
--   [ ] transient fallback cannot create unbounded dynamic rows for arbitrary
+-   [x] failures and too-many-items responses are not cached as success
+-   [x] transient fallback cannot create unbounded dynamic rows for arbitrary
         payloads
 -   [ ] tests cover cold, warm, failure, and transient-disabled paths
+        (implemented tests cover cache read/write and disabled transient
+        behavior; benchmark-backed warm-path measurement remains follow-up)
 
 ### Files affected
 
@@ -755,13 +765,16 @@ fingerprint strategy that avoids retaining full-payload key strings, such as:
 ### Acceptance criteria
 
 -   [ ] cache hit lookup cost becomes negligible compared with formatting work
--   [ ] cache memory remains bounded for repeated distinct supported-size
+-   [x] cache memory remains bounded for repeated distinct supported-size
         bibliographies
--   [ ] cache correctness is preserved across style, locale, order, and
+-   [x] cache correctness is preserved across style, locale, order, and
         bibliography-context differences
--   [ ] fallback results are not treated as successful cache hits
+-   [x] fallback results are not treated as successful cache hits
 -   [ ] tests cover equivalence, non-equivalence, order sensitivity,
         style/locale sensitivity, failure recovery, and LRU behavior
+        (implemented tests cover stable equivalence, failure recovery, and
+        byte-budget eviction; add explicit non-equivalence/style/locale/order
+        assertions during E1/E2 optimization)
 
 ### Files affected
 
@@ -880,10 +893,10 @@ Add deterministic benchmark/test fixtures for the chosen total-size policy:
 
 ### Acceptance criteria
 
--   [ ] benchmark fixtures match the supported-size policy
+-   [x] benchmark fixtures match the supported-size policy
 -   [ ] results report parse, cold format, warm format, style switch, add, edit,
         and delete paths
--   [ ] fallback invalidates benchmark authority
+-   [x] fallback invalidates benchmark authority
 -   [ ] documentation explains what sizes are officially supported vs.
         experimental
 
@@ -922,11 +935,14 @@ smaller hooks/modules for:
 
 ### Acceptance criteria
 
--   [ ] `src/edit.js` drops materially below its current size
--   [ ] behavior and tests remain stable
--   [ ] new module boundaries are coherent and documented in code comments or
-        adjacent docs
--   [ ] async-operation guard ownership is clear after the split
+-   [x] `src/edit.js` drops materially below its pre-phase size. Paste/import,
+        manual-entry, and clipboard/export behavior now lives in focused hooks,
+        leaving `edit.js` as the editor shell and UI composition layer.
+-   [x] behavior and tests remain stable
+-   [x] new module boundaries are coherent and documented in code comments for
+        the extracted hooks
+-   [x] async-operation guard ownership is clear after the split: the shared
+        guard remains owned by `edit.js` and is injected into mutation hooks
 
 ---
 
@@ -953,10 +969,14 @@ Extract focused units for:
 
 ### Acceptance criteria
 
--   [ ] core PHP logic is separated by responsibility
--   [ ] formatter, PMID, and REST code become easier to unit/integration test
--   [ ] no public behavior changes
--   [ ] Composer/autoload behavior remains compatible with release packaging
+-   [x] core PHP logic is separated by responsibility for the Phase 2 network
+        slice: PMID cache, permission, and resolver callbacks now live outside
+        the main plugin file
+-   [x] PMID code is easier to unit/integration test; deeper formatter and REST
+        route extraction remains optional follow-up rather than a Phase 2
+        blocker
+-   [x] no public behavior changes
+-   [x] Composer/autoload behavior remains compatible with release packaging
 
 ---
 
@@ -987,10 +1007,12 @@ into smaller heuristic modules by concern, such as:
 
 ### Acceptance criteria
 
--   [ ] parser heuristics are easier to test in isolation
--   [ ] new parser work can land with targeted fixtures instead of touching one
-        large file
--   [ ] existing supported-input behavior remains stable
+-   [x] parser heuristics are easier to test in isolation for the author-parsing
+        slice
+-   [x] new author/parser work can land with targeted fixtures instead of
+        touching one large file; deeper citation-type splits remain optional
+        follow-up if heuristic growth resumes
+-   [x] existing supported-input behavior remains stable
 
 ---
 
@@ -1008,7 +1030,11 @@ Prevent formatter stability surprises as PHP versions advance.
 ### Scope
 
 Current PHPUnit runs pass, but PHP 8.5 reports deprecations from
-`seboettg/citeproc-php v2.7.1`. Track this as a dependency stability item:
+`seboettg/citeproc-php v2.7.1`.
+`composer outdated seboettg/citeproc-php --direct` checked on 2026-05-10 reports
+v2.7.1 as the latest stable release, so there is no upstream update to apply
+yet. Treat the current vendor deprecations as accepted tracked debt for now, and
+re-check before release. Track this as a dependency stability item:
 
 -   check whether newer `seboettg/citeproc-php` releases resolve deprecations
 -   if not, decide whether to patch, fork, suppress in tests, or constrain
@@ -1017,10 +1043,10 @@ Current PHPUnit runs pass, but PHP 8.5 reports deprecations from
 
 ### Acceptance criteria
 
--   [ ] dependency compatibility decision is documented
--   [ ] PHP deprecations are either resolved, suppressed with rationale, or
+-   [x] dependency compatibility decision is documented
+-   [x] PHP deprecations are either resolved, suppressed with rationale, or
         tracked as accepted debt
--   [ ] release checklist includes a PHP-version compatibility check for
+-   [x] release checklist includes a PHP-version compatibility check for
         formatter dependencies
 
 ### Files affected
@@ -1075,23 +1101,157 @@ bounded, short-lived, filterable, and tested.
 
 ---
 
+## Execution progress
+
+### 2026-05-09 first implementation pass
+
+Completed or substantially implemented:
+
+-   REQ-C1 conservative 50-total-citation policy for 1.x, with editor guards and
+    `SPEC.md` documentation
+-   REQ-C2 no successful-cache storage for formatter fallback output
+-   REQ-C3 manual add no longer performs single-entry pre-formatting before the
+    merged-bibliography format
+-   REQ-S1 shared latest-operation guards across the main async editor mutation
+    flows, with new stale-parse/delete regression coverage
+-   REQ-B1 benchmark harness hardening with controlled formatter mode, p50/p95,
+    cold/warm timings, and fallback detection
+-   REQ-P1 release package pruning; local zip verification is ~386 KB
+-   REQ-N1 PMID success and 404 response caching
+-   REQ-N2 duplicate DOI reduction: existing DOI values are passed to the parser
+    so already-present DOI inputs can skip `citation-js`; successful DOI
+    metadata now has bounded in-session reuse; duplicate DOI lines share pending
+    resolution work. CrossRef polite-pool configuration remains documented as
+    deferred until a server-side DOI proxy or user-configurable contact setting
+    exists.
+-   REQ-P2 cautious server-side formatter caching: successful formatter
+    responses are cached only in a persistent object cache with a short TTL; no
+    transient fallback is used for full-bibliography payloads.
+-   REQ-P3 cheaper/memory-bounded JS formatter cache keys: the editor formatter
+    cache now uses a bounded stable hash key and an approximate byte budget in
+    addition to entry-count LRU eviction.
+-   REQ-E3 supported-size fixture coverage: benchmark fixtures already exercise
+    10, 25, and the supported 50-citation maximum with cold/warm formatter
+    timing.
+-   REQ-E1 measured whole-bibliography optimization: the safe no-reformat path
+    remains numeric-family deletion, where list markers provide numbering.
+    Author-date/notes add, delete, and structured-edit paths intentionally keep
+    full-bibliography reformatting because citeproc context can affect
+    disambiguation and same-author/year output.
+-   REQ-E2 refreshed bundle targets: the benchmark report now records build
+    asset raw/gzip sizes. Latest local build footprint is 261.54 KB raw / 80.15 KB
+    gzip across build CSS/JS/PHP assets; `index.js` is 59.79 KB raw / 18.1 KB gzip.
+-   REQ-M1 editor decomposition: paste/import, manual-entry, and
+    clipboard/export side effects now live in focused hooks. `src/edit.js` is
+    reduced to ~845 lines while UI markup remains in the editor shell. The
+    shared async-operation guard remains owned by the editor shell and injected
+    into mutation hooks.
+-   REQ-M2 PHP decomposition: PMID cache, permission, and resolver callbacks now
+    live in `includes/pmid.php`; the main plugin file is reduced to ~1,030 lines
+    and keeps route registration/bootstrap responsibilities.
+-   REQ-M3 parser decomposition: author parsing and author-confidence helpers
+    now live in `src/lib/free-text-authors.js`; `free-text-parser.js` is reduced
+    to ~761 lines.
+-   REQ-M4 compatibility tracking: citeproc-php remains at the latest stable
+    v2.7.1 as of 2026-05-10, PHP 8.5 vendor deprecations remain accepted tracked
+    debt, and the release checklist now requires a formatter dependency
+    compatibility check.
+
+Still open:
+
+-   Optional follow-up: extract delete/list-mutation behavior from `edit.js` if
+    future editor work makes the shell grow again
+-   Optional follow-up: split formatter/REST route helpers out of
+    `bibliography-builder.php` after the PMID include proves stable
+-   Optional follow-up: split free-text parser by citation type if future
+    heuristic growth resumes
+
+These optional splits are not Phase 2 stabilization blockers.
+
+---
+
+## Execution model guidance
+
+Use the following model/reasoning allocation when executing this plan:
+
+| Work                                                      | Recommended model/reasoning  |
+| --------------------------------------------------------- | ---------------------------- |
+| C1 total bibliography size policy / hidden 51-entry cliff | GPT-5.5 high                 |
+| C2 fallback cache correctness                             | GPT-5.5 high or GPT-5.4 high |
+| C3 manual-entry double-format fix                         | GPT-5.4 high acceptable      |
+| S1 async stale-result guards                              | GPT-5.5 high                 |
+| B1 benchmark harness hardening                            | GPT-5.4 high or GPT-5.5 high |
+| P1 release package pruning                                | GPT-5.4 medium               |
+| N1/N2 network hardening                                   | GPT-5.4 high                 |
+| P2/P3 cache optimization                                  | GPT-5.5 high                 |
+| docs/GSD updates                                          | GPT-5.4 medium               |
+
+Do not let a lower-reasoning model own C1, S1, or P2/P3 unsupervised. Smaller
+models are acceptable only for narrow mechanical subtasks with phase-lead
+review. If GPT-5.5 is unavailable, use the strongest available coding model with
+high reasoning for the P0 sequence.
+
+This guidance is mirrored in
+`/Users/danknauss/Developer/GitHub/wp-bibliography-block/.planning/phases/02-performance-stability-remediation/02-PLAN.md`.
+
+---
+
+## Current priority list after recent commits
+
+Recent commits changed the interpretation of the task list:
+
+-   **Already done / re-scoped**
+    -   PMID input now resolves through the WordPress REST proxy; remaining PMID
+        work is cache/retry hardening, not adding the proxy itself
+    -   structured-edit cancellation has post-format guards; remaining async
+        work is to apply the same latest-operation model to paste/import, manual
+        add, delete, and style switch
+    -   the formatter cache is already LRU by entry count; remaining cache work
+        is fallback correctness, cheaper keys, and memory/byte bounds
+    -   the benchmark harness exists; remaining benchmark work is making it fail
+        or mark output invalid when it measured fallback instead of real
+        formatting
+-   **P0 fixes before broader feature work**
+    1. REQ-C1 — total bibliography size policy / hidden 51-entry cliff
+    2. REQ-C2 — do not cache fallback formatter output as success
+    3. REQ-C3 — remove manual-entry double formatting
+    4. REQ-S1 — stale async-result guards across editor mutation flows
+    5. REQ-B1 — authoritative benchmark harness
+    6. REQ-C4 — preserve frontend zero-JS architecture as a review gate
+-   **P1 hardening after P0 correctness**
+    1. REQ-P1 — release-package pruning
+    2. REQ-N1 — PMID response caching
+    3. REQ-N2 — avoidable DOI network work
+    4. REQ-P2 — cautious server-side formatter caching
+    5. REQ-P3 — cheaper, memory-bounded JS formatter cache keys
+-   **New development should wait until P0 is under control**
+    -   frontend Cite/Export affordances
+    -   writable REST/Abilities integration
+    -   language-pack expansion
+    -   large module splits not directly needed for the P0 fixes
+
+This priority list is mirrored in
+`/Users/danknauss/Developer/GitHub/wp-bibliography-block/.planning/phases/02-performance-stability-remediation/02-PLAN.md`.
+
+---
+
 ## Suggested issue breakdown
 
 If this plan is moved into the tracker, create tickets in roughly this order:
 
-1. REQ-B1 — Benchmark harness hardening
-2. REQ-C1 — Total bibliography size policy
-3. REQ-C2 — Do not cache fallback formatter output
-4. REQ-C3 — Remove manual-entry double formatting
-5. REQ-C4 — Preserve frontend zero-JS architecture
-6. REQ-S1 — Async stale-result guards
-7. REQ-N1 — PMID caching
-8. REQ-N2 — Avoidable DOI network work
-9. REQ-P1 — Release package pruning
+1. REQ-C1 — Total bibliography size policy
+2. REQ-C2 — Do not cache fallback formatter output
+3. REQ-C3 — Remove manual-entry double formatting
+4. REQ-S1 — Async stale-result guards
+5. REQ-B1 — Benchmark harness hardening
+6. REQ-C4 — Preserve frontend zero-JS architecture
+7. REQ-P1 — Release package pruning
+8. REQ-N1 — PMID caching
+9. REQ-N2 — Avoidable DOI network work
 10. REQ-P2 — Cautious server-side formatter caching
 11. REQ-P3 — Cheaper, bounded JS cache keys
-12. REQ-E1 — Style-context-safe whole-list optimization
-13. REQ-E3 — Supported-size performance fixtures
+12. REQ-E3 — Supported-size performance fixtures
+13. REQ-E1 — Style-context-safe whole-list optimization
 14. REQ-E2 — Editor bundle optimization pass
 15. REQ-M1 — Split `edit.js`
 16. REQ-M2 — Split `bibliography-builder.php`
@@ -1125,3 +1285,5 @@ If this plan is moved into the tracker, create tickets in roughly this order:
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | 2026-05-08 | Initial draft created from repository audit and remediation recommendations                                                                                                                                                                     | Codex  |
 | 2026-05-09 | Revised priority order and requirements based on deeper performance/stability review: total-size cliff, fallback cache poisoning, manual double-formatting, DOI/PMID network risks, cautious formatter caching, and PHP dependency deprecations | Codex  |
+| 2026-05-09 | Checked recent commits/current state, elevated the 51-entry cliff to the first execution item, and mirrored the task list into GSD Phase 2 planning                                                                                             | Codex  |
+| 2026-05-09 | Added model/reasoning allocation guidance for Phase 2 execution, reserving high-reasoning frontier models for the P0 correctness sequence and cache optimization work                                                                           | Codex  |

@@ -22,6 +22,9 @@ cp "$ROOT_DIR/readme.txt" "$STAGING_DIR/"
 cp "$ROOT_DIR/LICENSE" "$STAGING_DIR/"
 cp "$ROOT_DIR/THIRD-PARTY-NOTICES.txt" "$STAGING_DIR/"
 cp -R "$ROOT_DIR/build" "$STAGING_DIR/build"
+if [ -d "$ROOT_DIR/includes" ]; then
+	cp -R "$ROOT_DIR/includes" "$STAGING_DIR/includes"
+fi
 if [ -d "$ROOT_DIR/languages" ]; then
 	cp -R "$ROOT_DIR/languages" "$STAGING_DIR/languages"
 fi
@@ -36,11 +39,26 @@ composer install \
 	--prefer-dist \
 	--classmap-authoritative
 
+rm -f "$STAGING_DIR/composer.lock"
+
 find "$STAGING_DIR/vendor" \
 	-type d \( -name tests -o -name test -o -name .github -o -name .circleci -o -name example -o -name examples \) \
 	-prune -exec rm -rf {} +
 find "$STAGING_DIR/vendor" \
 	-type f \( -name phpunit.xml -o -name phpunit.xml.dist -o -name phpcs.xml -o -name phpcs.xml.dist -o -name .scrutinizer.yml \) \
+	-delete
+find "$STAGING_DIR/vendor" \
+	-type f \( \
+		-name '*.png' -o \
+		-name '*.jpg' -o \
+		-name '*.jpeg' -o \
+		-name '*.gif' -o \
+		-name README.md -o \
+		-name CHANGELOG.md -o \
+		-name CONTRIBUTING.md -o \
+		-name ISSUE_TEMPLATE.md -o \
+		-name SECURITY.md \
+	\) \
 	-delete
 rm -rf "$STAGING_DIR/packages"
 

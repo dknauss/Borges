@@ -36,6 +36,16 @@ const BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS = 50;
 const BIBLIOGRAPHY_BUILDER_MAX_FORMAT_BYTES = 1048576;
 
 /**
+ * Object-cache group for successful formatter responses.
+ */
+const BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_GROUP = 'bibliography_builder_format';
+
+/**
+ * Short TTL for successful formatter responses when a persistent object cache exists.
+ */
+const BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL = 300;
+
+/**
  * NCBI Literature Citation Export endpoint used for PMID resolution.
  */
 const BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ctxp/v1/pubmed/';
@@ -44,6 +54,16 @@ const BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ct
  * HTTP timeout for external PMID resolution requests.
  */
 const BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT = 10;
+
+/**
+ * Cache TTL for successful PMID CSL lookups.
+ */
+const BIBLIOGRAPHY_BUILDER_PUBMED_SUCCESS_TTL = 86400;
+
+/**
+ * Cache TTL for PMID not-found responses.
+ */
+const BIBLIOGRAPHY_BUILDER_PUBMED_NOT_FOUND_TTL = 3600;
 
 /**
  * Recursively gather bibliography block data from parsed blocks.
@@ -292,6 +312,78 @@ function bibliography_builder_ensure_formatter_available() {
 function bibliography_builder_json_encode( $data ) {
 	// phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- Used only when WordPress is unavailable in isolated tests.
 	return function_exists( 'wp_json_encode' ) ? wp_json_encode( $data ) : json_encode( $data );
+}
+
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/pmid.php';
+
+/**
+ * Whether formatter response caching should use WordPress' persistent object cache.
+ *
+ * Avoid transients for full-bibliography formatter payloads so sites without a
+ * persistent cache do not churn wp_options rows for high-cardinality editor
+ * requests.
+ *
+ * @return bool
+ */
+function bibliography_builder_formatter_cache_enabled() {
+	return function_exists( 'wp_using_ext_object_cache' )
+		&& wp_using_ext_object_cache()
+		&& function_exists( 'wp_cache_get' )
+		&& function_exists( 'wp_cache_set' );
+}
+
+/**
+ * Build a bounded object-cache key for a successful formatter response.
+ *
+ * @param array  $csl_items CSL-JSON objects.
+ * @param string $style_key Citation style key.
+ * @return string
+ */
+function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key ) {
+	$encoded = bibliography_builder_json_encode(
+		array(
+			'style'    => sanitize_key( $style_key ),
+			'cslItems' => array_values( $csl_items ),
+		)
+	);
+
+	return is_string( $encoded ) ? 'format_' . md5( $encoded ) : '';
+}
+
+/**
+ * Get a cached formatter response from persistent object cache.
+ *
+ * @param string $cache_key Formatter cache key.
+ * @return array|null
+ */
+function bibliography_builder_get_cached_formatter_response( $cache_key ) {
+	if ( '' === $cache_key || ! bibliography_builder_formatter_cache_enabled() ) {
+		return null;
+	}
+
+	$cached = wp_cache_get( $cache_key, BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_GROUP );
+
+	return is_array( $cached ) ? $cached : null;
+}
+
+/**
+ * Cache a successful formatter response in persistent object cache.
+ *
+ * @param string $cache_key Formatter cache key.
+ * @param array  $formatted Formatted citation strings.
+ * @return void
+ */
+function bibliography_builder_set_cached_formatter_response( $cache_key, $formatted ) {
+	if ( '' === $cache_key || ! bibliography_builder_formatter_cache_enabled() ) {
+		return;
+	}
+
+	wp_cache_set(
+		$cache_key,
+		array_values( $formatted ),
+		BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_GROUP,
+		BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
+	);
 }
 
 /**
@@ -554,23 +646,6 @@ function bibliography_builder_rest_format_permissions_check() {
 }
 
 /**
- * Permission callback for editor-only PMID resolver requests.
- *
- * @return true|WP_Error
- */
-function bibliography_builder_rest_pmid_permissions_check() {
-	if ( current_user_can( 'edit_posts' ) ) {
-		return true;
-	}
-
-	return new WP_Error(
-		'bibliography_builder_pmid_forbidden',
-		__( 'Sorry, you are not allowed to resolve PubMed citations.', 'borges-bibliography-builder' ),
-		array( 'status' => 403 )
-	);
-}
-
-/**
  * Read JSON/body params from a REST request.
  *
  * @param WP_REST_Request $request REST request.
@@ -628,10 +703,17 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 		);
 	}
 
-	$formatted = bibliography_builder_format_csl_items( $csl_items, $style_key );
+	$cache_key = bibliography_builder_get_formatter_cache_key( $csl_items, $style_key );
+	$formatted = bibliography_builder_get_cached_formatter_response( $cache_key );
 
-	if ( is_wp_error( $formatted ) ) {
-		return $formatted;
+	if ( null === $formatted ) {
+		$formatted = bibliography_builder_format_csl_items( $csl_items, $style_key );
+
+		if ( is_wp_error( $formatted ) ) {
+			return $formatted;
+		}
+
+		bibliography_builder_set_cached_formatter_response( $cache_key, $formatted );
 	}
 
 	return rest_ensure_response(
@@ -649,83 +731,6 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 			),
 		)
 	);
-}
-
-/**
- * REST callback that resolves a PubMed ID to CSL-JSON.
- *
- * NCBI's CSL endpoint does not currently emit browser CORS headers, so editor
- * requests are proxied through WordPress using a fixed URL and numeric PMID.
- *
- * @param WP_REST_Request $request REST request.
- * @return WP_REST_Response|WP_Error
- */
-function bibliography_builder_rest_resolve_pmid( WP_REST_Request $request ) {
-	$pmid = isset( $request['pmid'] ) ? (string) $request['pmid'] : '';
-
-	if ( ! preg_match( '/^\d{1,8}$/', $pmid ) ) {
-		return new WP_Error(
-			'bibliography_builder_pmid_invalid',
-			__( 'Invalid PubMed ID.', 'borges-bibliography-builder' ),
-			array( 'status' => 400 )
-		);
-	}
-
-	$url      = add_query_arg(
-		array(
-			'format' => 'csl',
-			'id'     => $pmid,
-		),
-		BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API
-	);
-	$response = wp_remote_get(
-		$url,
-		array(
-			'timeout'     => BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT,
-			'redirection' => 3,
-		)
-	);
-
-	if ( is_wp_error( $response ) ) {
-		return new WP_Error(
-			'bibliography_builder_pmid_upstream_error',
-			__( 'The PubMed citation service could not be reached.', 'borges-bibliography-builder' ),
-			array( 'status' => 502 )
-		);
-	}
-
-	$status = (int) wp_remote_retrieve_response_code( $response );
-
-	if ( $status < 200 || $status >= 300 ) {
-		if ( 404 === $status ) {
-			return new WP_Error(
-				'bibliography_builder_pmid_not_found',
-				__( 'The PubMed ID could not be resolved.', 'borges-bibliography-builder' ),
-				array( 'status' => 404 )
-			);
-		}
-
-		return new WP_Error(
-			'bibliography_builder_pmid_upstream_error',
-			__( 'The PubMed citation service returned an error.', 'borges-bibliography-builder' ),
-			array(
-				'status'          => 502,
-				'upstream_status' => $status,
-			)
-		);
-	}
-
-	$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
-
-	if ( ! is_array( $decoded ) || empty( $decoded ) ) {
-		return new WP_Error(
-			'bibliography_builder_pmid_invalid_response',
-			__( 'The PubMed citation service returned an invalid response.', 'borges-bibliography-builder' ),
-			array( 'status' => 502 )
-		);
-	}
-
-	return rest_ensure_response( $decoded );
 }
 
 /**

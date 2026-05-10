@@ -7,6 +7,11 @@ Pre-release checklist for the Bibliography Builder block.
 -   [ ] `npm run lint:js`
 -   [ ] `npm run lint:css`
 -   [ ] `npm test -- --runInBand`
+-   [ ] `composer test:php` reviewed for new failures or new dependency
+        deprecations
+-   [ ] `composer outdated seboettg/citeproc-php --direct` checked; if a newer
+        formatter dependency is available, decide whether to update before
+        release
 -   [ ] `npm run build`
 -   [ ] No unexpected test regressions
 
@@ -15,7 +20,8 @@ Pre-release checklist for the Bibliography Builder block.
 -   [ ] Block appears in inserter
 -   [ ] DOI parsing works
 -   [ ] BibTeX parsing works
--   [ ] Supported free-text parsing works across books, articles, chapters, webpages, reviews, and theses/dissertations
+-   [ ] Supported free-text parsing works across books, articles, chapters,
+        webpages, reviews, and theses/dissertations
 -   [ ] Unsupported input fails closed with a clear notice
 -   [ ] Edit confirm/cancel behavior is correct
 -   [ ] Delete flow is correct and focus recovery works without a custom Undo UI

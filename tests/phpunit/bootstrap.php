@@ -16,6 +16,9 @@ $GLOBALS['bibliography_builder_test_enqueued_scripts']   = array();
 $GLOBALS['bibliography_builder_test_added_actions']      = array();
 $GLOBALS['bibliography_builder_test_http_response']      = null;
 $GLOBALS['bibliography_builder_test_http_requests']      = array();
+$GLOBALS['bibliography_builder_test_transients']          = array();
+$GLOBALS['bibliography_builder_test_object_cache']        = array();
+$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 
 function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_posts']           = array();
@@ -29,6 +32,9 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_enqueued_scripts']   = array();
 	$GLOBALS['bibliography_builder_test_http_response']      = null;
 	$GLOBALS['bibliography_builder_test_http_requests']      = array();
+	$GLOBALS['bibliography_builder_test_transients']          = array();
+	$GLOBALS['bibliography_builder_test_object_cache']        = array();
+	$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 }
 
 function bibliography_builder_test_set_post( $post_id, $status, $content, $password_required = false ) {
@@ -61,6 +67,40 @@ function bibliography_builder_test_set_http_response( $response ) {
 
 function bibliography_builder_test_get_http_requests() {
 	return $GLOBALS['bibliography_builder_test_http_requests'];
+}
+
+function get_transient( $key ) {
+	return $GLOBALS['bibliography_builder_test_transients'][ $key ]['value'] ?? false;
+}
+
+function set_transient( $key, $value, $expiration = 0 ) {
+	$GLOBALS['bibliography_builder_test_transients'][ $key ] = array(
+		'value'      => $value,
+		'expiration' => $expiration,
+	);
+
+	return true;
+}
+
+function bibliography_builder_test_use_ext_object_cache( $enabled ) {
+	$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = (bool) $enabled;
+}
+
+function wp_using_ext_object_cache() {
+	return $GLOBALS['bibliography_builder_test_using_ext_object_cache'];
+}
+
+function wp_cache_get( $key, $group = '' ) {
+	return $GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ]['value'] ?? false;
+}
+
+function wp_cache_set( $key, $value, $group = '', $expiration = 0 ) {
+	$GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ] = array(
+		'value'      => $value,
+		'expiration' => $expiration,
+	);
+
+	return true;
 }
 
 function add_action( $hook_name = '', $callback = null, $priority = 10, $accepted_args = 1 ) {

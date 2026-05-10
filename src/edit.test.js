@@ -708,6 +708,123 @@ describe('Edit focus management', () => {
 		});
 	});
 
+	it('passes existing DOI values to the parser and reports skipped duplicate DOI input', async () => {
+		parsePastedInput.mockResolvedValue({
+			entries: [],
+			errors: [],
+			truncated: false,
+			remainingInput: '',
+			skippedDuplicateCount: 1,
+		});
+
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Alpha',
+						year: 2024,
+						title: 'Alpha citation',
+						doi: '10.1234/already-present',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.type(
+			screen.getByLabelText('Add citations'),
+			'https://doi.org/10.1234/already-present'
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		expect(parsePastedInput).toHaveBeenCalledWith(
+			'https://doi.org/10.1234/already-present',
+			'chicago-notes-bibliography',
+			expect.objectContaining({
+				deferFormatting: true,
+				existingDoiValues: ['10.1234/already-present'],
+			})
+		);
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'No new citations added. Skipped 1 duplicate.'
+		);
+		expect(formatBibliographyEntries).not.toHaveBeenCalled();
+	});
+
+	it('does not parse when the bibliography already has 50 citations', async () => {
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 50 }, (_, index) =>
+					createCitation({
+						id: `entry-${index}`,
+						family: `Author ${index}`,
+						year: 2024,
+						title: `Citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		await userEvent.type(
+			screen.getByLabelText('Add citations'),
+			'10.1234/too-many'
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'This bibliography already has the maximum of 50 citations. Remove a citation before adding another.'
+		);
+		expect(parsePastedInput).not.toHaveBeenCalled();
+		expect(formatBibliographyEntries).not.toHaveBeenCalled();
+	});
+
+	it('does not append parsed entries that would exceed the 50 citation total limit', async () => {
+		parsePastedInput.mockResolvedValue({
+			entries: [
+				createCitation({
+					id: 'entry-new-a',
+					family: 'New',
+					year: 2024,
+					title: 'New citation A',
+				}),
+				createCitation({
+					id: 'entry-new-b',
+					family: 'New',
+					year: 2025,
+					title: 'New citation B',
+				}),
+			],
+			errors: [],
+			truncated: false,
+			remainingInput: '',
+		});
+
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 49 }, (_, index) =>
+					createCitation({
+						id: `entry-${index}`,
+						family: `Author ${index}`,
+						year: 2024,
+						title: `Citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		await userEvent.type(
+			screen.getByLabelText('Add citations'),
+			'10.1234/a\n10.1234/b'
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Adding 2 citations would exceed the supported limit of 50 citations per bibliography. 1 slot remain; add fewer items or remove citations first.'
+		);
+		expect(formatBibliographyEntries).not.toHaveBeenCalled();
+		expect(screen.queryByText('New citation A')).not.toBeInTheDocument();
+	});
+
 	it('keeps fallback and truncation details in the parse result notice', async () => {
 		parsePastedInput.mockResolvedValue({
 			entries: [
@@ -740,6 +857,58 @@ describe('Edit focus management', () => {
 		expect(await screen.findByRole('status')).toHaveTextContent(
 			'Added 1 citation. Only the first 50 items were processed. Formatter unavailable; added fallback citation text.'
 		);
+	});
+
+	it('does not commit parsed entries after delete supersedes a pending parse', async () => {
+		let resolveParse;
+		parsePastedInput.mockReturnValueOnce(
+			new Promise((resolve) => {
+				resolveParse = resolve;
+			})
+		);
+
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'existing',
+						family: 'Alpha',
+						year: 2024,
+						title: 'Existing citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.type(
+			screen.getByLabelText('Add citations'),
+			'10.1234/pending'
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Delete citation: Alpha 2024' })
+		);
+
+		resolveParse({
+			entries: [
+				createCitation({
+					id: 'pending-entry',
+					family: 'Pending',
+					year: 2025,
+					title: 'Pending citation',
+				}),
+			],
+			errors: [],
+			truncated: false,
+			remainingInput: '',
+		});
+
+		await waitFor(() => {
+			expect(
+				screen.queryByText('Pending citation')
+			).not.toBeInTheDocument();
+		});
+		expect(screen.queryByText('Existing citation')).not.toBeInTheDocument();
 	});
 
 	it('shows a persistent error notice when parsing throws', async () => {
@@ -1713,14 +1882,7 @@ describe('Edit focus management', () => {
 		});
 	});
 
-	it('keeps a persistent notice when manual citation formatting falls back', async () => {
-		formatBibliographyEntry.mockImplementationOnce(
-			(csl, style, options) => {
-				options.onFallback();
-				return Promise.resolve('Fallback manual citation');
-			}
-		);
-
+	it('adds a manual citation without single-entry pre-formatting', async () => {
 		render(<EditHarness />);
 
 		await userEvent.click(
@@ -1734,8 +1896,10 @@ describe('Edit focus management', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
 
 		expect(await screen.findByRole('status')).toHaveTextContent(
-			'Added 1 citation. Formatter unavailable; added fallback citation text.'
+			'Added 1 citation.'
 		);
+		expect(formatBibliographyEntry).not.toHaveBeenCalled();
+		expect(formatBibliographyEntries).toHaveBeenCalledTimes(1);
 	});
 
 	it('keeps a persistent notice when manual bibliography reformatting falls back', async () => {
@@ -1764,7 +1928,7 @@ describe('Edit focus management', () => {
 	});
 
 	it('shows an error notice when manual citation creation fails', async () => {
-		formatBibliographyEntry.mockRejectedValueOnce(
+		formatBibliographyEntries.mockRejectedValueOnce(
 			new Error('format failed')
 		);
 
@@ -1923,6 +2087,31 @@ describe('Edit focus management', () => {
 		await waitFor(() => {
 			expect(screen.getByText('Alpha citation')).toBeInTheDocument();
 		});
+	});
+
+	it('does not reformat legacy over-limit bibliographies on style change', async () => {
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 51 }, (_, index) =>
+					createCitation({
+						id: `legacy-${index}`,
+						family: `Legacy ${index}`,
+						year: 2024,
+						title: `Legacy citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		await userEvent.selectOptions(
+			screen.getByLabelText('Citation Style'),
+			'apa-7'
+		);
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'This bibliography has 51 citations, which exceeds the supported limit of 50. Remove citations until it is within the supported limit before reformatting.'
+		);
+		expect(formatBibliographyEntries).not.toHaveBeenCalled();
 	});
 
 	it('allows toggling metadata output layers in block settings', async () => {
@@ -2218,6 +2407,38 @@ describe('Edit focus management', () => {
 				})
 			);
 		});
+	});
+
+	it('skips deletion reformatting in numeric styles because list markers provide numbering', async () => {
+		render(
+			<EditHarness
+				initialStyle="ieee"
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'entry-b',
+						family: 'Bravo',
+						year: 2021,
+						title: 'Bravo citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Delete citation: Alpha 2020' })
+		);
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Citation removed.'
+		);
+		expect(formatBibliographyEntries).not.toHaveBeenCalled();
+		expect(screen.getByText('Bravo citation')).toBeInTheDocument();
 	});
 
 	it('keeps a persistent notice when deletion reformatting falls back', async () => {

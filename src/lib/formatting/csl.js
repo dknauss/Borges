@@ -2,7 +2,9 @@ import apiFetch from '@wordpress/api-fetch';
 
 const BIBLIOGRAPHY_CACHE = new Map();
 const MAX_FORMAT_CACHE_ENTRIES = 500;
+const MAX_FORMAT_CACHE_BYTES = 256 * 1024;
 const FORMAT_ENDPOINT = 'bibliography/v1/format';
+let bibliographyCacheBytes = 0;
 
 function emitFormattingWarning(...args) {
 	// eslint-disable-next-line no-console
@@ -10,11 +12,16 @@ function emitFormattingWarning(...args) {
 }
 
 function getBibliographyCacheKey(cslItems, styleKey, locale = '') {
-	return stableStringify({
-		styleKey,
-		locale,
-		cslItems,
-	});
+	return [
+		styleKey || '',
+		locale || '',
+		cslItems.length,
+		hashStableValue({
+			styleKey,
+			locale,
+			cslItems,
+		}),
+	].join('|');
 }
 
 function getCachedBibliography(cacheKey) {
@@ -22,21 +29,31 @@ function getCachedBibliography(cacheKey) {
 		return undefined;
 	}
 
-	const formattedEntries = BIBLIOGRAPHY_CACHE.get(cacheKey);
+	const cacheEntry = BIBLIOGRAPHY_CACHE.get(cacheKey);
 
 	// Refresh insertion order on access so Map behaves as a simple LRU cache.
 	BIBLIOGRAPHY_CACHE.delete(cacheKey);
-	BIBLIOGRAPHY_CACHE.set(cacheKey, formattedEntries);
+	BIBLIOGRAPHY_CACHE.set(cacheKey, cacheEntry);
 
-	return [...formattedEntries];
+	return [...cacheEntry.formattedEntries];
 }
 
 function setCachedBibliography(cacheKey, formattedEntries) {
 	if (BIBLIOGRAPHY_CACHE.has(cacheKey)) {
+		bibliographyCacheBytes -= BIBLIOGRAPHY_CACHE.get(cacheKey).bytes;
 		BIBLIOGRAPHY_CACHE.delete(cacheKey);
 	}
 
-	while (BIBLIOGRAPHY_CACHE.size >= MAX_FORMAT_CACHE_ENTRIES) {
+	const cacheEntry = {
+		formattedEntries: [...formattedEntries],
+		bytes: getApproximateCacheEntryBytes(cacheKey, formattedEntries),
+	};
+
+	while (
+		BIBLIOGRAPHY_CACHE.size >= MAX_FORMAT_CACHE_ENTRIES ||
+		(BIBLIOGRAPHY_CACHE.size > 0 &&
+			bibliographyCacheBytes + cacheEntry.bytes > MAX_FORMAT_CACHE_BYTES)
+	) {
 		const leastRecentlyUsedCacheKey =
 			BIBLIOGRAPHY_CACHE.keys().next().value;
 
@@ -44,10 +61,14 @@ function setCachedBibliography(cacheKey, formattedEntries) {
 			break;
 		}
 
+		bibliographyCacheBytes -= BIBLIOGRAPHY_CACHE.get(
+			leastRecentlyUsedCacheKey
+		).bytes;
 		BIBLIOGRAPHY_CACHE.delete(leastRecentlyUsedCacheKey);
 	}
 
-	BIBLIOGRAPHY_CACHE.set(cacheKey, [...formattedEntries]);
+	BIBLIOGRAPHY_CACHE.set(cacheKey, cacheEntry);
+	bibliographyCacheBytes += cacheEntry.bytes;
 	return [...formattedEntries];
 }
 
@@ -83,6 +104,7 @@ async function requestFormattedEntries(cslItems, styleKey) {
  */
 export function clearFormattingCache() {
 	BIBLIOGRAPHY_CACHE.clear();
+	bibliographyCacheBytes = 0;
 }
 
 /**
@@ -116,9 +138,11 @@ export async function formatBibliographyEntries(
 	}
 
 	let formattedTexts;
+	let formatterSucceeded = false;
 
 	try {
 		formattedTexts = await requestFormattedEntries(cslItems, styleKey);
+		formatterSucceeded = true;
 	} catch (error) {
 		emitFormattingWarning(
 			`Falling back to raw citation text for style "${styleKey}".`,
@@ -132,7 +156,11 @@ export async function formatBibliographyEntries(
 		(_, index) => formattedTexts[index] || ''
 	);
 
-	return setCachedBibliography(cacheKey, normalizedEntries);
+	if (formatterSucceeded) {
+		return setCachedBibliography(cacheKey, normalizedEntries);
+	}
+
+	return normalizedEntries;
 }
 
 /**
@@ -150,23 +178,68 @@ export async function formatBibliographyEntry(csl, styleKey, options = {}) {
 	return results[0];
 }
 
-function stableStringify(value) {
-	return JSON.stringify(sortObjectKeys(value));
+function getApproximateCacheEntryBytes(cacheKey, formattedEntries) {
+	return (
+		cacheKey.length +
+		formattedEntries.reduce(
+			(total, entry) => total + String(entry || '').length,
+			0
+		)
+	);
 }
 
-function sortObjectKeys(value) {
+/* eslint-disable no-bitwise */
+function updateHashState(state, chunk) {
+	const stringValue = String(chunk);
+
+	for (let index = 0; index < stringValue.length; index += 1) {
+		const code = stringValue.charCodeAt(index);
+		state.primary ^= code;
+		state.primary = Math.imul(state.primary, 16777619) >>> 0;
+		state.secondary = Math.imul(state.secondary ^ code, 2246822519) >>> 0;
+	}
+}
+/* eslint-enable no-bitwise */
+
+function hashStableInto(state, value) {
 	if (Array.isArray(value)) {
-		return value.map(sortObjectKeys);
+		updateHashState(state, '[');
+		updateHashState(state, value.length);
+		for (const item of value) {
+			hashStableInto(state, item);
+			updateHashState(state, ',');
+		}
+		updateHashState(state, ']');
+		return;
 	}
 
 	if (value && typeof value === 'object') {
-		return Object.keys(value)
-			.sort()
-			.reduce((accumulator, key) => {
-				accumulator[key] = sortObjectKeys(value[key]);
-				return accumulator;
-			}, {});
+		updateHashState(state, '{');
+		const keys = Object.keys(value).sort();
+		updateHashState(state, keys.length);
+		for (const key of keys) {
+			updateHashState(state, key.length);
+			updateHashState(state, key);
+			updateHashState(state, ':');
+			hashStableInto(state, value[key]);
+			updateHashState(state, ';');
+		}
+		updateHashState(state, '}');
+		return;
 	}
 
-	return value;
+	updateHashState(state, typeof value);
+	updateHashState(state, ':');
+	updateHashState(state, value === undefined ? 'undefined' : value);
+}
+
+function hashStableValue(value) {
+	const state = {
+		primary: 2166136261,
+		secondary: 374761393,
+	};
+
+	hashStableInto(state, value);
+
+	return `${state.primary.toString(36)}${state.secondary.toString(36)}`;
 }

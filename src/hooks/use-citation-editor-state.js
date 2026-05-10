@@ -11,6 +11,10 @@ import {
 	validateIdentifierFields,
 } from '../lib/manual-entry';
 import { sortCitations } from '../lib/sorter';
+import {
+	MAX_CITATIONS_PER_BIBLIOGRAPHY,
+	getBibliographyOverLimitMessage,
+} from '../lib/citation-limits';
 
 const FORMATTER_FALLBACK_MESSAGE =
 	'Formatter unavailable; using fallback citation text.';
@@ -80,10 +84,12 @@ function parseAuthorFieldList(value) {
 
 export function useCitationEditorState({
 	announce,
+	beginAsyncOperation = () => 0,
 	citationStyle,
 	citationsRef,
 	clearNotice,
 	headingText,
+	isCurrentAsyncOperation = () => true,
 	queueFocus,
 	setAttributes,
 }) {
@@ -267,6 +273,8 @@ export function useCitationEditorState({
 			return;
 		}
 
+		const operationId = beginAsyncOperation();
+
 		const updatedCsl = {
 			...citation.csl,
 			title: structuredFields.title || citation.csl.title,
@@ -322,7 +330,10 @@ export function useCitationEditorState({
 			'../lib/formatting/csl'
 		);
 
-		if (structuredEditingIdRef.current !== activeStructuredEditingId) {
+		if (
+			structuredEditingIdRef.current !== activeStructuredEditingId ||
+			!isCurrentAsyncOperation(operationId)
+		) {
 			return;
 		}
 
@@ -347,6 +358,15 @@ export function useCitationEditorState({
 				  }
 				: entry
 		);
+		if (nextEntries.length > MAX_CITATIONS_PER_BIBLIOGRAPHY) {
+			announce(
+				'warning',
+				getBibliographyOverLimitMessage(nextEntries.length)
+			);
+			queueFocus({ type: 'notice' });
+			return;
+		}
+
 		let formatterFallback = false;
 		const formattedTexts = await formatBibliographyEntries(
 			nextEntries.map((entry) => entry.csl),
@@ -360,7 +380,10 @@ export function useCitationEditorState({
 
 		// Second cancel guard: a cancel that arrives during formatBibliographyEntries
 		// would set structuredEditingIdRef.current to null — don't commit stale data.
-		if (structuredEditingIdRef.current !== activeStructuredEditingId) {
+		if (
+			structuredEditingIdRef.current !== activeStructuredEditingId ||
+			!isCurrentAsyncOperation(operationId)
+		) {
 			return;
 		}
 
@@ -391,8 +414,10 @@ export function useCitationEditorState({
 		setStructuredFields({});
 	}, [
 		announce,
+		beginAsyncOperation,
 		citationStyle,
 		citationsRef,
+		isCurrentAsyncOperation,
 		queueFocus,
 		setAttributes,
 		structuredEditingId,
@@ -434,6 +459,15 @@ export function useCitationEditorState({
 					? { headingText: nextDefaultHeading }
 					: {};
 
+			if (citationsRef.current.length > MAX_CITATIONS_PER_BIBLIOGRAPHY) {
+				announce(
+					'warning',
+					getBibliographyOverLimitMessage(citationsRef.current.length)
+				);
+				queueFocus({ type: 'notice' });
+				return;
+			}
+
 			if (!citationsRef.current.length) {
 				setAttributes({ citationStyle: nextStyle, ...headingUpdate });
 				announce('success', `Style changed to ${nextStyleLabel}.`, {
@@ -442,9 +476,15 @@ export function useCitationEditorState({
 				return;
 			}
 
+			const operationId = beginAsyncOperation();
+
 			const { formatBibliographyEntries } = await import(
 				'../lib/formatting/csl'
 			);
+			if (!isCurrentAsyncOperation(operationId)) {
+				return;
+			}
+
 			let formatterFallback = false;
 			const formattedTexts = await formatBibliographyEntries(
 				citationsRef.current.map((citation) => citation.csl),
@@ -455,6 +495,10 @@ export function useCitationEditorState({
 					},
 				}
 			);
+			if (!isCurrentAsyncOperation(operationId)) {
+				return;
+			}
+
 			const updated = sortCitations(
 				citationsRef.current.map((citation, index) => ({
 					...citation,
@@ -486,10 +530,12 @@ export function useCitationEditorState({
 		},
 		[
 			announce,
+			beginAsyncOperation,
 			citationStyle,
 			citationsRef,
 			clearNotice,
 			headingText,
+			isCurrentAsyncOperation,
 			queueFocus,
 			resetEditingState,
 			setAttributes,

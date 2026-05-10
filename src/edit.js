@@ -33,34 +33,21 @@ import { useBlockNotices } from './hooks/use-block-notices';
 import { useCitationEditorState } from './hooks/use-citation-editor-state';
 import { useEntryFocus } from './hooks/use-entry-focus';
 import { useCitationReorder } from './hooks/use-citation-reorder';
-import { copyTextToClipboard } from './lib/clipboard';
+import { useBibliographyExportActions } from './hooks/use-bibliography-export-actions';
+import { useCitationImportActions } from './hooks/use-citation-import-actions';
+import { useManualCitationActions } from './hooks/use-manual-citation-actions';
 import {
-	getDisplayText,
 	getHeadingPlaceholder,
 	getListSemantics,
 	getSelectableStyles,
 	getStyleDefinition,
 } from './lib/formatting';
-import {
-	findDuplicateCitation,
-	partitionDuplicateCitations,
-} from './lib/deduplicate';
 import { SUPPORTED_INPUT_MESSAGE } from './lib/input-support';
-import {
-	buildManualCsl,
-	createEmptyManualEntryFields,
-	createManualCitationFromCsl,
-	MANUAL_ENTRY_TYPE_OPTIONS,
-	validateManualEntry,
-} from './lib/manual-entry';
-import {
-	buildPlainTextBibliographyContent,
-	downloadBibtexExport,
-	downloadBiblatexExport,
-	downloadCslJsonExport,
-	downloadRisExport,
-} from './lib/export';
 import { sortCitations } from './lib/sorter';
+import {
+	MAX_CITATIONS_PER_BIBLIOGRAPHY,
+	getBibliographyOverLimitMessage,
+} from './lib/citation-limits';
 import { StructuredCitationEditor } from './components/structured-citation-editor';
 import {
 	ChevronDownIcon,
@@ -90,59 +77,6 @@ const FORMATTER_FALLBACK_MESSAGE = __(
 	'borges-bibliography-builder'
 );
 
-function pluralize(count, singular, plural = `${singular}s`) {
-	return `${count} ${count === 1 ? singular : plural}`;
-}
-
-function buildParseResultMessage({
-	addedCount,
-	duplicateCount,
-	errorCount,
-	reviewWarningCount,
-	truncated,
-	retainedUnparsedItems,
-	formatterFallback,
-}) {
-	const parts = [];
-
-	if (addedCount > 0) {
-		parts.push(`Added ${pluralize(addedCount, 'citation')}.`);
-	} else if (duplicateCount > 0 || errorCount > 0 || truncated) {
-		parts.push('No new citations added.');
-	}
-
-	if (duplicateCount > 0) {
-		parts.push(`Skipped ${pluralize(duplicateCount, 'duplicate')}.`);
-	}
-
-	if (errorCount > 0) {
-		parts.push(`Couldn't parse ${pluralize(errorCount, 'item')}.`);
-	}
-
-	if (truncated) {
-		parts.push('Only the first 50 items were processed.');
-	}
-
-	if (reviewWarningCount > 0) {
-		parts.push(
-			`Review ${pluralize(
-				reviewWarningCount,
-				'imported record'
-			)} before publishing.`
-		);
-	}
-
-	if (retainedUnparsedItems) {
-		parts.push('Unparsed items remain in the form.');
-	}
-
-	if (formatterFallback) {
-		parts.push(FORMATTER_FALLBACK_MESSAGE);
-	}
-
-	return parts.join(' ');
-}
-
 export default function Edit({ attributes, setAttributes }) {
 	const {
 		citations,
@@ -153,7 +87,6 @@ export default function Edit({ attributes, setAttributes }) {
 		outputCslJson = false,
 	} = attributes;
 	const selectableStyles = useMemo(() => getSelectableStyles(), []);
-	const manualTypeOptions = useMemo(() => MANUAL_ENTRY_TYPE_OPTIONS, []);
 	const blockProps = useBlockProps();
 	const headingPlaceholder = getHeadingPlaceholder(citationStyle);
 	const listStyleDefinition = getStyleDefinition(citationStyle);
@@ -167,16 +100,22 @@ export default function Edit({ attributes, setAttributes }) {
 	const [oscolaNoticeDismissed, setOscolaNoticeDismissed] = useState(false);
 	const [isFormOpen, setIsFormOpen] = useState(true);
 	const [activeAddMode, setActiveAddMode] = useState('paste');
-	const [manualFields, setManualFields] = useState(() =>
-		createEmptyManualEntryFields()
-	);
 	const sortedCitations = useMemo(
 		() => sortCitations(citations, citationStyle),
 		[citationStyle, citations]
 	);
 	const citationsRef = useRef(citations);
+	const asyncOperationRef = useRef(0);
 	const { announce, clearNotice, currentNotice, noticeVersion } =
 		useBlockNotices();
+	const beginAsyncOperation = useCallback(() => {
+		asyncOperationRef.current += 1;
+		return asyncOperationRef.current;
+	}, []);
+	const isCurrentAsyncOperation = useCallback(
+		(operationId) => asyncOperationRef.current === operationId,
+		[]
+	);
 	const { noticeRef, pasteZoneRef, queueFocus, setEntryRef } = useEntryFocus({
 		citations,
 		noticeVersion,
@@ -200,18 +139,34 @@ export default function Edit({ attributes, setAttributes }) {
 		structuredFields,
 	} = useCitationEditorState({
 		announce,
+		beginAsyncOperation,
 		citationStyle,
 		citationsRef,
 		clearNotice,
 		headingText,
+		isCurrentAsyncOperation,
 		queueFocus,
 		setAttributes,
 	});
 	const { moveCitationDown, moveCitationUp } = useCitationReorder({
 		announce,
 		citationsRef,
+		isCurrentAsyncOperation,
 		queueFocus,
 		setAttributes,
+	});
+	const {
+		handleCopyBibliography,
+		handleCopyCitation,
+		handleDownloadBiblatex,
+		handleDownloadBibtex,
+		handleDownloadCslJson,
+		handleDownloadRis,
+	} = useBibliographyExportActions({
+		announce,
+		citationStyle,
+		citationsRef,
+		queueFocus,
 	});
 
 	useEffect(() => {
@@ -251,145 +206,38 @@ export default function Edit({ attributes, setAttributes }) {
 		},
 		[pasteZoneRef]
 	);
-
-	const handleParse = useCallback(async () => {
-		if (!inputValue.trim()) {
-			return;
-		}
-
-		setIsLoading(true);
-		clearNotice();
-
-		try {
-			const { parsePastedInput } = await import('./lib/parser');
-			const {
-				entries,
-				errors,
-				truncated,
-				remainingInput = '',
-			} = await parsePastedInput(inputValue, citationStyle, {
-				deferFormatting: true,
-			});
-			const { uniqueEntries, duplicateEntries } =
-				partitionDuplicateCitations(entries, citationsRef.current);
-			const retainedUnparsedItems = Boolean(remainingInput.trim());
-
-			if (uniqueEntries.length > 0) {
-				const { formatBibliographyEntries } = await import(
-					'./lib/formatting/csl'
-				);
-				const mergedEntries = [
-					...citationsRef.current,
-					...uniqueEntries,
-				];
-				let formatterFallback = false;
-				const formattedTexts = await formatBibliographyEntries(
-					mergedEntries.map((citation) => citation.csl),
-					citationStyle,
-					{
-						onFallback: () => {
-							formatterFallback = true;
-						},
-					}
-				);
-				const formattedMergedEntries = mergedEntries.map(
-					(entry, index) => ({
-						...entry,
-						formattedText: formattedTexts[index],
-					})
-				);
-				const updated = sortCitations(
-					formattedMergedEntries,
-					citationStyle
-				);
-				const reviewWarningCount = uniqueEntries.filter(
-					(entry) => (entry.parseWarnings || []).length > 0
-				).length;
-				const firstNewEntry = updated.find((citation) =>
-					uniqueEntries.some((entry) => entry.id === citation.id)
-				);
-
-				citationsRef.current = updated;
-				setAttributes({ citations: updated });
-
-				const message = buildParseResultMessage({
-					addedCount: uniqueEntries.length,
-					duplicateCount: duplicateEntries.length,
-					errorCount: errors.length,
-					reviewWarningCount,
-					truncated,
-					retainedUnparsedItems,
-					formatterFallback,
-				});
-				announce(
-					reviewWarningCount > 0 ||
-						duplicateEntries.length > 0 ||
-						errors.length > 0 ||
-						truncated ||
-						formatterFallback
-						? 'warning'
-						: 'success',
-					message,
-					reviewWarningCount > 0 ||
-						duplicateEntries.length > 0 ||
-						errors.length > 0 ||
-						truncated ||
-						formatterFallback
-						? {}
-						: { type: 'snackbar' }
-				);
-
-				if (
-					duplicateEntries.length > 0 ||
-					errors.length > 0 ||
-					truncated ||
-					reviewWarningCount > 0 ||
-					formatterFallback
-				) {
-					queueFocus({ type: 'notice' });
-				} else if (firstNewEntry) {
-					queueFocus({ type: 'entry', id: firstNewEntry.id });
-				}
-			} else if (duplicateEntries.length > 0) {
-				announce(
-					'warning',
-					buildParseResultMessage({
-						addedCount: 0,
-						duplicateCount: duplicateEntries.length,
-						errorCount: errors.length,
-						reviewWarningCount: 0,
-						truncated,
-						retainedUnparsedItems,
-					})
-				);
-				queueFocus({ type: 'notice' });
-			} else if (errors.length > 0) {
-				announce('warning', errors[0]);
-				queueFocus({ type: 'notice' });
-			} else {
-				announce('warning', SUPPORTED_INPUT_MESSAGE);
-				queueFocus({ type: 'notice' });
-			}
-
-			updatePasteInput(remainingInput, { syncDom: true });
-		} catch (err) {
-			announce(
-				'error',
-				'Something went wrong while parsing. Please try again.'
-			);
-			queueFocus({ type: 'notice' });
-		} finally {
-			setIsLoading(false);
-		}
-	}, [
-		inputValue,
-		citationStyle,
-		setAttributes,
+	const { handleParse } = useCitationImportActions({
 		announce,
+		beginAsyncOperation,
+		citationStyle,
+		citationsRef,
 		clearNotice,
+		inputValue,
+		isCurrentAsyncOperation,
 		queueFocus,
+		setAttributes,
+		setIsLoading,
 		updatePasteInput,
-	]);
+	});
+	const {
+		handleManualAdd,
+		handleManualClear,
+		handleManualFieldChange,
+		manualFieldDefinitions,
+		manualFields,
+		manualTypeOptions,
+	} = useManualCitationActions({
+		announce,
+		beginAsyncOperation,
+		citationStyle,
+		citationsRef,
+		clearNotice,
+		currentNotice,
+		isCurrentAsyncOperation,
+		pasteZoneRef,
+		queueFocus,
+		setAttributes,
+	});
 
 	const handleDelete = useCallback(
 		async (id) => {
@@ -397,14 +245,18 @@ export default function Edit({ attributes, setAttributes }) {
 			const deletedIndex = currentCitations.findIndex((c) => c.id === id);
 			const entry = currentCitations[deletedIndex];
 			let formatterFallback = false;
+			let overLimitAfterDelete = false;
 
 			if (!entry) {
 				return;
 			}
 
+			const operationId = beginAsyncOperation();
 			let updated = currentCitations.filter((c) => c.id !== id);
 
-			if (updated.length > 0 && !isNumericFamily) {
+			if (updated.length > MAX_CITATIONS_PER_BIBLIOGRAPHY) {
+				overLimitAfterDelete = true;
+			} else if (updated.length > 0 && !isNumericFamily) {
 				try {
 					const { formatBibliographyEntries } = await import(
 						'./lib/formatting/csl'
@@ -431,14 +283,29 @@ export default function Edit({ attributes, setAttributes }) {
 				}
 			}
 
+			if (!isCurrentAsyncOperation(operationId)) {
+				return;
+			}
+
 			citationsRef.current = updated;
 			setAttributes({ citations: updated });
+			let noticeMessage = 'Citation removed.';
+			if (overLimitAfterDelete) {
+				noticeMessage = `Citation removed. ${getBibliographyOverLimitMessage(
+					updated.length
+				)}`;
+			} else if (formatterFallback) {
+				noticeMessage = `Citation removed. ${FORMATTER_FALLBACK_MESSAGE}`;
+			}
+
 			announce(
-				formatterFallback ? 'warning' : 'success',
-				formatterFallback
-					? `Citation removed. ${FORMATTER_FALLBACK_MESSAGE}`
-					: 'Citation removed.',
-				formatterFallback ? {} : { type: 'snackbar' }
+				formatterFallback || overLimitAfterDelete
+					? 'warning'
+					: 'success',
+				noticeMessage,
+				formatterFallback || overLimitAfterDelete
+					? {}
+					: { type: 'snackbar' }
 			);
 
 			if (!updated.length) {
@@ -453,7 +320,15 @@ export default function Edit({ attributes, setAttributes }) {
 				queueFocus({ type: 'entry', id: nextEntry.id });
 			}
 		},
-		[setAttributes, announce, queueFocus, isNumericFamily, citationStyle]
+		[
+			setAttributes,
+			announce,
+			beginAsyncOperation,
+			queueFocus,
+			isCurrentAsyncOperation,
+			isNumericFamily,
+			citationStyle,
+		]
 	);
 
 	const handleInputChange = useCallback(
@@ -494,220 +369,6 @@ export default function Edit({ attributes, setAttributes }) {
 			clearNotice();
 		},
 		[clearNotice]
-	);
-
-	const handleManualFieldChange = useCallback(
-		(field, value) => {
-			setManualFields((currentFields) => ({
-				...currentFields,
-				[field]: value,
-			}));
-			if (currentNotice) {
-				clearNotice();
-			}
-		},
-		[clearNotice, currentNotice]
-	);
-
-	const handleManualClear = useCallback(() => {
-		setManualFields(createEmptyManualEntryFields());
-		clearNotice();
-
-		if (pasteZoneRef.current?.focus) {
-			pasteZoneRef.current.focus();
-		}
-	}, [clearNotice, pasteZoneRef]);
-
-	const handleManualAdd = useCallback(async () => {
-		const validationMessage = validateManualEntry(manualFields);
-
-		if (validationMessage) {
-			announce('warning', validationMessage);
-			queueFocus({ type: 'notice' });
-			return;
-		}
-
-		try {
-			const csl = buildManualCsl(manualFields);
-
-			if (
-				findDuplicateCitation(
-					{
-						csl,
-					},
-					citationsRef.current
-				)
-			) {
-				announce(
-					'warning',
-					'No new citations added. Skipped 1 duplicate.'
-				);
-				queueFocus({ type: 'notice' });
-				return;
-			}
-
-			let formatterFallback = false;
-			const entry = await createManualCitationFromCsl(
-				csl,
-				citationStyle,
-				{
-					onFormatFallback: () => {
-						formatterFallback = true;
-					},
-				}
-			);
-			const { formatBibliographyEntries } = await import(
-				'./lib/formatting/csl'
-			);
-			const mergedEntries = [...citationsRef.current, entry];
-			const formattedTexts = await formatBibliographyEntries(
-				mergedEntries.map((citation) => citation.csl),
-				citationStyle,
-				{
-					onFallback: () => {
-						formatterFallback = true;
-					},
-				}
-			);
-			const updated = sortCitations(
-				mergedEntries.map((citation, index) => ({
-					...citation,
-					formattedText: formattedTexts[index] || '',
-				})),
-				citationStyle
-			);
-
-			citationsRef.current = updated;
-			setAttributes({ citations: updated });
-			setManualFields(createEmptyManualEntryFields(manualFields.type));
-			announce(
-				formatterFallback ? 'warning' : 'success',
-				formatterFallback
-					? `Added 1 citation. ${FORMATTER_FALLBACK_MESSAGE}`
-					: 'Added 1 citation.',
-				formatterFallback ? {} : { type: 'snackbar' }
-			);
-			queueFocus(
-				formatterFallback
-					? { type: 'notice' }
-					: { type: 'entry', id: entry.id }
-			);
-		} catch (error) {
-			announce(
-				'error',
-				'Something went wrong while adding the citation. Please try again.'
-			);
-			queueFocus({ type: 'notice' });
-		}
-	}, [announce, citationStyle, manualFields, queueFocus, setAttributes]);
-
-	const handleCopyBibliography = useCallback(async () => {
-		if (!citationsRef.current.length) {
-			return;
-		}
-
-		try {
-			await copyTextToClipboard(
-				buildPlainTextBibliographyContent(
-					citationsRef.current,
-					citationStyle
-				).trimEnd()
-			);
-			announce('success', 'Copied bibliography.', {
-				type: 'snackbar',
-			});
-		} catch (error) {
-			announce('error', 'Could not copy bibliography in this browser.');
-			queueFocus({ type: 'notice' });
-		}
-	}, [announce, citationStyle, queueFocus]);
-
-	const handleDownloadCslJson = useCallback(() => {
-		if (!citationsRef.current.length) {
-			return;
-		}
-
-		try {
-			downloadCslJsonExport(citationsRef.current, citationStyle);
-			announce('success', 'Downloaded CSL-JSON export.', {
-				type: 'snackbar',
-			});
-		} catch (error) {
-			announce(
-				'error',
-				'Could not download CSL-JSON export in this browser.'
-			);
-			queueFocus({ type: 'notice' });
-		}
-	}, [announce, citationStyle, queueFocus]);
-
-	const handleDownloadBibtex = useCallback(async () => {
-		if (!citationsRef.current.length) {
-			return;
-		}
-
-		try {
-			await downloadBibtexExport(citationsRef.current, citationStyle);
-			announce('success', 'Downloaded BibTeX export.', {
-				type: 'snackbar',
-			});
-		} catch (error) {
-			announce(
-				'error',
-				'Could not download BibTeX export in this browser.'
-			);
-			queueFocus({ type: 'notice' });
-		}
-	}, [announce, citationStyle, queueFocus]);
-
-	const handleDownloadBiblatex = useCallback(async () => {
-		if (!citationsRef.current.length) {
-			return;
-		}
-
-		try {
-			await downloadBiblatexExport(citationsRef.current, citationStyle);
-			announce('success', 'Downloaded BibLaTeX export.', {
-				type: 'snackbar',
-			});
-		} catch (error) {
-			announce(
-				'error',
-				'Could not download BibLaTeX export in this browser.'
-			);
-			queueFocus({ type: 'notice' });
-		}
-	}, [announce, citationStyle, queueFocus]);
-
-	const handleDownloadRis = useCallback(() => {
-		if (!citationsRef.current.length) {
-			return;
-		}
-
-		try {
-			downloadRisExport(citationsRef.current, citationStyle);
-			announce('success', 'Downloaded RIS export.', {
-				type: 'snackbar',
-			});
-		} catch (error) {
-			announce('error', 'Could not download RIS export in this browser.');
-			queueFocus({ type: 'notice' });
-		}
-	}, [announce, citationStyle, queueFocus]);
-
-	const handleCopyCitation = useCallback(
-		async (citation) => {
-			try {
-				await copyTextToClipboard(getDisplayText(citation));
-				announce('success', 'Copied citation.', {
-					type: 'snackbar',
-				});
-			} catch (error) {
-				announce('error', 'Could not copy citation in this browser.');
-				queueFocus({ type: 'notice' });
-			}
-		},
-		[announce, queueFocus]
 	);
 
 	const isHeuristicCitation = useCallback(
@@ -863,44 +524,6 @@ export default function Edit({ attributes, setAttributes }) {
 	const formToggleLabel = isFormOpen
 		? __('Hide citation form', 'borges-bibliography-builder')
 		: __('Show citation form', 'borges-bibliography-builder');
-
-	const manualFieldDefinitions = useMemo(
-		() => [
-			{
-				key: 'authors',
-				label: __('Author(s)', 'borges-bibliography-builder'),
-			},
-			{
-				key: 'title',
-				label: __('Title', 'borges-bibliography-builder'),
-			},
-			{
-				key: 'containerTitle',
-				label: __('Container', 'borges-bibliography-builder'),
-			},
-			{
-				key: 'publisher',
-				label: __('Publisher', 'borges-bibliography-builder'),
-			},
-			{
-				key: 'year',
-				label: __('Year', 'borges-bibliography-builder'),
-			},
-			{
-				key: 'page',
-				label: __('Pages', 'borges-bibliography-builder'),
-			},
-			{
-				key: 'doi',
-				label: __('DOI', 'borges-bibliography-builder'),
-			},
-			{
-				key: 'url',
-				label: __('URL', 'borges-bibliography-builder'),
-			},
-		],
-		[]
-	);
 
 	return (
 		<div {...blockProps}>
