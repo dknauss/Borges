@@ -90,8 +90,14 @@ function wp_using_ext_object_cache() {
 	return $GLOBALS['bibliography_builder_test_using_ext_object_cache'];
 }
 
-function wp_cache_get( $key, $group = '' ) {
-	return $GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ]['value'] ?? false;
+function wp_cache_get( $key, $group = '', $force = false, &$found = null ) {
+	if ( isset( $GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ] ) ) {
+		$found = true;
+		return $GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ]['value'];
+	}
+
+	$found = false;
+	return false;
 }
 
 function wp_cache_set( $key, $value, $group = '', $expiration = 0 ) {
