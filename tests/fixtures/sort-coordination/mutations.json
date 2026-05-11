@@ -1,0 +1,85 @@
+[
+  {
+    "id": "mutation-01-add-into-author-date-group",
+    "initialStyle": "chicago-author-date",
+    "initialCitations": [
+      { "id": "smith-2020-beta", "csl": { "type": "book", "title": "Beta", "author": [{ "family": "Smith", "given": "Ada" }], "issued": { "date-parts": [[2020]] } } },
+      { "id": "smith-2021-gamma", "csl": { "type": "book", "title": "Gamma", "author": [{ "family": "Smith", "given": "Ada" }], "issued": { "date-parts": [[2021]] } } }
+    ],
+    "steps": [
+      {
+        "operation": "add",
+        "citation": { "id": "smith-2020-alpha", "csl": { "type": "book", "title": "Alpha", "author": [{ "family": "Smith", "given": "Ada" }], "issued": { "date-parts": [[2020]] } } },
+        "expectedOrder": ["smith-2020-alpha", "smith-2020-beta", "smith-2021-gamma"]
+      }
+    ]
+  },
+  {
+    "id": "mutation-02-delete-from-tie-group",
+    "initialStyle": "apa-7",
+    "initialCitations": [
+      { "id": "lee-2020-alpha", "csl": { "type": "book", "title": "Alpha", "author": [{ "family": "Lee", "given": "Jordan" }], "issued": { "date-parts": [[2020]] } } },
+      { "id": "lee-2020-beta", "csl": { "type": "book", "title": "Beta", "author": [{ "family": "Lee", "given": "Jordan" }], "issued": { "date-parts": [[2020]] } } },
+      { "id": "lee-2021-gamma", "csl": { "type": "book", "title": "Gamma", "author": [{ "family": "Lee", "given": "Jordan" }], "issued": { "date-parts": [[2021]] } } }
+    ],
+    "steps": [
+      {
+        "operation": "delete",
+        "id": "lee-2020-alpha",
+        "expectedOrder": ["lee-2020-beta", "lee-2021-gamma"]
+      }
+    ]
+  },
+  {
+    "id": "mutation-03-reorder-numeric",
+    "initialStyle": "ieee",
+    "initialCitations": [
+      { "id": "n-a", "csl": { "type": "article-journal", "title": "A", "author": [{ "family": "Adams", "given": "Ann" }], "issued": { "date-parts": [[2020]] } } },
+      { "id": "n-b", "csl": { "type": "article-journal", "title": "B", "author": [{ "family": "Brown", "given": "Bea" }], "issued": { "date-parts": [[2021]] } } },
+      { "id": "n-c", "csl": { "type": "article-journal", "title": "C", "author": [{ "family": "Clark", "given": "Cal" }], "issued": { "date-parts": [[2022]] } } }
+    ],
+    "steps": [
+      {
+        "operation": "reorder",
+        "orderedIds": ["n-c", "n-a", "n-b"],
+        "expectedOrder": ["n-c", "n-a", "n-b"]
+      }
+    ]
+  },
+  {
+    "id": "mutation-04-style-change-numeric-to-author-date",
+    "initialStyle": "ieee",
+    "initialCitations": [
+      { "id": "style-smith", "csl": { "type": "book", "title": "Zeta", "author": [{ "family": "Smith", "given": "Ada" }], "issued": { "date-parts": [[2022]] } } },
+      { "id": "style-brown", "csl": { "type": "book", "title": "Alpha", "author": [{ "family": "Brown", "given": "Bea" }], "issued": { "date-parts": [[2021]] } } },
+      { "id": "style-clark", "csl": { "type": "book", "title": "Gamma", "author": [{ "family": "Clark", "given": "Cal" }], "issued": { "date-parts": [[2023]] } } }
+    ],
+    "steps": [
+      {
+        "operation": "style-change",
+        "style": "chicago-author-date",
+        "expectedOrder": ["style-brown", "style-clark", "style-smith"]
+      }
+    ]
+  },
+  {
+    "id": "mutation-05-edit-metadata-affecting-order",
+    "initialStyle": "harvard",
+    "initialCitations": [
+      { "id": "edit-smith", "csl": { "type": "book", "title": "Beta", "author": [{ "family": "Smith", "given": "Ada" }], "issued": { "date-parts": [[2020]] } } },
+      { "id": "edit-smith-2", "csl": { "type": "book", "title": "Gamma", "author": [{ "family": "Smith", "given": "Ada" }], "issued": { "date-parts": [[2020]] } } },
+      { "id": "edit-allen", "csl": { "type": "book", "title": "Alpha", "author": [{ "family": "Allen", "given": "Ari" }], "issued": { "date-parts": [[2021]] } } }
+    ],
+    "steps": [
+      {
+        "operation": "edit",
+        "id": "edit-smith",
+        "patch": {
+          "title": "Aardvark",
+          "issued": { "date-parts": [[2019]] }
+        },
+        "expectedOrder": ["edit-allen", "edit-smith", "edit-smith-2"]
+      }
+    ]
+  }
+]
