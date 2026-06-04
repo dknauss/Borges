@@ -64,9 +64,7 @@ function applyMutationStep(citations, step) {
 	}
 }
 
-const EXCLUDED_STATIC_CASE_IDS = new Set([
-	'case-13-s4-leading-article-strip',
-]);
+const EXCLUDED_STATIC_CASE_IDS = new Set(['case-13-s4-leading-article-strip']);
 
 describe('PHP↔JS sorter coordination fixtures', () => {
 	const staticCases = loadJsonFixture(CASES_FIXTURE_PATH).filter(
