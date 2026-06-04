@@ -98,5 +98,37 @@
       { "id": "van-3", "csl": { "type": "article-journal", "title": "Three", "author": [{ "family": "Zed", "given": "Zo" }], "issued": { "date-parts": [[2023]] } } }
     ],
     "expectedOrder": ["van-2", "van-1", "van-3"]
+  },
+  {
+    "id": "case-11-s4-suffix-title-tiebreak",
+    "style": "apa-7",
+    "description": "REQ-S4: same-author same-year titles sort alpha — JS order matches PHP suffix assignment (Alpha=a, Beta=b)",
+    "citations": [
+      { "id": "smith-2020-beta", "csl": { "type": "article-journal", "title": "Beta: a study", "author": [{ "family": "Smith", "given": "Ada" }], "issued": { "date-parts": [[2020]] } } },
+      { "id": "smith-2020-alpha", "csl": { "type": "article-journal", "title": "Alpha: a study", "author": [{ "family": "Smith", "given": "Ada" }], "issued": { "date-parts": [[2020]] } } }
+    ],
+    "expectedOrder": ["smith-2020-alpha", "smith-2020-beta"]
+  },
+  {
+    "id": "case-12-s4-mixed-case-title",
+    "style": "chicago-author-date",
+    "description": "REQ-S4: mixed-case titles sort case-insensitively",
+    "citations": [
+      { "id": "jones-zebra", "csl": { "type": "book", "title": "ZEBRA taxonomy", "author": [{ "family": "Jones", "given": "Jo" }], "issued": { "date-parts": [[2021]] } } },
+      { "id": "jones-alpha", "csl": { "type": "book", "title": "alpha studies", "author": [{ "family": "Jones", "given": "Jo" }], "issued": { "date-parts": [[2021]] } } },
+      { "id": "jones-meta", "csl": { "type": "book", "title": "Meta-analysis", "author": [{ "family": "Jones", "given": "Jo" }], "issued": { "date-parts": [[2021]] } } }
+    ],
+    "expectedOrder": ["jones-alpha", "jones-meta", "jones-zebra"]
+  },
+  {
+    "id": "case-13-s4-leading-article-strip",
+    "style": "chicago-notes-bibliography",
+    "description": "REQ-S4: leading articles (The, A, An) stripped before title sort",
+    "citations": [
+      { "id": "king-the", "csl": { "type": "book", "title": "The Zebra Kingdom", "author": [{ "family": "King", "given": "Kim" }], "issued": { "date-parts": [[2019]] } } },
+      { "id": "king-an", "csl": { "type": "book", "title": "An Alpha Survey", "author": [{ "family": "King", "given": "Kim" }], "issued": { "date-parts": [[2019]] } } },
+      { "id": "king-a", "csl": { "type": "book", "title": "A Beta Collection", "author": [{ "family": "King", "given": "Kim" }], "issued": { "date-parts": [[2019]] } } }
+    ],
+    "expectedOrder": ["king-an", "king-a", "king-the"]
   }
 ]
