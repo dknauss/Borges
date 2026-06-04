@@ -54,9 +54,12 @@ describe('REST-backed citation formatting', () => {
 		expect(apiFetch).not.toHaveBeenCalled();
 	});
 
-	it('deduplicates equivalent uncached CSL items within a single formatter request', async () => {
+	it('formats the full bibliography payload including duplicate-looking entries', async () => {
 		apiFetch.mockResolvedValueOnce({
-			entries: [{ index: 0, text: 'Shared formatted' }],
+			entries: [
+				{ index: 0, text: 'Shared formatted first' },
+				{ index: 1, text: 'Shared formatted second' },
+			],
 		});
 
 		const results = await formatBibliographyEntries(
@@ -75,8 +78,11 @@ describe('REST-backed citation formatting', () => {
 			'apa-7'
 		);
 
-		expect(results).toEqual(['Shared formatted', 'Shared formatted']);
-		expect(apiFetch.mock.calls[0][0].data.cslItems).toHaveLength(1);
+		expect(results).toEqual([
+			'Shared formatted first',
+			'Shared formatted second',
+		]);
+		expect(apiFetch.mock.calls[0][0].data.cslItems).toHaveLength(2);
 	});
 
 	it('formats a single entry through the same batch boundary', async () => {
@@ -114,6 +120,36 @@ describe('REST-backed citation formatting', () => {
 		expect(apiFetch).toHaveBeenCalledTimes(1);
 	});
 
+	it('evicts old cache entries when large formatted values exceed the byte budget', async () => {
+		apiFetch.mockImplementation(({ data }) =>
+			Promise.resolve({
+				entries: [
+					{
+						index: 0,
+						text: `${data.cslItems[0].title} ${'x'.repeat(
+							160 * 1024
+						)}`,
+					},
+				],
+			})
+		);
+
+		await formatBibliographyEntry(
+			{ type: 'book', title: 'First' },
+			'apa-7'
+		);
+		await formatBibliographyEntry(
+			{ type: 'book', title: 'Second' },
+			'apa-7'
+		);
+		await formatBibliographyEntry(
+			{ type: 'book', title: 'First' },
+			'apa-7'
+		);
+
+		expect(apiFetch).toHaveBeenCalledTimes(3);
+	});
+
 	it('falls back to inert title text if the formatter request fails', async () => {
 		const warnSpy = jest
 			.spyOn(console, 'warn')
@@ -133,6 +169,66 @@ describe('REST-backed citation formatting', () => {
 		).resolves.toEqual(['Fallback title', 'Fallback container']);
 		expect(warnSpy).toHaveBeenCalled();
 		expect(onFallback).toHaveBeenCalledWith(expect.any(Error));
+	});
+
+	it('does not cache fallback output after a formatter failure', async () => {
+		const warnSpy = jest
+			.spyOn(console, 'warn')
+			.mockImplementation(() => {});
+		apiFetch
+			.mockRejectedValueOnce(new Error('Formatter request failed.'))
+			.mockResolvedValueOnce({
+				entries: [{ index: 0, text: 'Recovered formatted' }],
+			});
+
+		await expect(
+			formatBibliographyEntries(
+				[{ type: 'book', title: 'Fallback title' }],
+				'apa-7'
+			)
+		).resolves.toEqual(['Fallback title']);
+
+		await expect(
+			formatBibliographyEntries(
+				[{ type: 'book', title: 'Fallback title' }],
+				'apa-7'
+			)
+		).resolves.toEqual(['Recovered formatted']);
+
+		expect(apiFetch).toHaveBeenCalledTimes(2);
+		expect(warnSpy).toHaveBeenCalled();
+	});
+
+	it('falls back and does not cache when the formatter response length mismatches the request', async () => {
+		const warnSpy = jest
+			.spyOn(console, 'warn')
+			.mockImplementation(() => {});
+		apiFetch
+			.mockResolvedValueOnce({
+				entries: [{ index: 0, text: 'Only one formatted entry' }],
+			})
+			.mockResolvedValueOnce({
+				entries: [
+					{ index: 0, text: 'Recovered first' },
+					{ index: 1, text: 'Recovered second' },
+				],
+			});
+
+		const cslItems = [
+			{ type: 'book', title: 'Fallback first' },
+			{ type: 'book', title: 'Fallback second' },
+		];
+
+		await expect(
+			formatBibliographyEntries(cslItems, 'apa-7')
+		).resolves.toEqual(['Fallback first', 'Fallback second']);
+
+		await expect(
+			formatBibliographyEntries(cslItems, 'apa-7')
+		).resolves.toEqual(['Recovered first', 'Recovered second']);
+
+		expect(apiFetch).toHaveBeenCalledTimes(2);
+		expect(warnSpy).toHaveBeenCalled();
 	});
 
 	it('falls back when the formatter response does not include an entries array', async () => {

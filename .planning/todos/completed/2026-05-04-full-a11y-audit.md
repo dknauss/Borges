@@ -114,7 +114,15 @@ AT + version:
 
 ## Completion criteria
 
-- [ ] All Tier 1 checks passing in CI (already green)
-- [ ] All Tier 2 checks passing in CI (items 3–10 coded and green)
+- [x] All Tier 1 checks passing in CI (already green)
+- [x] All Tier 2 checks passing in CI (items 3–10 coded and green — confirmed 2026-05-10)
 - [ ] Tier 3 manual test record completed and signed off for a release
 - [ ] Any P0 or P1 findings remediated before that release ships
+
+## Review notes (2026-05-10)
+
+All Tier 1 and Tier 2 items (1–10) are fully implemented in
+`tests/e2e/a11y.spec.js`. No spec changes were required. Automated review
+found zero P0/P1 axe violations. Audit record written to
+`docs/a11y-audit-records/1.3.1.md`. Tier 3 (manual AT session) remains
+outstanding and must be completed before a major release.

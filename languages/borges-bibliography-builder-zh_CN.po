@@ -1,12 +1,13 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Bibliography 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/dknauss/borges-bibliography-builder/issues\n"
 "POT-Creation-Date: 2026-04-08 00:00+0000\n"
-"PO-Revision-Date: 2026-04-08 00:00+0000\n"
-"Last-Translator: Dan Knauss <dan@newlocalmedia.com>\n"
-"Language: zh_CN\n"
+"PO-Revision-Date: 2026-05-10 00:00+0000\n"
+"Last-Translator: Borges Bibliography Builder contributors\n"
 "Language-Team: Simplified Chinese\n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -23,13 +24,10 @@ msgid "Paste / Import"
 msgstr "粘贴 / 导入"
 
 msgid "Manual Entry"
-msgstr "手动输入"
-
-msgid "Add DOI(s), BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
-msgstr "为图书、文章、章节和网页添加 DOI、BibTeX 条目以及受支持样式的引文。多条已格式化引文请用空行分隔。"
+msgstr "手动录入"
 
 msgid "Resolving…"
-msgstr "处理中…"
+msgstr "解析中…"
 
 msgid "Add"
 msgstr "添加"
@@ -44,7 +42,7 @@ msgid "Title"
 msgstr "标题"
 
 msgid "Container"
-msgstr "容器"
+msgstr "收录来源"
 
 msgid "Publisher"
 msgstr "出版者"
@@ -71,40 +69,44 @@ msgid "Settings"
 msgstr "设置"
 
 msgid "source"
-msgstr "来源"
+msgstr "条来源"
 
 msgid "sources"
-msgstr "来源"
+msgstr "条来源"
 
 msgid "Citation Style"
 msgstr "引文样式"
 
-msgid "Changing styles reformats auto-generated citations and keeps manual overrides intact."
-msgstr "更改样式会重新格式化自动生成的引文，并保留手动覆盖内容。"
+msgid ""
+"Changing styles reformats auto-generated citations and keeps manual "
+"overrides intact."
+msgstr "更改样式会重新格式化自动生成的引文，手动修改的内容将予以保留。"
 
 msgid "Visible Heading"
-msgstr "可见标题"
+msgstr "显示标题"
 
-msgid "Optional heading shown above the bibliography on the site front end when at least one citation exists."
-msgstr "当至少存在一条引文时，在站点前端显示在参考书目上方的可选标题。"
+msgid ""
+"Optional heading shown above the bibliography on the site front end when at "
+"least one citation exists."
+msgstr "当至少存在一条引文时，在站点前端参考书目上方显示的可选标题。"
 
 msgid "Output JSON-LD"
 msgstr "输出 JSON-LD"
 
 msgid "Helps search engines and other tools understand the bibliography."
-msgstr "帮助搜索引擎和其他工具理解参考书目。"
+msgstr "帮助搜索引擎和其他工具解读参考书目。"
 
 msgid "Output COinS"
 msgstr "输出 COinS"
 
 msgid "Lets Zotero and similar tools detect citations on the page."
-msgstr "让 Zotero 和类似工具在页面上识别引文。"
+msgstr "让 Zotero 等工具自动识别页面中的引文。"
 
 msgid "Output CSL-JSON"
 msgstr "输出 CSL-JSON"
 
 msgid "Makes citation data reusable by scholarly tools and services."
-msgstr "使学术工具和服务能够重复使用引文数据。"
+msgstr "使引文数据可供学术工具和服务复用。"
 
 msgid "Exports"
 msgstr "导出"
@@ -112,35 +114,41 @@ msgstr "导出"
 msgid "Copy bibliography"
 msgstr "复制参考书目"
 
-msgid "Copies the current bibliography as plain text in the current order and style."
-msgstr "按当前顺序和样式将当前参考书目复制为纯文本。"
+msgid ""
+"Copies the current bibliography as plain text in the current order and "
+"style."
+msgstr "按当前顺序和样式将参考书目复制为纯文本。"
 
 msgid "Download CSL-JSON"
 msgstr "下载 CSL-JSON"
 
 msgid "Downloads the current bibliography as structured citation data."
-msgstr "将当前参考书目下载为结构化引文数据。"
+msgstr "将参考书目下载为结构化引文数据。"
 
 msgid "Download BibTeX"
 msgstr "下载 BibTeX"
 
-msgid "Downloads the current bibliography as BibTeX for reference-manager and scholarly-writing workflows."
-msgstr "将当前参考书目下载为 BibTeX，用于文献管理和学术写作工作流。"
+msgid ""
+"Downloads the current bibliography as BibTeX for reference-manager and "
+"scholarly-writing workflows."
+msgstr "将参考书目下载为 BibTeX，供文献管理和学术写作工作流使用。"
 
 msgid "Download RIS"
 msgstr "下载 RIS"
 
-msgid "Downloads the current bibliography as RIS for citation managers and import/export workflows."
-msgstr "将当前参考书目下载为 RIS，用于引文管理器和导入/导出工作流。"
+msgid ""
+"Downloads the current bibliography as RIS for citation managers and "
+"import/export workflows."
+msgstr "将参考书目下载为 RIS，供文献管理工具及导入/导出工作流使用。"
 
 msgid "Notification"
 msgstr "通知"
 
 msgid "Publication Type"
-msgstr "出版物类型"
+msgstr "文献类型"
 
 msgid "Select a publication type"
-msgstr "选择出版物类型"
+msgstr "选择文献类型"
 
 msgid "Save"
 msgstr "保存"
@@ -155,13 +163,147 @@ msgid "Sorry, you are not allowed to read this bibliography."
 msgstr "抱歉，您无权查看此参考书目。"
 
 msgid "Bibliography block not found for the requested index."
-msgstr "未找到所请求索引的参考书目区块。"
+msgstr "未找到所请求索引对应的参考书目区块。"
 
 msgid "Post ID to inspect for bibliography blocks."
 msgstr "用于检查参考书目区块的文章 ID。"
 
 msgid "Zero-based bibliography block index within the post."
-msgstr "文章中从零开始的参考书目区块索引。"
+msgstr "文章中以 0 为起始的参考书目区块索引。"
 
 msgid "Response format: json, text, or csl-json."
 msgstr "响应格式：json、text 或 csl-json。"
+
+#, fuzzy
+msgid ""
+"Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported "
+"styles for books, articles, chapters, and webpages. Separate multiple "
+"formatted citations with a blank line."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"IEEE/Vancouver: arrange entries to match the order they're first cited in "
+"your text."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"OSCOLA convention groups bibliographies by source type (cases, legislation, "
+"books, articles, online). Borges currently renders a single alphabetized "
+"list. See Epic-OSCOLA for tracking."
+msgstr ""
+
+#, fuzzy
+msgid "Download BibLaTeX"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Downloads the current bibliography as BibLaTeX for LaTeX/Biber workflows "
+"with full Unicode support."
+msgstr ""
+
+#, fuzzy
+msgid "Move citation up"
+msgstr ""
+
+#, fuzzy
+msgid "Move citation down"
+msgstr ""
+
+#, fuzzy
+msgid "Formatter unavailable; added fallback citation text."
+msgstr ""
+
+#, fuzzy
+msgid "Link to publication"
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to format bibliographies."
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to resolve PubMed citations."
+msgstr ""
+
+#, fuzzy
+msgid "PubMed ID to resolve to CSL-JSON."
+msgstr ""
+
+#, fuzzy
+msgid "The citation formatting request is too large."
+msgstr ""
+
+#, fuzzy
+msgid "Too many citations were sent for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter requires the PHP %s extension."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter dependencies are missing."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style could not be read."
+msgstr ""
+
+#, fuzzy
+msgid "The citation data could not be prepared for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The citations could not be formatted."
+msgstr ""
+
+#, fuzzy
+msgid "Invalid PubMed ID."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service could not be reached."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed ID could not be resolved."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an error."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an invalid response."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Bibliography block has no heading. Screen reader users may not find this "
+"section."
+msgstr ""
+
+#, fuzzy
+msgid "Bibliography block contains no citations."
+msgstr ""
+
+#, fuzzy
+msgid "Add at least one citation before publishing."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Add a heading in block settings so the bibliography is announced as a "
+"document section."
+msgstr ""

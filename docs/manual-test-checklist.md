@@ -16,7 +16,7 @@ Manual QA flow for the local Studio setup.
 -   [ ] Insert the **Bibliography** block
 -   [ ] Confirm the block appears in the inserter
 -   [ ] Confirm the add form is open by default
--   [ ] Confirm the textarea placeholder reads: `Add DOI(s), BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages.`
+-   [ ] Confirm the textarea placeholder reads: `Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.`
 
 ## Supported input checks
 
@@ -58,7 +58,7 @@ Source page: `post=14`
 -   [ ] Paste a duplicate DOI already present in the block
 -   [ ] Confirm `No new citations added.` and duplicate-skip feedback appear
 
-## DOI and BibTeX checks
+## DOI, PubMed/PMID, and BibTeX checks
 
 Source page: `post=15`
 
@@ -67,6 +67,9 @@ Source page: `post=15`
 
 -   [ ] Paste a DOI URL form
 -   [ ] Confirm DOI URL form also resolves
+
+-   [ ] Paste `PMID:26673779`
+-   [ ] Confirm PubMed/PMID resolution succeeds
 
 -   [ ] Paste a BibTeX book entry
 -   [ ] Confirm it parses
@@ -123,6 +126,6 @@ Source page: `post=15`
 
 -   Supported input samples parse successfully
 -   Unsupported inputs fail closed with clear notice feedback
--   DOI and BibTeX samples parse successfully
+-   DOI, PubMed/PMID, and BibTeX samples parse successfully
 -   Editing, reset, and delete flows work without block validation regressions
 -   Save/reload is stable

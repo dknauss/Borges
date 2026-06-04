@@ -11,9 +11,15 @@ jest.mock('@citation-js/plugin-bibtex', () =>
 jest.mock('./formatting/csl', () =>
 	require('../__test-utils__/citation-js-mocks').stubFormattingFactory()
 );
+jest.mock('@wordpress/api-fetch', () => jest.fn());
 
 import { Cite } from '@citation-js/core';
-import { parsePastedInput, validateAndSanitizeCsl } from './parser';
+import apiFetch from '@wordpress/api-fetch';
+import {
+	clearDoiMetadataCache,
+	parsePastedInput,
+	validateAndSanitizeCsl,
+} from './parser';
 import { formatBibliographyEntries } from './formatting/csl';
 
 describe('validateAndSanitizeCsl', () => {
@@ -161,6 +167,8 @@ describe('parsePastedInput', () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks();
+		clearDoiMetadataCache();
+		apiFetch.mockReset();
 		originalCrypto = global.crypto;
 		Object.defineProperty(global, 'crypto', {
 			configurable: true,
@@ -453,7 +461,7 @@ describe('parsePastedInput', () => {
 		]);
 	});
 
-	it('processes DOI batches with bounded concurrency while preserving order', async () => {
+	it('serializes DOI batches while preserving order', async () => {
 		let activeCount = 0;
 		let maxActiveCount = 0;
 
@@ -479,7 +487,7 @@ describe('parsePastedInput', () => {
 
 		expect(result.errors).toEqual([]);
 		expect(result.entries).toHaveLength(5);
-		expect(maxActiveCount).toBeLessThanOrEqual(4);
+		expect(maxActiveCount).toBe(1);
 		expect(result.entries.map((entry) => entry.csl.title)).toEqual([
 			'Resolved 10.1000/a',
 			'Resolved 10.1000/b',
@@ -487,6 +495,99 @@ describe('parsePastedInput', () => {
 			'Resolved 10.1000/d',
 			'Resolved 10.1000/e',
 		]);
+	});
+
+	it('resolves DOI metadata through CrossRef when a fetch transport is available', async () => {
+		const fetchFn = jest.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({
+				type: 'journal-article',
+				title: 'Array programming with NumPy',
+				DOI: '10.1038/s41586-020-2649-2',
+				author: [
+					{
+						given: 'Charles R.',
+						family: 'Harris',
+					},
+				],
+			}),
+		});
+
+		const result = await parsePastedInput(
+			'10.1038/s41586-020-2649-2',
+			'apa-7',
+			{ fetchFn }
+		);
+
+		expect(fetchFn).toHaveBeenCalledWith(
+			'https://api.crossref.org/works/10.1038%2Fs41586-020-2649-2/transform/application/vnd.citationstyles.csl+json'
+		);
+		expect(Cite.async).not.toHaveBeenCalled();
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(1);
+		expect(result.entries[0].csl).toMatchObject({
+			type: 'article-journal',
+			title: 'Array programming with NumPy',
+			DOI: '10.1038/s41586-020-2649-2',
+		});
+	});
+
+	it('reuses DOI metadata for duplicate DOI values within one paste', async () => {
+		Cite.async.mockResolvedValue({
+			get: () => [
+				{
+					type: 'article-journal',
+					title: 'Shared DOI metadata',
+					DOI: '10.1234/shared',
+				},
+			],
+		});
+
+		const result = await parsePastedInput(
+			`https://doi.org/10.1234/shared\n10.1234/shared`
+		);
+
+		expect(Cite.async).toHaveBeenCalledTimes(1);
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(2);
+		expect(result.entries[0].csl.title).toBe('Shared DOI metadata');
+		expect(result.entries[1].csl.title).toBe('Shared DOI metadata');
+	});
+
+	it('reuses successful DOI metadata across parser calls in the same session', async () => {
+		Cite.async.mockResolvedValue({
+			get: () => [
+				{
+					type: 'article-journal',
+					title: 'Session cached DOI metadata',
+					DOI: '10.1234/session-cache',
+				},
+			],
+		});
+
+		await parsePastedInput('10.1234/session-cache');
+		const second = await parsePastedInput(
+			'https://doi.org/10.1234/session-cache'
+		);
+
+		expect(Cite.async).toHaveBeenCalledTimes(1);
+		expect(second.entries).toHaveLength(1);
+		expect(second.entries[0].csl.title).toBe('Session cached DOI metadata');
+	});
+
+	it('skips DOI resolution for DOI values already present in the bibliography', async () => {
+		const result = await parsePastedInput(
+			'https://doi.org/10.1234/already-present',
+			'apa-7',
+			{
+				existingDoiValues: ['10.1234/already-present'],
+			}
+		);
+
+		expect(Cite.async).not.toHaveBeenCalled();
+		expect(result.entries).toEqual([]);
+		expect(result.errors).toEqual([]);
+		expect(result.skippedDuplicateCount).toBe(1);
 	});
 
 	it('normalizes common BibTeX entry-type aliases like @artikel before parsing', async () => {
@@ -845,7 +946,7 @@ Hallo world\\cite{einstein}
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'This looks like LaTeX, not a bibliography entry. Paste a DOI, BibTeX entry, or supported citation instead.',
+			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, BibTeX entry, or supported citation instead.',
 		]);
 		expect(result.remainingInput).toContain('\\documentclass{article}');
 	});
@@ -855,7 +956,7 @@ Hallo world\\cite{einstein}
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'This looks like LaTeX, not a bibliography entry. Paste a DOI, BibTeX entry, or supported citation instead.',
+			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, BibTeX entry, or supported citation instead.',
 		]);
 		expect(result.remainingInput).toBe('\\autocite{einstein}');
 	});
@@ -1087,11 +1188,11 @@ describe('PMID input resolution', () => {
 	const SAMPLE_CSL = {
 		type: 'article-journal',
 		title: 'CRISPR–Cas9 for medical genetic screens: applications and future perspectives',
-		'container-title': 'Nature Reviews Genetics',
-		author: [{ family: 'Anzalone', given: 'Andrew V.' }],
-		issued: { 'date-parts': [[2023]] },
-		DOI: '10.1038/s41576-022-00557-5',
-		PMID: '36658352',
+		'container-title': 'Journal of medical genetics',
+		author: [{ family: 'Xue', given: 'Hui-Ying' }],
+		issued: { 'date-parts': [[2016, 2]] },
+		DOI: '10.1136/jmedgenet-2015-103409',
+		PMID: '26673779',
 	};
 
 	function makeFetchFn(status = 200, body = SAMPLE_CSL) {
@@ -1105,12 +1206,12 @@ describe('PMID input resolution', () => {
 	it('detects PMID: prefixed input and fetches from NCBI API', async () => {
 		const fetchFn = makeFetchFn();
 
-		const result = await parsePastedInput('PMID:36658352', 'apa', {
+		const result = await parsePastedInput('PMID:26673779', 'apa', {
 			fetchFn,
 		});
 
 		expect(fetchFn).toHaveBeenCalledWith(
-			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=36658352'
+			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=26673779'
 		);
 		expect(result.entries).toHaveLength(1);
 		expect(result.errors).toHaveLength(0);
@@ -1119,12 +1220,12 @@ describe('PMID input resolution', () => {
 	it('accepts lowercase pmid: prefix', async () => {
 		const fetchFn = makeFetchFn();
 
-		const result = await parsePastedInput('pmid:36658352', 'apa', {
+		const result = await parsePastedInput('pmid:26673779', 'apa', {
 			fetchFn,
 		});
 
 		expect(fetchFn).toHaveBeenCalledWith(
-			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=36658352'
+			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=26673779'
 		);
 		expect(result.entries).toHaveLength(1);
 	});
@@ -1132,12 +1233,12 @@ describe('PMID input resolution', () => {
 	it('accepts PMID: with a space before the number', async () => {
 		const fetchFn = makeFetchFn();
 
-		const result = await parsePastedInput('PMID: 36658352', 'apa', {
+		const result = await parsePastedInput('PMID: 26673779', 'apa', {
 			fetchFn,
 		});
 
 		expect(fetchFn).toHaveBeenCalledWith(
-			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=36658352'
+			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=26673779'
 		);
 		expect(result.entries).toHaveLength(1);
 	});
@@ -1145,7 +1246,7 @@ describe('PMID input resolution', () => {
 	it('maps NCBI CSL-JSON to a citation entry with inputFormat pmid', async () => {
 		const fetchFn = makeFetchFn();
 
-		const result = await parsePastedInput('PMID:36658352', 'apa', {
+		const result = await parsePastedInput('PMID:26673779', 'apa', {
 			fetchFn,
 		});
 
@@ -1156,6 +1257,18 @@ describe('PMID input resolution', () => {
 				title: 'CRISPR–Cas9 for medical genetic screens: applications and future perspectives',
 			},
 		});
+	});
+
+	it('uses the WordPress REST proxy for PMID resolution by default', async () => {
+		apiFetch.mockResolvedValue(SAMPLE_CSL);
+
+		const result = await parsePastedInput('PMID:26673779', 'apa');
+
+		expect(apiFetch).toHaveBeenCalledWith({
+			path: '/bibliography/v1/pmid/26673779',
+		});
+		expect(result.entries).toHaveLength(1);
+		expect(result.errors).toHaveLength(0);
 	});
 
 	it('returns an error when NCBI returns a non-OK status', async () => {
@@ -1170,11 +1283,22 @@ describe('PMID input resolution', () => {
 		expect(result.errors[0]).toMatch(/PMID/i);
 	});
 
+	it('returns a PMID error when the WordPress REST transport fails', async () => {
+		apiFetch.mockRejectedValue(new Error('WordPress API unavailable'));
+
+		const result = await parsePastedInput('PMID:26673779', 'apa');
+
+		expect(result.entries).toHaveLength(0);
+		expect(result.errors).toEqual([
+			"Couldn't resolve the PMID. Check the number and try again.",
+		]);
+	});
+
 	it('does not call Cite.async for PMID inputs', async () => {
 		const fetchFn = makeFetchFn();
 		Cite.async.mockClear();
 
-		await parsePastedInput('PMID:36658352', 'apa', { fetchFn });
+		await parsePastedInput('PMID:26673779', 'apa', { fetchFn });
 
 		expect(Cite.async).not.toHaveBeenCalled();
 	});
@@ -1205,5 +1329,78 @@ describe('PMID input resolution', () => {
 
 		expect(result.entries).toHaveLength(2);
 		expect(result.errors).toHaveLength(0);
+	});
+});
+
+describe('PMID fallback resolution', () => {
+	const SAMPLE_CSL = {
+		type: 'article-journal',
+		title: 'Fallback PMID citation',
+		PMID: '26673779',
+	};
+
+	function mockParserDependencies(apiFetchModule) {
+		jest.resetModules();
+		jest.doMock('@citation-js/core', () =>
+			require('../__test-utils__/citation-js-mocks').citationJsCoreMock()
+		);
+		jest.doMock('@citation-js/plugin-doi', () =>
+			require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
+		);
+		jest.doMock('@citation-js/plugin-bibtex', () =>
+			require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
+		);
+		jest.doMock('./formatting/csl', () =>
+			require('../__test-utils__/citation-js-mocks').stubFormattingFactory()
+		);
+		jest.doMock('@wordpress/api-fetch', () => apiFetchModule);
+	}
+
+	afterEach(() => {
+		jest.resetModules();
+		jest.dontMock('@wordpress/api-fetch');
+	});
+
+	it('falls back to window.fetch when the WordPress REST helper is unavailable', async () => {
+		const originalFetch = window.fetch;
+		const fetchMock = jest.fn().mockResolvedValue({
+			ok: true,
+			status: 200,
+			json: jest.fn().mockResolvedValue(SAMPLE_CSL),
+		});
+
+		mockParserDependencies({ __esModule: true, default: undefined });
+		window.fetch = fetchMock;
+
+		const { parsePastedInput: parseWithFallback } = require('./parser');
+		const result = await parseWithFallback('PMID:26673779', 'apa');
+
+		expect(fetchMock).toHaveBeenCalledWith(
+			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=26673779'
+		);
+		expect(result.errors).toEqual([]);
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'pmid',
+			csl: SAMPLE_CSL,
+		});
+
+		window.fetch = originalFetch;
+	});
+
+	it('reports a PMID error when no REST or fetch transport is available', async () => {
+		const originalFetch = window.fetch;
+
+		mockParserDependencies({ __esModule: true, default: undefined });
+		delete window.fetch;
+
+		const { parsePastedInput: parseWithoutTransport } = require('./parser');
+		const result = await parseWithoutTransport('PMID:26673779', 'apa');
+
+		expect(result.entries).toEqual([]);
+		expect(result.errors).toEqual([
+			"Couldn't resolve the PMID. Check the number and try again.",
+		]);
+
+		window.fetch = originalFetch;
 	});
 });

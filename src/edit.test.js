@@ -183,13 +183,13 @@ jest.mock(
 					},
 					children || 'icon'
 				),
-			TextControl: ({ label, value, disabled }) =>
+			TextControl: ({ label, value, disabled, onChange }) =>
 				ReactLocal.createElement('input', {
 					'aria-label': label,
 					value,
 					disabled,
-					readOnly: true,
-					onChange: () => {},
+					readOnly: !onChange,
+					onChange: (event) => onChange?.(event.target.value),
 				}),
 			ToggleControl: ({ label, checked, onChange, help }) =>
 				ReactLocal.createElement(
@@ -583,7 +583,7 @@ describe('Edit focus management', () => {
 
 		expect(
 			screen.getByPlaceholderText(
-				'Add DOI(s), BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.'
+				'Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.'
 			)
 		).toBeInTheDocument();
 
@@ -660,6 +660,167 @@ describe('Edit focus management', () => {
 		);
 	});
 
+	it('reformats the full bibliography when parsed entries are appended', async () => {
+		parsePastedInput.mockResolvedValue({
+			entries: [
+				createCitation({
+					id: 'entry-b',
+					family: 'Alpha',
+					year: 2023,
+					title: 'Alpha citation',
+				}),
+			],
+			errors: [],
+			truncated: false,
+			remainingInput: '',
+		});
+
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.type(
+			screen.getByLabelText('Add citations'),
+			'10.1234/context-aware'
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		await waitFor(() => {
+			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+				[
+					expect.objectContaining({ title: 'Zulu citation' }),
+					expect.objectContaining({ title: 'Alpha citation' }),
+				],
+				'chicago-notes-bibliography',
+				expect.objectContaining({
+					onFallback: expect.any(Function),
+				})
+			);
+		});
+	});
+
+	it('passes existing DOI values to the parser and reports skipped duplicate DOI input', async () => {
+		parsePastedInput.mockResolvedValue({
+			entries: [],
+			errors: [],
+			truncated: false,
+			remainingInput: '',
+			skippedDuplicateCount: 1,
+		});
+
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Alpha',
+						year: 2024,
+						title: 'Alpha citation',
+						doi: '10.1234/already-present',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.type(
+			screen.getByLabelText('Add citations'),
+			'https://doi.org/10.1234/already-present'
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		expect(parsePastedInput).toHaveBeenCalledWith(
+			'https://doi.org/10.1234/already-present',
+			'chicago-notes-bibliography',
+			expect.objectContaining({
+				deferFormatting: true,
+				existingDoiValues: ['10.1234/already-present'],
+			})
+		);
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'No new citations added. Skipped 1 duplicate.'
+		);
+		expect(formatBibliographyEntries).not.toHaveBeenCalled();
+	});
+
+	it('does not parse when the bibliography already has 200 citations', async () => {
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 200 }, (_, index) =>
+					createCitation({
+						id: `entry-${index}`,
+						family: `Author ${index}`,
+						year: 2024,
+						title: `Citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		await userEvent.type(
+			screen.getByLabelText('Add citations'),
+			'10.1234/too-many'
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'This bibliography already has the maximum of 200 citations. Remove a citation before adding another.'
+		);
+		expect(parsePastedInput).not.toHaveBeenCalled();
+		expect(formatBibliographyEntries).not.toHaveBeenCalled();
+	});
+
+	it('does not append parsed entries that would exceed the 200 citation total limit', async () => {
+		// 201 entries returned by the mock — only 199 slots are available (200 - 1 existing).
+		// Use 1 initial entry so the test renders quickly and stays below the soft cap.
+		parsePastedInput.mockResolvedValue({
+			entries: Array.from({ length: 201 }, (_, index) =>
+				createCitation({
+					id: `entry-new-${index}`,
+					family: `New ${index}`,
+					year: 2024,
+					title: `New citation ${index}`,
+				})
+			),
+			errors: [],
+			truncated: false,
+			remainingInput: '',
+		});
+
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'entry-0',
+						family: 'Existing',
+						year: 2024,
+						title: 'Existing citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.type(
+			screen.getByLabelText('Add citations'),
+			'10.1234/overflow'
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Adding 201 citations would exceed the supported limit of 200 citations per bibliography. 199 slots remain; add fewer items or remove citations first.'
+		);
+		expect(formatBibliographyEntries).not.toHaveBeenCalled();
+		expect(screen.queryByText('New citation 0')).not.toBeInTheDocument();
+	});
+
 	it('keeps fallback and truncation details in the parse result notice', async () => {
 		parsePastedInput.mockResolvedValue({
 			entries: [
@@ -692,6 +853,58 @@ describe('Edit focus management', () => {
 		expect(await screen.findByRole('status')).toHaveTextContent(
 			'Added 1 citation. Only the first 50 items were processed. Formatter unavailable; added fallback citation text.'
 		);
+	});
+
+	it('does not commit parsed entries after delete supersedes a pending parse', async () => {
+		let resolveParse;
+		parsePastedInput.mockReturnValueOnce(
+			new Promise((resolve) => {
+				resolveParse = resolve;
+			})
+		);
+
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'existing',
+						family: 'Alpha',
+						year: 2024,
+						title: 'Existing citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.type(
+			screen.getByLabelText('Add citations'),
+			'10.1234/pending'
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Delete citation: Alpha 2024' })
+		);
+
+		resolveParse({
+			entries: [
+				createCitation({
+					id: 'pending-entry',
+					family: 'Pending',
+					year: 2025,
+					title: 'Pending citation',
+				}),
+			],
+			errors: [],
+			truncated: false,
+			remainingInput: '',
+		});
+
+		await waitFor(() => {
+			expect(
+				screen.queryByText('Pending citation')
+			).not.toBeInTheDocument();
+		});
+		expect(screen.queryByText('Existing citation')).not.toBeInTheDocument();
 	});
 
 	it('shows a persistent error notice when parsing throws', async () => {
@@ -946,6 +1159,39 @@ describe('Edit focus management', () => {
 		});
 	});
 
+	it('moves numeric citations up with arrow controls', async () => {
+		render(
+			<EditHarness
+				initialStyle="ieee"
+				initialCitations={[
+					createCitation({
+						id: 'zulu',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+					createCitation({
+						id: 'alpha',
+						family: 'Alpha',
+						year: 2023,
+						title: 'Alpha citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getByRole('button', { name: "Move 'Alpha 2023' up" })
+		);
+
+		await waitFor(() => {
+			const entries = screen.getAllByRole('listitem');
+			expect(entries[0]).toHaveTextContent('Alpha citation');
+			expect(entries[1]).toHaveTextContent('Zulu citation');
+			expect(entries[0]).toHaveFocus();
+		});
+	});
+
 	it('supports Alt+ArrowDown reorder shortcut for numeric styles', async () => {
 		render(
 			<EditHarness
@@ -975,6 +1221,38 @@ describe('Edit focus management', () => {
 			const entries = screen.getAllByRole('listitem');
 			expect(entries[0]).toHaveTextContent('Alpha citation');
 			expect(entries[1]).toHaveTextContent('Zulu citation');
+		});
+	});
+
+	it('supports Alt+ArrowUp reorder shortcut for numeric styles', async () => {
+		render(
+			<EditHarness
+				initialStyle="ieee"
+				initialCitations={[
+					createCitation({
+						id: 'alpha',
+						family: 'Alpha',
+						year: 2023,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'zulu',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+				]}
+			/>
+		);
+
+		const secondEntry = screen.getAllByRole('listitem')[1];
+		secondEntry.focus();
+		fireEvent.keyDown(secondEntry, { key: 'ArrowUp', altKey: true });
+
+		await waitFor(() => {
+			const entries = screen.getAllByRole('listitem');
+			expect(entries[0]).toHaveTextContent('Zulu citation');
+			expect(entries[1]).toHaveTextContent('Alpha citation');
 		});
 	});
 
@@ -1022,6 +1300,19 @@ describe('Edit focus management', () => {
 			'Style changed to APA 7.'
 		);
 		expect(screen.getByLabelText('Citation Style')).toHaveValue('apa-7');
+	});
+
+	it('updates the visible bibliography heading from inspector settings', async () => {
+		render(<EditHarness />);
+
+		await userEvent.type(
+			screen.getByLabelText('Visible Heading'),
+			'Works Cited'
+		);
+
+		expect(screen.getByLabelText('Visible Heading')).toHaveValue(
+			'Works Cited'
+		);
 	});
 
 	it('renders notices inline within the block UI', async () => {
@@ -1548,11 +1839,70 @@ describe('Edit focus management', () => {
 		expect(screen.getByLabelText('Title')).toHaveValue('');
 	});
 
-	it('keeps a persistent notice when manual citation formatting falls back', async () => {
-		formatBibliographyEntry.mockImplementationOnce(
-			(csl, style, options) => {
+	it('reformats the full bibliography when adding a manual citation', async () => {
+		render(
+			<EditHarness
+				initialCitations={[
+					createCitation({
+						id: 'existing',
+						family: 'Zulu',
+						year: 2024,
+						title: 'Zulu citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+		);
+		await userEvent.selectOptions(
+			screen.getByLabelText('Publication Type'),
+			'book'
+		);
+		await userEvent.type(screen.getByLabelText('Author(s)'), 'Alpha, Ada');
+		await userEvent.type(screen.getByLabelText('Title'), 'Alpha citation');
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		await waitFor(() => {
+			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+				[
+					expect.objectContaining({ title: 'Zulu citation' }),
+					expect.objectContaining({ title: 'Alpha citation' }),
+				],
+				'chicago-notes-bibliography',
+				expect.objectContaining({
+					onFallback: expect.any(Function),
+				})
+			);
+		});
+	});
+
+	it('adds a manual citation without single-entry pre-formatting', async () => {
+		render(<EditHarness />);
+
+		await userEvent.click(
+			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+		);
+		await userEvent.selectOptions(
+			screen.getByLabelText('Publication Type'),
+			'book'
+		);
+		await userEvent.type(screen.getByLabelText('Title'), 'Manual Book');
+		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Added 1 citation.'
+		);
+		expect(formatBibliographyEntry).not.toHaveBeenCalled();
+		expect(formatBibliographyEntries).toHaveBeenCalledTimes(1);
+	});
+
+	it('keeps a persistent notice when manual bibliography reformatting falls back', async () => {
+		formatBibliographyEntries.mockImplementationOnce(
+			(cslItems, style, options) => {
 				options.onFallback();
-				return Promise.resolve('Fallback manual citation');
+				return cslItems.map((item) => item.title);
 			}
 		);
 
@@ -1574,7 +1924,7 @@ describe('Edit focus management', () => {
 	});
 
 	it('shows an error notice when manual citation creation fails', async () => {
-		formatBibliographyEntry.mockRejectedValueOnce(
+		formatBibliographyEntries.mockRejectedValueOnce(
 			new Error('format failed')
 		);
 
@@ -1733,6 +2083,31 @@ describe('Edit focus management', () => {
 		await waitFor(() => {
 			expect(screen.getByText('Alpha citation')).toBeInTheDocument();
 		});
+	});
+
+	it('does not reformat legacy over-limit bibliographies on style change', async () => {
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 201 }, (_, index) =>
+					createCitation({
+						id: `legacy-${index}`,
+						family: `Legacy ${index}`,
+						year: 2024,
+						title: `Legacy citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		await userEvent.selectOptions(
+			screen.getByLabelText('Citation Style'),
+			'apa-7'
+		);
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'This bibliography has 201 citations, which exceeds the supported limit of 200. Remove citations until it is within the supported limit before reformatting.'
+		);
+		expect(formatBibliographyEntries).not.toHaveBeenCalled();
 	});
 
 	it('allows toggling metadata output layers in block settings', async () => {
@@ -1993,6 +2368,148 @@ describe('Edit focus management', () => {
 		});
 	});
 
+	it('reformats remaining citations after deletion in author-date styles', async () => {
+		render(
+			<EditHarness
+				initialStyle="chicago-author-date"
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'entry-b',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Beta citation',
+					}),
+				]}
+			/>
+		);
+
+		const deleteButtons = screen.getAllByRole('button', {
+			name: 'Delete citation: Alpha 2020',
+		});
+		await userEvent.click(deleteButtons[0]);
+
+		await waitFor(() => {
+			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+				[expect.objectContaining({ title: 'Beta citation' })],
+				'chicago-author-date',
+				expect.objectContaining({
+					onFallback: expect.any(Function),
+				})
+			);
+		});
+	});
+
+	it('skips deletion reformatting in numeric styles because list markers provide numbering', async () => {
+		render(
+			<EditHarness
+				initialStyle="ieee"
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'entry-b',
+						family: 'Bravo',
+						year: 2021,
+						title: 'Bravo citation',
+					}),
+				]}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Delete citation: Alpha 2020' })
+		);
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Citation removed.'
+		);
+		expect(formatBibliographyEntries).not.toHaveBeenCalled();
+		expect(screen.getByText('Bravo citation')).toBeInTheDocument();
+	});
+
+	it('keeps a persistent notice when deletion reformatting falls back', async () => {
+		formatBibliographyEntries.mockImplementationOnce(
+			(cslItems, style, options) => {
+				options.onFallback();
+				return cslItems.map((item) => item.title);
+			}
+		);
+
+		render(
+			<EditHarness
+				initialStyle="chicago-author-date"
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'entry-b',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Beta citation',
+					}),
+				]}
+			/>
+		);
+
+		const deleteButtons = screen.getAllByRole('button', {
+			name: 'Delete citation: Alpha 2020',
+		});
+		await userEvent.click(deleteButtons[0]);
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Citation removed. Formatter unavailable; added fallback citation text.'
+		);
+	});
+
+	it('keeps a persistent notice when deletion reformatting throws', async () => {
+		formatBibliographyEntries.mockRejectedValueOnce(
+			new Error('format failed')
+		);
+
+		render(
+			<EditHarness
+				initialStyle="chicago-author-date"
+				initialCitations={[
+					createCitation({
+						id: 'entry-a',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Alpha citation',
+					}),
+					createCitation({
+						id: 'entry-b',
+						family: 'Alpha',
+						year: 2020,
+						title: 'Beta citation',
+					}),
+				]}
+			/>
+		);
+
+		const deleteButtons = screen.getAllByRole('button', {
+			name: 'Delete citation: Alpha 2020',
+		});
+		await userEvent.click(deleteButtons[0]);
+
+		expect(await screen.findByRole('status')).toHaveTextContent(
+			'Citation removed. Formatter unavailable; added fallback citation text.'
+		);
+	});
+
 	it('moves focus back to the add-citations textarea after deleting the last citation', async () => {
 		render(
 			<EditHarness
@@ -2219,13 +2736,15 @@ describe('Edit focus management', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
 		await waitFor(() => {
-			expect(formatBibliographyEntry).toHaveBeenCalledWith(
-				expect.objectContaining({
-					author: [
-						{ family: 'Smith', given: 'Ada' },
-						{ family: 'Scholar', given: 'Jane' },
-					],
-				}),
+			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+				[
+					expect.objectContaining({
+						author: [
+							{ family: 'Smith', given: 'Ada' },
+							{ family: 'Scholar', given: 'Jane' },
+						],
+					}),
+				],
 				'chicago-notes-bibliography',
 				expect.objectContaining({
 					onFallback: expect.any(Function),
@@ -2546,6 +3065,71 @@ describe('OSCOLA inspector notice', () => {
 
 		expect(
 			screen.queryByText(/OSCOLA convention groups bibliographies/i)
+		).not.toBeInTheDocument();
+	});
+});
+
+describe('soft-cap notice', () => {
+	it('shows warning when citation count is at or above 100 but below 200', () => {
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 100 }, (_, index) =>
+					createCitation({
+						id: `entry-${index}`,
+						family: `Author ${index}`,
+						year: 2024,
+						title: `Citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		expect(
+			screen.getByText(/above the 100-entry threshold/i)
+		).toBeInTheDocument();
+	});
+
+	it('does not show warning when citation count is below 100', () => {
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 99 }, (_, index) =>
+					createCitation({
+						id: `entry-${index}`,
+						family: `Author ${index}`,
+						year: 2024,
+						title: `Citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		expect(
+			screen.queryByText(/above the 100-entry threshold/i)
+		).not.toBeInTheDocument();
+	});
+
+	it('hides warning after dismissal', () => {
+		render(
+			<EditHarness
+				initialCitations={Array.from({ length: 100 }, (_, index) =>
+					createCitation({
+						id: `entry-${index}`,
+						family: `Author ${index}`,
+						year: 2024,
+						title: `Citation ${index}`,
+					})
+				)}
+			/>
+		);
+
+		expect(
+			screen.getByText(/above the 100-entry threshold/i)
+		).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
+
+		expect(
+			screen.queryByText(/above the 100-entry threshold/i)
 		).not.toBeInTheDocument();
 	});
 });

@@ -6,8 +6,10 @@
  */
 
 import { Cite } from '@citation-js/core';
+import { MAX_ENTRIES_PER_PASTE } from './citation-limits';
 import '@citation-js/plugin-doi';
 import '@citation-js/plugin-bibtex';
+import apiFetch from '@wordpress/api-fetch';
 import { createCitationId } from './citation-id';
 import { validateAndSanitizeCsl } from './csl-sanitize';
 import { DEFAULT_CITATION_STYLE } from './formatting';
@@ -20,15 +22,80 @@ const BIBTEX_REGEX = /@\w+\{/;
 const PMID_REGEX = /^PMID:\s*(\d{1,8})$/i;
 const NCBI_CSL_API =
 	'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=';
-const MAX_ENTRIES_PER_PASTE = 50;
+const CROSSREF_CSL_API = 'https://api.crossref.org/works/';
+const PMID_REST_ENDPOINT = '/bibliography/v1/pmid/';
 const MAX_INPUT_SIZE = 1024 * 1024; // 1 MB
 const PARSE_CONCURRENCY = 4;
+const MAX_DOI_METADATA_CACHE_ENTRIES = 100;
 const LATEX_DOCUMENT_PATTERN =
 	/\\documentclass\b|\\begin\{document\}|\\printbibliography\b|\\addbibresource\b|\\(?:auto|foot|paren|text)?cite\w*\{/u;
+const DOI_METADATA_CACHE = new Map();
+const PENDING_DOI_RESOLUTIONS = new Map();
+let DOI_RESOLUTION_QUEUE = Promise.resolve();
 export { validateAndSanitizeCsl };
 
 function normalizePmidInput(value) {
 	return value.replace(/^PMID:\s*/iu, '').trim();
+}
+
+function getDefaultFetchFn() {
+	if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
+		return window.fetch.bind(window);
+	}
+
+	return undefined;
+}
+
+async function resolvePmidViaFetch(pmid, fetchFn) {
+	const response = await fetchFn(`${NCBI_CSL_API}${pmid}`);
+
+	if (!response.ok) {
+		throw new Error(
+			`NCBI API returned ${response.status} for PMID ${pmid}`
+		);
+	}
+
+	return response.json();
+}
+
+async function resolvePmidViaRest(pmid) {
+	return apiFetch({
+		path: `${PMID_REST_ENDPOINT}${encodeURIComponent(pmid)}`,
+	});
+}
+
+async function resolvePmidCsl(pmid, fetchFn) {
+	if (typeof fetchFn === 'function') {
+		return resolvePmidViaFetch(pmid, fetchFn);
+	}
+
+	if (typeof apiFetch === 'function') {
+		return resolvePmidViaRest(pmid);
+	}
+
+	const defaultFetchFn = getDefaultFetchFn();
+
+	if (typeof defaultFetchFn === 'function') {
+		return resolvePmidViaFetch(pmid, defaultFetchFn);
+	}
+
+	throw new Error('Fetch API unavailable for PMID resolution');
+}
+
+async function resolveDoiViaCrossRef(doi, fetchFn) {
+	const response = await fetchFn(
+		`${CROSSREF_CSL_API}${encodeURIComponent(
+			doi
+		)}/transform/application/vnd.citationstyles.csl+json`
+	);
+
+	if (!response.ok) {
+		throw new Error(
+			`CrossRef API returned ${response.status} for DOI ${doi}`
+		);
+	}
+
+	return normalizeCrossRefCsl(await response.json());
 }
 
 function normalizeDoiInput(value) {
@@ -36,6 +103,107 @@ function normalizeDoiInput(value) {
 		.trim()
 		.replace(/[).,;:\s]+$/u, '')
 		.replace(/^(?:https?:\/\/)?doi:/iu, '');
+}
+
+export function normalizeDoiValueForLookup(value) {
+	return normalizeDoiInput(value)
+		.toLowerCase()
+		.replace(/^(?:https?:\/\/)?(?:dx\.)?doi\.org\//u, '');
+}
+
+function cloneCslItems(cslItems) {
+	return cslItems.map((item) => JSON.parse(JSON.stringify(item)));
+}
+
+function normalizeCrossRefCsl(csl) {
+	const typeMap = {
+		'journal-article': 'article-journal',
+		'book-chapter': 'chapter',
+		'proceedings-article': 'paper-conference',
+		dissertation: 'thesis',
+		'posted-content': 'manuscript',
+	};
+
+	return {
+		...csl,
+		type: typeMap[csl.type] || csl.type,
+	};
+}
+
+function getCachedDoiMetadata(cacheKey) {
+	if (!DOI_METADATA_CACHE.has(cacheKey)) {
+		return undefined;
+	}
+
+	const cslItems = DOI_METADATA_CACHE.get(cacheKey);
+	DOI_METADATA_CACHE.delete(cacheKey);
+	DOI_METADATA_CACHE.set(cacheKey, cslItems);
+
+	return cloneCslItems(cslItems);
+}
+
+function setCachedDoiMetadata(cacheKey, cslItems) {
+	if (DOI_METADATA_CACHE.has(cacheKey)) {
+		DOI_METADATA_CACHE.delete(cacheKey);
+	}
+
+	while (DOI_METADATA_CACHE.size >= MAX_DOI_METADATA_CACHE_ENTRIES) {
+		const leastRecentlyUsedKey = DOI_METADATA_CACHE.keys().next().value;
+
+		if (!leastRecentlyUsedKey) {
+			break;
+		}
+
+		DOI_METADATA_CACHE.delete(leastRecentlyUsedKey);
+	}
+
+	DOI_METADATA_CACHE.set(cacheKey, cloneCslItems(cslItems));
+}
+
+export function clearDoiMetadataCache() {
+	DOI_METADATA_CACHE.clear();
+	PENDING_DOI_RESOLUTIONS.clear();
+	DOI_RESOLUTION_QUEUE = Promise.resolve();
+}
+
+function enqueueDoiResolution(resolve) {
+	const queuedResolution = DOI_RESOLUTION_QUEUE.catch(() => {}).then(resolve);
+	DOI_RESOLUTION_QUEUE = queuedResolution.catch(() => {});
+
+	return queuedResolution;
+}
+
+async function resolveDoiCslItems(value, fetchFn) {
+	const cacheKey = normalizeDoiValueForLookup(value);
+	const cachedItems = getCachedDoiMetadata(cacheKey);
+
+	if (cachedItems) {
+		return cachedItems;
+	}
+
+	if (!PENDING_DOI_RESOLUTIONS.has(cacheKey)) {
+		const normalizedDoi = normalizeDoiInput(value);
+		const doiFetchFn =
+			typeof fetchFn === 'function' ? fetchFn : getDefaultFetchFn();
+
+		PENDING_DOI_RESOLUTIONS.set(
+			cacheKey,
+			enqueueDoiResolution(async () => {
+				const cslItems =
+					typeof doiFetchFn === 'function'
+						? [await resolveDoiViaCrossRef(cacheKey, doiFetchFn)]
+						: await Cite.async(normalizedDoi).then((cite) =>
+								cite.get({ type: 'json' })
+						  );
+				setCachedDoiMetadata(cacheKey, cslItems);
+				return cslItems;
+			}).finally(() => {
+				PENDING_DOI_RESOLUTIONS.delete(cacheKey);
+			})
+		);
+	}
+
+	return cloneCslItems(await PENDING_DOI_RESOLUTIONS.get(cacheKey));
 }
 
 function normalizeWhitespace(value) {
@@ -276,23 +444,13 @@ function splitChunkIntoDetectedItems(chunk) {
 const PARSER_BACKENDS = {
 	pmid: async (value, { fetchFn } = {}) => {
 		const pmid = normalizePmidInput(value);
-		const response = await fetchFn(`${NCBI_CSL_API}${pmid}`);
-
-		if (!response.ok) {
-			throw new Error(
-				`NCBI API returned ${response.status} for PMID ${pmid}`
-			);
-		}
-
-		const csl = await response.json();
+		const csl = await resolvePmidCsl(pmid, fetchFn);
 
 		return { cslItems: [csl] };
 	},
-	doi: async (value) => {
-		const cite = await Cite.async(normalizeDoiInput(value));
-
+	doi: async (value, { fetchFn } = {}) => {
 		return {
-			cslItems: cite.get({ type: 'json' }),
+			cslItems: await resolveDoiCslItems(value, fetchFn),
 		};
 	},
 	bibtex: async (value) => {
@@ -363,7 +521,7 @@ function formatUnsupportedInputError() {
 }
 
 function formatLatexDocumentError() {
-	return 'This looks like LaTeX, not a bibliography entry. Paste a DOI, BibTeX entry, or supported citation instead.';
+	return 'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, BibTeX entry, or supported citation instead.';
 }
 
 function formatBackendParseError(format, err) {
@@ -392,18 +550,20 @@ function formatBackendParseError(format, err) {
 /**
  * Parse pasted input into an array of CSL-JSON citation objects.
  *
- * @param {string}   input                     Raw pasted text.
- * @param {string}   styleKey                  Style key for derived formatting.
- * @param {Object}   [options={}]              Parse options.
- * @param {boolean}  [options.deferFormatting] When true (default), leave
- *                                             `formattedText` empty so callers
- *                                             can decide if and when to format.
- *                                             When false, format entries inside
- *                                             the parser for legacy/explicit
- *                                             call sites.
- * @param {Function} [options.fetchFn]         Fetch implementation; defaults to
- *                                             the global fetch. Override in tests
- *                                             to avoid real network calls.
+ * @param {string}   input                       Raw pasted text.
+ * @param {string}   styleKey                    Style key for derived formatting.
+ * @param {Object}   [options={}]                Parse options.
+ * @param {boolean}  [options.deferFormatting]   When true (default), leave
+ *                                               `formattedText` empty so callers
+ *                                               can decide if and when to format.
+ *                                               When false, format entries inside
+ *                                               the parser for legacy/explicit
+ *                                               call sites.
+ * @param {Function} [options.fetchFn]           Fetch implementation for PMID
+ *                                               resolution.
+ * @param {Array}    [options.existingDoiValues] Existing normalized or raw DOI
+ *                                               values already present in the
+ *                                               bibliography.
  * @return {Promise<Object>} { entries: Array, errors: Array, truncated: boolean }
  *
  * @since 0.1.0
@@ -411,10 +571,11 @@ function formatBackendParseError(format, err) {
 export async function parsePastedInput(
 	input,
 	styleKey = DEFAULT_CITATION_STYLE,
-	{ deferFormatting = true, fetchFn = global.fetch } = {}
+	{ deferFormatting = true, existingDoiValues = [], fetchFn } = {}
 ) {
 	const errors = [];
 	let truncated = false;
+	let skippedDuplicateCount = 0;
 
 	if (!input || !input.trim()) {
 		return {
@@ -458,6 +619,26 @@ export async function parsePastedInput(
 		overflowItems = detected.slice(MAX_ENTRIES_PER_PASTE);
 		detected = detected.slice(0, MAX_ENTRIES_PER_PASTE);
 	}
+
+	const existingDoiSet = new Set(
+		existingDoiValues
+			.filter((value) => typeof value === 'string' && value.trim())
+			.map(normalizeDoiValueForLookup)
+	);
+	detected = detected.filter((item) => {
+		if (item.format !== 'doi') {
+			return true;
+		}
+
+		const normalizedDoi = normalizeDoiValueForLookup(item.value);
+
+		if (existingDoiSet.has(normalizedDoi)) {
+			skippedDuplicateCount += 1;
+			return false;
+		}
+
+		return true;
+	});
 
 	const entries = [];
 	const remainingSegments = overflowItems.map((item) => item.rawValue);
@@ -528,6 +709,7 @@ export async function parsePastedInput(
 		errors,
 		truncated,
 		remainingInput: remainingSegments.join('\n\n'),
+		skippedDuplicateCount,
 	};
 }
 

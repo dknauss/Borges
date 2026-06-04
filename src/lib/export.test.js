@@ -21,6 +21,46 @@ import {
 } from './export';
 
 describe('export helpers', () => {
+	function createMatrixCitations() {
+		return [
+			{
+				id: 'zulu',
+				formattedText: 'Zulu formatted citation',
+				csl: {
+					type: 'book',
+					title: 'Zulu Book',
+					author: [{ family: 'Zulu', given: 'Zoe' }],
+					issued: { 'date-parts': [[2024]] },
+				},
+			},
+			{
+				id: 'alpha',
+				formattedText: 'Alpha formatted citation',
+				csl: {
+					type: 'book',
+					title: 'Alpha Book',
+					author: [{ family: 'Alpha', given: 'Ada' }],
+					issued: { 'date-parts': [[2020]] },
+				},
+			},
+		];
+	}
+
+	function createOrderingCiteCtor(expectedFormat) {
+		return jest.fn().mockImplementation((data) => ({
+			format: jest.fn((format) => {
+				expect(format).toBe(expectedFormat);
+				return data.map((csl) => csl.title).join('\n');
+			}),
+		}));
+	}
+
+	function getRisTitles(content) {
+		return [...content.matchAll(/^TI  - (.+)$/gmu)].map(
+			(match) => match[1]
+		);
+	}
+
 	it('builds a sorted plain-text bibliography payload', () => {
 		const content = buildPlainTextBibliographyContent(
 			[
@@ -85,6 +125,50 @@ describe('export helpers', () => {
 		expect(content.endsWith('\n')).toBe(true);
 	});
 
+	it.each([
+		{
+			style: 'chicago-author-date',
+			expectedTitles: ['Alpha Book', 'Zulu Book'],
+			expectedText: 'Alpha formatted citation\nZulu formatted citation\n',
+		},
+		{
+			style: 'ieee',
+			expectedTitles: ['Zulu Book', 'Alpha Book'],
+			expectedText: 'Zulu formatted citation\nAlpha formatted citation\n',
+		},
+	])(
+		'sorts every export format correctly for $style',
+		async ({ style, expectedTitles, expectedText }) => {
+			const citations = createMatrixCitations();
+
+			expect(buildPlainTextBibliographyContent(citations, style)).toBe(
+				expectedText
+			);
+
+			expect(
+				JSON.parse(buildCslJsonExportContent(citations, style)).map(
+					(csl) => csl.title
+				)
+			).toEqual(expectedTitles);
+
+			expect(
+				await buildBibtexExportContent(citations, style, {
+					CiteCtor: createOrderingCiteCtor('bibtex'),
+				})
+			).toBe(`${expectedTitles.join('\n')}\n`);
+
+			expect(
+				await buildBiblatexExportContent(citations, style, {
+					CiteCtor: createOrderingCiteCtor('biblatex'),
+				})
+			).toBe(`${expectedTitles.join('\n')}\n`);
+
+			expect(
+				getRisTitles(buildRisExportContent(citations, style))
+			).toEqual(expectedTitles);
+		}
+	);
+
 	it('downloads text content as a file', () => {
 		const click = jest.fn();
 		const remove = jest.fn();
@@ -127,6 +211,28 @@ describe('export helpers', () => {
 		expect(click).toHaveBeenCalled();
 		expect(remove).toHaveBeenCalled();
 		expect(revokeObjectURL).toHaveBeenCalledWith('blob:download');
+	});
+
+	it('throws clearly when browser download APIs are unavailable', () => {
+		expect(() =>
+			downloadTextExport(
+				{
+					content: 'citation data',
+					filename: 'citations.txt',
+					mimeType: 'text/plain',
+				},
+				{
+					documentRef: {
+						createElement: jest.fn(),
+						body: null,
+					},
+					urlRef: {
+						createObjectURL: jest.fn(),
+					},
+					BlobCtor: Blob,
+				}
+			)
+		).toThrow('Download API unavailable');
 	});
 
 	it('downloads CSL-JSON with the expected filename and MIME type', () => {
@@ -368,6 +474,28 @@ describe('export helpers', () => {
 		expect(content).toContain('SP  - 117');
 		expect(content).toContain('EP  - 134');
 		expect(content).toContain('ER  - ');
+	});
+
+	it('builds RIS authors from literal and partial personal names', () => {
+		const content = buildRisExportContent(
+			[
+				{
+					id: 'citation-1',
+					csl: {
+						type: 'report',
+						title: 'Institutional Report',
+						author: [
+							{ literal: 'World Health Organization' },
+							{ given: 'Alex' },
+						],
+					},
+				},
+			],
+			'apa-7'
+		);
+
+		expect(content).toContain('AU  - World Health Organization');
+		expect(content).toContain('AU  - Alex');
 	});
 
 	it('downloads RIS with the expected filename and MIME type', () => {

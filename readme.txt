@@ -4,26 +4,26 @@ Donate link: https://www.paypal.com/paypalme/DanKnauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.1.1
+Stable tag: 1.3.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Paste a DOI or BibTeX entry — get a formatted, auto-sorted bibliography in any of nine academic citation styles.
+Paste DOI, PubMed/PMID, BibTeX, or citations — get a formatted, auto-sorted bibliography in nine academic styles.
 
 == Description ==
 
 Named for Jorge Luis Borges (1899–1986), the Argentine writer and librarian known for stories about infinite libraries, imaginary books, and labyrinths of knowledge, Borges Bibliography Builder brings order to scholarly references in WordPress.
 
-The **Borges Bibliography Builder** transforms pasted DOI(s), BibTeX entries, and citations into a semantically rich, auto-sorted reference list.
+The **Borges Bibliography Builder** transforms pasted DOI(s), PubMed/PMID records, BibTeX entries, and citations into a semantically rich, auto-sorted reference list.
 
-**One-click import.** Paste a DOI, and CrossRef resolves the metadata instantly. Paste BibTeX or formatted citations for books, articles, chapters, webpages, reviews, and theses.
+**One-click import.** Paste a DOI and CrossRef resolves the metadata instantly. Paste a PubMed/PMID identifier and Borges resolves it through an authenticated WordPress REST proxy to NCBI/PMC citation metadata. Paste BibTeX or formatted citations for books, articles, chapters, webpages, reviews, and theses.
 
-**Nine citation styles.** Choose from Chicago Notes-Bibliography, Chicago Author-Date, APA 7, MLA 9, Harvard, Vancouver, IEEE, OSCOLA, and ABNT — all with automatic alphabetical sorting per style rules.
+**Nine citation styles.** Choose from Chicago Notes-Bibliography, Chicago Author-Date, APA 7, MLA 9, Harvard, Vancouver, IEEE, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2018) — all with automatic sorting per style rules.
 
 **Portable.** Static HTML output survives plugin deactivation. No shortcodes. No database tables.
 
-**Reference-manager friendly.** Export and reuse your bibliography in common research workflows. Borges supports CSL-JSON, BibTeX, RIS, DOI links, JSON-LD, and optional COinS metadata for compatibility with tools such as Zotero, Mendeley, EndNote, JabRef, BibDesk, and other citation managers.
+**Reference-manager friendly.** Export and reuse your bibliography in common research workflows. Borges supports CSL-JSON, BibTeX, BibLaTeX, RIS, DOI links, JSON-LD, and optional COinS metadata for compatibility with tools such as Zotero, Mendeley, EndNote, JabRef, BibDesk, and other citation managers.
 
 **Try it first.** Launch a disposable demo in [WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/borges-bibliography-builder/main/playground/blueprint.json) before installing it on your site.
 
@@ -34,7 +34,7 @@ The **Borges Bibliography Builder** transforms pasted DOI(s), BibTeX entries, an
 1. Upload the plugin files to `/wp-content/plugins/borges-bibliography-builder/`, or install directly through the WordPress plugin screen.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Add the "Bibliography" block to any post or page.
-4. Paste DOI(s), BibTeX entries, or supported citations for books, articles, chapters, and webpages.
+4. Paste DOI(s), PubMed/PMID identifiers, BibTeX entries, or supported citations for books, articles, chapters, and webpages.
 
 == Frequently Asked Questions ==
 
@@ -46,7 +46,11 @@ The package includes seed PO/MO files for translator review and import in French
 
 = What citation input formats does the Borges Bibliography Builder support? =
 
-Bare DOIs, DOI URLs, BibTeX entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. You can paste multiple entries at once, up to 50 entries per add.
+Bare DOIs, DOI URLs, PubMed/PMID identifiers, BibTeX entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. You can paste multiple entries at once, up to 50 entries per add.
+
+= Does the ABNT style implement NBR 6023:2018? =
+
+Yes. The ABNT option targets Associação Brasileira de Normas Técnicas bibliography formatting under NBR 6023:2018, uses the `pt-BR` locale, and defaults new ABNT bibliographies to the heading `Referências`. Always verify institutional or journal-specific ABNT variants before submission.
 
 = What happens if I deactivate the Borges Bibliography Builder? =
 
@@ -54,7 +58,7 @@ Your bibliographies remain fully readable. The block uses static HTML output, so
 
 = Does the Borges Bibliography Builder work with Zotero, Mendeley, EndNote, and other citation managers? =
 
-Yes. Borges is built around portable bibliography formats rather than lock-in. Zotero can use DOI links, BibTeX, RIS, CSL-JSON, and optional COinS metadata. Mendeley and EndNote are best supported through BibTeX/RIS exports, with DOI-backed entries also friendly to browser importers. CSL-JSON is available for citeproc and scholarly data workflows.
+Yes. Borges is built around portable bibliography formats rather than lock-in. Zotero can use DOI links, BibTeX, RIS, CSL-JSON, and optional COinS metadata. Mendeley and EndNote are best supported through BibTeX/RIS exports, with DOI-backed entries also friendly to browser importers. JabRef, BibDesk, and LaTeX/Biber workflows can use UTF-8 BibTeX or BibLaTeX. CSL-JSON is available for citeproc and scholarly data workflows.
 
 = Why would I enable CSL-JSON? =
 
@@ -62,11 +66,11 @@ Enable CSL-JSON if you want your bibliography data to be reusable by scholarly t
 
 = Can I export the bibliography data? =
 
-Yes. The editor currently includes Download CSL-JSON, Download BibTeX, Download RIS, per-entry Copy citation, and Copy bibliography actions for exporting or reusing bibliography data.
+Yes. The editor currently includes Download CSL-JSON, Download BibTeX, Download BibLaTeX, Download RIS, per-entry Copy citation, and Copy bibliography actions for exporting or reusing bibliography data.
 
 = Can I access bibliography data via API? =
 
-Yes. The plugin exposes read-only REST endpoints at `/wp-json/bibliography/v1/posts/<post_id>/bibliographies` and `/wp-json/bibliography/v1/posts/<post_id>/bibliographies/<index>`. Published posts are readable publicly; non-public posts require permission to edit the post. The single-bibliography route also supports `format=json`, `format=text`, and `format=csl-json`.
+Yes. The plugin exposes read-only REST endpoints at `/wp-json/bibliography/v1/posts/<post_id>/bibliographies` and `/wp-json/bibliography/v1/posts/<post_id>/bibliographies/<index>`. Published posts are readable publicly; non-public posts require permission to edit the post. The single-bibliography route also supports `format=json`, `format=text`, and `format=csl-json`. Editor-only authenticated endpoints handle CSL formatting and PubMed/PMID resolution; they do not persist citations by themselves.
 
 = Does the Borges Bibliography Builder work on WordPress Multisite? =
 
@@ -81,7 +85,7 @@ PHP 7.4+ and WordPress 6.4+. Borges Bibliography Builder is tested up to WordPre
 1. Front-end bibliography output with hanging indents, italic titles, and linked DOIs, styled by the active theme.
 2. Editor view showing a formatted bibliography; hover any entry to reveal copy, edit, and delete actions.
 3. Discover the Bibliography block in the block inserter by searching for "Bibliography."
-4. Paste DOIs, BibTeX entries, or supported citation text into the import form; the sidebar controls citation style, visible heading, and metadata output (JSON-LD, COinS, CSL-JSON).
+4. Paste DOIs, PubMed/PMID identifiers, BibTeX entries, or supported citation text into the import form; the sidebar controls citation style, visible heading, and metadata output (JSON-LD, COinS, CSL-JSON).
 5. Switch to Manual Entry to build a citation field by field — Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL.
 
 == Known Limitations ==
@@ -98,14 +102,60 @@ Bug reports, feature requests, and pull requests are welcome. See CONTRIBUTING.m
 
 == External Services ==
 
-This plugin connects to the **CrossRef REST API** (https://api.crossref.org/) when you paste a DOI to resolve citation metadata. No account or API key is required. Requests are made only when you explicitly add a DOI in the block editor — no data is sent automatically or in the background.
+This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for the supported DOI or PMID lookups.
+
+**DOI metadata**
+
+DOI input connects to the **CrossRef REST API** (https://api.crossref.org/) to resolve citation metadata.
 
 * CrossRef service: https://www.crossref.org/
 * CrossRef REST API documentation: https://api.crossref.org/swagger-ui/index.html
 * CrossRef privacy policy: https://www.crossref.org/privacy/
 * CrossRef terms of service: https://www.crossref.org/terms/
 
+**PubMed/PMID metadata**
+
+PubMed/PMID input connects through the plugin's authenticated WordPress REST proxy to the **NCBI/PMC Literature Citation Exporter** CSL endpoint. The proxy uses a fixed upstream host and validates the PMID before making the outbound request.
+
+* NCBI APIs: https://www.ncbi.nlm.nih.gov/home/develop/api/
+* NCBI/PMC Literature Citation Exporter: https://pmc.ncbi.nlm.nih.gov/api/ctxp/
+* NLM Web Policies: https://www.nlm.nih.gov/web_policies.html
+
 == Changelog ==
+
+= 1.3.3 =
+* Restore DOI imports in browser-based WordPress Playground by resolving DOI metadata through CrossRef's CORS-friendly CSL transform endpoint.
+* Serialize DOI lookups to respect CrossRef's public concurrency limit when multiple DOIs are pasted together.
+* Add a PubMed/PMID sample to the Playground starter content alongside DOI and BibTeX examples.
+
+= 1.3.2 =
+* Add optional Block Accessibility Checks compatibility: soft-detects the BAC plugin and registers four editor checks (empty bibliography, missing heading, raw URL link text, all metadata disabled). Borges works normally when BAC is absent.
+* Harden Playwright E2E plugin-row locator to exclude WordPress update notice rows, fixing CI strict-mode violations.
+* Regenerate translation template (POT) with 81 strings, up from 41; covers PHP error messages, BAC check strings, BibLaTeX export labels, and citation reorder controls.
+* Extend banner generation script with locale and RTL support flags.
+
+= 1.3.1 =
+* Raise per-bibliography hard cap from 50 to 200 citations. Bibliographies between 100 and 199 citations now show a dismissible editor notice warning about potential formatting slowness on shared hosting. The per-paste limit (50 entries) is unchanged.
+
+= 1.3.0 =
+* Enforce an explicit 50-citation total cap per bibliography block with inline editor warnings, replacing the silent 51-entry formatter cliff.
+* Guard all async editor mutation flows (paste/import, manual add, delete, style switch, structured edit) against stale results from superseded in-flight format requests.
+* Remove redundant formatter call in the manual-entry add path; the merged bibliography is now formatted once instead of twice.
+* Prune non-runtime vendor documentation and images from the release zip and exclude composer.lock, reducing release package weight.
+* Cache successful PMID proxy responses and deduplicate pending DOI resolution requests to reduce avoidable network traffic.
+* Refactor editor side-effects into focused hooks: useCitationImportActions, useManualCitationActions, and useBibliographyExportActions.
+* Extract PHP PMID resolver, cache, and permission logic into includes/pmid.php.
+
+= 1.2.0 =
+* Add BibLaTeX export from the editor exports panel.
+* Highlight 1.2.0 interoperability features, recent 1.1.x accessibility fixes, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2018) support in the readmes and changelogs.
+* Add PMID input resolution through an authenticated WordPress REST proxy to the NCBI/PMC Literature Citation Exporter API.
+* Add manual reordering controls for numeric citation styles, including keyboard Alt+Arrow movement.
+* Reformat the full bibliography after citation mutations so cached display text, sort order, and metadata stay aligned.
+* Improve sort parity with style-family dispatch, author-date tie-breakers, and JS/PHP coordination fixtures.
+* Improve accessibility names for saved citation URL links and block toolbar controls.
+* Harden Playwright accessibility and Playground smoke tests for shared WordPress Playground servers.
+* Add compact matrix coverage for all nine styles, formatter output, export ordering, and PMID REST proxy regression before tagging 1.2.0.
 
 = 1.1.1 =
 * Fix Block Accessibility Checks (BAC) integration shipped in 1.1.0: register against the current BAC API, harden the soft opt-in, and load validation checks reliably so the `empty_bibliography` error and `heading_missing` warning fire as documented when the BAC plugin is active.
@@ -128,7 +178,7 @@ This plugin connects to the **CrossRef REST API** (https://api.crossref.org/) wh
 = 1.0.0 =
 * Initial public release as Borges Bibliography Builder.
 * Add references from DOIs, DOI URLs, BibTeX entries, supported formatted citations, or manual entry.
-* Format bibliographies in Chicago Notes-Bibliography, Chicago Author-Date, APA 7, MLA 9, Harvard, Vancouver, IEEE, OSCOLA, and ABNT.
+* Format bibliographies in Chicago Notes-Bibliography, Chicago Author-Date, APA 7, MLA 9, Harvard, Vancouver, IEEE, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2018).
 * Automatically sort entries per style rules and skip duplicate manual or pasted entries.
 * Save static HTML output so bibliographies remain readable after plugin deactivation.
 * Output Schema.org JSON-LD by default, with optional COinS and CSL-JSON metadata layers.
@@ -144,6 +194,12 @@ This plugin connects to the **CrossRef REST API** (https://api.crossref.org/) wh
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Adds BibLaTeX and PubMed/PMID interoperability, numeric citation reordering, stronger sort parity, and explicit ABNT/NBR 6023:2018 docs.
+
+= 1.1.1 =
+Fixes Block Accessibility Checks integration and editor focus visibility.
 
 = 1.0.2 =
 Fixes WordPress Playground demo formatting when the browser runtime does not load PHP Intl from the extension bundle alone.

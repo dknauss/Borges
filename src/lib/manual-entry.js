@@ -197,14 +197,20 @@ export function buildManualCsl(fields) {
 }
 
 export async function createManualCitationFromCsl(csl, styleKey, options = {}) {
-	const { formatBibliographyEntry } = await import('./formatting/csl');
+	let formattedText = null;
+
+	if (!options.deferFormatting) {
+		const { formatBibliographyEntry } = await import('./formatting/csl');
+
+		formattedText = await formatBibliographyEntry(csl, styleKey, {
+			onFallback: options.onFormatFallback,
+		});
+	}
 
 	return {
 		id: createCitationId(),
 		csl,
-		formattedText: await formatBibliographyEntry(csl, styleKey, {
-			onFallback: options.onFormatFallback,
-		}),
+		formattedText,
 		displayOverride: null,
 		inputFormat: 'manual',
 		parseWarnings: [],

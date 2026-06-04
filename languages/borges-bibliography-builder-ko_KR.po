@@ -1,12 +1,13 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Bibliography 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/dknauss/borges-bibliography-builder/issues\n"
 "POT-Creation-Date: 2026-04-08 00:00+0000\n"
-"PO-Revision-Date: 2026-04-08 00:00+0000\n"
-"Last-Translator: Dan Knauss <dan@newlocalmedia.com>\n"
-"Language: ko_KR\n"
+"PO-Revision-Date: 2026-05-10 00:00+0000\n"
+"Last-Translator: Borges Bibliography Builder contributors\n"
 "Language-Team: Korean\n"
+"Language: ko_KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -23,13 +24,10 @@ msgid "Paste / Import"
 msgstr "붙여넣기 / 가져오기"
 
 msgid "Manual Entry"
-msgstr "수동 입력"
-
-msgid "Add DOI(s), BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
-msgstr "도서, 논문, 장, 웹페이지에 대해 지원되는 스타일의 DOI, BibTeX 항목 및 인용을 추가합니다. 여러 개의 서식 있는 인용은 빈 줄로 구분하세요."
+msgstr "직접 입력"
 
 msgid "Resolving…"
-msgstr "처리 중…"
+msgstr "확인 중…"
 
 msgid "Add"
 msgstr "추가"
@@ -44,7 +42,7 @@ msgid "Title"
 msgstr "제목"
 
 msgid "Container"
-msgstr "컨테이너"
+msgstr "수록지"
 
 msgid "Publisher"
 msgstr "출판사"
@@ -62,31 +60,35 @@ msgid "URL"
 msgstr "URL"
 
 msgid "Hide citation form"
-msgstr "인용 양식 숨기기"
+msgstr "인용 입력 폼 숨기기"
 
 msgid "Show citation form"
-msgstr "인용 양식 보기"
+msgstr "인용 입력 폼 보기"
 
 msgid "Settings"
 msgstr "설정"
 
 msgid "source"
-msgstr "출처"
+msgstr "건"
 
 msgid "sources"
-msgstr "출처"
+msgstr "건"
 
 msgid "Citation Style"
 msgstr "인용 스타일"
 
-msgid "Changing styles reformats auto-generated citations and keeps manual overrides intact."
-msgstr "스타일을 변경하면 자동 생성된 인용이 다시 서식 지정되며 수동 재정의는 유지됩니다."
+msgid ""
+"Changing styles reformats auto-generated citations and keeps manual "
+"overrides intact."
+msgstr "스타일을 변경하면 자동 생성된 인용이 재형식화되며, 직접 수정한 내용은 그대로 유지됩니다."
 
 msgid "Visible Heading"
 msgstr "표시 제목"
 
-msgid "Optional heading shown above the bibliography on the site front end when at least one citation exists."
-msgstr "하나 이상의 인용이 있을 때 사이트 프런트엔드에서 참고문헌 위에 표시되는 선택적 제목입니다."
+msgid ""
+"Optional heading shown above the bibliography on the site front end when at "
+"least one citation exists."
+msgstr "인용이 하나 이상 있을 때 사이트 전면에서 참고문헌 목록 위에 표시되는 선택적 제목입니다."
 
 msgid "Output JSON-LD"
 msgstr "JSON-LD 출력"
@@ -104,7 +106,7 @@ msgid "Output CSL-JSON"
 msgstr "CSL-JSON 출력"
 
 msgid "Makes citation data reusable by scholarly tools and services."
-msgstr "학술 도구와 서비스가 인용 데이터를 재사용할 수 있게 합니다."
+msgstr "학술 도구와 서비스에서 인용 데이터를 재사용할 수 있게 합니다."
 
 msgid "Exports"
 msgstr "내보내기"
@@ -112,35 +114,41 @@ msgstr "내보내기"
 msgid "Copy bibliography"
 msgstr "참고문헌 복사"
 
-msgid "Copies the current bibliography as plain text in the current order and style."
-msgstr "현재 순서와 스타일로 현재 참고문헌을 일반 텍스트로 복사합니다."
+msgid ""
+"Copies the current bibliography as plain text in the current order and "
+"style."
+msgstr "현재 순서와 스타일로 참고문헌을 일반 텍스트로 복사합니다."
 
 msgid "Download CSL-JSON"
 msgstr "CSL-JSON 다운로드"
 
 msgid "Downloads the current bibliography as structured citation data."
-msgstr "현재 참고문헌을 구조화된 인용 데이터로 다운로드합니다."
+msgstr "참고문헌을 구조화된 인용 데이터로 다운로드합니다."
 
 msgid "Download BibTeX"
 msgstr "BibTeX 다운로드"
 
-msgid "Downloads the current bibliography as BibTeX for reference-manager and scholarly-writing workflows."
-msgstr "현재 참고문헌을 참고문헌 관리자 및 학술 작성 워크플로용 BibTeX로 다운로드합니다."
+msgid ""
+"Downloads the current bibliography as BibTeX for reference-manager and "
+"scholarly-writing workflows."
+msgstr "참고문헌을 문헌 관리 도구 및 학술 저작 워크플로에서 사용할 BibTeX 형식으로 다운로드합니다."
 
 msgid "Download RIS"
 msgstr "RIS 다운로드"
 
-msgid "Downloads the current bibliography as RIS for citation managers and import/export workflows."
-msgstr "현재 참고문헌을 인용 관리자 및 가져오기/내보내기 워크플로용 RIS로 다운로드합니다."
+msgid ""
+"Downloads the current bibliography as RIS for citation managers and "
+"import/export workflows."
+msgstr "참고문헌을 문헌 관리 도구 및 가져오기/내보내기 워크플로에서 사용할 RIS 형식으로 다운로드합니다."
 
 msgid "Notification"
 msgstr "알림"
 
 msgid "Publication Type"
-msgstr "출판물 유형"
+msgstr "자료 유형"
 
 msgid "Select a publication type"
-msgstr "출판물 유형 선택"
+msgstr "자료 유형 선택"
 
 msgid "Save"
 msgstr "저장"
@@ -152,16 +160,150 @@ msgid "Post not found."
 msgstr "글을 찾을 수 없습니다."
 
 msgid "Sorry, you are not allowed to read this bibliography."
-msgstr "이 참고문헌을 읽을 권한이 없습니다."
+msgstr "이 참고문헌을 열람할 권한이 없습니다."
 
 msgid "Bibliography block not found for the requested index."
-msgstr "요청한 색인의 참고문헌 블록을 찾을 수 없습니다."
+msgstr "요청한 인덱스에 해당하는 참고문헌 블록을 찾을 수 없습니다."
 
 msgid "Post ID to inspect for bibliography blocks."
-msgstr "참고문헌 블록을 검사할 글 ID입니다."
+msgstr "참고문헌 블록을 검사할 글의 ID입니다."
 
 msgid "Zero-based bibliography block index within the post."
-msgstr "글 내부의 0부터 시작하는 참고문헌 블록 인덱스입니다."
+msgstr "글 내에서 0부터 시작하는 참고문헌 블록 인덱스입니다."
 
 msgid "Response format: json, text, or csl-json."
 msgstr "응답 형식: json, text 또는 csl-json."
+
+#, fuzzy
+msgid ""
+"Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported "
+"styles for books, articles, chapters, and webpages. Separate multiple "
+"formatted citations with a blank line."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"IEEE/Vancouver: arrange entries to match the order they're first cited in "
+"your text."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"OSCOLA convention groups bibliographies by source type (cases, legislation, "
+"books, articles, online). Borges currently renders a single alphabetized "
+"list. See Epic-OSCOLA for tracking."
+msgstr ""
+
+#, fuzzy
+msgid "Download BibLaTeX"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Downloads the current bibliography as BibLaTeX for LaTeX/Biber workflows "
+"with full Unicode support."
+msgstr ""
+
+#, fuzzy
+msgid "Move citation up"
+msgstr ""
+
+#, fuzzy
+msgid "Move citation down"
+msgstr ""
+
+#, fuzzy
+msgid "Formatter unavailable; added fallback citation text."
+msgstr ""
+
+#, fuzzy
+msgid "Link to publication"
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to format bibliographies."
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to resolve PubMed citations."
+msgstr ""
+
+#, fuzzy
+msgid "PubMed ID to resolve to CSL-JSON."
+msgstr ""
+
+#, fuzzy
+msgid "The citation formatting request is too large."
+msgstr ""
+
+#, fuzzy
+msgid "Too many citations were sent for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter requires the PHP %s extension."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter dependencies are missing."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style could not be read."
+msgstr ""
+
+#, fuzzy
+msgid "The citation data could not be prepared for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The citations could not be formatted."
+msgstr ""
+
+#, fuzzy
+msgid "Invalid PubMed ID."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service could not be reached."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed ID could not be resolved."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an error."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an invalid response."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Bibliography block has no heading. Screen reader users may not find this "
+"section."
+msgstr ""
+
+#, fuzzy
+msgid "Bibliography block contains no citations."
+msgstr ""
+
+#, fuzzy
+msgid "Add at least one citation before publishing."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Add a heading in block settings so the bibliography is announced as a "
+"document section."
+msgstr ""

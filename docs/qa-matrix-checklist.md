@@ -27,6 +27,9 @@ Use this checklist for live QA in the local Studio site.
 | DOI bare                  | `10.1177/00018392251368878`                                                             | Citation added                   | ☐      |
 | DOI full URL              | `https://doi.org/10.1177/00018392251368878`                                             | Citation added                   | ☐      |
 | DOI partial URL           | `doi.org/10.1177/00018392251368878`                                                     | Citation added                   | ☐      |
+| Two DOI batch             | `10.1145/3368089.3409742` and `10.1038/s41586-020-2649-2`                               | Two citations added              | ☐      |
+| PubMed/PMID               | `PMID:26673779`                                                                         | Citation added                   | ☐      |
+| Mixed demo batch          | DOI + PubMed/PMID + BibTeX from demo starter content                                    | All expected citations added     | ☐      |
 | BibTeX article            | `@article{...}`                                                                         | Citation added                   | ☐      |
 | BibTeX German alias       | `@artikel{...}`                                                                         | Citation added                   | ☐      |
 | BibTeX German alias       | `@buch{...}`                                                                            | Citation added                   | ☐      |
@@ -83,7 +86,7 @@ Use this checklist for live QA in the local Studio site.
 | Frontend render    | Bibliography list renders correctly                  | ☐      |
 | Frontend metadata  | JSON-LD and CSL-JSON script blocks present           | ☐      |
 | Frontend metadata  | COinS span present                                   | ☐      |
-| Frontend semantics | `doc-bibliography` / `doc-biblioentry` roles present | ☐      |
+| Frontend semantics | `doc-bibliography` section role present; no deprecated `doc-biblioentry` roles in newly saved entries | ☐      |
 | Frontend layout    | Long URLs wrap without overflow                      | ☐      |
 
 ## Notes

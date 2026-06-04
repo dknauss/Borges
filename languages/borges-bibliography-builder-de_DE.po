@@ -1,12 +1,13 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Bibliography 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/dknauss/borges-bibliography-builder/issues\n"
 "POT-Creation-Date: 2026-04-08 00:00+0000\n"
-"PO-Revision-Date: 2026-04-08 00:00+0000\n"
-"Last-Translator: Dan Knauss <dan@newlocalmedia.com>\n"
-"Language: de_DE\n"
+"PO-Revision-Date: 2026-05-10 00:00+0000\n"
+"Last-Translator: Borges Bibliography Builder contributors\n"
 "Language-Team: German\n"
+"Language: de_DE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -14,7 +15,9 @@ msgstr ""
 "X-Domain: borges-bibliography-builder\n"
 
 msgid "Imported metadata may be incomplete. Verify before publishing."
-msgstr "Importierte Metadaten können unvollständig sein. Vor der Veröffentlichung prüfen."
+msgstr ""
+"Importierte Metadaten können unvollständig sein. Vor der Veröffentlichung "
+"bitte prüfen."
 
 msgid "Add citations"
 msgstr "Zitate hinzufügen"
@@ -25,17 +28,14 @@ msgstr "Einfügen / Importieren"
 msgid "Manual Entry"
 msgstr "Manuelle Eingabe"
 
-msgid "Add DOI(s), BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
-msgstr "Füge DOIs, BibTeX-Einträge und Zitate in unterstützten Stilen für Bücher, Artikel, Kapitel und Webseiten hinzu. Trenne mehrere formatierte Zitate durch eine Leerzeile."
-
 msgid "Resolving…"
-msgstr "Wird aufgelöst…"
+msgstr "Wird abgerufen…"
 
 msgid "Add"
 msgstr "Hinzufügen"
 
 msgid "Clear"
-msgstr "Leeren"
+msgstr "Löschen"
 
 msgid "Author(s)"
 msgstr "Autor(en)"
@@ -44,7 +44,7 @@ msgid "Title"
 msgstr "Titel"
 
 msgid "Container"
-msgstr "Container"
+msgstr "Übergeordnete Publikation"
 
 msgid "Publisher"
 msgstr "Verlag"
@@ -62,10 +62,10 @@ msgid "URL"
 msgstr "URL"
 
 msgid "Hide citation form"
-msgstr "Zitationsformular ausblenden"
+msgstr "Zitierformular ausblenden"
 
 msgid "Show citation form"
-msgstr "Zitationsformular anzeigen"
+msgstr "Zitierformular einblenden"
 
 msgid "Settings"
 msgstr "Einstellungen"
@@ -79,32 +79,45 @@ msgstr "Quellen"
 msgid "Citation Style"
 msgstr "Zitierstil"
 
-msgid "Changing styles reformats auto-generated citations and keeps manual overrides intact."
-msgstr "Beim Ändern des Stils werden automatisch erzeugte Zitate neu formatiert, manuelle Überschreibungen bleiben erhalten."
+msgid ""
+"Changing styles reformats auto-generated citations and keeps manual "
+"overrides intact."
+msgstr ""
+"Ein Stilwechsel formatiert automatisch erzeugte Zitate neu; manuelle "
+"Anpassungen bleiben erhalten."
 
 msgid "Visible Heading"
 msgstr "Sichtbare Überschrift"
 
-msgid "Optional heading shown above the bibliography on the site front end when at least one citation exists."
-msgstr "Optionale Überschrift, die im Frontend über der Bibliografie angezeigt wird, wenn mindestens ein Zitat vorhanden ist."
+msgid ""
+"Optional heading shown above the bibliography on the site front end when at "
+"least one citation exists."
+msgstr ""
+"Optionale Überschrift, die im Frontend über der Bibliografie angezeigt wird,"
+" sobald mindestens ein Zitat vorhanden ist."
 
 msgid "Output JSON-LD"
 msgstr "JSON-LD ausgeben"
 
 msgid "Helps search engines and other tools understand the bibliography."
-msgstr "Hilft Suchmaschinen und anderen Werkzeugen, die Bibliografie zu verstehen."
+msgstr ""
+"Hilft Suchmaschinen und anderen Anwendungen, die Bibliografie zu verstehen."
 
 msgid "Output COinS"
 msgstr "COinS ausgeben"
 
 msgid "Lets Zotero and similar tools detect citations on the page."
-msgstr "Ermöglicht Zotero und ähnlichen Werkzeugen, Zitate auf der Seite zu erkennen."
+msgstr ""
+"Ermöglicht Zotero und ähnlichen Anwendungen, Zitate auf der Seite zu "
+"erkennen."
 
 msgid "Output CSL-JSON"
 msgstr "CSL-JSON ausgeben"
 
 msgid "Makes citation data reusable by scholarly tools and services."
-msgstr "Macht Zitationsdaten für wissenschaftliche Werkzeuge und Dienste wiederverwendbar."
+msgstr ""
+"Macht Zitationsdaten für wissenschaftliche Werkzeuge und Dienste "
+"wiederverwendbar."
 
 msgid "Exports"
 msgstr "Exporte"
@@ -112,29 +125,42 @@ msgstr "Exporte"
 msgid "Copy bibliography"
 msgstr "Bibliografie kopieren"
 
-msgid "Copies the current bibliography as plain text in the current order and style."
-msgstr "Kopiert die aktuelle Bibliografie als Klartext in der aktuellen Reihenfolge und im aktuellen Stil."
+msgid ""
+"Copies the current bibliography as plain text in the current order and "
+"style."
+msgstr ""
+"Kopiert die aktuelle Bibliografie als unformatierten Text in der aktuellen "
+"Reihenfolge und im aktuellen Stil."
 
 msgid "Download CSL-JSON"
 msgstr "CSL-JSON herunterladen"
 
 msgid "Downloads the current bibliography as structured citation data."
-msgstr "Lädt die aktuelle Bibliografie als strukturierte Zitationsdaten herunter."
+msgstr ""
+"Lädt die aktuelle Bibliografie als strukturierte Zitationsdaten herunter."
 
 msgid "Download BibTeX"
 msgstr "BibTeX herunterladen"
 
-msgid "Downloads the current bibliography as BibTeX for reference-manager and scholarly-writing workflows."
-msgstr "Lädt die aktuelle Bibliografie als BibTeX für Literaturverwaltungen und wissenschaftliche Schreib-Workflows herunter."
+msgid ""
+"Downloads the current bibliography as BibTeX for reference-manager and "
+"scholarly-writing workflows."
+msgstr ""
+"Lädt die aktuelle Bibliografie als BibTeX für Literaturverwaltungsprogramme "
+"und wissenschaftliche Schreibprozesse herunter."
 
 msgid "Download RIS"
 msgstr "RIS herunterladen"
 
-msgid "Downloads the current bibliography as RIS for citation managers and import/export workflows."
-msgstr "Lädt die aktuelle Bibliografie als RIS für Zitationsmanager und Import-/Export-Workflows herunter."
+msgid ""
+"Downloads the current bibliography as RIS for citation managers and "
+"import/export workflows."
+msgstr ""
+"Lädt die aktuelle Bibliografie als RIS für Literaturverwaltungsprogramme und"
+" Import-/Export-Prozesse herunter."
 
 msgid "Notification"
-msgstr "Benachrichtigung"
+msgstr "Hinweis"
 
 msgid "Publication Type"
 msgstr "Publikationstyp"
@@ -158,10 +184,144 @@ msgid "Bibliography block not found for the requested index."
 msgstr "Bibliografie-Block für den angeforderten Index nicht gefunden."
 
 msgid "Post ID to inspect for bibliography blocks."
-msgstr "Beitrags-ID zur Prüfung auf Bibliografie-Blöcke."
+msgstr "Beitrags-ID zur Suche nach Bibliografie-Blöcken."
 
 msgid "Zero-based bibliography block index within the post."
-msgstr "Nullbasierter Bibliografie-Blockindex innerhalb des Beitrags."
+msgstr "Nullbasierter Index des Bibliografie-Blocks innerhalb des Beitrags."
 
 msgid "Response format: json, text, or csl-json."
 msgstr "Antwortformat: json, text oder csl-json."
+
+#, fuzzy
+msgid ""
+"Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported "
+"styles for books, articles, chapters, and webpages. Separate multiple "
+"formatted citations with a blank line."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"IEEE/Vancouver: arrange entries to match the order they're first cited in "
+"your text."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"OSCOLA convention groups bibliographies by source type (cases, legislation, "
+"books, articles, online). Borges currently renders a single alphabetized "
+"list. See Epic-OSCOLA for tracking."
+msgstr ""
+
+#, fuzzy
+msgid "Download BibLaTeX"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Downloads the current bibliography as BibLaTeX for LaTeX/Biber workflows "
+"with full Unicode support."
+msgstr ""
+
+#, fuzzy
+msgid "Move citation up"
+msgstr ""
+
+#, fuzzy
+msgid "Move citation down"
+msgstr ""
+
+#, fuzzy
+msgid "Formatter unavailable; added fallback citation text."
+msgstr ""
+
+#, fuzzy
+msgid "Link to publication"
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to format bibliographies."
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to resolve PubMed citations."
+msgstr ""
+
+#, fuzzy
+msgid "PubMed ID to resolve to CSL-JSON."
+msgstr ""
+
+#, fuzzy
+msgid "The citation formatting request is too large."
+msgstr ""
+
+#, fuzzy
+msgid "Too many citations were sent for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter requires the PHP %s extension."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter dependencies are missing."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style could not be read."
+msgstr ""
+
+#, fuzzy
+msgid "The citation data could not be prepared for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The citations could not be formatted."
+msgstr ""
+
+#, fuzzy
+msgid "Invalid PubMed ID."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service could not be reached."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed ID could not be resolved."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an error."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an invalid response."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Bibliography block has no heading. Screen reader users may not find this "
+"section."
+msgstr ""
+
+#, fuzzy
+msgid "Bibliography block contains no citations."
+msgstr ""
+
+#, fuzzy
+msgid "Add at least one citation before publishing."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Add a heading in block settings so the bibliography is announced as a "
+"document section."
+msgstr ""

@@ -1,49 +1,75 @@
 import apiFetch from '@wordpress/api-fetch';
 
-const FORMAT_CACHE = new Map();
+const BIBLIOGRAPHY_CACHE = new Map();
 const MAX_FORMAT_CACHE_ENTRIES = 500;
+const MAX_FORMAT_CACHE_BYTES = 256 * 1024;
 const FORMAT_ENDPOINT = 'bibliography/v1/format';
+let bibliographyCacheBytes = 0;
 
 function emitFormattingWarning(...args) {
 	// eslint-disable-next-line no-console
 	console?.warn?.(...args);
 }
 
-function getFormatCacheKey(csl, styleKey) {
-	return `${styleKey}::${stableStringify(csl)}`;
+function getBibliographyCacheKey(cslItems, styleKey, locale = '') {
+	return [
+		styleKey || '',
+		locale || '',
+		cslItems.length,
+		hashStableValue({
+			styleKey,
+			locale,
+			cslItems,
+		}),
+	].join('|');
 }
 
-function getCachedFormat(cacheKey) {
-	if (!FORMAT_CACHE.has(cacheKey)) {
+function getCachedBibliography(cacheKey) {
+	if (!BIBLIOGRAPHY_CACHE.has(cacheKey)) {
 		return undefined;
 	}
 
-	const formatted = FORMAT_CACHE.get(cacheKey);
+	const cacheEntry = BIBLIOGRAPHY_CACHE.get(cacheKey);
 
 	// Refresh insertion order on access so Map behaves as a simple LRU cache.
-	FORMAT_CACHE.delete(cacheKey);
-	FORMAT_CACHE.set(cacheKey, formatted);
+	BIBLIOGRAPHY_CACHE.delete(cacheKey);
+	BIBLIOGRAPHY_CACHE.set(cacheKey, cacheEntry);
 
-	return formatted;
+	return [...cacheEntry.formattedEntries];
 }
 
-function setCachedFormat(cacheKey, formatted) {
-	if (FORMAT_CACHE.has(cacheKey)) {
-		FORMAT_CACHE.delete(cacheKey);
+function setCachedBibliography(cacheKey, formattedEntries) {
+	if (BIBLIOGRAPHY_CACHE.has(cacheKey)) {
+		bibliographyCacheBytes -= BIBLIOGRAPHY_CACHE.get(cacheKey).bytes;
+		BIBLIOGRAPHY_CACHE.delete(cacheKey);
 	}
 
-	while (FORMAT_CACHE.size >= MAX_FORMAT_CACHE_ENTRIES) {
-		const leastRecentlyUsedCacheKey = FORMAT_CACHE.keys().next().value;
+	const cacheEntry = {
+		formattedEntries: [...formattedEntries],
+		bytes: getApproximateCacheEntryBytes(cacheKey, formattedEntries),
+	};
+
+	while (
+		BIBLIOGRAPHY_CACHE.size >= MAX_FORMAT_CACHE_ENTRIES ||
+		(BIBLIOGRAPHY_CACHE.size > 0 &&
+			bibliographyCacheBytes + cacheEntry.bytes > MAX_FORMAT_CACHE_BYTES)
+	) {
+		const leastRecentlyUsedCacheKey =
+			BIBLIOGRAPHY_CACHE.keys().next().value;
 
 		if (!leastRecentlyUsedCacheKey) {
 			break;
 		}
 
-		FORMAT_CACHE.delete(leastRecentlyUsedCacheKey);
+		bibliographyCacheBytes -= BIBLIOGRAPHY_CACHE.get(
+			leastRecentlyUsedCacheKey
+		).bytes;
+		BIBLIOGRAPHY_CACHE.delete(leastRecentlyUsedCacheKey);
 	}
 
-	FORMAT_CACHE.set(cacheKey, formatted);
-	return formatted;
+	BIBLIOGRAPHY_CACHE.set(cacheKey, cacheEntry);
+	bibliographyCacheBytes += cacheEntry.bytes;
+	return [...formattedEntries];
 }
 
 function getFallbackText(csl) {
@@ -68,6 +94,12 @@ async function requestFormattedEntries(cslItems, styleKey) {
 		throw new Error('Formatter response did not include entries.');
 	}
 
+	if (data.entries.length !== cslItems.length) {
+		throw new Error(
+			'Formatter response entry count did not match request.'
+		);
+	}
+
 	return data.entries.map((entry) => String(entry?.text || ''));
 }
 
@@ -77,7 +109,8 @@ async function requestFormattedEntries(cslItems, styleKey) {
  * @since 0.1.0
  */
 export function clearFormattingCache() {
-	FORMAT_CACHE.clear();
+	BIBLIOGRAPHY_CACHE.clear();
+	bibliographyCacheBytes = 0;
 }
 
 /**
@@ -99,66 +132,41 @@ export async function formatBibliographyEntries(
 		return [];
 	}
 
-	const results = new Array(cslItems.length);
-	const uncachedItems = new Map();
+	const cacheKey = getBibliographyCacheKey(
+		cslItems,
+		styleKey,
+		options.locale || ''
+	);
+	const cachedEntries = getCachedBibliography(cacheKey);
 
-	cslItems.forEach((csl, index) => {
-		const cacheKey = getFormatCacheKey(csl, styleKey);
-
-		const cachedFormat = getCachedFormat(cacheKey);
-
-		if (cachedFormat !== undefined) {
-			results[index] = cachedFormat;
-			return;
-		}
-
-		const pendingItem = uncachedItems.get(cacheKey);
-
-		if (pendingItem) {
-			pendingItem.indices.push(index);
-			return;
-		}
-
-		uncachedItems.set(cacheKey, {
-			csl,
-			indices: [index],
-		});
-	});
-
-	const uncachedEntries = Array.from(uncachedItems.entries());
-
-	if (uncachedEntries.length) {
-		let formattedTexts;
-
-		try {
-			formattedTexts = await requestFormattedEntries(
-				uncachedEntries.map(([, { csl }]) => csl),
-				styleKey
-			);
-		} catch (error) {
-			emitFormattingWarning(
-				`Falling back to raw citation text for style "${styleKey}".`,
-				error
-			);
-			options.onFallback?.(error);
-			formattedTexts = uncachedEntries.map(([, { csl }]) =>
-				getFallbackText(csl)
-			);
-		}
-
-		uncachedEntries.forEach(([cacheKey, { indices }], batchIndex) => {
-			const formatted = setCachedFormat(
-				cacheKey,
-				formattedTexts[batchIndex] || ''
-			);
-
-			for (const index of indices) {
-				results[index] = formatted;
-			}
-		});
+	if (cachedEntries !== undefined) {
+		return cachedEntries;
 	}
 
-	return results;
+	let formattedTexts;
+	let formatterSucceeded = false;
+
+	try {
+		formattedTexts = await requestFormattedEntries(cslItems, styleKey);
+		formatterSucceeded = true;
+	} catch (error) {
+		emitFormattingWarning(
+			`Falling back to raw citation text for style "${styleKey}".`,
+			error
+		);
+		options.onFallback?.(error);
+		formattedTexts = cslItems.map((csl) => getFallbackText(csl));
+	}
+
+	const normalizedEntries = cslItems.map(
+		(_, index) => formattedTexts[index] || ''
+	);
+
+	if (formatterSucceeded) {
+		return setCachedBibliography(cacheKey, normalizedEntries);
+	}
+
+	return normalizedEntries;
 }
 
 /**
@@ -176,23 +184,68 @@ export async function formatBibliographyEntry(csl, styleKey, options = {}) {
 	return results[0];
 }
 
-function stableStringify(value) {
-	return JSON.stringify(sortObjectKeys(value));
+function getApproximateCacheEntryBytes(cacheKey, formattedEntries) {
+	return (
+		cacheKey.length +
+		formattedEntries.reduce(
+			(total, entry) => total + String(entry || '').length,
+			0
+		)
+	);
 }
 
-function sortObjectKeys(value) {
+/* eslint-disable no-bitwise */
+function updateHashState(state, chunk) {
+	const stringValue = String(chunk);
+
+	for (let index = 0; index < stringValue.length; index += 1) {
+		const code = stringValue.charCodeAt(index);
+		state.primary ^= code;
+		state.primary = Math.imul(state.primary, 16777619) >>> 0;
+		state.secondary = Math.imul(state.secondary ^ code, 2246822519) >>> 0;
+	}
+}
+/* eslint-enable no-bitwise */
+
+function hashStableInto(state, value) {
 	if (Array.isArray(value)) {
-		return value.map(sortObjectKeys);
+		updateHashState(state, '[');
+		updateHashState(state, value.length);
+		for (const item of value) {
+			hashStableInto(state, item);
+			updateHashState(state, ',');
+		}
+		updateHashState(state, ']');
+		return;
 	}
 
 	if (value && typeof value === 'object') {
-		return Object.keys(value)
-			.sort()
-			.reduce((accumulator, key) => {
-				accumulator[key] = sortObjectKeys(value[key]);
-				return accumulator;
-			}, {});
+		updateHashState(state, '{');
+		const keys = Object.keys(value).sort();
+		updateHashState(state, keys.length);
+		for (const key of keys) {
+			updateHashState(state, key.length);
+			updateHashState(state, key);
+			updateHashState(state, ':');
+			hashStableInto(state, value[key]);
+			updateHashState(state, ';');
+		}
+		updateHashState(state, '}');
+		return;
 	}
 
-	return value;
+	updateHashState(state, typeof value);
+	updateHashState(state, ':');
+	updateHashState(state, value === undefined ? 'undefined' : value);
+}
+
+function hashStableValue(value) {
+	const state = {
+		primary: 2166136261,
+		secondary: 374761393,
+	};
+
+	hashStableInto(state, value);
+
+	return `${state.primary.toString(36)}${state.secondary.toString(36)}`;
 }

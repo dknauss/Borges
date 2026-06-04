@@ -2,16 +2,9 @@
 const { test, expect } = require('@playwright/test');
 
 function getPluginRow(page) {
-	return page
-		.locator(
-			'tr[data-slug="borges-bibliography-builder"], tr[data-plugin="borges-bibliography-builder/bibliography-builder.php"]'
-		)
-		.first()
-		.or(
-			page.locator('tr', {
-				hasText: 'Bibliography',
-			})
-		);
+	return page.locator(
+		'tr[data-plugin="borges-bibliography-builder/bibliography-builder.php"]:not(.plugin-update-tr)'
+	);
 }
 
 async function ensurePluginActivated(page) {
@@ -21,6 +14,7 @@ async function ensurePluginActivated(page) {
 	).toBeVisible();
 
 	const pluginRow = getPluginRow(page);
+	await expect(pluginRow).toHaveCount(1);
 	await expect(pluginRow).toBeVisible();
 
 	const activateLink = pluginRow.getByRole('link', { name: /^Activate$/i });

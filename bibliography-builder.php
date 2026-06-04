@@ -3,7 +3,7 @@
  * Plugin Name:       Borges Bibliography Builder
  * Plugin URI:        https://github.com/dknauss/borges-bibliography-builder/
  * Description:       Paste a DOI or BibTeX entry to build a formatted, auto-sorted bibliography in any style.
- * Version:           1.1.1
+ * Version:           1.3.3
  * Requires at least: 6.4
  * Tested up to:      7.0
  * Requires PHP:      7.4
@@ -34,6 +34,36 @@ const BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS = 50;
  * Maximum formatter request payload size.
  */
 const BIBLIOGRAPHY_BUILDER_MAX_FORMAT_BYTES = 1048576;
+
+/**
+ * NCBI Literature Citation Export endpoint used for PMID resolution.
+ */
+const BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ctxp/v1/pubmed/';
+
+/**
+ * HTTP timeout for external PMID resolution requests.
+ */
+const BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT = 10;
+
+/**
+ * Cache TTL for repeated formatter responses.
+ */
+const BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL = 3600;
+
+/**
+ * Cache TTL for successful PMID resolution responses.
+ */
+const BIBLIOGRAPHY_BUILDER_PUBMED_SUCCESS_CACHE_TTL = 86400;
+
+/**
+ * Cache TTL for PMID not-found responses.
+ */
+const BIBLIOGRAPHY_BUILDER_PUBMED_NOT_FOUND_CACHE_TTL = 3600;
+
+/**
+ * Cache TTL for transient PMID upstream failures.
+ */
+const BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL = 600;
 
 /**
  * Recursively gather bibliography block data from parsed blocks.
@@ -276,12 +306,147 @@ function bibliography_builder_ensure_formatter_available() {
 /**
  * JSON-encode data using WordPress when available.
  *
- * @param mixed $data Data to encode.
+ * @param mixed $data  Data to encode.
+ * @param int   $flags Optional encoding flags.
+ * @param int   $depth Optional maximum depth.
  * @return string|false
  */
-function bibliography_builder_json_encode( $data ) {
-	// phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- Used only when WordPress is unavailable in isolated tests.
-	return function_exists( 'wp_json_encode' ) ? wp_json_encode( $data ) : json_encode( $data );
+function bibliography_builder_json_encode( $data, $flags = 0, $depth = 512 ) {
+	if ( function_exists( 'wp_json_encode' ) ) {
+		return wp_json_encode( $data, $flags, $depth );
+	}
+
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- Test fallback when WP is absent.
+	return json_encode( $data, $flags, $depth );
+}
+
+/**
+ * Build a compact transient key for a cache group/key pair.
+ *
+ * @param string $group Cache group.
+ * @param string $key   Cache key.
+ * @return string
+ */
+function bibliography_builder_get_transient_cache_key( $group, $key ) {
+	return 'bbb_' . md5( $group . ':' . $key );
+}
+
+/**
+ * Read a cached value from object cache with a transient fallback.
+ *
+ * @param string $key   Cache key.
+ * @param string $group Cache group.
+ * @return array{hit:bool,value:mixed}
+ */
+function bibliography_builder_cache_get( $key, $group ) {
+	if ( function_exists( 'wp_cache_get' ) ) {
+		$found = false;
+		$value = wp_cache_get( $key, $group, false, $found );
+
+		if ( $found ) {
+			return array(
+				'hit'   => true,
+				'value' => $value,
+			);
+		}
+	}
+
+	if ( function_exists( 'get_transient' ) ) {
+		$value = get_transient( bibliography_builder_get_transient_cache_key( $group, $key ) );
+
+		if ( false !== $value ) {
+			return array(
+				'hit'   => true,
+				'value' => $value,
+			);
+		}
+	}
+
+	return array(
+		'hit'   => false,
+		'value' => null,
+	);
+}
+
+/**
+ * Store a cached value in object cache and transient storage when available.
+ *
+ * @param string $key    Cache key.
+ * @param mixed  $value  Cache value.
+ * @param string $group  Cache group.
+ * @param int    $expire TTL in seconds.
+ * @return void
+ */
+function bibliography_builder_cache_set( $key, $value, $group, $expire ) {
+	if ( function_exists( 'wp_cache_set' ) ) {
+		wp_cache_set( $key, $value, $group, $expire );
+	}
+
+	if ( function_exists( 'set_transient' ) ) {
+		set_transient( bibliography_builder_get_transient_cache_key( $group, $key ), $value, $expire );
+	}
+}
+
+/**
+ * Determine whether an array is a list on PHP versions before array_is_list().
+ *
+ * @param array $value Array to inspect.
+ * @return bool
+ */
+function bibliography_builder_is_list_array( $value ) {
+	return array() === $value || array_keys( $value ) === range( 0, count( $value ) - 1 );
+}
+
+/**
+ * Recursively sort associative keys so equivalent CSL payloads hash identically.
+ *
+ * @param mixed $value Value to normalize.
+ * @return mixed
+ */
+function bibliography_builder_sort_for_cache_key( $value ) {
+	if ( ! is_array( $value ) ) {
+		return $value;
+	}
+
+	if ( bibliography_builder_is_list_array( $value ) ) {
+		return array_map( 'bibliography_builder_sort_for_cache_key', $value );
+	}
+
+	ksort( $value, SORT_STRING );
+
+	foreach ( $value as $key => $nested_value ) {
+		$value[ $key ] = bibliography_builder_sort_for_cache_key( $nested_value );
+	}
+
+	return $value;
+}
+
+/**
+ * Build a stable cache key for a full bibliography formatting request.
+ *
+ * @param array  $csl_items CSL-JSON items.
+ * @param string $style_key Requested style key.
+ * @param array  $style     Formatter style definition.
+ * @return string
+ */
+function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style ) {
+	$payload = array(
+		'version'   => 1,
+		'style'     => sanitize_key( $style_key ),
+		'template'  => isset( $style['template'] ) ? (string) $style['template'] : '',
+		'locale'    => isset( $style['locale'] ) ? (string) $style['locale'] : '',
+		'csl_items' => bibliography_builder_sort_for_cache_key( array_values( $csl_items ) ),
+	);
+	$encoded = bibliography_builder_json_encode( $payload );
+
+	if ( ! is_string( $encoded ) ) {
+		$encoded = bibliography_builder_json_encode(
+			$payload,
+			JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR
+		);
+	}
+
+	return 'format_' . md5( is_string( $encoded ) ? $encoded : '' );
 }
 
 /**
@@ -380,13 +545,20 @@ function bibliography_builder_extract_citeproc_entries( $html, $style ) {
  * @return array|WP_Error Array of formatted text strings in input order.
  */
 function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
+	$style     = bibliography_builder_get_formatter_style_definition( sanitize_key( $style_key ) );
+	$cache_key = bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style );
+	$cached    = bibliography_builder_cache_get( $cache_key, 'bibliography_builder_formatter' );
+
+	if ( $cached['hit'] && is_array( $cached['value'] ) ) {
+		return $cached['value'];
+	}
+
 	$available = bibliography_builder_ensure_formatter_available();
 
 	if ( is_wp_error( $available ) ) {
 		return $available;
 	}
 
-	$style           = bibliography_builder_get_formatter_style_definition( sanitize_key( $style_key ) );
 	$style_file_name = $style['template'] . '.csl';
 	$style_path      = BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'vendor/citation-style-language/styles/' . $style_file_name;
 
@@ -474,7 +646,93 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 			: bibliography_builder_sanitize_formatted_text( $fallback_text );
 	}
 
+	bibliography_builder_cache_set(
+		$cache_key,
+		$formatted,
+		'bibliography_builder_formatter',
+		BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
+	);
+
 	return $formatted;
+}
+
+/**
+ * Build the cache key for one PMID resolution.
+ *
+ * @param string $pmid PubMed ID.
+ * @return string
+ */
+function bibliography_builder_get_pmid_cache_key( $pmid ) {
+	return 'pmid_' . preg_replace( '/\D/u', '', (string) $pmid );
+}
+
+/**
+ * Build a WP_Error for PMID resolution.
+ *
+ * @param string $code    Error code.
+ * @param string $message Error message.
+ * @param array  $data    Error data.
+ * @return WP_Error
+ */
+function bibliography_builder_pmid_error( $code, $message, $data ) {
+	return new WP_Error( $code, $message, $data );
+}
+
+/**
+ * Cache a PMID resolution result.
+ *
+ * @param string $pmid   PubMed ID.
+ * @param array  $result Cache payload.
+ * @param int    $ttl    Cache TTL in seconds.
+ * @return void
+ */
+function bibliography_builder_cache_pmid_result( $pmid, $result, $ttl ) {
+	bibliography_builder_cache_set(
+		bibliography_builder_get_pmid_cache_key( $pmid ),
+		$result,
+		'bibliography_builder_pmid',
+		$ttl
+	);
+}
+
+/**
+ * Read a cached PMID resolution result.
+ *
+ * @param string $pmid PubMed ID.
+ * @return WP_REST_Response|WP_Error|null
+ */
+function bibliography_builder_get_cached_pmid_result( $pmid ) {
+	$cached = bibliography_builder_cache_get(
+		bibliography_builder_get_pmid_cache_key( $pmid ),
+		'bibliography_builder_pmid'
+	);
+
+	if ( ! $cached['hit'] || ! is_array( $cached['value'] ) ) {
+		return null;
+	}
+
+	if ( isset( $cached['value']['type'] ) && 'success' === $cached['value']['type'] ) {
+		return rest_ensure_response( isset( $cached['value']['data'] ) ? $cached['value']['data'] : array() );
+	}
+
+	if ( isset( $cached['value']['type'] ) && 'error' === $cached['value']['type'] ) {
+		$error_code    = isset( $cached['value']['code'] )
+			? (string) $cached['value']['code']
+			: 'bibliography_builder_pmid_upstream_error';
+		$error_message = isset( $cached['value']['message'] )
+			? (string) $cached['value']['message']
+			: __( 'The PubMed citation service returned an error.', 'borges-bibliography-builder' );
+
+		return bibliography_builder_pmid_error(
+			$error_code,
+			$error_message,
+			isset( $cached['value']['data'] ) && is_array( $cached['value']['data'] )
+				? $cached['value']['data']
+				: array( 'status' => 502 )
+		);
+	}
+
+	return null;
 }
 
 /**
@@ -539,6 +797,23 @@ function bibliography_builder_rest_format_permissions_check() {
 	return new WP_Error(
 		'bibliography_builder_formatter_forbidden',
 		__( 'Sorry, you are not allowed to format bibliographies.', 'borges-bibliography-builder' ),
+		array( 'status' => 403 )
+	);
+}
+
+/**
+ * Permission callback for editor-only PMID resolver requests.
+ *
+ * @return true|WP_Error
+ */
+function bibliography_builder_rest_pmid_permissions_check() {
+	if ( current_user_can( 'edit_posts' ) ) {
+		return true;
+	}
+
+	return new WP_Error(
+		'bibliography_builder_pmid_forbidden',
+		__( 'Sorry, you are not allowed to resolve PubMed citations.', 'borges-bibliography-builder' ),
 		array( 'status' => 403 )
 	);
 }
@@ -625,6 +900,146 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 }
 
 /**
+ * REST callback that resolves a PubMed ID to CSL-JSON.
+ *
+ * NCBI's CSL endpoint does not currently emit browser CORS headers, so editor
+ * requests are proxied through WordPress using a fixed URL and numeric PMID.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_resolve_pmid( WP_REST_Request $request ) {
+	$pmid = isset( $request['pmid'] ) ? (string) $request['pmid'] : '';
+
+	if ( ! preg_match( '/^\d{1,8}$/', $pmid ) ) {
+		return new WP_Error(
+			'bibliography_builder_pmid_invalid',
+			__( 'Invalid PubMed ID.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	$cached = bibliography_builder_get_cached_pmid_result( $pmid );
+
+	if ( null !== $cached ) {
+		return $cached;
+	}
+
+	$url      = add_query_arg(
+		array(
+			'format' => 'csl',
+			'id'     => $pmid,
+		),
+		BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API
+	);
+	$response = wp_remote_get(
+		$url,
+		array(
+			'timeout'     => BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT,
+			'redirection' => 3,
+		)
+	);
+
+	if ( is_wp_error( $response ) ) {
+		$error = bibliography_builder_pmid_error(
+			'bibliography_builder_pmid_upstream_error',
+			__( 'The PubMed citation service could not be reached.', 'borges-bibliography-builder' ),
+			array( 'status' => 502 )
+		);
+		bibliography_builder_cache_pmid_result(
+			$pmid,
+			array(
+				'type'    => 'error',
+				'code'    => $error->get_error_code(),
+				'message' => $error->get_error_message(),
+				'data'    => $error->get_error_data(),
+			),
+			BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL
+		);
+
+		return $error;
+	}
+
+	$status = (int) wp_remote_retrieve_response_code( $response );
+
+	if ( $status < 200 || $status >= 300 ) {
+		if ( 404 === $status ) {
+			$error = bibliography_builder_pmid_error(
+				'bibliography_builder_pmid_not_found',
+				__( 'The PubMed ID could not be resolved.', 'borges-bibliography-builder' ),
+				array( 'status' => 404 )
+			);
+			bibliography_builder_cache_pmid_result(
+				$pmid,
+				array(
+					'type'    => 'error',
+					'code'    => $error->get_error_code(),
+					'message' => $error->get_error_message(),
+					'data'    => $error->get_error_data(),
+				),
+				BIBLIOGRAPHY_BUILDER_PUBMED_NOT_FOUND_CACHE_TTL
+			);
+
+			return $error;
+		}
+
+		$error = bibliography_builder_pmid_error(
+			'bibliography_builder_pmid_upstream_error',
+			__( 'The PubMed citation service returned an error.', 'borges-bibliography-builder' ),
+			array(
+				'status'          => 502,
+				'upstream_status' => $status,
+			)
+		);
+		bibliography_builder_cache_pmid_result(
+			$pmid,
+			array(
+				'type'    => 'error',
+				'code'    => $error->get_error_code(),
+				'message' => $error->get_error_message(),
+				'data'    => $error->get_error_data(),
+			),
+			BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL
+		);
+
+		return $error;
+	}
+
+	$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
+
+	if ( ! is_array( $decoded ) || empty( $decoded ) ) {
+		$error = bibliography_builder_pmid_error(
+			'bibliography_builder_pmid_invalid_response',
+			__( 'The PubMed citation service returned an invalid response.', 'borges-bibliography-builder' ),
+			array( 'status' => 502 )
+		);
+		bibliography_builder_cache_pmid_result(
+			$pmid,
+			array(
+				'type'    => 'error',
+				'code'    => $error->get_error_code(),
+				'message' => $error->get_error_message(),
+				'data'    => $error->get_error_data(),
+			),
+			BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL
+		);
+
+		return $error;
+	}
+
+	bibliography_builder_cache_pmid_result(
+		$pmid,
+		array(
+			'type' => 'success',
+			'data' => $decoded,
+		),
+		BIBLIOGRAPHY_BUILDER_PUBMED_SUCCESS_CACHE_TTL
+	);
+
+	return rest_ensure_response( $decoded );
+}
+
+/**
  * REST callback returning bibliography block data for a post.
  *
  * @param WP_REST_Request $request REST request.
@@ -694,6 +1109,29 @@ function bibliography_builder_register_rest_routes() {
 			'methods'             => WP_REST_Server::CREATABLE,
 			'callback'            => 'bibliography_builder_rest_format_citations',
 			'permission_callback' => 'bibliography_builder_rest_format_permissions_check',
+		)
+	);
+
+	register_rest_route(
+		'bibliography/v1',
+		'/pmid/(?P<pmid>\d{1,8})',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'bibliography_builder_rest_resolve_pmid',
+			'permission_callback' => 'bibliography_builder_rest_pmid_permissions_check',
+			'args'                => array(
+				'pmid' => array(
+					'description'       => __( 'PubMed ID to resolve to CSL-JSON.', 'borges-bibliography-builder' ),
+					'type'              => 'string',
+					'required'          => true,
+					'sanitize_callback' => static function ( $value ) {
+						return preg_replace( '/\D/u', '', (string) $value );
+					},
+					'validate_callback' => static function ( $value ) {
+						return is_scalar( $value ) && (bool) preg_match( '/^\d{1,8}$/', (string) $value );
+					},
+				),
+			),
 		)
 	);
 

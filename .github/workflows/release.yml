@@ -7,6 +7,7 @@ on:
 
 permissions:
     contents: write
+    actions: write
 
 jobs:
     release:
@@ -39,3 +40,8 @@ jobs:
                   generate_release_notes: true
                   fail_on_unmatched_files: true
                   overwrite_files: true
+
+            - name: Dispatch WordPress.org deploy
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: gh workflow run wp-deploy.yml --ref "$GITHUB_REF_NAME"

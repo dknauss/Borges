@@ -9,6 +9,7 @@ import {
 	DEFAULT_CITATION_STYLE,
 	getDefaultHeadingText,
 } from './lib/formatting';
+import { registerBACChecks } from './lib/block-accessibility-checks';
 
 registerBlockType(metadata.name, {
 	edit: Edit,
@@ -25,3 +26,5 @@ registerBlockType(metadata.name, {
 		},
 	],
 });
+
+registerBACChecks();

@@ -30,8 +30,8 @@ This is an easy, low-risk cleanup phase. Prefer documentation, planning, and sma
    - Keep later screenshots/captions consistent between GitHub and WordPress.org.
 
 4. **SPEC stale testing-gap cleanup**
-   - Remove or revise stale SPEC language saying Multisite and SQLite runtime coverage are future gaps.
-   - Reflect current coverage: runtime smoke coverage includes SQLite and Multisite lanes.
+   - Remove or revise stale SPEC language saying Multisite runtime coverage is a future gap.
+   - Reflect current coverage: runtime smoke coverage includes a Multisite lane; SQLite is not currently in the GitHub runtime matrix.
    - Keep the manual testing checklist focused on release-gate manual checks rather than completed CI backlog items.
 
 5. **Compatibility statement harmonization**
@@ -55,7 +55,7 @@ This is an easy, low-risk cleanup phase. Prefer documentation, planning, and sma
 - WordPress.org readme includes a concise Playground demo link if validation confirms the blueprint uses the intended package.
 - GitHub README documents the read-only REST API in enough detail for developers, while WordPress.org readme stays concise.
 - Compatibility copy consistently says tested up to WordPress 7.0 and avoids unnecessary CI-matrix detail in user-facing WordPress.org copy.
-- SPEC testing-gap language matches current SQLite and Multisite coverage.
+- SPEC testing-gap language matches current Multisite coverage and does not claim a SQLite lane exists.
 - Manual WordPress.org deploy trigger exists and still deploys only the packaged release directory plus sanitized assets.
 - Targeted unit tests cover any shared utility/cache behavior refactor.
 

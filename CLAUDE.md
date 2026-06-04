@@ -44,13 +44,13 @@ npm run test:e2e:playground  # Playground smoke tests
 
 ### What it does
 
-A Gutenberg block plugin that accepts DOI identifiers, BibTeX, or free-text citations and renders them as a formatted bibliography. Citations are stored as CSL-JSON in block attributes; formatting is done both client-side (display logic) and server-side (via REST for accurate CSL style rendering).
+A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibTeX, or free-text citations and renders them as a formatted bibliography. Citations are stored as CSL-JSON in block attributes; formatting is done both client-side (display logic) and server-side (via REST for accurate CSL style rendering).
 
 ### PHP/JS boundary
 
 | Responsibility | Owner |
 |---|---|
-| Input parsing (DOI, BibTeX, free text) | JS (`src/lib/parser.js`, `free-text-parser.js`) |
+| Input parsing (DOI, PubMed/PMID, BibTeX, free text) | JS (`src/lib/parser.js`, `free-text-parser.js`) plus PHP PMID REST proxy |
 | CSL-JSON as internal exchange format | Both |
 | Formatting to HTML citation strings | PHP via citeproc-php (REST call) |
 | Deduplication, sorting, export | JS client-side |
@@ -64,6 +64,7 @@ A Gutenberg block plugin that accepts DOI identifiers, BibTeX, or free-text cita
 - `bibliography_builder_block_init()` — registers block type from `block.json` on `init`
 - REST routes registered on `rest_api_init` at namespace `/bibliography/v1`:
   - `POST /format` — formats CSL items via citeproc-php; requires `edit_posts`
+  - `GET /pmid/{pmid}` — resolves PubMed/PMID records through a fixed NCBI/PMC CSL endpoint; requires `edit_posts`
   - `GET /posts/{post_id}/bibliographies` — list all bibliography blocks in post
   - `GET /posts/{post_id}/bibliographies/{index}` — single bibliography; supports `?format=json|text|csl-json`
 - Payload limits: 1 MB max body, 50 items max per `/format` request
@@ -94,15 +95,16 @@ A Gutenberg block plugin that accepts DOI identifiers, BibTeX, or free-text cita
 
 ### Playground
 
-The Playground blueprint at `playground/blueprint.json` configures a live demo environment. It requires `"phpExtensionBundles": ["kitchen-sink"]` for the `intl` extension used by the CSL formatter — do not remove this. The E2E tests (`npm run test:e2e:playground`) run against this blueprint.
+The Playground blueprint at `playground/blueprint.json` configures the GitHub/readme demo. It installs the latest GitHub Release ZIP through the WordPress Playground CORS proxy, installs Block Accessibility Checks from WordPress.org, and requires both `"phpExtensionBundles": ["kitchen-sink"]` and `features.intl` for the CSL formatter. The WordPress.org Preview blueprint at `.wordpress-org/blueprints/blueprint.json` is separate; WordPress.org installs Borges automatically there. The E2E tests (`npm run test:e2e:playground`) run against the GitHub/readme blueprint.
 
 ### Release
 
-`npm run package:release` builds the production zip (strips dev dependencies). Tagging a GitHub release triggers `wp-deploy.yml`, which deploys to WordPress.org SVN automatically.
+`npm run package:release` builds the production zip (strips dev dependencies). Pushing a `v*` tag triggers `release.yml`, which builds the ZIP, publishes the GitHub Release, and dispatches `wp-deploy.yml`. `wp-deploy.yml` also runs on published GitHub releases and can be run manually.
 
 ## CI overview
 
 - **ci.yml** — lint, Jest, PHPUnit, Psalm, Playwright Playground E2E, coverage upload, package artifact
 - **runtime-matrix.yml** — smoke tests across PHP 7.4–8.4, WP 6.4+, Apache/Nginx, MySQL via Docker
-- **wp-deploy.yml** — deploys to WordPress.org SVN on published GitHub release
+- **release.yml** — tag-triggered GitHub Release and ZIP publication
+- **wp-deploy.yml** — deploys to WordPress.org SVN on published GitHub release, release dispatch, or manual run
 - **codeql.yml** — security analysis

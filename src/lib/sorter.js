@@ -67,20 +67,20 @@ function getTitleSort(csl = {}) {
 	return stripArticles(csl.title || '').toLowerCase();
 }
 
-function compareAuthors(a, b) {
+function compareAuthors(a, b, locale) {
 	const authorA = getAuthorSort(a.csl);
 	const authorB = getAuthorSort(b.csl);
 
-	return authorA.localeCompare(authorB, undefined, {
+	return authorA.localeCompare(authorB, locale, {
 		sensitivity: 'base',
 	});
 }
 
-function compareTitles(a, b) {
+function compareTitles(a, b, locale) {
 	const titleA = getTitleSort(a.csl);
 	const titleB = getTitleSort(b.csl);
 
-	return titleA.localeCompare(titleB, undefined, {
+	return titleA.localeCompare(titleB, locale, {
 		sensitivity: 'base',
 	});
 }
@@ -102,14 +102,10 @@ function getAuthorChain(csl = {}) {
 	return primaryContributors.map(normalizeContributorKey);
 }
 
-function compareAuthorChains(chainA, chainB) {
-	const firstCmp = (chainA[0] || '').localeCompare(
-		chainB[0] || '',
-		undefined,
-		{
-			sensitivity: 'base',
-		}
-	);
+function compareAuthorChains(chainA, chainB, locale) {
+	const firstCmp = (chainA[0] || '').localeCompare(chainB[0] || '', locale, {
+		sensitivity: 'base',
+	});
 
 	if (firstCmp !== 0) {
 		return firstCmp;
@@ -129,7 +125,7 @@ function compareAuthorChains(chainA, chainB) {
 	for (let index = 1; index < chainLength; index++) {
 		const contributorCmp = chainA[index].localeCompare(
 			chainB[index],
-			undefined,
+			locale,
 			{
 				sensitivity: 'base',
 			}
@@ -143,13 +139,13 @@ function compareAuthorChains(chainA, chainB) {
 	return chainA.length - chainB.length;
 }
 
-function compareNotes(a, b) {
-	const authorCmp = compareAuthors(a, b);
+function compareNotes(a, b, locale) {
+	const authorCmp = compareAuthors(a, b, locale);
 	if (authorCmp !== 0) {
 		return authorCmp;
 	}
 
-	const titleCmp = compareTitles(a, b);
+	const titleCmp = compareTitles(a, b, locale);
 	if (titleCmp !== 0) {
 		return titleCmp;
 	}
@@ -157,23 +153,23 @@ function compareNotes(a, b) {
 	return compareYears(a, b);
 }
 
-function compareAuthorDate(a, b) {
+function compareAuthorDate(a, b, locale) {
 	const chainA = getAuthorChain(a.csl);
 	const chainB = getAuthorChain(b.csl);
 
 	if (chainA.length && chainB.length) {
-		const chainCmp = compareAuthorChains(chainA, chainB);
+		const chainCmp = compareAuthorChains(chainA, chainB, locale);
 		if (chainCmp !== 0) {
 			return chainCmp;
 		}
 	} else {
-		const authorCmp = compareAuthors(a, b);
+		const authorCmp = compareAuthors(a, b, locale);
 		if (authorCmp !== 0) {
 			return authorCmp;
 		}
 	}
 
-	const authorCmp = compareAuthors(a, b);
+	const authorCmp = compareAuthors(a, b, locale);
 	if (authorCmp !== 0) {
 		return authorCmp;
 	}
@@ -183,19 +179,19 @@ function compareAuthorDate(a, b) {
 		return yearCmp;
 	}
 
-	return compareTitles(a, b);
+	return compareTitles(a, b, locale);
 }
 
-function getComparatorForFamily(family) {
+function getComparatorForFamily(family, locale) {
 	switch (family) {
 		case 'notes':
-			return compareNotes;
+			return (a, b) => compareNotes(a, b, locale);
 		case 'author-date':
-			return compareAuthorDate;
+			return (a, b) => compareAuthorDate(a, b, locale);
 		case 'numeric':
 			return null;
 		default:
-			return compareAuthorDate;
+			return (a, b) => compareAuthorDate(a, b, locale);
 	}
 }
 
@@ -210,7 +206,10 @@ function getComparatorForFamily(family) {
  */
 export function sortCitations(citations, styleKey) {
 	const style = getStyleDefinition(styleKey);
-	const comparator = getComparatorForFamily(style.family);
+	const comparator = getComparatorForFamily(
+		style.family,
+		style.locale || 'en-US'
+	);
 
 	if (comparator === null) {
 		return [...citations];

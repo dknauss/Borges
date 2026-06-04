@@ -1,12 +1,13 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Bibliography 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/dknauss/borges-bibliography-builder/issues\n"
 "POT-Creation-Date: 2026-04-08 00:00+0000\n"
-"PO-Revision-Date: 2026-04-08 00:00+0000\n"
-"Last-Translator: Dan Knauss <dan@newlocalmedia.com>\n"
-"Language: ta_IN\n"
+"PO-Revision-Date: 2026-05-10 00:00+0000\n"
+"Last-Translator: Borges Bibliography Builder contributors\n"
 "Language-Team: Tamil\n"
+"Language: ta_IN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -14,7 +15,9 @@ msgstr ""
 "X-Domain: borges-bibliography-builder\n"
 
 msgid "Imported metadata may be incomplete. Verify before publishing."
-msgstr "இறக்குமதி செய்யப்பட்ட மெட்டாடேட்டா முழுமையற்றதாக இருக்கலாம். வெளியிடுவதற்கு முன் சரிபார்க்கவும்."
+msgstr ""
+"இறக்குமதி செய்யப்பட்ட மெட்டாடேட்டா முழுமையற்றதாக இருக்கலாம். வெளியிடுவதற்கு "
+"முன் சரிபார்க்கவும்."
 
 msgid "Add citations"
 msgstr "மேற்கோள்களைச் சேர்க்கவும்"
@@ -25,11 +28,8 @@ msgstr "ஒட்டு / இறக்குமதி"
 msgid "Manual Entry"
 msgstr "கைமுறை உள்ளீடு"
 
-msgid "Add DOI(s), BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
-msgstr "புத்தகங்கள், கட்டுரைகள், அத்தியாயங்கள் மற்றும் இணையப் பக்கங்களுக்கு ஆதரிக்கப்படும் பாணிகளில் DOI, BibTeX பதிவுகள் மற்றும் மேற்கோள்களைச் சேர்க்கவும். பல வடிவமைக்கப்பட்ட மேற்கோள்களை காலியான வரியால் பிரிக்கவும்."
-
 msgid "Resolving…"
-msgstr "செயலாக்கப்படுகிறது…"
+msgstr "DOI தீர்க்கப்படுகிறது…"
 
 msgid "Add"
 msgstr "சேர்"
@@ -44,7 +44,7 @@ msgid "Title"
 msgstr "தலைப்பு"
 
 msgid "Container"
-msgstr "கொண்டைனர்"
+msgstr "தாங்கி வெளியீடு"
 
 msgid "Publisher"
 msgstr "வெளியீட்டாளர்"
@@ -79,59 +79,83 @@ msgstr "மூலங்கள்"
 msgid "Citation Style"
 msgstr "மேற்கோள் பாணி"
 
-msgid "Changing styles reformats auto-generated citations and keeps manual overrides intact."
-msgstr "பாணியை மாற்றுவது தானாக உருவாக்கப்பட்ட மேற்கோள்களை மறுவடிவமைக்கிறது மற்றும் கைமுறை மாற்றங்களை அப்படியே வைத்திருக்கிறது."
+msgid ""
+"Changing styles reformats auto-generated citations and keeps manual "
+"overrides intact."
+msgstr ""
+"பாணியை மாற்றுவது தானாக உருவாக்கப்பட்ட மேற்கோள்களை மறுவடிவமைக்கிறது; கைமுறை "
+"மாற்றங்கள் அப்படியே தக்கவைக்கப்படும்."
 
 msgid "Visible Heading"
 msgstr "காணக்கூடிய தலைப்பு"
 
-msgid "Optional heading shown above the bibliography on the site front end when at least one citation exists."
-msgstr "குறைந்தது ஒரு மேற்கோள் இருந்தால் தளத்தின் முன்பக்கத்தில் நூற்பட்டியலின் மேல் காட்டப்படும் விருப்பத் தலைப்பு."
+msgid ""
+"Optional heading shown above the bibliography on the site front end when at "
+"least one citation exists."
+msgstr ""
+"குறைந்தது ஒரு மேற்கோள் இருந்தால் தளத்தின் முன்பக்கத்தில் நூலகவியலின் மேல் "
+"காட்டப்படும் விருப்பத் தலைப்பு."
 
 msgid "Output JSON-LD"
 msgstr "JSON-LD வெளியீடு"
 
 msgid "Helps search engines and other tools understand the bibliography."
-msgstr "இது தேடுபொறிகளும் பிற கருவிகளும் நூற்பட்டியலைப் புரிந்துகொள்ள உதவுகிறது."
+msgstr "தேடுபொறிகளும் பிற கருவிகளும் நூலகவியலைப் புரிந்துகொள்ள உதவுகிறது."
 
 msgid "Output COinS"
 msgstr "COinS வெளியீடு"
 
 msgid "Lets Zotero and similar tools detect citations on the page."
-msgstr "இது Zotero மற்றும் இதற்கு ஒத்த கருவிகள் பக்கத்தில் மேற்கோள்களை கண்டறிய அனுமதிக்கிறது."
+msgstr ""
+"Zotero மற்றும் இதற்கு ஒத்த கருவிகள் பக்கத்தில் மேற்கோள்களைக் கண்டறிய "
+"அனுமதிக்கிறது."
 
 msgid "Output CSL-JSON"
 msgstr "CSL-JSON வெளியீடு"
 
 msgid "Makes citation data reusable by scholarly tools and services."
-msgstr "இது மேற்கோள் தரவை கல்வி கருவிகள் மற்றும் சேவைகள் மீண்டும் பயன்படுத்தக்கூடியதாக மாற்றுகிறது."
+msgstr ""
+"மேற்கோள் தரவை கல்விசார் கருவிகள் மற்றும் சேவைகள் மீண்டும் "
+"பயன்படுத்தக்கூடியதாக மாற்றுகிறது."
 
 msgid "Exports"
-msgstr "ஏற்றுமதிகள்"
+msgstr "ஏற்றுமதி"
 
 msgid "Copy bibliography"
-msgstr "நூற்பட்டியலை நகலெடு"
+msgstr "நூலகவியலை நகலெடு"
 
-msgid "Copies the current bibliography as plain text in the current order and style."
-msgstr "தற்போதைய நூற்பட்டியலை தற்போதைய வரிசை மற்றும் பாணியில் எளிய உரையாக நகலெடுக்கிறது."
+msgid ""
+"Copies the current bibliography as plain text in the current order and "
+"style."
+msgstr ""
+"தற்போதைய நூலகவியலை தற்போதைய வரிசை மற்றும் பாணியில் எளிய உரையாக "
+"நகலெடுக்கிறது."
 
 msgid "Download CSL-JSON"
 msgstr "CSL-JSON பதிவிறக்கு"
 
 msgid "Downloads the current bibliography as structured citation data."
-msgstr "தற்போதைய நூற்பட்டியலை கட்டமைக்கப்பட்ட மேற்கோள் தரவாக பதிவிறக்குகிறது."
+msgstr "தற்போதைய நூலகவியலை கட்டமைக்கப்பட்ட மேற்கோள் தரவாக பதிவிறக்குகிறது."
 
 msgid "Download BibTeX"
 msgstr "BibTeX பதிவிறக்கு"
 
-msgid "Downloads the current bibliography as BibTeX for reference-manager and scholarly-writing workflows."
-msgstr "தற்போதைய நூற்பட்டியலை குறிப்பு மேலாளர்கள் மற்றும் கல்வி எழுத்து பணிச்சூழல்களுக்கு BibTeX ஆக பதிவிறக்குகிறது."
+msgid ""
+"Downloads the current bibliography as BibTeX for reference-manager and "
+"scholarly-writing workflows."
+msgstr ""
+"தற்போதைய நூலகவியலை குறிப்பு மேலாளர்கள் மற்றும் கல்விசார் எழுத்து "
+"பணிப்பாய்வுகளுக்கு BibTeX ஆக பதிவிறக்குகிறது."
 
 msgid "Download RIS"
 msgstr "RIS பதிவிறக்கு"
 
-msgid "Downloads the current bibliography as RIS for citation managers and import/export workflows."
-msgstr "தற்போதைய நூற்பட்டியலை மேற்கோள் மேலாளர்கள் மற்றும் இறக்குமதி/ஏற்றுமதி பணிச்சூழல்களுக்கு RIS ஆக பதிவிறக்குகிறது."
+msgid ""
+"Downloads the current bibliography as RIS for citation managers and "
+"import/export workflows."
+msgstr ""
+"தற்போதைய நூலகவியலை மேற்கோள் மேலாளர்கள் மற்றும் இறக்குமதி/ஏற்றுமதி "
+"பணிப்பாய்வுகளுக்கு RIS ஆக பதிவிறக்குகிறது."
 
 msgid "Notification"
 msgstr "அறிவிப்பு"
@@ -152,16 +176,150 @@ msgid "Post not found."
 msgstr "பதிவு கிடைக்கவில்லை."
 
 msgid "Sorry, you are not allowed to read this bibliography."
-msgstr "மன்னிக்கவும், இந்த நூற்பட்டியலை நீங்கள் படிக்க அனுமதி இல்லை."
+msgstr "மன்னிக்கவும், இந்த நூலகவியலை நீங்கள் படிக்க அனுமதி இல்லை."
 
 msgid "Bibliography block not found for the requested index."
-msgstr "கோரப்பட்ட குறியீட்டிற்கான நூற்பட்டியல் தொகுதி காணப்படவில்லை."
+msgstr "கோரப்பட்ட குறியீட்டிற்கான நூலகவியல் தொகுதி காணப்படவில்லை."
 
 msgid "Post ID to inspect for bibliography blocks."
-msgstr "நூற்பட்டியல் தொகுதிகளைச் சோதிக்க வேண்டிய பதிவு ID."
+msgstr "நூலகவியல் தொகுதிகளைச் சோதிக்க வேண்டிய பதிவு ID."
 
 msgid "Zero-based bibliography block index within the post."
-msgstr "பதிவுக்குள் பூஜ்ய அடிப்படையிலான நூற்பட்டியல் தொகுதி குறியீடு."
+msgstr "பதிவுக்குள் பூஜ்ய அடிப்படையிலான நூலகவியல் தொகுதி குறியீடு."
 
 msgid "Response format: json, text, or csl-json."
 msgstr "பதில் வடிவம்: json, text, அல்லது csl-json."
+
+#, fuzzy
+msgid ""
+"Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported "
+"styles for books, articles, chapters, and webpages. Separate multiple "
+"formatted citations with a blank line."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"IEEE/Vancouver: arrange entries to match the order they're first cited in "
+"your text."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"OSCOLA convention groups bibliographies by source type (cases, legislation, "
+"books, articles, online). Borges currently renders a single alphabetized "
+"list. See Epic-OSCOLA for tracking."
+msgstr ""
+
+#, fuzzy
+msgid "Download BibLaTeX"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Downloads the current bibliography as BibLaTeX for LaTeX/Biber workflows "
+"with full Unicode support."
+msgstr ""
+
+#, fuzzy
+msgid "Move citation up"
+msgstr ""
+
+#, fuzzy
+msgid "Move citation down"
+msgstr ""
+
+#, fuzzy
+msgid "Formatter unavailable; added fallback citation text."
+msgstr ""
+
+#, fuzzy
+msgid "Link to publication"
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to format bibliographies."
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to resolve PubMed citations."
+msgstr ""
+
+#, fuzzy
+msgid "PubMed ID to resolve to CSL-JSON."
+msgstr ""
+
+#, fuzzy
+msgid "The citation formatting request is too large."
+msgstr ""
+
+#, fuzzy
+msgid "Too many citations were sent for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter requires the PHP %s extension."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter dependencies are missing."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style could not be read."
+msgstr ""
+
+#, fuzzy
+msgid "The citation data could not be prepared for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The citations could not be formatted."
+msgstr ""
+
+#, fuzzy
+msgid "Invalid PubMed ID."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service could not be reached."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed ID could not be resolved."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an error."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an invalid response."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Bibliography block has no heading. Screen reader users may not find this "
+"section."
+msgstr ""
+
+#, fuzzy
+msgid "Bibliography block contains no citations."
+msgstr ""
+
+#, fuzzy
+msgid "Add at least one citation before publishing."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Add a heading in block settings so the bibliography is announced as a "
+"document section."
+msgstr ""

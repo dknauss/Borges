@@ -45,7 +45,7 @@ This repository uses Git for development and WordPress.org SVN for release publi
 - **GitHub release zip**: packaged artifact for GitHub Releases and Playground.
 - **WordPress.org SVN `trunk/`**: public release source.
 - **WordPress.org `assets/`**: directory screenshots, banner, and icon assets.
-- **Playground blueprints**: `playground/blueprint.json` powers GitHub/readme demo links and installs the public plugin package with the `wordpress.org/plugins` resource; `.wordpress-org/blueprints/blueprint.json` deploys to SVN `assets/blueprints/blueprint.json` for the plugin-directory Preview button, where WordPress.org installs the plugin automatically.
+- **Playground blueprints**: `playground/blueprint.json` powers GitHub/readme demo links and installs the latest GitHub Release ZIP through the WordPress Playground CORS proxy; `.wordpress-org/blueprints/blueprint.json` deploys to SVN `assets/blueprints/blueprint.json` for the plugin-directory Preview button, where WordPress.org installs the plugin automatically.
 - **WordPress.org `tags/<version>/`**: release snapshot.
 
 ## Playground preview verification
@@ -56,12 +56,12 @@ After editing either Blueprint, run:
 npm run test -- --runTestsByPath src/blueprint.test.js
 ```
 
-For a browser/WASM smoke check, launch the GitHub demo link and add the sample citations. The GitHub demo blueprint should install the plugin through `wordpress.org/plugins` rather than a GitHub Release asset URL, which is blocked by browser CORS in live Playground. The formatter REST response must not return `bibliography_builder_formatter_extension_missing`; the success notice should say citations were added without the fallback warning.
+For a browser/WASM smoke check, launch the GitHub demo link and add the sample citations. The GitHub demo blueprint should install the latest GitHub Release ZIP through the WordPress Playground CORS proxy; direct GitHub release asset URLs are blocked by browser CORS in live Playground. The WordPress.org Preview blueprint should not install Borges itself because WordPress.org installs the current plugin automatically. The formatter REST response must not return `bibliography_builder_formatter_extension_missing`; the success notice should say citations were added without the fallback warning.
 
 
 ## Translation count and language-pack wording
 
-WordPress.org's plugin page treats English (US) as the source language and counts only approved generated language packs as translated locales. If the public sidebar says "Languages: English (US) and Russian" while the Development tab says "translated into 1 locale," that means one translated locale is published and English (US) is the source language.
+WordPress.org's plugin page treats English (US) as the source language and counts only approved generated language packs as translated locales. If the public sidebar lists English (US) plus one translated locale while the Development tab says "translated into 1 locale," that means one translated locale is published and English (US) is the source language.
 
 Do not describe bundled PO/MO seed files as official language availability. WordPress.org may import shipped `.mo` files into translate.wordpress.org, but a locale appears as an official language pack only after the Stable plugin translation reaches the approval threshold and a language pack is generated. The plugin page's live **Languages** list is the canonical public availability signal.
 

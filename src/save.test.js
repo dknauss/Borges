@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import save from './save';
+import { getListSemantics, STYLE_DEFINITIONS } from './lib/formatting';
 
 jest.mock(
 	'@wordpress/block-editor',
@@ -147,6 +148,66 @@ describe('save', () => {
 				`<ol class="bibliography-builder-list bibliography-builder-list-numeric bibliography-builder-list-${style}">`
 			);
 			expect(markup).not.toContain('<ul>');
+		}
+	});
+
+	it('preserves semantic save markup across every registered style', () => {
+		const styleKeys = Object.keys(STYLE_DEFINITIONS);
+
+		expect(styleKeys).toEqual([
+			'chicago-notes-bibliography',
+			'chicago-author-date',
+			'apa-7',
+			'mla-9',
+			'harvard',
+			'ieee',
+			'vancouver',
+			'oscola',
+			'abnt',
+		]);
+
+		for (const style of styleKeys) {
+			const listTag = getListSemantics(style);
+			const listClass =
+				listTag === 'ol'
+					? 'bibliography-builder-list-numeric'
+					: 'bibliography-builder-list-unordered';
+			const markup = renderToStaticMarkup(
+				save({
+					attributes: {
+						citationStyle: style,
+						headingText: `Heading for ${style}`,
+						outputJsonLd: true,
+						outputCoins: true,
+						outputCslJson: true,
+						citations: [
+							createCitation({
+								id: `matrix-${style}`,
+								csl: {
+									language: 'en',
+									DOI: `10.1234/${style}`,
+									URL: `https://example.org/${style}`,
+								},
+							}),
+						],
+					},
+				})
+			);
+
+			expect(markup).toContain('role="doc-bibliography"');
+			expect(markup).toContain(`aria-label="Heading for ${style}"`);
+			expect(markup).toContain(
+				`<${listTag} class="bibliography-builder-list ${listClass} bibliography-builder-list-${style}">`
+			);
+			expect(markup).toContain(`id="ref-matrix-${style}"`);
+			expect(markup).toContain('lang="en"');
+			expect(markup).toContain('<script type="application/ld+json">');
+			expect(markup).toContain(
+				'<script type="application/vnd.citationstyles.csl+json">'
+			);
+			expect(markup).toContain('class="Z3988"');
+			expect(markup).toContain('aria-hidden="true"');
+			expect(markup).not.toContain('role="doc-biblioentry"');
 		}
 	});
 

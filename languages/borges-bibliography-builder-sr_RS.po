@@ -1,12 +1,13 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Bibliography 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/dknauss/borges-bibliography-builder/issues\n"
 "POT-Creation-Date: 2026-04-08 00:00+0000\n"
-"PO-Revision-Date: 2026-04-08 00:00+0000\n"
-"Last-Translator: Dan Knauss <dan@newlocalmedia.com>\n"
-"Language: sr_RS\n"
+"PO-Revision-Date: 2026-05-10 00:00+0000\n"
+"Last-Translator: Borges Bibliography Builder contributors\n"
 "Language-Team: Serbian\n"
+"Language: sr_RS\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -17,7 +18,7 @@ msgid "Imported metadata may be incomplete. Verify before publishing."
 msgstr "Увезени метаподаци могу бити непотпуни. Проверите их пре објављивања."
 
 msgid "Add citations"
-msgstr "Додај цитате"
+msgstr "Додај изворе"
 
 msgid "Paste / Import"
 msgstr "Налепи / Увези"
@@ -25,11 +26,8 @@ msgstr "Налепи / Увези"
 msgid "Manual Entry"
 msgstr "Ручни унос"
 
-msgid "Add DOI(s), BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
-msgstr "Додајте DOI, BibTeX уносе и цитате у подржаним стиловима за књиге, чланке, поглавља и веб-странице. Одвојите више форматираних цитата празним редом."
-
 msgid "Resolving…"
-msgstr "Обрада…"
+msgstr "Преузимање…"
 
 msgid "Add"
 msgstr "Додај"
@@ -44,7 +42,7 @@ msgid "Title"
 msgstr "Наслов"
 
 msgid "Container"
-msgstr "Контејнер"
+msgstr "Надређена публикација"
 
 msgid "Publisher"
 msgstr "Издавач"
@@ -74,46 +72,60 @@ msgid "source"
 msgstr "извор"
 
 msgid "sources"
-msgstr "извори"
+msgstr "извора"
 
 msgid "Citation Style"
 msgstr "Стил цитирања"
 
-msgid "Changing styles reformats auto-generated citations and keeps manual overrides intact."
-msgstr "Промена стила поново форматира аутоматски генерисане цитате и задржава ручне измене."
+msgid ""
+"Changing styles reformats auto-generated citations and keeps manual "
+"overrides intact."
+msgstr ""
+"Промена стила поново форматира аутоматски генерисане цитате и задржава ручне"
+" измене."
 
 msgid "Visible Heading"
 msgstr "Видљиви наслов"
 
-msgid "Optional heading shown above the bibliography on the site front end when at least one citation exists."
-msgstr "Опциони наслов приказан изнад библиографије на предњем делу сајта када постоји бар један цитат."
+msgid ""
+"Optional heading shown above the bibliography on the site front end when at "
+"least one citation exists."
+msgstr ""
+"Опциони наслов приказан изнад библиографије на јавном делу сајта кад постоји"
+" бар један цитат."
 
 msgid "Output JSON-LD"
-msgstr "Прикажи JSON-LD"
+msgstr "Укључи JSON-LD"
 
 msgid "Helps search engines and other tools understand the bibliography."
-msgstr "Помаже претраживачима и другим алатима да разумеју библиографију."
+msgstr "Помаже претраживачима и другим алатима да препознају библиографију."
 
 msgid "Output COinS"
-msgstr "Прикажи COinS"
+msgstr "Укључи COinS"
 
 msgid "Lets Zotero and similar tools detect citations on the page."
-msgstr "Омогућава Zotero-у и сличним алатима да открију цитате на страници."
+msgstr "Омогућава Zotero и сличним алатима да откривају цитате на страници."
 
 msgid "Output CSL-JSON"
-msgstr "Прикажи CSL-JSON"
+msgstr "Укључи CSL-JSON"
 
 msgid "Makes citation data reusable by scholarly tools and services."
-msgstr "Омогућава поновну употребу података о цитирању у научним алатима и сервисима."
+msgstr ""
+"Омогућава поновну употребу података о цитирању у научним алатима и "
+"сервисима."
 
 msgid "Exports"
-msgstr "Извози"
+msgstr "Извоз"
 
 msgid "Copy bibliography"
 msgstr "Копирај библиографију"
 
-msgid "Copies the current bibliography as plain text in the current order and style."
-msgstr "Копира тренутну библиографију као обичан текст у тренутном редоследу и стилу."
+msgid ""
+"Copies the current bibliography as plain text in the current order and "
+"style."
+msgstr ""
+"Копира тренутну библиографију као обичан текст у тренутном редоследу и "
+"стилу."
 
 msgid "Download CSL-JSON"
 msgstr "Преузми CSL-JSON"
@@ -124,23 +136,31 @@ msgstr "Преузима тренутну библиографију као ст
 msgid "Download BibTeX"
 msgstr "Преузми BibTeX"
 
-msgid "Downloads the current bibliography as BibTeX for reference-manager and scholarly-writing workflows."
-msgstr "Преузима тренутну библиографију као BibTeX за менаџере референци и научне токове писања."
+msgid ""
+"Downloads the current bibliography as BibTeX for reference-manager and "
+"scholarly-writing workflows."
+msgstr ""
+"Преузима тренутну библиографију као BibTeX за менаџере референци и научне "
+"токове рада."
 
 msgid "Download RIS"
 msgstr "Преузми RIS"
 
-msgid "Downloads the current bibliography as RIS for citation managers and import/export workflows."
-msgstr "Преузима тренутну библиографију као RIS за менаџере цитата и токове увоза/извоза."
+msgid ""
+"Downloads the current bibliography as RIS for citation managers and "
+"import/export workflows."
+msgstr ""
+"Преузима тренутну библиографију као RIS за менаџере цитата и токове "
+"увоза/извоза."
 
 msgid "Notification"
 msgstr "Обавештење"
 
 msgid "Publication Type"
-msgstr "Тип публикације"
+msgstr "Врста публикације"
 
 msgid "Select a publication type"
-msgstr "Изаберите тип публикације"
+msgstr "Изаберите врсту публикације"
 
 msgid "Save"
 msgstr "Сачувај"
@@ -155,13 +175,148 @@ msgid "Sorry, you are not allowed to read this bibliography."
 msgstr "Немате дозволу да читате ову библиографију."
 
 msgid "Bibliography block not found for the requested index."
-msgstr "Библиографски блок није пронађен за тражени индекс."
+msgstr "Библиографски блок за тражени индекс није пронађен."
 
 msgid "Post ID to inspect for bibliography blocks."
 msgstr "ID чланка за проверу библиографских блокова."
 
 msgid "Zero-based bibliography block index within the post."
-msgstr "Индекс библиографског блока у чланку који почиње од нуле."
+msgstr ""
+"Индекс библиографског блока унутар чланка (нумерација почиње од нуле)."
 
 msgid "Response format: json, text, or csl-json."
 msgstr "Формат одговора: json, text или csl-json."
+
+#, fuzzy
+msgid ""
+"Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported "
+"styles for books, articles, chapters, and webpages. Separate multiple "
+"formatted citations with a blank line."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"IEEE/Vancouver: arrange entries to match the order they're first cited in "
+"your text."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"OSCOLA convention groups bibliographies by source type (cases, legislation, "
+"books, articles, online). Borges currently renders a single alphabetized "
+"list. See Epic-OSCOLA for tracking."
+msgstr ""
+
+#, fuzzy
+msgid "Download BibLaTeX"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Downloads the current bibliography as BibLaTeX for LaTeX/Biber workflows "
+"with full Unicode support."
+msgstr ""
+
+#, fuzzy
+msgid "Move citation up"
+msgstr ""
+
+#, fuzzy
+msgid "Move citation down"
+msgstr ""
+
+#, fuzzy
+msgid "Formatter unavailable; added fallback citation text."
+msgstr ""
+
+#, fuzzy
+msgid "Link to publication"
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to format bibliographies."
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to resolve PubMed citations."
+msgstr ""
+
+#, fuzzy
+msgid "PubMed ID to resolve to CSL-JSON."
+msgstr ""
+
+#, fuzzy
+msgid "The citation formatting request is too large."
+msgstr ""
+
+#, fuzzy
+msgid "Too many citations were sent for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter requires the PHP %s extension."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter dependencies are missing."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style could not be read."
+msgstr ""
+
+#, fuzzy
+msgid "The citation data could not be prepared for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The citations could not be formatted."
+msgstr ""
+
+#, fuzzy
+msgid "Invalid PubMed ID."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service could not be reached."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed ID could not be resolved."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an error."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an invalid response."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Bibliography block has no heading. Screen reader users may not find this "
+"section."
+msgstr ""
+
+#, fuzzy
+msgid "Bibliography block contains no citations."
+msgstr ""
+
+#, fuzzy
+msgid "Add at least one citation before publishing."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Add a heading in block settings so the bibliography is announced as a "
+"document section."
+msgstr ""

@@ -354,6 +354,63 @@ final class UtilityFunctionsTest extends TestCase {
 		$this->assertSame( 'pt-BR', $style['locale'] );
 	}
 
+	public function test_formatter_cache_key_is_stable_for_equivalent_csl_shapes() {
+		$style = bibliography_builder_get_formatter_style_definition( 'apa-7' );
+		$left  = array(
+			array(
+				'type'   => 'book',
+				'title'  => 'Cacheable Work',
+				'author' => array(
+					array(
+						'family' => 'Alpha',
+						'given'  => 'Ada',
+					),
+				),
+			),
+		);
+		$right = array(
+			array(
+				'author' => array(
+					array(
+						'given'  => 'Ada',
+						'family' => 'Alpha',
+					),
+				),
+				'title'  => 'Cacheable Work',
+				'type'   => 'book',
+			),
+		);
+
+		$this->assertSame(
+			bibliography_builder_get_formatter_cache_key( $left, 'apa-7', $style ),
+			bibliography_builder_get_formatter_cache_key( $right, 'apa-7', $style )
+		);
+	}
+
+	public function test_format_csl_items_returns_warm_cache_without_formatter_bootstrap() {
+		$style_key = 'apa-7';
+		$style     = bibliography_builder_get_formatter_style_definition( $style_key );
+		$csl_items = array(
+			array(
+				'type'  => 'book',
+				'title' => 'Cached Work',
+			),
+		);
+		$cache_key = bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style );
+
+		bibliography_builder_cache_set(
+			$cache_key,
+			array( 'Cached formatted entry.' ),
+			'bibliography_builder_formatter',
+			BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
+		);
+
+		$this->assertSame(
+			array( 'Cached formatted entry.' ),
+			bibliography_builder_format_csl_items( $csl_items, $style_key )
+		);
+	}
+
 	// ── bibliography_builder_extract_citeproc_entries ────────────────────────
 
 	public function test_extract_citeproc_entries_parses_csl_entry_elements() {

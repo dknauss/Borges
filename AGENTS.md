@@ -1,6 +1,6 @@
 # Bibliography Builder Block
 
-WordPress block plugin: DOI/BibTeX → semantically rich, auto-sorted bibliography.
+WordPress block plugin: DOI/PubMed/BibTeX → semantically rich, auto-sorted bibliography.
 
 ## Authoritative Spec
 
@@ -22,7 +22,7 @@ npm run test         # Jest unit tests
 - **Static save** — `save.js` bakes HTML into post content. No PHP `render_callback`. Output survives plugin deactivation.
 - **CSL-JSON is the source of truth** — all metadata output (JSON-LD, COinS, CSL-JSON script blocks) derives from the `csl` object in each citation.
 - **`displayOverride`** — user-edited display text. When set, rendered instead of auto-formatted output. Does NOT modify the `csl` object.
-- **citation-js** — handles DOI resolution (CrossRef), BibTeX parsing, and CSL formatting. Pinned versions, not ranges.
+- **citation-js** — handles BibTeX parsing and fallback DOI support. Browser DOI resolution primarily uses CrossRef's CSL transform endpoint directly; CSL formatting is handled by the PHP formatter. Pinned versions, not ranges.
 
 ## Key Rules from Spec
 

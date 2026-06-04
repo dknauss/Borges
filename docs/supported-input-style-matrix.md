@@ -97,7 +97,7 @@ These are style outputs, not raw-input parsing promises.
 | Vancouver                  | Enabled | Core numeric style     |
 | IEEE                       | Enabled | Core numeric style     |
 | OSCOLA                     | Enabled | Specialized legal style |
-| ABNT                       | Enabled | Specialized regional style |
+| ABNT                       | Enabled | Associação Brasileira de Normas Técnicas / NBR 6023:2018 |
 
 ### Planned later
 

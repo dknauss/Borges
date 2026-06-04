@@ -626,9 +626,9 @@ describe('sortCitations', () => {
 			}),
 		];
 
-		const sorted = sortCitations(citations, 'apa');
+		const sorted = sortCitations(citations, 'apa-7');
 		const roundTripped = JSON.parse(JSON.stringify(sorted));
-		const reSorted = sortCitations(roundTripped, 'apa');
+		const reSorted = sortCitations(roundTripped, 'apa-7');
 
 		expect(reSorted.map((c) => c.id)).toEqual(sorted.map((c) => c.id));
 	});

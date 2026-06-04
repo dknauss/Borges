@@ -103,6 +103,106 @@ describe('useCitationReorder', () => {
 		expect(queueFocus).toHaveBeenCalledWith({ type: 'entry', id: 'a' });
 	});
 
+	it('announces a generated citation label when none is provided', () => {
+		const citationsRef = {
+			current: [
+				makeCitation('a', 'Alpha', 2020),
+				makeCitation('b', 'Bravo', 2021),
+			],
+		};
+		const announce = jest.fn();
+		const queueFocus = jest.fn();
+		const setAttributes = jest.fn((update) => {
+			citationsRef.current = update.citations;
+		});
+
+		const { result } = renderHook(() =>
+			useCitationReorder({
+				announce,
+				citationsRef,
+				queueFocus,
+				setAttributes,
+			})
+		);
+
+		act(() => {
+			result.current.moveCitationDown('a');
+		});
+
+		expect(announce).toHaveBeenCalledWith(
+			'success',
+			"Moved 'Alpha 2020' to position 2 of 2.",
+			{ type: 'snackbar' }
+		);
+	});
+
+	it('falls back to an Unknown label for sparse citation metadata', () => {
+		const citationsRef = {
+			current: [
+				{
+					id: 'a',
+					csl: {},
+				},
+				makeCitation('b', 'Bravo', 2021),
+			],
+		};
+		const announce = jest.fn();
+		const queueFocus = jest.fn();
+		const setAttributes = jest.fn((update) => {
+			citationsRef.current = update.citations;
+		});
+
+		const { result } = renderHook(() =>
+			useCitationReorder({
+				announce,
+				citationsRef,
+				queueFocus,
+				setAttributes,
+			})
+		);
+
+		act(() => {
+			result.current.moveCitationDown('a');
+		});
+
+		expect(announce).toHaveBeenCalledWith(
+			'success',
+			"Moved 'Unknown' to position 2 of 2.",
+			{ type: 'snackbar' }
+		);
+	});
+
+	it('does nothing when the requested citation id is missing', () => {
+		const citationsRef = {
+			current: [
+				makeCitation('a', 'Alpha', 2020),
+				makeCitation('b', 'Bravo', 2021),
+			],
+		};
+		const announce = jest.fn();
+		const queueFocus = jest.fn();
+		const setAttributes = jest.fn();
+
+		const { result } = renderHook(() =>
+			useCitationReorder({
+				announce,
+				citationsRef,
+				queueFocus,
+				setAttributes,
+			})
+		);
+
+		let moved;
+		act(() => {
+			moved = result.current.moveCitationDown('missing');
+		});
+
+		expect(moved).toBe(false);
+		expect(setAttributes).not.toHaveBeenCalled();
+		expect(announce).not.toHaveBeenCalled();
+		expect(queueFocus).not.toHaveBeenCalled();
+	});
+
 	it('does not move first entry up or last entry down', () => {
 		const citationsRef = {
 			current: [

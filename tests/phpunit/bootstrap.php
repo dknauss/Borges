@@ -14,6 +14,11 @@ $GLOBALS['bibliography_builder_test_registered_block_types'] = array();
 $GLOBALS['bibliography_builder_test_registered_scripts'] = array();
 $GLOBALS['bibliography_builder_test_enqueued_scripts']   = array();
 $GLOBALS['bibliography_builder_test_added_actions']      = array();
+$GLOBALS['bibliography_builder_test_http_response']      = null;
+$GLOBALS['bibliography_builder_test_http_requests']      = array();
+$GLOBALS['bibliography_builder_test_transients']          = array();
+$GLOBALS['bibliography_builder_test_object_cache']        = array();
+$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 
 function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_posts']           = array();
@@ -25,6 +30,11 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_registered_block_types'] = array();
 	$GLOBALS['bibliography_builder_test_registered_scripts'] = array();
 	$GLOBALS['bibliography_builder_test_enqueued_scripts']   = array();
+	$GLOBALS['bibliography_builder_test_http_response']      = null;
+	$GLOBALS['bibliography_builder_test_http_requests']      = array();
+	$GLOBALS['bibliography_builder_test_transients']          = array();
+	$GLOBALS['bibliography_builder_test_object_cache']        = array();
+	$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 }
 
 function bibliography_builder_test_set_post( $post_id, $status, $content, $password_required = false ) {
@@ -49,6 +59,54 @@ function bibliography_builder_test_grant_cap( $user_id, $capability, $object_id 
 
 function bibliography_builder_test_set_current_user( $user_id ) {
 	$GLOBALS['bibliography_builder_test_current_user_id'] = $user_id;
+}
+
+function bibliography_builder_test_set_http_response( $response ) {
+	$GLOBALS['bibliography_builder_test_http_response'] = $response;
+}
+
+function bibliography_builder_test_get_http_requests() {
+	return $GLOBALS['bibliography_builder_test_http_requests'];
+}
+
+function get_transient( $key ) {
+	return $GLOBALS['bibliography_builder_test_transients'][ $key ]['value'] ?? false;
+}
+
+function set_transient( $key, $value, $expiration = 0 ) {
+	$GLOBALS['bibliography_builder_test_transients'][ $key ] = array(
+		'value'      => $value,
+		'expiration' => $expiration,
+	);
+
+	return true;
+}
+
+function bibliography_builder_test_use_ext_object_cache( $enabled ) {
+	$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = (bool) $enabled;
+}
+
+function wp_using_ext_object_cache() {
+	return $GLOBALS['bibliography_builder_test_using_ext_object_cache'];
+}
+
+function wp_cache_get( $key, $group = '', $force = false, &$found = null ) {
+	if ( isset( $GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ] ) ) {
+		$found = true;
+		return $GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ]['value'];
+	}
+
+	$found = false;
+	return false;
+}
+
+function wp_cache_set( $key, $value, $group = '', $expiration = 0 ) {
+	$GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ] = array(
+		'value'      => $value,
+		'expiration' => $expiration,
+	);
+
+	return true;
 }
 
 function add_action( $hook_name = '', $callback = null, $priority = 10, $accepted_args = 1 ) {
@@ -135,8 +193,34 @@ function wp_strip_all_tags( $text ) {
 	return strip_tags( (string) $text );
 }
 
-function wp_json_encode( $data ) {
-	return json_encode( $data );
+function wp_json_encode( $data, $flags = 0, $depth = 512 ) {
+	return json_encode( $data, $flags, $depth );
+}
+
+function add_query_arg( $args, $url ) {
+	$separator = false === strpos( $url, '?' ) ? '?' : '&';
+	return $url . $separator . http_build_query( $args, '', '&', PHP_QUERY_RFC3986 );
+}
+
+function wp_remote_get( $url, $args = array() ) {
+	$GLOBALS['bibliography_builder_test_http_requests'][] = array(
+		'url'  => $url,
+		'args' => $args,
+	);
+
+	if ( null === $GLOBALS['bibliography_builder_test_http_response'] ) {
+		return new WP_Error( 'http_request_failed', 'No test HTTP response configured.' );
+	}
+
+	return $GLOBALS['bibliography_builder_test_http_response'];
+}
+
+function wp_remote_retrieve_response_code( $response ) {
+	return isset( $response['response']['code'] ) ? (int) $response['response']['code'] : 0;
+}
+
+function wp_remote_retrieve_body( $response ) {
+	return isset( $response['body'] ) ? (string) $response['body'] : '';
 }
 
 function rest_ensure_response( $response ) {

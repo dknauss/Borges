@@ -1,12 +1,13 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Bibliography 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/dknauss/borges-bibliography-builder/issues\n"
 "POT-Creation-Date: 2026-04-08 00:00+0000\n"
-"PO-Revision-Date: 2026-04-08 00:00+0000\n"
-"Last-Translator: Dan Knauss <dan@newlocalmedia.com>\n"
-"Language: ja\n"
+"PO-Revision-Date: 2026-05-10 00:00+0000\n"
+"Last-Translator: Borges Bibliography Builder contributors\n"
 "Language-Team: Japanese\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -14,7 +15,7 @@ msgstr ""
 "X-Domain: borges-bibliography-builder\n"
 
 msgid "Imported metadata may be incomplete. Verify before publishing."
-msgstr "インポートしたメタデータは不完全な場合があります。公開前に確認してください。"
+msgstr "インポートしたメタデータは不完全な場合があります。公開前にご確認ください。"
 
 msgid "Add citations"
 msgstr "引用を追加"
@@ -25,11 +26,8 @@ msgstr "貼り付け / インポート"
 msgid "Manual Entry"
 msgstr "手動入力"
 
-msgid "Add DOI(s), BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
-msgstr "書籍、論文、章、ウェブページ向けの対応スタイルで DOI、BibTeX エントリー、引用を追加します。複数の整形済み引用は空行で区切ってください。"
-
 msgid "Resolving…"
-msgstr "処理中…"
+msgstr "解決中…"
 
 msgid "Add"
 msgstr "追加"
@@ -62,7 +60,7 @@ msgid "URL"
 msgstr "URL"
 
 msgid "Hide citation form"
-msgstr "引用フォームを隠す"
+msgstr "引用フォームを非表示"
 
 msgid "Show citation form"
 msgstr "引用フォームを表示"
@@ -71,28 +69,32 @@ msgid "Settings"
 msgstr "設定"
 
 msgid "source"
-msgstr "ソース"
+msgstr "件"
 
 msgid "sources"
-msgstr "ソース"
+msgstr "件"
 
 msgid "Citation Style"
 msgstr "引用スタイル"
 
-msgid "Changing styles reformats auto-generated citations and keeps manual overrides intact."
-msgstr "スタイルを変更すると自動生成された引用は再整形され、手動の上書きは保持されます。"
+msgid ""
+"Changing styles reformats auto-generated citations and keeps manual "
+"overrides intact."
+msgstr "スタイルを変更すると自動生成された引用は再整形され、手動で変更した内容は保持されます。"
 
 msgid "Visible Heading"
 msgstr "表示見出し"
 
-msgid "Optional heading shown above the bibliography on the site front end when at least one citation exists."
-msgstr "少なくとも 1 件の引用がある場合に、サイトのフロントエンドで参考文献の上に表示される任意の見出しです。"
+msgid ""
+"Optional heading shown above the bibliography on the site front end when at "
+"least one citation exists."
+msgstr "引用が 1 件以上ある場合に、サイトのフロントエンドで参考文献リストの上に表示される任意の見出しです。"
 
 msgid "Output JSON-LD"
 msgstr "JSON-LD を出力"
 
 msgid "Helps search engines and other tools understand the bibliography."
-msgstr "検索エンジンや他のツールが参考文献を理解するのに役立ちます。"
+msgstr "検索エンジンや他のツールが参考文献を解釈するのに役立ちます。"
 
 msgid "Output COinS"
 msgstr "COinS を出力"
@@ -112,7 +114,9 @@ msgstr "エクスポート"
 msgid "Copy bibliography"
 msgstr "参考文献をコピー"
 
-msgid "Copies the current bibliography as plain text in the current order and style."
+msgid ""
+"Copies the current bibliography as plain text in the current order and "
+"style."
 msgstr "現在の順序とスタイルで参考文献をプレーンテキストとしてコピーします。"
 
 msgid "Download CSL-JSON"
@@ -124,23 +128,27 @@ msgstr "現在の参考文献を構造化された引用データとしてダウ
 msgid "Download BibTeX"
 msgstr "BibTeX をダウンロード"
 
-msgid "Downloads the current bibliography as BibTeX for reference-manager and scholarly-writing workflows."
-msgstr "現在の参考文献を、文献管理や学術執筆ワークフロー向けの BibTeX としてダウンロードします。"
+msgid ""
+"Downloads the current bibliography as BibTeX for reference-manager and "
+"scholarly-writing workflows."
+msgstr "現在の参考文献を、文献管理・学術執筆ワークフロー向けの BibTeX としてダウンロードします。"
 
 msgid "Download RIS"
 msgstr "RIS をダウンロード"
 
-msgid "Downloads the current bibliography as RIS for citation managers and import/export workflows."
-msgstr "現在の参考文献を、引用管理やインポート/エクスポート向けの RIS としてダウンロードします。"
+msgid ""
+"Downloads the current bibliography as RIS for citation managers and "
+"import/export workflows."
+msgstr "現在の参考文献を、文献管理ツールやインポート・エクスポート向けの RIS としてダウンロードします。"
 
 msgid "Notification"
 msgstr "通知"
 
 msgid "Publication Type"
-msgstr "出版物の種類"
+msgstr "資料種別"
 
 msgid "Select a publication type"
-msgstr "出版物の種類を選択"
+msgstr "資料種別を選択"
 
 msgid "Save"
 msgstr "保存"
@@ -158,10 +166,144 @@ msgid "Bibliography block not found for the requested index."
 msgstr "指定されたインデックスの参考文献ブロックが見つかりません。"
 
 msgid "Post ID to inspect for bibliography blocks."
-msgstr "参考文献ブロックを調べる投稿 ID。"
+msgstr "参考文献ブロックを検索する投稿 ID。"
 
 msgid "Zero-based bibliography block index within the post."
-msgstr "投稿内の 0 始まりの参考文献ブロック番号。"
+msgstr "投稿内の参考文献ブロックの 0 始まりのインデックス。"
 
 msgid "Response format: json, text, or csl-json."
 msgstr "応答形式: json、text、または csl-json。"
+
+#, fuzzy
+msgid ""
+"Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported "
+"styles for books, articles, chapters, and webpages. Separate multiple "
+"formatted citations with a blank line."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"IEEE/Vancouver: arrange entries to match the order they're first cited in "
+"your text."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"OSCOLA convention groups bibliographies by source type (cases, legislation, "
+"books, articles, online). Borges currently renders a single alphabetized "
+"list. See Epic-OSCOLA for tracking."
+msgstr ""
+
+#, fuzzy
+msgid "Download BibLaTeX"
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Downloads the current bibliography as BibLaTeX for LaTeX/Biber workflows "
+"with full Unicode support."
+msgstr ""
+
+#, fuzzy
+msgid "Move citation up"
+msgstr ""
+
+#, fuzzy
+msgid "Move citation down"
+msgstr ""
+
+#, fuzzy
+msgid "Formatter unavailable; added fallback citation text."
+msgstr ""
+
+#, fuzzy
+msgid "Link to publication"
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to format bibliographies."
+msgstr ""
+
+#, fuzzy
+msgid "Sorry, you are not allowed to resolve PubMed citations."
+msgstr ""
+
+#, fuzzy
+msgid "PubMed ID to resolve to CSL-JSON."
+msgstr ""
+
+#, fuzzy
+msgid "The citation formatting request is too large."
+msgstr ""
+
+#, fuzzy
+msgid "Too many citations were sent for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter requires the PHP %s extension."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter dependencies are missing."
+msgstr ""
+
+#, fuzzy
+msgid "The bibliography formatter is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style is unavailable."
+msgstr ""
+
+#, fuzzy
+msgid "The requested bibliography style could not be read."
+msgstr ""
+
+#, fuzzy
+msgid "The citation data could not be prepared for formatting."
+msgstr ""
+
+#, fuzzy
+msgid "The citations could not be formatted."
+msgstr ""
+
+#, fuzzy
+msgid "Invalid PubMed ID."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service could not be reached."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed ID could not be resolved."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an error."
+msgstr ""
+
+#, fuzzy
+msgid "The PubMed citation service returned an invalid response."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Bibliography block has no heading. Screen reader users may not find this "
+"section."
+msgstr ""
+
+#, fuzzy
+msgid "Bibliography block contains no citations."
+msgstr ""
+
+#, fuzzy
+msgid "Add at least one citation before publishing."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Add a heading in block settings so the bibliography is announced as a "
+"document section."
+msgstr ""

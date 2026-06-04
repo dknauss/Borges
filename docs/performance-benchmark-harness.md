@@ -14,8 +14,8 @@ npm run benchmark:perf
 
 It writes fresh reports to:
 
-- `/Users/danknauss/Developer/GitHub/bibliography-builder/output/benchmarks/latest.json`
-- `/Users/danknauss/Developer/GitHub/bibliography-builder/output/benchmarks/latest.md`
+- `output/benchmarks/latest.json`
+- `output/benchmarks/latest.md`
 
 The automated harness clears the formatting cache between runs so the reported timings reflect cold-formatting costs more consistently.
 
@@ -23,9 +23,9 @@ The automated harness clears the formatting cache between runs so the reported t
 
 Use these fixed import fixtures:
 
-- `/Users/danknauss/Developer/GitHub/bibliography-builder/output/benchmarks/fixtures/import-freetext-10.txt`
-- `/Users/danknauss/Developer/GitHub/bibliography-builder/output/benchmarks/fixtures/import-freetext-25.txt`
-- `/Users/danknauss/Developer/GitHub/bibliography-builder/output/benchmarks/fixtures/import-freetext-50.txt`
+- `src/benchmarks/fixtures/import-freetext-10.txt`
+- `src/benchmarks/fixtures/import-freetext-25.txt`
+- `src/benchmarks/fixtures/import-freetext-50.txt`
 
 Each file contains unique supported free-text book citations separated by blank lines, so the parser can process them deterministically without DOI/network variance.
 
