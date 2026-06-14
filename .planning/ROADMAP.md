@@ -411,7 +411,8 @@ Planned language-pack work:
 1. **Keep i18n artifacts current with source strings** — regenerate the POT and
    merge/rebuild seed PO/MO files whenever PHP, JS, or block metadata strings
    change; generate/verify JS JSON translation files only if bundled
-   translations are intentionally shipped for a locale.
+   translations are intentionally shipped for a locale. `npm run lint:i18n`
+   guards the checked-in POT/PO/MO set and stale availability wording in CI.
 2. **Maintain bundled-vs-official translation policy** — prefer WordPress.org
    language packs as the public availability signal; keep bundled PO/MO files
    only as seed/import material unless there is a strong support reason to ship

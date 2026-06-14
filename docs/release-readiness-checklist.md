@@ -6,6 +6,7 @@ Pre-release checklist for the Bibliography Builder block.
 
 -   [ ] `npm run lint:js`
 -   [ ] `npm run lint:css`
+-   [ ] `npm run lint:i18n`
 -   [ ] `npm test -- --runInBand`
 -   [ ] `composer test:php` reviewed for new failures or new dependency
         deprecations

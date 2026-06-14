@@ -1,7 +1,7 @@
 {
 	"name": "borges-bibliography-builder",
 	"version": "1.3.3",
-	"description": "A WordPress block plugin that transforms pasted scholarly citations (DOIs, BibTeX) into a semantically rich, auto-sorted bibliography list.",
+	"description": "A WordPress block plugin that transforms DOI, PubMed/PMID, BibTeX, and citation text into a semantically rich, auto-sorted bibliography list.",
 	"author": "Dan Knauss",
 	"license": "GPL-2.0-or-later",
 	"main": "build/index.js",
@@ -11,6 +11,7 @@
 		"lint:js": "wp-scripts lint-js",
 		"lint:css": "wp-scripts lint-style",
 		"lint:php": "composer lint:php",
+		"lint:i18n": "node scripts/check-i18n.js",
 		"test": "wp-scripts test-unit-js",
 		"test:js:coverage": "wp-scripts test-unit-js --runInBand --coverage --coverageReporters=clover --coverageReporters=text-summary --silent",
 		"test:coordination": "node scripts/verify-sort-coordination.js",

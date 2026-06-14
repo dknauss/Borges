@@ -12,6 +12,17 @@ wp i18n make-pot . languages/borges-bibliography-builder.pot \
 
 The POT is checked into `languages/`. Commit it alongside any source string changes so translators and translate.wordpress.org stay in sync.
 
+Before committing source-string, language-file, or translation-documentation
+changes, run:
+
+```bash
+npm run lint:i18n
+```
+
+This read-only check verifies POT/PO msgid parity, the expected PO/MO seed
+locale set, absence of bundled JS translation JSON files, and stale public
+language-pack wording.
+
 ## Seed PO/MO refresh
 
 After regenerating the POT, merge the current source-string catalog into the
@@ -82,6 +93,21 @@ Priority locales targeted for translate.wordpress.org review coordination:
 | `ja` | Japanese |
 
 These were chosen based on WordPress.org locale team activity and plugin usage patterns.
+
+## First-wave coordination checklist
+
+For each first-wave locale:
+
+1. Export the current seed PO for reviewer context, or point translators to the
+   Stable project on translate.wordpress.org.
+2. Confirm a native or professionally qualified reviewer is available before
+   submitting strings for approval.
+3. Submit translations through translate.wordpress.org, locale-team review, PTE,
+   or CLPTE workflows. Do not submit unreviewed machine translations.
+4. After approval, confirm the generated language pack appears on the live
+   WordPress.org Languages list.
+5. Update docs only to describe official availability after the live list shows
+   the generated pack.
 
 ## translate.wordpress.org approval path
 

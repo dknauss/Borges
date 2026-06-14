@@ -39,6 +39,9 @@ jobs:
       - name: Lint CSS
         run: npm run lint:css
 
+      - name: Lint i18n artifacts
+        run: npm run lint:i18n
+
       - name: Run unit tests
         run: npm test -- --runInBand --silent
 
