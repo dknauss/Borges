@@ -1,129 +1,197 @@
 name: Runtime matrix smoke
 
 on:
-  workflow_dispatch:
-  pull_request:
-  push:
-    branches:
-      - main
-      - master
-      - 'codex/**'
+    workflow_dispatch:
+    pull_request:
+    push:
+        branches:
+            - main
+            - master
+            - 'codex/**'
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  smoke:
-    name: Runtime smoke (${{ matrix.name }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: apache-php74-wp64
-            server: apache
-            php: '7.4'
-            wp: '6.4'
-            db_engine: mysql
-            http_port: '8891'
-            db_port: '33071'
-          - name: apache-php81-wp64
-            server: apache
-            php: '8.1'
-            wp: '6.4'
-            db_engine: mysql
-            http_port: '8892'
-            db_port: '33072'
-          - name: apache-php81-wp67
-            server: apache
-            php: '8.1'
-            wp: '6.7'
-            db_engine: mysql
-            http_port: '8898'
-            db_port: '33078'
-          - name: apache-php82-wplatest
-            server: apache
-            php: '8.2'
-            wp: latest
-            db_engine: mysql
-            http_port: '8893'
-            db_port: '33073'
-          - name: apache-php83-wplatest
-            server: apache
-            php: '8.3'
-            wp: latest
-            db_engine: mysql
-            http_port: '8894'
-            db_port: '33074'
-          - name: apache-php84-wplatest
-            server: apache
-            php: '8.4'
-            wp: latest
-            db_engine: mysql
-            http_port: '8895'
-            db_port: '33075'
-          - name: nginx-php81-wp67
-            server: nginx
-            php: '8.1'
-            wp: '6.7'
-            db_engine: mysql
-            http_port: '8896'
-            db_port: '33076'
-          - name: nginx-php82-wplatest
-            server: nginx
-            php: '8.2'
-            wp: latest
-            db_engine: mysql
-            http_port: '8900'
-            db_port: '33080'
-          - name: nginx-php83-wplatest
-            server: nginx
-            php: '8.3'
-            wp: latest
-            db_engine: mysql
-            http_port: '8897'
-            db_port: '33077'
-          - name: apache-php83-wplatest-multisite
-            server: apache
-            php: '8.3'
-            wp: latest
-            db_engine: mysql
-            multisite: '1'
-            http_port: '8901'
-            db_port: '33081'
+    smoke-pr:
+        name: Runtime smoke PR (${{ matrix.name }})
+        if: github.event_name == 'pull_request'
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - name: apache-php74-wp64
+                      server: apache
+                      php: '7.4'
+                      wp: '6.4'
+                      db_engine: mysql
+                      http_port: '8891'
+                      db_port: '33071'
+                    - name: apache-php83-wplatest
+                      server: apache
+                      php: '8.3'
+                      wp: latest
+                      db_engine: mysql
+                      http_port: '8894'
+                      db_port: '33074'
+                    - name: apache-php83-wplatest-multisite
+                      server: apache
+                      php: '8.3'
+                      wp: latest
+                      db_engine: mysql
+                      multisite: '1'
+                      http_port: '8901'
+                      db_port: '33081'
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 20
-          cache: npm
+            - name: Set up Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: npm
 
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+            - name: Install dependencies
+              run: npm ci --legacy-peer-deps
 
-      - name: Build plugin assets
-        run: npm run build
+            - name: Build plugin assets
+              run: npm run build
 
-      - name: Run runtime smoke test
-        env:
-          WP_BIBLIO_SERVER: ${{ matrix.server }}
-          WP_BIBLIO_PHP_VERSION: ${{ matrix.php }}
-          WP_BIBLIO_WP_VERSION: ${{ matrix.wp }}
-          WP_BIBLIO_HTTP_PORT: ${{ matrix.http_port }}
-          WP_BIBLIO_DB_PORT: ${{ matrix.db_port }}
-          WP_BIBLIO_DB_ENGINE: ${{ matrix.db_engine }}
-          WP_BIBLIO_MULTISITE: ${{ matrix.multisite }}
-          WP_BIBLIO_ARTIFACT_DIR: ${{ github.workspace }}/output/runtime-matrix/${{ matrix.name }}
-        run: sh ./scripts/runtime-matrix/smoke.sh
+            - name: Run runtime smoke test
+              env:
+                  WP_BIBLIO_SERVER: ${{ matrix.server }}
+                  WP_BIBLIO_PHP_VERSION: ${{ matrix.php }}
+                  WP_BIBLIO_WP_VERSION: ${{ matrix.wp }}
+                  WP_BIBLIO_HTTP_PORT: ${{ matrix.http_port }}
+                  WP_BIBLIO_DB_PORT: ${{ matrix.db_port }}
+                  WP_BIBLIO_DB_ENGINE: ${{ matrix.db_engine }}
+                  WP_BIBLIO_MULTISITE: ${{ matrix.multisite }}
+                  WP_BIBLIO_ARTIFACT_DIR: ${{ github.workspace }}/output/runtime-matrix/${{ matrix.name }}
+              run: sh ./scripts/runtime-matrix/smoke.sh
 
-      - name: Upload runtime smoke artifacts
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: runtime-smoke-${{ matrix.name }}
-          path: output/runtime-matrix/${{ matrix.name }}
-          if-no-files-found: warn
+            - name: Upload runtime smoke artifacts
+              if: always()
+              uses: actions/upload-artifact@v6
+              with:
+                  name: runtime-smoke-pr-${{ matrix.name }}
+                  path: output/runtime-matrix/${{ matrix.name }}
+                  if-no-files-found: warn
+
+    smoke-full:
+        name: Runtime smoke full (${{ matrix.name }})
+        if: github.event_name != 'pull_request'
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - name: apache-php74-wp64
+                      server: apache
+                      php: '7.4'
+                      wp: '6.4'
+                      db_engine: mysql
+                      http_port: '8891'
+                      db_port: '33071'
+                    - name: apache-php81-wp64
+                      server: apache
+                      php: '8.1'
+                      wp: '6.4'
+                      db_engine: mysql
+                      http_port: '8892'
+                      db_port: '33072'
+                    - name: apache-php81-wp67
+                      server: apache
+                      php: '8.1'
+                      wp: '6.7'
+                      db_engine: mysql
+                      http_port: '8898'
+                      db_port: '33078'
+                    - name: apache-php82-wplatest
+                      server: apache
+                      php: '8.2'
+                      wp: latest
+                      db_engine: mysql
+                      http_port: '8893'
+                      db_port: '33073'
+                    - name: apache-php83-wplatest
+                      server: apache
+                      php: '8.3'
+                      wp: latest
+                      db_engine: mysql
+                      http_port: '8894'
+                      db_port: '33074'
+                    - name: apache-php84-wplatest
+                      server: apache
+                      php: '8.4'
+                      wp: latest
+                      db_engine: mysql
+                      http_port: '8895'
+                      db_port: '33075'
+                    - name: nginx-php81-wp67
+                      server: nginx
+                      php: '8.1'
+                      wp: '6.7'
+                      db_engine: mysql
+                      http_port: '8896'
+                      db_port: '33076'
+                    - name: nginx-php82-wplatest
+                      server: nginx
+                      php: '8.2'
+                      wp: latest
+                      db_engine: mysql
+                      http_port: '8900'
+                      db_port: '33080'
+                    - name: nginx-php83-wplatest
+                      server: nginx
+                      php: '8.3'
+                      wp: latest
+                      db_engine: mysql
+                      http_port: '8897'
+                      db_port: '33077'
+                    - name: apache-php83-wplatest-multisite
+                      server: apache
+                      php: '8.3'
+                      wp: latest
+                      db_engine: mysql
+                      multisite: '1'
+                      http_port: '8901'
+                      db_port: '33081'
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci --legacy-peer-deps
+
+            - name: Build plugin assets
+              run: npm run build
+
+            - name: Run runtime smoke test
+              env:
+                  WP_BIBLIO_SERVER: ${{ matrix.server }}
+                  WP_BIBLIO_PHP_VERSION: ${{ matrix.php }}
+                  WP_BIBLIO_WP_VERSION: ${{ matrix.wp }}
+                  WP_BIBLIO_HTTP_PORT: ${{ matrix.http_port }}
+                  WP_BIBLIO_DB_PORT: ${{ matrix.db_port }}
+                  WP_BIBLIO_DB_ENGINE: ${{ matrix.db_engine }}
+                  WP_BIBLIO_MULTISITE: ${{ matrix.multisite }}
+                  WP_BIBLIO_ARTIFACT_DIR: ${{ github.workspace }}/output/runtime-matrix/${{ matrix.name }}
+              run: sh ./scripts/runtime-matrix/smoke.sh
+
+            - name: Upload runtime smoke artifacts
+              if: always()
+              uses: actions/upload-artifact@v6
+              with:
+                  name: runtime-smoke-${{ matrix.name }}
+                  path: output/runtime-matrix/${{ matrix.name }}
+                  if-no-files-found: warn
