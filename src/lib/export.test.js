@@ -4,6 +4,7 @@ import {
 	buildBibtexExportContent,
 	buildBiblatexExportContent,
 	buildRisExportContent,
+	cslToRisEntry,
 	normalizeBibtexUnicodeQuotes,
 	downloadTextExport,
 	downloadCslJsonExport,
@@ -678,5 +679,31 @@ describe('export helpers', () => {
 		expect(documentRef.createElement.mock.results[0].value.download).toBe(
 			BIBLATEX_EXPORT_FILENAME
 		);
+	});
+});
+
+describe('cslToRisEntry (per-entry RIS for save() cite/export)', () => {
+	it('is importable as a named export and returns a string', () => {
+		const ris = cslToRisEntry({ type: 'article-journal', title: 'X' });
+		expect(typeof ris).toBe('string');
+	});
+
+	it('opens with the mapped RIS type and closes with the ER terminator', () => {
+		const ris = cslToRisEntry({
+			type: 'article-journal',
+			title: 'A Study',
+			issued: { 'date-parts': [[2023]] },
+		});
+		expect(ris.startsWith('TY  - JOUR')).toBe(true);
+		expect(ris.endsWith('ER  - ')).toBe(true);
+	});
+
+	it('includes an AU line for a named author', () => {
+		const ris = cslToRisEntry({
+			type: 'article-journal',
+			title: 'A Study',
+			author: [{ family: 'Doe', given: 'Jane' }],
+		});
+		expect(ris).toContain('AU  - Doe, Jane');
 	});
 });

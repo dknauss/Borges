@@ -101,7 +101,7 @@ function formatRisAuthor(author) {
 	return author.family || author.given || '';
 }
 
-function cslToRisEntry(csl) {
+export function cslToRisEntry(csl) {
 	const lines = [];
 	const { start, end } = splitPageRange(csl.page);
 

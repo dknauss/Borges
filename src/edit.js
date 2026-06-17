@@ -180,6 +180,13 @@ export default function Edit({ attributes, setAttributes }) {
 	}, [citations]);
 
 	useEffect(() => {
+		if (!attributes.bibliographyId) {
+			setAttributes({ bibliographyId: crypto.randomUUID() });
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	useEffect(() => {
 		if (isNumericFamily) {
 			return;
 		}

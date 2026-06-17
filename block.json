@@ -58,6 +58,14 @@
 			"type": "boolean",
 			"default": false
 		},
+		"outputCiteExport": {
+			"type": "boolean",
+			"default": false
+		},
+		"bibliographyId": {
+			"type": "string",
+			"default": ""
+		},
 		"citations": {
 			"type": "array",
 			"default": [],
