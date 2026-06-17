@@ -704,3 +704,109 @@ describe('save', () => {
 		);
 	});
 });
+
+describe('save cite/export disclosure panels', () => {
+	function renderWith(attrs) {
+		return renderToStaticMarkup(
+			save({
+				attributes: {
+					citationStyle: 'chicago-author-date',
+					citations: [createCitation()],
+					...attrs,
+				},
+			})
+		);
+	}
+
+	it('renders no cite/export panel by default (opt-in)', () => {
+		expect(renderWith({})).not.toContain(
+			'bibliography-builder-cite-export'
+		);
+	});
+
+	it('renders a <details> cite/export panel when outputCiteExport is true', () => {
+		const markup = renderWith({ outputCiteExport: true });
+		expect(markup).toContain(
+			'<details class="bibliography-builder-cite-export">'
+		);
+		expect(markup).toContain('Cite / Export');
+	});
+
+	it('emits synchronous RIS and CSL-JSON data-URI download links', () => {
+		const markup = renderWith({ outputCiteExport: true });
+		expect(markup).toContain(
+			'href="data:application/x-research-info-systems'
+		);
+		expect(markup).toContain(
+			'href="data:application/vnd.citationstyles.csl+json'
+		);
+		expect(markup).toContain('download="citation-citation-1.ris"');
+		expect(markup).toContain('download="citation-citation-1.csl.json"');
+	});
+
+	it('renders BibTeX/BibLaTeX links only when pre-computed strings are present', () => {
+		const withStrings = renderWith({
+			outputCiteExport: true,
+			citations: [
+				createCitation({
+					exportBibtex: '@article{x}',
+					exportBiblatex: '@article{y}',
+				}),
+			],
+		});
+		expect(withStrings).toContain('href="data:text/x-bibtex');
+		expect(withStrings).toContain('download="citation-citation-1.bib"');
+		expect(withStrings).toContain(
+			'download="citation-citation-1.biblatex.bib"'
+		);
+
+		const withoutStrings = renderWith({ outputCiteExport: true });
+		expect(withoutStrings).not.toContain(
+			'download="citation-citation-1.bib"'
+		);
+		expect(withoutStrings).not.toContain(
+			'download="citation-citation-1.biblatex.bib"'
+		);
+	});
+
+	it('gives every export link a download attribute', () => {
+		const markup = renderWith({
+			outputCiteExport: true,
+			citations: [
+				createCitation({
+					exportBibtex: '@article{x}',
+					exportBiblatex: '@article{y}',
+				}),
+			],
+		});
+		// RIS + CSL-JSON + BibTeX + BibLaTeX = 4
+		expect(markup.match(/download="citation-/g)).toHaveLength(4);
+	});
+
+	it('shows the visible cite text without requiring JS', () => {
+		const markup = renderWith({
+			outputCiteExport: true,
+			citations: [
+				createCitation({ formattedText: 'Smith, Ada. A Study. 2024.' }),
+			],
+		});
+		expect(markup).toContain('Smith, Ada. A Study. 2024.');
+	});
+
+	it('encodes special characters in data URIs (no raw markup injection)', () => {
+		const markup = renderWith({
+			outputCiteExport: true,
+			citations: [
+				createCitation({
+					formattedText: 'Benign text',
+					csl: {
+						type: 'article-journal',
+						title: '<script>alert(1)</script>',
+					},
+				}),
+			],
+		});
+		expect(markup).toContain('%3Cscript%3E');
+		expect(markup).not.toContain('<script>alert(1)</script>');
+	});
+});
