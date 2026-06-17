@@ -30,10 +30,33 @@ const FIXTURE_NAMES = [
 const STYLE_SWITCH_SEQUENCE = ['ieee', 'vancouver', 'mla-9'];
 const DEFAULT_STYLE = 'chicago-notes-bibliography';
 const RUNS = 5;
+const LARGE_SIZES = [75, 100, 150, 200];
+// SPEC §Rate Limiting & Resource Caps budget thresholds
+const BUDGET_STYLE_SWITCH_P95_MS = 250;
+const BUDGET_MUTATION_P95_MS = 150;
+// One style from each family: notes, author-date, numeric
+const LARGE_STYLE_FAMILIES = [
+	{ styleKey: 'chicago-notes-bibliography', family: 'notes' },
+	{ styleKey: 'chicago-author-date', family: 'author-date' },
+	{ styleKey: 'ieee', family: 'numeric' },
+];
 const BUILD_ASSET_EXTENSIONS = new Set(['.css', '.js', '.php']);
 
 function readFixture(name) {
 	return fs.readFileSync(path.join(fixturesDir, name), 'utf8');
+}
+
+function loadCslFixture(name) {
+	return JSON.parse(fs.readFileSync(path.join(fixturesDir, name), 'utf8'));
+}
+
+function cslToEntries(cslItems) {
+	return cslItems.map((csl, index) => ({
+		id: csl.id,
+		csl,
+		formattedText: `mock:${csl.title || `Entry ${index + 1}`}`,
+		displayOverride: null,
+	}));
 }
 
 function round(value) {
@@ -329,6 +352,134 @@ async function benchmarkEditorMutationPaths(baseEntries) {
 	};
 }
 
+async function benchmarkLargeSizeStyleSwitch(allCslItems) {
+	const results = [];
+
+	for (const size of LARGE_SIZES) {
+		const entries = cslToEntries(allCslItems.slice(0, size));
+		const byFamily = [];
+
+		for (const { styleKey, family } of LARGE_STYLE_FAMILIES) {
+			const runs = [];
+
+			for (let index = 0; index < RUNS; index += 1) {
+				clearFormattingCache();
+				const { elapsedMs } = await timeAsync(() =>
+					Promise.resolve(
+						formatBibliographyEntries(
+							entries.map((entry) => entry.csl),
+							styleKey
+						)
+					)
+				);
+				runs.push(elapsedMs);
+			}
+
+			const stats = summarize(runs);
+			byFamily.push({
+				styleKey,
+				family,
+				...stats,
+				exceedsBudget: stats.p95Ms > BUDGET_STYLE_SWITCH_P95_MS,
+			});
+		}
+
+		results.push({ size, byFamily });
+	}
+
+	return results;
+}
+
+async function benchmarkLargeSizeMutations(allCslItems) {
+	const results = [];
+	const manualCsl = {
+		id: 'benchmark-add',
+		type: 'book',
+		title: 'Benchmark Added Citation',
+		author: [{ family: 'Benchmark', given: 'Ada' }],
+		publisher: 'Example Press',
+		issued: { 'date-parts': [[2026]] },
+	};
+
+	for (const size of LARGE_SIZES) {
+		const base = cslToEntries(allCslItems.slice(0, size));
+		const addRuns = [];
+		const deleteAuthorDateRuns = [];
+		const deleteNumericRuns = [];
+
+		for (let index = 0; index < RUNS; index += 1) {
+			clearFormattingCache();
+			const addMutation = await timeAsync(async () => {
+				const nextEntries = [
+					...base,
+					{
+						id: 'benchmark-add',
+						csl: manualCsl,
+						formattedText: null,
+						displayOverride: null,
+					},
+				];
+				const formattedTexts = await formatBibliographyEntries(
+					nextEntries.map((entry) => entry.csl),
+					DEFAULT_STYLE
+				);
+				return sortCitations(
+					nextEntries.map((entry, i) => ({
+						...entry,
+						formattedText: formattedTexts[i],
+					})),
+					DEFAULT_STYLE
+				);
+			});
+			addRuns.push(addMutation.elapsedMs);
+
+			clearFormattingCache();
+			const deleteAuthorDate = await timeAsync(async () => {
+				const nextEntries = base.slice(1);
+				const formattedTexts = await formatBibliographyEntries(
+					nextEntries.map((entry) => entry.csl),
+					'chicago-author-date'
+				);
+				return sortCitations(
+					nextEntries.map((entry, i) => ({
+						...entry,
+						formattedText: formattedTexts[i],
+					})),
+					'chicago-author-date'
+				);
+			});
+			deleteAuthorDateRuns.push(deleteAuthorDate.elapsedMs);
+
+			const deleteNumeric = await timeAsync(() => {
+				return Promise.resolve(sortCitations(base.slice(1), 'ieee'));
+			});
+			deleteNumericRuns.push(deleteNumeric.elapsedMs);
+		}
+
+		const addStats = summarize(addRuns);
+		const deleteAdStats = summarize(deleteAuthorDateRuns);
+		const deleteNumStats = summarize(deleteNumericRuns);
+
+		results.push({
+			size,
+			add: {
+				...addStats,
+				exceedsBudget: addStats.p95Ms > BUDGET_MUTATION_P95_MS,
+			},
+			deleteAuthorDate: {
+				...deleteAdStats,
+				exceedsBudget: deleteAdStats.p95Ms > BUDGET_MUTATION_P95_MS,
+			},
+			deleteNumeric: {
+				...deleteNumStats,
+				exceedsBudget: deleteNumStats.p95Ms > BUDGET_MUTATION_P95_MS,
+			},
+		});
+	}
+
+	return results;
+}
+
 function writeOutputs(report) {
 	fs.mkdirSync(outputDir, { recursive: true });
 	const jsonPath = path.join(outputDir, 'latest.json');
@@ -390,6 +541,58 @@ function writeOutputs(report) {
 		`| Delete from numeric bibliography | ${report.editorMutations.deleteNumericNoReformat.avgMs} | ${report.editorMutations.deleteNumericNoReformat.p50Ms} | ${report.editorMutations.deleteNumericNoReformat.p95Ms} | Safe no-reformat path; list marker provides numbering. |`
 	);
 
+	if (report.largeSizeStyleSwitch) {
+		lines.push(
+			'',
+			'## Large-size JS orchestration — style switch (mock formatter)',
+			'',
+			`Budget: p95 < ${BUDGET_STYLE_SWITCH_P95_MS} ms. Entries from csl-200.json fixture.`,
+			'',
+			'| Size | Family | Style | p50 (ms) | p95 (ms) | Budget |',
+			'| ---: | --- | --- | ---: | ---: | --- |'
+		);
+		for (const row of report.largeSizeStyleSwitch) {
+			for (const f of row.byFamily) {
+				lines.push(
+					`| ${row.size} | ${f.family} | ${f.styleKey} | ${
+						f.p50Ms
+					} | ${f.p95Ms} | ${f.exceedsBudget ? '⚠ over' : 'ok'} |`
+				);
+			}
+		}
+	}
+
+	if (report.largeSizeMutations) {
+		lines.push(
+			'',
+			'## Large-size JS orchestration — mutations (mock formatter)',
+			'',
+			`Budget: p95 < ${BUDGET_MUTATION_P95_MS} ms.`,
+			'',
+			'| Size | Operation | p50 (ms) | p95 (ms) | Budget |',
+			'| ---: | --- | ---: | ---: | --- |'
+		);
+		for (const row of report.largeSizeMutations) {
+			lines.push(
+				`| ${row.size} | add (notes, full reformat) | ${
+					row.add.p50Ms
+				} | ${row.add.p95Ms} | ${
+					row.add.exceedsBudget ? '⚠ over' : 'ok'
+				} |`,
+				`| ${row.size} | delete — author-date (full reformat) | ${
+					row.deleteAuthorDate.p50Ms
+				} | ${row.deleteAuthorDate.p95Ms} | ${
+					row.deleteAuthorDate.exceedsBudget ? '⚠ over' : 'ok'
+				} |`,
+				`| ${row.size} | delete — numeric (no reformat) | ${
+					row.deleteNumeric.p50Ms
+				} | ${row.deleteNumeric.p95Ms} | ${
+					row.deleteNumeric.exceedsBudget ? '⚠ over' : 'ok'
+				} |`
+			);
+		}
+	}
+
 	lines.push(
 		'',
 		'## Build footprint',
@@ -440,6 +643,98 @@ const runBenchmark = process.env.RUN_PERF_BENCHMARK === '1';
 					})),
 				})
 			);
+		});
+
+		it('records large-size JS orchestration overhead', async () => {
+			const allCslItems = loadCslFixture('csl-200.json');
+
+			const largeSizeStyleSwitch = await benchmarkLargeSizeStyleSwitch(
+				allCslItems
+			);
+			const largeSizeMutations = await benchmarkLargeSizeMutations(
+				allCslItems
+			);
+
+			const report = {
+				generatedAt: new Date().toISOString(),
+				formatterMode: FORMATTER_MODE,
+				budgets: {
+					styleSwitchP95Ms: BUDGET_STYLE_SWITCH_P95_MS,
+					mutationP95Ms: BUDGET_MUTATION_P95_MS,
+				},
+				largeSizes: LARGE_SIZES,
+				largeSizeStyleSwitch,
+				largeSizeMutations,
+			};
+
+			fs.mkdirSync(outputDir, { recursive: true });
+			const jsonPath = path.join(outputDir, 'large-size.json');
+			fs.writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`);
+
+			const mdLines = [
+				'# Large-size JS orchestration benchmark',
+				'',
+				`Generated: ${report.generatedAt}`,
+				`Formatter mode: ${FORMATTER_MODE} (apiFetch mock — JS orchestration only)`,
+				'',
+				'## Style switch',
+				'',
+				`Budget: p95 < ${BUDGET_STYLE_SWITCH_P95_MS} ms`,
+				'',
+				'| Size | Family | Style | p50 (ms) | p95 (ms) | Budget |',
+				'| ---: | --- | --- | ---: | ---: | --- |',
+			];
+			for (const row of largeSizeStyleSwitch) {
+				for (const f of row.byFamily) {
+					mdLines.push(
+						`| ${row.size} | ${f.family} | ${f.styleKey} | ${
+							f.p50Ms
+						} | ${f.p95Ms} | ${f.exceedsBudget ? 'OVER' : 'ok'} |`
+					);
+				}
+			}
+			mdLines.push(
+				'',
+				'## Mutations',
+				'',
+				`Budget: p95 < ${BUDGET_MUTATION_P95_MS} ms`,
+				'',
+				'| Size | Operation | p50 (ms) | p95 (ms) | Budget |',
+				'| ---: | --- | ---: | ---: | --- |'
+			);
+			for (const row of largeSizeMutations) {
+				mdLines.push(
+					`| ${row.size} | add (notes, full reformat) | ${
+						row.add.p50Ms
+					} | ${row.add.p95Ms} | ${
+						row.add.exceedsBudget ? 'OVER' : 'ok'
+					} |`,
+					`| ${row.size} | delete — author-date (full reformat) | ${
+						row.deleteAuthorDate.p50Ms
+					} | ${row.deleteAuthorDate.p95Ms} | ${
+						row.deleteAuthorDate.exceedsBudget ? 'OVER' : 'ok'
+					} |`,
+					`| ${row.size} | delete — numeric (no reformat) | ${
+						row.deleteNumeric.p50Ms
+					} | ${row.deleteNumeric.p95Ms} | ${
+						row.deleteNumeric.exceedsBudget ? 'OVER' : 'ok'
+					} |`
+				);
+			}
+			const mdPath = path.join(outputDir, 'large-size.md');
+			fs.writeFileSync(mdPath, `${mdLines.join('\n')}\n`);
+
+			// eslint-disable-next-line no-console
+			console.log(`Wrote large-size report to ${jsonPath}`);
+
+			expect(largeSizeStyleSwitch).toHaveLength(LARGE_SIZES.length);
+			expect(largeSizeMutations).toHaveLength(LARGE_SIZES.length);
+			// Sort (no-reformat path) must always be fast regardless of list size
+			for (const row of largeSizeMutations) {
+				expect(row.deleteNumeric.p95Ms).toBeLessThan(
+					BUDGET_MUTATION_P95_MS
+				);
+			}
 		});
 
 		it('records repeatable local benchmark timings', async () => {
