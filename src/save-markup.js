@@ -145,6 +145,7 @@ export function renderBibliographySave(
 														)
 													)}`}
 													download={`citation-${citation.id}.ris`}
+													data-cite-export-filename={`citation-${citation.id}.ris`}
 													rel="noopener"
 												>
 													{__(
@@ -163,6 +164,7 @@ export function renderBibliographySave(
 														)}\n`
 													)}`}
 													download={`citation-${citation.id}.csl.json`}
+													data-cite-export-filename={`citation-${citation.id}.csl.json`}
 													rel="noopener"
 												>
 													{__(
@@ -178,6 +180,7 @@ export function renderBibliographySave(
 															citation.exportBibtex
 														)}`}
 														download={`citation-${citation.id}.bib`}
+														data-cite-export-filename={`citation-${citation.id}.bib`}
 														rel="noopener"
 													>
 														{__(
@@ -194,6 +197,7 @@ export function renderBibliographySave(
 															citation.exportBiblatex
 														)}`}
 														download={`citation-${citation.id}.biblatex.bib`}
+														data-cite-export-filename={`citation-${citation.id}.biblatex.bib`}
 														rel="noopener"
 													>
 														{__(

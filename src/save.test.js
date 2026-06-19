@@ -740,8 +740,12 @@ describe('save cite/export disclosure panels', () => {
 		expect(markup).toContain(
 			'href="data:application/vnd.citationstyles.csl+json'
 		);
-		expect(markup).toContain('download="citation-citation-1.ris"');
-		expect(markup).toContain('download="citation-citation-1.csl.json"');
+		expect(markup).toContain(
+			'data-cite-export-filename="citation-citation-1.ris"'
+		);
+		expect(markup).toContain(
+			'data-cite-export-filename="citation-citation-1.csl.json"'
+		);
 	});
 
 	it('renders BibTeX/BibLaTeX links only when pre-computed strings are present', () => {
@@ -755,21 +759,26 @@ describe('save cite/export disclosure panels', () => {
 			],
 		});
 		expect(withStrings).toContain('href="data:text/x-bibtex');
-		expect(withStrings).toContain('download="citation-citation-1.bib"');
 		expect(withStrings).toContain(
-			'download="citation-citation-1.biblatex.bib"'
+			'data-cite-export-filename="citation-citation-1.bib"'
+		);
+		expect(withStrings).toContain(
+			'data-cite-export-filename="citation-citation-1.biblatex.bib"'
 		);
 
 		const withoutStrings = renderWith({ outputCiteExport: true });
 		expect(withoutStrings).not.toContain(
-			'download="citation-citation-1.bib"'
+			'data-cite-export-filename="citation-citation-1.bib"'
 		);
 		expect(withoutStrings).not.toContain(
-			'download="citation-citation-1.biblatex.bib"'
+			'data-cite-export-filename="citation-citation-1.biblatex.bib"'
 		);
 	});
 
-	it('gives every export link a download attribute', () => {
+	// Filenames are carried in data-cite-export-filename, not the download
+	// attribute: Gutenberg's @wordpress/element serializer treats `download`
+	// as boolean and drops its value, so view.js restores the name at runtime.
+	it('names every export link via data-cite-export-filename', () => {
 		const markup = renderWith({
 			outputCiteExport: true,
 			citations: [
@@ -780,7 +789,9 @@ describe('save cite/export disclosure panels', () => {
 			],
 		});
 		// RIS + CSL-JSON + BibTeX + BibLaTeX = 4
-		expect(markup.match(/download="citation-/g)).toHaveLength(4);
+		expect(
+			markup.match(/data-cite-export-filename="citation-/g)
+		).toHaveLength(4);
 	});
 
 	it('shows the visible cite text without requiring JS', () => {
