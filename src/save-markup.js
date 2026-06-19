@@ -8,7 +8,7 @@ import {
 	getStyleDefinition,
 } from './lib/formatting';
 import { buildJsonLdString, buildCslJsonString } from './lib/jsonld';
-import { cslToRisEntry } from './lib/export';
+import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
 
 export function renderBibliographySave(
@@ -66,6 +66,7 @@ export function renderBibliographySave(
 					const coinsTitle = outputCoins
 						? buildCoins(citation.csl)
 						: null;
+					const exportBase = getCitationExportBasename(citation.csl);
 
 					return (
 						<li
@@ -144,8 +145,8 @@ export function renderBibliographySave(
 															citation.csl
 														)
 													)}`}
-													download={`citation-${citation.id}.ris`}
-													data-cite-export-filename={`citation-${citation.id}.ris`}
+													download={`${exportBase}.ris`}
+													data-cite-export-filename={`${exportBase}.ris`}
 													rel="noopener"
 												>
 													{__(
@@ -163,8 +164,8 @@ export function renderBibliographySave(
 															2
 														)}\n`
 													)}`}
-													download={`citation-${citation.id}.csl.json`}
-													data-cite-export-filename={`citation-${citation.id}.csl.json`}
+													download={`${exportBase}.csl.json`}
+													data-cite-export-filename={`${exportBase}.csl.json`}
 													rel="noopener"
 												>
 													{__(
@@ -179,8 +180,8 @@ export function renderBibliographySave(
 														href={`data:text/x-bibtex;charset=utf-8,${encodeURIComponent(
 															citation.exportBibtex
 														)}`}
-														download={`citation-${citation.id}.bib`}
-														data-cite-export-filename={`citation-${citation.id}.bib`}
+														download={`${exportBase}.bib`}
+														data-cite-export-filename={`${exportBase}.bib`}
 														rel="noopener"
 													>
 														{__(
@@ -196,8 +197,8 @@ export function renderBibliographySave(
 														href={`data:text/x-bibtex;charset=utf-8,${encodeURIComponent(
 															citation.exportBiblatex
 														)}`}
-														download={`citation-${citation.id}.biblatex.bib`}
-														data-cite-export-filename={`citation-${citation.id}.biblatex.bib`}
+														download={`${exportBase}.biblatex.bib`}
+														data-cite-export-filename={`${exportBase}.biblatex.bib`}
 														rel="noopener"
 													>
 														{__(

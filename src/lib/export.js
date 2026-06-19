@@ -101,6 +101,58 @@ function formatRisAuthor(author) {
 	return author.family || author.given || '';
 }
 
+function slugifyExportName(value) {
+	return String(value || '')
+		.normalize('NFKD')
+		.replace(/[^\w\s-]/g, '')
+		.trim()
+		.replace(/[\s_]+/g, '-')
+		.replace(/-{2,}/g, '-')
+		.replace(/^-+|-+$/g, '')
+		.slice(0, 60);
+}
+
+/**
+ * Build a short, human-meaningful, filesystem-safe basename for per-entry
+ * export download filenames (e.g. "watson1953", "Kuhn-1962"). Prefers the
+ * BibTeX citation-key, then first-author + year, then a title slug, then a
+ * generic "citation" fallback. Used by save() instead of the internal UUID id.
+ *
+ * @param {Object} csl CSL-JSON object for a single citation.
+ * @return {string} Slugged basename (no extension).
+ */
+export function getCitationExportBasename(csl) {
+	if (!csl) {
+		return 'citation';
+	}
+
+	const citationKey =
+		typeof csl['citation-key'] === 'string' ? csl['citation-key'] : '';
+	const fromKey = slugifyExportName(citationKey);
+	if (fromKey) {
+		return fromKey;
+	}
+
+	const firstAuthor = (csl.author || [])[0] || {};
+	const namePart =
+		firstAuthor.family || firstAuthor.literal || firstAuthor.given || '';
+	const year = csl.issued?.['date-parts']?.[0]?.[0] || '';
+	const fromAuthorYear = slugifyExportName(
+		[namePart, year].filter(Boolean).join('-')
+	);
+	if (fromAuthorYear) {
+		return fromAuthorYear;
+	}
+
+	const fromTitle = slugifyExportName(
+		String(csl.title || '')
+			.split(/\s+/)
+			.slice(0, 4)
+			.join(' ')
+	);
+	return fromTitle || 'citation';
+}
+
 export function cslToRisEntry(csl) {
 	const lines = [];
 	const { start, end } = splitPageRange(csl.page);

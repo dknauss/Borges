@@ -740,11 +740,9 @@ describe('save cite/export disclosure panels', () => {
 		expect(markup).toContain(
 			'href="data:application/vnd.citationstyles.csl+json'
 		);
+		expect(markup).toContain('data-cite-export-filename="Smith-2024.ris"');
 		expect(markup).toContain(
-			'data-cite-export-filename="citation-citation-1.ris"'
-		);
-		expect(markup).toContain(
-			'data-cite-export-filename="citation-citation-1.csl.json"'
+			'data-cite-export-filename="Smith-2024.csl.json"'
 		);
 	});
 
@@ -760,18 +758,18 @@ describe('save cite/export disclosure panels', () => {
 		});
 		expect(withStrings).toContain('href="data:text/x-bibtex');
 		expect(withStrings).toContain(
-			'data-cite-export-filename="citation-citation-1.bib"'
+			'data-cite-export-filename="Smith-2024.bib"'
 		);
 		expect(withStrings).toContain(
-			'data-cite-export-filename="citation-citation-1.biblatex.bib"'
+			'data-cite-export-filename="Smith-2024.biblatex.bib"'
 		);
 
 		const withoutStrings = renderWith({ outputCiteExport: true });
 		expect(withoutStrings).not.toContain(
-			'data-cite-export-filename="citation-citation-1.bib"'
+			'data-cite-export-filename="Smith-2024.bib"'
 		);
 		expect(withoutStrings).not.toContain(
-			'data-cite-export-filename="citation-citation-1.biblatex.bib"'
+			'data-cite-export-filename="Smith-2024.biblatex.bib"'
 		);
 	});
 
@@ -789,9 +787,7 @@ describe('save cite/export disclosure panels', () => {
 			],
 		});
 		// RIS + CSL-JSON + BibTeX + BibLaTeX = 4
-		expect(
-			markup.match(/data-cite-export-filename="citation-/g)
-		).toHaveLength(4);
+		expect(markup.match(/data-cite-export-filename="/g)).toHaveLength(4);
 	});
 
 	it('shows the visible cite text without requiring JS', () => {

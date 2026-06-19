@@ -5,6 +5,7 @@ import {
 	buildBiblatexExportContent,
 	buildRisExportContent,
 	cslToRisEntry,
+	getCitationExportBasename,
 	normalizeBibtexUnicodeQuotes,
 	downloadTextExport,
 	downloadCslJsonExport,
@@ -679,6 +680,52 @@ describe('export helpers', () => {
 		expect(documentRef.createElement.mock.results[0].value.download).toBe(
 			BIBLATEX_EXPORT_FILENAME
 		);
+	});
+});
+
+describe('getCitationExportBasename (human-meaningful download filenames)', () => {
+	it('prefers the BibTeX citation-key', () => {
+		expect(
+			getCitationExportBasename({
+				'citation-key': 'watson1953',
+				author: [{ family: 'Watson' }],
+			})
+		).toBe('watson1953');
+	});
+
+	it('falls back to first-author family + year', () => {
+		expect(
+			getCitationExportBasename({
+				author: [{ family: 'Kuhn', given: 'Thomas' }],
+				issued: { 'date-parts': [[1962]] },
+			})
+		).toBe('Kuhn-1962');
+	});
+
+	it('strips diacritics and unsafe characters', () => {
+		expect(
+			getCitationExportBasename({
+				author: [{ family: 'Müller' }],
+				issued: { 'date-parts': [[2001]] },
+			})
+		).toBe('Muller-2001');
+	});
+
+	it('uses a literal (corporate) author name when present', () => {
+		expect(
+			getCitationExportBasename({
+				author: [{ literal: 'World Health Organization' }],
+				issued: { 'date-parts': [[2020]] },
+			})
+		).toBe('World-Health-Organization-2020');
+	});
+
+	it('falls back to a title slug, then to "citation"', () => {
+		expect(
+			getCitationExportBasename({ title: 'A Mathematical Theory' })
+		).toBe('A-Mathematical-Theory');
+		expect(getCitationExportBasename({})).toBe('citation');
+		expect(getCitationExportBasename(null)).toBe('citation');
 	});
 });
 
