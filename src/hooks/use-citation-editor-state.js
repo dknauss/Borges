@@ -15,6 +15,7 @@ import {
 	MAX_CITATIONS_PER_BIBLIOGRAPHY,
 	getBibliographyOverLimitMessage,
 } from '../lib/citation-limits';
+import { computeExportStrings } from './compute-export-strings';
 
 const FORMATTER_FALLBACK_MESSAGE =
 	'Formatter unavailable; using fallback citation text.';
@@ -387,10 +388,27 @@ export function useCitationEditorState({
 			return;
 		}
 
+		const exportStrings = await computeExportStrings(
+			nextEntries.map((entry) => entry.csl),
+			citationStyle
+		);
+
+		// Re-check guards after the export await — a cancel or a newer operation
+		// could have arrived while building the export strings.
+		if (
+			structuredEditingIdRef.current !== activeStructuredEditingId ||
+			!isCurrentAsyncOperation(operationId)
+		) {
+			return;
+		}
+
 		const updated = sortCitations(
 			nextEntries.map((entry, index) => ({
 				...entry,
+				id: entry.id || crypto.randomUUID(),
 				formattedText: formattedTexts[index],
+				exportBibtex: exportStrings[index]?.exportBibtex ?? '',
+				exportBiblatex: exportStrings[index]?.exportBiblatex ?? '',
 			})),
 			citationStyle
 		);
@@ -499,10 +517,21 @@ export function useCitationEditorState({
 				return;
 			}
 
+			const exportStrings = await computeExportStrings(
+				citationsRef.current.map((citation) => citation.csl),
+				nextStyle
+			);
+			if (!isCurrentAsyncOperation(operationId)) {
+				return;
+			}
+
 			const updated = sortCitations(
 				citationsRef.current.map((citation, index) => ({
 					...citation,
+					id: citation.id || crypto.randomUUID(),
 					formattedText: formattedTexts[index],
+					exportBibtex: exportStrings[index]?.exportBibtex ?? '',
+					exportBiblatex: exportStrings[index]?.exportBiblatex ?? '',
 				})),
 				nextStyle
 			);

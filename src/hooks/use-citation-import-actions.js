@@ -3,6 +3,7 @@ import { __ } from '@wordpress/i18n';
 import { partitionDuplicateCitations } from '../lib/deduplicate';
 import { SUPPORTED_INPUT_MESSAGE } from '../lib/input-support';
 import { sortCitations } from '../lib/sorter';
+import { computeExportStrings } from './compute-export-strings';
 import {
 	MAX_CITATIONS_PER_BIBLIOGRAPHY,
 	getBibliographyLimitExceededMessage,
@@ -189,10 +190,22 @@ export function useCitationImportActions({
 					return;
 				}
 
+				const exportStrings = await computeExportStrings(
+					mergedEntries.map((entry) => entry.csl),
+					citationStyle
+				);
+				if (!isCurrentAsyncOperation(operationId)) {
+					return;
+				}
+
 				const formattedMergedEntries = mergedEntries.map(
 					(entry, index) => ({
 						...entry,
+						id: entry.id || crypto.randomUUID(),
 						formattedText: formattedTexts[index],
+						exportBibtex: exportStrings[index]?.exportBibtex ?? '',
+						exportBiblatex:
+							exportStrings[index]?.exportBiblatex ?? '',
 					})
 				);
 				if (!isCurrentAsyncOperation(operationId)) {

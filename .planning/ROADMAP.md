@@ -32,8 +32,9 @@ after completion.
     in `3d5d3de` and `539b6b3`)
 -   **Phase 03** — 1.3.x release prep (complete; `v1.3.3` is the current
     public release baseline)
--   **Phase 04** — frontend Cite/Export affordances (active next feature
-    track)
+-   **Phase 04** — frontend Cite/Export affordances (implementation
+    code-complete on branch `phase-04/cite-export-affordances` / PR #37;
+    pending the plan 04-04 human browser-verify checkpoint before merge)
 -   **Phase 05** — writable bibliography REST/Abilities design (memo complete;
     implementation deferred)
 

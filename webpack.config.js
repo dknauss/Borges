@@ -17,6 +17,7 @@ module.exports = {
 		return {
 			...base,
 			validation: path.resolve(__dirname, 'src/validation.js'),
+			view: path.resolve(__dirname, 'src/view.js'),
 		};
 	},
 	resolve: {

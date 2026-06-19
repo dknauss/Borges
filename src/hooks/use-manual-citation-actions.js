@@ -9,6 +9,7 @@ import {
 	validateManualEntry,
 } from '../lib/manual-entry';
 import { sortCitations } from '../lib/sorter';
+import { computeExportStrings } from './compute-export-strings';
 import {
 	MAX_CITATIONS_PER_BIBLIOGRAPHY,
 	getBibliographyLimitReachedMessage,
@@ -169,10 +170,21 @@ export function useManualCitationActions({
 				return;
 			}
 
+			const exportStrings = await computeExportStrings(
+				mergedEntries.map((citation) => citation.csl),
+				citationStyle
+			);
+			if (!isCurrentAsyncOperation(operationId)) {
+				return;
+			}
+
 			const updated = sortCitations(
 				mergedEntries.map((citation, index) => ({
 					...citation,
+					id: citation.id || crypto.randomUUID(),
 					formattedText: formattedTexts[index] || '',
+					exportBibtex: exportStrings[index]?.exportBibtex ?? '',
+					exportBiblatex: exportStrings[index]?.exportBiblatex ?? '',
 				})),
 				citationStyle
 			);

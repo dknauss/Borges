@@ -13,5 +13,6 @@ export default function save({ attributes }) {
 		sortEntries: true,
 		headingTag: 'p',
 		entryTag: 'cite',
+		includeCiteExport: attributes.outputCiteExport ?? false,
 	});
 }

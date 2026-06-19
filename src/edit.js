@@ -87,6 +87,7 @@ export default function Edit({ attributes, setAttributes }) {
 		outputJsonLd = true,
 		outputCoins = false,
 		outputCslJson = false,
+		outputCiteExport = false,
 	} = attributes;
 	const selectableStyles = useMemo(() => getSelectableStyles(), []);
 	const blockProps = useBlockProps();
@@ -178,6 +179,13 @@ export default function Edit({ attributes, setAttributes }) {
 	useEffect(() => {
 		citationsRef.current = citations;
 	}, [citations]);
+
+	useEffect(() => {
+		if (!attributes.bibliographyId) {
+			setAttributes({ bibliographyId: crypto.randomUUID() });
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	useEffect(() => {
 		if (isNumericFamily) {
@@ -675,6 +683,20 @@ export default function Edit({ attributes, setAttributes }) {
 						}
 						help={__(
 							'Makes citation data reusable by scholarly tools and services.',
+							'borges-bibliography-builder'
+						)}
+					/>
+					<ToggleControl
+						label={__(
+							'Per-entry Cite / Export',
+							'borges-bibliography-builder'
+						)}
+						checked={outputCiteExport}
+						onChange={(value) =>
+							setAttributes({ outputCiteExport: value })
+						}
+						help={__(
+							'Add per-entry disclosure panels with copy and download links for BibTeX, RIS, and CSL-JSON.',
 							'borges-bibliography-builder'
 						)}
 					/>

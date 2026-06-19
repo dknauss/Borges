@@ -1,6 +1,6 @@
 # Project State
 
-_Last reviewed: 2026-06-14._
+_Last reviewed: 2026-06-17._
 
 ## Current Focus
 
@@ -23,8 +23,12 @@ _Last reviewed: 2026-06-14._
    - `b44a899` Add direct access guard to PMID helpers
 3. Keep the release artifact, WordPress.org SVN output, Playground blueprints,
    and docs aligned whenever DOI/PMID/BibTeX import behavior changes.
-4. Next feature track remains frontend Cite/Export affordances, unless a
-   release or Playground regression takes priority.
+4. Phase 04 (frontend Cite/Export affordances) is **implementation
+   code-complete** on branch `phase-04/cite-export-affordances` (PR #37),
+   covering plans 04-01 through 04-04. All automated gates pass (570 Jest
+   tests, lint, build); the only outstanding item is the plan 04-04 human
+   browser-verify checkpoint (visual confirmation in the editor + frontend),
+   which must be completed in a browser-capable session before merge.
 
 ## Current Priority Order
 

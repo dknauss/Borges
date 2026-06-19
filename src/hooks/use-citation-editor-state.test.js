@@ -60,6 +60,15 @@ jest.mock('../lib/formatting/csl', () => ({
 	),
 }));
 
+jest.mock('./compute-export-strings', () => ({
+	computeExportStrings: jest.fn(async (cslObjects) =>
+		(cslObjects || []).map(() => ({
+			exportBibtex: 'BIBTEX',
+			exportBiblatex: 'BIBLATEX',
+		}))
+	),
+}));
+
 // --- Test helpers ---
 
 function makeCitation(overrides = {}) {
@@ -767,5 +776,46 @@ describe('resetEditingState', () => {
 		expect(result.current.editText).toBe('');
 		expect(result.current.structuredEditingId).toBeNull();
 		expect(result.current.structuredFields).toEqual({});
+	});
+});
+
+// --- Export-string pre-computation (Phase 04-03) ---
+
+describe('export-string pre-computation', () => {
+	it('stores exportBibtex/exportBiblatex on citations after a style change', async () => {
+		const args = makeHookArgs();
+		const { result } = renderHook(() => useCitationEditorState(args));
+
+		await act(() => result.current.handleCitationStyleChange('apa-7'));
+
+		const saved = args.setAttributes.mock.calls[0][0].citations[0];
+		expect(saved.exportBibtex).toBe('BIBTEX');
+		expect(saved.exportBiblatex).toBe('BIBLATEX');
+	});
+
+	it('stores export strings after a structured edit save', async () => {
+		const args = makeHookArgs();
+		const { result } = renderHook(() => useCitationEditorState(args));
+
+		act(() => result.current.handleStructuredEditStart('cit-1'));
+		act(() =>
+			result.current.handleStructuredFieldChange('title', 'Edited Title')
+		);
+		await act(() => result.current.handleStructuredEditSave());
+
+		const saved = args.setAttributes.mock.calls[0][0].citations[0];
+		expect(saved.exportBibtex).toBe('BIBTEX');
+		expect(saved.exportBiblatex).toBe('BIBLATEX');
+	});
+
+	it('assigns a stable id to a citation lacking one on the next format pass', async () => {
+		const args = makeHookArgs([makeCitation({ id: '' })]);
+		const { result } = renderHook(() => useCitationEditorState(args));
+
+		await act(() => result.current.handleCitationStyleChange('apa-7'));
+
+		const saved = args.setAttributes.mock.calls[0][0].citations[0];
+		expect(typeof saved.id).toBe('string');
+		expect(saved.id.length).toBeGreaterThan(0);
 	});
 });

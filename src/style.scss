@@ -70,3 +70,42 @@
 .wp-block-bibliography-builder-bibliography .Z3988 {
 	display: none;
 }
+
+// Cite / Export disclosure panels — reset hanging-indent inheritance so the
+// panel is flush-left, and make the summary/links readable and non-italic.
+.wp-block-bibliography-builder-bibliography
+details.bibliography-builder-cite-export {
+	text-indent: 0;
+	padding-left: 0;
+	margin-top: 0.4em;
+	font-size: 0.875em;
+}
+
+.wp-block-bibliography-builder-bibliography
+details.bibliography-builder-cite-export
+summary {
+	display: inline-block;
+	font-style: normal;
+	font-weight: 400;
+	color: currentcolor;
+	cursor: pointer;
+}
+
+.wp-block-bibliography-builder-bibliography
+details.bibliography-builder-cite-export
+.bibliography-builder-cite-text {
+	margin: 0.4em 0;
+	font-style: normal;
+	white-space: pre-wrap;
+}
+
+.wp-block-bibliography-builder-bibliography
+details.bibliography-builder-cite-export
+.bibliography-builder-export-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em;
+	margin: 0.4em 0 0;
+	padding: 0;
+	list-style: none;
+}

@@ -8,6 +8,7 @@ import {
 	getStyleDefinition,
 } from './lib/formatting';
 import { buildJsonLdString, buildCslJsonString } from './lib/jsonld';
+import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
 
 export function renderBibliographySave(
@@ -19,6 +20,7 @@ export function renderBibliographySave(
 		linkVisibleUrls = true,
 		ariaLabel = null,
 		includeDeprecatedBiblioEntryRole = false,
+		includeCiteExport = false,
 	} = {}
 ) {
 	const {
@@ -64,6 +66,7 @@ export function renderBibliographySave(
 					const coinsTitle = outputCoins
 						? buildCoins(citation.csl)
 						: null;
+					const exportBase = getCitationExportBasename(citation.csl);
 
 					return (
 						<li
@@ -119,6 +122,95 @@ export function renderBibliographySave(
 									aria-hidden="true"
 									title={coinsTitle}
 								/>
+							) : null}
+							{includeCiteExport ? (
+								<details className="bibliography-builder-cite-export">
+									<summary className="bibliography-builder-cite-export-toggle">
+										{__(
+											'Cite / Export',
+											'borges-bibliography-builder'
+										)}
+									</summary>
+									<div className="bibliography-builder-cite-export-panel">
+										<p className="bibliography-builder-cite-text">
+											{citation.displayOverride ||
+												citation.formattedText ||
+												''}
+										</p>
+										<ul className="bibliography-builder-export-links">
+											<li>
+												<a
+													href={`data:application/x-research-info-systems;charset=utf-8,${encodeURIComponent(
+														cslToRisEntry(
+															citation.csl
+														)
+													)}`}
+													download={`${exportBase}.ris`}
+													data-cite-export-filename={`${exportBase}.ris`}
+													rel="noopener"
+												>
+													{__(
+														'RIS',
+														'borges-bibliography-builder'
+													)}
+												</a>
+											</li>
+											<li>
+												<a
+													href={`data:application/vnd.citationstyles.csl+json;charset=utf-8,${encodeURIComponent(
+														`${JSON.stringify(
+															citation.csl,
+															null,
+															2
+														)}\n`
+													)}`}
+													download={`${exportBase}.csl.json`}
+													data-cite-export-filename={`${exportBase}.csl.json`}
+													rel="noopener"
+												>
+													{__(
+														'CSL-JSON',
+														'borges-bibliography-builder'
+													)}
+												</a>
+											</li>
+											{citation.exportBibtex ? (
+												<li>
+													<a
+														href={`data:text/x-bibtex;charset=utf-8,${encodeURIComponent(
+															citation.exportBibtex
+														)}`}
+														download={`${exportBase}.bib`}
+														data-cite-export-filename={`${exportBase}.bib`}
+														rel="noopener"
+													>
+														{__(
+															'BibTeX',
+															'borges-bibliography-builder'
+														)}
+													</a>
+												</li>
+											) : null}
+											{citation.exportBiblatex ? (
+												<li>
+													<a
+														href={`data:text/x-bibtex;charset=utf-8,${encodeURIComponent(
+															citation.exportBiblatex
+														)}`}
+														download={`${exportBase}.biblatex.bib`}
+														data-cite-export-filename={`${exportBase}.biblatex.bib`}
+														rel="noopener"
+													>
+														{__(
+															'BibLaTeX',
+															'borges-bibliography-builder'
+														)}
+													</a>
+												</li>
+											) : null}
+										</ul>
+									</div>
+								</details>
 							) : null}
 						</li>
 					);

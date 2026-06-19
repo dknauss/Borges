@@ -16,6 +16,18 @@ function migrateSortedAttributes(attributes) {
 
 export const deprecated = [
 	{
+		// Freezes the current pre-Phase-4 save() shape (no <details>) so that
+		// existing saved blocks keep validating once Plan 02 adds per-entry
+		// cite/export disclosure panels. Mirrors src/save.js exactly.
+		attributes: deprecatedAttributes,
+		save: ({ attributes }) =>
+			renderBibliographySave(attributes, {
+				sortEntries: true,
+				headingTag: 'p',
+				entryTag: 'cite',
+			}),
+	},
+	{
 		attributes: deprecatedAttributes,
 		save: ({ attributes }) =>
 			renderBibliographySave(attributes, {

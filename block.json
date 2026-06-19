@@ -37,6 +37,7 @@
 	"editorScript": "file:./build/index.js",
 	"editorStyle": "file:./build/index.css",
 	"style": "file:./build/style-index.css",
+	"viewScript": "file:./build/view.js",
 	"attributes": {
 		"citationStyle": {
 			"type": "string",
@@ -57,6 +58,14 @@
 		"outputCslJson": {
 			"type": "boolean",
 			"default": false
+		},
+		"outputCiteExport": {
+			"type": "boolean",
+			"default": false
+		},
+		"bibliographyId": {
+			"type": "string",
+			"default": ""
 		},
 		"citations": {
 			"type": "array",
