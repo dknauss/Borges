@@ -1,6 +1,6 @@
 === Borges Bibliography Builder ===
 Contributors: dpknauss
-Donate link: https://www.paypal.com/paypalme/DanKnauss
+Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.0
@@ -28,6 +28,8 @@ The **Borges Bibliography Builder** transforms pasted DOI(s), PubMed/PMID record
 **Try it first.** Launch a disposable demo in [WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json) before installing it on your site.
 
 **Translation-ready.** Plugin interface strings use the `borges-bibliography-builder` text domain, and official WordPress.org language packs are generated as community translations are approved on translate.wordpress.org.
+
+**Support development.** If Borges saves you time, you can [sponsor Dan Knauss on GitHub](https://github.com/sponsors/dknauss) to support ongoing maintenance.
 
 == Installation ==
 
