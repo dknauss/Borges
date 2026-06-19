@@ -688,7 +688,7 @@ export default function Edit({ attributes, setAttributes }) {
 					/>
 					<ToggleControl
 						label={__(
-							'Cite / Export affordances',
+							'Per-entry Cite / Export',
 							'borges-bibliography-builder'
 						)}
 						checked={outputCiteExport}
