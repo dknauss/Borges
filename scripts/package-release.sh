@@ -29,7 +29,7 @@ if [ -d "$ROOT_DIR/languages" ]; then
 	cp -R "$ROOT_DIR/languages" "$STAGING_DIR/languages"
 fi
 cp "$ROOT_DIR/composer.json" "$STAGING_DIR/"
-# Keep Composer installs deterministic, then remove the lockfile before zipping.
+# Keep Composer installs deterministic, then remove Composer metadata before zipping.
 cp "$ROOT_DIR/composer.lock" "$STAGING_DIR/"
 cp -R "$ROOT_DIR/packages" "$STAGING_DIR/packages"
 
@@ -40,13 +40,19 @@ composer install \
 	--prefer-dist \
 	--classmap-authoritative
 
-rm -f "$STAGING_DIR/composer.lock"
+rm -f "$STAGING_DIR/composer.json" "$STAGING_DIR/composer.lock"
 
 find "$STAGING_DIR/vendor" \
 	-type d \( -iname tests -o -iname test -o -iname .github -o -iname .circleci -o -iname docs -o -iname doc -o -iname documentation -o -iname example -o -iname examples -o -iname image -o -iname images \) \
 	-prune -exec rm -rf {} +
 find "$STAGING_DIR/vendor" \
 	-type f \( -iname README -o -iname 'README.*' -o -iname CHANGELOG -o -iname 'CHANGELOG.*' -o -iname UPGRADING -o -iname 'UPGRADING.*' -o -iname phpunit.xml -o -iname phpunit.xml.dist -o -iname phpcs.xml -o -iname phpcs.xml.dist -o -iname .scrutinizer.yml \) \
+	-delete
+find "$STAGING_DIR/vendor" \
+	-type f -name composer.json \
+	-delete
+find "$STAGING_DIR/vendor" \
+	-type f \( -name '.editorconfig' -o -name '.gitattributes' -o -name '.gitignore' -o -name '.php-cs-fixer.dist.php' -o -name '.php_cs.dist' -o -name '.travis.yml' \) \
 	-delete
 find "$STAGING_DIR/vendor" \
 	-type f \( \
@@ -63,8 +69,12 @@ find "$STAGING_DIR/vendor" \
 	-delete
 rm -rf "$STAGING_DIR/packages"
 
-if [ -e "$STAGING_DIR/composer.lock" ]; then
-	printf 'Release package staging directory must not contain composer.lock.\n' >&2
+FORBIDDEN_PACKAGE_METADATA=$(find "$STAGING_DIR" \
+	\( -name composer.json -o -name composer.lock -o -name package.json -o -name package-lock.json -o -name yarn.lock -o -name pnpm-lock.yaml -o -name .DS_Store -o -name '.gitignore' -o -name '.gitattributes' \) \
+	-print)
+
+if [ -n "$FORBIDDEN_PACKAGE_METADATA" ]; then
+	printf 'Release package staging directory contains forbidden package metadata:\n%s\n' "$FORBIDDEN_PACKAGE_METADATA" >&2
 	exit 1
 fi
 

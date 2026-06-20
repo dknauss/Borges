@@ -1,0 +1,63 @@
+name: Dependency audit
+
+on:
+    workflow_dispatch:
+    schedule:
+        - cron: '37 8 * * 1'
+
+permissions:
+    contents: read
+
+jobs:
+    production:
+        name: Production dependency audit
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: npm
+
+            - name: Set up PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.3'
+                  coverage: none
+
+            - name: Install JS dependencies
+              run: npm ci --legacy-peer-deps
+
+            - name: Install Composer dependencies
+              run: composer install --no-dev --no-interaction --prefer-dist
+
+            - name: Audit production npm dependencies
+              run: npm audit --omit=dev --omit=optional
+
+            - name: Audit Composer production dependencies
+              run: composer audit --no-dev
+
+    development:
+        name: Development dependency audit
+        runs-on: ubuntu-latest
+        continue-on-error: true
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: npm
+
+            - name: Install JS dependencies
+              run: npm ci --legacy-peer-deps
+
+            - name: Audit development npm dependencies
+              run: npm audit --omit=optional --audit-level=moderate

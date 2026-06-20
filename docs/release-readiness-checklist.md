@@ -7,6 +7,8 @@ Pre-release checklist for the Bibliography Builder block.
 -   [ ] `npm run lint:js`
 -   [ ] `npm run lint:css`
 -   [ ] `npm run lint:i18n`
+-   [ ] `npm audit --omit=dev --omit=optional`
+-   [ ] `composer audit --no-dev`
 -   [ ] `npm test -- --runInBand`
 -   [ ] `composer test:php` reviewed for new failures or new dependency
         deprecations
@@ -14,6 +16,7 @@ Pre-release checklist for the Bibliography Builder block.
         formatter dependency is available, decide whether to update before
         release
 -   [ ] `npm run build`
+-   [ ] `npm run package:release` creates a clean zip without Composer or package-manager metadata
 -   [ ] No unexpected test regressions
 
 ## Manual editor QA

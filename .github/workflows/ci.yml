@@ -38,6 +38,9 @@ jobs:
             - name: Lint i18n artifacts
               run: npm run lint:i18n
 
+            - name: Audit production npm dependencies
+              run: npm audit --omit=dev --omit=optional
+
             - name: Run unit tests
               run: npm test -- --runInBand --silent
 
@@ -63,6 +66,9 @@ jobs:
 
             - name: Install Composer dependencies
               run: composer install --no-interaction --prefer-dist
+
+            - name: Audit Composer production dependencies
+              run: composer audit --no-dev
 
             - name: Run PHPCS
               run: composer lint:php
