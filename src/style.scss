@@ -93,10 +93,33 @@ summary {
 
 .wp-block-bibliography-builder-bibliography
 details.bibliography-builder-cite-export
-.bibliography-builder-cite-text {
+.bibliography-builder-cite-copy {
 	margin: 0.4em 0;
+	padding: 0.2em 0.6em;
+	font: inherit;
 	font-style: normal;
-	white-space: pre-wrap;
+	line-height: 1.4;
+	color: currentcolor;
+	background: transparent;
+	border: 1px solid currentcolor;
+	border-radius: 3px;
+	cursor: pointer;
+	opacity: 0.85;
+}
+
+.wp-block-bibliography-builder-bibliography
+details.bibliography-builder-cite-export
+.bibliography-builder-cite-copy:hover,
+.wp-block-bibliography-builder-bibliography
+details.bibliography-builder-cite-export
+.bibliography-builder-cite-copy:focus-visible {
+	opacity: 1;
+}
+
+.wp-block-bibliography-builder-bibliography
+details.bibliography-builder-cite-export
+.bibliography-builder-cite-copy.is-copied {
+	opacity: 1;
 }
 
 .wp-block-bibliography-builder-bibliography

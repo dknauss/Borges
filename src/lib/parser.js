@@ -12,6 +12,8 @@ import '@citation-js/plugin-bibtex';
 import apiFetch from '@wordpress/api-fetch';
 import { createCitationId } from './citation-id';
 import { validateAndSanitizeCsl, KNOWN_CSL_TYPES } from './csl-sanitize';
+import { normalizeCslNameCase } from './normalize-author-names';
+import { normalizeCslTitleCase } from './normalize-title-case';
 import { DEFAULT_CITATION_STYLE } from './formatting';
 import { parseFreeTextCitation } from './free-text-parser';
 import { SUPPORTED_INPUT_MESSAGE } from './input-support';
@@ -327,9 +329,14 @@ function getReviewMetadataWarnings(inputFormat, originalCsl, normalizedCsl) {
 }
 
 function normalizeResolvedCsl(csl, inputFormat) {
-	const normalizedCsl = {
-		...csl,
-	};
+	// Title-case ALL-CAPS personal names and titles returned by CrossRef /
+	// PubMed before any further normalization or storage. Machine-resolved
+	// sources only; manual entry intentionally bypasses this path.
+	const normalizedCsl = normalizeCslTitleCase(
+		normalizeCslNameCase({
+			...csl,
+		})
+	);
 
 	if (
 		normalizedCsl.type === 'article-journal' &&

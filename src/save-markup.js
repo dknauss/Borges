@@ -132,11 +132,25 @@ export function renderBibliographySave(
 										)}
 									</summary>
 									<div className="bibliography-builder-cite-export-panel">
-										<p className="bibliography-builder-cite-text">
-											{citation.displayOverride ||
+										<button
+											type="button"
+											className="bibliography-builder-cite-copy"
+											aria-live="polite"
+											data-cite-text={
+												citation.displayOverride ||
 												citation.formattedText ||
-												''}
-										</p>
+												''
+											}
+											data-copied-label={__(
+												'Copied',
+												'borges-bibliography-builder'
+											)}
+										>
+											{__(
+												'Copy citation',
+												'borges-bibliography-builder'
+											)}
+										</button>
 										<ul className="bibliography-builder-export-links">
 											<li>
 												<a

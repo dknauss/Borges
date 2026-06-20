@@ -732,6 +732,15 @@ describe('save cite/export disclosure panels', () => {
 		expect(markup).toContain('Cite / Export');
 	});
 
+	it('renders a Copy citation button carrying the citation text, not a duplicated paragraph', () => {
+		const markup = renderWith({ outputCiteExport: true });
+		expect(markup).toContain('bibliography-builder-cite-copy');
+		expect(markup).toContain('Copy citation');
+		expect(markup).toContain('data-cite-text="Example formatted citation"');
+		// The old duplicated plain-text block is gone.
+		expect(markup).not.toContain('bibliography-builder-cite-text');
+	});
+
 	it('emits synchronous RIS and CSL-JSON data-URI download links', () => {
 		const markup = renderWith({ outputCiteExport: true });
 		expect(markup).toContain(
