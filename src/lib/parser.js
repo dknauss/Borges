@@ -11,7 +11,7 @@ import '@citation-js/plugin-doi';
 import '@citation-js/plugin-bibtex';
 import apiFetch from '@wordpress/api-fetch';
 import { createCitationId } from './citation-id';
-import { validateAndSanitizeCsl } from './csl-sanitize';
+import { validateAndSanitizeCsl, KNOWN_CSL_TYPES } from './csl-sanitize';
 import { DEFAULT_CITATION_STYLE } from './formatting';
 import { parseFreeTextCitation } from './free-text-parser';
 import { SUPPORTED_INPUT_MESSAGE } from './input-support';
@@ -115,18 +115,32 @@ function cloneCslItems(cslItems) {
 	return cslItems.map((item) => JSON.parse(JSON.stringify(item)));
 }
 
-function normalizeCrossRefCsl(csl) {
+export function normalizeCrossRefCsl(csl) {
 	const typeMap = {
 		'journal-article': 'article-journal',
 		'book-chapter': 'chapter',
+		'book-part': 'chapter',
+		'book-section': 'chapter',
 		'proceedings-article': 'paper-conference',
 		dissertation: 'thesis',
 		'posted-content': 'manuscript',
+		monograph: 'book',
+		'edited-book': 'book',
+		'reference-book': 'book',
+		'reference-entry': 'entry-encyclopedia',
+		'report-component': 'report',
 	};
+
+	const mappedType = typeMap[csl.type] || csl.type;
 
 	return {
 		...csl,
-		type: typeMap[csl.type] || csl.type,
+		// CrossRef emits types that aren't valid CSL types (e.g. "monograph"
+		// for books). validateAndSanitizeCsl rejects unknown types and aborts
+		// the whole import, so map the common ones above and fall any remaining
+		// unknown type back to the generic "document" — a valid DOI should
+		// never be unimportable just because of an unusual type label.
+		type: KNOWN_CSL_TYPES.has(mappedType) ? mappedType : 'document',
 	};
 }
 

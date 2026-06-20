@@ -1,4 +1,4 @@
-const KNOWN_CSL_TYPES = new Set([
+export const KNOWN_CSL_TYPES = new Set([
 	'article',
 	'article-journal',
 	'article-magazine',

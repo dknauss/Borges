@@ -131,6 +131,7 @@ PubMed/PMID input connects through the plugin's authenticated WordPress REST pro
 * Only pre-compute export data when the feature is enabled, so bibliographies that do not use Cite / Export incur no extra editor work.
 * Use a secure-context-safe helper for generating citation and bibliography IDs.
 * Remove a dead, never-loaded duplicate of the PMID resolver (includes/pmid.php) to eliminate a function-redeclare risk.
+* Fix DOI imports for works CrossRef labels with a non-standard type such as "monograph" (common for university-press books), which previously failed to import; unrecognized types now map to a sensible CSL type or fall back gracefully instead of aborting the import.
 
 = 1.3.4 =
 * Refresh the translation template and 19 seed PO/MO locale pairs from current source strings.

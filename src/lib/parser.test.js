@@ -17,6 +17,7 @@ import { Cite } from '@citation-js/core';
 import apiFetch from '@wordpress/api-fetch';
 import {
 	clearDoiMetadataCache,
+	normalizeCrossRefCsl,
 	parsePastedInput,
 	validateAndSanitizeCsl,
 } from './parser';
@@ -159,6 +160,53 @@ describe('validateAndSanitizeCsl', () => {
 				},
 			],
 		});
+	});
+});
+
+describe('normalizeCrossRefCsl (CrossRef type mapping)', () => {
+	it('maps CrossRef "monograph" to the CSL "book" type', () => {
+		expect(normalizeCrossRefCsl({ type: 'monograph' }).type).toBe('book');
+	});
+
+	it('maps other CrossRef book/reference types to valid CSL types', () => {
+		expect(normalizeCrossRefCsl({ type: 'edited-book' }).type).toBe('book');
+		expect(normalizeCrossRefCsl({ type: 'reference-book' }).type).toBe(
+			'book'
+		);
+		expect(normalizeCrossRefCsl({ type: 'reference-entry' }).type).toBe(
+			'entry-encyclopedia'
+		);
+		expect(normalizeCrossRefCsl({ type: 'book-section' }).type).toBe(
+			'chapter'
+		);
+	});
+
+	it('keeps existing mappings (journal-article -> article-journal)', () => {
+		expect(normalizeCrossRefCsl({ type: 'journal-article' }).type).toBe(
+			'article-journal'
+		);
+	});
+
+	it('falls back any unknown type to the generic "document"', () => {
+		expect(normalizeCrossRefCsl({ type: 'grant' }).type).toBe('document');
+		expect(normalizeCrossRefCsl({ type: 'totally-made-up' }).type).toBe(
+			'document'
+		);
+	});
+
+	it('preserves other fields, and a monograph now passes validation', () => {
+		const csl = {
+			type: 'monograph',
+			title: 'The Structure of Scientific Revolutions',
+			author: [{ given: 'Thomas S.', family: 'Kuhn' }],
+			issued: { 'date-parts': [[2012]] },
+		};
+		const normalized = normalizeCrossRefCsl(csl);
+
+		expect(normalized.title).toBe(
+			'The Structure of Scientific Revolutions'
+		);
+		expect(() => validateAndSanitizeCsl(normalized)).not.toThrow();
 	});
 });
 
