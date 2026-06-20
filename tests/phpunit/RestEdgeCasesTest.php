@@ -91,6 +91,110 @@ final class RestEdgeCasesTest extends TestCase {
 		$this->assertSame( 413, $result->get_error_data()['status'] );
 	}
 
+
+	public function test_format_citations_rejects_invalid_csl_type(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+
+		$request = new WP_REST_Request( 'POST', '/bibliography/v1/format' );
+		$request->set_body_params(
+			array(
+				'cslItems' => array(
+					array(
+						'type'  => 'not-a-csl-type',
+						'title' => 'Bad type',
+					),
+				),
+			)
+		);
+
+		$result = bibliography_builder_rest_format_citations( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_invalid_csl_item', $result->get_error_code() );
+		$this->assertSame( 400, $result->get_error_data()['status'] );
+	}
+
+	public function test_format_citations_rejects_invalid_csl_author_shape(): void {
+		$request = new WP_REST_Request( 'POST', '/bibliography/v1/format' );
+		$request->set_body_params(
+			array(
+				'cslItems' => array(
+					array(
+						'type'   => 'book',
+						'title'  => 'Bad author',
+						'author' => array( 'not-an-author-object' ),
+					),
+				),
+			)
+		);
+
+		$result = bibliography_builder_rest_format_citations( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_invalid_csl_item', $result->get_error_code() );
+		$this->assertSame( 400, $result->get_error_data()['status'] );
+	}
+
+	public function test_format_citations_rejects_invalid_csl_date_parts(): void {
+		$request = new WP_REST_Request( 'POST', '/bibliography/v1/format' );
+		$request->set_body_params(
+			array(
+				'cslItems' => array(
+					array(
+						'type'   => 'book',
+						'title'  => 'Bad date',
+						'issued' => array(
+							'date-parts' => array( array( 'not-a-year' ) ),
+						),
+					),
+				),
+			)
+		);
+
+		$result = bibliography_builder_rest_format_citations( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_invalid_csl_item', $result->get_error_code() );
+	}
+
+	public function test_csl_sanitizer_strips_html_and_forbidden_keys(): void {
+		$sanitized = bibliography_builder_validate_and_sanitize_csl_item(
+			array(
+				'type'        => 'book',
+				'title'       => '<b>Safe</b> <script>alert(1)</script>',
+				'ISBN'        => array( '<b>9780000000000</b>' ),
+				'__proto__'   => array( 'polluted' => true ),
+				'constructor' => array( 'polluted' => true ),
+			)
+		);
+
+		$this->assertIsArray( $sanitized );
+		$this->assertSame( 'Safe alert(1)', $sanitized['title'] );
+		$this->assertSame( array( '9780000000000' ), $sanitized['ISBN'] );
+		$this->assertArrayNotHasKey( '__proto__', $sanitized );
+		$this->assertArrayNotHasKey( 'constructor', $sanitized );
+	}
+
+	public function test_csl_sanitizer_rejects_excessive_depth(): void {
+		$nested = 'too deep';
+
+		for ( $index = 0; $index < 12; $index++ ) {
+			$nested = array( 'next' => $nested );
+		}
+
+		$result = bibliography_builder_validate_and_sanitize_csl_item(
+			array(
+				'type'  => 'book',
+				'title' => 'Deep payload',
+				'extra' => $nested,
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_invalid_csl_item', $result->get_error_code() );
+	}
+
 	public function test_format_citations_defaults_style_to_chicago_when_absent(): void {
 		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
 		bibliography_builder_test_set_current_user( 7 );

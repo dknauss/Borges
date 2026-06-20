@@ -397,6 +397,505 @@ function bibliography_builder_is_list_array( $value ) {
 	return array() === $value || array_keys( $value ) === range( 0, count( $value ) - 1 );
 }
 
+
+/**
+ * Return the CSL item types accepted by the formatter endpoint.
+ *
+ * Keep this in sync with src/lib/csl-sanitize.js.
+ *
+ * @return array
+ */
+function bibliography_builder_get_known_csl_types() {
+	return array(
+		'article',
+		'article-journal',
+		'article-magazine',
+		'article-newspaper',
+		'bill',
+		'book',
+		'broadcast',
+		'chapter',
+		'classic',
+		'collection',
+		'dataset',
+		'document',
+		'entry',
+		'entry-dictionary',
+		'entry-encyclopedia',
+		'event',
+		'figure',
+		'graphic',
+		'hearing',
+		'interview',
+		'legal_case',
+		'legislation',
+		'magazine',
+		'manuscript',
+		'map',
+		'motion_picture',
+		'musical_score',
+		'pamphlet',
+		'paper-conference',
+		'patent',
+		'post',
+		'post-weblog',
+		'personal_communication',
+		'report',
+		'review',
+		'review-book',
+		'software',
+		'song',
+		'speech',
+		'standard',
+		'thesis',
+		'treaty',
+		'webpage',
+	);
+}
+
+/**
+ * Return CSL fields that must contain strings.
+ *
+ * @return array
+ */
+function bibliography_builder_get_csl_string_fields() {
+	return array(
+		'title',
+		'container-title',
+		'publisher',
+		'page',
+		'volume',
+		'issue',
+		'DOI',
+		'URL',
+		'language',
+		'edition',
+		'medium',
+		'genre',
+		'publisher-place',
+		'event-place',
+		'reviewed-title',
+	);
+}
+
+/**
+ * Strip HTML markup from CSL strings, including nested/broken tag payloads.
+ *
+ * @param string $text String value.
+ * @return string
+ */
+function bibliography_builder_strip_csl_html( $text ) {
+	$result = (string) $text;
+
+	do {
+		$previous = $result;
+		$result   = wp_strip_all_tags( $result );
+	} while ( $result !== $previous );
+
+	return $result;
+}
+
+/**
+ * Whether a CSL key should be dropped before storage/formatting.
+ *
+ * @param string|int $key Array key.
+ * @return bool
+ */
+function bibliography_builder_is_forbidden_csl_key( $key ) {
+	return in_array( (string) $key, array( '__proto__', 'constructor', 'prototype' ), true );
+}
+
+/**
+ * Recursively sanitize a CSL value and reject excessive nesting.
+ *
+ * @param mixed $value Value to sanitize.
+ * @param int   $depth Current recursion depth.
+ * @param bool  $valid Validity accumulator.
+ * @return mixed
+ */
+function bibliography_builder_sanitize_csl_value( $value, $depth, &$valid ) {
+	if ( $depth > 10 ) {
+		$valid = false;
+		return null;
+	}
+
+	if ( is_string( $value ) || is_int( $value ) || is_float( $value ) || is_bool( $value ) ) {
+		return $value;
+	}
+
+	if ( is_array( $value ) ) {
+		$sanitized = array();
+
+		foreach ( $value as $key => $nested_value ) {
+			if ( bibliography_builder_is_forbidden_csl_key( $key ) ) {
+				continue;
+			}
+
+			$nested_valid    = true;
+			$sanitized_value = bibliography_builder_sanitize_csl_value( $nested_value, $depth + 1, $nested_valid );
+
+			if ( ! $nested_valid ) {
+				$valid = false;
+				continue;
+			}
+
+			if ( null !== $sanitized_value ) {
+				$sanitized[ $key ] = $sanitized_value;
+			}
+		}
+
+		return $sanitized;
+	}
+
+	if ( null !== $value ) {
+		$valid = false;
+	}
+
+	return null;
+}
+
+/**
+ * Normalize one CSL date part to an integer.
+ *
+ * @param mixed $part Date part.
+ * @return int|null
+ */
+function bibliography_builder_normalize_csl_date_part( $part ) {
+	if ( is_int( $part ) ) {
+		return $part;
+	}
+
+	if ( is_float( $part ) && floor( $part ) === $part ) {
+		return (int) $part;
+	}
+
+	if ( is_string( $part ) && preg_match( '/^\d+$/', $part ) ) {
+		return (int) $part;
+	}
+
+	return null;
+}
+
+/**
+ * Sanitize and validate CSL date structures.
+ *
+ * @param mixed $issued CSL issued/accessed value.
+ * @return array|WP_Error
+ */
+function bibliography_builder_sanitize_csl_date( $issued ) {
+	if ( ! is_array( $issued ) || bibliography_builder_is_list_array( $issued ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			__( 'Invalid CSL date value.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	$valid            = true;
+	$sanitized_issued = bibliography_builder_sanitize_csl_value( $issued, 0, $valid );
+
+	if ( ! $valid || ! is_array( $sanitized_issued ) || empty( $sanitized_issued['date-parts'] ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			__( 'Invalid CSL date-parts.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	if ( ! is_array( $sanitized_issued['date-parts'] ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			__( 'Invalid CSL date-parts.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	$date_parts = array();
+
+	foreach ( $sanitized_issued['date-parts'] as $date_part ) {
+		if ( ! is_array( $date_part ) ) {
+			continue;
+		}
+
+		$normalized_date_part = array();
+
+		foreach ( $date_part as $part ) {
+			$normalized_part = bibliography_builder_normalize_csl_date_part( $part );
+
+			if ( null !== $normalized_part ) {
+				$normalized_date_part[] = $normalized_part;
+			}
+		}
+
+		if ( ! empty( $normalized_date_part ) ) {
+			$date_parts[] = $normalized_date_part;
+		}
+	}
+
+	if ( empty( $date_parts ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			__( 'Invalid CSL date-parts.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	$sanitized_issued['date-parts'] = $date_parts;
+
+	return $sanitized_issued;
+}
+
+/**
+ * Sanitize and validate one CSL name object.
+ *
+ * @param mixed $author CSL name object.
+ * @return array|WP_Error
+ */
+function bibliography_builder_sanitize_csl_author( $author ) {
+	if ( ! is_array( $author ) || bibliography_builder_is_list_array( $author ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			__( 'Invalid CSL author entry.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	$valid            = true;
+	$sanitized_author = bibliography_builder_sanitize_csl_value( $author, 0, $valid );
+
+	if ( ! $valid || ! is_array( $sanitized_author ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			__( 'Invalid CSL author entry.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	foreach ( array( 'family', 'given', 'literal', 'ORCID' ) as $key ) {
+		if ( array_key_exists( $key, $sanitized_author ) && ! is_string( $sanitized_author[ $key ] ) ) {
+			return new WP_Error(
+				'bibliography_builder_invalid_csl_item',
+				__( 'Invalid CSL author field.', 'borges-bibliography-builder' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( array_key_exists( $key, $sanitized_author ) ) {
+			$sanitized_author[ $key ] = bibliography_builder_strip_csl_html( $sanitized_author[ $key ] );
+		}
+	}
+
+	return $sanitized_author;
+}
+
+/**
+ * Sanitize and validate CSL name lists.
+ *
+ * @param mixed  $names CSL name list.
+ * @param string $field Field name.
+ * @return array|WP_Error
+ */
+function bibliography_builder_sanitize_csl_name_list( $names, $field ) {
+	if ( ! is_array( $names ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			sprintf(
+				/* translators: %s: CSL field name. */
+				__( 'Invalid CSL %s list.', 'borges-bibliography-builder' ),
+				$field
+			),
+			array( 'status' => 400 )
+		);
+	}
+
+	$sanitized = array();
+
+	foreach ( $names as $author ) {
+		$sanitized_author = bibliography_builder_sanitize_csl_author( $author );
+
+		if ( is_wp_error( $sanitized_author ) ) {
+			return $sanitized_author;
+		}
+
+		$sanitized[] = $sanitized_author;
+	}
+
+	return $sanitized;
+}
+
+/**
+ * Sanitize and validate a string-or-string-array CSL field.
+ *
+ * @param mixed  $value Field value.
+ * @param string $field Field name.
+ * @return string|array|WP_Error
+ */
+function bibliography_builder_sanitize_csl_string_or_array_field( $value, $field ) {
+	if ( is_string( $value ) ) {
+		return bibliography_builder_strip_csl_html( $value );
+	}
+
+	if ( is_array( $value ) ) {
+		$sanitized = array();
+
+		foreach ( $value as $item ) {
+			if ( ! is_string( $item ) ) {
+				return new WP_Error(
+					'bibliography_builder_invalid_csl_item',
+					sprintf(
+						/* translators: %s: CSL field name. */
+						__( 'Invalid CSL %s.', 'borges-bibliography-builder' ),
+						$field
+					),
+					array( 'status' => 400 )
+				);
+			}
+
+			$sanitized[] = bibliography_builder_strip_csl_html( $item );
+		}
+
+		return $sanitized;
+	}
+
+	return new WP_Error(
+		'bibliography_builder_invalid_csl_item',
+		sprintf(
+			/* translators: %s: CSL field name. */
+			__( 'Invalid CSL %s.', 'borges-bibliography-builder' ),
+			$field
+		),
+		array( 'status' => 400 )
+	);
+}
+
+/**
+ * Validate and sanitize one CSL-JSON item for the formatter endpoint.
+ *
+ * @param mixed $csl CSL-JSON item.
+ * @return array|WP_Error
+ */
+function bibliography_builder_validate_and_sanitize_csl_item( $csl ) {
+	if ( ! is_array( $csl ) || bibliography_builder_is_list_array( $csl ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			__( 'Invalid CSL object.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	$valid         = true;
+	$sanitized_csl = bibliography_builder_sanitize_csl_value( $csl, 0, $valid );
+
+	if ( ! $valid || ! is_array( $sanitized_csl ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			__( 'Invalid CSL object.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	if (
+		empty( $sanitized_csl['type'] ) ||
+		! is_string( $sanitized_csl['type'] ) ||
+		! in_array( $sanitized_csl['type'], bibliography_builder_get_known_csl_types(), true )
+	) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			__( 'Invalid CSL type.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	foreach ( array( 'author', 'editor', 'reviewed-author' ) as $field ) {
+		if ( array_key_exists( $field, $sanitized_csl ) ) {
+			$sanitized_list = bibliography_builder_sanitize_csl_name_list( $sanitized_csl[ $field ], $field );
+
+			if ( is_wp_error( $sanitized_list ) ) {
+				return $sanitized_list;
+			}
+
+			$sanitized_csl[ $field ] = $sanitized_list;
+		}
+	}
+
+	foreach ( array( 'issued', 'accessed' ) as $field ) {
+		if ( array_key_exists( $field, $sanitized_csl ) ) {
+			$sanitized_date = bibliography_builder_sanitize_csl_date( $sanitized_csl[ $field ] );
+
+			if ( is_wp_error( $sanitized_date ) ) {
+				return $sanitized_date;
+			}
+
+			$sanitized_csl[ $field ] = $sanitized_date;
+		}
+	}
+
+	foreach ( bibliography_builder_get_csl_string_fields() as $field ) {
+		if ( array_key_exists( $field, $sanitized_csl ) ) {
+			if ( ! is_string( $sanitized_csl[ $field ] ) ) {
+				return new WP_Error(
+					'bibliography_builder_invalid_csl_item',
+					sprintf(
+						/* translators: %s: CSL field name. */
+						__( 'Invalid CSL %s.', 'borges-bibliography-builder' ),
+						$field
+					),
+					array( 'status' => 400 )
+				);
+			}
+
+			$sanitized_csl[ $field ] = bibliography_builder_strip_csl_html( $sanitized_csl[ $field ] );
+		}
+	}
+
+	foreach ( array( 'ISBN', 'ISSN' ) as $field ) {
+		if ( array_key_exists( $field, $sanitized_csl ) ) {
+			$sanitized_identifier = bibliography_builder_sanitize_csl_string_or_array_field(
+				$sanitized_csl[ $field ],
+				$field
+			);
+
+			if ( is_wp_error( $sanitized_identifier ) ) {
+				return $sanitized_identifier;
+			}
+
+			$sanitized_csl[ $field ] = $sanitized_identifier;
+		}
+	}
+
+	return $sanitized_csl;
+}
+
+/**
+ * Validate and sanitize a list of CSL-JSON items for the formatter endpoint.
+ *
+ * @param array $csl_items CSL-JSON items.
+ * @return array|WP_Error
+ */
+function bibliography_builder_validate_and_sanitize_csl_items( $csl_items ) {
+	$sanitized_items = array();
+
+	foreach ( array_values( $csl_items ) as $index => $item ) {
+		$sanitized_item = bibliography_builder_validate_and_sanitize_csl_item( $item );
+
+		if ( is_wp_error( $sanitized_item ) ) {
+			return new WP_Error(
+				$sanitized_item->get_error_code(),
+				sprintf(
+					/* translators: %d: 1-based citation item number. */
+					__( 'Invalid CSL citation item at position %d.', 'borges-bibliography-builder' ),
+					$index + 1
+				),
+				$sanitized_item->get_error_data()
+			);
+		}
+
+		$sanitized_items[] = $sanitized_item;
+	}
+
+	return $sanitized_items;
+}
+
 /**
  * Recursively sort associative keys so equivalent CSL payloads hash identically.
  *
@@ -876,7 +1375,13 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 		);
 	}
 
-	$formatted = bibliography_builder_format_csl_items( $csl_items, $style_key );
+	$sanitized_csl_items = bibliography_builder_validate_and_sanitize_csl_items( $csl_items );
+
+	if ( is_wp_error( $sanitized_csl_items ) ) {
+		return $sanitized_csl_items;
+	}
+
+	$formatted = bibliography_builder_format_csl_items( $sanitized_csl_items, $style_key );
 
 	if ( is_wp_error( $formatted ) ) {
 		return $formatted;
