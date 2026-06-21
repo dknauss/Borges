@@ -275,6 +275,50 @@ test.describe('Plugin lifecycle', () => {
 
 const path = require('path');
 
+/**
+ * Seed durable plugin state by calling the authenticated /format endpoint while
+ * the plugin is active. A successful format writes a `_transient_bbb_<hash>` row
+ * to the options table — exactly the data uninstall.php must remove.
+ *
+ * Best-effort: the plain Playground used for the delete test may lack the intl
+ * extension citeproc-php needs, so callers should not hard-fail on the status.
+ * The transient SQL in uninstall.php runs on delete regardless of whether a row
+ * was seeded; seeding just makes the DELETE match real data when the env allows.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @return {Promise<number|null>} HTTP status of the /format request, or null.
+ */
+async function seedPluginTransient(page) {
+	return page.evaluate(async () => {
+		try {
+			const nonce = window.wpApiSettings?.nonce;
+			const response = await fetch('/wp-json/bibliography/v1/format', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					...(nonce ? { 'X-WP-Nonce': nonce } : {}),
+				},
+				body: JSON.stringify({
+					style: 'chicago-notes-bibliography',
+					cslItems: [
+						{
+							id: 'uninstall2024',
+							type: 'article-journal',
+							title: 'Uninstall Cleanup Test',
+							'container-title': 'Test Journal',
+							author: [{ family: 'Author', given: 'Test' }],
+							issued: { 'date-parts': [[2024]] },
+						},
+					],
+				}),
+			});
+			return response.status;
+		} catch (error) {
+			return null;
+		}
+	});
+}
+
 async function installPluginFromZip(page) {
 	await page.goto('/wp-admin/plugin-install.php?tab=upload');
 	await page.waitForLoadState('networkidle');
@@ -304,15 +348,21 @@ async function installPluginFromZip(page) {
 test.describe('Plugin delete', () => {
 	test.setTimeout(90_000);
 
-	test('plugin can be installed from zip and deleted cleanly', async ({
-		page,
-	}) => {
+	test('deleting the plugin runs uninstall.php cleanly', async ({ page }) => {
 		// Install from the release zip via Upload Plugin.
 		await installPluginFromZip(page);
 
 		// Verify plugin is active.
 		let pluginRow = await getPluginRow(page);
 		await expect(pluginRow).toBeVisible();
+
+		// Seed a real `_transient_bbb_*` row so the uninstall DELETE has
+		// something to match. Best-effort — see seedPluginTransient().
+		const seedStatus = await seedPluginTransient(page);
+		test.info().annotations.push({
+			type: 'seed-format-status',
+			description: String(seedStatus),
+		});
 
 		// Deactivate.
 		const deactivateLink = pluginRow.getByRole('link', {
@@ -328,6 +378,16 @@ test.describe('Plugin delete', () => {
 		await expect(
 			pluginRow.getByRole('link', { name: /^Activate/i })
 		).toBeVisible({ timeout: 10_000 });
+
+		// From here on, any 5xx response means the uninstall path faulted —
+		// a parse error, undefined function, or bad SQL in uninstall.php would
+		// surface as a server error on the delete request.
+		const serverErrors = [];
+		page.on('response', (response) => {
+			if (response.status() >= 500) {
+				serverErrors.push(`${response.status()} ${response.url()}`);
+			}
+		});
 
 		const deleteLink = pluginRow.getByRole('link', { name: /Delete/i });
 		await expect(deleteLink).toBeVisible();
@@ -348,6 +408,13 @@ test.describe('Plugin delete', () => {
 
 		await page.waitForTimeout(2000);
 
+		// The delete results page (where an uninstall.php fatal would render)
+		// must show no PHP error.
+		const deleteResultBody = await page.locator('body').textContent();
+		expect(deleteResultBody).not.toMatch(
+			/Fatal error|Parse error|There has been a critical error/i
+		);
+
 		// Verify plugin is gone.
 		await page.goto('/wp-admin/plugins.php');
 		await page.waitForLoadState('networkidle');
@@ -358,5 +425,8 @@ test.describe('Plugin delete', () => {
 
 		const remainingRow = await getPluginRow(page);
 		await expect(remainingRow).toHaveCount(0, { timeout: 10_000 });
+
+		// uninstall.php executed during the delete with no server error.
+		expect(serverErrors).toEqual([]);
 	});
 });
