@@ -1,34 +1,31 @@
 # Project State
 
-_Last reviewed: 2026-06-17._
+_Last reviewed: 2026-06-21._
 
 ## Current Focus
 
-1. `v1.3.3` is the current public release baseline. It restored DOI imports in
-   browser-based WordPress Playground by using CrossRef's CSL transform endpoint
-   directly, serialized DOI requests, and added a PubMed sample to the demo
-   starter content.
-2. `main` is currently 11 commits ahead of `v1.3.3` with post-release
-   test, documentation, planning, hygiene, and dev-dependency work:
-   - `4fee7d2` Add Playground DOI import smoke test
-   - `1654cee` Ignore local Claude worktrees
-   - `65275c8` Expand Playground citation import coverage
-   - `7176f41` Refresh documentation for current release state
-   - `d372501` chore(deps): bump qs in the npm_and_yarn group across 1 directory
-   - `8893b32` test(sort): add REQ-S4 coordination fixture cases and fix lint
-   - `fbe09da` chore(deps-dev): bump shell-quote
-   - `4519dd4` Refresh planning state after dependency update
-   - `8002bed` chore(deps-dev): bump webpack-dev-server
-   - `adb8998` Document dependency alert resolution
-   - `b44a899` Add direct access guard to PMID helpers
-3. Keep the release artifact, WordPress.org SVN output, Playground blueprints,
+1. `v1.4.1` is the current release baseline. `main` tip is `a1ad7a2`
+   ("chore(release): prepare 1.4.1 (#51)"); tags run through `v1.4.0` and
+   `v1.4.1`. The 1.4.x line shipped frontend Cite/Export affordances, CrossRef
+   non-standard type mapping for book DOIs (`#45`), and uninstall data cleanup
+   (`#49`). Treat the live WordPress.org plugin page as canonical for the
+   publicly available version.
+2. **Phase 04 (frontend Cite/Export affordances) is SHIPPED — not pending.** It
+   merged via PR #37 (`3995d14`) and released in 1.4.0, with follow-up fixes in
+   1.4.x (e.g. `de81e52` / #47: year rendering, ALL-CAPS name/title
+   normalization, cite/export copy button). There is no outstanding pre-merge
+   gate. The deterministic half of its former 04-04 browser checkpoint now has
+   Playwright E2E coverage (PR #53, branch `test/e2e-cite-export`); only the
+   visual layout row remains a manual/screenshot pass.
+3. **Phase 07 (free-text embedded-identifier resolution, Tier 1) is complete.**
+   The parser extracts an embedded DOI/PMID from a full free-text citation and
+   routes it to the existing CrossRef/NCBI resolvers, degrading to the heuristic
+   freetext parse and then the limited-support message on failure. In PR #52
+   (branch `phase-07/free-text-embedded-identifier-resolution`), targeting
+   `main`; not yet merged. Verifier passed 13/13; no new SSRF surface; dedup
+   path reused unchanged.
+4. Keep the release artifact, WordPress.org SVN output, Playground blueprints,
    and docs aligned whenever DOI/PMID/BibTeX import behavior changes.
-4. Phase 04 (frontend Cite/Export affordances) is **implementation
-   code-complete** on branch `phase-04/cite-export-affordances` (PR #37),
-   covering plans 04-01 through 04-04. All automated gates pass (570 Jest
-   tests, lint, build); the only outstanding item is the plan 04-04 human
-   browser-verify checkpoint (visual confirmation in the editor + frontend),
-   which must be completed in a browser-capable session before merge.
 
 ## Current Priority Order
 
@@ -39,62 +36,75 @@ _Last reviewed: 2026-06-17._
      the WordPress Playground CORS proxy; the WordPress.org Preview blueprint
      relies on WordPress.org to install Borges automatically.
 2. **CI and runtime compatibility hygiene**
-   - Current runtime matrix covers PHP 7.4-8.4, WordPress 6.4/6.7/latest,
-     Apache/Nginx, MySQL, and one Multisite lane.
-   - SQLite is not currently in the GitHub runtime matrix; add it only when a
-     compatibility risk justifies the extra lane.
+   - Runtime matrix covers PHP 7.4-8.4, WordPress 6.4/6.7/latest, Apache/Nginx,
+     MySQL, and one Multisite lane. SQLite is not in the matrix; add only when a
+     compatibility risk justifies it.
+   - Phase 06 (CI optimization) exists only as a strategy sketch
+     (`.planning/phases/06-ci-optimization/06-PLAN.md`, sub-phases 06.1-06.5);
+     it has never been planned into executable tasks and is out of scope until
+     prioritized.
 3. **Interoperability backlog**
-   - Frontend Cite/Export affordances are the next planned user-facing feature.
-   - BibLaTeX export and PMID input/proxy are shipped; remaining identifier
-     expansion should use the resolver-layer model from `SPEC.md`.
+   - Frontend Cite/Export affordances are **shipped** (1.4.x).
+   - Embedded-identifier Tier 1 is **done** (PR #52). Further identifier
+     expansion should use the resolver-layer model from `SPEC.md`; Tier 2
+     (generic monograph fallback) and Tier 3 (CRF/ML parsing) remain out of
+     scope.
+   - Phase 05 (writable bibliography REST/Abilities) remains a design memo;
+     implementation deferred.
 4. **Translation and language-pack expansion**
-   - The live WordPress.org plugin page is the canonical source for official
-     generated language packs.
-   - Bundled PO/MO files are seed/import material for translator review, not
-     public language-pack availability claims. The 2026-06-14 i18n refresh
-     brought all 19 seed PO/MO locale pairs up to the current 93-string POT.
+   - The live WordPress.org plugin page is canonical for official generated
+     language packs. Bundled PO/MO files are seed/import material for translator
+     review, not public availability claims. The 2026-06-14 i18n refresh brought
+     all 19 seed PO/MO locale pairs up to the current 93-string POT.
 
 ## Last Activity
 
-- `v1.3.3` was cut and distributed after the DOI Playground fix.
-- Playwright coverage now covers a single DOI paste, two DOI paste, and mixed
-  DOI + PMID + BibTeX demo starter content.
-- Local Claude worktrees were removed and ignored.
-- Documentation was reviewed for current release, Playground, DOI resolver,
-  PubMed/PMID, runtime matrix, and planning-state accuracy.
-- Dependabot PR #33 was merged, bumping `shell-quote` from 1.8.3 to 1.8.4 and
-  clearing the critical `shell-quote` alert.
-- `webpack-dev-server` was bumped beyond the patched 5.2.4 threshold; the
-  remaining `uuid` and `showdown` alerts were dismissed in GitHub as tolerable
-  transitive development-dependency risk with comments.
-- The POT, 19 seed PO files, and 19 seed MO files were refreshed from current
-  source strings; active docs now point to the live WordPress.org Languages
-  list for official language-pack availability.
-- Historical Phase 1-3 planning docs and the implemented performance
-  remediation plan were archived out of the active planning paths.
+- 2026-06-21: Phase 07 (embedded-identifier resolution) executed and completed
+  across plans 07-01..07-03; opened PR #52.
+- 2026-06-21: Added a cite/export frontend E2E regression spec
+  (`tests/e2e/cite-export.spec.js`) wired into `test:e2e:playground`; opened
+  PR #53.
+- 2026-06-21: Corrected stale planning state. STATE/ROADMAP had described
+  Phase 04 as code-complete and pending a pre-merge browser-verify, but it had
+  in fact merged (#37) and shipped in 1.4.x. A v1.3 milestone audit, scope
+  narrowing, and 04-04 browser-verify handoff built on that stale premise were
+  retired (branch `docs/milestone-v1.3-audit` deleted).
+- Earlier 1.4.x work on `main`: prepare 1.4.0 (#43) and 1.4.1 (#51), lockfile
+  sync (#44), DOI monograph-type mapping (#45), QA/code-review remediation,
+  readme revision (#50), uninstall cleanup (#49).
 
 ## Active Concerns
 
-- **Main vs. release:** `main` is ahead of `v1.3.3` by E2E, hygiene, docs,
-  sorting-test, and dev-dependency lockfile work. Do not retag or redeploy
-  unless there is a real release reason.
+- **Planning vs. git reality:** `.planning/` — and the GSD milestone label, which
+  still reads `v1.3` — drifts from the actual releases. The project is on the
+  1.4.x line. Verify any merge/release claim against `git log main` and tags, not
+  the planning docs. ROADMAP.md still narrates the stale v1.3/Phase-04-pending
+  framing and should be reconciled when the milestone is formally rolled.
 - **Public pages:** Treat the live WordPress.org plugin page as canonical for
   version and language-pack availability. Avoid hard-coding official locale
   claims in planning docs.
-- **Dependabot alerts:** No open Dependabot alerts remain. Re-evaluate dismissed
-  `uuid` and `showdown` alerts if upstream WordPress packages publish patched
-  compatible ranges or Showdown publishes a patched release.
-- **Coverage:** The main remaining quality gap is broader browser/E2E coverage
-  around paste/import behavior, especially external metadata resolution paths.
+- **Dependabot alerts:** GitHub's push banner reports 4 alerts (3 moderate,
+  1 low) on the default branch as of 2026-06-21 — re-triage when prioritized.
+- **Coverage:** Broader browser/E2E coverage around paste/import behavior remains
+  the main quality gap, especially external metadata resolution paths.
+  Cite/export now has a regression spec (PR #53).
 
 ## Pending Todos
 
-- 1 pending todo in `.planning/todos/pending`:
-  - Add frontend Cite and Export affordances.
+Two resolved todos were pruned 2026-06-21: "Add frontend Cite and Export
+affordances" (shipped in 1.4.x) and "Resolve DOIs embedded in free-text
+citations" (Phase 07, complete in PR #52). Two remain in
+`.planning/todos/pending/`:
+
+- Coordinate first-wave language packs (2026-06-14).
+- Research benefits of a leaner root plugin file (2026-06-17).
 
 ## Roadmap Alignment
 
-Post-launch Phase 2 performance/stability remediation is complete and shipped.
-Phase 3 release prep produced the 1.3.x release line; `v1.3.3` is the current
-release baseline. Phase 4, frontend Cite/Export affordances, is the next planned
-feature phase.
+The 1.3.x release line shipped (`v1.3.0`-`v1.3.4`); 1.4.x is current (`v1.4.0`,
+`v1.4.1`). Phase 04 (Cite/Export affordances) shipped in 1.4.x. Phase 07
+(embedded-identifier resolution, Tier 1) is complete and in PR #52. Phase 05
+(writable bibliography REST/Abilities) is deferred (design memo). Phase 06
+(CI optimization) is an unplanned strategy sketch. The GSD milestone label
+(`v1.3`) is stale relative to the actual 1.4.x line and should be reconciled when
+the milestone is formally rolled.
