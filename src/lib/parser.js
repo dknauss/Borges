@@ -414,7 +414,7 @@ function normalizeResolvedCsl(csl, inputFormat) {
  * Detect the format of a single chunk of text.
  *
  * @param {string} chunk Trimmed text segment.
- * @return {Object|null} { format: 'doi'|'bibtex', value: string } or null.
+ * @return {{ format: string, value: string, rawValue?: string, fallbackValue?: string }} Detected format descriptor.
  */
 function detectFormat(chunk) {
 	if (PMID_REGEX.test(chunk)) {
@@ -429,14 +429,25 @@ function detectFormat(chunk) {
 		return { format: 'bibtex', value: chunk };
 	}
 
+	const embedded = extractEmbeddedIdentifier(chunk);
+	if (embedded) {
+		return { ...embedded, fallbackValue: chunk };
+	}
+
 	return { format: 'freetext', value: chunk };
 }
 
-function createDetectedItem(format, value, rawValue = value) {
+function createDetectedItem(
+	format,
+	value,
+	rawValue = value,
+	fallbackValue = undefined
+) {
 	return {
 		format,
 		value,
 		rawValue,
+		...(fallbackValue !== undefined ? { fallbackValue } : {}),
 	};
 }
 
@@ -496,7 +507,8 @@ function splitChunkIntoDetectedItems(chunk) {
 			return createDetectedItem(
 				detectedLine.format,
 				detectedLine.value,
-				line
+				line,
+				detectedLine.fallbackValue
 			);
 		});
 	}
@@ -508,7 +520,8 @@ function splitChunkIntoDetectedItems(chunk) {
 		createDetectedItem(
 			detectedChunk.format,
 			detectedChunk.value,
-			chunk.trim()
+			chunk.trim(),
+			detectedChunk.fallbackValue
 		),
 	];
 }
@@ -734,6 +747,33 @@ export async function parsePastedInput(
 
 	const entries = [];
 	const remainingSegments = overflowItems.map((item) => item.rawValue);
+
+	/**
+	 * Map resolved CSL items to bibliography entry objects.
+	 *
+	 * @param {Array}  cslItems    Raw CSL items from a backend.
+	 * @param {string} inputFormat The format key used to produce these items.
+	 * @return {Array} Normalized entry objects.
+	 */
+	function mapCslToEntries(cslItems, inputFormat) {
+		return cslItems.map((csl) => {
+			const { csl: normalizedCsl, parseWarnings } = normalizeResolvedCsl(
+				csl,
+				inputFormat
+			);
+			const sanitizedCsl = validateAndSanitizeCsl(normalizedCsl);
+
+			return {
+				id: createCitationId(),
+				csl: sanitizedCsl,
+				formattedText: null,
+				displayOverride: null,
+				inputFormat,
+				parseWarnings,
+			};
+		});
+	}
+
 	const resolvedItems = await mapWithConcurrency(
 		detected,
 		PARSE_CONCURRENCY,
@@ -746,23 +786,32 @@ export async function parsePastedInput(
 
 				return {
 					item,
-					entries: cslItems.map((csl) => {
-						const { csl: normalizedCsl, parseWarnings } =
-							normalizeResolvedCsl(csl, item.format);
-						const sanitizedCsl =
-							validateAndSanitizeCsl(normalizedCsl);
-
-						return {
-							id: createCitationId(),
-							csl: sanitizedCsl,
-							formattedText: null,
-							displayOverride: null,
-							inputFormat: item.format,
-							parseWarnings,
-						};
-					}),
+					entries: mapCslToEntries(cslItems, item.format),
 				};
 			} catch (err) {
+				// When an embedded identifier was extracted from free text, try
+				// the freetext backend before surfacing any resolver error.
+				if (item.fallbackValue !== undefined) {
+					try {
+						const { cslItems } = await PARSER_BACKENDS.freetext(
+							item.fallbackValue
+						);
+
+						return {
+							item,
+							entries: mapCslToEntries(cslItems, 'freetext'),
+						};
+					} catch (_fallbackErr) {
+						// Both resolver and freetext failed — report as
+						// unsupported input so the user sees the guidance
+						// message rather than a confusing DOI/PMID error.
+						return {
+							item,
+							error: formatUnsupportedInputError(),
+						};
+					}
+				}
+
 				return {
 					item,
 					error:
