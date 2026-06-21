@@ -68,10 +68,27 @@ async function dismissEditorOverlay(page) {
 	}
 }
 
+async function waitForEditorReady(page) {
+	// Guard against the "entity being edited (postType, undefined) does not
+	// have a loaded config" race: dispatching to core/editor before the post
+	// entity/config has loaded throws. Wait for the block APIs and the current
+	// post type to be resolved before any core/editor dispatch.
+	await page.waitForFunction(
+		() =>
+			window.wp?.blocks?.createBlock &&
+			window.wp?.data?.dispatch('core/editor')?.savePost &&
+			window.wp?.data?.dispatch('core/block-editor')?.resetBlocks &&
+			!!window.wp?.data?.select('core/editor')?.getCurrentPost()?.type,
+		null,
+		{ timeout: 20000 }
+	);
+}
+
 async function createNumericBibliographyPost(page) {
 	await page.goto('/wp-admin/post-new.php');
 	await page.waitForLoadState('domcontentloaded');
 	await dismissEditorOverlay(page);
+	await waitForEditorReady(page);
 
 	const postData = await page.evaluate(async () => {
 		const { blocks, data } = window.wp || {};
