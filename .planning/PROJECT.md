@@ -16,11 +16,13 @@ block backed by CSL-JSON.
 
 ## Current focus
 
--   Current public release baseline is `v1.3.3`; `main` is 11 commits ahead
-    with post-release E2E, docs, planning, sorting-test, hygiene, and
-    dev-dependency lockfile work
--   Next feature track is the post-Phase 2 backlog, starting with frontend
-    Cite/Export affordances
+-   Current public release baseline is `v1.4.1`. The GSD `v1.3` milestone label
+    is **retired**: its feature work (frontend Cite/Export affordances and
+    free-text embedded-identifier resolution) shipped in the 1.4.x line. Future
+    work is tracked against release versions rather than a GSD milestone.
+-   Frontend Cite/Export affordances **shipped** in 1.4.x. Remaining active phase
+    work: `05-writable-bibliography-rest` (deferred design memo) and
+    `06-ci-optimization` (unplanned strategy sketch) — both backlog.
 -   The hidden 51-entry formatter cliff is now replaced by an explicit, tested
     50-total-citation policy for 1.x
 -   Maintain CSL-JSON as the canonical citation model

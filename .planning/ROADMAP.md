@@ -32,19 +32,22 @@ after completion.
     in `3d5d3de` and `539b6b3`)
 -   **Phase 03** — 1.3.x release prep (complete; produced the `v1.3.x` line)
 -   **Phase 04** — frontend Cite/Export affordances (**shipped** in 1.4.x; merged
-    via PR #37 `3995d14`, with follow-up fixes such as #47. The deterministic half
-    of its former 04-04 browser checkpoint now has E2E coverage in PR #53; only the
-    visual layout row remains a manual pass)
+    via PR #37 `3995d14`, with follow-up fixes such as #47; deterministic frontend
+    behavior covered by E2E in PR #53. **Archived** to
+    `.planning/archive/phases/`)
 -   **Phase 05** — writable bibliography REST/Abilities design (memo complete;
-    implementation deferred)
+    implementation deferred — active backlog)
 -   **Phase 06** — CI optimization (strategy sketch only, never planned into
-    executable tasks; out of scope until prioritized)
--   **Phase 07** — free-text embedded-identifier resolution, Tier 1 (**complete**;
-    verifier passed 13/13, in PR #52, not yet merged)
+    executable tasks — active backlog)
+-   **Phase 07** — free-text embedded-identifier resolution, Tier 1 (**shipped**;
+    verifier passed 13/13, merged via PR #52. **Archived** to
+    `.planning/archive/phases/`)
 
-**Note:** the current public release baseline is `v1.4.1` (tags through `v1.4.0`,
-`v1.4.1`). The GSD milestone label still reads `v1.3` and is stale relative to the
-1.4.x line; reconcile it when the milestone is formally rolled.
+**GSD `v1.3` milestone retired (2026-06-21):** the current public release baseline
+is `v1.4.1` (tags through `v1.4.0`, `v1.4.1`). The v1.3 milestone's in-scope feature
+work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories are archived.
+Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work is tracked
+against release versions rather than a GSD milestone label.
 
 ## Phase detail
 

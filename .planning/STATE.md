@@ -4,6 +4,15 @@ _Last reviewed: 2026-06-21._
 
 ## Current Focus
 
+0. **GSD `v1.3` milestone retired (2026-06-21).** Its in-scope feature work —
+   Phase 04 (Cite/Export) and Phase 07 (embedded-identifier resolution) — shipped
+   in the 1.4.x line and merged (PRs #52/#53/#54/#55). Both phase directories are
+   archived under `.planning/archive/phases/`. Active phases are now only
+   `05-writable-bibliography-rest` (deferred design memo) and `06-ci-optimization`
+   (unplanned strategy sketch) — backlog, not gating any release. GSD's
+   milestone-version heuristic may still echo `v1.3`; future work is tracked
+   against release versions, not a GSD milestone.
+
 1. `v1.4.1` is the current release baseline. `main` tip is `a1ad7a2`
    ("chore(release): prepare 1.4.1 (#51)"); tags run through `v1.4.0` and
    `v1.4.1`. The 1.4.x line shipped frontend Cite/Export affordances, CrossRef
