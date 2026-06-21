@@ -32,4 +32,4 @@ until curl -fsS "$BASE_URL" >/dev/null 2>&1; do
 	sleep 2
 done
 
-PLAYWRIGHT_BASE_URL="$BASE_URL" npx playwright test tests/e2e/playground.spec.js tests/e2e/numeric-reorder.spec.js
+PLAYWRIGHT_BASE_URL="$BASE_URL" npx playwright test tests/e2e/playground.spec.js tests/e2e/numeric-reorder.spec.js tests/e2e/cite-export.spec.js
