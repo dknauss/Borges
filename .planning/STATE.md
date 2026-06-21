@@ -1,6 +1,6 @@
 # Project State
 
-_Last reviewed: 2026-06-17._
+_Last reviewed: 2026-06-21. Phase 07 Plan 01 complete._
 
 ## Current Focus
 
@@ -56,6 +56,12 @@ _Last reviewed: 2026-06-17._
 
 ## Last Activity
 
+- Phase 07 Plan 01 complete (2026-06-21): Added `extractEmbeddedIdentifier()` helper and two unanchored
+  regexes (`EMBEDDED_DOI_REGEX`, `EMBEDDED_PMID_REGEX`) to `src/lib/parser.js`. Exported for direct unit
+  test access. 13 unit tests cover extraction, false-positive guards, and DOI-over-PMID precedence.
+  Commits: `8db8115` (feat), `b3f8397` (test), `a06c115` (fix).
+  Key decisions: export as named export; DOI preferred over PMID; PMID requires label; first match only;
+  normalizeDoiInput applied to strip trailing punctuation.
 - `v1.3.3` was cut and distributed after the DOI Playground fix.
 - Playwright coverage now covers a single DOI paste, two DOI paste, and mixed
   DOI + PMID + BibTeX demo starter content.
