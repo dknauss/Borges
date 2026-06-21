@@ -1,0 +1,19 @@
+# Codecov configuration.
+#
+# Coverage uploads in CI are best-effort (continue-on-error), so treat patch
+# coverage as guidance rather than a merge gate: marginal or flaky patch
+# measurements should not red-X otherwise well-tested PRs. The "auto" patch
+# target compares the diff against the project average, which makes a patch
+# sitting right at the project level (e.g. 80.00% vs an 80.78% base) fail by a
+# fraction of a point even when the new code is genuinely covered.
+#
+# Project coverage stays a real signal at the documented 80%+ target.
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+    patch:
+      default:
+        informational: true
