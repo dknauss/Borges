@@ -91,9 +91,13 @@ _Last reviewed: 2026-06-21._
 
 ## Pending Todos
 
-- The previously-pending "Add frontend Cite and Export affordances" todo is
-  **resolved** — shipped in 1.4.x. Prune it from `.planning/todos/pending` when
-  convenient.
+Two resolved todos were pruned 2026-06-21: "Add frontend Cite and Export
+affordances" (shipped in 1.4.x) and "Resolve DOIs embedded in free-text
+citations" (Phase 07, complete in PR #52). Two remain in
+`.planning/todos/pending/`:
+
+- Coordinate first-wave language packs (2026-06-14).
+- Research benefits of a leaner root plugin file (2026-06-17).
 
 ## Roadmap Alignment
 

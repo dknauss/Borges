@@ -30,13 +30,21 @@ after completion.
 -   **Phase 01** — post-launch cleanup and documentation polish (complete)
 -   **Phase 02** — performance and stability remediation (complete, committed
     in `3d5d3de` and `539b6b3`)
--   **Phase 03** — 1.3.x release prep (complete; `v1.3.3` is the current
-    public release baseline)
--   **Phase 04** — frontend Cite/Export affordances (implementation
-    code-complete on branch `phase-04/cite-export-affordances` / PR #37;
-    pending the plan 04-04 human browser-verify checkpoint before merge)
+-   **Phase 03** — 1.3.x release prep (complete; produced the `v1.3.x` line)
+-   **Phase 04** — frontend Cite/Export affordances (**shipped** in 1.4.x; merged
+    via PR #37 `3995d14`, with follow-up fixes such as #47. The deterministic half
+    of its former 04-04 browser checkpoint now has E2E coverage in PR #53; only the
+    visual layout row remains a manual pass)
 -   **Phase 05** — writable bibliography REST/Abilities design (memo complete;
     implementation deferred)
+-   **Phase 06** — CI optimization (strategy sketch only, never planned into
+    executable tasks; out of scope until prioritized)
+-   **Phase 07** — free-text embedded-identifier resolution, Tier 1 (**complete**;
+    verifier passed 13/13, in PR #52, not yet merged)
+
+**Note:** the current public release baseline is `v1.4.1` (tags through `v1.4.0`,
+`v1.4.1`). The GSD milestone label still reads `v1.3` and is stale relative to the
+1.4.x line; reconcile it when the milestone is formally rolled.
 
 ## Phase detail
 
@@ -255,7 +263,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. `v1.3.3` is the current public release baseline.
+1.3.x release line. The current public release baseline is now `v1.4.1`.
 
 Completed Phase 2 outcomes:
 
@@ -683,7 +691,7 @@ Plans:
 Plans:
 
 -   [x] `.planning/archive/phases/03-1-3-0-release-prep/03-01-PLAN.md` —
-    1.3.x release prep; current public baseline is `v1.3.3`
+    1.3.x release prep; current public baseline is now `v1.4.1`
 
 ### Phase 4: Frontend Cite/Export affordances
 
@@ -697,11 +705,14 @@ Plans:
     no JS required for the readable bibliography itself; no regression in
     plugin-deactivation resilience or static-save contract.
 -   **Depends on:** Phase 3 released.
--   **Plans:** 4 plans.
+-   **Plans:** 4 plans (all complete).
+-   **Status:** **shipped** in 1.4.x (merged via PR #37 `3995d14`, plus follow-up
+    fixes such as #47). Deterministic frontend behavior now covered by the E2E
+    spec in PR #53; the visual layout row remains a manual pass.
 
 Plans:
 
--   [ ] 04-01-PLAN.md — foundation: outputCiteExport attribute, cslToRisEntry export, deprecated entry
--   [ ] 04-02-PLAN.md — save markup: <details> disclosure panels with RIS/CSL-JSON/BibTeX/BibLaTeX data URI links
--   [ ] 04-03-PLAN.md — editor pre-computation of BibTeX and BibLaTeX per-citation export strings
--   [ ] 04-04-PLAN.md — CSS reset for hanging-indent, editor inspector toggle, human verification
+-   [x] 04-01-PLAN.md — foundation: outputCiteExport attribute, cslToRisEntry export, deprecated entry
+-   [x] 04-02-PLAN.md — save markup: <details> disclosure panels with RIS/CSL-JSON/BibTeX/BibLaTeX data URI links
+-   [x] 04-03-PLAN.md — editor pre-computation of BibTeX and BibLaTeX per-citation export strings
+-   [x] 04-04-PLAN.md — CSS reset for hanging-indent, editor inspector toggle, human verification
