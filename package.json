@@ -1,6 +1,6 @@
 {
 	"name": "borges-bibliography-builder",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"description": "A WordPress block plugin that transforms DOI, PubMed/PMID, BibTeX, and citation text into a semantically rich, auto-sorted bibliography list.",
 	"author": "Dan Knauss",
 	"license": "GPL-2.0-or-later",

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-06-20
+
 ### Added
 
 - Clean up after the plugin on uninstall: deleting the plugin now removes its cached data — the `bbb_` formatter and PubMed/PMID transients in the options table (swept across all sites on multisite) and the object-cache groups when the backend supports group flushing. Bibliography blocks stored in your posts are user content and are left untouched.
