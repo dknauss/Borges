@@ -1762,4 +1762,46 @@ describe('parsePastedInput — embedded identifier resolution', () => {
 		// Bare DOI gets the backend error, not the SUPPORTED_INPUT_MESSAGE.
 		expect(result.errors[0]).toMatch(/Couldn't parse the DOI/i);
 	});
+
+	// Task 3: Dedup parity + no-new-SSRF regression
+	it('deduplicates embedded DOI identically to a bare-DOI paste', async () => {
+		const fetchFn = makeCrossRefFetchFn();
+		// The normalized form that normalizeDoiValueForLookup produces for the embedded DOI.
+		const existingDoiValues = ['10.1234/abcd'];
+
+		const result = await parsePastedInput(
+			'Author. Title. Journal 1 (2024): 1-10. https://doi.org/10.1234/abcd',
+			'apa-7',
+			{ fetchFn, existingDoiValues }
+		);
+
+		expect(result.entries).toHaveLength(0);
+		expect(result.errors).toHaveLength(0);
+		expect(result.skippedDuplicateCount).toBe(1);
+		// fetchFn must NOT be called because the item was deduped before resolution.
+		expect(fetchFn).not.toHaveBeenCalled();
+	});
+
+	it('fetchFn is only called with CrossRef or NCBI fixed hosts — no arbitrary URL fetch', async () => {
+		const fetchFn = makeCrossRefFetchFn();
+
+		await parsePastedInput(
+			'Author. Title. Journal 1 (2024): 1-10. https://doi.org/10.1234/abcd',
+			'apa-7',
+			{ fetchFn }
+		);
+
+		// Every URL requested by fetchFn must start with a known fixed host.
+		const ALLOWED_HOSTS = [
+			'https://api.crossref.org/',
+			'https://api.ncbi.nlm.nih.gov/',
+		];
+
+		for (const [calledUrl] of fetchFn.mock.calls) {
+			const isAllowed = ALLOWED_HOSTS.some((host) =>
+				calledUrl.startsWith(host)
+			);
+			expect(isAllowed).toBe(true);
+		}
+	});
 });
