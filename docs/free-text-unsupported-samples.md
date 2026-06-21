@@ -4,6 +4,11 @@ Known unsupported or intentionally out-of-scope sample inputs for the current he
 
 Use these to confirm the parser fails closed with a clear message instead of producing unreliable metadata.
 
+Note: a citation that carries an inline DOI (`10.NNNN/...`) or a labeled PMID is no
+longer unsupported — as of Phase 7 it is extracted and resolved via the existing
+DOI/PMID resolver. Samples remain here only because they lack any embedded
+identifier.
+
 ## Unsupported samples
 
 ### Short-note / footnote style

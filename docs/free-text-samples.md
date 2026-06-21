@@ -107,6 +107,39 @@ Expected:
 - URL captured
 - parse confidence: `low`
 
+## Supported embedded-identifier samples
+
+When a citation carries an inline DOI (`10.\d{4,}/…`) or a labeled PMID, the
+heuristic free-text parser is bypassed entirely. The identifier is extracted and
+routed to the existing CrossRef DOI resolver or NCBI PMID REST proxy. If the
+resolver fails, the chain degrades gracefully: the input is retried through the
+heuristic parser, and if that also fails the limited-support message is shown.
+No input is silently dropped.
+
+### Embedded DOI
+
+```text
+Author. Title. Place: Publisher, 2020. https://doi.org/10.1234/abcd
+```
+
+Expected:
+
+- resolves via the existing CrossRef DOI resolver (not the heuristic parser)
+- inputFormat: `doi`
+- CSL sourced from CrossRef; deduped against existing DOIs in the block
+
+### Embedded PMID
+
+```text
+Author. Title. Journal. 2019. PMID: 12345678
+```
+
+Expected:
+
+- resolves via the existing PMID REST proxy
+- inputFormat: `pmid`
+- CSL sourced from NCBI
+
 ## Notes
 
 - These fixtures are intentionally narrow and aligned to the parser's current heuristic support.
