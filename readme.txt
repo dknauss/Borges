@@ -4,18 +4,18 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.4.1
+Stable tag: 1.4.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Import, edit, sort, format, and export accessible bibliographies with DOI, PubMed, BibTeX, RIS, CSL-JSON, and manual entries.
+Create accessible, structured bibliographies from DOI, PubMed, BibTeX, RIS, CSL-JSON, and manual citation entries.
 
 == Description ==
 
 Named for Jorge Luis Borges (1899–1986), the Argentine writer and librarian known for stories about infinite libraries, imaginary books, and labyrinths of knowledge, Borges Bibliography Builder brings order to scholarly references in WordPress.
 
-The **Borges Bibliography Builder** transforms pasted DOI(s), PubMed/PMID records, BibTeX entries, and citations into a semantically rich, deduplicated, auto-sorted reference list.
+The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibTeX, RIS, CSL-JSON, manual entries, and supported free-text citations into a semantically rich, deduplicated, auto-sorted reference list.
 
 **One-click import.** Paste a DOI and Crossref resolves the metadata instantly. Paste a PubMed/PMID identifier and Borges resolves it through an authenticated WordPress REST proxy to NCBI/PMC citation metadata. Paste BibTeX or formatted citations for books, articles, chapters, webpages, reviews, and theses.
 
@@ -40,7 +40,7 @@ The **Borges Bibliography Builder** transforms pasted DOI(s), PubMed/PMID record
 1. Upload the plugin files to `/wp-content/plugins/borges-bibliography-builder/`, or install directly through the WordPress plugin screen.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Add the "Bibliography" block to any post or page.
-4. Paste DOI(s), PubMed/PMID identifiers, BibTeX entries, or supported citations for books, articles, chapters, and webpages.
+4. Paste DOI(s), PubMed/PMID identifiers, BibTeX, RIS, CSL-JSON, or supported citations for books, articles, chapters, and webpages — or add citations manually.
 
 == Frequently Asked Questions ==
 
@@ -52,7 +52,7 @@ The package includes seed PO/MO files for translator review and import in French
 
 = What citation input formats does the Borges Bibliography Builder support? =
 
-Bare DOIs, DOI URLs, PubMed/PMID identifiers, BibTeX entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
+Bare DOIs, DOI URLs, PubMed/PMID identifiers, BibTeX, RIS, CSL-JSON, manual citation entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. Free-text citations that include an inline DOI or labeled PMID are routed through the DOI/PubMed resolvers before falling back to the heuristic parser. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
 
 = Does the ABNT style implement NBR 6023:2018? =
 
@@ -95,7 +95,7 @@ PHP 7.4+ and WordPress 6.4+. Borges Bibliography Builder is tested up to WordPre
 1. Front-end bibliography output with hanging indents, italic titles, and linked DOIs, styled by the active theme.
 2. Editor view showing a formatted bibliography; hover any entry to reveal copy, edit, and delete actions.
 3. Discover the Bibliography block in the block inserter by searching for "Bibliography."
-4. Paste DOIs, PubMed/PMID identifiers, BibTeX entries, or supported citation text into the import form; the sidebar controls citation style, visible heading, and metadata output (JSON-LD, COinS, CSL-JSON, and an optional per-entry Cite / Export panel).
+4. Paste DOIs, PubMed/PMID identifiers, BibTeX, RIS, CSL-JSON, or supported citation text into the import form; the sidebar controls citation style, visible heading, and metadata output (JSON-LD, COinS, CSL-JSON, and an optional per-entry Cite / Export panel).
 5. Switch to Manual Entry to build a citation field by field — Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL.
 
 == Known Limitations ==
@@ -132,6 +132,12 @@ PubMed/PMID input connects through the plugin's authenticated WordPress REST pro
 * NLM Web Policies: https://www.nlm.nih.gov/web_policies.html
 
 == Changelog ==
+
+= 1.4.2 =
+* Resolve DOI and labeled PMID identifiers embedded in free-text citation pastes through the existing CrossRef and PubMed resolver paths.
+* Fall back from embedded-identifier resolution to the heuristic free-text parser before showing unsupported-input guidance.
+* Add free-text sample documentation for supported embedded DOI/PMID citation inputs.
+* Stabilize numeric citation reorder E2E coverage against editor readiness races.
 
 = 1.4.1 =
 * Clean up after the plugin when it is deleted: uninstalling now removes the plugin's cached data — the formatter and PubMed/PMID transients (across all sites on multisite) and its object-cache groups where the host supports it. Bibliography blocks already saved in your posts are left untouched.
@@ -223,6 +229,9 @@ PubMed/PMID input connects through the plugin's authenticated WordPress REST pro
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.4.2 =
+Improves free-text citation imports by resolving embedded DOI and PMID identifiers before falling back to heuristic parsing.
 
 = 1.2.0 =
 Adds BibLaTeX and PubMed/PMID interoperability, numeric citation reordering, stronger sort parity, and explicit ABNT/NBR 6023:2018 docs.

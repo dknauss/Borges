@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-06-21
+
+### Added
+
+- Resolve DOI and labeled PMID identifiers embedded in free-text citation pastes through the existing CrossRef and PubMed resolver paths.
+- Add free-text sample documentation for supported embedded DOI/PMID citation inputs.
+
+### Changed
+
+- Fall back from embedded-identifier resolution to the heuristic free-text parser before showing unsupported-input guidance.
+- Make Codecov patch coverage informational while keeping the project coverage gate.
+
+### Fixed
+
+- Stabilize numeric citation reorder E2E coverage against editor readiness races.
+
 ## [1.4.1] - 2026-06-20
 
 ### Added
