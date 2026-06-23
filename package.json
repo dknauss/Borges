@@ -1,7 +1,7 @@
 {
 	"name": "borges-bibliography-builder",
 	"version": "1.4.2",
-	"description": "A WordPress block plugin that creates accessible, structured bibliographies from DOI, PubMed, BibTeX, RIS, CSL-JSON, and manual citation entries.",
+	"description": "A WordPress block plugin that creates accessible, structured bibliographies from DOI, PubMed, BibTeX, CSL-JSON, free text, and manual entries with RIS export.",
 	"author": "Dan Knauss",
 	"license": "GPL-2.0-or-later",
 	"main": "build/index.js",
