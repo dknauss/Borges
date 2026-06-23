@@ -19,7 +19,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-CI=1 npx @wp-playground/cli@latest server \
+CI=1 npx @wp-playground/cli@3.1.40 server \
 	--auto-mount --login --port="$PORT" --blueprint="$BLUEPRINT_FILE" \
 	>"$LOG_FILE" 2>&1 &
 PLAYGROUND_PID=$!

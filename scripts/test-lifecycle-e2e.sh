@@ -36,13 +36,13 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # Start server 1 (auto-mount — plugin source is read-write mounted).
-CI=1 npx @wp-playground/cli@latest server \
+CI=1 npx @wp-playground/cli@3.1.40 server \
 	--auto-mount --login --port="$PORT_MOUNT" \
 	>"$LOG_MOUNT" 2>&1 &
 PID_MOUNT=$!
 
 # Start server 2 (plain — no plugin pre-installed; test uploads the zip).
-CI=1 npx @wp-playground/cli@latest server \
+CI=1 npx @wp-playground/cli@3.1.40 server \
 	--login --port="$PORT_ZIP" \
 	>"$LOG_ZIP" 2>&1 &
 PID_ZIP=$!
