@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Stabilize numeric citation reorder E2E coverage against editor readiness races.
+- Clarify that RIS is supported for export, not import.
 
 ## [1.4.1] - 2026-06-20
 
