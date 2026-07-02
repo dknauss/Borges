@@ -196,6 +196,8 @@ jobs:
         needs:
             - quality
             - phpunit
+        permissions:
+            contents: write
 
         steps:
             - name: Checkout
@@ -222,3 +224,22 @@ jobs:
                   name: bibliography-release
                   path: output/release/borges-bibliography-builder.zip
                   if-no-files-found: error
+
+            # Publish the freshly built main artifact to a rolling `main-preview`
+            # pre-release so WordPress Playground has a stable, CORS-reachable URL
+            # for the current main HEAD (git:directory is unavailable in live
+            # Playground). Only runs on push to main, never on pull requests.
+            - name: Publish rolling main preview
+              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+              uses: softprops/action-gh-release@v3
+              with:
+                  tag_name: main-preview
+                  name: Main branch preview (rolling)
+                  prerelease: true
+                  make_latest: false
+                  files: output/release/borges-bibliography-builder.zip
+                  overwrite_files: true
+                  body: |
+                      Automated rolling build of the `main` branch, refreshed on every push.
+                      This is **not** a stable release — for production use install the
+                      latest tagged release or the WordPress.org listing.

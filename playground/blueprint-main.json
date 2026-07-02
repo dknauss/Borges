@@ -1,0 +1,48 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"meta": {
+		"title": "Borges Bibliography Builder (main build)",
+		"description": "Launch WordPress Playground with the current development build of the Borges Bibliography Builder plugin from the main branch.",
+		"author": "danknauss",
+		"categories": ["plugin", "bibliography", "block-editor"]
+	},
+	"landingPage": "/wp-admin/post.php?post=1&action=edit",
+	"preferredVersions": {
+		"php": "8.3",
+		"wp": "latest"
+	},
+	"phpExtensionBundles": ["kitchen-sink"],
+	"features": {
+		"networking": true,
+		"intl": true
+	},
+	"login": true,
+	"steps": [
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "url",
+				"url": "https://wordpress-playground-cors-proxy.net/?https://github.com/dknauss/Borges/releases/download/main-preview/borges-bibliography-builder.zip"
+			},
+			"options": {
+				"activate": true,
+				"targetFolderName": "borges-bibliography-builder"
+			},
+			"ifAlreadyInstalled": "overwrite"
+		},
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "wordpress.org/plugins",
+				"slug": "block-accessibility-checks"
+			},
+			"options": {
+				"activate": true
+			}
+		},
+		{
+			"step": "runPHP",
+			"code": "<?php\nrequire_once '/wordpress/wp-load.php';\n\n$post_content = <<<'EOT'\n<!-- wp:paragraph -->\n<p><strong>Welcome to the Borges Bibliography Builder development build.</strong> This Playground runs the current <code>main</code> branch, not a stable release. Use the Bibliography block below, then paste one or more sample entries into the <em>Paste / Import</em> field (separate entries with a blank line).</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:code -->\n<pre class=\"wp-block-code\"><code>10.1145/3368089.3409742\n\n10.1038/s41586-020-2649-2\n\nPMID:26673779\n\n@article{knuth1984literate,\n  author = {Knuth, Donald E.},\n  title = {Literate Programming},\n  journal = {The Computer Journal},\n  year = {1984},\n  volume = {27},\n  number = {2},\n  pages = {97--111},\n  doi = {10.1093/comjnl/27.2.97}\n}</code></pre>\n<!-- /wp:code -->\n\n<!-- wp:paragraph -->\n<p>Tip: In the block sidebar, try changing citation style and export actions (CSL-JSON, BibTeX, RIS).</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:bibliography-builder/bibliography {\"citationStyle\":\"chicago-notes-bibliography\",\"showHeading\":true,\"headingText\":\"References\",\"outputJsonLd\":true,\"outputCoins\":false,\"outputCslJson\":false,\"citations\":[]} /-->\nEOT;\n\nwp_update_post(\n\tarray(\n\t\t'ID' => 1,\n\t\t'post_title' => 'Borges Bibliography Playground Starter (main build)',\n\t\t'post_content' => $post_content,\n\t)\n);\n"
+		}
+	]
+}

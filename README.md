@@ -9,7 +9,8 @@
 [![Runtime matrix](https://github.com/dknauss/Borges/actions/workflows/runtime-matrix.yml/badge.svg)](https://github.com/dknauss/Borges/actions/workflows/runtime-matrix.yml)
 [![CodeQL](https://github.com/dknauss/Borges/actions/workflows/codeql.yml/badge.svg)](https://github.com/dknauss/Borges/actions/workflows/codeql.yml)
 [![codecov](https://codecov.io/gh/dknauss/Borges/branch/main/graph/badge.svg?token=2MSXL46VTF)](https://codecov.io/gh/dknauss/Borges)
-[![WordPress Playground](https://img.shields.io/badge/WordPress%20Playground-Try%20it-3858e9.svg?logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json)
+[![Playground: Release](https://img.shields.io/badge/Playground-Release-3858e9.svg?logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json)
+[![Playground: Main build](https://img.shields.io/badge/Playground-Main%20build-8858e9.svg?logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint-main.json)
 [![WordPress.org](https://img.shields.io/badge/WordPress.org-Install-21759b.svg?logo=wordpress&logoColor=white)](https://wordpress.org/plugins/borges-bibliography-builder/)
 
 Borges Bibliography Builder is named after Jorge Luis Borges (1899–1986), the Argentine writer, essayist, poet, and librarian whose work imagined infinite libraries, invented books, and self-referential labyrinths.
@@ -22,7 +23,12 @@ Just write out your citations or paste DOIs, PubMed/PMID identifiers, and BibTeX
 
 ## Try it in WordPress Playground
 
-Install the public release from [WordPress.org](https://wordpress.org/plugins/borges-bibliography-builder/) or launch a disposable WordPress instance with the plugin preinstalled: [Try the Borges Bibliography Builder in WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json). The GitHub-hosted demo Blueprint installs the latest GitHub Release ZIP through the WordPress Playground CORS proxy and explicitly requests PHP `intl` support because editor-time CSL formatting runs through the plugin's local PHP formatter. The WordPress.org Preview blueprint is separate; WordPress.org installs Borges automatically there, and the blueprint only seeds demo content and auxiliary plugin setup.
+Install the public release from [WordPress.org](https://wordpress.org/plugins/borges-bibliography-builder/) or launch a disposable WordPress instance with the plugin preinstalled. Two Playground demos are available:
+
+- **[Try the released version](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json)** — installs the latest GitHub Release ZIP (the same build published to WordPress.org) through the WordPress Playground CORS proxy.
+- **[Try the current main build](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint-main.json)** — installs the development build of the `main` branch from the rolling `main-preview` pre-release, which CI refreshes on every push to `main`. Use this to preview unreleased changes; it is not a stable release.
+
+Both demo Blueprints explicitly request PHP `intl` support because editor-time CSL formatting runs through the plugin's local PHP formatter. The WordPress.org Preview blueprint is separate; WordPress.org installs Borges automatically there, and the blueprint only seeds demo content and auxiliary plugin setup.
 
 ## Screenshots
 
@@ -257,7 +263,8 @@ Multisite runtime smoke coverage is included in CI. SQLite is not currently part
 - [GitHub releases](https://github.com/dknauss/Borges/releases)
 - [Release readiness checklist](./docs/release-readiness-checklist.md)
 - [WordPress.org SVN deploy checklist](./docs/wporg-svn-checklist.md) — maintainer-facing notes
-- [Playground blueprint](./playground/blueprint.json) — GitHub demo Blueprint; keep its `features.intl` and `phpExtensionBundles` settings aligned with `.wordpress-org/blueprints/blueprint.json` for WordPress.org previews.
+- [Playground blueprint](./playground/blueprint.json) — GitHub demo Blueprint (released version); keep its `features.intl` and `phpExtensionBundles` settings aligned with `.wordpress-org/blueprints/blueprint.json` for WordPress.org previews.
+- [Playground main-build blueprint](./playground/blueprint-main.json) — GitHub demo Blueprint that runs the current `main` branch from the rolling `main-preview` pre-release.
 - [Runtime matrix smoke script](./scripts/runtime-matrix/smoke.sh)
 - [Brand assets](./.wordpress-org/)
 
@@ -265,13 +272,14 @@ WordPress.org branding assets live in [.wordpress-org](./.wordpress-org/), edita
 
 ### Playground Blueprint maintenance
 
-The Playground demo and WordPress.org Preview both rely on the PHP formatter used by the editor REST endpoint. That formatter uses `citeproc-php`, which requires PHP `intl`. Keep both Blueprint files in sync:
+The Playground demos and WordPress.org Preview all rely on the PHP formatter used by the editor REST endpoint. That formatter uses `citeproc-php`, which requires PHP `intl`. Keep the Blueprint files in sync:
 
-- `playground/blueprint.json` powers the GitHub README and WordPress.org readme demo link; it installs the latest GitHub Release ZIP through the WordPress Playground CORS proxy so the demo exercises the packaged release artifact without direct GitHub asset CORS failures.
+- `playground/blueprint.json` powers the GitHub README (Release badge) and WordPress.org readme demo link; it installs the latest GitHub Release ZIP through the WordPress Playground CORS proxy so the demo exercises the packaged release artifact without direct GitHub asset CORS failures.
+- `playground/blueprint-main.json` powers the GitHub README Main-build badge; it installs the `borges-bibliography-builder.zip` asset from the rolling `main-preview` pre-release through the same CORS proxy. CI's `package-release` job refreshes that pre-release on every push to `main` (`git:directory` is unavailable in live Playground, so a stable release asset is the reliable way to boot main HEAD).
 - `.wordpress-org/blueprints/blueprint.json` deploys to WordPress.org SVN as `assets/blueprints/blueprint.json` for the plugin-directory Preview button. WordPress.org installs the plugin automatically in that preview, so this blueprint does not install Borges itself.
-- Both files intentionally declare `phpExtensionBundles: ["kitchen-sink"]` and `features: { "networking": true, "intl": true }`. The bundle form follows WordPress.org Preview documentation; the `features.intl` flag is required by the live browser Playground runtime so formatter requests do not fall back with `bibliography_builder_formatter_extension_missing`.
+- All three files intentionally declare `phpExtensionBundles: ["kitchen-sink"]` and `features: { "networking": true, "intl": true }`. The bundle form follows WordPress.org Preview documentation; the `features.intl` flag is required by the live browser Playground runtime so formatter requests do not fall back with `bibliography_builder_formatter_extension_missing`.
 
-Run `npm run test -- --runTestsByPath src/blueprint.test.js` after editing either Blueprint.
+Run `npm run test -- --runTestsByPath src/blueprint.test.js` after editing any Blueprint.
 
 ### Plugin File Structure
 
