@@ -196,8 +196,6 @@ jobs:
         needs:
             - quality
             - phpunit
-        permissions:
-            contents: write
 
         steps:
             - name: Checkout
@@ -225,12 +223,39 @@ jobs:
                   path: output/release/borges-bibliography-builder.zip
                   if-no-files-found: error
 
-            # Publish the freshly built main artifact to a rolling `main-preview`
-            # pre-release so WordPress Playground has a stable, CORS-reachable URL
-            # for the current main HEAD (git:directory is unavailable in live
-            # Playground). Only runs on push to main, never on pull requests.
+    # Publish the packaged main build to a rolling `main-preview` pre-release so
+    # WordPress Playground has a stable, CORS-reachable URL for the current main
+    # HEAD (git:directory is unavailable in live Playground). Isolated in its own
+    # job so the write-scoped token is never present during checkout/build/package
+    # (and never on pull_request or codex/** runs), gated behind the full required
+    # CI suite so the Main-build badge can't install a build from a run that later
+    # failed, and reuses the exact artifact those gates validated.
+    publish-main-preview:
+        name: Publish rolling main preview
+        runs-on: ubuntu-latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        needs:
+            - quality
+            - phpunit
+            - playwright-playground
+            - psalm
+            - package-release
+        permissions:
+            contents: write
+        # Serialize publishes so a slower older run cannot overwrite `main-preview`
+        # with a stale ZIP after a newer push has landed; the newest run wins.
+        concurrency:
+            group: main-preview-publish
+            cancel-in-progress: true
+
+        steps:
+            - name: Download packaged plugin artifact
+              uses: actions/download-artifact@v6
+              with:
+                  name: bibliography-release
+                  path: output/release
+
             - name: Publish rolling main preview
-              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
               uses: softprops/action-gh-release@v3
               with:
                   tag_name: main-preview
