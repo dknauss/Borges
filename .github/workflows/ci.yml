@@ -257,8 +257,11 @@ jobs:
             # run publishes. Correct regardless of job-scheduling order, unlike
             # job-level concurrency (which can cancel the newer run instead).
             - name: Publish rolling main preview
+              # This job has no checkout, so gh cannot infer the repo from a local
+              # git remote; GH_REPO gives `gh release`/`gh api` their repo context.
               env:
                   GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
               run: |
                   tip="$(gh api "repos/${{ github.repository }}/commits/main" --jq .sha)"
                   if [ "$tip" != "${{ github.sha }}" ]; then
