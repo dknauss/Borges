@@ -1,0 +1,22 @@
+name: Demo Link Monitor
+
+# Verifies the Playground demo blueprints' install URLs stay reachable and never
+# regress to the browser-broken `git:directory` resource. Scheduled (external
+# release assets can rot over time) plus manual dispatch. Not run on PRs — the
+# structural blueprint contract is already covered by src/blueprint.test.js.
+
+on:
+  schedule:
+    - cron: '17 9 * * 1' # Mondays 09:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-demo-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check demo install URLs resolve
+        run: sh ./scripts/check-demo-links.sh

@@ -108,3 +108,4 @@ The Playground blueprint at `playground/blueprint.json` configures the GitHub/re
 - **release.yml** — tag-triggered GitHub Release and ZIP publication
 - **wp-deploy.yml** — deploys to WordPress.org SVN on published GitHub release, release dispatch, or manual run
 - **codeql.yml** — security analysis
+- **demo-links.yml** — scheduled/manual check that Playground demo blueprint install URLs stay reachable and never regress to the browser-broken `git:directory` resource
