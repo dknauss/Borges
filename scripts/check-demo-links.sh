@@ -18,6 +18,11 @@ set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
+if ! command -v jq >/dev/null 2>&1; then
+	echo "Demo link check FAILED: jq is required but not installed." >&2
+	exit 1
+fi
+
 fail=0
 checked=0
 
@@ -31,8 +36,14 @@ for bp in "$ROOT"/playground/blueprint*.json "$ROOT"/.wordpress-org/blueprints/*
 		fail=1
 	fi
 
-	# Check every url-resource install target is reachable.
-	urls=$(jq -r '.. | objects | select(.resource? == "url") | .url' "$bp" 2>/dev/null || true)
+	# Check every url-resource install target is reachable. Fail loudly if the
+	# blueprint is not valid JSON, rather than silently treating an unparseable
+	# file as "no URLs to check".
+	if ! urls=$(jq -r '.. | objects | select(.resource? == "url") | .url' "$bp"); then
+		echo "  ERROR: could not parse $name (invalid JSON)"
+		fail=1
+		continue
+	fi
 	[ -n "$urls" ] || continue
 
 	# Iterate without a pipe so $fail survives the loop (POSIX subshell rule).
