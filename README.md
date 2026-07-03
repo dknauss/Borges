@@ -23,10 +23,10 @@ Just write out your citations or paste DOIs, PubMed/PMID identifiers, and BibTeX
 
 ## Try it in WordPress Playground
 
-Install the public release from [WordPress.org](https://wordpress.org/plugins/borges-bibliography-builder/) or launch a disposable WordPress instance with the plugin preinstalled. Two Playground demos are available:
+Install the public release from [WordPress.org](https://wordpress.org/plugins/borges-bibliography-builder/), or launch a disposable WordPress instance with the plugin preinstalled — no setup, no database, and gone when you close the tab. Two Playground demos are available:
 
-- **[Try the released version](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json)** — installs the latest GitHub Release ZIP (the same build published to WordPress.org) through the WordPress Playground CORS proxy.
-- **[Try the current main build](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint-main.json)** — installs the development build of the `main` branch from the rolling `main-preview` pre-release, which CI refreshes on every push to `main`. Use this to preview unreleased changes; it is not a stable release.
+- **[Try the released version](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json)** — installs the latest GitHub Release ZIP (the same build published to WordPress.org) through the WordPress Playground CORS proxy. Use this to try the current stable plugin.
+- **[Try the current main build](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint-main.json)** — installs the development build of the `main` branch from the rolling `main-preview` pre-release, which CI refreshes on every push to `main`. Use this to preview unreleased changes ahead of the next release; it is not a stable build.
 
 Both demo Blueprints explicitly request PHP `intl` support because editor-time CSL formatting runs through the plugin's local PHP formatter. The WordPress.org Preview blueprint is separate; WordPress.org installs Borges automatically there, and the blueprint only seeds demo content and auxiliary plugin setup.
 
