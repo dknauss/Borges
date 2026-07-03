@@ -242,11 +242,6 @@ jobs:
             - package-release
         permissions:
             contents: write
-        # Serialize publishes so a slower older run cannot overwrite `main-preview`
-        # with a stale ZIP after a newer push has landed; the newest run wins.
-        concurrency:
-            group: main-preview-publish
-            cancel-in-progress: true
 
         steps:
             - name: Download packaged plugin artifact
@@ -255,7 +250,26 @@ jobs:
                   name: bibliography-release
                   path: output/release
 
+            # Guard against a slower older run overwriting `main-preview` with a
+            # stale ZIP: publish only if this commit is still the tip of `main`. A
+            # superseded run detects it is behind and skips; the newest run wins.
+            # Correct regardless of job-scheduling order — unlike job-level
+            # concurrency, which (per review) can cancel the newer run instead.
+            - name: Confirm this commit is still main's tip
+              id: tip
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  tip="$(gh api "repos/${{ github.repository }}/commits/main" --jq .sha)"
+                  if [ "$tip" = "${{ github.sha }}" ]; then
+                      echo "is_tip=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "is_tip=false" >> "$GITHUB_OUTPUT"
+                      echo "::notice::main advanced to ${tip}; skipping stale main-preview publish for ${{ github.sha }}"
+                  fi
+
             - name: Publish rolling main preview
+              if: steps.tip.outputs.is_tip == 'true'
               uses: softprops/action-gh-release@v3
               with:
                   tag_name: main-preview

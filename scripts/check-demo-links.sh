@@ -8,8 +8,8 @@
 #
 # For each blueprint under playground/ and .wordpress-org/blueprints/:
 #   - fail if any install step uses `resource: "git:directory"`
-#   - for every `resource: "url"` step, resolve the target (stripping the
-#     CORS-proxy prefix) and fail if it is not reachable.
+#   - for every `resource: "url"` step, probe the full install URL (through the
+#     CORS proxy, exactly as Playground fetches it) and fail if it is unreachable.
 #
 # Run locally:  npm run test:demo-links
 # In CI:        .github/workflows/demo-links.yml (scheduled + manual)
@@ -17,7 +17,6 @@
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-PROXY_PREFIX="https://wordpress-playground-cors-proxy.net/?"
 
 fail=0
 checked=0
@@ -41,16 +40,18 @@ for bp in "$ROOT"/playground/blueprint*.json "$ROOT"/.wordpress-org/blueprints/*
 '
 	for url in $urls; do
 		[ -n "$url" ] || continue
-		target=${url#"$PROXY_PREFIX"}
 		checked=$((checked + 1))
-		printf 'checking %-28s %s\n' "$name" "$target"
+		# Probe the FULL install URL the Blueprint uses (through the CORS proxy),
+		# not just the underlying GitHub asset — so a proxy outage that would break
+		# the live demo is caught even when the raw asset is still reachable.
+		printf 'checking %-28s %s\n' "$name" "$url"
 		# Prefer HEAD; some hosts reject it, so fall back to a 1-byte ranged GET.
-		if curl -fsSL --retry 2 --max-time 60 -o /dev/null -I "$target" 2>/dev/null; then
+		if curl -fsSL --retry 2 --max-time 60 -o /dev/null -I "$url" 2>/dev/null; then
 			:
-		elif curl -fsSL --retry 2 --max-time 60 -o /dev/null -r 0-0 "$target" 2>/dev/null; then
+		elif curl -fsSL --retry 2 --max-time 60 -o /dev/null -r 0-0 "$url" 2>/dev/null; then
 			:
 		else
-			echo "  DEAD LINK: $target (in $name)"
+			echo "  DEAD LINK: $url (in $name)"
 			fail=1
 		fi
 	done
