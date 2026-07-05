@@ -67,6 +67,23 @@ Both demo Blueprints explicitly request PHP `intl` support because editor-time C
 
 Developer-facing CI/runtime coverage details are listed in the development section below.
 
+## Footprint & Performance
+
+Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS are baked into post content at save time, so **published pages add zero database queries and zero server-side formatting** — the citeproc engine and metadata lookups run only while you edit. All figures below are hand-verified; re-derivation commands live in [`docs/current-metrics.md`](docs/current-metrics.md).
+
+| Metric | Value |
+|---|---|
+| First-party PHP (main plugin file) | ~1,880 LOC (single file) |
+| JS source (`src/`) | ~8,850 LOC |
+| Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, enqueued only when the block is present |
+| Installed footprint | ~2.2 MB (citeproc-php engine ~1.0 MB, translations 724 KB, assets 328 KB, curated CSL styles 60 KB) |
+| Distributed ZIP (compressed) | ~0.9–1 MB |
+| **Added DB queries per page** | **0** — regardless of block or citation count |
+| Autoloaded options / cron / custom tables / custom post types | none |
+| `render_callback` on the frontend | none (static `save()` only) |
+
+The only per-visitor cost is the small `view.js`/`style-index.css` pair, loaded solely on pages that contain a bibliography. Deactivating the plugin leaves the rendered bibliographies intact as static HTML.
+
 ## Recent Release Highlights
 
 - **1.3.4** — Refreshes the translation template plus 19 seed PO/MO locale pairs, adds CI validation for i18n artifacts, clarifies the bundled seed versus official language-pack policy, and archives historical planning notes out of active docs.

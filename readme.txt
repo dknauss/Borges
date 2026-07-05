@@ -102,6 +102,21 @@ PHP 7.4+ and WordPress 6.4+. Borges Bibliography Builder is tested up to WordPre
 8. Export the whole bibliography from the sidebar: copy as plain text, or download CSL-JSON, BibTeX, BibLaTeX, or RIS.
 9. Readers can expand the per-entry Cite / Export panel on the published page to copy a citation or download it as RIS, CSL-JSON, BibTeX, or BibLaTeX.
 
+== Performance & Footprint ==
+
+Borges is a static-output block. Formatted bibliography HTML, JSON-LD, and COinS are baked into your post content when you save, so the citeproc formatting engine and the DOI/PubMed lookups run **only in the editor** — never on the front end.
+
+What this means for a published page:
+
+* **Zero added database queries** — no matter how many bibliographies or citations the page contains. Query load does not grow with your content.
+* **No `render_callback`, no REST calls, no shortcodes** on the front end. Output is static HTML from the block's `save()`.
+* **No persistent storage** — the plugin creates no options (nothing added to the `wp_options` autoload), no custom tables, no custom post types, and no cron events.
+* **Tiny front-end payload** — only a small view script (~1.4 KB) and stylesheet (~2.9 KB) load, and only on pages that actually contain a bibliography.
+
+Installed footprint is roughly **2.2 MB** (the bundled citeproc-php formatting engine accounts for about half; the rest is translations, editor/front-end assets, and a curated set of citation styles). The downloadable ZIP is about 0.9–1 MB compressed.
+
+Because output is static, your bibliographies remain intact as plain HTML even if the plugin is deactivated.
+
 == Known Limitations ==
 
 **OSCOLA grouped bibliography** — OSCOLA convention requires the bibliography to be divided into source-type groups (cases, legislation, books, articles, online sources). Borges currently renders a single alphabetized list regardless of style. A dismissible notice in the editor explains this when OSCOLA is selected. Grouped-bibliography support is planned for a future release.
