@@ -84,7 +84,7 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 
 The only per-visitor cost is the small `view.js`/`style-index.css` pair, loaded solely on pages that contain a bibliography. Deactivating the plugin leaves the rendered bibliographies intact as static HTML.
 
-Editor-time DOI/PMID and formatting results are cached in the object cache when one is present, or otherwise in short-lived, non-autoloaded `_transient_bbb_*` transients — written only while editing, never on a visitor request.
+Editor-time PMID and formatting results are cached in the object cache and in short-lived, non-autoloaded `_transient_bbb_*` transients — written only while editing, never on a visitor request. (DOI imports are deduped in a browser-session cache, not stored server-side.)
 
 ## Recent Release Highlights
 

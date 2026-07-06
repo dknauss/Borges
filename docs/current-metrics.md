@@ -71,14 +71,18 @@ grep -rEl "add_option|update_option|register_setting|register_post_type|dbDelta|
   --include='*.php' . | grep -vE 'vendor|tests|node_modules'
 ```
 
-**One caveat on `wp_options`.** The plugin's editor-time cache
-(`bibliography_builder_cache_set()`) writes to the persistent object cache via `wp_cache_set()`
-when one is available, and otherwise falls back to `set_transient()` — which stores
-**non-autoloaded, expiring** `_transient_bbb_*` rows in `wp_options`. Those rows are written
-**only during editor REST calls** (`/format`, `/pmid`) as short-lived caches of upstream
-lookups — never on a visitor request, and never added to the autoload set. So there are no
-long-lived settings and nothing on the autoload path, but "zero rows ever touch `wp_options`"
-would be inaccurate on a site without an external object cache.
+**One caveat on `wp_options`.** On every store, the plugin's editor-time cache
+(`bibliography_builder_cache_set()`) calls **both** `wp_cache_set()` and `set_transient()` —
+they are two independent `if ( function_exists() )` guards, not an object-cache-else-transient
+fallback. With a persistent object cache drop-in active, `set_transient()` also routes to the
+object cache and **no** option row is written; without one, it materializes
+**non-autoloaded, expiring** `_transient_bbb_*` rows in `wp_options`. Either way the write
+happens **only during editor REST calls** (`/format`, `/pmid`) as short-lived caches of
+upstream lookups — never on a visitor request, and never added to the autoload set. So there
+are no long-lived settings and nothing on the autoload path, but "zero rows ever touch
+`wp_options`" would be inaccurate on a site without an external object cache. (DOI imports are
+deduped separately in a browser-session JS `Map` in `src/lib/parser.js` and never reach this
+PHP cache.)
 
 The "average queries per page" figure is a flat **0 additional queries**, independent of the
 number of bibliography blocks or citations on the page — all expensive resolution (Crossref

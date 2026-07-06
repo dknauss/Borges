@@ -110,7 +110,7 @@ What this means for a published page:
 
 * **Zero added database queries** — no matter how many bibliographies or citations the page contains. Query load does not grow with your content.
 * **No `render_callback`, no REST calls, no shortcodes** on the front end. Output is static HTML from the block's `save()`.
-* **No long-lived settings** — the plugin registers no settings or autoloaded options, no custom tables, no custom post types, and no cron events. Editor-time DOI/PMID and formatting results are cached in the object cache when one is present, or otherwise in short-lived, non-autoloaded transients, written only while editing.
+* **No long-lived settings** — the plugin registers no settings or autoloaded options, no custom tables, no custom post types, and no cron events. Editor-time PMID and formatting results are cached in the object cache and in short-lived, non-autoloaded transients, written only while editing. DOI imports are deduped in a browser-session cache, not stored server-side.
 * **Tiny front-end payload** — only a small view script (~1.4 KB) and stylesheet (~2.9 KB) load, and only on pages that actually contain a bibliography.
 
 Installed footprint is roughly **2.1 MB** (the bundled citeproc-php formatting engine accounts for about half; the rest is translations, editor/front-end assets, and a curated set of citation styles). The downloadable ZIP is about 0.9–1 MB compressed.
