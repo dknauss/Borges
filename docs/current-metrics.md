@@ -12,9 +12,9 @@ Last verified: **2026-07-05** against `main` (commit `49f623b`).
 | Metric | Value | Re-derivation command |
 |---|---|---|
 | Main plugin file (`bibliography-builder.php`) | **1,881** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules) | **1,982** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **1,979** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
 | JS source (`src/`, excl. `*.test.js`) | **8,851** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
-| Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `wc -c < build/view.js` |
+| Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
 (REST registration + block registration); the CSL formatting engine under `vendor/` runs
@@ -25,6 +25,10 @@ The only PHP that executes at runtime on a visitor request path is `bibliography
 Measured from a full release build (`npm run package:release`), which copies the shipped
 files and installs runtime Composer dependencies with `--no-dev`, then prunes tests/docs/images
 from `vendor/`.
+
+**Prerequisite:** `build/` is gitignored (produced by `npm run build`), and
+`scripts/package-release.sh` copies it, so run **`npm run build`** first on a clean checkout —
+otherwise `package:release` (and the `du -sh build` row below) fails with `cannot stat build`.
 
 | Component | Size | Re-derivation command |
 |---|---|---|
