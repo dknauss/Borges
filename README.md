@@ -76,13 +76,15 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 | First-party PHP (main plugin file) | ~1,880 LOC (single file) |
 | JS source (`src/`) | ~8,850 LOC |
 | Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, enqueued only when the block is present |
-| Installed footprint | ~2.2 MB (citeproc-php engine ~1.0 MB, translations 724 KB, assets 328 KB, curated CSL styles 60 KB) |
+| Installed footprint | ~2.1 MB (`vendor/` ~1.0 MB incl. citeproc-php and curated CSL styles, translations 724 KB, assets 328 KB) |
 | Distributed ZIP (compressed) | ~0.9–1 MB |
 | **Added DB queries per page** | **0** — regardless of block or citation count |
-| Autoloaded options / cron / custom tables / custom post types | none |
+| Autoloaded options / registered settings / cron / custom tables / custom post types | none |
 | `render_callback` on the frontend | none (static `save()` only) |
 
 The only per-visitor cost is the small `view.js`/`style-index.css` pair, loaded solely on pages that contain a bibliography. Deactivating the plugin leaves the rendered bibliographies intact as static HTML.
+
+Editor-time DOI/PMID and formatting results are cached in the object cache when one is present, or otherwise in short-lived, non-autoloaded `_transient_bbb_*` transients — written only while editing, never on a visitor request.
 
 ## Recent Release Highlights
 

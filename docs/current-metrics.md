@@ -28,20 +28,24 @@ from `vendor/`.
 
 | Component | Size | Re-derivation command |
 |---|---|---|
-| `vendor/` — citeproc-php engine + `seboettg/collection` + `myclabs/php-enum`, pruned | **~1.0 MB** | `du -sh output/release/borges-bibliography-builder/vendor` (after `npm run package:release`) |
+| `vendor/` — citeproc-php engine + `seboettg/collection` + `myclabs/php-enum` + curated `citation-style-language/styles` & `/locales`, pruned | **~1.0 MB** | `du -sh output/release/borges-bibliography-builder/vendor` (after `npm run package:release`) |
 | `languages/` — seed PO/MO/JSON translations | **724 KB** | `du -sh languages` |
 | `build/` — editor + frontend assets | **328 KB** | `du -sh build` |
-| `packages/` — curated CSL styles + locales | **60 KB** | `du -sh packages` |
 | PHP + `block.json` + `readme.txt` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` | **~100 KB** | — |
-| **Total installed** | **~2.2 MB** | `du -sh output/release/borges-bibliography-builder` (after `npm run package:release`) |
+| **Total installed** | **~2.1 MB** | `du -sh output/release/borges-bibliography-builder` (after `npm run package:release`) |
 | Distributed ZIP (compressed) | **~0.9–1 MB** | `du -h output/release/borges-bibliography-builder.zip` |
+
+The source tree's `packages/` directory (60 KB) is **not** a separate shipped component: the
+release script (`scripts/package-release.sh`) Composer-installs those path packages into
+`vendor/citation-style-language/*` and then deletes the staged `packages/` (`rm -rf`). The
+curated CSL styles are therefore counted inside the `vendor/` figure above.
 
 Notes:
 - `vendor/seboettg/citeproc-php` is **3.2 MB** unpruned and **~536 KB** after the release
   script strips tests/docs. The pruning is what keeps the installed footprint near 2 MB.
-- `packages/` bundles a **curated subset** of CSL styles (the nine the plugin ships), not the
-  full upstream `citation-style-language/styles` repository (~40 MB). This is a deliberate
-  footprint control, not an accident of packaging.
+- The bundled `citation-style-language/styles` is a **curated subset** (the nine styles the
+  plugin ships), not the full upstream repository (~40 MB). This is a deliberate footprint
+  control, not an accident of packaging.
 
 ## Runtime / query overhead
 
@@ -51,20 +55,30 @@ path therefore adds **zero** database queries and **zero** citeproc/PHP formatti
 
 | Overhead on the frontend (per published page) | Value | Re-derivation |
 |---|---|---|
-| Additional database queries | **0** | Static save; no persistent storage — see audit below |
+| Additional database queries | **0** | Static save; nothing on the block runs on the frontend — see audit below |
 | REST calls | **0** | `POST /format` and `GET /pmid/{pmid}` fire only in the editor |
 | `render_callback` invocations | **0** | Block registers no server render |
-| Autoloaded options / rows in `wp_options` | **0** | No `add_option`/`update_option`/`register_setting` |
+| Autoloaded options / registered settings | **0** | No `add_option`/`update_option`/`register_setting` |
 | Cron events | **0** | No `wp_schedule_event` |
 | Custom post types / custom tables | **0** | No `register_post_type` / `dbDelta` |
 | Enqueued frontend assets (only when block present) | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB | `wc -c build/view.js build/style-index.css` |
 
-Persistence/hook audit (expected output: **NONE**):
+Persistence/hook audit — no persistent settings, options, cron, CPTs, or custom tables
+(expected output: **NONE**):
 
 ```
 grep -rEl "add_option|update_option|register_setting|register_post_type|dbDelta|wp_schedule_event" \
   --include='*.php' . | grep -vE 'vendor|tests|node_modules'
 ```
+
+**One caveat on `wp_options`.** The plugin's editor-time cache
+(`bibliography_builder_cache_set()`) writes to the persistent object cache via `wp_cache_set()`
+when one is available, and otherwise falls back to `set_transient()` — which stores
+**non-autoloaded, expiring** `_transient_bbb_*` rows in `wp_options`. Those rows are written
+**only during editor REST calls** (`/format`, `/pmid`) as short-lived caches of upstream
+lookups — never on a visitor request, and never added to the autoload set. So there are no
+long-lived settings and nothing on the autoload path, but "zero rows ever touch `wp_options`"
+would be inaccurate on a site without an external object cache.
 
 The "average queries per page" figure is a flat **0 additional queries**, independent of the
 number of bibliography blocks or citations on the page — all expensive resolution (Crossref
