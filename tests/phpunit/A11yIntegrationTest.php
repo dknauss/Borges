@@ -2,18 +2,6 @@
 
 use PHPUnit\Framework\TestCase;
 
-final class BibliographyBuilderFakeA11yRegistry {
-	public $checks = array();
-
-	public function register_check( $block_name, $check_name, $args ) {
-		$this->checks[] = array(
-			'block_name' => $block_name,
-			'check_name' => $check_name,
-			'args'       => $args,
-		);
-	}
-}
-
 final class A11yIntegrationTest extends TestCase {
 
 	protected function setUp(): void {
@@ -21,34 +9,88 @@ final class A11yIntegrationTest extends TestCase {
 		bibliography_builder_test_reset_state();
 	}
 
-	public function test_register_a11y_checks_ignores_invalid_registry(): void {
-		$this->assertNull( bibliography_builder_register_a11y_checks( null ) );
+	// -------------------------------------------------------------------------
+	// PHP registration
+	// -------------------------------------------------------------------------
 
-		$result = bibliography_builder_register_a11y_checks( new stdClass() );
+	public function test_register_a11y_checks_registers_all_four_checks(): void {
+		bibliography_builder_register_a11y_checks();
 
-		$this->assertNull( $result );
+		$calls = $GLOBALS['bibliography_builder_test_bac_register_calls'] ?? array();
+
+		$this->assertCount( 4, $calls );
+
+		$ids = array_column( array_column( $calls, 'args' ), 'name' );
+		$this->assertContains( 'empty_bibliography', $ids );
+		$this->assertContains( 'heading_missing', $ids );
+		$this->assertContains( 'raw_url_link_text', $ids );
+		$this->assertContains( 'all_metadata_disabled', $ids );
 	}
 
-	public function test_register_a11y_checks_registers_bibliography_checks(): void {
-		$registry = new BibliographyBuilderFakeA11yRegistry();
+	public function test_register_a11y_checks_uses_correct_block_type(): void {
+		bibliography_builder_register_a11y_checks();
 
-		bibliography_builder_register_a11y_checks( $registry );
+		$calls = $GLOBALS['bibliography_builder_test_bac_register_calls'] ?? array();
 
-		$this->assertCount( 2, $registry->checks );
-		$this->assertSame( 'bibliography-builder/bibliography', $registry->checks[0]['block_name'] );
-		$this->assertSame( 'empty_bibliography', $registry->checks[0]['check_name'] );
-		$this->assertSame( 'error', $registry->checks[0]['args']['type'] );
-		$this->assertSame( 'accessibility', $registry->checks[0]['args']['category'] );
-		$this->assertSame( 'bibliography-builder/bibliography', $registry->checks[1]['block_name'] );
-		$this->assertSame( 'heading_missing', $registry->checks[1]['check_name'] );
-		$this->assertSame( 'warning', $registry->checks[1]['args']['type'] );
-		$this->assertSame( 'accessibility', $registry->checks[1]['args']['category'] );
-		$this->assertNotEmpty( $registry->checks[1]['args']['error_msg'] );
-		$this->assertSame(
-			$registry->checks[1]['args']['error_msg'],
-			$registry->checks[1]['args']['warning_msg']
+		foreach ( $calls as $call ) {
+			$this->assertSame( 'bibliography-builder/bibliography', $call['block_type'] );
+		}
+	}
+
+	public function test_register_a11y_checks_uses_v4_args_shape(): void {
+		bibliography_builder_register_a11y_checks();
+
+		$calls = $GLOBALS['bibliography_builder_test_bac_register_calls'] ?? array();
+
+		foreach ( $calls as $call ) {
+			$args = $call['args'];
+			$this->assertArrayHasKey( 'namespace', $args, 'namespace key required in v4' );
+			$this->assertSame( 'borges-bibliography-builder', $args['namespace'] );
+			$this->assertArrayHasKey( 'level', $args, 'level key required in v4' );
+			$this->assertArrayNotHasKey( 'type', $args, 'type key removed in v4' );
+			$this->assertNotEmpty( $args['error_msg'] );
+		}
+	}
+
+	public function test_empty_bibliography_check_is_error(): void {
+		bibliography_builder_register_a11y_checks();
+
+		$calls = $GLOBALS['bibliography_builder_test_bac_register_calls'] ?? array();
+		$check = $this->findCheck( $calls, 'empty_bibliography' );
+
+		$this->assertSame( 'error', $check['args']['level'] );
+	}
+
+	public function test_heading_missing_check_is_warning(): void {
+		bibliography_builder_register_a11y_checks();
+
+		$calls = $GLOBALS['bibliography_builder_test_bac_register_calls'] ?? array();
+		$check = $this->findCheck( $calls, 'heading_missing' );
+
+		$this->assertSame( 'warning', $check['args']['level'] );
+		$this->assertNotEmpty( $check['args']['error_msg'] );
+		$this->assertSame( $check['args']['error_msg'], $check['args']['warning_msg'] );
+	}
+
+	public function test_bac_ready_action_passes_no_arguments(): void {
+		$matching_actions = array_filter(
+			$GLOBALS['bibliography_builder_test_added_actions'],
+			static function ( $action ) {
+				return 'ba11yc_ready' === $action['hook_name']
+					&& 'bibliography_builder_register_a11y_checks' === $action['callback'];
+			}
 		);
+
+		$this->assertNotEmpty( $matching_actions );
+
+		$action = array_values( $matching_actions )[0];
+
+		$this->assertSame( 0, $action['accepted_args'] );
 	}
+
+	// -------------------------------------------------------------------------
+	// Enqueue behaviour (unchanged from v3 — handle already correct)
+	// -------------------------------------------------------------------------
 
 	public function test_enqueue_a11y_validation_is_noop_when_bac_script_is_absent(): void {
 		bibliography_builder_enqueue_a11y_validation();
@@ -142,5 +184,18 @@ final class A11yIntegrationTest extends TestCase {
 			array( rtrim( BIBLIOGRAPHY_BUILDER_PLUGIN_DIR, '/' ) ),
 			$GLOBALS['bibliography_builder_test_registered_block_types']
 		);
+	}
+
+	// -------------------------------------------------------------------------
+	// Helpers
+	// -------------------------------------------------------------------------
+
+	private function findCheck( array $calls, string $name ): array {
+		foreach ( $calls as $call ) {
+			if ( ( $call['args']['name'] ?? '' ) === $name ) {
+				return $call;
+			}
+		}
+		$this->fail( "Check '{$name}' was not registered." );
 	}
 }

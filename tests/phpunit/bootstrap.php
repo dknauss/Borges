@@ -19,6 +19,7 @@ $GLOBALS['bibliography_builder_test_http_requests']      = array();
 $GLOBALS['bibliography_builder_test_transients']          = array();
 $GLOBALS['bibliography_builder_test_object_cache']        = array();
 $GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
+$GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
 
 function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_posts']           = array();
@@ -35,6 +36,7 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_transients']          = array();
 	$GLOBALS['bibliography_builder_test_object_cache']        = array();
 	$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
+	$GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
 }
 
 function bibliography_builder_test_set_post( $post_id, $status, $content, $password_required = false ) {
@@ -121,6 +123,13 @@ function add_action( $hook_name = '', $callback = null, $priority = 10, $accepte
 }
 
 function add_filter() {}
+
+function ba11yc_register_block_check( $block_type, $args ) {
+	$GLOBALS['bibliography_builder_test_bac_register_calls'][] = array(
+		'block_type' => $block_type,
+		'args'       => $args,
+	);
+}
 
 function register_block_type( $block_type ) {
 	$GLOBALS['bibliography_builder_test_registered_block_types'][] = $block_type;

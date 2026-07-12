@@ -544,10 +544,15 @@ test.describe('Bibliography block accessibility gate', () => {
 		await dismissEditorOverlay(page);
 
 		// BAC may not be active in all environments; skip gracefully if absent.
-		// The plugin exposes a global `window.BlockAccessibilityChecks` when loaded.
+		// Detect via the block-accessibility-checks Redux store (v4 API).
 		const bacPresent = await page
 			.evaluate(
-				() => typeof window.BlockAccessibilityChecks !== 'undefined'
+				() =>
+					typeof window.wp !== 'undefined' &&
+					typeof window.wp.data !== 'undefined' &&
+					typeof window.wp.data.select(
+						'block-accessibility-checks'
+					) !== 'undefined'
 			)
 			.catch(() => false);
 

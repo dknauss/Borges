@@ -1804,50 +1804,97 @@ add_filter( 'rest_pre_serve_request', 'bibliography_builder_rest_pre_serve_reque
  * active. If BAC is not present, this function is never called.
  *
  * Registered checks:
- *   - empty_bibliography (error)   — block has no citations.
- *   - heading_missing   (warning)  — headingText is blank; no visible heading.
+ *   - empty_bibliography (error) - block has no citations.
+ *   - heading_missing (warning) - citations exist with no visible heading.
+ *   - raw_url_link_text (warning) - citation link text is a raw URL/DOI.
+ *   - all_metadata_disabled (warning) - metadata outputs are disabled.
  *
- * @param object $registry BAC check registry instance.
  * @since 1.1.0
  */
-function bibliography_builder_register_a11y_checks( $registry ) {
-	if ( ! is_object( $registry ) || ! method_exists( $registry, 'register_check' ) ) {
+function bibliography_builder_register_a11y_checks() {
+	if ( ! function_exists( 'ba11yc_register_block_check' ) ) {
 		return;
 	}
 
-	$heading_missing_message = __(
+	$raw_url_link_text_message     = __(
+		'One or more citations use a URL or DOI as link text. Add a descriptive title for screen readers.',
+		'borges-bibliography-builder'
+	);
+	$all_metadata_disabled_message = __(
+		'All machine-readable metadata outputs are disabled. Enable JSON-LD, COinS, or CSL-JSON for interoperability.',
+		'borges-bibliography-builder'
+	);
+	$heading_missing_message       = __(
 		'Bibliography block has no heading. Screen reader users may not find this section.',
 		'borges-bibliography-builder'
 	);
 
-	$registry->register_check(
+	\ba11yc_register_block_check(
 		'bibliography-builder/bibliography',
-		'empty_bibliography',
 		array(
-			'error_msg'   => __( 'Bibliography block contains no citations.', 'borges-bibliography-builder' ),
-			'warning_msg' => __( 'Bibliography block contains no citations.', 'borges-bibliography-builder' ),
-			'description' => __( 'Add at least one citation before publishing.', 'borges-bibliography-builder' ),
-			'type'        => 'error',
-			'category'    => 'accessibility',
+			'namespace'    => 'borges-bibliography-builder',
+			'name'         => 'empty_bibliography',
+			'error_msg'    => __( 'Bibliography block contains no citations.', 'borges-bibliography-builder' ),
+			'warning_msg'  => __( 'Bibliography block contains no citations.', 'borges-bibliography-builder' ),
+			'description'  => __( 'Add at least one citation before publishing.', 'borges-bibliography-builder' ),
+			'level'        => 'error',
+			'configurable' => true,
+			'category'     => 'accessibility',
 		)
 	);
 
-	$registry->register_check(
+	\ba11yc_register_block_check(
 		'bibliography-builder/bibliography',
-		'heading_missing',
 		array(
-			'error_msg'   => $heading_missing_message,
-			'warning_msg' => $heading_missing_message,
-			'description' => __(
+			'namespace'    => 'borges-bibliography-builder',
+			'name'         => 'heading_missing',
+			'error_msg'    => $heading_missing_message,
+			'warning_msg'  => $heading_missing_message,
+			'description'  => __(
 				'Add a heading in block settings so the bibliography is announced as a document section.',
 				'borges-bibliography-builder'
 			),
-			'type'        => 'warning',
-			'category'    => 'accessibility',
+			'level'        => 'warning',
+			'configurable' => true,
+			'category'     => 'accessibility',
+		)
+	);
+
+	\ba11yc_register_block_check(
+		'bibliography-builder/bibliography',
+		array(
+			'namespace'    => 'borges-bibliography-builder',
+			'name'         => 'raw_url_link_text',
+			'error_msg'    => $raw_url_link_text_message,
+			'warning_msg'  => $raw_url_link_text_message,
+			'description'  => __(
+				'Citations with a URL or DOI should have a descriptive title as link text.',
+				'borges-bibliography-builder'
+			),
+			'level'        => 'warning',
+			'configurable' => true,
+			'category'     => 'accessibility',
+		)
+	);
+
+	\ba11yc_register_block_check(
+		'bibliography-builder/bibliography',
+		array(
+			'namespace'    => 'borges-bibliography-builder',
+			'name'         => 'all_metadata_disabled',
+			'error_msg'    => $all_metadata_disabled_message,
+			'warning_msg'  => $all_metadata_disabled_message,
+			'description'  => __(
+				'Enable at least one metadata output to improve citation-manager interoperability.',
+				'borges-bibliography-builder'
+			),
+			'level'        => 'warning',
+			'configurable' => true,
+			'category'     => 'accessibility',
 		)
 	);
 }
-add_action( 'ba11yc_ready', 'bibliography_builder_register_a11y_checks' );
+add_action( 'ba11yc_ready', 'bibliography_builder_register_a11y_checks', 10, 0 );
 
 /**
  * Conditionally enqueue the BAC validation script in the block editor.
