@@ -154,6 +154,34 @@ async function selectBibliographyBlock(page, editorFrame) {
 		.catch(() => {});
 }
 
+/**
+ * Read the BAC issues currently raised against the bibliography block.
+ *
+ * Returns a flat array of `{ check, type }` for every issue BAC reports for
+ * `bibliography-builder/bibliography`, or `[]` when the block is clean.
+ * Reads the `block-accessibility-checks` store, which is the interface BAC 4.0
+ * documents for validation state.
+ *
+ * @param {import('@playwright/test').Page} page Playwright page.
+ * @return {Promise<Array<{check: string, type: string}>>} Issues for the block.
+ */
+async function getBibliographyBacIssues(page) {
+	return page.evaluate(() => {
+		const store = window.wp?.data?.select('block-accessibility-checks');
+		const invalid = store?.getInvalidBlocks?.() || [];
+		return invalid
+			.filter(
+				(entry) => 'bibliography-builder/bibliography' === entry.name
+			)
+			.flatMap((entry) =>
+				(entry.issues || []).map((issue) => ({
+					check: issue.check,
+					type: issue.type,
+				}))
+			);
+	});
+}
+
 async function publishCurrentPost(page) {
 	return page.evaluate(async () => {
 		const { data } = window.wp || {};
@@ -163,18 +191,32 @@ async function publishCurrentPost(page) {
 
 		const editor = data.dispatch('core/editor');
 		const select = data.select('core/editor');
-		editor.editPost({
-			title: `Accessibility Audit ${Date.now()}`,
-			status: 'publish',
-		});
-		await editor.savePost();
 
-		const currentPost = select.getCurrentPost();
-		if (currentPost?.link) {
-			return currentPost.link;
+		// Set the title on its own first. Block Accessibility Checks ships an
+		// error-level `post_title_required` editor check and holds core's
+		// post-saving lock while the title is empty. Setting the title and
+		// saving in the same tick races that release, and the save is rejected
+		// with "Validation errors must be resolved before saving." Give the
+		// lock a chance to lift before asking for the save.
+		editor.editPost({ title: `Accessibility Audit ${Date.now()}` });
+
+		const deadline = Date.now() + 15000;
+		while (select.isPostSavingLocked() && Date.now() < deadline) {
+			await new Promise((resolve) => setTimeout(resolve, 100));
+		}
+		if (select.isPostSavingLocked()) {
+			throw new Error(
+				'Post saving is still locked after 15s; a validation check has not cleared.'
+			);
 		}
 
-		const postId = currentPost?.id || select.getCurrentPostId();
+		editor.editPost({ status: 'publish' });
+		await editor.savePost();
+
+		// An auto-draft still reports a truthy `?p=N` link, so trusting the
+		// link alone turns a failed publish into a confusing 404 downstream.
+		// Confirm the post actually reached `publish` before returning.
+		const postId = select.getCurrentPostId();
 		if (!postId) {
 			throw new Error('Could not determine saved post ID.');
 		}
@@ -190,6 +232,17 @@ async function publishCurrentPost(page) {
 			throw new Error(`Failed to fetch saved post ${postId}.`);
 		}
 		const post = await response.json();
+		if (post?.status !== 'publish') {
+			const notices = (data.select('core/notices')?.getNotices?.() || [])
+				.filter((notice) => 'error' === notice.status)
+				.map((notice) => String(notice.content))
+				.join('; ');
+			throw new Error(
+				`Post ${postId} did not publish (status: ${post?.status}).` +
+					(notices ? ` Editor errors: ${notices}` : '')
+			);
+		}
+
 		return post?.link || '';
 	});
 }
@@ -564,11 +617,22 @@ test.describe('Bibliography block accessibility gate', () => {
 			return;
 		}
 
-		// Item 9: empty block should show a BAC error indicator.
-		// BAC wraps each flagged block in .ba11y-block-wrapper and renders
-		// a .ba11y-block-indicator--error badge for error-level checks.
-		const errorIndicator = page.locator('.ba11y-block-indicator--error');
-		await expect(errorIndicator).toBeVisible({ timeout: 5000 });
+		// Item 9: an empty block must raise BAC's error-level empty_bibliography
+		// check. Assert against the `block-accessibility-checks` data store
+		// rather than BAC's markup: v4 removed the v3 indicator classes in
+		// favour of a validation toolbar button, and the store is the interface
+		// v4 documents for reading validation state. A class-name assertion
+		// here silently passes when the class simply no longer exists.
+		await expect
+			.poll(() => getBibliographyBacIssues(page), { timeout: 10000 })
+			.toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({
+						check: 'empty_bibliography',
+						type: 'error',
+					}),
+				])
+			);
 
 		// Item 10: adding a citation and heading clears both the error and warning.
 		const editorFrame = await getEditorFrame(page);
@@ -594,11 +658,10 @@ test.describe('Bibliography block accessibility gate', () => {
 			await headingInput.fill('References');
 		}
 
-		// Both error (empty_bibliography) and warning (heading_missing) should clear.
-		await expect(errorIndicator).not.toBeVisible({ timeout: 5000 });
-		const warningIndicator = page.locator(
-			'.ba11y-block-indicator--warning'
-		);
-		await expect(warningIndicator).not.toBeVisible({ timeout: 3000 });
+		// Both error (empty_bibliography) and warning (heading_missing) clear
+		// once the block has a citation and a heading.
+		await expect
+			.poll(() => getBibliographyBacIssues(page), { timeout: 10000 })
+			.toEqual([]);
 	});
 });
