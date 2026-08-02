@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `docs/current-metrics.md`: hand-verified lines-of-code, installed-footprint, and runtime-overhead figures, each paired with the exact command used to re-derive it so the numbers can be re-checked rather than trusted on faith.
 - Add a `composer verify:metrics` check (`.github/scripts/verify-metrics.sh`), run in CI, that re-derives the lines-of-code figures in `docs/current-metrics.md` and re-runs the persistence/hook audit, failing when either drifts from the doc. Footprint figures measured with `du` and built-asset byte sizes stay hand-verified, since both vary with the filesystem and toolchain rather than with the repository.
 
+### Security
+
+- Resolve PubMed/PMID records through `wp_safe_remote_get()` rather than `wp_remote_get()`. The request follows up to three redirects and only the safe variant validates each hop against the site's own network. The PMID is already constrained to digits and the endpoint host is a fixed constant, so the redirect chain was the one part of the request an upstream change could have pointed somewhere unintended.
+
 ### Fixed
 
 - The end-to-end test covering the Block Accessibility Checks integration never actually ran. The accessibility Playground environment installed no plugins, so BAC was absent, the test skipped itself, and the suite still reported green — meaning the BAC integration had no end-to-end coverage at all. The environment now installs BAC, and the assertions read the `block-accessibility-checks` data store instead of BAC's markup: v4 replaced the v3 indicator classes the test looked for, and a class-name assertion silently passes once the class no longer exists. Verified in both directions — the test now fails if the editor-side filter is registered under its pre-4.0 name, the exact silent regression BAC's upgrade notes warn about.

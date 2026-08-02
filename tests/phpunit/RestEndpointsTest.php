@@ -276,6 +276,15 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertSame( 3, $requests[0]['args']['redirection'] );
 		$this->assertArrayNotHasKey( 'headers', $requests[0]['args'] );
 
+		// The resolver follows up to three redirects. wp_remote_get would follow
+		// them anywhere, including a host on the site's own network; the safe
+		// variant runs each hop through wp_http_validate_url first.
+		$this->assertSame(
+			'wp_safe_remote_get',
+			$requests[0]['function'],
+			'PMID resolution must use wp_safe_remote_get so redirect targets are validated.'
+		);
+
 		bibliography_builder_test_set_http_response(
 			array(
 				'response' => array( 'code' => 404 ),
