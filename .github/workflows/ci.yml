@@ -29,6 +29,9 @@ jobs:
             - name: Install dependencies
               run: npm ci --legacy-peer-deps
 
+            - name: Verify docs/current-metrics.md
+              run: bash .github/scripts/verify-metrics.sh docs/current-metrics.md
+
             - name: Lint JavaScript
               run: npm run lint:js
 

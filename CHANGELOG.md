@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a second WordPress Playground demo that boots the current `main` branch build, alongside the existing released-version demo. CI publishes the freshly built plugin to a rolling `main-preview` pre-release so live Playground has a stable, CORS-reachable URL for main HEAD; the README exposes both as separate Playground badges.
 - Add a scheduled Demo Link Monitor (`demo-links.yml` / `npm run test:demo-links`) that verifies each Playground blueprint's install URL stays reachable and guards against reintroducing the hosted-browser-broken `git:directory` resource.
 - Add `docs/current-metrics.md`: hand-verified lines-of-code, installed-footprint, and runtime-overhead figures, each paired with the exact command used to re-derive it so the numbers can be re-checked rather than trusted on faith.
+- Add a `composer verify:metrics` check (`.github/scripts/verify-metrics.sh`), run in CI, that re-derives the lines-of-code figures in `docs/current-metrics.md` and re-runs the persistence/hook audit, failing when either drifts from the doc. Footprint figures measured with `du` and built-asset byte sizes stay hand-verified, since both vary with the filesystem and toolchain rather than with the repository.
 
 ### Changed
 

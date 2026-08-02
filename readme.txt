@@ -163,7 +163,7 @@ PubMed/PMID input connects through the plugin's authenticated WordPress REST pro
 * The BAC integration now requires Block Accessibility Checks 4.0 or later. On BAC 3.x the integration stays dormant and no bibliography checks appear; Borges itself works normally whether BAC is outdated or not installed at all.
 * Add a second WordPress Playground demo that boots the current development build alongside the released-version demo.
 * Add a scheduled monitor that verifies each Playground demo link stays reachable.
-* Publish hand-verified size, footprint, and runtime-overhead metrics, each paired with the command used to re-derive it.
+* Publish hand-verified size, footprint, and runtime-overhead metrics, each paired with the command used to re-derive it, and add a continuous-integration check that fails when the recorded lines-of-code figures or the no-persistent-storage audit drift.
 
 = 1.4.2 =
 * Resolve DOI and labeled PMID identifiers embedded in free-text citation pastes through the existing CrossRef and PubMed resolver paths.
