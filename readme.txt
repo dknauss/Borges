@@ -23,7 +23,7 @@ The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibT
 
 **Portable.** Static HTML output survives plugin deactivation. No shortcodes. No database tables.
 
-**Accessible by default.** Semantic list markup, keyboard-operable editing and entry reordering (Alt+Arrow for numeric styles), visible focus, and optional Block Accessibility Checks integration help your bibliographies meet accessibility expectations.
+**Accessible by default.** Semantic list markup, keyboard-operable editing and entry reordering (Alt+Arrow for numeric styles), visible focus, and optional Block Accessibility Checks integration (requires that plugin at version 4.0 or later) help your bibliographies meet accessibility expectations.
 
 **Reference-manager friendly.** Export and reuse your bibliography in common research workflows. Borges supports CSL-JSON, BibTeX, BibLaTeX, RIS, DOI links, JSON-LD, and optional COinS metadata for compatibility with tools such as Zotero, Mendeley, EndNote, JabRef, BibDesk, and other citation managers.
 
@@ -90,6 +90,12 @@ Yes. Borges works on WordPress Multisite, including network activation. If you e
 
 PHP 7.4+ and WordPress 6.4+. Borges Bibliography Builder is tested up to WordPress 7.0.
 
+= Does Borges work with the Block Accessibility Checks plugin? =
+
+Yes, and the integration is entirely optional. When Block Accessibility Checks 4.0 or later is active, the Bibliography block registers four authoring-time checks: an error when the block contains no citations, and warnings for a missing heading, for citations whose link text is a bare URL or DOI, and for having every machine-readable metadata output disabled. You can adjust each check's severity, or turn it off, from the Block Accessibility Checks settings screen.
+
+Version 4.0 replaced the plugin's registration API, so the integration requires 4.0 or later. On Block Accessibility Checks 3.x the integration stays dormant and no bibliography checks appear. Borges itself is unaffected and works normally whether that plugin is outdated or not installed at all.
+
 == Screenshots ==
 
 1. Front-end bibliography output with hanging indents, italic titles, and linked DOIs, styled by the active theme.
@@ -151,6 +157,13 @@ PubMed/PMID input connects through the plugin's authenticated WordPress REST pro
 * NLM Web Policies: https://www.nlm.nih.gov/web_policies.html
 
 == Changelog ==
+
+= Unreleased =
+* Update the Block Accessibility Checks (BAC) integration for BAC 4.0, which replaced the registration API and renamed its editor filter hooks. All four bibliography checks — empty bibliography, missing heading, raw URL link text, and all metadata outputs disabled — are now admin-configurable from BAC's unified settings screen.
+* The BAC integration now requires Block Accessibility Checks 4.0 or later. On BAC 3.x the integration stays dormant and no bibliography checks appear; Borges itself works normally whether BAC is outdated or not installed at all.
+* Add a second WordPress Playground demo that boots the current development build alongside the released-version demo.
+* Add a scheduled monitor that verifies each Playground demo link stays reachable.
+* Publish hand-verified size, footprint, and runtime-overhead metrics, each paired with the command used to re-derive it.
 
 = 1.4.2 =
 * Resolve DOI and labeled PMID identifiers embedded in free-text citation pastes through the existing CrossRef and PubMed resolver paths.

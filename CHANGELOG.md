@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a second WordPress Playground demo that boots the current `main` branch build, alongside the existing released-version demo. CI publishes the freshly built plugin to a rolling `main-preview` pre-release so live Playground has a stable, CORS-reachable URL for main HEAD; the README exposes both as separate Playground badges.
 - Add a scheduled Demo Link Monitor (`demo-links.yml` / `npm run test:demo-links`) that verifies each Playground blueprint's install URL stays reachable and guards against reintroducing the hosted-browser-broken `git:directory` resource.
+- Add `docs/current-metrics.md`: hand-verified lines-of-code, installed-footprint, and runtime-overhead figures, each paired with the exact command used to re-derive it so the numbers can be re-checked rather than trusted on faith.
+
+### Changed
+
+- Update the Block Accessibility Checks (BAC) integration for BAC 4.0. Checks now register through the top-level `ba11yc_register_block_check()` function with a `namespace` key and explicit `level` / `configurable` severity in place of the v3 registry object and `type` key, and the editor-side validator listens on BAC's renamed `ba11yc.validateBlock` filter. All four checks — `empty_bibliography`, `heading_missing`, `raw_url_link_text`, and `all_metadata_disabled` — are now admin-configurable from BAC's unified settings screen.
+- **The BAC integration now requires Block Accessibility Checks 4.0 or later.** On BAC 3.x the v4 registration function is absent, so the integration stays dormant and no bibliography checks appear. Borges itself is unaffected and works normally whether BAC is outdated or not installed at all.
 
 ## [1.4.2] - 2026-06-21
 

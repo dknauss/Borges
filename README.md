@@ -107,6 +107,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 - **Export** — Download the current bibliography as CSL-JSON, UTF-8 BibTeX, BibLaTeX, or RIS; copy individual citations or the full bibliography as plain text.
 - **Static save** — Bibliography HTML and metadata are baked into post content at save time.
 - **Accessible editor UX** — Focus management, block-local Gutenberg notices, keyboard escape/cancel flows, and row action controls.
+- **Block Accessibility Checks integration** — Optional. With [Block Accessibility Checks](https://wordpress.org/plugins/block-accessibility-checks/) **4.0 or later** active, the block registers four configurable authoring-time checks (empty bibliography, missing heading, raw URL link text, all metadata outputs disabled). Version 4.0 replaced that plugin's registration API, so on 3.x the integration stays dormant and no checks appear; Borges works normally either way.
 - **Translation-ready interface** — strings use the `borges-bibliography-builder` text domain; WordPress.org publishes language packs as community translations are approved. (See **Language Support** below.)
 
 ## Reference Manager Compatibility
