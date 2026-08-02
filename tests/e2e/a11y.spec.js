@@ -596,8 +596,7 @@ test.describe('Bibliography block accessibility gate', () => {
 		await insertBibliographyBlock(page);
 		await dismissEditorOverlay(page);
 
-		// BAC may not be active in all environments; skip gracefully if absent.
-		// Detect via the block-accessibility-checks Redux store (v4 API).
+		// Detect BAC via the block-accessibility-checks store (the v4 API).
 		const bacPresent = await page
 			.evaluate(
 				() =>
@@ -610,6 +609,20 @@ test.describe('Bibliography block accessibility gate', () => {
 			.catch(() => false);
 
 		if (!bacPresent) {
+			// Locally BAC may legitimately be absent, so skip. In CI it must not
+			// be: playground/a11y-blueprint.json installs it, and this is the
+			// only test covering the BAC integration. A skip reads as a pass on
+			// a green run, which is exactly how this test sat dormant from the
+			// integration landing until it was noticed — so fail loudly instead
+			// of quietly reporting success with no coverage.
+			if (process.env.CI) {
+				throw new Error(
+					'Block Accessibility Checks is not active, so the BAC integration is unverified. ' +
+						'CI installs it via playground/a11y-blueprint.json — check that the blueprint ' +
+						'still applies and that scripts/test-a11y.sh still passes --blueprint.'
+				);
+			}
+
 			test.skip(
 				true,
 				'Block Accessibility Checks plugin not active — skipping BAC integration assertions'
