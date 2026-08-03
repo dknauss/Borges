@@ -223,8 +223,29 @@ function __( $text ) {
 	return $text;
 }
 
-function wp_strip_all_tags( $text ) {
-	return strip_tags( (string) $text );
+/**
+ * Faithful stand-in for core's wp_strip_all_tags.
+ *
+ * The previous mock was a bare strip_tags(), which omitted the lazy
+ * script/style-stripping regex core runs first. That regex is the expensive
+ * part: past roughly 600 KB it exhausts PCRE's JIT stack and degrades to
+ * catastrophic backtracking. Modelling it lets tests observe the cost the
+ * plugin actually pays in production rather than a cheaper fiction.
+ */
+function wp_strip_all_tags( $text, $remove_breaks = false ) {
+	if ( null === $text ) {
+		return '';
+	}
+
+	$pattern = '@' . '<(script|style)[^' . '>' . ']*?' . '>' . '.*?</\1' . '>' . '@si';
+	$text    = preg_replace( $pattern, '', (string) $text );
+	$text    = strip_tags( $text );
+
+	if ( $remove_breaks ) {
+		$text = preg_replace( '/[\r\n\t ]+/', ' ', $text );
+	}
+
+	return trim( $text );
 }
 
 function wp_json_encode( $data, $flags = 0, $depth = 512 ) {

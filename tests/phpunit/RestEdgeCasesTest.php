@@ -1,5 +1,6 @@
 <?php
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -170,7 +171,12 @@ final class RestEdgeCasesTest extends TestCase {
 		);
 
 		$this->assertIsArray( $sanitized );
-		$this->assertSame( 'Safe alert(1)', $sanitized['title'] );
+		// Core's wp_strip_all_tags drops script and style elements together
+		// with their contents before stripping remaining tags, so the payload
+		// disappears entirely rather than surviving as bare text. The previous
+		// expectation of 'Safe alert(1)' described the harness's old naive
+		// strip_tags() stand-in, not WordPress.
+		$this->assertSame( 'Safe', $sanitized['title'] );
 		$this->assertSame( array( '9780000000000' ), $sanitized['ISBN'] );
 		$this->assertArrayNotHasKey( '__proto__', $sanitized );
 		$this->assertArrayNotHasKey( 'constructor', $sanitized );
@@ -193,6 +199,236 @@ final class RestEdgeCasesTest extends TestCase {
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'bibliography_builder_invalid_csl_item', $result->get_error_code() );
+	}
+
+	public function test_csl_sanitizer_rejects_oversized_string_field(): void {
+		// Every CSL string field is run through a looped wp_strip_all_tags.
+		// Core's implementation applies a lazy script/style-stripping regex
+		// that exhausts PCRE's JIT stack somewhere above 600 KB and falls back
+		// to catastrophic backtracking: ~2.4s at 600 KB, ~12.9s at 950 KB of
+		// unclosed "<script " tokens. The request-level cap is on the whole
+		// body, so without a per-field cap one Contributor-authored field can
+		// carry the entire megabyte into that regex. Reject before stripping.
+		$result = bibliography_builder_validate_and_sanitize_csl_item(
+			array(
+				'type'  => 'book',
+				'title' => str_repeat( 'a', BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES + 1 ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_invalid_csl_item', $result->get_error_code() );
+		$this->assertSame( 400, $result->get_error_data()['status'] );
+	}
+
+	public function test_csl_sanitizer_accepts_string_field_at_the_cap(): void {
+		$result = bibliography_builder_validate_and_sanitize_csl_item(
+			array(
+				'type'  => 'book',
+				'title' => str_repeat( 'a', BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES ),
+			)
+		);
+
+		$this->assertIsArray( $result );
+		$this->assertSame(
+			BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES,
+			strlen( $result['title'] )
+		);
+	}
+
+	public function test_csl_sanitizer_rejects_oversized_field_without_stripping_it(): void {
+		// The cap is only worth having if it short-circuits the expensive path.
+		// A hostile payload well past the backtracking cliff must be rejected
+		// promptly rather than stripped first and rejected after.
+		$hostile = str_repeat( '<script ', 120000 ); // ~960 KB
+
+		$start  = microtime( true );
+		$result = bibliography_builder_validate_and_sanitize_csl_item(
+			array(
+				'type'  => 'book',
+				'title' => $hostile,
+			)
+		);
+		$elapsed = microtime( true ) - $start;
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertLessThan(
+			1.0,
+			$elapsed,
+			'Oversized field should be rejected before the looped strip, not after.'
+		);
+	}
+
+	/**
+	 * Every path that reaches the looped strip must be bounded, not just the
+	 * flat string fields. bibliography_builder_strip_csl_html is called from
+	 * five sites: the string-field loop, author name parts, date literal/raw,
+	 * and both branches of the string-or-array handler. A cap on one of them
+	 * leaves the same vulnerability reachable under a different key.
+	 *
+	 * @param array $csl_item CSL item carrying an oversized string.
+	 */
+	#[DataProvider( 'oversized_csl_path_provider' )]
+	public function test_csl_sanitizer_rejects_oversized_strings_on_every_strip_path( array $csl_item ): void {
+		$start   = microtime( true );
+		$result  = bibliography_builder_validate_and_sanitize_csl_item( $csl_item );
+		$elapsed = microtime( true ) - $start;
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 400, $result->get_error_data()['status'] );
+		$this->assertLessThan(
+			1.0,
+			$elapsed,
+			'Oversized string must be rejected before any strip, on every path.'
+		);
+	}
+
+	public static function oversized_csl_path_provider(): array {
+		$hostile = str_repeat( '<script ', 120000 ); // ~960 KB.
+
+		return array(
+			'flat string field'  => array(
+				array(
+					'type'  => 'book',
+					'title' => $hostile,
+				),
+			),
+			'author family name' => array(
+				array(
+					'type'   => 'book',
+					'title'  => 'Fine',
+					'author' => array( array( 'family' => $hostile ) ),
+				),
+			),
+			'author literal'     => array(
+				array(
+					'type'   => 'book',
+					'title'  => 'Fine',
+					'author' => array( array( 'literal' => $hostile ) ),
+				),
+			),
+			'date literal'       => array(
+				array(
+					'type'   => 'book',
+					'title'  => 'Fine',
+					'issued' => array( 'literal' => $hostile ),
+				),
+			),
+			'date raw'           => array(
+				array(
+					'type'     => 'book',
+					'title'    => 'Fine',
+					'accessed' => array( 'raw' => $hostile ),
+				),
+			),
+			'ISBN string'        => array(
+				array(
+					'type'  => 'book',
+					'title' => 'Fine',
+					'ISBN'  => $hostile,
+				),
+			),
+			'ISBN array member'  => array(
+				array(
+					'type'  => 'book',
+					'title' => 'Fine',
+					'ISBN'  => array( $hostile ),
+				),
+			),
+		);
+	}
+
+	/**
+	 * The read side strips stored citation text too, and that path is worse
+	 * than the formatter's: the payload is already in post_content, the route
+	 * needs no authentication for a published post, and every request pays the
+	 * cost again. Bound it wherever a stored string reaches a strip.
+	 *
+	 * @param callable $invoke Callable exercising one stripping read path.
+	 */
+	#[DataProvider( 'unbounded_read_path_provider' )]
+	public function test_read_paths_bound_stored_text_before_stripping( callable $invoke ): void {
+		$start   = microtime( true );
+		$invoke();
+		$elapsed = microtime( true ) - $start;
+
+		$this->assertLessThan(
+			1.0,
+			$elapsed,
+			'Stored text must be bounded before stripping on every read path.'
+		);
+	}
+
+	public static function unbounded_read_path_provider(): array {
+		$hostile = str_repeat( '<script ', 120000 ); // ~960 KB.
+
+		return array(
+			'plain-text bibliography render' => array(
+				static function () use ( $hostile ) {
+					bibliography_builder_build_plain_text(
+						array(
+							'citations' => array(
+								array( 'displayOverride' => $hostile ),
+							),
+						)
+					);
+				},
+			),
+			'formatted-text sanitizer'       => array(
+				static function () use ( $hostile ) {
+					bibliography_builder_sanitize_formatted_text( $hostile );
+				},
+			),
+		);
+	}
+
+	public function test_plain_text_response_is_not_truncated_at_supported_size(): void {
+		// The per-citation bound must not become a per-response bound.
+		// build_plain_text already bounds each citation before stripping, so the
+		// aggregate cost is linear and a response-level cap adds no protection —
+		// but it would silently drop the tail of a legitimate bibliography.
+		//
+		// An annotated bibliography reaches that size easily and well inside the
+		// supported 200-citation ceiling: each entry is a citation plus a note
+		// carried in displayOverride, so 50 entries already exceed the 64 KB
+		// single-field cap by a comfortable margin.
+		$entry = 'Author, Ada. "A Representative Article Title of Ordinary Length." '
+			. 'Journal of Representative Studies 12, no. 3 (2024): 100-140. '
+			. 'https://doi.org/10.1000/representative.example. '
+			. str_repeat( 'This annotation summarizes the argument and its method. ', 26 );
+
+		$bibliography = array( 'citations' => array() );
+		for ( $index = 0; $index < 50; $index++ ) {
+			$bibliography['citations'][] = array( 'displayOverride' => $entry );
+		}
+
+		$text = bibliography_builder_build_plain_text( $bibliography );
+
+		$this->assertGreaterThan(
+			BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES,
+			strlen( $text ),
+			'A 50-entry annotated bibliography should exceed the single-field cap.'
+		);
+		$this->assertSame( 50, substr_count( $text, 'Representative Studies' ) );
+
+		// And it must survive the send-time filter intact. This is the path that
+		// actually regressed: bounding $data there re-applies a single-field cap
+		// to the whole response.
+		$request = new WP_REST_Request( 'GET', '/bibliography/v1/posts/101/bibliographies/0' );
+		$request->set_query_params( array( 'format' => 'text' ) );
+		$response = new WP_REST_Response( $text, 200 );
+		$response->header( 'Content-Type', 'text/plain; charset=utf-8' );
+		$server = new WP_REST_Server();
+
+		ob_start();
+		bibliography_builder_rest_pre_serve_request( false, $response, $request, $server );
+		$output = ob_get_clean();
+
+		$this->assertSame(
+			50,
+			substr_count( $output, 'Representative Studies' ),
+			'The send-time filter must not truncate a legitimate bibliography.'
+		);
 	}
 
 	public function test_published_post_in_non_viewable_post_type_is_not_world_readable(): void {
