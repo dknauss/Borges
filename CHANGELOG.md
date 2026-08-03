@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a scheduled Demo Link Monitor (`demo-links.yml` / `npm run test:demo-links`) that verifies each Playground blueprint's install URL stays reachable and guards against reintroducing the hosted-browser-broken `git:directory` resource.
 - Add `docs/current-metrics.md`: hand-verified lines-of-code, installed-footprint, and runtime-overhead figures, each paired with the exact command used to re-derive it so the numbers can be re-checked rather than trusted on faith.
 - Add a `composer verify:metrics` check (`.github/scripts/verify-metrics.sh`), run in CI, that re-derives the lines-of-code figures in `docs/current-metrics.md` and re-runs the persistence/hook audit, failing when either drifts from the doc. Footprint figures measured with `du` and built-asset byte sizes stay hand-verified, since both vary with the filesystem and toolchain rather than with the repository.
+- Add a deprecation regression test that parses committed markup fixtures — one per shipped `save()` shape — through Gutenberg's own block registry and validator, asserting each still validates against the current `save` plus the `deprecated` chain. Breaking a deprecation is how a static-save block turns existing posts into "Attempt Block Recovery", and no unit test of `save()` in isolation can catch it. The fixtures are frozen on disk rather than generated at test time, so editing a deprecation cannot silently rewrite its own expectation.
 
 ### Security
 
