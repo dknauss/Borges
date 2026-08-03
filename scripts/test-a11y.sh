@@ -6,6 +6,7 @@ PORT="${PLAYGROUND_PORT_A11Y:-9404}"
 BASE_URL="http://127.0.0.1:${PORT}"
 LOG_DIR="${ROOT_DIR}/.tmp/playground-e2e"
 LOG_FILE="${LOG_DIR}/a11y.log"
+BLUEPRINT_FILE="${ROOT_DIR}/playground/a11y-blueprint.json"
 
 mkdir -p "$LOG_DIR"
 rm -f "$LOG_FILE"
@@ -19,6 +20,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 CI=1 npx @wp-playground/cli@3.1.40 server --auto-mount --login --port="$PORT" \
+	--blueprint="$BLUEPRINT_FILE" \
 	>"$LOG_FILE" 2>&1 &
 PLAYGROUND_PID=$!
 

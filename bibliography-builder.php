@@ -1470,14 +1470,19 @@ function bibliography_builder_rest_resolve_pmid( WP_REST_Request $request ) {
 		return $cached;
 	}
 
-	$url      = add_query_arg(
+	$url = add_query_arg(
 		array(
 			'format' => 'csl',
 			'id'     => $pmid,
 		),
 		BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API
 	);
-	$response = wp_remote_get(
+	// wp_safe_remote_get, not wp_remote_get: the request follows up to three
+	// redirects, and only the safe variant runs each hop through
+	// wp_http_validate_url. The PMID itself is already constrained to digits and
+	// the host is a fixed constant, so the redirect chain is the one part of
+	// this request an upstream change could point somewhere unintended.
+	$response = wp_safe_remote_get(
 		$url,
 		array(
 			'timeout'     => BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT,

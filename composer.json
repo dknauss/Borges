@@ -15,7 +15,11 @@
 		"test:php:coverage": "phpunit --coverage-clover build/logs/phpunit-clover.xml",
 		"analyze:php": "psalm --no-progress",
 		"lint:php": "phpcs --standard=phpcs.xml.dist",
-		"lint:php:fix": "phpcbf --standard=phpcs.xml.dist"
+		"lint:php:fix": "phpcbf --standard=phpcs.xml.dist",
+		"verify:metrics": "bash .github/scripts/verify-metrics.sh docs/current-metrics.md"
+	},
+	"scripts-descriptions": {
+		"verify:metrics": "Check that the figures in docs/current-metrics.md still match the repository."
 	},
 	"config": {
 		"platform": {

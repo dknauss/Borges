@@ -5,15 +5,15 @@ Each number carries the exact command used to re-derive it, so the figures can b
 on demand rather than trusted on faith. Re-run the relevant command and update the number **in
 the same commit** whenever the underlying quantity changes.
 
-Last verified: **2026-07-05** against `main` (commit `49f623b`).
+Last verified: **2026-08-02** against `main` (commit `f150017`).
 
 ## Lines of code
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **1,881** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **1,979** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **8,851** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **1,933** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **2,031** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **8,802** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
@@ -32,12 +32,12 @@ otherwise `package:release` (and the `du -sh build` row below) fails with `canno
 
 | Component | Size | Re-derivation command |
 |---|---|---|
-| `vendor/` — citeproc-php engine + `seboettg/collection` + `myclabs/php-enum` + curated `citation-style-language/styles` & `/locales`, pruned | **~1.0 MB** | `du -sh output/release/borges-bibliography-builder/vendor` (after `npm run package:release`) |
+| `vendor/` — citeproc-php engine + `seboettg/collection` + `myclabs/php-enum` + curated `citation-style-language/styles` & `/locales`, pruned | **792 KB** | `du -sh output/release/borges-bibliography-builder/vendor` (after `npm run package:release`) |
 | `languages/` — seed PO/MO/JSON translations | **724 KB** | `du -sh languages` |
-| `build/` — editor + frontend assets | **328 KB** | `du -sh build` |
-| PHP + `block.json` + `readme.txt` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` | **~100 KB** | — |
-| **Total installed** | **~2.1 MB** | `du -sh output/release/borges-bibliography-builder` (after `npm run package:release`) |
-| Distributed ZIP (compressed) | **~0.9–1 MB** | `du -h output/release/borges-bibliography-builder.zip` |
+| `build/` — editor + frontend assets | **324 KB** | `du -sh build` |
+| PHP + `block.json` + `readme.txt` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` | **~112 KB** | — |
+| **Total installed** | **~1.9 MB** | `du -sh output/release/borges-bibliography-builder` (after `npm run package:release`) |
+| Distributed ZIP (compressed) | **~461 KB** (472,215 bytes) | `du -h output/release/borges-bibliography-builder.zip`; exact bytes via `stat -f%z` (macOS) / `stat -c%s` (GNU) |
 
 The source tree's `packages/` directory (60 KB) is **not** a separate shipped component: the
 release script (`scripts/package-release.sh`) Composer-installs those path packages into
@@ -45,8 +45,9 @@ release script (`scripts/package-release.sh`) Composer-installs those path packa
 curated CSL styles are therefore counted inside the `vendor/` figure above.
 
 Notes:
-- `vendor/seboettg/citeproc-php` is **3.2 MB** unpruned and **~536 KB** after the release
-  script strips tests/docs. The pruning is what keeps the installed footprint near 2 MB.
+- `vendor/seboettg/citeproc-php` is **3.2 MB** unpruned (`composer install --no-dev` then
+  `du -sh vendor/seboettg/citeproc-php`) and **520 KB** after the release script strips
+  tests/docs. The pruning is what keeps the installed footprint under 2 MB.
 - The bundled `citation-style-language/styles` is a **curated subset** (the nine styles the
   plugin ships), not the full upstream repository (~40 MB). This is a deliberate footprint
   control, not an accident of packaging.
@@ -65,7 +66,7 @@ path therefore adds **zero** database queries and **zero** citeproc/PHP formatti
 | Autoloaded options / registered settings | **0** | No `add_option`/`update_option`/`register_setting` |
 | Cron events | **0** | No `wp_schedule_event` |
 | Custom post types / custom tables | **0** | No `register_post_type` / `dbDelta` |
-| Enqueued frontend assets (only when block present) | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB | `wc -c build/view.js build/style-index.css` |
+| Enqueued frontend assets (only when block present) | `view.js` 1,449 bytes + `style-index.css` 2,965 bytes | `wc -c build/view.js build/style-index.css` |
 
 Persistence/hook audit — no persistent settings, options, cron, CPTs, or custom tables
 (expected output: **NONE**):

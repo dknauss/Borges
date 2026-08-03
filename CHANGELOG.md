@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a second WordPress Playground demo that boots the current `main` branch build, alongside the existing released-version demo. CI publishes the freshly built plugin to a rolling `main-preview` pre-release so live Playground has a stable, CORS-reachable URL for main HEAD; the README exposes both as separate Playground badges.
 - Add a scheduled Demo Link Monitor (`demo-links.yml` / `npm run test:demo-links`) that verifies each Playground blueprint's install URL stays reachable and guards against reintroducing the hosted-browser-broken `git:directory` resource.
+- Add `docs/current-metrics.md`: hand-verified lines-of-code, installed-footprint, and runtime-overhead figures, each paired with the exact command used to re-derive it so the numbers can be re-checked rather than trusted on faith.
+- Add a `composer verify:metrics` check (`.github/scripts/verify-metrics.sh`), run in CI, that re-derives the lines-of-code figures in `docs/current-metrics.md` and re-runs the persistence/hook audit, failing when either drifts from the doc. Footprint figures measured with `du` and built-asset byte sizes stay hand-verified, since both vary with the filesystem and toolchain rather than with the repository.
+
+### Security
+
+- Resolve PubMed/PMID records through `wp_safe_remote_get()` rather than `wp_remote_get()`. The request follows up to three redirects and only the safe variant validates each hop against the site's own network. The PMID is already constrained to digits and the endpoint host is a fixed constant, so the redirect chain was the one part of the request an upstream change could have pointed somewhere unintended.
+
+### Fixed
+
+- The end-to-end test covering the Block Accessibility Checks integration never actually ran. The accessibility Playground environment installed no plugins, so BAC was absent, the test skipped itself, and the suite still reported green — meaning the BAC integration had no end-to-end coverage at all. The environment now installs BAC, and the assertions read the `block-accessibility-checks` data store instead of BAC's markup: v4 replaced the v3 indicator classes the test looked for, and a class-name assertion silently passes once the class no longer exists. Verified in both directions — the test now fails if the editor-side filter is registered under its pre-4.0 name, the exact silent regression BAC's upgrade notes warn about. The test also no longer skips itself in CI: a skip reads as a pass on a green run, which is how it sat dormant in the first place, so an absent BAC now fails the run with a message pointing at the blueprint. It still skips gracefully for local runs without the plugin installed.
+- The accessibility suite's publish helper set the post title and published in the same tick. BAC holds an error-level `post_title_required` editor check and locks post saving while the title is empty, so the save raced that lock and was rejected. The helper now waits for the lock to lift and verifies the post actually reached `publish`, instead of returning an auto-draft permalink that 404s later in the test.
+
+### Changed
+
+- Update the Block Accessibility Checks (BAC) integration for BAC 4.0. Checks now register through the top-level `ba11yc_register_block_check()` function with a `namespace` key and explicit `level` / `configurable` severity in place of the v3 registry object and `type` key, and the editor-side validator listens on BAC's renamed `ba11yc.validateBlock` filter. All four checks — `empty_bibliography`, `heading_missing`, `raw_url_link_text`, and `all_metadata_disabled` — are now admin-configurable from BAC's unified settings screen.
+- **The BAC integration now requires Block Accessibility Checks 4.0 or later.** On BAC 3.x the v4 registration function is absent, so the integration stays dormant and no bibliography checks appear. Borges itself is unaffected and works normally whether BAC is outdated or not installed at all.
 
 ## [1.4.2] - 2026-06-21
 

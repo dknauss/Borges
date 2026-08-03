@@ -211,10 +211,17 @@ function add_query_arg( $args, $url ) {
 	return $url . $separator . http_build_query( $args, '', '&', PHP_QUERY_RFC3986 );
 }
 
-function wp_remote_get( $url, $args = array() ) {
+/**
+ * Record an outbound HTTP request and return the configured test response.
+ *
+ * `function` records which WordPress helper the caller reached for, so tests can
+ * assert on the safe variant rather than only on the URL.
+ */
+function bibliography_builder_test_record_http_request( $function, $url, $args ) {
 	$GLOBALS['bibliography_builder_test_http_requests'][] = array(
-		'url'  => $url,
-		'args' => $args,
+		'function' => $function,
+		'url'      => $url,
+		'args'     => $args,
 	);
 
 	if ( null === $GLOBALS['bibliography_builder_test_http_response'] ) {
@@ -222,6 +229,14 @@ function wp_remote_get( $url, $args = array() ) {
 	}
 
 	return $GLOBALS['bibliography_builder_test_http_response'];
+}
+
+function wp_remote_get( $url, $args = array() ) {
+	return bibliography_builder_test_record_http_request( 'wp_remote_get', $url, $args );
+}
+
+function wp_safe_remote_get( $url, $args = array() ) {
+	return bibliography_builder_test_record_http_request( 'wp_safe_remote_get', $url, $args );
 }
 
 function wp_remote_retrieve_response_code( $response ) {

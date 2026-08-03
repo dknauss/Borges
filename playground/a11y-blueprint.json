@@ -1,0 +1,29 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "meta": {
+    "title": "Bibliography Builder Accessibility E2E",
+    "description": "Installs Block Accessibility Checks so the BAC integration assertions in a11y.spec.js actually run instead of skipping.",
+    "author": "danknauss"
+  },
+  "preferredVersions": {
+    "php": "8.3",
+    "wp": "latest"
+  },
+  "login": true,
+  "steps": [
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "wordpress.org/plugins",
+        "slug": "block-accessibility-checks"
+      },
+      "options": {
+        "activate": false
+      }
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php\nrequire_once '/wordpress/wp-load.php';\nrequire_once ABSPATH . 'wp-admin/includes/plugin.php';\n\nforeach ( array( 'bibliography-builder.php', 'block-accessibility-checks.php' ) as $entry ) {\n\tforeach ( glob( WP_PLUGIN_DIR . '/*/' . $entry ) as $candidate ) {\n\t\tactivate_plugin( plugin_basename( $candidate ) );\n\t\tbreak;\n\t}\n}\n"
+    }
+  ]
+}
