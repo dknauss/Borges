@@ -77,6 +77,12 @@ const WRITE_MODE = Boolean(process.env.BORGES_WRITE_DEPRECATION_FIXTURES);
  * — so without a URL in the text itself the `linkVisibleUrls: true` and `false`
  * deprecations serialize identically on that dimension and the fixtures cannot
  * catch a regression in link rendering.
+ *
+ * `outputCiteExport` is on for the same reason. `deprecated[0]` exists purely to
+ * freeze the shape from before per-entry cite/export panels were added, so with
+ * the panels off it and the current `save()` emit identical markup — and
+ * breaking or deleting that entry would leave its fixture validating against the
+ * current save anyway, silently uncovering the newest compatibility boundary.
  */
 const FIXTURE_ATTRIBUTES = {
 	citationStyle: 'chicago-notes-bibliography',
@@ -84,7 +90,7 @@ const FIXTURE_ATTRIBUTES = {
 	outputJsonLd: true,
 	outputCoins: true,
 	outputCslJson: true,
-	outputCiteExport: false,
+	outputCiteExport: true,
 	bibliographyId: 'bib-fixture',
 	citations: [
 		{
@@ -256,6 +262,29 @@ if (WRITE_MODE) {
 				: [];
 
 			expect(files).toHaveLength(expectedCount);
+		});
+
+		it('has no two fixtures with identical markup', () => {
+			// Structural guard on the fixture data. Two identical fixtures mean
+			// their save() shapes do not differ under FIXTURE_ATTRIBUTES, so
+			// breaking or deleting one of those deprecations still leaves its
+			// fixture validating against another entry and the regression goes
+			// unnoticed. Catches the whole class rather than one instance:
+			// outputCiteExport: false previously made the current save and
+			// deprecated[0] byte-identical.
+			const files = readdirSync(FIXTURE_DIR).filter((file) =>
+				file.endsWith('.html')
+			);
+			const byContent = new Map();
+			files.forEach((file) => {
+				const body = readFileSync(join(FIXTURE_DIR, file), 'utf8');
+				byContent.set(body, [...(byContent.get(body) || []), file]);
+			});
+			const duplicates = [...byContent.values()].filter(
+				(group) => group.length > 1
+			);
+
+			expect(duplicates).toEqual([]);
 		});
 
 		it('covers both sides of the linkVisibleUrls split', () => {
