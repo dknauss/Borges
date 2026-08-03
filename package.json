@@ -38,6 +38,10 @@
 		"transform": {
 			"^.+\\.[jt]sx?$": "babel-jest"
 		},
+		"transformIgnorePatterns": [
+			"/node_modules/(?!uuid/)",
+			"\\.pnp\\.[^\\\\/]+$"
+		],
 		"testPathIgnorePatterns": [
 			"<rootDir>/tests/e2e/",
 			"<rootDir>/.claude/",
