@@ -195,6 +195,39 @@ final class RestEdgeCasesTest extends TestCase {
 		$this->assertSame( 'bibliography_builder_invalid_csl_item', $result->get_error_code() );
 	}
 
+	public function test_published_post_in_non_viewable_post_type_is_not_world_readable(): void {
+		// can_read_post short-circuits on 'publish' without asking whether the
+		// post type is publicly viewable, so bibliography data stored in a
+		// private CPT was readable unauthenticated — where core's own REST
+		// controllers would refuse. Narrow, since bibliographies usually live in
+		// ordinary posts, but the check costs nothing.
+		bibliography_builder_test_set_post( 909, 'publish', '', false, 'internal_notes' );
+		bibliography_builder_test_set_post_type_viewable( 'internal_notes', false );
+		bibliography_builder_test_set_current_user( 0 );
+
+		$this->assertFalse(
+			bibliography_builder_can_read_post( get_post( 909 ) ),
+			'A published post in a non-viewable post type must not be world-readable.'
+		);
+	}
+
+	public function test_published_post_in_viewable_post_type_stays_readable(): void {
+		bibliography_builder_test_set_post( 910, 'publish', '', false, 'post' );
+		bibliography_builder_test_set_current_user( 0 );
+
+		$this->assertTrue( bibliography_builder_can_read_post( get_post( 910 ) ) );
+	}
+
+	public function test_editor_can_still_read_non_viewable_post_type(): void {
+		// Losing the publish shortcut must not lock out someone who can edit it.
+		bibliography_builder_test_set_post( 911, 'publish', '', false, 'internal_notes' );
+		bibliography_builder_test_set_post_type_viewable( 'internal_notes', false );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_grant_cap( 7, 'edit_post', 911 );
+
+		$this->assertTrue( bibliography_builder_can_read_post( get_post( 911 ) ) );
+	}
+
 	public function test_csl_sanitizer_rejects_list_shaped_csl_item(): void {
 		$result = bibliography_builder_validate_and_sanitize_csl_item(
 			array( 'book', 'Not an object' )

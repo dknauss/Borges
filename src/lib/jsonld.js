@@ -133,8 +133,36 @@ export function cslToJsonLd(csl) {
 }
 
 /**
+ * Escape a JSON string for embedding inside a <script> element.
+ *
+ * Two separate concerns, both left unhandled by JSON.stringify:
+ *
+ * - `<` becomes `<`. The HTML parser ends a script element at the literal
+ *   bytes `</script` regardless of JSON or JavaScript string context, so
+ *   escaping every `<` is what prevents a breakout. Escaping the whole
+ *   character rather than the `</script` sequence makes it case- and
+ *   delimiter-agnostic for free.
+ * - U+2028 and U+2029 become `\\u2028` / `\\u2029`. They are legal inside a JSON
+ *   string, so this is not a security issue for `ld+json`, which is never
+ *   executed — but they are line terminators to a JavaScript parser, and a
+ *   downstream consumer that evals this block rather than parsing it would see
+ *   a broken literal.
+ *
+ * Order matters: JSON.stringify runs first and doubles any backslashes, so the
+ * escapes introduced here can never end up behind an odd backslash count.
+ *
+ * @param {string} json Serialized JSON.
+ * @return {string} JSON safe to embed in a script element.
+ */
+function escapeForScriptContext(json) {
+	return json
+		.replace(/</g, '\\u003c')
+		.replace(/\u2028/g, '\\u2028')
+		.replace(/\u2029/g, '\\u2029');
+}
+
+/**
  * Convert an array of CSL-JSON objects to a JSON-LD array and serialize.
- * Escapes </ sequences to prevent script tag breakout.
  *
  * @param {Array} cslArray Array of CSL-JSON objects.
  * @return {string} Safe JSON string for embedding in a <script> tag.
@@ -143,7 +171,7 @@ export function cslToJsonLd(csl) {
  */
 export function buildJsonLdString(cslArray) {
 	const data = cslArray.map(cslToJsonLd);
-	return JSON.stringify(data).replace(/</g, '\\u003c');
+	return escapeForScriptContext(JSON.stringify(data));
 }
 
 /**
@@ -156,5 +184,5 @@ export function buildJsonLdString(cslArray) {
  * @since 0.1.0
  */
 export function buildCslJsonString(cslArray) {
-	return JSON.stringify(cslArray).replace(/</g, '\\u003c');
+	return escapeForScriptContext(JSON.stringify(cslArray));
 }

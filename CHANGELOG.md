@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Require a post type to be publicly viewable, not merely a published post, before serving its bibliography data without authentication. `publish` status alone was enough, so bibliography blocks stored in a post type registered non-public were readable by anyone — content core's own REST controllers would refuse to expose. Anyone able to edit the post still reaches it.
+- Enforce an explicit `http`/`https` allowlist on links generated from citation text. Nothing else prevented a `javascript:` or `data:text/html` href: React does not sanitize href schemes, and the output is baked into `post_content` as static HTML, so the only barrier was the URL-detection pattern happening to require a literal `http(s)://` prefix. Broadening that pattern later — to catch bare `www.`, `doi:`, or protocol-relative `//` — would have silently created a scheme-injection sink. A non-http(s) URL now renders as plain text instead of a link.
+- Escape U+2028 and U+2029 in the JSON-LD and CSL-JSON script blocks. Both are legal inside a JSON string, so this is not a cross-site scripting issue — `ld+json` is never executed — but they are line terminators to a JavaScript parser, and a consumer that evaluates the block rather than parsing it would see a broken literal.
 - Resolve PubMed/PMID records through `wp_safe_remote_get()` rather than `wp_remote_get()`. The request follows up to three redirects and only the safe variant validates each hop against the site's own network. The PMID is already constrained to digits and the endpoint host is a fixed constant, so the redirect chain was the one part of the request an upstream change could have pointed somewhere unintended.
 
 ### Fixed

@@ -142,6 +142,39 @@ describe('formatting helpers', () => {
 		]);
 	});
 
+	it.each([
+		['javascript:alert(1)'],
+		['JavaScript:alert(1)'],
+		['data:text/html,<script>alert(1)</script>'],
+		['vbscript:msgbox(1)'],
+		['file:///etc/passwd'],
+	])('never emits a non-http(s) scheme as an href: %s', (hostile) => {
+		// React does not sanitize href schemes, and this output is baked into
+		// post_content as static HTML. Today the only thing preventing a
+		// javascript: href is URL_PATTERN requiring a literal http(s):// prefix
+		// — the safety is an accident of the regex rather than a stated rule.
+		// This asserts the rule directly, so broadening URL_PATTERN later (to
+		// catch bare www., doi:, or protocol-relative //) fails here instead of
+		// silently creating a scheme-injection sink.
+		const parts = splitTextIntoLinkParts(`See ${hostile} end`);
+
+		parts
+			.filter((part) => part.link)
+			.forEach((part) => {
+				expect(part.href).toMatch(/^https?:\/\//);
+			});
+	});
+
+	it('links only the http(s) URL when a hostile scheme sits beside one', () => {
+		const parts = splitTextIntoLinkParts(
+			'javascript:alert(1) and https://example.com/ok'
+		);
+		const linked = parts.filter((part) => part.link);
+
+		expect(linked).toHaveLength(1);
+		expect(linked[0].href).toBe('https://example.com/ok');
+	});
+
 	it('preserves balanced parentheses inside linked URLs', () => {
 		expect(
 			splitTextIntoLinkParts('See https://example.com/path_(alpha).')

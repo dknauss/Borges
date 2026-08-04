@@ -1287,11 +1287,41 @@ function bibliography_builder_can_read_post( $post ) {
 		return current_user_can( 'edit_post', $post->ID );
 	}
 
-	if ( 'publish' === $status ) {
+	// `publish` alone is not enough: a post type can be registered non-public,
+	// in which case core's own REST controllers refuse to expose its content.
+	// Without the visibility check, bibliography data stored in such a type was
+	// readable by anyone. Fall through to the capability check instead, so an
+	// editor still reaches it.
+	if ( 'publish' === $status && bibliography_builder_is_post_type_viewable( $post ) ) {
 		return true;
 	}
 
 	return current_user_can( 'edit_post', $post->ID );
+}
+
+/**
+ * Whether a post's type is publicly viewable.
+ *
+ * Wrapped so the check degrades to the previous behaviour rather than fatalling
+ * if `is_post_type_viewable()` is unavailable, and so an unregistered type is
+ * treated as viewable — matching how ordinary posts behaved before this check
+ * existed.
+ *
+ * @param WP_Post $post Post object.
+ * @return bool
+ */
+function bibliography_builder_is_post_type_viewable( $post ) {
+	if ( ! function_exists( 'is_post_type_viewable' ) || ! function_exists( 'get_post_type' ) ) {
+		return true;
+	}
+
+	$post_type = get_post_type( $post );
+
+	if ( ! $post_type ) {
+		return true;
+	}
+
+	return (bool) is_post_type_viewable( $post_type );
 }
 
 /**
