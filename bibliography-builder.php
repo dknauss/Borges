@@ -36,6 +36,20 @@ const BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS = 50;
 const BIBLIOGRAPHY_BUILDER_MAX_FORMAT_BYTES = 1048576;
 
 /**
+ * Maximum length of any single CSL string field.
+ *
+ * Every CSL string field is run through a looped wp_strip_all_tags, and core's
+ * lazy script/style-stripping regex degrades to catastrophic backtracking past
+ * roughly 600 KB: measured at ~2.4s for 600 KB and ~12.9s for 950 KB of
+ * unclosed script tokens. BIBLIOGRAPHY_BUILDER_MAX_FORMAT_BYTES bounds the
+ * whole request body, so without a per-field limit a single field can carry the
+ * entire megabyte into that regex and pin a CPU core. 64 KB sits an order of
+ * magnitude below the cliff while staying far above any real bibliographic
+ * value, including long abstracts.
+ */
+const BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES = 65536;
+
+/**
  * NCBI Literature Citation Export endpoint used for PMID resolution.
  */
 const BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ctxp/v1/pubmed/';
@@ -170,7 +184,7 @@ function bibliography_builder_build_plain_text( $bibliography ) {
 	$lines = array();
 
 	foreach ( $bibliography['citations'] as $citation ) {
-		$lines[] = wp_strip_all_tags( bibliography_builder_get_citation_display_text( $citation ), false );
+		$lines[] = bibliography_builder_strip_bounded( bibliography_builder_get_citation_display_text( $citation ) );
 	}
 
 	return implode( "\n", $lines ) . "\n";
@@ -482,7 +496,76 @@ function bibliography_builder_get_csl_string_fields() {
 }
 
 /**
+ * Whether any string anywhere in a CSL value exceeds the per-field byte cap.
+ *
+ * Stripping is reached from five separate call sites — the flat string-field
+ * loop, author name parts, date literal/raw, and both branches of the
+ * string-or-array handler — and the strip is the expensive step. Capping at one
+ * call site leaves the same cost reachable under a different key, so the check
+ * lives here and runs once over the whole decoded item before any sanitization
+ * begins. Any string field added to any of those paths later is bounded
+ * automatically.
+ *
+ * Depth is bounded the same way bibliography_builder_sanitize_csl_value bounds
+ * it; over-deep items are rejected separately by that function.
+ *
+ * @param mixed $value CSL value, of any shape.
+ * @param int   $depth Current recursion depth.
+ * @return bool True when some string exceeds the cap.
+ */
+function bibliography_builder_csl_has_oversized_string( $value, $depth = 0 ) {
+	if ( $depth > 10 ) {
+		return false;
+	}
+
+	if ( is_string( $value ) ) {
+		return strlen( $value ) > BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES;
+	}
+
+	if ( is_array( $value ) ) {
+		foreach ( $value as $item ) {
+			if ( bibliography_builder_csl_has_oversized_string( $item, $depth + 1 ) ) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Strip tags from text that may be arbitrarily long, bounding the work first.
+ *
+ * The write path rejects oversized strings outright, but the read path cannot:
+ * the text is already in post_content, and refusing to render a stored
+ * bibliography would break a post that exists. Truncate to the same cap
+ * instead, which bounds the regex cost while staying lossless for any real
+ * citation — 64 KB is far beyond the longest plausible formatted entry.
+ *
+ * Without this, a single oversized string stored in a published post makes
+ * every subsequent read of that bibliography pay ~12 seconds of CPU, on a route
+ * that needs no authentication.
+ *
+ * @param string $text Possibly untrusted, possibly very long text.
+ * @return string Stripped text.
+ */
+function bibliography_builder_strip_bounded( $text ) {
+	$text = (string) $text;
+
+	if ( strlen( $text ) > BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES ) {
+		$text = function_exists( 'mb_strcut' )
+			? mb_strcut( $text, 0, BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES, 'UTF-8' )
+			: substr( $text, 0, BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES );
+	}
+
+	return wp_strip_all_tags( $text, false );
+}
+
+/**
  * Strip HTML markup from CSL strings, including nested/broken tag payloads.
+ *
+ * Callers must bound the input first; see
+ * bibliography_builder_csl_has_oversized_string().
  *
  * @param string $text String value.
  * @return string
@@ -816,6 +899,20 @@ function bibliography_builder_validate_and_sanitize_csl_item( $csl ) {
 		);
 	}
 
+	// Bound string length before anything strips HTML. Every strip path is
+	// covered by this one check; see bibliography_builder_csl_has_oversized_string.
+	if ( bibliography_builder_csl_has_oversized_string( $csl ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_csl_item',
+			sprintf(
+				/* translators: %d: maximum length in bytes. */
+				__( 'A CSL field exceeds the maximum length of %d bytes.', 'borges-bibliography-builder' ),
+				BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES
+			),
+			array( 'status' => 400 )
+		);
+	}
+
 	$valid         = true;
 	$sanitized_csl = bibliography_builder_sanitize_csl_value( $csl, 0, $valid );
 
@@ -996,7 +1093,7 @@ function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $
  */
 function bibliography_builder_sanitize_formatted_text( $text ) {
 	$decoded  = html_entity_decode( (string) $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-	$stripped = wp_strip_all_tags( $decoded );
+	$stripped = bibliography_builder_strip_bounded( $decoded );
 
 	return trim( preg_replace( '/\s+/u', ' ', $stripped ) );
 }
@@ -1818,6 +1915,16 @@ function bibliography_builder_rest_pre_serve_request( $served, $result, $request
 	}
 
 	// Plain-text REST response is intentionally stripped to plain text at send time.
+	//
+	// Deliberately NOT bibliography_builder_strip_bounded() here. $data is a
+	// whole bibliography, already assembled by bibliography_builder_build_plain_text(),
+	// which bounds each citation individually before stripping it. No single
+	// strip therefore ever sees enough text to reach the backtracking cliff, and
+	// the aggregate cost is linear in the number of citations. Applying the
+	// per-field cap to the joined response would add no protection and would
+	// silently truncate a legitimate bibliography: 200 citations is a supported
+	// size and exceeds 64 KB on its own. Any future route returning a string
+	// body must bound it at its source, as build_plain_text does.
 	echo wp_strip_all_tags( $data, false ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	return true;
 }
