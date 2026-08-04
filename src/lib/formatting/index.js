@@ -26,6 +26,33 @@ export function getDisplayText(citation) {
 
 const URL_PATTERN = /https?:\/\/\S+/gu;
 
+/**
+ * Schemes that may appear in a generated `href`.
+ *
+ * Linked text is baked into `post_content` as static HTML, and React does not
+ * sanitize href schemes — a `javascript:` href would execute for every reader.
+ * URL_PATTERN happens to require a literal `http(s)://` prefix, so today no
+ * other scheme can reach here, but that makes the safety an accident of the
+ * regex rather than a rule. State it explicitly, so broadening URL_PATTERN
+ * later (to catch bare `www.`, `doi:`, or protocol-relative `//`) cannot
+ * silently turn this into a scheme-injection sink.
+ */
+const ALLOWED_LINK_SCHEMES = ['http:', 'https:'];
+
+/**
+ * Whether a candidate URL may be emitted as a link.
+ *
+ * @param {string} candidate Detected URL text.
+ * @return {boolean} True when the scheme is allowed.
+ */
+function isLinkableUrl(candidate) {
+	try {
+		return ALLOWED_LINK_SCHEMES.includes(new URL(candidate).protocol);
+	} catch {
+		return false;
+	}
+}
+
 function splitTrailingUrlPunctuation(url) {
 	let href = url;
 	let trailing = '';
@@ -87,6 +114,17 @@ export function splitTextIntoLinkParts(text, options = {}) {
 		}
 
 		const { href, trailing } = splitTrailingUrlPunctuation(matchedUrl);
+
+		if (!isLinkableUrl(href)) {
+			// Emit as plain text rather than dropping it: the reader still sees
+			// what the citation says, but it never becomes a clickable href.
+			parts.push({
+				text: matchedUrl,
+				link: false,
+			});
+			cursor = start + matchedUrl.length;
+			continue;
+		}
 
 		parts.push({
 			text: href,

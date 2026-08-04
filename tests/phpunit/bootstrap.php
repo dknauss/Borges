@@ -20,6 +20,7 @@ $GLOBALS['bibliography_builder_test_transients']          = array();
 $GLOBALS['bibliography_builder_test_object_cache']        = array();
 $GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 $GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
+$GLOBALS['bibliography_builder_test_viewable_post_types'] = array();
 
 function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_posts']           = array();
@@ -37,13 +38,15 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_object_cache']        = array();
 	$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 	$GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
+	$GLOBALS['bibliography_builder_test_viewable_post_types'] = array();
 }
 
-function bibliography_builder_test_set_post( $post_id, $status, $content, $password_required = false ) {
+function bibliography_builder_test_set_post( $post_id, $status, $content, $password_required = false, $post_type = 'post' ) {
 	$GLOBALS['bibliography_builder_test_posts'][ $post_id ] = (object) array(
 		'ID'           => $post_id,
 		'post_status'  => $status,
 		'post_content' => $content,
+		'post_type'    => $post_type,
 	);
 
 	if ( $password_required ) {
@@ -170,6 +173,28 @@ function get_post( $post_id ) {
 
 function get_post_status( $post ) {
 	return is_object( $post ) ? $post->post_status : null;
+}
+
+function get_post_type( $post = null ) {
+	return is_object( $post ) ? $post->post_type : false;
+}
+
+function bibliography_builder_test_set_post_type_viewable( $post_type, $viewable ) {
+	$GLOBALS['bibliography_builder_test_viewable_post_types'][ $post_type ] = (bool) $viewable;
+}
+
+/**
+ * Stand-in for core's is_post_type_viewable().
+ *
+ * Defaults to true for unregistered types so existing fixtures, which are all
+ * ordinary posts, keep behaving as they did.
+ */
+function is_post_type_viewable( $post_type ) {
+	if ( ! isset( $GLOBALS['bibliography_builder_test_viewable_post_types'][ $post_type ] ) ) {
+		return true;
+	}
+
+	return $GLOBALS['bibliography_builder_test_viewable_post_types'][ $post_type ];
 }
 
 function current_user_can( $capability, $object_id = 0 ) {
