@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 1.4.2
+Stable tag: 1.5.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -158,9 +158,22 @@ PubMed/PMID input connects through the plugin's authenticated WordPress REST pro
 
 == Changelog ==
 
-= Unreleased =
+= 1.5.0 =
+**Security release. Updating is recommended for all sites.**
+
+* Security: Fixed a denial-of-service weakness in the public bibliography REST route, present in 1.4.2 and earlier. Reading a bibliography ran its stored citation text through WordPress tag stripping with no length limit, and past roughly 600 KB that operation degrades badly — a single oversized value saved into a published post cost about 12 seconds of pinned CPU on every read, on a route that requires no login and can be requested repeatedly at no cost to the caller. Stored text is now truncated to 64 KB before stripping, so existing bibliographies still render. This is the change that makes updating worthwhile.
+* Security: Applied the same 64 KB limit to citation text sent to the formatter endpoint, where any user who can reach the block editor could otherwise tie up a CPU core per request.
+
+The three changes below are hardening. None of them was exploitable; each was a case where the plugin happened to be safe because of how some unrelated code was written, which is a property that quietly stops holding when that code changes.
+
+* Hardening: Bibliography data in a post type registered as non-public is no longer readable without authentication. Published status alone previously satisfied the check. Anyone able to edit the post still has access.
+* Hardening: Links generated from citation text are now restricted to `http` and `https`, and any other scheme renders as plain text. Nothing downstream would have caught a `javascript:` link; the only thing preventing one was the URL-detection pattern requiring a literal `http(s)://` prefix, which a later improvement to that pattern could have removed.
+* Hardening: PubMed/PMID lookups now use WordPress's safe HTTP client, so every redirect in the chain is validated against the site's own network.
+* Escape two Unicode line-separator characters in the JSON-LD and CSL-JSON output blocks. Not a security issue — these blocks are never executed — but the characters terminate a line for a JavaScript parser and would break a consumer that evaluates a block instead of parsing it.
 * Update the Block Accessibility Checks (BAC) integration for BAC 4.0, which replaced the registration API and renamed its editor filter hooks. All four bibliography checks — empty bibliography, missing heading, raw URL link text, and all metadata outputs disabled — are now admin-configurable from BAC's unified settings screen.
 * The BAC integration now requires Block Accessibility Checks 4.0 or later. On BAC 3.x the integration stays dormant and no bibliography checks appear; Borges itself works normally whether BAC is outdated or not installed at all.
+* Add a regression test that validates every shipped bibliography markup format against the block's own deprecation chain, guarding existing posts against "Attempt Block Recovery" prompts after an upgrade.
+* Fix the end-to-end test covering the Block Accessibility Checks integration, which silently skipped itself and left the integration without real coverage.
 * Add a second WordPress Playground demo that boots the current development build alongside the released-version demo.
 * Add a scheduled monitor that verifies each Playground demo link stays reachable.
 * Publish hand-verified size, footprint, and runtime-overhead metrics, each paired with the command used to re-derive it, and add a continuous-integration check that fails when the recorded lines-of-code figures or the no-persistent-storage audit drift.
@@ -262,6 +275,9 @@ PubMed/PMID input connects through the plugin's authenticated WordPress REST pro
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Security release; updating is recommended. Fixes an unauthenticated denial-of-service weakness in the public bibliography REST route, present in 1.4.2 and earlier, where oversized stored citation text cost seconds of CPU per read. Also includes hardening; requires Block Accessibility Checks 4.0.
 
 = 1.4.2 =
 Improves free-text citation imports by resolving embedded DOI and PMID identifiers before falling back to heuristic parsing.
