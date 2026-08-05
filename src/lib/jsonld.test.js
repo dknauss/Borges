@@ -368,6 +368,28 @@ describe('buildJsonLdString', () => {
 		expect(json).not.toContain('</script><script>');
 	});
 
+	it('escapes U+2028 and U+2029 in JSON-LD output', () => {
+		// Built from escapes, never embedded raw: these are line terminators in
+		// JS source, so a literal one in this file would change how the test
+		// itself parses. JSON.stringify leaves them unescaped, which is legal
+		// inside a JSON string and not XSS -- ld+json is never executed -- but a
+		// downstream consumer that evals the block rather than parsing it sees a
+		// broken literal.
+		const LS = String.fromCharCode(0x2028);
+		const PS = String.fromCharCode(0x2029);
+		const json = buildJsonLdString([
+			{ type: 'webpage', title: `a${LS}b${PS}c` },
+		]);
+
+		expect(json).not.toContain(LS);
+		expect(json).not.toContain(PS);
+		// Built by concatenation so the expectation is a literal backslash
+		// followed by "u2028", not the character it denotes.
+		expect(json).toContain('\\' + 'u2028');
+		expect(json).toContain('\\' + 'u2029');
+		expect(JSON.parse(json)[0].name).toBe(`a${LS}b${PS}c`);
+	});
+
 	it('keeps quote-breakout payloads inside the title string instead of creating sibling properties', () => {
 		const json = buildJsonLdString([
 			{
@@ -409,5 +431,23 @@ describe('buildCslJsonString', () => {
 			'\\u003c/script>\\u003cscript>alert(1)\\u003c/script>'
 		);
 		expect(json).not.toContain('</script><script>');
+	});
+
+	it('escapes U+2028 and U+2029 in serialized CSL-JSON output', () => {
+		// Asserted separately from the JSON-LD serializer rather than assumed:
+		// they are independent functions and have to be verified independently.
+		const LS = String.fromCharCode(0x2028);
+		const PS = String.fromCharCode(0x2029);
+		const json = buildCslJsonString([
+			{ type: 'book', title: `a${LS}b${PS}c` },
+		]);
+
+		expect(json).not.toContain(LS);
+		expect(json).not.toContain(PS);
+		// Built by concatenation so the expectation is a literal backslash
+		// followed by "u2028", not the character it denotes.
+		expect(json).toContain('\\' + 'u2028');
+		expect(json).toContain('\\' + 'u2029');
+		expect(JSON.parse(json)[0].title).toBe(`a${LS}b${PS}c`);
 	});
 });

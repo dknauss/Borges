@@ -20,6 +20,7 @@ $GLOBALS['bibliography_builder_test_transients']          = array();
 $GLOBALS['bibliography_builder_test_object_cache']        = array();
 $GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 $GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
+$GLOBALS['bibliography_builder_test_viewable_post_types'] = array();
 
 function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_posts']           = array();
@@ -37,13 +38,15 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_object_cache']        = array();
 	$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 	$GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
+	$GLOBALS['bibliography_builder_test_viewable_post_types'] = array();
 }
 
-function bibliography_builder_test_set_post( $post_id, $status, $content, $password_required = false ) {
+function bibliography_builder_test_set_post( $post_id, $status, $content, $password_required = false, $post_type = 'post' ) {
 	$GLOBALS['bibliography_builder_test_posts'][ $post_id ] = (object) array(
 		'ID'           => $post_id,
 		'post_status'  => $status,
 		'post_content' => $content,
+		'post_type'    => $post_type,
 	);
 
 	if ( $password_required ) {
@@ -172,6 +175,28 @@ function get_post_status( $post ) {
 	return is_object( $post ) ? $post->post_status : null;
 }
 
+function get_post_type( $post = null ) {
+	return is_object( $post ) ? $post->post_type : false;
+}
+
+function bibliography_builder_test_set_post_type_viewable( $post_type, $viewable ) {
+	$GLOBALS['bibliography_builder_test_viewable_post_types'][ $post_type ] = (bool) $viewable;
+}
+
+/**
+ * Stand-in for core's is_post_type_viewable().
+ *
+ * Defaults to true for unregistered types so existing fixtures, which are all
+ * ordinary posts, keep behaving as they did.
+ */
+function is_post_type_viewable( $post_type ) {
+	if ( ! isset( $GLOBALS['bibliography_builder_test_viewable_post_types'][ $post_type ] ) ) {
+		return true;
+	}
+
+	return $GLOBALS['bibliography_builder_test_viewable_post_types'][ $post_type ];
+}
+
 function current_user_can( $capability, $object_id = 0 ) {
 	$user_id = $GLOBALS['bibliography_builder_test_current_user_id'];
 	return ! empty( $GLOBALS['bibliography_builder_test_user_caps'][ $user_id ][ $capability ][ $object_id ] );
@@ -198,8 +223,29 @@ function __( $text ) {
 	return $text;
 }
 
-function wp_strip_all_tags( $text ) {
-	return strip_tags( (string) $text );
+/**
+ * Faithful stand-in for core's wp_strip_all_tags.
+ *
+ * The previous mock was a bare strip_tags(), which omitted the lazy
+ * script/style-stripping regex core runs first. That regex is the expensive
+ * part: past roughly 600 KB it exhausts PCRE's JIT stack and degrades to
+ * catastrophic backtracking. Modelling it lets tests observe the cost the
+ * plugin actually pays in production rather than a cheaper fiction.
+ */
+function wp_strip_all_tags( $text, $remove_breaks = false ) {
+	if ( null === $text ) {
+		return '';
+	}
+
+	$pattern = '@' . '<(script|style)[^' . '>' . ']*?' . '>' . '.*?</\1' . '>' . '@si';
+	$text    = preg_replace( $pattern, '', (string) $text );
+	$text    = strip_tags( $text );
+
+	if ( $remove_breaks ) {
+		$text = preg_replace( '/[\r\n\t ]+/', ' ', $text );
+	}
+
+	return trim( $text );
 }
 
 function wp_json_encode( $data, $flags = 0, $depth = 512 ) {
