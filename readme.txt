@@ -3,7 +3,7 @@ Contributors: dpknauss
 Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
-Tested up to: 7.0
+Tested up to: 7.1
 Stable tag: 1.5.0
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -88,7 +88,7 @@ Yes. Borges works on WordPress Multisite, including network activation. If you e
 
 = What PHP and WordPress versions are supported? =
 
-PHP 7.4+ and WordPress 6.4+. Borges Bibliography Builder is tested up to WordPress 7.0.
+PHP 7.4+ and WordPress 6.4+. Borges Bibliography Builder is tested up to WordPress 7.1.
 
 = Does Borges work with the Block Accessibility Checks plugin? =
 
