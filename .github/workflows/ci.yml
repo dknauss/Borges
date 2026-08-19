@@ -15,6 +15,7 @@ jobs:
     quality:
         name: Quality (Node 22)
         runs-on: ubuntu-latest
+        timeout-minutes: 10
 
         steps:
             - name: Checkout
@@ -53,6 +54,7 @@ jobs:
     phpunit:
         name: PHPUnit
         runs-on: ubuntu-latest
+        timeout-minutes: 10
 
         steps:
             - name: Checkout
@@ -82,6 +84,7 @@ jobs:
     playwright-playground:
         name: Playwright Playground smoke
         runs-on: ubuntu-latest
+        timeout-minutes: 20
         needs: quality
 
         steps:
@@ -100,7 +103,38 @@ jobs:
             - name: Build
               run: npm run build
 
+            # This is the step that actually hung in #79 — apt-get, inside the
+            # browser install — so it gets its own bound under the job timeout.
+            #
+            # Not about the artifact upload below: a cancelled job still
+            # re-evaluates `if` conditions and `always()` evaluates true when
+            # cancelled, so that upload runs either way. Verified in #79's own
+            # cancelled run, where it completed successfully.
+            #
+            # What this actually buys, strongest first:
+            #   1. Attributable. The log names the step that timed out, rather
+            #      than a generic job-level annotation.
+            #   2. Failed, not Cancelled — a cleaner signal for a required check.
+            #   3. Fail fast, the weakest: it saves ~7 minutes of the job budget.
+            #      (Not 8. The step starts ~42s into the job, so a 12-minute step
+            #      bound fires at ~12.7 minutes on the job clock.)
+            #
+            # Sized against all 388 runs in which this step succeeded, not a
+            # recent window — a short window misses the tail and misled earlier
+            # attempts at this comment. The step is typically ~25s (median 25s,
+            # p95 34s) but has reached 350s, with the step at >=50s in 2.1% of
+            # them. 8 minutes would have been only 1.37x that worst case; 12 is
+            # ~2.06x, and also exceeds the job's worst-ever GREEN wall time
+            # (525s), so it can only fire on a true hang and never on a
+            # legitimately slow run.
+            #
+            # Unfiltered, five job attempts have exceeded that 525s, and only in
+            # ways this either catches or should not touch: the two ~6h hangs
+            # (both in this step, both catchable), and three of one run's five
+            # failing attempts at 629-915s, whose install step took 19-25s and
+            # which this bound would not have fired on.
             - name: Install Playwright browsers
+              timeout-minutes: 12
               run: npx playwright install --with-deps chromium
 
             - name: Run Playground Playwright smoke
@@ -128,6 +162,7 @@ jobs:
     psalm:
         name: Psalm
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         needs: phpunit
 
         steps:
@@ -149,6 +184,7 @@ jobs:
     coverage:
         name: Coverage upload
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         needs:
             - quality
             - phpunit
@@ -196,6 +232,7 @@ jobs:
     package-release:
         name: Package release artifact
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         needs:
             - quality
             - phpunit
@@ -236,6 +273,7 @@ jobs:
     publish-main-preview:
         name: Publish rolling main preview
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         needs:
             - quality
