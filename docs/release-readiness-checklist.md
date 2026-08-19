@@ -55,6 +55,48 @@ Pre-release checklist for the Bibliography Builder block.
 -   [ ] Style metadata still resolves correctly
 -   [ ] COinS output is still generated for supported entries
 
+## WordPress compatibility
+
+The `Tested up to` value is a claim made to users on wordpress.org. Re-verify it
+here rather than trusting that it was checked when it was first written — the
+version may have moved on, and the earlier check may have been partial.
+
+-   [ ] `Tested up to` names the WordPress version actually exercised below, not
+        the newest one released
+-   [ ] Verified against a full install, with `vendor/` present. A hand-trimmed
+        plugin copy leaves the formatter unavailable, and the render still looks
+        plausible because the fallback text is plain — a bare title, no authors
+        or date
+-   [ ] No "Formatter unavailable; added fallback citation text." warning notice
+        appeared during that check — its absence is the cheapest reliable signal
+        that citeproc actually ran (same check as `docs/wporg-svn-checklist.md`)
+-   [ ] Block registers and renders in the editor, in the WordPress version under test
+-   [ ] CSL formatting exercised across several visibly different styles (e.g.
+        `chicago-notes-bibliography`, `apa-7`, `ieee`) and the output actually
+        DIFFERS between them. Divergence proves citeproc ran, since the fallback
+        text is style-independent. Identical output does not prove the reverse on
+        its own — an unknown style key silently renders Chicago for everything,
+        and a style whose template fails to resolve looks the same — but it is
+        the signal to investigate
+-   [ ] All four surfaces agree on the version: `readme.txt` header, the
+        `readme.txt` FAQ answer, the plugin header, and the README badge and
+        requirements line
+
+## Version strings
+
+`scripts/package-release.sh` copies an explicit allowlist into the zip, so some
+of these ship and some do not: the plugin header, `block.json`, and everything in
+`readme.txt` go to wordpress.org, while `package.json` and `CHANGELOG.md` stay
+repo-internal. That asymmetry is exactly why the ones that DO ship are easy to
+miss — nothing in CI checks any of them.
+
+-   [ ] `bibliography-builder.php` plugin header
+-   [ ] `block.json`
+-   [ ] `readme.txt` `Stable tag`
+-   [ ] `package.json` and `package-lock.json` — not shipped, but keep in sync
+-   [ ] `CHANGELOG.md` has a section for this version
+-   [ ] `readme.txt` has both a Changelog entry and an Upgrade Notice
+
 ## Docs and fixtures
 
 -   [ ] `docs/manual-test-checklist.md` reviewed
@@ -69,3 +111,13 @@ Pre-release checklist for the Bibliography Builder block.
 -   [ ] No open P1 issues
 -   [ ] Remaining P2/P3 issues are accepted
 -   [ ] Ready to tag/release
+
+## Publish and verify
+
+Merging the release PR does not release anything. `wp-deploy.yml` runs on
+`release: published` (or manual dispatch), so wordpress.org keeps serving the
+previous tag — and keeps showing its `Tested up to` — until a release exists.
+
+-   [ ] Tag created and GitHub release published
+-   [ ] `wp-deploy` run completed
+-   [ ] wordpress.org listing shows the new version and `Tested up to`
