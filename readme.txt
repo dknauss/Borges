@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -158,6 +158,10 @@ PubMed/PMID input connects through the plugin's authenticated WordPress REST pro
 
 == Changelog ==
 
+= 1.5.1 =
+* **WordPress 7.1 support.** Verified against a 7.1 release candidate: the block registers and renders in the editor, which 7.1 now always runs inside an iframe, and bibliographies still format correctly in every citation style tested.
+* **Fixed: copying could report failure when copying was still possible.** Both **Copy citation** and **Copy bibliography** had a fallback for browsers without clipboard access, but only used it when that access was missing entirely — not when the browser offered it and then refused. A refusal now falls through to the fallback instead of reporting failure.
+
 = 1.5.0 =
 **Security release. Updating is recommended for all sites.**
 
@@ -275,6 +279,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.5.1 =
+Adds WordPress 7.1 support and fixes a case where "Copy citation" reported failure although copying was still possible. No security content; no configuration changes.
 
 = 1.5.0 =
 Security release; updating is recommended. Fixes an unauthenticated denial-of-service weakness in the public bibliography REST route, present in 1.4.2 and earlier, where oversized stored citation text cost seconds of CPU per read. Also includes hardening; requires Block Accessibility Checks 4.0.
