@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-08-19
+
+### Added
+- WordPress 7.1 compatibility declaration. Verified against 7.1-RC4: the block
+  registers and renders in the always-iframed editor, and CSL formatting was
+  exercised through `POST bibliography/v1/format` across five styles with
+  `vendor/` present.
+
+### Fixed
+- `copyTextToClipboard` reached its `execCommand` fallback only when
+  `navigator.clipboard.writeText` was absent, not when it was present and
+  rejected. Both "Copy citation" and "Copy bibliography" reported failure in
+  that case while an untried option remained.
+
+### Security
+- No security content in this release. Dependabot #78 bumped the indirect
+  build-tooling packages `brace-expansion` and `ip-address`; neither is a
+  runtime dependency and `package-lock.json` is dist-ignored, so nothing from
+  it reaches an installed site.
+
 ## [1.5.0] - 2026-08-04
 
 ### Added

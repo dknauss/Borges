@@ -3,7 +3,7 @@
  * Plugin Name:       Borges Bibliography Builder
  * Plugin URI:        https://github.com/dknauss/Borges/
  * Description:       Create accessible bibliographies from DOI, PubMed, BibTeX, CSL-JSON, and free text; export RIS.
- * Version:           1.5.0
+ * Version:           1.5.1
  * Requires at least: 6.4
  * Tested up to:      7.1
  * Requires PHP:      7.4
