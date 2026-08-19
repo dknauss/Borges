@@ -9,8 +9,16 @@ export async function copyTextToClipboard(
 		documentRef ?? (typeof document !== 'undefined' ? document : undefined);
 
 	if (runtimeNavigator?.clipboard?.writeText) {
-		await runtimeNavigator.clipboard.writeText(text);
-		return true;
+		try {
+			await runtimeNavigator.clipboard.writeText(text);
+			return true;
+		} catch {
+			// Presence is not permission. The API can be there and still refuse:
+			// permission denied, a document that is not the focused one (common
+			// once a control renders inside the iframed block-editor canvas), or
+			// a non-secure context. Fall through to the textarea path rather than
+			// reporting failure while an option remains untried.
+		}
 	}
 
 	if (!runtimeDocument?.createElement || !runtimeDocument?.body) {
