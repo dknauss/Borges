@@ -1,9 +1,9 @@
 # Current metrics
 
 Hand-verified size, footprint, and runtime-overhead metrics for Borges Bibliography Builder.
-Each number carries the exact command used to re-derive it, so the figures can be re-checked
-on demand rather than trusted on faith. Re-run the relevant command and update the number **in
-the same commit** whenever the underlying quantity changes.
+Each source metric carries the exact command used to re-derive it. Package-size references
+identify their measurement or release-artifact source. Re-run the relevant command and update the
+number **in the same commit** whenever the underlying quantity changes.
 
 Source and LOC figures last verified: **2026-08-25** against `main` (commit `ce3a862`). The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.5.1 release asset.
 
