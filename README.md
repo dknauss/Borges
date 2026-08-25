@@ -17,7 +17,7 @@ Borges Bibliography Builder is named after Jorge Luis Borges (1899–1986), the 
 
 Borges, the plugin, adds a single bibliography builder block to the WordPress editor. It transforms pasted scholarly references — DOI numbers/URLs, PubMed/PMID identifiers, BibTeX entries, and supported formatted citations — into a semantically rich, auto-sorted bibliography with static saved output. Export your work as CSL-JSON, BibTeX, BibLaTeX, and RIS for Zotero, Mendeley, EndNote, JabRef, BibDesk, and similar tools.
 
-No shortcodes. No database storage. Static HTML output survives plugin deactivation.
+No shortcodes. No citation database tables or long-lived settings. Static HTML output survives plugin deactivation.
 
 Just write out your citations or paste DOIs, PubMed/PMID identifiers, and BibTeX code, up to 50 at a time. Easily build a formatted, auto-sorted bibliography in any supported style.
 
@@ -40,7 +40,7 @@ Both demo Blueprints explicitly request PHP `intl` support because editor-time C
 | Import form | Manual entry | Structured field editor |
 |---|---|---|
 | ![](.wordpress-org/screenshot-3.png) | ![](.wordpress-org/screenshot-4.png) | ![](.wordpress-org/screenshot-5.png) |
-| Paste DOIs, PubMed/PMID identifiers, BibTeX, RIS, CSL-JSON, or free-text citations into the import form. Hover any entry to reveal copy, edit, and delete actions. | Switch to Manual Entry to build a citation field by field: Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL. These fields are populated automatically from DOIs, PubMed/PMID records, and any pasted input that can be parsed. | Correct imported or free-text citations in place with the structured field editor — fix individual fields without retyping the whole entry. |
+| Paste DOIs, PubMed/PMID identifiers, BibTeX, CSL-JSON, or free-text citations into the import form. Hover any entry to reveal copy, edit, and delete actions. | Switch to Manual Entry to build a citation field by field: Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL. These fields are populated automatically from DOIs, PubMed/PMID records, and any pasted input that can be parsed. | Correct imported or free-text citations in place with the structured field editor — fix individual fields without retyping the whole entry. |
 
 | Numeric reorder | Settings sidebar | Exports |
 |---|---|---|
@@ -73,11 +73,11 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 
 | Metric | Value |
 |---|---|
-| First-party PHP (main plugin file) | ~1,880 LOC (single file) |
-| JS source (`src/`) | ~8,850 LOC |
+| First-party PHP (main plugin file) | ~2,070 LOC (single file) |
+| JS source (`src/`) | ~8,889 LOC |
 | Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, enqueued only when the block is present |
-| Installed footprint | ~2.1 MB (`vendor/` ~1.0 MB incl. citeproc-php and curated CSL styles, translations 724 KB, assets 328 KB) |
-| Distributed ZIP (compressed) | ~0.9–1 MB |
+| Installed footprint | ~1.9 MB (`vendor/` ~792 KB, translations 724 KB, build assets ~324 KB) |
+| Distributed ZIP (latest v1.5.1 release) | ~465 KB (475,778 bytes) |
 | **Added DB queries per page** | **0** — regardless of block or citation count |
 | Autoloaded options / registered settings / cron / custom tables / custom post types | none |
 | `render_callback` on the frontend | none (static `save()` only) |
@@ -88,6 +88,8 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.5.1** — Adds WordPress 7.1 compatibility and fixes clipboard fallback behavior when the browser exposes clipboard access but rejects the write.
+- **1.5.0** — Security release that hardens public bibliography reads, formatter inputs, generated links, script-block output, and PubMed redirect handling; it also adds the current Block Accessibility Checks 4.0 integration.
 - **1.3.4** — Refreshes the translation template plus 19 seed PO/MO locale pairs, adds CI validation for i18n artifacts, clarifies the bundled seed versus official language-pack policy, and archives historical planning notes out of active docs.
 - **1.3.3** — Restores DOI imports in WordPress Playground with direct CrossRef CSL transform lookups, serializes DOI requests for CrossRef's public concurrency limit, and adds a PubMed sample to the demo starter content.
 - **1.3.0** — Enforces an explicit 50-citation cap with editor warnings, guards all editor mutation flows against stale async results, removes a redundant formatter call in the manual-entry path, prunes non-runtime vendor dead weight from the release zip, and caches successful PMID responses while deduplicating concurrent DOI requests.

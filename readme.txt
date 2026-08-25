@@ -119,7 +119,7 @@ What this means for a published page:
 * **No long-lived settings** — the plugin registers no settings or autoloaded options, no custom tables, no custom post types, and no cron events. Editor-time PMID and formatting results are cached in the object cache and in short-lived, non-autoloaded transients, written only while editing. DOI imports are deduped in a browser-session cache, not stored server-side.
 * **Tiny front-end payload** — only a small view script (~1.4 KB) and stylesheet (~2.9 KB) load, and only on pages that actually contain a bibliography.
 
-Installed footprint is roughly **2.1 MB** (the bundled citeproc-php formatting engine accounts for about half; the rest is translations, editor/front-end assets, and a curated set of citation styles). The downloadable ZIP is about 0.9–1 MB compressed.
+Installed footprint is roughly **1.9 MB** (the bundled citeproc-php formatting engine, translations, and editor/front-end assets account for the total). The latest v1.5.1 downloadable ZIP is **475,778 bytes** (about 465 KB compressed).
 
 Because output is static, your bibliographies remain intact as plain HTML even if the plugin is deactivated.
 
