@@ -5,7 +5,7 @@ Each number carries the exact command used to re-derive it, so the figures can b
 on demand rather than trusted on faith. Re-run the relevant command and update the number **in
 the same commit** whenever the underlying quantity changes.
 
-Last verified: **2026-08-03** against `main` (commit `06df0fb`).
+Source and LOC figures last verified: **2026-08-25** against `main` (commit `ce3a862`). The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.5.1 release asset.
 
 ## Lines of code
 
@@ -37,7 +37,7 @@ otherwise `package:release` (and the `du -sh build` row below) fails with `canno
 | `build/` — editor + frontend assets | **324 KB** | `du -sh build` |
 | PHP + `block.json` + `readme.txt` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` | **~112 KB** | — |
 | **Total installed** | **~1.9 MB** | `du -sh output/release/borges-bibliography-builder` (after `npm run package:release`) |
-| Distributed ZIP (compressed) | **~461 KB** (472,215 bytes) | `du -h output/release/borges-bibliography-builder.zip`; exact bytes via `stat -f%z` (macOS) / `stat -c%s` (GNU) |
+| Distributed ZIP (v1.5.1 release) | **~465 KB** (475,778 bytes) | GitHub release asset metadata for [v1.5.1](https://github.com/dknauss/Borges/releases/tag/v1.5.1) |
 
 The source tree's `packages/` directory (60 KB) is **not** a separate shipped component: the
 release script (`scripts/package-release.sh`) Composer-installs those path packages into
