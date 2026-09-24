@@ -2199,3 +2199,93 @@ describe('extractEmbeddedIdentifier — ISBN', () => {
 		).toMatchObject({ format: 'doi' });
 	});
 });
+
+describe('arXiv link host boundary', () => {
+	it.each([
+		'Preprint. https://evilarxiv.org/abs/1706.03762',
+		'Mirror copy: https://mirror.arxiv.org/abs/1706.03762',
+		'Tagged notarxiv:1706.03762 in the text',
+	])('does not treat %p as an arXiv link', (text) => {
+		expect(extractEmbeddedIdentifier(text)).toBeNull();
+	});
+
+	it.each([
+		['See (https://arxiv.org/abs/1706.03762).', 'arXiv:1706.03762'],
+		['https://www.arxiv.org/pdf/1706.03762v2', 'arXiv:1706.03762v2'],
+	])('still extracts %p', (text, expected) => {
+		expect(extractEmbeddedIdentifier(text)).toMatchObject({
+			format: 'arxiv',
+			value: expected,
+		});
+	});
+});
+
+describe('ISBN request pacing', () => {
+	const BOOK = { type: 'book', title: 'Book', ISBN: '9780140328721' };
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+		clearDoiMetadataCache();
+	});
+
+	it('resolves several ISBNs one at a time', async () => {
+		let inFlight = 0;
+		let maxInFlight = 0;
+		apiFetch.mockImplementation(async () => {
+			inFlight += 1;
+			maxInFlight = Math.max(maxInFlight, inFlight);
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			inFlight -= 1;
+			return BOOK;
+		});
+
+		const result = await parsePastedInput(
+			'ISBN 9780140328721\nISBN 9780804429573\nISBN 0-14-032872-6',
+			'apa'
+		);
+
+		expect(result.entries).toHaveLength(3);
+		expect(maxInFlight).toBe(1);
+	});
+
+	it('keeps the queue moving after a failed lookup', async () => {
+		apiFetch
+			.mockRejectedValueOnce(new Error('upstream down'))
+			.mockResolvedValueOnce(BOOK);
+
+		const result = await parsePastedInput(
+			'ISBN 9780140328721\nISBN 9780804429573',
+			'apa'
+		);
+
+		expect(result.entries).toHaveLength(1);
+		expect(result.errors).toEqual([
+			"Couldn't resolve the ISBN. Check it and try again.",
+		]);
+		expect(apiFetch).toHaveBeenCalledTimes(2);
+	});
+
+	it('paces ISBN and arXiv lookups on separate queues', async () => {
+		let inFlight = 0;
+		let maxInFlight = 0;
+		apiFetch.mockImplementation(async ({ path }) => {
+			inFlight += 1;
+			maxInFlight = Math.max(maxInFlight, inFlight);
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			inFlight -= 1;
+			return path.includes('/isbn/')
+				? BOOK
+				: { type: 'article', title: 'Preprint' };
+		});
+
+		const result = await parsePastedInput(
+			'ISBN 9780140328721\narXiv:1706.03762',
+			'apa'
+		);
+
+		expect(result.entries).toHaveLength(2);
+		// One ISBN and one arXiv lookup overlapped: each upstream has its own
+		// queue, so pacing one never delays the other.
+		expect(maxInFlight).toBe(2);
+	});
+});

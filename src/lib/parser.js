@@ -51,8 +51,10 @@ const ARXIV_REGEX = new RegExp(
 	`^(?:arxiv:\\s*|${ARXIV_URL_PREFIX_SOURCE})(${ARXIV_ID_SOURCE})(?:\\.pdf)?\\/?$`,
 	'iu'
 );
+// The lookbehind keeps an embedded link from matching inside a longer
+// hostname: `evilarxiv.org/abs/…` or `mirror.arxiv.org/abs/…` is not arXiv.
 const EMBEDDED_ARXIV_REGEX = new RegExp(
-	`(?:\\barxiv:\\s*|${ARXIV_URL_PREFIX_SOURCE})(${ARXIV_ID_SOURCE})`,
+	`(?:\\barxiv:\\s*|(?<![\\w.-])${ARXIV_URL_PREFIX_SOURCE})(${ARXIV_ID_SOURCE})`,
 	'iu'
 );
 // arXiv's own DataCite DOIs (10.48550/arXiv.ID) are not in CrossRef, so they
@@ -87,9 +89,10 @@ const LATEX_DOCUMENT_PATTERN =
 const DOI_METADATA_CACHE = new Map();
 const PENDING_DOI_RESOLUTIONS = new Map();
 let DOI_RESOLUTION_QUEUE = Promise.resolve();
-// arXiv asks API clients to space out requests, so arXiv lookups run one at a
-// time even when a paste contains several.
-let ARXIV_RESOLUTION_QUEUE = Promise.resolve();
+// arXiv and Open Library/Google Books ask API clients to space out requests,
+// so lookups against each upstream run one at a time even when a paste
+// contains several. One promise chain per queue name.
+const SERIAL_QUEUES = new Map();
 export { validateAndSanitizeCsl };
 
 function normalizePmidInput(value) {
@@ -344,7 +347,28 @@ export function clearDoiMetadataCache() {
 	DOI_METADATA_CACHE.clear();
 	PENDING_DOI_RESOLUTIONS.clear();
 	DOI_RESOLUTION_QUEUE = Promise.resolve();
-	ARXIV_RESOLUTION_QUEUE = Promise.resolve();
+	SERIAL_QUEUES.clear();
+}
+
+/**
+ * Run `task` after every earlier task on the same named queue has settled.
+ *
+ * A failed task does not block the queue; its rejection still reaches the
+ * caller of that task.
+ *
+ * @param {string}             queueName Queue to serialize on, e.g. 'arxiv'.
+ * @param {() => Promise<any>} task      Work to run.
+ * @return {Promise<any>} The task's result.
+ */
+function runSerially(queueName, task) {
+	const previous = SERIAL_QUEUES.get(queueName) || Promise.resolve();
+	const run = previous.catch(() => {}).then(task);
+	SERIAL_QUEUES.set(
+		queueName,
+		run.catch(() => {})
+	);
+
+	return run;
 }
 
 /**
@@ -415,14 +439,11 @@ function resolveArxivCsl(arxivId) {
 		);
 	}
 
-	const queuedResolution = ARXIV_RESOLUTION_QUEUE.catch(() => {}).then(() =>
+	return runSerially('arxiv', () =>
 		apiFetch({
 			path: `${ARXIV_REST_ENDPOINT}?id=${encodeURIComponent(arxivId)}`,
 		})
 	);
-	ARXIV_RESOLUTION_QUEUE = queuedResolution.catch(() => {});
-
-	return queuedResolution;
 }
 
 function enqueueDoiResolution(resolve) {
@@ -755,7 +776,9 @@ const PARSER_BACKENDS = {
 
 		return {
 			cslItems: [
-				await apiFetch({ path: `${ISBN_REST_ENDPOINT}${isbn13}` }),
+				await runSerially('isbn', () =>
+					apiFetch({ path: `${ISBN_REST_ENDPOINT}${isbn13}` })
+				),
 			],
 		};
 	},
