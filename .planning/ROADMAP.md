@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-09-24):** `v1.5.1` (2026-08-19).
+**Current release baseline (reconciled 2026-09-24):** `v1.6.0` (2026-09-24).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -59,6 +59,9 @@ Releases since the milestone was retired, all outside any GSD phase:
     doc plus `composer verify:metrics` CI gate; deprecation-chain regression tests.
 -   **1.5.1** (2026-08-19) — WordPress 7.1 compatibility; clipboard fallback on
     rejected `navigator.clipboard.writeText`.
+-   **1.6.0** (2026-09-24) — PMCID, arXiv, and ISBN resolvers; BibLaTeX import
+    pinned and hardened (`langid` → BCP 47); read-only WordPress Abilities;
+    i18n template catch-up; External Services disclosure for the new providers.
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -187,7 +190,7 @@ Planned:
 
 6. **BibLaTeX import** — citation-js already parsed BibLaTeX through the
    BibTeX path; import is now documented, pinned by an unmocked test suite,
-   and hardened (babel `langid` → BCP 47, arXiv `eprint` → URL). Unreleased.
+   and hardened (babel `langid` → BCP 47, arXiv `eprint` → URL). Shipped in 1.6.0.
 
 Deferred / demand-gated:
 
@@ -217,9 +220,9 @@ CSL-JSON script blocks.
 
 | Identifier            | Status                       | Evaluation                                                                                                                                                                                                                                                         |
 | --------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **ISBN-10 / ISBN-13** | Done (unreleased)            | Open Library first via `/isbn/<isbn>.json` + `/search.json` for authors (its `/api/books` endpoint returns 404), Google Books fallback (approved 2026-09-24; keyless quota was exhausted in CI, so it is a best-effort fallback). Checksums verified in JS and PHP; ISBN-10 normalized to ISBN-13; bare ISBN-10 not accepted.                                                  |
-| **PMCID**             | Done (unreleased)            | `GET /bibliography/v1/pmcid/<pmcid>` proxies NCBI's fixed PMC citation exporter through the shared NCBI resolver used by PMID; bare `PMC…`, `PMCID:` labels, and free-text `PMC…` are detected.                                                                   |
-| **arXiv ID**          | Done (unreleased)            | `GET /bibliography/v1/arxiv?id=<id>` queries the fixed arXiv API and maps Atom to a CSL preprint in PHP; `arXiv:` labels, arxiv.org URLs, and arXiv DOIs are detected, standalone and in free text.                                                           |
+| **ISBN-10 / ISBN-13** | Done (1.6.0)                 | Open Library first via `/isbn/<isbn>.json` + `/search.json` for authors (its `/api/books` endpoint returns 404), Google Books fallback (approved 2026-09-24; keyless quota was exhausted in CI, so it is a best-effort fallback). Checksums verified in JS and PHP; ISBN-10 normalized to ISBN-13; bare ISBN-10 not accepted.                                                  |
+| **PMCID**             | Done (1.6.0)                 | `GET /bibliography/v1/pmcid/<pmcid>` proxies NCBI's fixed PMC citation exporter through the shared NCBI resolver used by PMID; bare `PMC…`, `PMCID:` labels, and free-text `PMC…` are detected.                                                                   |
+| **arXiv ID**          | Done (1.6.0)                 | `GET /bibliography/v1/arxiv?id=<id>` queries the fixed arXiv API and maps Atom to a CSL preprint in PHP; `arXiv:` labels, arxiv.org URLs, and arXiv DOIs are detected, standalone and in free text.                                                           |
 | **ISSN**              | Evaluate                     | Identifies a serial, not a specific cited work. Useful for journal/periodical enrichment and validation, but should not create a standalone bibliography entry unless paired with article-level metadata.                                                          |
 | **URL**               | Evaluate                     | Useful but risky and unreliable. Consider after fixed-host identifiers; require strict timeout, content-type, size, redirect, and allowlist/denylist controls; prefer standards-based metadata (`citation_*`, Open Graph, JSON-LD, COinS) over arbitrary scraping. |
 | **OCLC / WorldCat**   | Evaluate                     | Useful for library/book workflows and edition disambiguation. Needs API/access/licensing review and careful mapping from edition/work records to CSL `book`.                                                                                                       |
@@ -280,7 +283,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.5.1`.
+1.3.x release line. The current public release baseline is now `v1.6.0`.
 
 Completed Phase 2 outcomes:
 
@@ -381,16 +384,16 @@ in 1.4.0. Suggested ordering for a 1.6.0 cut, in rough payoff-per-effort order:
     - release-package output, WordPress.org artifact alignment, citeproc-php
       PHP deprecations, runtime smoke lanes, and representative DOI / PMID /
       BibTeX / mixed Playground imports
-2. **BibLaTeX import** (Export backlog item 6) — **done, unreleased**
+2. **BibLaTeX import** (Export backlog item 6) — **shipped in 1.6.0**
     - citation-js already parsed BibLaTeX; the work was pinning it with real
       (unmocked) tests and fixing `langid` → `lang` and dropped arXiv eprints
 3. **Reference-manager export corpus**
     - pending todo `2026-06-23-test-reference-manager-exports.md`; targets the
       paste/import coverage gap named in STATE.md
-4. ~~**PMCID resolver**~~, ~~**arXiv**~~, and ~~**ISBN**~~ (Open Library) — all done, unreleased
+4. ~~**PMCID resolver**~~, ~~**arXiv**~~, and ~~**ISBN**~~ (Open Library) — all shipped in 1.6.0
     - PMCID reuses the PMID REST proxy pattern; arXiv is the highest-value new
       source; ISBN needs a provider/terms decision first (see identifier table)
-5. **Phase 05 read-only Abilities** — **done, unreleased** (`includes/abilities.php`)
+5. **Phase 05 read-only Abilities** — **shipped in 1.6.0** (`includes/abilities.php`)
     - re-check the design memo's "until the API stabilises in WP core" gate
       against current core; a read-only first cut
       (`borges/get-bibliographies`, `borges/export-bibliography`,
@@ -725,7 +728,7 @@ Plans:
 Plans:
 
 -   [x] `.planning/archive/phases/03-1-3-0-release-prep/03-01-PLAN.md` —
-    1.3.x release prep; current public baseline is now `v1.5.1`
+    1.3.x release prep; current public baseline is now `v1.6.0`
 
 ### Phase 4: Frontend Cite/Export affordances
 

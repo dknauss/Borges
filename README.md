@@ -88,6 +88,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.6.0** — Adds PubMed Central (PMCID), arXiv, and ISBN import (Open Library with a Google Books fallback), test-pinned BibLaTeX import, and three read-only WordPress Abilities on WordPress 6.9+; fixes invalid `lang` attributes from BibTeX/BibLaTeX language fields.
 - **1.5.1** — Adds WordPress 7.1 compatibility and fixes clipboard fallback behavior when the browser exposes clipboard access but rejects the write.
 - **1.5.0** — Security release that hardens public bibliography reads, formatter inputs, generated links, script-block output, and PubMed redirect handling; it also adds the current Block Accessibility Checks 4.0 integration.
 - **1.3.4** — Refreshes the translation template plus 19 seed PO/MO locale pairs, adds CI validation for i18n artifacts, clarifies the bundled seed versus official language-pack policy, and archives historical planning notes out of active docs.

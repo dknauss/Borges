@@ -4,15 +4,13 @@ _Last reviewed: 2026-09-24._
 
 ## Current Focus
 
-0. **`v1.5.1` (2026-08-19) is the current release baseline.** Version strings
+0. **`v1.6.0` (2026-09-24) is the current release baseline.** Version strings
    agree across the plugin header, `package.json`, `block.json`, and
-   `readme.txt` (`Stable tag: 1.5.1`, `Tested up to: 7.1`). Treat the live
+   `readme.txt` (`Stable tag: 1.6.0`, `Tested up to: 7.1`). Treat the live
    WordPress.org plugin page as canonical for the publicly available version.
-1. **`main` since 1.5.1** carries only maintenance: CI job timeouts (#80),
-   clipboard error-cause preservation (#82), release-checklist compatibility and
-   version-string gates (#83), and a dev-dependency security refresh (#86). The
-   `[Unreleased]` changelog section is empty; nothing on `main` requires a
-   release yet.
+1. **1.6.0 shipped** PMCID, arXiv, and ISBN import, pinned BibLaTeX import,
+   read-only Abilities, and the i18n catch-up (#87), after the README/metrics
+   drift fix (#84). The `[Unreleased]` changelog section is empty again.
 2. **Releases since the GSD `v1.3` milestone was retired (2026-06-21):**
    - 1.4.2 (2026-06-21) — shipped Phase 07 embedded-identifier resolution (#52)
      and the cite/export E2E spec (#53).
@@ -23,6 +21,8 @@ _Last reviewed: 2026-09-24._
      gate, deprecation-chain regression tests.
    - 1.5.1 (2026-08-19) — WordPress 7.1 compatibility; clipboard fallback on a
      rejected `writeText`.
+   - 1.6.0 (2026-09-24) — PMCID/arXiv/ISBN resolvers, BibLaTeX import,
+     read-only Abilities, i18n catch-up.
 3. **Active phases** are still only `05-writable-bibliography-rest` (design
    memo; implementation deferred) and `06-ci-optimization` (unplanned strategy
    sketch). Neither gates a release.
@@ -35,16 +35,16 @@ See "Immediate next-task priorities (2026-09-24)" in `ROADMAP.md` for the full
 ordering. In short:
 
 1. **CI, runtime, and Playground hygiene** (standing)
-2. **BibLaTeX import** — done, unreleased (`[Unreleased]` in `CHANGELOG.md`)
+2. **BibLaTeX import** — shipped in 1.6.0
 3. **Reference-manager export corpus** — addresses the paste/import coverage gap
-4. **Identifier resolvers** — PMCID, arXiv, and ISBN (Open Library) done (unreleased)
-5. **Phase 05 read-only Abilities** — done, unreleased (`includes/abilities.php`); writable abilities stay behind the memo's M0–M3
+4. **Identifier resolvers** — PMCID, arXiv, and ISBN (Open Library) shipped in 1.6.0
+5. **Phase 05 read-only Abilities** — shipped in 1.6.0 (`includes/abilities.php`); writable abilities stay behind the memo's M0–M3
 6. **First-wave official language packs**
 
-Suggested 1.6.0 scope: BibLaTeX import + PMCID + read-only Abilities.
 
 ## Last Activity
 
+- 2026-09-24: Released 1.6.0 (#84, #87, release PR).
 - 2026-09-24: Reconciled STATE/ROADMAP to the 1.5.1 baseline; updated the open
   documentation-drift PR (#84) against `main`.
 - 2026-08-19 → 2026-09: 1.5.1 release (#81), then #80, #82, #83, #86 on `main`.
@@ -80,7 +80,7 @@ Three in `.planning/todos/pending/`:
 ## Roadmap Alignment
 
 Shipped lines: 1.3.x (`v1.3.0`–`v1.3.4`), 1.4.x (`v1.4.0`–`v1.4.2`), 1.5.x
-(`v1.5.0`, `v1.5.1`). Phases 04 (Cite/Export) and 07 (embedded identifiers)
+(`v1.5.0`, `v1.5.1`), 1.6.x (`v1.6.0`). Phases 04 (Cite/Export) and 07 (embedded identifiers)
 are shipped and archived. Phase 05 is deferred behind its design memo; Phase 06
 is an unplanned sketch. Future work is tracked against release versions, not a
 GSD milestone label.

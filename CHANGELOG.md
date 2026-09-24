@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-24
+
 ### Added
 
 - BibLaTeX import. BibLaTeX entries (`date`, `journaltitle`, `location`, `urldate`, `@online`, `@report`, `@collection`, and similar) paste through the same path as BibTeX; citation-js already mapped these fields, and a new unmocked test suite (`src/lib/biblatex-import.test.js`) now pins that behavior so a citation-js upgrade cannot silently regress it.
