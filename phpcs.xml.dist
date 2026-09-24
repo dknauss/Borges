@@ -4,6 +4,7 @@
 
 	<!-- Files to check -->
 	<file>bibliography-builder.php</file>
+	<file>includes</file>
 
 	<!-- Exclude vendor, node_modules, and tests -->
 	<exclude-pattern>vendor/*</exclude-pattern>

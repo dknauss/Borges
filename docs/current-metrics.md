@@ -11,13 +11,15 @@ Last verified: **2026-08-03** against `main` (commit `06df0fb`).
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **2,470** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **2,568** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **2,473** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **2,913** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
 | JS source (`src/`, excl. `*.test.js`) | **9,260** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
-(REST registration + block registration); the CSL formatting engine under `vendor/` runs
+(REST registration + block registration) and `includes/abilities.php`, which only defines
+functions and adds two Abilities API hooks, which run only when WordPress initializes its
+Abilities registry and do no I/O. The CSL formatting engine under `vendor/` runs
 **only** for editor-time REST calls. `scripts/*.php` are dev tooling and are not packaged.
 
 ## Storage footprint (installed)

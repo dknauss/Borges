@@ -21,6 +21,8 @@ $GLOBALS['bibliography_builder_test_object_cache']        = array();
 $GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 $GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
 $GLOBALS['bibliography_builder_test_viewable_post_types'] = array();
+$GLOBALS['bibliography_builder_test_abilities']           = array();
+$GLOBALS['bibliography_builder_test_ability_categories']  = array();
 
 function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_posts']           = array();
@@ -39,6 +41,25 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 	$GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
 	$GLOBALS['bibliography_builder_test_viewable_post_types'] = array();
+	$GLOBALS['bibliography_builder_test_abilities']           = array();
+	$GLOBALS['bibliography_builder_test_ability_categories']  = array();
+}
+
+/**
+ * Minimal Abilities API (WordPress 6.9) stubs that record registrations.
+ */
+function wp_register_ability_category( $slug, $args ) {
+	$GLOBALS['bibliography_builder_test_ability_categories'][ $slug ] = $args;
+	return (object) array( 'slug' => $slug );
+}
+
+function wp_has_ability_category( $slug ) {
+	return isset( $GLOBALS['bibliography_builder_test_ability_categories'][ $slug ] );
+}
+
+function wp_register_ability( $name, $args ) {
+	$GLOBALS['bibliography_builder_test_abilities'][ $name ] = $args;
+	return (object) array( 'name' => $name );
 }
 
 function bibliography_builder_test_set_post( $post_id, $status, $content, $password_required = false, $post_type = 'post' ) {

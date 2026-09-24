@@ -324,3 +324,70 @@ test('bibliography block imports an arXiv preprint', async ({ page }) => {
 
 	await importCitations(editorFrame, 'arXiv:1706.03762', 1);
 });
+
+// Live check of the read-only Abilities API integration (WordPress 6.9+).
+// Discovery first, then a run of borges/validate-citations, which needs no
+// post fixture. Read-only abilities run over GET with an `input` argument.
+test('Borges read-only abilities are discoverable and runnable', async ({
+	page,
+}) => {
+	test.setTimeout(90_000);
+
+	await ensurePluginActivated(page);
+	await page.goto('/wp-admin/post-new.php');
+	await page.waitForFunction(() => typeof window.wp?.apiFetch === 'function');
+
+	const result = await page.evaluate(async () => {
+		const call = async (options) => {
+			try {
+				return { ok: true, data: await window.wp.apiFetch(options) };
+			} catch (error) {
+				return {
+					ok: false,
+					code: error?.code,
+					message: error?.message,
+					data: error?.data,
+				};
+			}
+		};
+
+		const names = [
+			'borges/get-bibliographies',
+			'borges/export-bibliography',
+			'borges/validate-citations',
+		];
+		const discovered = {};
+		for (const name of names) {
+			discovered[name] = await call({
+				path: `/wp-abilities/v1/abilities/${name}`,
+			});
+		}
+
+		const query = new URLSearchParams({
+			'input[items][0][type]': 'book',
+			'input[items][0][title]': 'Live Ability Check',
+			'input[items][1][type]': 'not-a-csl-type',
+		});
+		const run = await call({
+			path: `/wp-abilities/v1/abilities/borges/validate-citations/run?${query}`,
+		});
+
+		return { discovered, run };
+	});
+
+	for (const [name, response] of Object.entries(result.discovered)) {
+		expect(
+			response.ok,
+			`${name} not discoverable: ${JSON.stringify(response)}`
+		).toBe(true);
+		expect(response.data?.category).toBe('bibliography');
+	}
+
+	expect(
+		result.run.ok,
+		`validate-citations run failed: ${JSON.stringify(result.run)}`
+	).toBe(true);
+	expect(result.run.data.valid).toBe(false);
+	expect(result.run.data.results[0].valid).toBe(true);
+	expect(result.run.data.results[1].valid).toBe(false);
+});

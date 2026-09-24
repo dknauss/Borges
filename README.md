@@ -207,6 +207,18 @@ The editor-only PubMed Central resolver accepts `GET /wp-json/bibliography/v1/pm
 
 The editor-only arXiv resolver accepts `GET /wp-json/bibliography/v1/arxiv?id=<arxiv-id>` (modern or legacy IDs, optional version), requires `edit_posts`, validates the ID pattern before any outbound request, queries the fixed arXiv API, and returns a CSL-JSON preprint record. It is used for pasted `arXiv:` IDs, arxiv.org links, and arXiv DOIs.
 
+## WordPress Abilities
+
+On WordPress 6.9 and later, Borges registers three read-only abilities with the core Abilities API, in a `bibliography` category. Automation tools and AI agents can discover them and run them through `/wp-json/wp-abilities/v1`. On earlier WordPress versions nothing is registered and nothing else changes.
+
+| Ability | Input | Returns | Permission |
+|---|---|---|---|
+| `borges/get-bibliographies` | `post_id` | Every bibliography block in the post (same shape as the list route above) | Same as the public read routes |
+| `borges/export-bibliography` | `post_id`, `index` (default `0`), `format` (`csl-json` or `text`) | The block as a CSL-JSON array or plain text | Same as the public read routes |
+| `borges/validate-citations` | `items`: 1–50 CSL-JSON records | Per-item validity, the rejection reason, or the sanitized record | `edit_posts` |
+
+All three are annotated `readonly`, non-destructive, and idempotent. None of them writes post content or any other stored data. Writable abilities remain a separate, later design decision; see the Phase 05 memo.
+
 ## External Services
 
 This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for the supported DOI or PMID lookups.

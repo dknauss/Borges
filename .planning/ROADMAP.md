@@ -390,7 +390,7 @@ in 1.4.0. Suggested ordering for a 1.6.0 cut, in rough payoff-per-effort order:
 4. ~~**PMCID resolver**~~ and ~~**arXiv**~~ (done, unreleased), then **ISBN**
     - PMCID reuses the PMID REST proxy pattern; arXiv is the highest-value new
       source; ISBN needs a provider/terms decision first (see identifier table)
-5. **Phase 05 read-only Abilities**
+5. **Phase 05 read-only Abilities** — **done, unreleased** (`includes/abilities.php`)
     - re-check the design memo's "until the API stabilises in WP core" gate
       against current core; a read-only first cut
       (`borges/get-bibliographies`, `borges/export-bibliography`,
