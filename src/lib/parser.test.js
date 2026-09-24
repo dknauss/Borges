@@ -1840,7 +1840,7 @@ describe('PMCID input resolution', () => {
 		const result = await parsePastedInput(input, 'apa', { fetchFn });
 
 		expect(fetchFn).toHaveBeenCalledWith(
-			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pmc/?format=csl&id=PMC3531190'
+			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pmc/?format=csl&id=3531190'
 		);
 		expect(result.errors).toEqual([]);
 		expect(result.entries).toHaveLength(1);

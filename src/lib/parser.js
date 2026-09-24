@@ -80,7 +80,8 @@ const NCBI_SOURCES = {
 	},
 	pmcid: {
 		label: 'PMCID',
-		fetchUrl: (id) => `${NCBI_PMC_CSL_API}PMC${id}`,
+		// The PMC exporter rejects `id=PMC…` with HTTP 400; it takes digits.
+		fetchUrl: (id) => `${NCBI_PMC_CSL_API}${id}`,
 		restPath: (id) => `${PMCID_REST_ENDPOINT}PMC${encodeURIComponent(id)}`,
 	},
 };

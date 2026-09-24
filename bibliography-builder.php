@@ -1742,8 +1742,8 @@ function bibliography_builder_rest_resolve_pmid( WP_REST_Request $request ) {
 /**
  * REST callback that resolves a PubMed Central ID (PMCID) to CSL-JSON.
  *
- * Accepts the digits with or without the `PMC` prefix and always sends the
- * canonical `PMC<digits>` form upstream.
+ * Accepts the digits with or without the `PMC` prefix. NCBI's PMC exporter
+ * wants the bare digits: it answers `id=PMC<digits>` with HTTP 400.
  *
  * @param WP_REST_Request $request REST request.
  * @return WP_REST_Response|WP_Error
@@ -1761,7 +1761,7 @@ function bibliography_builder_rest_resolve_pmcid( WP_REST_Request $request ) {
 
 	return bibliography_builder_resolve_ncbi_csl(
 		BIBLIOGRAPHY_BUILDER_PMC_CSL_API,
-		'PMC' . $pmcid,
+		$pmcid,
 		bibliography_builder_get_pmcid_cache_key( $pmcid ),
 		'bibliography_builder_pmcid',
 		array(

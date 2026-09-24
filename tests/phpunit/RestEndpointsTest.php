@@ -364,7 +364,9 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertCount( 1, $requests );
 		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_PMC_CSL_API, $requests[0]['url'] );
 		$this->assertStringContainsString( 'format=csl', $requests[0]['url'] );
-		$this->assertStringContainsString( 'id=PMC3531190', $requests[0]['url'] );
+		// NCBI's PMC exporter rejects `id=PMC…` with HTTP 400; it takes bare digits.
+		$this->assertStringContainsString( 'id=3531190', $requests[0]['url'] );
+		$this->assertStringNotContainsString( 'id=PMC', $requests[0]['url'] );
 		$this->assertSame( 'wp_safe_remote_get', $requests[0]['function'] );
 		$this->assertSame( 3, $requests[0]['args']['redirection'] );
 
