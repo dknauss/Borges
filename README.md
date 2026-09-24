@@ -207,7 +207,7 @@ The editor-only PubMed Central resolver accepts `GET /wp-json/bibliography/v1/pm
 
 The editor-only arXiv resolver accepts `GET /wp-json/bibliography/v1/arxiv?id=<arxiv-id>` (modern or legacy IDs, optional version), requires `edit_posts`, validates the ID pattern before any outbound request, queries the fixed arXiv API, and returns a CSL-JSON preprint record. It is used for pasted `arXiv:` IDs, arxiv.org links, and arXiv DOIs.
 
-The editor-only ISBN resolver accepts `GET /wp-json/bibliography/v1/isbn/<isbn>` (ISBN-10 or ISBN-13, no hyphens), requires `edit_posts`, verifies the checksum before any outbound request, queries the fixed Open Library Books API with a fixed Google Books fallback, and returns a CSL-JSON book record. It is used for pasted `ISBN` labels and bare 978/979 ISBN-13s.
+The editor-only ISBN resolver accepts `GET /wp-json/bibliography/v1/isbn/<isbn>` (ISBN-10 or ISBN-13, no hyphens), requires `edit_posts`, verifies the checksum before any outbound request, queries Open Library's fixed ISBN edition and search endpoints with a fixed Google Books fallback, and returns a CSL-JSON book record. It is used for pasted `ISBN` labels and bare 978/979 ISBN-13s.
 
 ## WordPress Abilities
 
@@ -252,9 +252,10 @@ arXiv IDs, arxiv.org links, and arXiv DOIs connect through the plugin's authenti
 
 ### ISBN metadata
 
-ISBN input connects through the plugin's authenticated WordPress REST proxy to the [Open Library Books API](https://openlibrary.org/dev/docs/api/books) (`openlibrary.org/api/books`), run by the Internet Archive. If Open Library has no record or cannot be reached, the proxy falls back to the [Google Books API](https://developers.google.com/books) (`www.googleapis.com/books/v1/volumes`). Both upstream hosts are fixed, and the ISBN checksum is verified before any outbound request. Only the ISBN is sent.
+ISBN input connects through the plugin's authenticated WordPress REST proxy to [Open Library](https://openlibrary.org), run by the Internet Archive: its ISBN edition endpoint (`openlibrary.org/isbn/<isbn>.json`) for the book record and its [search API](https://openlibrary.org/dev/docs/api/search) (`openlibrary.org/search.json`) for author names. If Open Library has no record or cannot be reached, the proxy falls back to the [Google Books API](https://developers.google.com/books) (`www.googleapis.com/books/v1/volumes`). All upstream hosts are fixed, and the ISBN checksum is verified before any outbound request. Only the ISBN is sent.
 
-- [Open Library Books API](https://openlibrary.org/dev/docs/api/books)
+- [Open Library Books API (ISBN endpoint)](https://openlibrary.org/dev/docs/api/books)
+- [Open Library Search API](https://openlibrary.org/dev/docs/api/search)
 - [Internet Archive terms of use](https://archive.org/about/terms.php)
 - [Google Books APIs](https://developers.google.com/books)
 - [Google APIs Terms of Service](https://developers.google.com/terms)

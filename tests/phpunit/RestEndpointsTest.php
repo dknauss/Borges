@@ -691,39 +691,47 @@ final class RestEndpointsTest extends TestCase {
 	}
 
 	/**
-	 * Open Library Books API response (`jscmd=data`) for one ISBN.
+	 * Open Library edition record, as served after the /isbn/ redirect.
 	 */
-	private function open_library_fixture(): string {
+	private function open_library_edition_fixture(): string {
 		return wp_json_encode(
 			array(
-				'ISBN:9780140328721' => array(
-					'url'             => 'https://openlibrary.org/books/OL7353617M/Fantastic_Mr._Fox',
-					'title'           => 'Fantastic Mr. Fox',
-					'subtitle'        => 'A Story',
-					'authors'         => array(
-						array(
-							'url'  => 'https://openlibrary.org/authors/OL34184A/Roald_Dahl',
-							'name' => 'Roald Dahl',
-						),
-					),
-					'number_of_pages' => 96,
-					'publishers'      => array( array( 'name' => 'Puffin' ) ),
-					'publish_places'  => array( array( 'name' => 'New York' ) ),
-					'publish_date'    => 'October 1, 1988',
-				),
+				'title'           => 'Fantastic Mr. Fox',
+				'subtitle'        => 'A Story',
+				'authors'         => array( array( 'key' => '/authors/OL34184A' ) ),
+				'number_of_pages' => 96,
+				'publishers'      => array( 'Puffin' ),
+				'publish_places'  => array( 'New York' ),
+				'publish_date'    => 'October 1, 1988',
+				'isbn_13'         => array( '9780140328721' ),
 			)
 		);
 	}
 
-	public function test_isbn_endpoint_maps_open_library_to_a_csl_book(): void {
+	private function open_library_ok(): array {
+		return array(
+			'response' => array( 'code' => 200 ),
+			'body'     => $this->open_library_edition_fixture(),
+		);
+	}
+
+	private function open_library_authors_ok(): array {
+		return array(
+			'response' => array( 'code' => 200 ),
+			'body'     => wp_json_encode(
+				array(
+					'numFound' => 1,
+					'docs'     => array( array( 'author_name' => array( 'Roald Dahl' ) ) ),
+				)
+			),
+		);
+	}
+
+	public function test_isbn_endpoint_maps_open_library_edition_and_authors_to_a_csl_book(): void {
 		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
 		bibliography_builder_test_set_current_user( 7 );
-		bibliography_builder_test_set_http_response(
-			array(
-				'response' => array( 'code' => 200 ),
-				'body'     => $this->open_library_fixture(),
-			)
-		);
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/isbn/', $this->open_library_ok() );
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/search.json', $this->open_library_authors_ok() );
 
 		// ISBN-10 input is normalized to the ISBN-13 used for lookup and cache.
 		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/0140328726' );
@@ -737,30 +745,32 @@ final class RestEndpointsTest extends TestCase {
 				'type'            => 'book',
 				'title'           => 'Fantastic Mr. Fox: A Story',
 				'ISBN'            => '9780140328721',
+				'publisher'       => 'Puffin',
+				'publisher-place' => 'New York',
+				'issued'          => array( 'date-parts' => array( array( 1988 ) ) ),
+				'number-of-pages' => '96',
 				'author'          => array(
 					array(
 						'family' => 'Dahl',
 						'given'  => 'Roald',
 					),
 				),
-				'publisher'       => 'Puffin',
-				'publisher-place' => 'New York',
-				'issued'          => array( 'date-parts' => array( array( 1988 ) ) ),
-				'number-of-pages' => '96',
 			),
 			$data
 		);
-		$this->assertCount( 1, $requests );
-		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_BOOKS_API, $requests[0]['url'] );
-		// Both forms are requested: Open Library matches stored identifiers literally.
-		$this->assertStringContainsString( 'bibkeys=ISBN:9780140328721,ISBN:0140328726', $requests[0]['url'] );
-		$this->assertStringContainsString( 'jscmd=data', $requests[0]['url'] );
+		$this->assertCount( 2, $requests );
+		$this->assertSame( BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_HOST . '/isbn/9780140328721.json', $requests[0]['url'] );
+		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_HOST . '/search.json?', $requests[1]['url'] );
+		$this->assertStringContainsString( 'isbn=9780140328721', $requests[1]['url'] );
+		$this->assertStringContainsString( 'fields=author_name', $requests[1]['url'] );
 		$this->assertSame( 'wp_safe_remote_get', $requests[0]['function'] );
+		$this->assertSame( 'wp_safe_remote_get', $requests[1]['function'] );
+		$this->assertSame( 3, $requests[0]['args']['redirection'], 'The /isbn/ endpoint redirects to the edition record.' );
 
 		$request13         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
 		$request13['isbn'] = '9780140328721';
 		bibliography_builder_rest_resolve_isbn( $request13 );
-		$this->assertCount( 1, bibliography_builder_test_get_http_requests(), 'ISBN-10 and ISBN-13 share one cache entry.' );
+		$this->assertCount( 2, bibliography_builder_test_get_http_requests(), 'ISBN-10 and ISBN-13 share one cached result.' );
 	}
 
 	public function test_isbn13_to_isbn10_conversion(): void {
@@ -769,13 +779,13 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertSame( '', bibliography_builder_isbn13_to_isbn10( '9791032300824' ) );
 	}
 
-	public function test_isbn_endpoint_accepts_a_record_keyed_by_the_isbn10_form(): void {
-		bibliography_builder_test_set_http_response(
+	public function test_isbn_endpoint_keeps_the_edition_when_the_author_lookup_fails(): void {
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/isbn/', $this->open_library_ok() );
+		bibliography_builder_test_set_http_response_for(
+			'openlibrary.org/search.json',
 			array(
-				'response' => array( 'code' => 200 ),
-				'body'     => wp_json_encode(
-					array( 'ISBN:0140328726' => array( 'title' => 'Fantastic Mr. Fox' ) )
-				),
+				'response' => array( 'code' => 503 ),
+				'body'     => '',
 			)
 		);
 
@@ -784,15 +794,23 @@ final class RestEndpointsTest extends TestCase {
 
 		$data = bibliography_builder_rest_resolve_isbn( $request )->get_data();
 
-		$this->assertSame( 'Fantastic Mr. Fox', $data['title'] );
-		$this->assertSame( '9780140328721', $data['ISBN'] );
+		$this->assertSame( 'Fantastic Mr. Fox: A Story', $data['title'] );
+		$this->assertArrayNotHasKey( 'author', $data );
 	}
 
 	public function test_isbn_endpoint_reports_an_unknown_isbn_as_not_found(): void {
-		bibliography_builder_test_set_http_response(
+		bibliography_builder_test_set_http_response_for(
+			'openlibrary.org',
+			array(
+				'response' => array( 'code' => 404 ),
+				'body'     => '',
+			)
+		);
+		bibliography_builder_test_set_http_response_for(
+			'googleapis.com',
 			array(
 				'response' => array( 'code' => 200 ),
-				'body'     => '{}',
+				'body'     => '{"kind":"books#volumes","totalItems":0}',
 			)
 		);
 
@@ -811,7 +829,7 @@ final class RestEndpointsTest extends TestCase {
 			'openlibrary.org',
 			array(
 				'response' => array( 'code' => 200 ),
-				'body'     => '{"ISBN:9780140328721":{"authors":[]}}',
+				'body'     => '{"authors":[]}',
 			)
 		);
 		bibliography_builder_test_set_http_response_for(
@@ -828,6 +846,7 @@ final class RestEndpointsTest extends TestCase {
 		$result = bibliography_builder_rest_resolve_isbn( $request );
 
 		$this->assertSame( 'bibliography_builder_isbn_invalid_response', $result->get_error_code() );
+		// Edition + Google only: no author lookup is spent on an unusable edition.
 		$this->assertCount( 2, bibliography_builder_test_get_http_requests() );
 	}
 
@@ -902,6 +921,7 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertCount( 2, $requests );
 		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API, $requests[1]['url'] );
 		$this->assertStringEndsWith( '?q=isbn%3A9780140328721', $requests[1]['url'] );
+		$this->assertStringContainsString( 'openlibrary.org/isbn/', $requests[0]['url'] );
 		$this->assertSame( 'wp_safe_remote_get', $requests[1]['function'] );
 
 		// Both providers' results are cached: a repeat lookup makes no request.
@@ -910,20 +930,17 @@ final class RestEndpointsTest extends TestCase {
 	}
 
 	public function test_isbn_endpoint_does_not_call_google_books_when_open_library_succeeds(): void {
-		bibliography_builder_test_set_http_response_for(
-			'openlibrary.org',
-			array(
-				'response' => array( 'code' => 200 ),
-				'body'     => $this->open_library_fixture(),
-			)
-		);
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/isbn/', $this->open_library_ok() );
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/search.json', $this->open_library_authors_ok() );
 
 		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
 		$request['isbn'] = '9780140328721';
 
 		bibliography_builder_rest_resolve_isbn( $request );
 
-		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
+		$urls = array_column( bibliography_builder_test_get_http_requests(), 'url' );
+		$this->assertCount( 2, $urls );
+		$this->assertEmpty( preg_grep( '/googleapis\\.com/', $urls ) );
 	}
 
 	public function test_google_books_rejects_a_volume_for_a_different_isbn(): void {

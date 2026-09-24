@@ -65,9 +65,12 @@ const BIBLIOGRAPHY_BUILDER_PMC_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ctxp/
 const BIBLIOGRAPHY_BUILDER_ARXIV_API = 'https://export.arxiv.org/api/query';
 
 /**
- * Open Library Books API endpoint: the first provider tried for ISBNs.
+ * Open Library host: the first provider tried for ISBNs. Uses the edition
+ * endpoint (`/isbn/<isbn>.json`) for edition data and the search endpoint
+ * (`/search.json`) for author names; the older `/api/books` endpoint now
+ * answers HTTP 404.
  */
-const BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_BOOKS_API = 'https://openlibrary.org/api/books';
+const BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_HOST = 'https://openlibrary.org';
 
 /**
  * Google Books volumes endpoint: the ISBN fallback when Open Library fails.
@@ -2126,26 +2129,55 @@ function bibliography_builder_isbn13_to_isbn10( $isbn13 ) {
 }
 
 /**
- * Convert an Open Library Books API response into a CSL-JSON book record.
+ * Look up author display names for an ISBN through Open Library search.
  *
- * @param string $body   JSON response body (`jscmd=data` shape).
- * @param string $isbn13 The requested ISBN-13.
- * @return array|string|null CSL item, `not_found`, or null when unusable.
+ * Open Library edition records reference authors by key only; the search
+ * endpoint returns the names in one request. A failed lookup yields no names
+ * rather than failing the whole resolution.
+ *
+ * @param string $isbn13 Checksum-valid ISBN-13.
+ * @return string[] Author display names.
  */
-function bibliography_builder_open_library_to_csl( $body, $isbn13 ) {
-	$decoded = json_decode( (string) $body, true );
+function bibliography_builder_open_library_author_names( $isbn13 ) {
+	$response = wp_safe_remote_get(
+		add_query_arg(
+			array(
+				'isbn'   => $isbn13,
+				'fields' => 'author_name',
+				'limit'  => '1',
+			),
+			BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_HOST . '/search.json'
+		),
+		array(
+			'timeout'     => BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT,
+			'redirection' => 3,
+		)
+	);
 
-	if ( ! is_array( $decoded ) ) {
-		return null;
+	if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+		return array();
 	}
 
-	// An unknown ISBN is a 200 with an empty object.
-	if ( empty( $decoded ) ) {
-		return 'not_found';
-	}
+	$decoded = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+	$names   = isset( $decoded['docs'][0]['author_name'] ) && is_array( $decoded['docs'][0]['author_name'] )
+		? $decoded['docs'][0]['author_name']
+		: array();
 
-	// Both ISBN forms are requested; take whichever record Open Library found.
-	$record = reset( $decoded );
+	return array_values( array_filter( $names, 'is_string' ) );
+}
+
+/**
+ * Convert an Open Library edition record into a CSL-JSON book record.
+ *
+ * Authors are not included: edition records reference them by key only.
+ * See bibliography_builder_open_library_author_names().
+ *
+ * @param string $body   Edition JSON (`/isbn/<isbn>.json`, after redirect).
+ * @param string $isbn13 The requested ISBN-13.
+ * @return array|null CSL item, or null when unusable.
+ */
+function bibliography_builder_open_library_edition_to_csl( $body, $isbn13 ) {
+	$record = json_decode( (string) $body, true );
 
 	if ( ! is_array( $record ) || empty( $record['title'] ) || ! is_string( $record['title'] ) ) {
 		return null;
@@ -2162,27 +2194,12 @@ function bibliography_builder_open_library_to_csl( $body, $isbn13 ) {
 		'ISBN'  => $isbn13,
 	);
 
-	$authors        = array();
-	$record_authors = isset( $record['authors'] ) && is_array( $record['authors'] ) ? $record['authors'] : array();
-	foreach ( $record_authors as $author ) {
-		$csl_name = is_array( $author ) && isset( $author['name'] )
-			? bibliography_builder_split_display_name( (string) $author['name'] )
-			: array();
-
-		if ( ! empty( $csl_name ) ) {
-			$authors[] = $csl_name;
-		}
-	}
-	if ( ! empty( $authors ) ) {
-		$csl['author'] = $authors;
-	}
-
 	foreach ( array(
 		'publishers'     => 'publisher',
 		'publish_places' => 'publisher-place',
 	) as $source => $field ) {
-		if ( isset( $record[ $source ][0]['name'] ) && is_string( $record[ $source ][0]['name'] ) ) {
-			$csl[ $field ] = trim( $record[ $source ][0]['name'] );
+		if ( isset( $record[ $source ][0] ) && is_string( $record[ $source ][0] ) ) {
+			$csl[ $field ] = trim( $record[ $source ][0] );
 		}
 	}
 
@@ -2320,29 +2337,29 @@ function bibliography_builder_rest_resolve_isbn( WP_REST_Request $request ) {
 		),
 	);
 
-	// Open Library first. It matches bibkeys literally against each edition's
-	// stored identifiers, and many older editions carry only an ISBN-10, so ask
-	// for both forms in one request.
-	$bibkeys = 'ISBN:' . $isbn13;
-	$isbn10  = bibliography_builder_isbn13_to_isbn10( $isbn13 );
-	if ( '' !== $isbn10 ) {
-		$bibkeys .= ',ISBN:' . $isbn10;
-	}
-
+	// Open Library first: the edition endpoint resolves either ISBN form and
+	// redirects to the edition record; author names come from search, since
+	// edition records reference authors by key only. The combined record is
+	// cached as one result.
 	$open_library = bibliography_builder_resolve_remote_csl(
-		add_query_arg(
-			array(
-				'bibkeys' => $bibkeys,
-				'format'  => 'json',
-				'jscmd'   => 'data',
-			),
-			BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_BOOKS_API
-		),
+		BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_HOST . '/isbn/' . $isbn13 . '.json',
 		'isbn_ol_' . $isbn13,
 		'bibliography_builder_isbn',
 		$messages,
 		static function ( $body ) use ( $isbn13 ) {
-			return bibliography_builder_open_library_to_csl( $body, $isbn13 );
+			$csl = bibliography_builder_open_library_edition_to_csl( $body, $isbn13 );
+
+			// Only spend the author lookup on a usable edition record.
+			if ( is_array( $csl ) ) {
+				$names   = bibliography_builder_open_library_author_names( $isbn13 );
+				$authors = array_filter( array_map( 'bibliography_builder_split_display_name', $names ) );
+
+				if ( ! empty( $authors ) ) {
+					$csl['author'] = array_values( $authors );
+				}
+			}
+
+			return $csl;
 		}
 	);
 

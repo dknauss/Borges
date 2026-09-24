@@ -166,9 +166,10 @@ arXiv IDs, arxiv.org links, and arXiv DOIs connect through the plugin's authenti
 
 **ISBN metadata**
 
-ISBN input connects through the plugin's authenticated WordPress REST proxy to the **Open Library Books API** (https://openlibrary.org/api/books), run by the Internet Archive. If Open Library has no record or cannot be reached, the proxy falls back to the **Google Books API** (https://www.googleapis.com/books/v1/volumes). Both upstream hosts are fixed, and the ISBN checksum is verified before any outbound request. Only the ISBN is sent.
+ISBN input connects through the plugin's authenticated WordPress REST proxy to **Open Library** (https://openlibrary.org), run by the Internet Archive: its ISBN edition endpoint (https://openlibrary.org/isbn/) for the book record and its search API (https://openlibrary.org/search.json) for author names. If Open Library has no record or cannot be reached, the proxy falls back to the **Google Books API** (https://www.googleapis.com/books/v1/volumes). All upstream hosts are fixed, and the ISBN checksum is verified before any outbound request. Only the ISBN is sent.
 
-* Open Library Books API: https://openlibrary.org/dev/docs/api/books
+* Open Library Books API (ISBN endpoint): https://openlibrary.org/dev/docs/api/books
+* Open Library Search API: https://openlibrary.org/dev/docs/api/search
 * Internet Archive terms of use: https://archive.org/about/terms.php
 * Google Books APIs: https://developers.google.com/books
 * Google APIs Terms of Service: https://developers.google.com/terms
