@@ -263,5 +263,30 @@ test('bibliography block imports a PubMed Central PMCID', async ({ page }) => {
 
 	const editorFrame = await createPostWithBibliographyBlock(page);
 
+	// Hit the proxy route directly first. If NCBI rejects the request, the
+	// failure message carries the proxy's error code and upstream status
+	// instead of only "no entry appeared" from the UI assertion below.
+	const proxyResult = await page.evaluate(async () => {
+		try {
+			const data = await window.wp.apiFetch({
+				path: '/bibliography/v1/pmcid/PMC3531190',
+			});
+			return { ok: true, title: data?.title, type: data?.type };
+		} catch (error) {
+			return {
+				ok: false,
+				code: error?.code,
+				message: error?.message,
+				data: error?.data,
+			};
+		}
+	});
+
+	expect(
+		proxyResult.ok,
+		`PMCID proxy failed: ${JSON.stringify(proxyResult)}`
+	).toBe(true);
+	expect(typeof proxyResult.title).toBe('string');
+
 	await importCitations(editorFrame, 'PMCID: PMC3531190', 1);
 });
