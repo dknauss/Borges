@@ -34,166 +34,166 @@ msgid "https://dan.knauss.ca/"
 msgstr ""
 
 #. translators: %s: PHP extension name.
-#: bibliography-builder.php:310
+#: bibliography-builder.php:315
 #, php-format
 msgid "The bibliography formatter requires the PHP %s extension."
 msgstr ""
 
-#: bibliography-builder.php:323
+#: bibliography-builder.php:328
 msgid "The bibliography formatter dependencies are missing."
 msgstr ""
 
-#: bibliography-builder.php:333
+#: bibliography-builder.php:338
 msgid "The bibliography formatter is unavailable."
 msgstr ""
 
-#: bibliography-builder.php:696
-#: bibliography-builder.php:707
-#: bibliography-builder.php:765
+#: bibliography-builder.php:701
+#: bibliography-builder.php:712
+#: bibliography-builder.php:770
 msgid "Invalid CSL date value."
 msgstr ""
 
-#: bibliography-builder.php:718
-#: bibliography-builder.php:748
-#: bibliography-builder.php:777
+#: bibliography-builder.php:723
+#: bibliography-builder.php:753
+#: bibliography-builder.php:782
 msgid "Invalid CSL date-parts."
 msgstr ""
 
-#: bibliography-builder.php:795
-#: bibliography-builder.php:806
+#: bibliography-builder.php:800
+#: bibliography-builder.php:811
 msgid "Invalid CSL author entry."
 msgstr ""
 
-#: bibliography-builder.php:815
+#: bibliography-builder.php:820
 msgid "Invalid CSL author field."
 msgstr ""
 
 #. translators: %s: CSL field name.
-#: bibliography-builder.php:841
+#: bibliography-builder.php:846
 #, php-format
 msgid "Invalid CSL %s list."
 msgstr ""
 
 #. translators: %s: CSL field name.
-#: bibliography-builder.php:884
-#: bibliography-builder.php:901
-#: bibliography-builder.php:997
+#: bibliography-builder.php:889
+#: bibliography-builder.php:906
+#: bibliography-builder.php:1002
 #, php-format
 msgid "Invalid CSL %s."
 msgstr ""
 
-#: bibliography-builder.php:918
-#: bibliography-builder.php:943
+#: bibliography-builder.php:923
+#: bibliography-builder.php:948
 msgid "Invalid CSL object."
 msgstr ""
 
-#: bibliography-builder.php:955
+#: bibliography-builder.php:960
 msgid "Invalid CSL type."
 msgstr ""
 
 #. translators: %d: 1-based citation item number.
-#: bibliography-builder.php:1044
+#: bibliography-builder.php:1049
 #, php-format
 msgid "Invalid CSL citation item at position %d."
 msgstr ""
 
-#: bibliography-builder.php:1225
+#: bibliography-builder.php:1230
 msgid "The requested bibliography style is unavailable."
 msgstr ""
 
-#: bibliography-builder.php:1236
+#: bibliography-builder.php:1241
 msgid "The requested bibliography style could not be read."
 msgstr ""
 
-#: bibliography-builder.php:1254
+#: bibliography-builder.php:1259
 msgid "The citation data could not be prepared for formatting."
 msgstr ""
 
-#: bibliography-builder.php:1280
+#: bibliography-builder.php:1285
 msgid "The citations could not be formatted."
 msgstr ""
 
-#: bibliography-builder.php:1819
+#: bibliography-builder.php:1824
 msgid "The PubMed citation service returned an error."
 msgstr ""
 
-#: bibliography-builder.php:1463
+#: bibliography-builder.php:1468
 #: includes/abilities.php:238
 msgid "Post not found."
 msgstr "未找到文章。"
 
-#: bibliography-builder.php:1474
+#: bibliography-builder.php:1479
 #: includes/abilities.php:249
 msgid "Sorry, you are not allowed to read this bibliography."
 msgstr "抱歉，您无权查看此参考书目。"
 
-#: bibliography-builder.php:1491
+#: bibliography-builder.php:1496
 msgid "Sorry, you are not allowed to format bibliographies."
 msgstr ""
 
-#: bibliography-builder.php:1508
+#: bibliography-builder.php:1513
 msgid "Sorry, you are not allowed to resolve PubMed citations."
 msgstr ""
 
-#: bibliography-builder.php:1578
+#: bibliography-builder.php:1583
 msgid "The citation formatting request is too large."
 msgstr ""
 
-#: bibliography-builder.php:1600
+#: bibliography-builder.php:1605
 msgid "Too many citations were sent for formatting."
 msgstr ""
 
-#: bibliography-builder.php:1800
+#: bibliography-builder.php:1805
 msgid "Invalid PubMed ID."
 msgstr ""
 
-#: bibliography-builder.php:1811
+#: bibliography-builder.php:1816
 msgid "The PubMed citation service could not be reached."
 msgstr ""
 
-#: bibliography-builder.php:1815
+#: bibliography-builder.php:1820
 msgid "The PubMed ID could not be resolved."
 msgstr ""
 
-#: bibliography-builder.php:1823
+#: bibliography-builder.php:1828
 msgid "The PubMed citation service returned an invalid response."
 msgstr ""
 
-#: bibliography-builder.php:2308
+#: bibliography-builder.php:2451
 #: includes/abilities.php:293
 msgid "Bibliography block not found for the requested index."
 msgstr "未找到所请求索引对应的参考书目区块。"
 
-#: bibliography-builder.php:2355
+#: bibliography-builder.php:2498
 msgid "PubMed ID to resolve to CSL-JSON."
 msgstr ""
 
-#: bibliography-builder.php:2371
+#: bibliography-builder.php:2514
 msgid "Post ID to inspect for bibliography blocks."
 msgstr "用于检查参考书目区块的文章 ID。"
 
-#: bibliography-builder.php:2402
+#: bibliography-builder.php:2545
 msgid "Zero-based bibliography block index within the post."
 msgstr "文章中以 0 为起始的参考书目区块索引。"
 
-#: bibliography-builder.php:2413
+#: bibliography-builder.php:2556
 msgid "Response format: json, text, or csl-json."
 msgstr "响应格式：json、text 或 csl-json。"
 
-#: bibliography-builder.php:2598
+#: bibliography-builder.php:2741
 msgid "Bibliography block has no heading. Screen reader users may not find this section."
 msgstr ""
 
-#: bibliography-builder.php:2608
-#: bibliography-builder.php:2609
+#: bibliography-builder.php:2751
+#: bibliography-builder.php:2752
 msgid "Bibliography block contains no citations."
 msgstr ""
 
-#: bibliography-builder.php:2610
+#: bibliography-builder.php:2753
 msgid "Add at least one citation before publishing."
 msgstr ""
 
-#: bibliography-builder.php:2624
+#: bibliography-builder.php:2767
 msgid "Add a heading in block settings so the bibliography is announced as a document section."
 msgstr ""
 
@@ -841,48 +841,48 @@ msgid "Create accessible bibliographies from DOI, PubMed, BibTeX, CSL-JSON, and 
 msgstr ""
 
 #. translators: %d: maximum length in bytes.
-#: bibliography-builder.php:930
+#: bibliography-builder.php:935
 #, php-format
 msgid "A CSL field exceeds the maximum length of %d bytes."
 msgstr ""
 
-#: bibliography-builder.php:2242
+#: bibliography-builder.php:2385
 msgid "Invalid PubMed Central ID."
 msgstr ""
 
-#: bibliography-builder.php:2253
+#: bibliography-builder.php:2396
 msgid "The PubMed Central citation service could not be reached."
 msgstr ""
 
-#: bibliography-builder.php:2257
+#: bibliography-builder.php:2400
 msgid "The PubMed Central ID could not be resolved."
 msgstr ""
 
-#: bibliography-builder.php:2261
+#: bibliography-builder.php:2404
 msgid "The PubMed Central citation service returned an error."
 msgstr ""
 
-#: bibliography-builder.php:2265
+#: bibliography-builder.php:2408
 msgid "The PubMed Central citation service returned an invalid response."
 msgstr ""
 
-#: bibliography-builder.php:2444
+#: bibliography-builder.php:2587
 msgid "PubMed Central ID (PMCID) to resolve to CSL-JSON."
 msgstr ""
 
-#: bibliography-builder.php:2590
+#: bibliography-builder.php:2733
 msgid "One or more citations use a URL or DOI as link text. Add a descriptive title for screen readers."
 msgstr ""
 
-#: bibliography-builder.php:2594
+#: bibliography-builder.php:2737
 msgid "All machine-readable metadata outputs are disabled. Enable JSON-LD, COinS, or CSL-JSON for interoperability."
 msgstr ""
 
-#: bibliography-builder.php:2641
+#: bibliography-builder.php:2784
 msgid "Citations with a URL or DOI should have a descriptive title as link text."
 msgstr ""
 
-#: bibliography-builder.php:2658
+#: bibliography-builder.php:2801
 msgid "Enable at least one metadata output to improve citation-manager interoperability."
 msgstr ""
 
@@ -890,31 +890,31 @@ msgstr ""
 msgid "Couldn't resolve the PMCID. Check the number and try again."
 msgstr ""
 
-#: bibliography-builder.php:1525
+#: bibliography-builder.php:1530
 msgid "Sorry, you are not allowed to resolve arXiv citations."
 msgstr ""
 
-#: bibliography-builder.php:2013
+#: bibliography-builder.php:2018
 msgid "Invalid arXiv ID."
 msgstr ""
 
-#: bibliography-builder.php:2023
+#: bibliography-builder.php:2028
 msgid "The arXiv metadata service could not be reached."
 msgstr ""
 
-#: bibliography-builder.php:2027
+#: bibliography-builder.php:2032
 msgid "The arXiv ID could not be resolved."
 msgstr ""
 
-#: bibliography-builder.php:2031
+#: bibliography-builder.php:2036
 msgid "The arXiv metadata service returned an error."
 msgstr ""
 
-#: bibliography-builder.php:2035
+#: bibliography-builder.php:2040
 msgid "The arXiv metadata service returned an invalid response."
 msgstr ""
 
-#: bibliography-builder.php:2470
+#: bibliography-builder.php:2613
 msgid "arXiv ID (modern or legacy, optional version) to resolve to CSL-JSON."
 msgstr ""
 
@@ -970,31 +970,19 @@ msgstr ""
 msgid "CSL-JSON citation records to check."
 msgstr ""
 
-#: bibliography-builder.php:1542
+#: bibliography-builder.php:1547
 msgid "Sorry, you are not allowed to resolve book citations."
 msgstr ""
 
-#: bibliography-builder.php:2187
+#: bibliography-builder.php:2299
 msgid "Invalid ISBN."
 msgstr ""
 
-#: bibliography-builder.php:2204
-msgid "The Open Library book service could not be reached."
-msgstr ""
-
-#: bibliography-builder.php:2208
+#: bibliography-builder.php:2309
 msgid "The ISBN could not be resolved."
 msgstr ""
 
-#: bibliography-builder.php:2212
-msgid "The Open Library book service returned an error."
-msgstr ""
-
-#: bibliography-builder.php:2216
-msgid "The Open Library book service returned an invalid response."
-msgstr ""
-
-#: bibliography-builder.php:2493
+#: bibliography-builder.php:2636
 msgid "ISBN-10 or ISBN-13, without hyphens, to resolve to CSL-JSON."
 msgstr ""
 
@@ -1017,4 +1005,16 @@ msgstr ""
 #: block.json
 msgctxt "block description"
 msgid "A scholarly bibliography block. Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, and supported citations to build a semantically rich, auto-sorted reference list."
+msgstr ""
+
+#: bibliography-builder.php:2305
+msgid "The book metadata service could not be reached."
+msgstr ""
+
+#: bibliography-builder.php:2313
+msgid "The book metadata service returned an error."
+msgstr ""
+
+#: bibliography-builder.php:2317
+msgid "The book metadata service returned an invalid response."
 msgstr ""

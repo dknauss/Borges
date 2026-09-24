@@ -806,23 +806,139 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertSame( 404, $result->get_error_data()['status'] );
 	}
 
-	public function test_isbn_endpoint_rejects_unusable_records(): void {
-		foreach ( array( 'not json', '{"ISBN:9780140328721":{"authors":[]}}' ) as $body ) {
-			bibliography_builder_test_reset_state();
-			bibliography_builder_test_set_http_response(
-				array(
-					'response' => array( 'code' => 200 ),
-					'body'     => $body,
-				)
-			);
+	public function test_isbn_endpoint_rejects_unusable_records_from_both_providers(): void {
+		bibliography_builder_test_set_http_response_for(
+			'openlibrary.org',
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '{"ISBN:9780140328721":{"authors":[]}}',
+			)
+		);
+		bibliography_builder_test_set_http_response_for(
+			'googleapis.com',
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => 'not json',
+			)
+		);
 
-			$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
-			$request['isbn'] = '9780140328721';
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+		$request['isbn'] = '9780140328721';
 
-			$result = bibliography_builder_rest_resolve_isbn( $request );
+		$result = bibliography_builder_rest_resolve_isbn( $request );
 
-			$this->assertSame( 'bibliography_builder_isbn_invalid_response', $result->get_error_code(), $body );
-		}
+		$this->assertSame( 'bibliography_builder_isbn_invalid_response', $result->get_error_code() );
+		$this->assertCount( 2, bibliography_builder_test_get_http_requests() );
+	}
+
+	/**
+	 * Google Books volumes search response for one ISBN.
+	 */
+	private function google_books_fixture( string $identifier = '9780140328721' ): string {
+		return wp_json_encode(
+			array(
+				'kind'       => 'books#volumes',
+				'totalItems' => 1,
+				'items'      => array(
+					array(
+						'volumeInfo' => array(
+							'title'               => 'Fantastic Mr. Fox',
+							'authors'             => array( 'Roald Dahl' ),
+							'publisher'           => 'Puffin',
+							'publishedDate'       => '1988-10-01',
+							'pageCount'           => 96,
+							'industryIdentifiers' => array(
+								array(
+									'type'       => 'ISBN_13',
+									'identifier' => $identifier,
+								),
+							),
+						),
+					),
+				),
+			)
+		);
+	}
+
+	public function test_isbn_endpoint_falls_back_to_google_books_when_open_library_fails(): void {
+		bibliography_builder_test_set_http_response_for(
+			'openlibrary.org',
+			array(
+				'response' => array( 'code' => 404 ),
+				'body'     => '',
+			)
+		);
+		bibliography_builder_test_set_http_response_for(
+			'googleapis.com',
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => $this->google_books_fixture(),
+			)
+		);
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+		$request['isbn'] = '9780140328721';
+
+		$data     = bibliography_builder_rest_resolve_isbn( $request )->get_data();
+		$requests = bibliography_builder_test_get_http_requests();
+
+		$this->assertSame(
+			array(
+				'type'            => 'book',
+				'title'           => 'Fantastic Mr. Fox',
+				'ISBN'            => '9780140328721',
+				'author'          => array(
+					array(
+						'family' => 'Dahl',
+						'given'  => 'Roald',
+					),
+				),
+				'publisher'       => 'Puffin',
+				'issued'          => array( 'date-parts' => array( array( 1988, 10, 1 ) ) ),
+				'number-of-pages' => '96',
+			),
+			$data
+		);
+		$this->assertCount( 2, $requests );
+		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API, $requests[1]['url'] );
+		$this->assertStringEndsWith( '?q=isbn%3A9780140328721', $requests[1]['url'] );
+		$this->assertSame( 'wp_safe_remote_get', $requests[1]['function'] );
+
+		// Both providers' results are cached: a repeat lookup makes no request.
+		bibliography_builder_rest_resolve_isbn( $request );
+		$this->assertCount( 2, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_isbn_endpoint_does_not_call_google_books_when_open_library_succeeds(): void {
+		bibliography_builder_test_set_http_response_for(
+			'openlibrary.org',
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => $this->open_library_fixture(),
+			)
+		);
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+		$request['isbn'] = '9780140328721';
+
+		bibliography_builder_rest_resolve_isbn( $request );
+
+		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_google_books_rejects_a_volume_for_a_different_isbn(): void {
+		$this->assertSame(
+			'not_found',
+			bibliography_builder_google_books_to_csl( $this->google_books_fixture( '9780000000002' ), '9780140328721' )
+		);
+		$this->assertSame(
+			'not_found',
+			bibliography_builder_google_books_to_csl( '{"kind":"books#volumes","totalItems":0}', '9780140328721' )
+		);
+		$this->assertIsArray(
+			bibliography_builder_google_books_to_csl( $this->google_books_fixture( '0140328726' ), '9780140328721' ),
+			'An ISBN-10 identifier for the same book matches.'
+		);
 	}
 
 	public function test_isbn_endpoint_rejects_invalid_checksums_without_a_request(): void {

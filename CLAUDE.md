@@ -67,7 +67,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
   - `GET /pmid/{pmid}` — resolves PubMed/PMID records through a fixed NCBI/PMC CSL endpoint; requires `edit_posts`
   - `GET /pmcid/{pmcid}` — resolves PubMed Central/PMCID records through NCBI's fixed PMC CSL endpoint via the same shared resolver; requires `edit_posts`
   - `GET /arxiv?id={id}` — resolves arXiv IDs through the fixed arXiv API, mapping Atom to a CSL preprint in PHP; requires `edit_posts`
-  - `GET /isbn/{isbn}` — resolves checksum-valid ISBNs through the fixed Open Library Books API, mapping to a CSL book in PHP; requires `edit_posts`
+  - `GET /isbn/{isbn}` — resolves checksum-valid ISBNs through the fixed Open Library Books API, falling back to Google Books, mapping to a CSL book in PHP; requires `edit_posts`
   - `GET /posts/{post_id}/bibliographies` — list all bibliography blocks in post
   - `GET /posts/{post_id}/bibliographies/{index}` — single bibliography; supports `?format=json|text|csl-json`
 - Read-only Abilities API integration (WordPress 6.9+) lives in `includes/abilities.php`: `borges/get-bibliographies`, `borges/export-bibliography`, `borges/validate-citations` in a `bibliography` category. They reuse the REST read/permission helpers; on older WordPress the `wp_abilities_api_*` hooks never fire.

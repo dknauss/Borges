@@ -65,9 +65,14 @@ const BIBLIOGRAPHY_BUILDER_PMC_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ctxp/
 const BIBLIOGRAPHY_BUILDER_ARXIV_API = 'https://export.arxiv.org/api/query';
 
 /**
- * Open Library Books API endpoint used for ISBN resolution.
+ * Open Library Books API endpoint: the first provider tried for ISBNs.
  */
 const BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_BOOKS_API = 'https://openlibrary.org/api/books';
+
+/**
+ * Google Books volumes endpoint: the ISBN fallback when Open Library fails.
+ */
+const BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API = 'https://www.googleapis.com/books/v1/volumes';
 
 /**
  * Modern (2301.00001) and legacy (hep-th/9901001, math.GT/0309136) arXiv IDs,
@@ -2195,6 +2200,91 @@ function bibliography_builder_open_library_to_csl( $body, $isbn13 ) {
 }
 
 /**
+ * Convert a Google Books volumes search response into a CSL-JSON book record.
+ *
+ * `q=isbn:` is a search, so a volume is only accepted when its
+ * industryIdentifiers contain the requested ISBN; anything else is treated
+ * as not found rather than citing a different book.
+ *
+ * @param string $body   JSON response body.
+ * @param string $isbn13 The requested ISBN-13.
+ * @return array|string|null CSL item, `not_found`, or null when unusable.
+ */
+function bibliography_builder_google_books_to_csl( $body, $isbn13 ) {
+	$decoded = json_decode( (string) $body, true );
+
+	if ( ! is_array( $decoded ) ) {
+		return null;
+	}
+
+	$items  = isset( $decoded['items'] ) && is_array( $decoded['items'] ) ? $decoded['items'] : array();
+	$wanted = array_filter( array( $isbn13, bibliography_builder_isbn13_to_isbn10( $isbn13 ) ) );
+	$volume = null;
+
+	foreach ( $items as $item ) {
+		$info = isset( $item['volumeInfo'] ) && is_array( $item['volumeInfo'] ) ? $item['volumeInfo'] : array();
+		$ids  = isset( $info['industryIdentifiers'] ) && is_array( $info['industryIdentifiers'] )
+			? $info['industryIdentifiers']
+			: array();
+
+		foreach ( $ids as $identifier ) {
+			$value = isset( $identifier['identifier'] ) ? strtoupper( (string) $identifier['identifier'] ) : '';
+			if ( in_array( $value, $wanted, true ) ) {
+				$volume = $info;
+				break 2;
+			}
+		}
+	}
+
+	if ( null === $volume ) {
+		return 'not_found';
+	}
+
+	if ( empty( $volume['title'] ) || ! is_string( $volume['title'] ) ) {
+		return null;
+	}
+
+	$title = trim( $volume['title'] );
+	if ( ! empty( $volume['subtitle'] ) && is_string( $volume['subtitle'] ) ) {
+		$title .= ': ' . trim( $volume['subtitle'] );
+	}
+
+	$csl = array(
+		'type'  => 'book',
+		'title' => $title,
+		'ISBN'  => $isbn13,
+	);
+
+	$authors = array();
+	foreach ( isset( $volume['authors'] ) && is_array( $volume['authors'] ) ? $volume['authors'] : array() as $name ) {
+		$csl_name = is_string( $name ) ? bibliography_builder_split_display_name( $name ) : array();
+
+		if ( ! empty( $csl_name ) ) {
+			$authors[] = $csl_name;
+		}
+	}
+	if ( ! empty( $authors ) ) {
+		$csl['author'] = $authors;
+	}
+
+	if ( ! empty( $volume['publisher'] ) && is_string( $volume['publisher'] ) ) {
+		$csl['publisher'] = trim( $volume['publisher'] );
+	}
+
+	$published = isset( $volume['publishedDate'] ) ? (string) $volume['publishedDate'] : '';
+	if ( preg_match( '/^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?/', $published, $date ) ) {
+		$csl['issued'] = array( 'date-parts' => array( array_map( 'intval', array_slice( $date, 1 ) ) ) );
+	}
+
+	$pages = isset( $volume['pageCount'] ) ? $volume['pageCount'] : null;
+	if ( is_int( $pages ) && $pages > 0 ) {
+		$csl['number-of-pages'] = (string) $pages;
+	}
+
+	return $csl;
+}
+
+/**
  * REST callback that resolves an ISBN to a CSL-JSON book record.
  *
  * @param WP_REST_Request $request REST request.
@@ -2211,16 +2301,35 @@ function bibliography_builder_rest_resolve_isbn( WP_REST_Request $request ) {
 		);
 	}
 
-	// Open Library matches bibkeys literally against each edition's stored
-	// identifiers, and many older editions carry only an ISBN-10, so ask for
-	// both forms in one request.
+	$messages = array(
+		'unreachable'      => __(
+			'The book metadata service could not be reached.',
+			'borges-bibliography-builder'
+		),
+		'not_found'        => __(
+			'The ISBN could not be resolved.',
+			'borges-bibliography-builder'
+		),
+		'upstream'         => __(
+			'The book metadata service returned an error.',
+			'borges-bibliography-builder'
+		),
+		'invalid_response' => __(
+			'The book metadata service returned an invalid response.',
+			'borges-bibliography-builder'
+		),
+	);
+
+	// Open Library first. It matches bibkeys literally against each edition's
+	// stored identifiers, and many older editions carry only an ISBN-10, so ask
+	// for both forms in one request.
 	$bibkeys = 'ISBN:' . $isbn13;
 	$isbn10  = bibliography_builder_isbn13_to_isbn10( $isbn13 );
 	if ( '' !== $isbn10 ) {
 		$bibkeys .= ',ISBN:' . $isbn10;
 	}
 
-	return bibliography_builder_resolve_remote_csl(
+	$open_library = bibliography_builder_resolve_remote_csl(
 		add_query_arg(
 			array(
 				'bibkeys' => $bibkeys,
@@ -2229,28 +2338,31 @@ function bibliography_builder_rest_resolve_isbn( WP_REST_Request $request ) {
 			),
 			BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_BOOKS_API
 		),
-		'isbn_' . $isbn13,
+		'isbn_ol_' . $isbn13,
 		'bibliography_builder_isbn',
-		array(
-			'unreachable'      => __(
-				'The Open Library book service could not be reached.',
-				'borges-bibliography-builder'
-			),
-			'not_found'        => __(
-				'The ISBN could not be resolved.',
-				'borges-bibliography-builder'
-			),
-			'upstream'         => __(
-				'The Open Library book service returned an error.',
-				'borges-bibliography-builder'
-			),
-			'invalid_response' => __(
-				'The Open Library book service returned an invalid response.',
-				'borges-bibliography-builder'
-			),
-		),
+		$messages,
 		static function ( $body ) use ( $isbn13 ) {
 			return bibliography_builder_open_library_to_csl( $body, $isbn13 );
+		}
+	);
+
+	if ( ! is_wp_error( $open_library ) ) {
+		return $open_library;
+	}
+
+	// Google Books when Open Library has no record or is unavailable. Each
+	// provider caches its own result, so a failing provider is not retried on
+	// every lookup of the same ISBN.
+	return bibliography_builder_resolve_remote_csl(
+		add_query_arg(
+			array( 'q' => rawurlencode( 'isbn:' . $isbn13 ) ),
+			BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API
+		),
+		'isbn_gb_' . $isbn13,
+		'bibliography_builder_isbn',
+		$messages,
+		static function ( $body ) use ( $isbn13 ) {
+			return bibliography_builder_google_books_to_csl( $body, $isbn13 );
 		}
 	);
 }

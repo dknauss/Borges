@@ -23,6 +23,7 @@ $GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
 $GLOBALS['bibliography_builder_test_viewable_post_types'] = array();
 $GLOBALS['bibliography_builder_test_abilities']           = array();
 $GLOBALS['bibliography_builder_test_ability_categories']  = array();
+$GLOBALS['bibliography_builder_test_http_responses_for']  = array();
 
 function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_posts']           = array();
@@ -43,6 +44,15 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_viewable_post_types'] = array();
 	$GLOBALS['bibliography_builder_test_abilities']           = array();
 	$GLOBALS['bibliography_builder_test_ability_categories']  = array();
+	$GLOBALS['bibliography_builder_test_http_responses_for']  = array();
+}
+
+/**
+ * Serve a response only for request URLs containing $url_fragment. Checked
+ * before the single default response, so tests can script provider chains.
+ */
+function bibliography_builder_test_set_http_response_for( $url_fragment, $response ) {
+	$GLOBALS['bibliography_builder_test_http_responses_for'][ $url_fragment ] = $response;
 }
 
 /**
@@ -299,6 +309,12 @@ function bibliography_builder_test_record_http_request( $function, $url, $args )
 		'url'      => $url,
 		'args'     => $args,
 	);
+
+	foreach ( $GLOBALS['bibliography_builder_test_http_responses_for'] as $fragment => $response ) {
+		if ( false !== strpos( $url, $fragment ) ) {
+			return $response;
+		}
+	}
 
 	if ( null === $GLOBALS['bibliography_builder_test_http_response'] ) {
 		return new WP_Error( 'http_request_failed', 'No test HTTP response configured.' );
