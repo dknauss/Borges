@@ -97,7 +97,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Features
 
-- **Multiple input paths** — Add bare DOIs, DOI URLs, PubMed/PMID records, BibTeX entries, and supported formatted citations.
+- **Multiple input paths** — Add bare DOIs, DOI URLs, PubMed/PMID and PubMed Central/PMCID records, arXiv IDs and links, BibTeX and BibLaTeX entries, and supported formatted citations.
 - **Nine citation styles** — Chicago Notes-Bibliography by default, with Chicago Author-Date, APA 7, Harvard, Vancouver, IEEE, MLA 9, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2018) selectable.
 - **Structured editing** — Plain-text editing plus per-field editing for heuristic or warning-marked citations.
 - **Semantic output** — `role="doc-bibliography"`, `<cite>` wrappers, `lang` attributes, and hanging-indent styling without deprecated bibliography-entry ARIA roles.

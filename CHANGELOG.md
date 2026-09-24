@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The paste-box placeholder, the supported-input notice, the LaTeX-detected error, and the block description now list PMCID and arXiv IDs alongside DOIs, PMIDs, and BibTeX. These are changed source strings: none of the 19 bundled seed locales had translated them, but any official WordPress.org language pack that did will need the new wording re-translated.
 - Regenerated the translation template and merged all 19 seed PO/MO files. Beyond the new PMCID strings, the committed POT had fallen behind: it was missing six strings that shipped in 1.5.0 (the CSL field-length error, four Block Accessibility Checks 4.0 messages, and the current plugin description) and still listed 14 strings that no longer exist in the source. No existing translation was lost; every locale keeps the same number of translated strings.
 
 ### Fixed

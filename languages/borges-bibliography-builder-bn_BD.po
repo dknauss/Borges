@@ -221,10 +221,6 @@ msgstr ""
 msgid "The pasted input is too large. Maximum size is 1 MB."
 msgstr ""
 
-#: src/lib/parser.js:764
-msgid "This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, BibTeX entry, or supported citation instead."
-msgstr ""
-
 #: src/components/editor-canvas-notices.js:40
 msgid "Notification"
 msgstr "বিজ্ঞপ্তি"
@@ -606,10 +602,6 @@ msgstr "উদ্ধৃতি শৈলী"
 msgid "Citation removed. %s"
 msgstr ""
 
-#: src/edit.js:550
-msgid "Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
-msgstr ""
-
 #: src/edit.js:566
 msgid "Resolving…"
 msgstr "DOI নিষ্পত্তি হচ্ছে…"
@@ -782,10 +774,6 @@ msgstr ""
 msgid "This bibliography has %1$d citations — above the %2$d-entry threshold. Formatting may be slower on shared hosting. The hard limit is %3$d citations."
 msgstr ""
 
-#: src/lib/input-support.js:3
-msgid "Paste a DOI, PMID (PubMed ID), BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line."
-msgstr ""
-
 #. translators: %d: citation count.
 #: src/hooks/use-citation-import-actions.js:34
 #, fuzzy,js-format
@@ -821,11 +809,6 @@ msgstr[1] ""
 #: block.json
 msgctxt "block title"
 msgid "Bibliography"
-msgstr ""
-
-#: block.json
-msgctxt "block description"
-msgid "A scholarly bibliography block. Add DOI(s), PubMed/PMID records, BibTeX entries, and supported citations to build a semantically rich, auto-sorted reference list."
 msgstr ""
 
 #: block.json
@@ -991,4 +974,21 @@ msgstr ""
 
 #: includes/abilities.php:190
 msgid "CSL-JSON citation records to check."
+msgstr ""
+
+#: src/edit.js:550
+msgid "Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
+msgstr ""
+
+#: src/lib/input-support.js:3
+msgid "Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line."
+msgstr ""
+
+#: src/lib/parser.js:764
+msgid "This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, BibTeX entry, or supported citation instead."
+msgstr ""
+
+#: block.json
+msgctxt "block description"
+msgid "A scholarly bibliography block. Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, BibTeX entries, and supported citations to build a semantically rich, auto-sorted reference list."
 msgstr ""
