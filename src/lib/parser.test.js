@@ -1949,3 +1949,146 @@ describe('extractEmbeddedIdentifier — PMCID', () => {
 		expect(extractEmbeddedIdentifier('The PMCs of 2012.')).toBeNull();
 	});
 });
+
+describe('arXiv input resolution', () => {
+	const ARXIV_CSL = {
+		type: 'article',
+		title: 'Attention Is All You Need',
+		author: [{ family: 'Vaswani', given: 'Ashish' }],
+		issued: { 'date-parts': [[2017, 6, 12]] },
+		publisher: 'arXiv',
+		number: 'arXiv:1706.03762',
+		DOI: '10.48550/arXiv.1706.03762',
+		URL: 'https://arxiv.org/abs/1706.03762',
+	};
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+		clearDoiMetadataCache();
+		apiFetch.mockResolvedValue(ARXIV_CSL);
+	});
+
+	it.each([
+		['arXiv:1706.03762', '1706.03762'],
+		['arxiv: 1706.03762v5', '1706.03762v5'],
+		['https://arxiv.org/abs/1706.03762', '1706.03762'],
+		['arxiv.org/pdf/1706.03762v2.pdf', '1706.03762v2'],
+		['https://export.arxiv.org/abs/hep-th/9901001', 'hep-th/9901001'],
+		['arXiv:math.GT/0309136', 'math.GT/0309136'],
+		['10.48550/arXiv.1706.03762', '1706.03762'],
+		['https://doi.org/10.48550/arXiv.1706.03762', '1706.03762'],
+	])('routes %p to the arXiv proxy as %p', async (input, expectedId) => {
+		const result = await parsePastedInput(input, 'apa');
+
+		expect(apiFetch).toHaveBeenCalledWith({
+			path: `/bibliography/v1/arxiv?id=${encodeURIComponent(expectedId)}`,
+		});
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(1);
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'arxiv',
+			csl: {
+				type: 'article',
+				publisher: 'arXiv',
+				DOI: '10.48550/arXiv.1706.03762',
+			},
+		});
+	});
+
+	it('does not treat a bare arXiv-shaped number as an arXiv ID', async () => {
+		const result = await parsePastedInput('1706.03762', 'apa');
+
+		expect(apiFetch).not.toHaveBeenCalledWith(
+			expect.objectContaining({
+				path: expect.stringContaining('/arxiv'),
+			})
+		);
+		expect(result.entries.every((e) => e.inputFormat !== 'arxiv')).toBe(
+			true
+		);
+	});
+
+	it('leaves ordinary DOIs on the DOI backend', async () => {
+		const fetchFn = jest.fn().mockResolvedValue({
+			ok: true,
+			status: 200,
+			json: jest.fn().mockResolvedValue({
+				type: 'journal-article',
+				title: 'Regular Article',
+				DOI: '10.1000/xyz123',
+			}),
+		});
+
+		const result = await parsePastedInput('10.1000/xyz123', 'apa', {
+			fetchFn,
+		});
+
+		expect(result.entries[0].inputFormat).toBe('doi');
+		expect(apiFetch).not.toHaveBeenCalled();
+	});
+
+	it('resolves several arXiv IDs one at a time', async () => {
+		let inFlight = 0;
+		let maxInFlight = 0;
+		apiFetch.mockImplementation(async () => {
+			inFlight += 1;
+			maxInFlight = Math.max(maxInFlight, inFlight);
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			inFlight -= 1;
+			return ARXIV_CSL;
+		});
+
+		const result = await parsePastedInput(
+			'arXiv:1706.03762\narXiv:2301.00001\narXiv:hep-th/9901001',
+			'apa'
+		);
+
+		expect(result.entries).toHaveLength(3);
+		expect(maxInFlight).toBe(1);
+	});
+
+	it('returns an arXiv error when resolution fails', async () => {
+		apiFetch.mockRejectedValue(new Error('Not found'));
+
+		const result = await parsePastedInput('arXiv:9999.99999', 'apa');
+
+		expect(result.entries).toHaveLength(0);
+		expect(result.errors).toEqual([
+			"Couldn't resolve the arXiv ID. Check it and try again.",
+		]);
+	});
+});
+
+describe('extractEmbeddedIdentifier — arXiv', () => {
+	it('extracts a labeled arXiv ID from a free-text citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Vaswani A, et al. Attention Is All You Need. 2017. arXiv:1706.03762.'
+			)
+		).toMatchObject({ format: 'arxiv', value: 'arXiv:1706.03762' });
+	});
+
+	it('extracts an arxiv.org URL from a free-text citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Vaswani A. Attention. Preprint, https://arxiv.org/abs/1706.03762v7'
+			)
+		).toMatchObject({ format: 'arxiv', value: 'arXiv:1706.03762v7' });
+	});
+
+	it('routes an embedded arXiv DOI to arXiv rather than CrossRef', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Vaswani A. Attention. 2017. https://doi.org/10.48550/arXiv.1706.03762'
+			)
+		).toMatchObject({ format: 'arxiv', value: 'arXiv:1706.03762' });
+	});
+
+	it('prefers a journal DOI over an arXiv label in the same citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Author. Title. Nature 1 (2020). doi:10.1038/s41586-020-2649-2. arXiv:2006.10256'
+			)
+		).toMatchObject({ format: 'doi' });
+	});
+});

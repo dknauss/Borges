@@ -219,7 +219,7 @@ CSL-JSON script blocks.
 | --------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **ISBN-10 / ISBN-13** | Planned support              | High-value next book/monograph importer. Accept `ISBN:` prefixes plus bare, hyphenated, or spaced ISBNs; validate ISBN-10/ISBN-13 checksums before lookup; evaluate metadata providers and terms before choosing a resolver.                                       |
 | **PMCID**             | Done (unreleased)            | `GET /bibliography/v1/pmcid/<pmcid>` proxies NCBI's fixed PMC citation exporter through the shared NCBI resolver used by PMID; bare `PMC…`, `PMCID:` labels, and free-text `PMC…` are detected.                                                                   |
-| **arXiv ID**          | Planned support              | High-value scholarly preprint importer. Accept modern and legacy arXiv identifiers; resolve through arXiv metadata APIs; map to CSL article/report-ish records while preserving DOI/journal data when present.                                                     |
+| **arXiv ID**          | Done (unreleased)            | `GET /bibliography/v1/arxiv?id=<id>` queries the fixed arXiv API and maps Atom to a CSL preprint in PHP; `arXiv:` labels, arxiv.org URLs, and arXiv DOIs are detected, standalone and in free text.                                                           |
 | **ISSN**              | Evaluate                     | Identifies a serial, not a specific cited work. Useful for journal/periodical enrichment and validation, but should not create a standalone bibliography entry unless paired with article-level metadata.                                                          |
 | **URL**               | Evaluate                     | Useful but risky and unreliable. Consider after fixed-host identifiers; require strict timeout, content-type, size, redirect, and allowlist/denylist controls; prefer standards-based metadata (`citation_*`, Open Graph, JSON-LD, COinS) over arbitrary scraping. |
 | **OCLC / WorldCat**   | Evaluate                     | Useful for library/book workflows and edition disambiguation. Needs API/access/licensing review and careful mapping from edition/work records to CSL `book`.                                                                                                       |
@@ -387,7 +387,7 @@ in 1.4.0. Suggested ordering for a 1.6.0 cut, in rough payoff-per-effort order:
 3. **Reference-manager export corpus**
     - pending todo `2026-06-23-test-reference-manager-exports.md`; targets the
       paste/import coverage gap named in STATE.md
-4. ~~**PMCID resolver**~~ (done, unreleased), then **arXiv**, then **ISBN**
+4. ~~**PMCID resolver**~~ and ~~**arXiv**~~ (done, unreleased), then **ISBN**
     - PMCID reuses the PMID REST proxy pattern; arXiv is the highest-value new
       source; ISBN needs a provider/terms decision first (see identifier table)
 5. **Phase 05 read-only Abilities**

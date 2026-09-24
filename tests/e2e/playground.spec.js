@@ -290,3 +290,37 @@ test('bibliography block imports a PubMed Central PMCID', async ({ page }) => {
 
 	await importCitations(editorFrame, 'PMCID: PMC3531190', 1);
 });
+
+// Live check of the arXiv proxy against export.arxiv.org. The direct proxy
+// call comes first so a failure reports the proxy's error code and upstream
+// status rather than only "no entry appeared".
+test('bibliography block imports an arXiv preprint', async ({ page }) => {
+	test.setTimeout(120_000);
+
+	const editorFrame = await createPostWithBibliographyBlock(page);
+
+	const proxyResult = await page.evaluate(async () => {
+		try {
+			const data = await window.wp.apiFetch({
+				path: '/bibliography/v1/arxiv?id=1706.03762',
+			});
+			return { ok: true, title: data?.title, doi: data?.DOI };
+		} catch (error) {
+			return {
+				ok: false,
+				code: error?.code,
+				message: error?.message,
+				data: error?.data,
+			};
+		}
+	});
+
+	expect(
+		proxyResult.ok,
+		`arXiv proxy failed: ${JSON.stringify(proxyResult)}`
+	).toBe(true);
+	expect(proxyResult.title).toMatch(/Attention/i);
+	expect(proxyResult.doi).toBe('10.48550/arXiv.1706.03762');
+
+	await importCitations(editorFrame, 'arXiv:1706.03762', 1);
+});

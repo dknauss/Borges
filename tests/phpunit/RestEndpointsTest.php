@@ -52,7 +52,7 @@ final class RestEndpointsTest extends TestCase {
 		bibliography_builder_register_rest_routes();
 		$routes = $GLOBALS['bibliography_builder_test_rest_routes'];
 
-		$this->assertCount( 5, $routes );
+		$this->assertCount( 6, $routes );
 		$this->assertSame( 'bibliography/v1', $routes[0]['namespace'] );
 		$this->assertSame( '/format', $routes[0]['route'] );
 		$this->assertSame( '/pmid/(?P<pmid>\d{1,8})', $routes[1]['route'] );
@@ -78,6 +78,16 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertFalse( $pmcid_arg['validate_callback']( '1234567890' ) );
 		$this->assertFalse( $pmcid_arg['validate_callback']( 'PMC' ) );
 		$this->assertFalse( $pmcid_arg['validate_callback']( array( '3531190' ) ) );
+
+		$this->assertSame( '/arxiv', $routes[5]['route'] );
+		$this->assertSame( 'bibliography_builder_rest_resolve_arxiv', $routes[5]['args']['callback'] );
+		$this->assertSame( 'bibliography_builder_rest_arxiv_permissions_check', $routes[5]['args']['permission_callback'] );
+
+		$arxiv_arg = $routes[5]['args']['args']['id'];
+		$this->assertTrue( $arxiv_arg['validate_callback']( '1706.03762' ) );
+		$this->assertTrue( $arxiv_arg['validate_callback']( 'hep-th/9901001v2' ) );
+		$this->assertFalse( $arxiv_arg['validate_callback']( '../../etc/passwd' ) );
+		$this->assertFalse( $arxiv_arg['validate_callback']( array( '1706.03762' ) ) );
 	}
 
 	public function test_published_posts_are_publicly_readable(): void {
@@ -458,6 +468,197 @@ final class RestEndpointsTest extends TestCase {
 
 		$this->assertInstanceOf( WP_Error::class, $result );
 		$this->assertSame( 'bibliography_builder_pmcid_invalid_response', $result->get_error_code() );
+	}
+
+	/**
+	 * Atom response in the shape export.arxiv.org returns for one entry.
+	 */
+	private function arxiv_atom_fixture(): string {
+		return '<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title type="html">ArXiv Query: id_list=1706.03762</title>
+  <entry>
+    <id>http://arxiv.org/abs/1706.03762v7</id>
+    <updated>2023-08-02T00:41:18Z</updated>
+    <published>2017-06-12T17:57:34Z</published>
+    <title>Attention Is All
+      You Need</title>
+    <summary>The dominant sequence transduction models...</summary>
+    <author><name>Ashish Vaswani</name></author>
+    <author><name>Ludwig van der Waals</name></author>
+    <author><name>Martin Luther King Jr.</name></author>
+    <author><name>ATLAS Collaboration</name></author>
+    <arxiv:doi>10.5555/published.version</arxiv:doi>
+    <link href="http://arxiv.org/abs/1706.03762v7" rel="alternate" type="text/html"/>
+  </entry>
+</feed>';
+	}
+
+	public function test_arxiv_endpoint_maps_atom_to_a_csl_preprint(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => $this->arxiv_atom_fixture(),
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = 'arXiv:1706.03762';
+
+		$data     = bibliography_builder_rest_resolve_arxiv( $request )->get_data();
+		$requests = bibliography_builder_test_get_http_requests();
+
+		$this->assertSame( 'article', $data['type'] );
+		$this->assertSame( 'Attention Is All You Need', $data['title'] );
+		$this->assertSame( 'arXiv', $data['publisher'] );
+		$this->assertSame( 'arXiv:1706.03762', $data['number'] );
+		// The preprint's own DataCite DOI, not the published version's DOI.
+		$this->assertSame( '10.48550/arXiv.1706.03762', $data['DOI'] );
+		$this->assertSame( 'https://arxiv.org/abs/1706.03762', $data['URL'] );
+		$this->assertSame( array( array( 2017, 6, 12 ) ), $data['issued']['date-parts'] );
+		$this->assertSame(
+			array(
+				array(
+					'family' => 'Vaswani',
+					'given'  => 'Ashish',
+				),
+				array(
+					'family' => 'van der Waals',
+					'given'  => 'Ludwig',
+				),
+				array(
+					'family' => 'King',
+					'given'  => 'Martin Luther',
+					'suffix' => 'Jr.',
+				),
+				array( 'literal' => 'ATLAS Collaboration' ),
+			),
+			$data['author']
+		);
+
+		$this->assertCount( 1, $requests );
+		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_ARXIV_API, $requests[0]['url'] );
+		$this->assertStringContainsString( 'id_list=1706.03762', $requests[0]['url'] );
+		$this->assertSame( 'wp_safe_remote_get', $requests[0]['function'] );
+
+		bibliography_builder_rest_resolve_arxiv( $request );
+		$this->assertCount( 1, bibliography_builder_test_get_http_requests(), 'Second call is cached.' );
+	}
+
+	public function test_arxiv_endpoint_keeps_the_requested_version_in_the_url_only(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => $this->arxiv_atom_fixture(),
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = 'https://arxiv.org/pdf/1706.03762v5.pdf';
+
+		$data = bibliography_builder_rest_resolve_arxiv( $request )->get_data();
+
+		$this->assertSame( 'https://arxiv.org/abs/1706.03762v5', $data['URL'] );
+		$this->assertSame( 'arXiv:1706.03762', $data['number'] );
+		$this->assertSame( '10.48550/arXiv.1706.03762', $data['DOI'] );
+	}
+
+	public function test_arxiv_endpoint_reports_api_error_entries_as_not_found(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry>'
+					. '<id>http://arxiv.org/api/errors#incorrect_id_format_for_9999.99999</id>'
+					. '<title>Error</title></entry></feed>',
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = '9999.99999';
+
+		$result = bibliography_builder_rest_resolve_arxiv( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_arxiv_not_found', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
+	}
+
+	public function test_arxiv_endpoint_reports_an_empty_feed_as_not_found(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Empty</title></feed>',
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = '2301.00001';
+
+		$result = bibliography_builder_rest_resolve_arxiv( $request );
+
+		$this->assertSame( 'bibliography_builder_arxiv_not_found', $result->get_error_code() );
+	}
+
+	public function test_arxiv_endpoint_rejects_malformed_xml(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '<html><body>Service unavailable</body',
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = '2301.00001';
+
+		$result = bibliography_builder_rest_resolve_arxiv( $request );
+
+		$this->assertSame( 'bibliography_builder_arxiv_invalid_response', $result->get_error_code() );
+	}
+
+	public function test_arxiv_endpoint_refuses_responses_that_declare_entities(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '<?xml version="1.0"?><!DOCTYPE feed [<!ENTITY x SYSTEM "file:///etc/passwd">]>'
+					. '<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>http://arxiv.org/abs/2301.00001v1</id>'
+					. '<title>&x;</title></entry></feed>',
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = '2301.00001';
+
+		$result = bibliography_builder_rest_resolve_arxiv( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_arxiv_invalid_response', $result->get_error_code() );
+	}
+
+	public function test_arxiv_endpoint_rejects_invalid_ids_without_a_request(): void {
+		foreach ( array( '', 'not-an-id', '1706.037', 'http://evil.example/abs/1706.03762' ) as $bad_id ) {
+			$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+			$request['id'] = $bad_id;
+
+			$result = bibliography_builder_rest_resolve_arxiv( $request );
+
+			$this->assertSame( 'bibliography_builder_arxiv_invalid', $result->get_error_code(), $bad_id );
+		}
+
+		$this->assertCount( 0, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_arxiv_endpoint_requires_editor_capability(): void {
+		$forbidden = bibliography_builder_rest_arxiv_permissions_check();
+
+		$this->assertInstanceOf( WP_Error::class, $forbidden );
+		$this->assertSame( 'bibliography_builder_arxiv_forbidden', $forbidden->get_error_code() );
+
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+
+		$this->assertTrue( bibliography_builder_rest_arxiv_permissions_check() );
 	}
 
 	public function test_formatter_endpoint_supports_all_registered_styles(): void {

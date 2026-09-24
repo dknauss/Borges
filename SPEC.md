@@ -56,10 +56,11 @@ A standalone WordPress block plugin that transforms pasted scholarly citations (
 1. **DOI** — one or more per paste, one per line. Detected by `10.\d{4,}/` pattern. Resolved to CSL-JSON through CrossRef's CORS-friendly CSL transform endpoint, with sequential browser fetches and a `citation-js` fallback when direct fetch is unavailable.
 2. **PubMed/PMID** — one or more `PMID:<number>` entries per paste. Resolved through the authenticated WordPress REST proxy to a fixed NCBI/PMC CSL endpoint; PMID input is validated as numeric before any outbound request.
 3. **PubMed Central/PMCID** — one or more `PMC<number>` entries per paste, with or without a `PMCID:` label. Resolved through the same authenticated proxy pattern to NCBI's fixed PMC citation-exporter endpoint; the ID is reduced to its digits before any outbound request and sent upstream as bare digits (the exporter answers `id=PMC<digits>` with HTTP 400). Free-text citations carrying `PMC<4+ digits>` are routed here when they have no DOI or labeled PMID.
-4. **BibTeX** — one or more entries per paste. Detected by `@type{` boundaries. Parsed to CSL-JSON via `citation-js` (client-side).
-5. **Mixed** — a paste containing DOIs, PubMed/PMID and PMCID entries, and BibTeX entries, separated by blank lines.
-6. **Free-text formatted citations** — heuristic parser for books, journal articles, chapters, webpages/social posts, reviews, and theses/dissertations. Support is best-effort; unsupported inputs fail closed with a block-local notice.
-7. **Manual entry** — structured form with Publication Type, Author(s), Title, Container, Publisher, Year, Pages, DOI, and URL fields.
+4. **arXiv** — `arXiv:<id>`, arxiv.org `/abs/` or `/pdf/` URLs, or arXiv DataCite DOIs (`10.48550/arXiv.<id>`), in modern (`2301.00001`) or legacy (`hep-th/9901001`) form with an optional version. Resolved through `GET /bibliography/v1/arxiv?id=<id>`, which queries the fixed `export.arxiv.org` API and maps the Atom response to a CSL `article` preprint (publisher `arXiv`, number `arXiv:<id>`, the arXiv DOI, and the abstract URL). A bare number is not treated as an arXiv ID. arXiv lookups run one at a time in the editor to respect arXiv's request-rate guidance.
+5. **BibTeX** — one or more entries per paste. Detected by `@type{` boundaries. Parsed to CSL-JSON via `citation-js` (client-side).
+6. **Mixed** — a paste containing DOIs, PubMed/PMID, PMCID, and arXiv entries, and BibTeX entries, separated by blank lines.
+7. **Free-text formatted citations** — heuristic parser for books, journal articles, chapters, webpages/social posts, reviews, and theses/dissertations. Support is best-effort; unsupported inputs fail closed with a block-local notice.
+8. **Manual entry** — structured form with Publication Type, Author(s), Title, Container, Publisher, Year, Pages, DOI, and URL fields.
 
 ### Citation Styles (1.0)
 
@@ -926,7 +927,7 @@ PMID support shipped in 1.2. Future identifier support should use a resolver lay
 | --- | --- | --- |
 | **ISBN-10 / ISBN-13** | Planned support | High-value next book/monograph importer. Accept `ISBN:` prefixes plus bare, hyphenated, or spaced ISBNs; validate ISBN-10/ISBN-13 checksums before lookup; evaluate metadata providers and terms before choosing a resolver. |
 | **PMCID** | Supported (unreleased) | Resolved through `GET /bibliography/v1/pmcid/<pmcid>`, the same authenticated proxy pattern as PMID, against NCBI's fixed PMC citation exporter. |
-| **arXiv ID** | Planned support | High-value scholarly preprint importer. Accept modern and legacy arXiv identifiers; resolve through arXiv metadata APIs; map to CSL article/report-ish records while preserving DOI/journal data when present. |
+| **arXiv ID** | Supported (unreleased) | Resolved through `GET /bibliography/v1/arxiv?id=<id>` against the fixed arXiv API; Atom mapped to a CSL preprint server-side. arXiv DOIs (`10.48550/arXiv.…`) route here instead of CrossRef. |
 | **ISSN** | Evaluate | Identifies a serial, not a specific cited work. Useful for journal/periodical enrichment and validation, but should not create a standalone bibliography entry unless paired with article-level metadata. |
 | **URL** | Evaluate | Useful but risky and unreliable. Consider after fixed-host identifiers; require strict timeout, content-type, size, redirect, and allowlist/denylist controls; prefer standards-based metadata (`citation_*`, Open Graph, JSON-LD, COinS) over arbitrary scraping. |
 | **OCLC / WorldCat** | Evaluate | Useful for library/book workflows and edition disambiguation. Needs API/access/licensing review and careful mapping from edition/work records to CSL `book`. |

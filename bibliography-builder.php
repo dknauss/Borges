@@ -60,7 +60,18 @@ const BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ct
 const BIBLIOGRAPHY_BUILDER_PMC_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ctxp/v1/pmc/';
 
 /**
- * HTTP timeout for external PMID and PMCID resolution requests.
+ * Query endpoint of the arXiv API, used for arXiv ID resolution (Atom XML).
+ */
+const BIBLIOGRAPHY_BUILDER_ARXIV_API = 'https://export.arxiv.org/api/query';
+
+/**
+ * Modern (2301.00001) and legacy (hep-th/9901001, math.GT/0309136) arXiv IDs,
+ * with an optional version suffix.
+ */
+const BIBLIOGRAPHY_BUILDER_ARXIV_ID_PATTERN = '#^(?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[a-z]{2})?/\d{7})(?:v\d+)?$#i';
+
+/**
+ * HTTP timeout for external PMID, PMCID, and arXiv resolution requests.
  */
 const BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT = 10;
 
@@ -1495,6 +1506,23 @@ function bibliography_builder_rest_pmid_permissions_check() {
 }
 
 /**
+ * Permission callback for editor-only arXiv resolver requests.
+ *
+ * @return true|WP_Error
+ */
+function bibliography_builder_rest_arxiv_permissions_check() {
+	if ( current_user_can( 'edit_posts' ) ) {
+		return true;
+	}
+
+	return new WP_Error(
+		'bibliography_builder_arxiv_forbidden',
+		__( 'Sorry, you are not allowed to resolve arXiv citations.', 'borges-bibliography-builder' ),
+		array( 'status' => 403 )
+	);
+}
+
+/**
  * Read JSON/body params from a REST request.
  *
  * @param WP_REST_Request $request REST request.
@@ -1598,6 +1626,45 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
  * @return WP_REST_Response|WP_Error
  */
 function bibliography_builder_resolve_ncbi_csl( $endpoint, $id, $cache_key, $code_prefix, $messages ) {
+	return bibliography_builder_resolve_remote_csl(
+		add_query_arg(
+			array(
+				'format' => 'csl',
+				'id'     => $id,
+			),
+			$endpoint
+		),
+		$cache_key,
+		$code_prefix,
+		$messages,
+		static function ( $body ) {
+			$decoded = json_decode( $body, true );
+
+			return is_array( $decoded ) && ! empty( $decoded ) ? $decoded : null;
+		}
+	);
+}
+
+/**
+ * Fetch, decode, and cache one record from a fixed citation-metadata host.
+ *
+ * Shared by the PMID, PMCID, and arXiv resolvers. Successes, not-found
+ * answers, and failures are cached for different TTLs in the resolver cache
+ * group (`bibliography_builder_pmid`, kept for uninstall-cleanup
+ * compatibility).
+ *
+ * @param string   $url         Request URL built from a fixed host constant and a
+ *                              validated identifier.
+ * @param string   $cache_key   Resolver cache key.
+ * @param string   $code_prefix Error code prefix, e.g. `bibliography_builder_pmid`.
+ * @param array    $messages    Error messages keyed `unreachable`, `not_found`,
+ *                              `upstream`, and `invalid_response`.
+ * @param callable $decode      Maps a 2xx response body to a CSL array, to null for
+ *                              an unusable response, or to the string `not_found`
+ *                              when the upstream reports no such record in a 2xx.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_resolve_remote_csl( $url, $cache_key, $code_prefix, $messages, $decode ) {
 	$cached = bibliography_builder_get_cached_ncbi_result(
 		$cache_key,
 		$code_prefix . '_upstream_error',
@@ -1608,13 +1675,6 @@ function bibliography_builder_resolve_ncbi_csl( $endpoint, $id, $cache_key, $cod
 		return $cached;
 	}
 
-	$url = add_query_arg(
-		array(
-			'format' => 'csl',
-			'id'     => $id,
-		),
-		$endpoint
-	);
 	// wp_safe_remote_get, not wp_remote_get: the request follows up to three
 	// redirects, and only the safe variant runs each hop through
 	// wp_http_validate_url. The identifier is already constrained to digits and
@@ -1657,9 +1717,16 @@ function bibliography_builder_resolve_ncbi_csl( $endpoint, $id, $cache_key, $cod
 				)
 			);
 		} else {
-			$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
+			$decoded = call_user_func( $decode, (string) wp_remote_retrieve_body( $response ) );
 
-			if ( ! is_array( $decoded ) || empty( $decoded ) ) {
+			if ( 'not_found' === $decoded ) {
+				$error = bibliography_builder_pmid_error(
+					$code_prefix . '_not_found',
+					$messages['not_found'],
+					array( 'status' => 404 )
+				);
+				$ttl   = BIBLIOGRAPHY_BUILDER_PUBMED_NOT_FOUND_CACHE_TTL;
+			} elseif ( ! is_array( $decoded ) || empty( $decoded ) ) {
 				$error = bibliography_builder_pmid_error(
 					$code_prefix . '_invalid_response',
 					$messages['invalid_response'],
@@ -1736,6 +1803,221 @@ function bibliography_builder_rest_resolve_pmid( WP_REST_Request $request ) {
 				'borges-bibliography-builder'
 			),
 		)
+	);
+}
+
+/**
+ * Reduce pasted arXiv input to a bare arXiv identifier.
+ *
+ * Accepts `arXiv:` prefixes and arxiv.org `/abs/` or `/pdf/` URLs.
+ *
+ * @param mixed $value Raw identifier.
+ * @return string The identifier, or an empty string when it is not valid.
+ */
+function bibliography_builder_normalize_arxiv_id( $value ) {
+	if ( ! is_scalar( $value ) ) {
+		return '';
+	}
+
+	$id = trim( (string) $value );
+	$id = (string) preg_replace( '#^(?:https?://)?(?:www\.|export\.)?arxiv\.org/(?:abs|pdf)/#i', '', $id );
+	$id = (string) preg_replace( '#^arxiv:\s*#i', '', $id );
+	$id = (string) preg_replace( '#\.pdf$#i', '', $id );
+
+	return preg_match( BIBLIOGRAPHY_BUILDER_ARXIV_ID_PATTERN, $id ) ? $id : '';
+}
+
+/**
+ * Split an arXiv author string ("Given Middle Family") into a CSL name.
+ *
+ * The arXiv Atom feed gives each author as one display string. Lowercase
+ * particles (van, de, von, ...) stay with the family name, a trailing
+ * generational suffix is kept separately, and single-word or collaboration
+ * names become literals.
+ *
+ * @param string $name Author display name.
+ * @return array CSL name object, or an empty array for a blank name.
+ */
+function bibliography_builder_split_arxiv_author( $name ) {
+	$name = trim( (string) preg_replace( '/\s+/u', ' ', (string) $name ) );
+
+	if ( '' === $name ) {
+		return array();
+	}
+
+	$tokens = explode( ' ', $name );
+
+	if ( count( $tokens ) < 2 || preg_match( '/\b(?:collaboration|consortium|group|team)\b/iu', $name ) ) {
+		return array( 'literal' => $name );
+	}
+
+	$suffix = '';
+	if ( preg_match( '/^(?:jr\.?|sr\.?|ii|iii|iv)$/iu', (string) end( $tokens ) ) && count( $tokens ) > 2 ) {
+		$suffix = (string) array_pop( $tokens );
+	}
+
+	$family    = array( (string) array_pop( $tokens ) );
+	$particles = array( 'da', 'de', 'del', 'della', 'der', 'di', 'dos', 'du', 'la', 'le', 'ten', 'ter', 'van', 'von' );
+
+	// Keep at least one given-name token: `isset( $tokens[1] )` means two or more remain.
+	while ( isset( $tokens[1] ) && in_array( end( $tokens ), $particles, true ) ) {
+		array_unshift( $family, (string) array_pop( $tokens ) );
+	}
+
+	$csl_name = array(
+		'family' => implode( ' ', $family ),
+		'given'  => implode( ' ', $tokens ),
+	);
+
+	if ( '' !== $suffix ) {
+		$csl_name['suffix'] = $suffix;
+	}
+
+	return $csl_name;
+}
+
+/**
+ * Convert an arXiv API Atom response into a CSL-JSON preprint record.
+ *
+ * Follows the Zotero preprint convention: CSL type `article`, publisher
+ * `arXiv`, number `arXiv:<id>`, the arXiv-assigned DataCite DOI, and the
+ * abstract-page URL.
+ *
+ * @param string $body Atom XML response body.
+ * @param string $id   The requested arXiv ID.
+ * @return array|string|null CSL item, `not_found`, or null when unusable.
+ */
+function bibliography_builder_arxiv_atom_to_csl( $body, $id ) {
+	if ( ! function_exists( 'simplexml_load_string' ) || '' === trim( (string) $body ) ) {
+		return null;
+	}
+
+	// arXiv's Atom never declares a DOCTYPE. Refusing one outright closes off
+	// entity expansion even on PHP 7.4 hosts with a pre-2.9 libxml, where
+	// external entities were not yet disabled by default.
+	if ( false !== stripos( (string) $body, '<!DOCTYPE' ) || false !== stripos( (string) $body, '<!ENTITY' ) ) {
+		return null;
+	}
+
+	$previous_errors = libxml_use_internal_errors( true );
+	// LIBXML_NONET blocks network access during parsing; external entities are
+	// not substituted without LIBXML_NOENT, so the fixed-host response cannot
+	// pull in other content.
+	$feed = simplexml_load_string( (string) $body, 'SimpleXMLElement', LIBXML_NONET );
+	libxml_clear_errors();
+	libxml_use_internal_errors( $previous_errors );
+
+	if ( false === $feed ) {
+		return null;
+	}
+
+	$atom  = $feed->children( 'http://www.w3.org/2005/Atom' );
+	$entry = isset( $atom->entry ) ? $atom->entry[0] : null;
+
+	if ( null === $entry ) {
+		return 'not_found';
+	}
+
+	$entry_id = trim( (string) $entry->id );
+
+	// The API reports an unknown or malformed ID as a 200 with an error entry.
+	if ( false !== strpos( $entry_id, '/api/errors' ) ) {
+		return 'not_found';
+	}
+
+	$title = trim( (string) preg_replace( '/\s+/u', ' ', (string) $entry->title ) );
+
+	if ( '' === $title ) {
+		return null;
+	}
+
+	$authors = array();
+	foreach ( $entry->author as $author ) {
+		$csl_name = bibliography_builder_split_arxiv_author( (string) $author->name );
+
+		if ( ! empty( $csl_name ) ) {
+			$authors[] = $csl_name;
+		}
+	}
+
+	$base_id = (string) preg_replace( '/v\d+$/i', '', $id );
+	$csl     = array(
+		'type'      => 'article',
+		'title'     => $title,
+		'publisher' => 'arXiv',
+		'number'    => 'arXiv:' . $base_id,
+		'DOI'       => '10.48550/arXiv.' . $base_id,
+		'URL'       => 'https://arxiv.org/abs/' . $id,
+	);
+
+	if ( ! empty( $authors ) ) {
+		$csl['author'] = $authors;
+	}
+
+	if ( preg_match( '/^(\d{4})-(\d{2})-(\d{2})/', trim( (string) $entry->published ), $date ) ) {
+		$csl['issued'] = array(
+			'date-parts' => array( array( (int) $date[1], (int) $date[2], (int) $date[3] ) ),
+		);
+	}
+
+	return $csl;
+}
+
+/**
+ * Build the cache key for one arXiv resolution.
+ *
+ * @param string $arxiv_id Normalized arXiv ID.
+ * @return string
+ */
+function bibliography_builder_get_arxiv_cache_key( $arxiv_id ) {
+	return 'arxiv_' . strtolower( (string) $arxiv_id );
+}
+
+/**
+ * REST callback that resolves an arXiv ID to CSL-JSON.
+ *
+ * The ID travels as a query argument rather than a path segment because
+ * legacy IDs contain a slash (`hep-th/9901001`).
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_resolve_arxiv( WP_REST_Request $request ) {
+	$arxiv_id = bibliography_builder_normalize_arxiv_id( isset( $request['id'] ) ? $request['id'] : '' );
+
+	if ( '' === $arxiv_id ) {
+		return new WP_Error(
+			'bibliography_builder_arxiv_invalid',
+			__( 'Invalid arXiv ID.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	return bibliography_builder_resolve_remote_csl(
+		add_query_arg( array( 'id_list' => rawurlencode( $arxiv_id ) ), BIBLIOGRAPHY_BUILDER_ARXIV_API ),
+		bibliography_builder_get_arxiv_cache_key( $arxiv_id ),
+		'bibliography_builder_arxiv',
+		array(
+			'unreachable'      => __(
+				'The arXiv metadata service could not be reached.',
+				'borges-bibliography-builder'
+			),
+			'not_found'        => __(
+				'The arXiv ID could not be resolved.',
+				'borges-bibliography-builder'
+			),
+			'upstream'         => __(
+				'The arXiv metadata service returned an error.',
+				'borges-bibliography-builder'
+			),
+			'invalid_response' => __(
+				'The arXiv metadata service returned an invalid response.',
+				'borges-bibliography-builder'
+			),
+		),
+		static function ( $body ) use ( $arxiv_id ) {
+			return bibliography_builder_arxiv_atom_to_csl( $body, $arxiv_id );
+		}
 	);
 }
 
@@ -1967,6 +2249,29 @@ function bibliography_builder_register_rest_routes() {
 					},
 					'validate_callback' => static function ( $value ) {
 						return is_scalar( $value ) && (bool) preg_match( '/^(?:PMC)?\d{1,9}$/i', (string) $value );
+					},
+				),
+			),
+		)
+	);
+
+	register_rest_route(
+		'bibliography/v1',
+		'/arxiv',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'bibliography_builder_rest_resolve_arxiv',
+			'permission_callback' => 'bibliography_builder_rest_arxiv_permissions_check',
+			'args'                => array(
+				'id' => array(
+					'description'       => __(
+						'arXiv ID (modern or legacy, optional version) to resolve to CSL-JSON.',
+						'borges-bibliography-builder'
+					),
+					'type'              => 'string',
+					'required'          => true,
+					'validate_callback' => static function ( $value ) {
+						return '' !== bibliography_builder_normalize_arxiv_id( $value );
 					},
 				),
 			),

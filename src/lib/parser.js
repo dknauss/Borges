@@ -39,6 +39,28 @@ const EMBEDDED_PMID_REGEX = /\bPMID[:\s]\s*(\d{1,8})\b/iu;
 // EMBEDDED_PMCID_REGEX: `PMC` plus at least four digits, which is how PMCIDs
 // appear in published reference lists (with or without a `PMCID:` label).
 const EMBEDDED_PMCID_REGEX = /\bPMC(\d{4,9})\b/u;
+// arXiv IDs: modern `2301.00001` or legacy `hep-th/9901001`, optional `vN`.
+// Mirrors BIBLIOGRAPHY_BUILDER_ARXIV_ID_PATTERN in bibliography-builder.php.
+const ARXIV_ID_SOURCE =
+	'(?:\\d{4}\\.\\d{4,5}|[a-z-]+(?:\\.[a-z]{2})?\\/\\d{7})(?:v\\d+)?';
+const ARXIV_URL_PREFIX_SOURCE =
+	'(?:https?:\\/\\/)?(?:www\\.|export\\.)?arxiv\\.org\\/(?:abs|pdf)\\/';
+// Standalone: `arXiv:ID` or an arxiv.org abs/pdf URL. A bare `2301.00001` is
+// not accepted; without the label it is indistinguishable from a number.
+const ARXIV_REGEX = new RegExp(
+	`^(?:arxiv:\\s*|${ARXIV_URL_PREFIX_SOURCE})(${ARXIV_ID_SOURCE})(?:\\.pdf)?\\/?$`,
+	'iu'
+);
+const EMBEDDED_ARXIV_REGEX = new RegExp(
+	`(?:\\barxiv:\\s*|${ARXIV_URL_PREFIX_SOURCE})(${ARXIV_ID_SOURCE})`,
+	'iu'
+);
+// arXiv's own DataCite DOIs (10.48550/arXiv.ID) are not in CrossRef, so they
+// resolve through the arXiv backend instead of the DOI one.
+const ARXIV_DOI_REGEX = new RegExp(
+	`^(?:(?:https?:\\/\\/)?(?:dx\\.)?doi\\.org\\/|doi:)?10\\.48550\\/arxiv\\.(${ARXIV_ID_SOURCE})$`,
+	'iu'
+);
 const NCBI_CSL_API =
 	'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=';
 const NCBI_PMC_CSL_API =
@@ -46,6 +68,7 @@ const NCBI_PMC_CSL_API =
 const CROSSREF_CSL_API = 'https://api.crossref.org/works/';
 const PMID_REST_ENDPOINT = '/bibliography/v1/pmid/';
 const PMCID_REST_ENDPOINT = '/bibliography/v1/pmcid/';
+const ARXIV_REST_ENDPOINT = '/bibliography/v1/arxiv';
 const MAX_INPUT_SIZE = 1024 * 1024; // 1 MB
 const PARSE_CONCURRENCY = 4;
 const MAX_DOI_METADATA_CACHE_ENTRIES = 100;
@@ -54,6 +77,9 @@ const LATEX_DOCUMENT_PATTERN =
 const DOI_METADATA_CACHE = new Map();
 const PENDING_DOI_RESOLUTIONS = new Map();
 let DOI_RESOLUTION_QUEUE = Promise.resolve();
+// arXiv asks API clients to space out requests, so arXiv lookups run one at a
+// time even when a paste contains several.
+let ARXIV_RESOLUTION_QUEUE = Promise.resolve();
 export { validateAndSanitizeCsl };
 
 function normalizePmidInput(value) {
@@ -173,12 +199,22 @@ export function normalizeDoiValueForLookup(value) {
  * extracted — one citation, one identifier.
  *
  * @param {string} chunk Free-text citation string (already trimmed).
- * @return {{ format: 'doi'|'pmid'|'pmcid', value: string, rawValue: string } | null} Extracted identifier result, or null if none found.
+ * @return {{ format: 'doi'|'pmid'|'pmcid'|'arxiv', value: string, rawValue: string } | null} Extracted identifier result, or null if none found.
  */
 export function extractEmbeddedIdentifier(chunk) {
 	// DOI first — higher authority than PMID when both co-occur.
 	const doiMatch = chunk.match(EMBEDDED_DOI_REGEX);
 	if (doiMatch) {
+		const arxivIdFromDoi = getArxivId(doiMatch[0]);
+
+		if (arxivIdFromDoi) {
+			return {
+				format: 'arxiv',
+				value: `arXiv:${arxivIdFromDoi}`,
+				rawValue: chunk,
+			};
+		}
+
 		return {
 			format: 'doi',
 			// Strip trailing punctuation (.,;:) and any doi: URL prefix via the
@@ -204,6 +240,15 @@ export function extractEmbeddedIdentifier(chunk) {
 		return {
 			format: 'pmcid',
 			value: `PMC${pmcidMatch[1]}`,
+			rawValue: chunk,
+		};
+	}
+
+	const arxivMatch = chunk.match(EMBEDDED_ARXIV_REGEX);
+	if (arxivMatch) {
+		return {
+			format: 'arxiv',
+			value: `arXiv:${arxivMatch[1]}`,
 			rawValue: chunk,
 		};
 	}
@@ -278,6 +323,39 @@ export function clearDoiMetadataCache() {
 	DOI_METADATA_CACHE.clear();
 	PENDING_DOI_RESOLUTIONS.clear();
 	DOI_RESOLUTION_QUEUE = Promise.resolve();
+	ARXIV_RESOLUTION_QUEUE = Promise.resolve();
+}
+
+/**
+ * Extract a bare arXiv ID from an `arXiv:` label, arxiv.org URL, or arXiv DOI.
+ *
+ * @param {string} value Standalone identifier text.
+ * @return {string|null} The arXiv ID, or null when the value is not one.
+ */
+function getArxivId(value) {
+	const trimmed = value.trim();
+	const match =
+		trimmed.match(ARXIV_REGEX) ||
+		normalizeDoiInput(trimmed).match(ARXIV_DOI_REGEX);
+
+	return match ? match[1] : null;
+}
+
+function resolveArxivCsl(arxivId) {
+	if (typeof apiFetch !== 'function') {
+		return Promise.reject(
+			new Error('WordPress REST transport unavailable for arXiv')
+		);
+	}
+
+	const queuedResolution = ARXIV_RESOLUTION_QUEUE.catch(() => {}).then(() =>
+		apiFetch({
+			path: `${ARXIV_REST_ENDPOINT}?id=${encodeURIComponent(arxivId)}`,
+		})
+	);
+	ARXIV_RESOLUTION_QUEUE = queuedResolution.catch(() => {});
+
+	return queuedResolution;
 }
 
 function enqueueDoiResolution(resolve) {
@@ -472,6 +550,11 @@ function detectFormat(chunk) {
 		return { format: 'pmcid', value: chunk };
 	}
 
+	// Before DOI: arXiv DOIs (10.48550/arXiv.ID) also match DOI_ONLY_REGEX.
+	if (getArxivId(chunk)) {
+		return { format: 'arxiv', value: chunk };
+	}
+
 	if (DOI_ONLY_REGEX.test(chunk)) {
 		return { format: 'doi', value: chunk };
 	}
@@ -502,7 +585,7 @@ function createDetectedItem(
 	};
 }
 
-const IDENTIFIER_FORMATS = ['doi', 'pmid', 'pmcid'];
+const IDENTIFIER_FORMATS = ['doi', 'pmid', 'pmcid', 'arxiv'];
 
 function looksLikeStandaloneCitationLine(line) {
 	const normalizedLine = line.trim();
@@ -585,6 +668,15 @@ const PARSER_BACKENDS = {
 		const csl = await resolveNcbiCsl('pmid', pmid, fetchFn);
 
 		return { cslItems: [csl] };
+	},
+	arxiv: async (value) => {
+		const arxivId = getArxivId(value);
+
+		if (!arxivId) {
+			throw new Error('Invalid arXiv ID');
+		}
+
+		return { cslItems: [await resolveArxivCsl(arxivId)] };
 	},
 	pmcid: async (value, { fetchFn } = {}) => {
 		const pmcid = normalizePmcidInput(value);
@@ -686,6 +778,13 @@ function formatBackendParseError(format, err) {
 	if (format === 'pmid') {
 		return __(
 			"Couldn't resolve the PMID. Check the number and try again.",
+			'borges-bibliography-builder'
+		);
+	}
+
+	if (format === 'arxiv') {
+		return __(
+			"Couldn't resolve the arXiv ID. Check it and try again.",
 			'borges-bibliography-builder'
 		);
 	}

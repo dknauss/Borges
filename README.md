@@ -15,7 +15,7 @@
 
 Borges Bibliography Builder is named after Jorge Luis Borges (1899–1986), the Argentine writer, essayist, poet, and librarian whose work imagined infinite libraries, invented books, and self-referential labyrinths.
 
-Borges, the plugin, adds a single bibliography builder block to the WordPress editor. It transforms pasted scholarly references — DOI numbers/URLs, PubMed/PMID and PubMed Central/PMCID identifiers, BibTeX and BibLaTeX entries, and supported formatted citations — into a semantically rich, auto-sorted bibliography with static saved output. Export your work as CSL-JSON, BibTeX, BibLaTeX, and RIS for Zotero, Mendeley, EndNote, JabRef, BibDesk, and similar tools.
+Borges, the plugin, adds a single bibliography builder block to the WordPress editor. It transforms pasted scholarly references — DOI numbers/URLs, PubMed/PMID and PubMed Central/PMCID identifiers, arXiv IDs, BibTeX and BibLaTeX entries, and supported formatted citations — into a semantically rich, auto-sorted bibliography with static saved output. Export your work as CSL-JSON, BibTeX, BibLaTeX, and RIS for Zotero, Mendeley, EndNote, JabRef, BibDesk, and similar tools.
 
 No shortcodes. No database storage. Static HTML output survives plugin deactivation.
 
@@ -204,6 +204,8 @@ The separate editor-only formatter endpoint accepts `POST /wp-json/bibliography/
 The editor-only PubMed resolver accepts `GET /wp-json/bibliography/v1/pmid/<pmid>`, requires `edit_posts`, validates the PMID as numeric input, and returns normalized CSL-JSON from the fixed NCBI/PMC citation exporter endpoint. It is used for pasted `PMID:` input and does not persist citations by itself.
 
 The editor-only PubMed Central resolver accepts `GET /wp-json/bibliography/v1/pmcid/<pmcid>` (with or without the `PMC` prefix), has the same `edit_posts` requirement and numeric validation, and returns CSL-JSON from NCBI's fixed PMC citation exporter endpoint. It is used for pasted `PMC…` / `PMCID:` input.
+
+The editor-only arXiv resolver accepts `GET /wp-json/bibliography/v1/arxiv?id=<arxiv-id>` (modern or legacy IDs, optional version), requires `edit_posts`, validates the ID pattern before any outbound request, queries the fixed arXiv API, and returns a CSL-JSON preprint record. It is used for pasted `arXiv:` IDs, arxiv.org links, and arXiv DOIs.
 
 ## External Services
 
