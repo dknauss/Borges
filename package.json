@@ -89,6 +89,7 @@
 		"@wordpress/i18n": "^6.15.0",
 		"@wordpress/icons": "^12.0.0",
 		"@wordpress/notices": "^5.42.0",
+		"@wordpress/prettier-config": "^4.43.0",
 		"@wordpress/scripts": "^31.8.0",
 		"citeproc": "^2.4.63",
 		"prettier": "^2.8.8",
@@ -98,10 +99,34 @@
 	"overrides": {
 		"typescript": "~5.3.3",
 		"serialize-javascript": "^7.0.5",
-		"js-yaml": "^4.2.0",
+		"js-yaml": "^4.3.2",
 		"uuid": "^14.0.0",
 		"basic-ftp": "5.3.1",
 		"showdown": "^2.1.0",
+		"adm-zip": "^0.6.0",
+		"fast-uri": "^3.1.6",
+		"svgo": "^3.3.5",
+		"browserslist": "^4.28.7",
+		"baseline-browser-mapping": "^2.11.0",
+		"joi": "^18.2.5",
+		"@stylistic/stylelint-plugin": {
+			"postcss-selector-parser": "^6.1.3"
+		},
+		"postcss-calc": {
+			"postcss-selector-parser": "^6.1.3"
+		},
+		"postcss-merge-rules": {
+			"postcss-selector-parser": "^6.1.3"
+		},
+		"postcss-minify-selectors": {
+			"postcss-selector-parser": "^6.1.3"
+		},
+		"postcss-unique-selectors": {
+			"postcss-selector-parser": "^6.1.3"
+		},
+		"stylehacks": {
+			"postcss-selector-parser": "^6.1.3"
+		},
 		"@babel/core": "^7.29.6",
 		"http-proxy-middleware": "^3.0.6",
 		"markdown-it": "^14.2.0",
