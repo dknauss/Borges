@@ -185,8 +185,9 @@ Completed:
 
 Planned:
 
-6. **BibLaTeX import** — `@citation-js/plugin-bibtex` already parses BibLaTeX;
-   wire into the parser/paste flow for completeness.
+6. **BibLaTeX import** — citation-js already parsed BibLaTeX through the
+   BibTeX path; import is now documented, pinned by an unmocked test suite,
+   and hardened (babel `langid` → BCP 47, arXiv `eprint` → URL). Unreleased.
 
 Deferred / demand-gated:
 
@@ -380,9 +381,9 @@ in 1.4.0. Suggested ordering for a 1.6.0 cut, in rough payoff-per-effort order:
     - release-package output, WordPress.org artifact alignment, citeproc-php
       PHP deprecations, runtime smoke lanes, and representative DOI / PMID /
       BibTeX / mixed Playground imports
-2. **BibLaTeX import** (Export backlog item 6)
-    - `@citation-js/plugin-bibtex` already parses BibLaTeX; wire it into the
-      paste flow so import matches the existing BibLaTeX export
+2. **BibLaTeX import** (Export backlog item 6) — **done, unreleased**
+    - citation-js already parsed BibLaTeX; the work was pinning it with real
+      (unmocked) tests and fixing `langid` → `lang` and dropped arXiv eprints
 3. **Reference-manager export corpus**
     - pending todo `2026-06-23-test-reference-manager-exports.md`; targets the
       paste/import coverage gap named in STATE.md

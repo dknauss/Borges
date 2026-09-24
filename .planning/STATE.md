@@ -35,7 +35,7 @@ See "Immediate next-task priorities (2026-09-24)" in `ROADMAP.md` for the full
 ordering. In short:
 
 1. **CI, runtime, and Playground hygiene** (standing)
-2. **BibLaTeX import** — cheap; citation-js already parses it
+2. **BibLaTeX import** — done, unreleased (`[Unreleased]` in `CHANGELOG.md`)
 3. **Reference-manager export corpus** — addresses the paste/import coverage gap
 4. **Identifier resolvers** — PMCID, then arXiv, then ISBN
 5. **Phase 05 read-only Abilities** — re-check the memo's core-API gate first

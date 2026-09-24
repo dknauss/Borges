@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- BibLaTeX import. BibLaTeX entries (`date`, `journaltitle`, `location`, `urldate`, `@online`, `@report`, `@collection`, and similar) paste through the same path as BibTeX; citation-js already mapped these fields, and a new unmocked test suite (`src/lib/biblatex-import.test.js`) now pins that behavior so a citation-js upgrade cannot silently regress it.
+- arXiv preprints pasted as BibTeX or BibLaTeX keep a link: an `eprint` with `eprinttype = {arxiv}` (or BibTeX's `archiveprefix = {arXiv}`) becomes an `https://arxiv.org/abs/…` URL when the entry has no URL of its own. Previously the eprint was dropped. The identifier must match the modern or legacy arXiv ID pattern before a URL is built.
+
+### Fixed
+
+- BibTeX `language` and BibLaTeX `langid` values were saved verbatim into the bibliography entry's HTML `lang` attribute, so an entry pasted with `langid = {ngerman}` rendered as `lang="ngerman"`, which is not a valid BCP 47 tag and gives assistive technology a language it cannot use. Babel/polyglossia names now map to BCP 47 (`ngerman` → `de`, `british` → `en-GB`); values that are already BCP 47 pass through; anything unmappable is dropped, since an absent `lang` is correct and a wrong one is not. Already-saved entries are unchanged.
+
 ## [1.5.1] - 2026-08-19
 
 ### Added

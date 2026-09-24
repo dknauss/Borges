@@ -1,7 +1,8 @@
 /**
  * Input format detection and citation-js orchestration.
  *
- * Splits pasted input into individual entries, detects DOIs and BibTeX,
+ * Splits pasted input into individual entries, detects DOIs and BibTeX
+ * (including BibLaTeX, which shares the same detection and backend),
  * and resolves them to CSL-JSON via citation-js.
  */
 
@@ -13,6 +14,7 @@ import '@citation-js/plugin-bibtex';
 import apiFetch from '@wordpress/api-fetch';
 import { createCitationId } from './citation-id';
 import { validateAndSanitizeCsl, KNOWN_CSL_TYPES } from './csl-sanitize';
+import { normalizeBibtexCsl } from './bibtex-fields';
 import { normalizeCslNameCase } from './normalize-author-names';
 import { normalizeCslTitleCase } from './normalize-title-case';
 import { DEFAULT_CITATION_STYLE } from './formatting';
@@ -540,9 +542,13 @@ const PARSER_BACKENDS = {
 	},
 	bibtex: async (value) => {
 		const cite = await Cite.async(normalizeBibtexInput(value));
+		const cslItems = cite.get({ type: 'json' });
+		// Raw-field recovery (arXiv eprints) is only unambiguous when the
+		// segment produced exactly one item.
+		const rawEntry = cslItems.length === 1 ? value : undefined;
 
 		return {
-			cslItems: cite.get({ type: 'json' }),
+			cslItems: cslItems.map((csl) => normalizeBibtexCsl(csl, rawEntry)),
 		};
 	},
 	freetext: async (value) => {
