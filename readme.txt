@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.5.1
+Stable tag: 1.6.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -177,6 +177,17 @@ ISBN input connects through the plugin's authenticated WordPress REST proxy to *
 
 == Changelog ==
 
+= 1.6.0 =
+* **New: PubMed Central import.** Paste a PMCID (`PMC3531190`) and it is looked up through the same NCBI service as PubMed IDs.
+* **New: arXiv import.** Paste an arXiv ID, an arxiv.org link, or an arXiv DOI (`arXiv:1706.03762`, `10.48550/arXiv.1706.03762`) and it is looked up through the arXiv API. arXiv DOIs used to fail because Crossref doesn't hold them.
+* **New: ISBN import.** Paste `ISBN 978-0-14-032872-1` or a labeled ISBN-10 and the book is looked up through Open Library, with Google Books as a fallback. Checksums are verified before any lookup, and a Google result is used only if it carries the exact ISBN you pasted.
+* **New: BibLaTeX import** (`date`, `journaltitle`, `@online`, and similar) is now covered by tests. Formatted citations that contain a PMCID, arXiv ID, or labeled ISBN are looked up the same way as the bare identifier.
+* **New: WordPress Abilities (WordPress 6.9 and later).** Three read-only abilities let AI assistants and automation tools list a post's bibliographies, export one as CSL-JSON or plain text, and check citation records, with the same permissions as the existing REST routes. Nothing can be changed through them.
+* **Fixed: invalid language tags on imported entries.** BibTeX `language` and BibLaTeX `langid` values such as `ngerman` were saved verbatim into the entry's HTML `lang` attribute, which assistive technology cannot use. They now map to standard tags (`ngerman` → `de`); unknown values are left out. Already-saved entries are unchanged.
+* **Fixed: arXiv links from BibTeX.** arXiv preprints pasted as BibTeX or BibLaTeX now keep a link to the abstract page instead of dropping the eprint.
+* **Translations:** the translation template is back in sync with the plugin. A few help strings changed to name the new identifier types.
+* **Privacy:** the External Services section now also lists arXiv, Open Library, and Google Books. Each is contacted only from the editor, only when you paste that kind of identifier, and receives only the identifier.
+
 = 1.5.1 =
 * **WordPress 7.1 support.** Verified against a 7.1 release candidate: the block registers and renders in the editor, which 7.1 now always runs inside an iframe, and bibliographies still format correctly in every citation style tested.
 * **Fixed: copying could report failure when copying was still possible.** Both **Copy citation** and **Copy bibliography** had a fallback for browsers without clipboard access, but only used it when that access was missing entirely — not when the browser offered it and then refused. A refusal now falls through to the fallback instead of reporting failure.
@@ -298,6 +309,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.6.0 =
+Adds PubMed Central, arXiv, ISBN, and BibLaTeX import, plus read-only WordPress Abilities on WordPress 6.9+. Lookups contact arXiv, Open Library, or Google Books only when you paste those identifiers. No configuration changes.
 
 = 1.5.1 =
 Adds WordPress 7.1 support and fixes a case where "Copy citation" reported failure although copying was still possible. No security content; no configuration changes.
