@@ -25,6 +25,9 @@ const DOI_ONLY_REGEX =
 	/^(?:(?:https?:\/\/)?(?:dx\.)?doi\.org\/|(?:https?:\/\/)?doi:)?10\.\d{4,}\/[^\s]+$/i;
 const BIBTEX_REGEX = /@\w+\{/;
 const PMID_REGEX = /^PMID:\s*(\d{1,8})$/i;
+// PMCID: the `PMC` prefix is what distinguishes it from a PMID, so it is
+// required; the `PMCID:` label is optional.
+const PMCID_REGEX = /^(?:PMCID:\s*)?PMC(\d{1,9})$/i;
 // Unanchored variants — find an identifier anywhere inside a longer free-text string.
 // EMBEDDED_DOI_REGEX: requires registrant prefix (10.\d{4,}/) plus at least one path
 // character to avoid matching bare decimals or chapter references like "Chapter 10.".
@@ -33,10 +36,16 @@ const EMBEDDED_DOI_REGEX =
 // EMBEDDED_PMID_REGEX: requires the "PMID" label (colon or space form) to avoid
 // matching bare 8-digit numbers in page ranges, ISBNs, and phone numbers.
 const EMBEDDED_PMID_REGEX = /\bPMID[:\s]\s*(\d{1,8})\b/iu;
+// EMBEDDED_PMCID_REGEX: `PMC` plus at least four digits, which is how PMCIDs
+// appear in published reference lists (with or without a `PMCID:` label).
+const EMBEDDED_PMCID_REGEX = /\bPMC(\d{4,9})\b/u;
 const NCBI_CSL_API =
 	'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=';
+const NCBI_PMC_CSL_API =
+	'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pmc/?format=csl&id=';
 const CROSSREF_CSL_API = 'https://api.crossref.org/works/';
 const PMID_REST_ENDPOINT = '/bibliography/v1/pmid/';
+const PMCID_REST_ENDPOINT = '/bibliography/v1/pmcid/';
 const MAX_INPUT_SIZE = 1024 * 1024; // 1 MB
 const PARSE_CONCURRENCY = 4;
 const MAX_DOI_METADATA_CACHE_ENTRIES = 100;
@@ -59,37 +68,61 @@ function getDefaultFetchFn() {
 	return undefined;
 }
 
-async function resolvePmidViaFetch(pmid, fetchFn) {
-	const response = await fetchFn(`${NCBI_CSL_API}${pmid}`);
+function normalizePmcidInput(value) {
+	return value.replace(/^(?:PMCID:\s*)?PMC/iu, '').trim();
+}
+
+const NCBI_SOURCES = {
+	pmid: {
+		label: 'PMID',
+		fetchUrl: (id) => `${NCBI_CSL_API}${id}`,
+		restPath: (id) => `${PMID_REST_ENDPOINT}${encodeURIComponent(id)}`,
+	},
+	pmcid: {
+		label: 'PMCID',
+		fetchUrl: (id) => `${NCBI_PMC_CSL_API}PMC${id}`,
+		restPath: (id) => `${PMCID_REST_ENDPOINT}PMC${encodeURIComponent(id)}`,
+	},
+};
+
+async function resolveNcbiViaFetch(source, id, fetchFn) {
+	const response = await fetchFn(source.fetchUrl(id));
 
 	if (!response.ok) {
 		throw new Error(
-			`NCBI API returned ${response.status} for PMID ${pmid}`
+			`NCBI API returned ${response.status} for ${source.label} ${id}`
 		);
 	}
 
 	return response.json();
 }
 
-async function resolvePmidViaRest(pmid) {
-	return apiFetch({
-		path: `${PMID_REST_ENDPOINT}${encodeURIComponent(pmid)}`,
-	});
-}
+/**
+ * Resolve a PubMed or PubMed Central record to CSL-JSON.
+ *
+ * Prefers an injected fetch (tests, benchmarks), then the authenticated
+ * WordPress REST proxy, then a direct browser fetch.
+ *
+ * @param {'pmid'|'pmcid'} sourceKey Which NCBI source to query.
+ * @param {string}         id        Digits only (no `PMC` prefix).
+ * @param {Function}       [fetchFn] Optional fetch implementation.
+ * @return {Promise<Object>} CSL-JSON item.
+ */
+async function resolveNcbiCsl(sourceKey, id, fetchFn) {
+	const source = NCBI_SOURCES[sourceKey];
 
-async function resolvePmidCsl(pmid, fetchFn) {
 	if (typeof fetchFn === 'function') {
-		return resolvePmidViaFetch(pmid, fetchFn);
+		return resolveNcbiViaFetch(source, id, fetchFn);
 	}
 
 	if (typeof apiFetch === 'function') {
-		return resolvePmidViaRest(pmid);
+		return apiFetch({ path: source.restPath(id) });
 	}
 
 	const defaultFetchFn = getDefaultFetchFn();
 
 	if (typeof defaultFetchFn === 'function') {
-		return resolvePmidViaFetch(pmid, defaultFetchFn);
+		return resolveNcbiViaFetch(source, id, defaultFetchFn);
 	}
 
 	throw new Error(
@@ -130,14 +163,16 @@ export function normalizeDoiValueForLookup(value) {
 }
 
 /**
- * Scan `chunk` for an embedded DOI or labeled PMID.
+ * Scan `chunk` for an embedded DOI, labeled PMID, or PMCID.
  *
  * DOI is preferred over PMID when both are present (DOI resolves via CrossRef
- * and returns richer structured metadata). Only the first match is extracted —
- * one citation, one identifier.
+ * and returns richer structured metadata). PMCID is tried last: a PMID
+ * resolves the same article through PubMed, and the unlabeled `PMC1234` form
+ * is the least specific of the three patterns. Only the first match is
+ * extracted — one citation, one identifier.
  *
  * @param {string} chunk Free-text citation string (already trimmed).
- * @return {{ format: 'doi'|'pmid', value: string, rawValue: string } | null} Extracted identifier result, or null if none found.
+ * @return {{ format: 'doi'|'pmid'|'pmcid', value: string, rawValue: string } | null} Extracted identifier result, or null if none found.
  */
 export function extractEmbeddedIdentifier(chunk) {
 	// DOI first — higher authority than PMID when both co-occur.
@@ -159,6 +194,15 @@ export function extractEmbeddedIdentifier(chunk) {
 			format: 'pmid',
 			// Normalized to the PMID:NNNN form that PARSER_BACKENDS.pmid expects.
 			value: `PMID:${pmidMatch[1]}`,
+			rawValue: chunk,
+		};
+	}
+
+	const pmcidMatch = chunk.match(EMBEDDED_PMCID_REGEX);
+	if (pmcidMatch) {
+		return {
+			format: 'pmcid',
+			value: `PMC${pmcidMatch[1]}`,
 			rawValue: chunk,
 		};
 	}
@@ -423,6 +467,10 @@ function detectFormat(chunk) {
 		return { format: 'pmid', value: chunk };
 	}
 
+	if (PMCID_REGEX.test(chunk)) {
+		return { format: 'pmcid', value: chunk };
+	}
+
 	if (DOI_ONLY_REGEX.test(chunk)) {
 		return { format: 'doi', value: chunk };
 	}
@@ -453,6 +501,8 @@ function createDetectedItem(
 	};
 }
 
+const IDENTIFIER_FORMATS = ['doi', 'pmid', 'pmcid'];
+
 function looksLikeStandaloneCitationLine(line) {
 	const normalizedLine = line.trim();
 
@@ -462,7 +512,7 @@ function looksLikeStandaloneCitationLine(line) {
 
 	const format = detectFormat(normalizedLine).format;
 
-	if (format === 'doi' || format === 'pmid') {
+	if (IDENTIFIER_FORMATS.includes(format)) {
 		return true;
 	}
 
@@ -490,7 +540,7 @@ function splitChunkIntoDetectedItems(chunk) {
 	const allLinesAreIdentifiers =
 		lines.length > 1 &&
 		lines.every((line) =>
-			['doi', 'pmid'].includes(detectFormat(line).format)
+			IDENTIFIER_FORMATS.includes(detectFormat(line).format)
 		);
 
 	if (allLinesAreIdentifiers) {
@@ -531,7 +581,13 @@ function splitChunkIntoDetectedItems(chunk) {
 const PARSER_BACKENDS = {
 	pmid: async (value, { fetchFn } = {}) => {
 		const pmid = normalizePmidInput(value);
-		const csl = await resolvePmidCsl(pmid, fetchFn);
+		const csl = await resolveNcbiCsl('pmid', pmid, fetchFn);
+
+		return { cslItems: [csl] };
+	},
+	pmcid: async (value, { fetchFn } = {}) => {
+		const pmcid = normalizePmcidInput(value);
+		const csl = await resolveNcbiCsl('pmcid', pmcid, fetchFn);
 
 		return { cslItems: [csl] };
 	},
@@ -629,6 +685,13 @@ function formatBackendParseError(format, err) {
 	if (format === 'pmid') {
 		return __(
 			"Couldn't resolve the PMID. Check the number and try again.",
+			'borges-bibliography-builder'
+		);
+	}
+
+	if (format === 'pmcid') {
+		return __(
+			"Couldn't resolve the PMCID. Check the number and try again.",
 			'borges-bibliography-builder'
 		);
 	}

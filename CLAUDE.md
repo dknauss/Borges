@@ -65,6 +65,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
 - REST routes registered on `rest_api_init` at namespace `/bibliography/v1`:
   - `POST /format` — formats CSL items via citeproc-php; requires `edit_posts`
   - `GET /pmid/{pmid}` — resolves PubMed/PMID records through a fixed NCBI/PMC CSL endpoint; requires `edit_posts`
+  - `GET /pmcid/{pmcid}` — resolves PubMed Central/PMCID records through NCBI's fixed PMC CSL endpoint via the same shared resolver; requires `edit_posts`
   - `GET /posts/{post_id}/bibliographies` — list all bibliography blocks in post
   - `GET /posts/{post_id}/bibliographies/{index}` — single bibliography; supports `?format=json|text|csl-json`
 - Payload limits: 1 MB max body, 50 items max per `/format` request

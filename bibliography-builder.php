@@ -55,7 +55,12 @@ const BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES = 65536;
 const BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ctxp/v1/pubmed/';
 
 /**
- * HTTP timeout for external PMID resolution requests.
+ * NCBI Literature Citation Export endpoint used for PMCID resolution.
+ */
+const BIBLIOGRAPHY_BUILDER_PMC_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ctxp/v1/pmc/';
+
+/**
+ * HTTP timeout for external PMID and PMCID resolution requests.
  */
 const BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT = 10;
 
@@ -1303,6 +1308,19 @@ function bibliography_builder_get_pmid_cache_key( $pmid ) {
 }
 
 /**
+ * Build the cache key for one PMCID resolution.
+ *
+ * Shares the PMID cache group so uninstall's group flush covers it; the key
+ * prefix keeps the two identifier spaces apart.
+ *
+ * @param string $pmcid PMCID digits, with or without the `PMC` prefix.
+ * @return string
+ */
+function bibliography_builder_get_pmcid_cache_key( $pmcid ) {
+	return 'pmcid_' . preg_replace( '/\D/u', '', (string) $pmcid );
+}
+
+/**
  * Build a WP_Error for PMID resolution.
  *
  * @param string $code    Error code.
@@ -1315,16 +1333,16 @@ function bibliography_builder_pmid_error( $code, $message, $data ) {
 }
 
 /**
- * Cache a PMID resolution result.
+ * Cache an NCBI resolution result.
  *
- * @param string $pmid   PubMed ID.
- * @param array  $result Cache payload.
- * @param int    $ttl    Cache TTL in seconds.
+ * @param string $cache_key Cache key from the PMID or PMCID key builder.
+ * @param array  $result    Cache payload.
+ * @param int    $ttl       Cache TTL in seconds.
  * @return void
  */
-function bibliography_builder_cache_pmid_result( $pmid, $result, $ttl ) {
+function bibliography_builder_cache_ncbi_result( $cache_key, $result, $ttl ) {
 	bibliography_builder_cache_set(
-		bibliography_builder_get_pmid_cache_key( $pmid ),
+		$cache_key,
 		$result,
 		'bibliography_builder_pmid',
 		$ttl
@@ -1332,16 +1350,15 @@ function bibliography_builder_cache_pmid_result( $pmid, $result, $ttl ) {
 }
 
 /**
- * Read a cached PMID resolution result.
+ * Read a cached NCBI resolution result.
  *
- * @param string $pmid PubMed ID.
+ * @param string $cache_key        Cache key from the PMID or PMCID key builder.
+ * @param string $fallback_code    Error code when a cached error lacks one.
+ * @param string $fallback_message Error message when a cached error lacks one.
  * @return WP_REST_Response|WP_Error|null
  */
-function bibliography_builder_get_cached_pmid_result( $pmid ) {
-	$cached = bibliography_builder_cache_get(
-		bibliography_builder_get_pmid_cache_key( $pmid ),
-		'bibliography_builder_pmid'
-	);
+function bibliography_builder_get_cached_ncbi_result( $cache_key, $fallback_code, $fallback_message ) {
+	$cached = bibliography_builder_cache_get( $cache_key, 'bibliography_builder_pmid' );
 
 	if ( ! $cached['hit'] || ! is_array( $cached['value'] ) ) {
 		return null;
@@ -1352,16 +1369,9 @@ function bibliography_builder_get_cached_pmid_result( $pmid ) {
 	}
 
 	if ( isset( $cached['value']['type'] ) && 'error' === $cached['value']['type'] ) {
-		$error_code    = isset( $cached['value']['code'] )
-			? (string) $cached['value']['code']
-			: 'bibliography_builder_pmid_upstream_error';
-		$error_message = isset( $cached['value']['message'] )
-			? (string) $cached['value']['message']
-			: __( 'The PubMed citation service returned an error.', 'borges-bibliography-builder' );
-
 		return bibliography_builder_pmid_error(
-			$error_code,
-			$error_message,
+			isset( $cached['value']['code'] ) ? (string) $cached['value']['code'] : $fallback_code,
+			isset( $cached['value']['message'] ) ? (string) $cached['value']['message'] : $fallback_message,
 			isset( $cached['value']['data'] ) && is_array( $cached['value']['data'] )
 				? $cached['value']['data']
 				: array( 'status' => 502 )
@@ -1572,10 +1582,122 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 }
 
 /**
- * REST callback that resolves a PubMed ID to CSL-JSON.
+ * Resolve one record through NCBI's Literature Citation Exporter.
  *
  * NCBI's CSL endpoint does not currently emit browser CORS headers, so editor
- * requests are proxied through WordPress using a fixed URL and numeric PMID.
+ * requests are proxied through WordPress. Callers pass a fixed endpoint
+ * constant and an identifier already constrained to a digit pattern, so the
+ * only request input that varies is a validated number.
+ *
+ * @param string $endpoint    One of the fixed BIBLIOGRAPHY_BUILDER_*_CSL_API constants.
+ * @param string $id          Validated identifier sent as the `id` query arg.
+ * @param string $cache_key   Cache key from the PMID or PMCID key builder.
+ * @param string $code_prefix Error code prefix, e.g. `bibliography_builder_pmid`.
+ * @param array  $messages    Error messages keyed `unreachable`, `not_found`,
+ *                            `upstream`, and `invalid_response`.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_resolve_ncbi_csl( $endpoint, $id, $cache_key, $code_prefix, $messages ) {
+	$cached = bibliography_builder_get_cached_ncbi_result(
+		$cache_key,
+		$code_prefix . '_upstream_error',
+		$messages['upstream']
+	);
+
+	if ( null !== $cached ) {
+		return $cached;
+	}
+
+	$url = add_query_arg(
+		array(
+			'format' => 'csl',
+			'id'     => $id,
+		),
+		$endpoint
+	);
+	// wp_safe_remote_get, not wp_remote_get: the request follows up to three
+	// redirects, and only the safe variant runs each hop through
+	// wp_http_validate_url. The identifier is already constrained to digits and
+	// the host is a fixed constant, so the redirect chain is the one part of
+	// this request an upstream change could point somewhere unintended.
+	$response = wp_safe_remote_get(
+		$url,
+		array(
+			'timeout'     => BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT,
+			'redirection' => 3,
+		)
+	);
+
+	$error = null;
+	$ttl   = BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL;
+
+	if ( is_wp_error( $response ) ) {
+		$error = bibliography_builder_pmid_error(
+			$code_prefix . '_upstream_error',
+			$messages['unreachable'],
+			array( 'status' => 502 )
+		);
+	} else {
+		$status = (int) wp_remote_retrieve_response_code( $response );
+
+		if ( 404 === $status ) {
+			$error = bibliography_builder_pmid_error(
+				$code_prefix . '_not_found',
+				$messages['not_found'],
+				array( 'status' => 404 )
+			);
+			$ttl   = BIBLIOGRAPHY_BUILDER_PUBMED_NOT_FOUND_CACHE_TTL;
+		} elseif ( $status < 200 || $status >= 300 ) {
+			$error = bibliography_builder_pmid_error(
+				$code_prefix . '_upstream_error',
+				$messages['upstream'],
+				array(
+					'status'          => 502,
+					'upstream_status' => $status,
+				)
+			);
+		} else {
+			$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
+
+			if ( ! is_array( $decoded ) || empty( $decoded ) ) {
+				$error = bibliography_builder_pmid_error(
+					$code_prefix . '_invalid_response',
+					$messages['invalid_response'],
+					array( 'status' => 502 )
+				);
+			}
+		}
+	}
+
+	if ( null !== $error ) {
+		bibliography_builder_cache_ncbi_result(
+			$cache_key,
+			array(
+				'type'    => 'error',
+				'code'    => $error->get_error_code(),
+				'message' => $error->get_error_message(),
+				'data'    => $error->get_error_data(),
+			),
+			$ttl
+		);
+
+		return $error;
+	}
+
+	bibliography_builder_cache_ncbi_result(
+		$cache_key,
+		array(
+			'type' => 'success',
+			'data' => $decoded,
+		),
+		BIBLIOGRAPHY_BUILDER_PUBMED_SUCCESS_CACHE_TTL
+	);
+
+	return rest_ensure_response( $decoded );
+}
+
+/**
+ * REST callback that resolves a PubMed ID to CSL-JSON.
  *
  * @param WP_REST_Request $request REST request.
  * @return WP_REST_Response|WP_Error
@@ -1591,129 +1713,76 @@ function bibliography_builder_rest_resolve_pmid( WP_REST_Request $request ) {
 		);
 	}
 
-	$cached = bibliography_builder_get_cached_pmid_result( $pmid );
-
-	if ( null !== $cached ) {
-		return $cached;
-	}
-
-	$url = add_query_arg(
+	return bibliography_builder_resolve_ncbi_csl(
+		BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API,
+		$pmid,
+		bibliography_builder_get_pmid_cache_key( $pmid ),
+		'bibliography_builder_pmid',
 		array(
-			'format' => 'csl',
-			'id'     => $pmid,
-		),
-		BIBLIOGRAPHY_BUILDER_PUBMED_CSL_API
-	);
-	// wp_safe_remote_get, not wp_remote_get: the request follows up to three
-	// redirects, and only the safe variant runs each hop through
-	// wp_http_validate_url. The PMID itself is already constrained to digits and
-	// the host is a fixed constant, so the redirect chain is the one part of
-	// this request an upstream change could point somewhere unintended.
-	$response = wp_safe_remote_get(
-		$url,
-		array(
-			'timeout'     => BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT,
-			'redirection' => 3,
+			'unreachable'      => __(
+				'The PubMed citation service could not be reached.',
+				'borges-bibliography-builder'
+			),
+			'not_found'        => __(
+				'The PubMed ID could not be resolved.',
+				'borges-bibliography-builder'
+			),
+			'upstream'         => __(
+				'The PubMed citation service returned an error.',
+				'borges-bibliography-builder'
+			),
+			'invalid_response' => __(
+				'The PubMed citation service returned an invalid response.',
+				'borges-bibliography-builder'
+			),
 		)
 	);
+}
 
-	if ( is_wp_error( $response ) ) {
-		$error = bibliography_builder_pmid_error(
-			'bibliography_builder_pmid_upstream_error',
-			__( 'The PubMed citation service could not be reached.', 'borges-bibliography-builder' ),
-			array( 'status' => 502 )
-		);
-		bibliography_builder_cache_pmid_result(
-			$pmid,
-			array(
-				'type'    => 'error',
-				'code'    => $error->get_error_code(),
-				'message' => $error->get_error_message(),
-				'data'    => $error->get_error_data(),
-			),
-			BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL
-		);
+/**
+ * REST callback that resolves a PubMed Central ID (PMCID) to CSL-JSON.
+ *
+ * Accepts the digits with or without the `PMC` prefix and always sends the
+ * canonical `PMC<digits>` form upstream.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_resolve_pmcid( WP_REST_Request $request ) {
+	$pmcid = isset( $request['pmcid'] ) ? (string) $request['pmcid'] : '';
 
-		return $error;
+	if ( ! preg_match( '/^\d{1,9}$/', $pmcid ) ) {
+		return new WP_Error(
+			'bibliography_builder_pmcid_invalid',
+			__( 'Invalid PubMed Central ID.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
 	}
 
-	$status = (int) wp_remote_retrieve_response_code( $response );
-
-	if ( $status < 200 || $status >= 300 ) {
-		if ( 404 === $status ) {
-			$error = bibliography_builder_pmid_error(
-				'bibliography_builder_pmid_not_found',
-				__( 'The PubMed ID could not be resolved.', 'borges-bibliography-builder' ),
-				array( 'status' => 404 )
-			);
-			bibliography_builder_cache_pmid_result(
-				$pmid,
-				array(
-					'type'    => 'error',
-					'code'    => $error->get_error_code(),
-					'message' => $error->get_error_message(),
-					'data'    => $error->get_error_data(),
-				),
-				BIBLIOGRAPHY_BUILDER_PUBMED_NOT_FOUND_CACHE_TTL
-			);
-
-			return $error;
-		}
-
-		$error = bibliography_builder_pmid_error(
-			'bibliography_builder_pmid_upstream_error',
-			__( 'The PubMed citation service returned an error.', 'borges-bibliography-builder' ),
-			array(
-				'status'          => 502,
-				'upstream_status' => $status,
-			)
-		);
-		bibliography_builder_cache_pmid_result(
-			$pmid,
-			array(
-				'type'    => 'error',
-				'code'    => $error->get_error_code(),
-				'message' => $error->get_error_message(),
-				'data'    => $error->get_error_data(),
-			),
-			BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL
-		);
-
-		return $error;
-	}
-
-	$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
-
-	if ( ! is_array( $decoded ) || empty( $decoded ) ) {
-		$error = bibliography_builder_pmid_error(
-			'bibliography_builder_pmid_invalid_response',
-			__( 'The PubMed citation service returned an invalid response.', 'borges-bibliography-builder' ),
-			array( 'status' => 502 )
-		);
-		bibliography_builder_cache_pmid_result(
-			$pmid,
-			array(
-				'type'    => 'error',
-				'code'    => $error->get_error_code(),
-				'message' => $error->get_error_message(),
-				'data'    => $error->get_error_data(),
-			),
-			BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL
-		);
-
-		return $error;
-	}
-
-	bibliography_builder_cache_pmid_result(
-		$pmid,
+	return bibliography_builder_resolve_ncbi_csl(
+		BIBLIOGRAPHY_BUILDER_PMC_CSL_API,
+		'PMC' . $pmcid,
+		bibliography_builder_get_pmcid_cache_key( $pmcid ),
+		'bibliography_builder_pmcid',
 		array(
-			'type' => 'success',
-			'data' => $decoded,
-		),
-		BIBLIOGRAPHY_BUILDER_PUBMED_SUCCESS_CACHE_TTL
+			'unreachable'      => __(
+				'The PubMed Central citation service could not be reached.',
+				'borges-bibliography-builder'
+			),
+			'not_found'        => __(
+				'The PubMed Central ID could not be resolved.',
+				'borges-bibliography-builder'
+			),
+			'upstream'         => __(
+				'The PubMed Central citation service returned an error.',
+				'borges-bibliography-builder'
+			),
+			'invalid_response' => __(
+				'The PubMed Central citation service returned an invalid response.',
+				'borges-bibliography-builder'
+			),
+		)
 	);
-
-	return rest_ensure_response( $decoded );
 }
 
 /**
@@ -1874,6 +1943,32 @@ function bibliography_builder_register_rest_routes() {
 						},
 					),
 				)
+			),
+		)
+	);
+
+	register_rest_route(
+		'bibliography/v1',
+		'/pmcid/(?P<pmcid>(?:PMC)?\d{1,9})',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'bibliography_builder_rest_resolve_pmcid',
+			'permission_callback' => 'bibliography_builder_rest_pmid_permissions_check',
+			'args'                => array(
+				'pmcid' => array(
+					'description'       => __(
+						'PubMed Central ID (PMCID) to resolve to CSL-JSON.',
+						'borges-bibliography-builder'
+					),
+					'type'              => 'string',
+					'required'          => true,
+					'sanitize_callback' => static function ( $value ) {
+						return preg_replace( '/\D/u', '', (string) $value );
+					},
+					'validate_callback' => static function ( $value ) {
+						return is_scalar( $value ) && (bool) preg_match( '/^(?:PMC)?\d{1,9}$/i', (string) $value );
+					},
+				),
 			),
 		)
 	);

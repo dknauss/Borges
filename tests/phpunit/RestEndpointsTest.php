@@ -52,7 +52,7 @@ final class RestEndpointsTest extends TestCase {
 		bibliography_builder_register_rest_routes();
 		$routes = $GLOBALS['bibliography_builder_test_rest_routes'];
 
-		$this->assertCount( 4, $routes );
+		$this->assertCount( 5, $routes );
 		$this->assertSame( 'bibliography/v1', $routes[0]['namespace'] );
 		$this->assertSame( '/format', $routes[0]['route'] );
 		$this->assertSame( '/pmid/(?P<pmid>\d{1,8})', $routes[1]['route'] );
@@ -65,6 +65,19 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertTrue( $pmid_arg['validate_callback']( '26673779' ) );
 		$this->assertFalse( $pmid_arg['validate_callback']( '123456789' ) );
 		$this->assertFalse( $pmid_arg['validate_callback']( array( '26673779' ) ) );
+
+		// PMCID is registered last so the earlier route indices stay stable.
+		$this->assertSame( '/pmcid/(?P<pmcid>(?:PMC)?\d{1,9})', $routes[4]['route'] );
+		$this->assertSame( 'bibliography_builder_rest_resolve_pmcid', $routes[4]['args']['callback'] );
+		$this->assertSame( 'bibliography_builder_rest_pmid_permissions_check', $routes[4]['args']['permission_callback'] );
+
+		$pmcid_arg = $routes[4]['args']['args']['pmcid'];
+		$this->assertSame( '3531190', $pmcid_arg['sanitize_callback']( 'PMC3531190' ) );
+		$this->assertTrue( $pmcid_arg['validate_callback']( '3531190' ) );
+		$this->assertTrue( $pmcid_arg['validate_callback']( 'pmc3531190' ) );
+		$this->assertFalse( $pmcid_arg['validate_callback']( '1234567890' ) );
+		$this->assertFalse( $pmcid_arg['validate_callback']( 'PMC' ) );
+		$this->assertFalse( $pmcid_arg['validate_callback']( array( '3531190' ) ) );
 	}
 
 	public function test_published_posts_are_publicly_readable(): void {
@@ -323,6 +336,126 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertSame( 'Cached PubMed Record', $first['title'] );
 		$this->assertSame( $first, $second );
 		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_pmcid_endpoint_returns_csl_json_from_ncbi_pmc_exporter(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode(
+					array(
+						'id'    => 'pmc:3531190',
+						'type'  => 'article-journal',
+						'title' => 'PubMed Central Record',
+					)
+				),
+			)
+		);
+
+		$request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/PMC3531190' );
+		$request['pmcid'] = '3531190';
+
+		$response = bibliography_builder_rest_resolve_pmcid( $request );
+		$requests = bibliography_builder_test_get_http_requests();
+
+		$this->assertSame( 'PubMed Central Record', $response->get_data()['title'] );
+		$this->assertCount( 1, $requests );
+		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_PMC_CSL_API, $requests[0]['url'] );
+		$this->assertStringContainsString( 'format=csl', $requests[0]['url'] );
+		$this->assertStringContainsString( 'id=PMC3531190', $requests[0]['url'] );
+		$this->assertSame( 'wp_safe_remote_get', $requests[0]['function'] );
+		$this->assertSame( 3, $requests[0]['args']['redirection'] );
+
+		// Second call is served from cache.
+		bibliography_builder_rest_resolve_pmcid( $request );
+		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_pmcid_and_pmid_caches_do_not_collide_on_equal_digits(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode( array( 'title' => 'PubMed record 1234567' ) ),
+			)
+		);
+
+		$pmid_request         = new WP_REST_Request( 'GET', '/bibliography/v1/pmid/1234567' );
+		$pmid_request['pmid'] = '1234567';
+		bibliography_builder_rest_resolve_pmid( $pmid_request );
+
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode( array( 'title' => 'PMC record 1234567' ) ),
+			)
+		);
+
+		$pmcid_request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/1234567' );
+		$pmcid_request['pmcid'] = '1234567';
+		$pmcid_result           = bibliography_builder_rest_resolve_pmcid( $pmcid_request );
+
+		$this->assertSame( 'PMC record 1234567', $pmcid_result->get_data()['title'] );
+		$this->assertCount( 2, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_pmcid_endpoint_uses_pmcid_error_codes(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 404 ),
+				'body'     => '',
+			)
+		);
+
+		$request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/99999999' );
+		$request['pmcid'] = '99999999';
+
+		$not_found = bibliography_builder_rest_resolve_pmcid( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $not_found );
+		$this->assertSame( 'bibliography_builder_pmcid_not_found', $not_found->get_error_code() );
+		$this->assertSame( 404, $not_found->get_error_data()['status'] );
+
+		$invalid_request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/x' );
+		$invalid_request['pmcid'] = 'PMC12';
+
+		$invalid = bibliography_builder_rest_resolve_pmcid( $invalid_request );
+
+		$this->assertInstanceOf( WP_Error::class, $invalid );
+		$this->assertSame( 'bibliography_builder_pmcid_invalid', $invalid->get_error_code() );
+		$this->assertSame( 400, $invalid->get_error_data()['status'] );
+		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_pmcid_endpoint_reports_unreachable_upstream(): void {
+		$request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/3531190' );
+		$request['pmcid'] = '3531190';
+
+		$result = bibliography_builder_rest_resolve_pmcid( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_pmcid_upstream_error', $result->get_error_code() );
+		$this->assertSame( 502, $result->get_error_data()['status'] );
+	}
+
+	public function test_pmcid_endpoint_rejects_non_json_response(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '<html>maintenance</html>',
+			)
+		);
+
+		$request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/3531190' );
+		$request['pmcid'] = '3531190';
+
+		$result = bibliography_builder_rest_resolve_pmcid( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_pmcid_invalid_response', $result->get_error_code() );
 	}
 
 	public function test_formatter_endpoint_supports_all_registered_styles(): void {

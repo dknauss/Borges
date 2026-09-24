@@ -255,3 +255,13 @@ test('bibliography block imports the demo DOI, PMID, and BibTeX content', async 
 
 	await importCitations(editorFrame, DEMO_IMPORT_INPUT, 4);
 });
+
+// Live check of the PMCID proxy against NCBI's PMC citation exporter. Kept
+// separate from the demo import so a PMC-side failure is attributed to PMCID.
+test('bibliography block imports a PubMed Central PMCID', async ({ page }) => {
+	test.setTimeout(120_000);
+
+	const editorFrame = await createPostWithBibliographyBlock(page);
+
+	await importCitations(editorFrame, 'PMCID: PMC3531190', 1);
+});

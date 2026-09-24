@@ -1805,3 +1805,147 @@ describe('parsePastedInput — embedded identifier resolution', () => {
 		}
 	});
 });
+
+describe('PMCID input resolution', () => {
+	const PMC_CSL = {
+		type: 'article-journal',
+		title: 'A PubMed Central Article',
+		'container-title': 'Journal of Open Access',
+		author: [{ family: 'Rivera', given: 'Ana' }],
+		issued: { 'date-parts': [[2012, 12]] },
+		DOI: '10.1000/pmc.example',
+		PMCID: 'PMC3531190',
+	};
+
+	function makeFetchFn(status = 200, body = PMC_CSL) {
+		return jest.fn().mockResolvedValue({
+			ok: status >= 200 && status < 300,
+			status,
+			json: jest.fn().mockResolvedValue(body),
+		});
+	}
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+	});
+
+	it.each([
+		'PMC3531190',
+		'pmc3531190',
+		'PMCID: PMC3531190',
+		'PMCID:PMC3531190',
+	])('detects %p and fetches from the NCBI PMC exporter', async (input) => {
+		const fetchFn = makeFetchFn();
+
+		const result = await parsePastedInput(input, 'apa', { fetchFn });
+
+		expect(fetchFn).toHaveBeenCalledWith(
+			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pmc/?format=csl&id=PMC3531190'
+		);
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(1);
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'pmcid',
+			csl: { title: 'A PubMed Central Article' },
+		});
+	});
+
+	it('keeps routing PMID input to the PubMed exporter', async () => {
+		const fetchFn = makeFetchFn();
+
+		await parsePastedInput('PMID:26673779', 'apa', { fetchFn });
+
+		expect(fetchFn).toHaveBeenCalledWith(
+			expect.stringContaining('/pubmed/?format=csl&id=26673779')
+		);
+	});
+
+	it('uses the WordPress REST proxy for PMCID resolution by default', async () => {
+		apiFetch.mockResolvedValue(PMC_CSL);
+
+		const result = await parsePastedInput('PMC3531190', 'apa');
+
+		expect(apiFetch).toHaveBeenCalledWith({
+			path: '/bibliography/v1/pmcid/PMC3531190',
+		});
+		expect(result.entries).toHaveLength(1);
+		expect(result.errors).toHaveLength(0);
+	});
+
+	it('returns a PMCID error when resolution fails', async () => {
+		apiFetch.mockRejectedValue(new Error('Not found'));
+
+		const result = await parsePastedInput('PMC99999999', 'apa');
+
+		expect(result.entries).toHaveLength(0);
+		expect(result.errors).toEqual([
+			"Couldn't resolve the PMCID. Check the number and try again.",
+		]);
+	});
+
+	it('resolves a mixed list of DOI, PMID, and PMCID lines as separate items', async () => {
+		apiFetch.mockImplementation(({ path }) =>
+			Promise.resolve(
+				path.includes('/pmcid/')
+					? PMC_CSL
+					: { ...PMC_CSL, title: 'PubMed Article', DOI: '10.1000/pm' }
+			)
+		);
+
+		const result = await parsePastedInput(
+			'PMID:26673779\nPMC3531190',
+			'apa'
+		);
+
+		expect(result.errors).toEqual([]);
+		expect(result.entries.map((entry) => entry.inputFormat)).toEqual([
+			'pmid',
+			'pmcid',
+		]);
+	});
+
+	it('does not call Cite.async for PMCID inputs', async () => {
+		await parsePastedInput('PMC3531190', 'apa', { fetchFn: makeFetchFn() });
+
+		expect(Cite.async).not.toHaveBeenCalled();
+	});
+});
+
+describe('extractEmbeddedIdentifier — PMCID', () => {
+	it('extracts a labeled PMCID from a free-text citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Rivera A. A PubMed Central Article. J Open Access. 2012;4:1-9. PMCID: PMC3531190.'
+			)
+		).toMatchObject({ format: 'pmcid', value: 'PMC3531190' });
+	});
+
+	it('extracts an unlabeled PMC identifier', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Rivera A. A PubMed Central Article. 2012. PMC3531190'
+			)
+		).toMatchObject({ format: 'pmcid', value: 'PMC3531190' });
+	});
+
+	it('prefers a PMID over a PMCID in the same citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Rivera A. Article. 2012. PMID: 23300456; PMCID: PMC3531190.'
+			)
+		).toMatchObject({ format: 'pmid', value: 'PMID:23300456' });
+	});
+
+	it('prefers a DOI over a PMCID in the same citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Rivera A. Article. 2012. doi:10.1000/xyz123. PMC3531190'
+			)
+		).toMatchObject({ format: 'doi' });
+	});
+
+	it('ignores short PMC tokens that are unlikely to be identifiers', () => {
+		expect(extractEmbeddedIdentifier('Report PMC12, annex 3.')).toBeNull();
+		expect(extractEmbeddedIdentifier('The PMCs of 2012.')).toBeNull();
+	});
+});

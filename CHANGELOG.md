@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BibLaTeX import. BibLaTeX entries (`date`, `journaltitle`, `location`, `urldate`, `@online`, `@report`, `@collection`, and similar) paste through the same path as BibTeX; citation-js already mapped these fields, and a new unmocked test suite (`src/lib/biblatex-import.test.js`) now pins that behavior so a citation-js upgrade cannot silently regress it.
 - arXiv preprints pasted as BibTeX or BibLaTeX keep a link: an `eprint` with `eprinttype = {arxiv}` (or BibTeX's `archiveprefix = {arXiv}`) becomes an `https://arxiv.org/abs/…` URL when the entry has no URL of its own. Previously the eprint was dropped. The identifier must match the modern or legacy arXiv ID pattern before a URL is built.
+- PubMed Central (PMCID) import. Paste `PMC3531190` or `PMCID: PMC3531190`, alone or one per line alongside DOIs and PMIDs, and Borges resolves it through a new editor-only `GET /bibliography/v1/pmcid/<pmcid>` route that proxies NCBI's fixed PMC citation exporter. Free-text citations that end in a `PMC…` identifier are resolved the same way when they carry no DOI or labeled PMID. The route has the same `edit_posts` requirement, digits-only validation, `wp_safe_remote_get` redirect checks, and success/not-found/failure caching as the PMID route; both now share one NCBI resolver, and PMID behavior, error codes, and cache keys are unchanged.
+
+### Changed
+
+- Regenerated the translation template and merged all 19 seed PO/MO files. Beyond the new PMCID strings, the committed POT had fallen behind: it was missing six strings that shipped in 1.5.0 (the CSL field-length error, four Block Accessibility Checks 4.0 messages, and the current plugin description) and still listed 14 strings that no longer exist in the source. No existing translation was lost; every locale keeps the same number of translated strings.
 
 ### Fixed
 
