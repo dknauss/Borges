@@ -85,6 +85,22 @@ describe('getArxivUrlFromRawEntry', () => {
 		).toBeUndefined();
 	});
 
+	it('reads bare (unbraced, unquoted) field values', () => {
+		expect(
+			getArxivUrlFromRawEntry(
+				'@article{a, eprinttype = arxiv, eprint = 2301.00001}'
+			)
+		).toBe('https://arxiv.org/abs/2301.00001');
+	});
+
+	it('treats an empty eprint as absent', () => {
+		expect(
+			getArxivUrlFromRawEntry(
+				'@article{a, eprinttype={arxiv}, eprint={ }}'
+			)
+		).toBeUndefined();
+	});
+
 	it('does not mistake eprinttype for eprint', () => {
 		expect(
 			getArxivUrlFromRawEntry('@article{a, eprinttype={arxiv}}')
