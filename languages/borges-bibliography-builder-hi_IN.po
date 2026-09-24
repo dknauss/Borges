@@ -118,10 +118,12 @@ msgid "The PubMed citation service returned an error."
 msgstr ""
 
 #: bibliography-builder.php:1458
+#: includes/abilities.php:238
 msgid "Post not found."
 msgstr "पोस्ट नहीं मिली।"
 
 #: bibliography-builder.php:1469
+#: includes/abilities.php:249
 msgid "Sorry, you are not allowed to read this bibliography."
 msgstr "क्षमा करें, आपको यह ग्रंथसूची पढ़ने की अनुमति नहीं है।"
 
@@ -157,40 +159,41 @@ msgstr ""
 msgid "The PubMed citation service returned an invalid response."
 msgstr ""
 
-#: bibliography-builder.php:2098
+#: bibliography-builder.php:2105
+#: includes/abilities.php:293
 msgid "Bibliography block not found for the requested index."
 msgstr "अनुरोधित अनुक्रमांक के लिए ग्रंथसूची ब्लॉक नहीं मिला।"
 
-#: bibliography-builder.php:2145
+#: bibliography-builder.php:2152
 msgid "PubMed ID to resolve to CSL-JSON."
 msgstr ""
 
-#: bibliography-builder.php:2161
+#: bibliography-builder.php:2168
 msgid "Post ID to inspect for bibliography blocks."
 msgstr "ग्रंथसूची ब्लॉकों की जाँच के लिए पोस्ट ID।"
 
-#: bibliography-builder.php:2192
+#: bibliography-builder.php:2199
 msgid "Zero-based bibliography block index within the post."
 msgstr "पोस्ट के अंतर्गत शून्य-आधारित ग्रंथसूची ब्लॉक अनुक्रमांक।"
 
-#: bibliography-builder.php:2203
+#: bibliography-builder.php:2210
 msgid "Response format: json, text, or csl-json."
 msgstr "प्रतिक्रिया प्रारूप: json, text, या csl-json।"
 
-#: bibliography-builder.php:2362
+#: bibliography-builder.php:2372
 msgid "Bibliography block has no heading. Screen reader users may not find this section."
 msgstr ""
 
-#: bibliography-builder.php:2372
-#: bibliography-builder.php:2373
+#: bibliography-builder.php:2382
+#: bibliography-builder.php:2383
 msgid "Bibliography block contains no citations."
 msgstr ""
 
-#: bibliography-builder.php:2374
+#: bibliography-builder.php:2384
 msgid "Add at least one citation before publishing."
 msgstr ""
 
-#: bibliography-builder.php:2388
+#: bibliography-builder.php:2398
 msgid "Add a heading in block settings so the bibliography is announced as a document section."
 msgstr ""
 
@@ -866,43 +869,43 @@ msgstr ""
 msgid "A CSL field exceeds the maximum length of %d bytes."
 msgstr ""
 
-#: bibliography-builder.php:2032
+#: bibliography-builder.php:2039
 msgid "Invalid PubMed Central ID."
 msgstr ""
 
-#: bibliography-builder.php:2043
+#: bibliography-builder.php:2050
 msgid "The PubMed Central citation service could not be reached."
 msgstr ""
 
-#: bibliography-builder.php:2047
+#: bibliography-builder.php:2054
 msgid "The PubMed Central ID could not be resolved."
 msgstr ""
 
-#: bibliography-builder.php:2051
+#: bibliography-builder.php:2058
 msgid "The PubMed Central citation service returned an error."
 msgstr ""
 
-#: bibliography-builder.php:2055
+#: bibliography-builder.php:2062
 msgid "The PubMed Central citation service returned an invalid response."
 msgstr ""
 
-#: bibliography-builder.php:2234
+#: bibliography-builder.php:2241
 msgid "PubMed Central ID (PMCID) to resolve to CSL-JSON."
 msgstr ""
 
-#: bibliography-builder.php:2354
+#: bibliography-builder.php:2364
 msgid "One or more citations use a URL or DOI as link text. Add a descriptive title for screen readers."
 msgstr ""
 
-#: bibliography-builder.php:2358
+#: bibliography-builder.php:2368
 msgid "All machine-readable metadata outputs are disabled. Enable JSON-LD, COinS, or CSL-JSON for interoperability."
 msgstr ""
 
-#: bibliography-builder.php:2405
+#: bibliography-builder.php:2415
 msgid "Citations with a URL or DOI should have a descriptive title as link text."
 msgstr ""
 
-#: bibliography-builder.php:2422
+#: bibliography-builder.php:2432
 msgid "Enable at least one metadata output to improve citation-manager interoperability."
 msgstr ""
 
@@ -914,30 +917,78 @@ msgstr ""
 msgid "Sorry, you are not allowed to resolve arXiv citations."
 msgstr ""
 
-#: bibliography-builder.php:1984
+#: bibliography-builder.php:1991
 msgid "Invalid arXiv ID."
 msgstr ""
 
-#: bibliography-builder.php:1994
+#: bibliography-builder.php:2001
 msgid "The arXiv metadata service could not be reached."
 msgstr ""
 
-#: bibliography-builder.php:1998
+#: bibliography-builder.php:2005
 msgid "The arXiv ID could not be resolved."
 msgstr ""
 
-#: bibliography-builder.php:2002
+#: bibliography-builder.php:2009
 msgid "The arXiv metadata service returned an error."
 msgstr ""
 
-#: bibliography-builder.php:2006
+#: bibliography-builder.php:2013
 msgid "The arXiv metadata service returned an invalid response."
 msgstr ""
 
-#: bibliography-builder.php:2260
+#: bibliography-builder.php:2267
 msgid "arXiv ID (modern or legacy, optional version) to resolve to CSL-JSON."
 msgstr ""
 
 #: src/lib/parser.js:786
 msgid "Couldn't resolve the arXiv ID. Check it and try again."
+msgstr ""
+
+#: includes/abilities.php:49
+msgid "Bibliographies"
+msgstr ""
+
+#: includes/abilities.php:50
+msgid "Read and check scholarly bibliographies built with the Borges bibliography block."
+msgstr ""
+
+#: includes/abilities.php:87
+msgid "ID of the post that contains the bibliography blocks."
+msgstr ""
+
+#: includes/abilities.php:93
+msgid "Get bibliographies"
+msgstr ""
+
+#: includes/abilities.php:94
+msgid "Lists a post's Borges bibliography blocks with each citation's CSL-JSON and display text."
+msgstr ""
+
+#: includes/abilities.php:126
+msgid "Export a bibliography"
+msgstr ""
+
+#: includes/abilities.php:127
+msgid "Exports one Borges bibliography block as a CSL-JSON array or as plain text, one citation per line."
+msgstr ""
+
+#: includes/abilities.php:140
+msgid "Zero-based position of the bibliography block within the post."
+msgstr ""
+
+#: includes/abilities.php:149
+msgid "Export format: csl-json or text."
+msgstr ""
+
+#: includes/abilities.php:176
+msgid "Validate citations"
+msgstr ""
+
+#: includes/abilities.php:177
+msgid "Checks CSL-JSON records against the rules Borges applies before formatting. Saves nothing."
+msgstr ""
+
+#: includes/abilities.php:190
+msgid "CSL-JSON citation records to check."
 msgstr ""
