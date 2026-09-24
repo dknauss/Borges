@@ -1,18 +1,16 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Borges Bibliography Builder 1.3.4\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wp-bibliography-"
-"block\n"
-"POT-Creation-Date: 2026-06-20T07:04:40+00:00\n"
-"PO-Revision-Date: 2026-06-14 00:00+0000\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wp-bibliography-block\n"
 "Last-Translator: Borges Bibliography Builder contributors\n"
 "Language-Team: Polish\n"
-"Language: pl_PL\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
-"|| n%100>=20) ? 1 : 2);\n"
+"POT-Creation-Date: 2026-06-20T07:04:40+00:00\n"
+"PO-Revision-Date: 2026-06-14 00:00+0000\n"
+"Language: pl_PL\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Domain: borges-bibliography-builder\n"
 
 #. Plugin Name of the plugin
@@ -23,13 +21,6 @@ msgstr ""
 #. Plugin URI of the plugin
 #: bibliography-builder.php
 msgid "https://github.com/dknauss/Borges/"
-msgstr ""
-
-#. Description of the plugin
-#: bibliography-builder.php
-msgid ""
-"Paste DOI, PubMed/PMID, BibTeX, or citation text into a formatted, auto-"
-"sorted bibliography."
 msgstr ""
 
 #. Author of the plugin
@@ -43,371 +34,358 @@ msgid "https://dan.knauss.ca/"
 msgstr ""
 
 #. translators: %s: PHP extension name.
-#: bibliography-builder.php:275
+#: bibliography-builder.php:315
 #, php-format
 msgid "The bibliography formatter requires the PHP %s extension."
 msgstr ""
 
-#: bibliography-builder.php:288
+#: bibliography-builder.php:328
 msgid "The bibliography formatter dependencies are missing."
 msgstr ""
 
-#: bibliography-builder.php:298
+#: bibliography-builder.php:338
 msgid "The bibliography formatter is unavailable."
 msgstr ""
 
-#: bibliography-builder.php:589
+#: bibliography-builder.php:701
+#: bibliography-builder.php:712
+#: bibliography-builder.php:770
 msgid "Invalid CSL date value."
 msgstr ""
 
-#: bibliography-builder.php:600 bibliography-builder.php:608
-#: bibliography-builder.php:638
+#: bibliography-builder.php:723
+#: bibliography-builder.php:753
+#: bibliography-builder.php:782
 msgid "Invalid CSL date-parts."
 msgstr ""
 
-#: bibliography-builder.php:658 bibliography-builder.php:669
+#: bibliography-builder.php:800
+#: bibliography-builder.php:811
 msgid "Invalid CSL author entry."
 msgstr ""
 
-#: bibliography-builder.php:678
+#: bibliography-builder.php:820
 msgid "Invalid CSL author field."
 msgstr ""
 
 #. translators: %s: CSL field name.
-#: bibliography-builder.php:704
+#: bibliography-builder.php:846
 #, php-format
 msgid "Invalid CSL %s list."
 msgstr ""
 
 #. translators: %s: CSL field name.
-#: bibliography-builder.php:747 bibliography-builder.php:764
-#: bibliography-builder.php:840
+#: bibliography-builder.php:889
+#: bibliography-builder.php:906
+#: bibliography-builder.php:1002
 #, php-format
 msgid "Invalid CSL %s."
 msgstr ""
 
-#: bibliography-builder.php:781 bibliography-builder.php:792
+#: bibliography-builder.php:923
+#: bibliography-builder.php:948
 msgid "Invalid CSL object."
 msgstr ""
 
-#: bibliography-builder.php:804
+#: bibliography-builder.php:960
 msgid "Invalid CSL type."
 msgstr ""
 
 #. translators: %d: 1-based citation item number.
-#: bibliography-builder.php:886
+#: bibliography-builder.php:1049
 #, php-format
 msgid "Invalid CSL citation item at position %d."
 msgstr ""
 
-#: bibliography-builder.php:1067
+#: bibliography-builder.php:1230
 msgid "The requested bibliography style is unavailable."
 msgstr ""
 
-#: bibliography-builder.php:1078
+#: bibliography-builder.php:1241
 msgid "The requested bibliography style could not be read."
 msgstr ""
 
-#: bibliography-builder.php:1096
+#: bibliography-builder.php:1259
 msgid "The citation data could not be prepared for formatting."
 msgstr ""
 
-#: bibliography-builder.php:1122
+#: bibliography-builder.php:1285
 msgid "The citations could not be formatted."
 msgstr ""
 
-#: bibliography-builder.php:1223 bibliography-builder.php:1493
+#: bibliography-builder.php:1824
 msgid "The PubMed citation service returned an error."
 msgstr ""
 
-#: bibliography-builder.php:1270
+#: bibliography-builder.php:1468
+#: includes/abilities.php:238
 msgid "Post not found."
 msgstr "Nie znaleziono wpisu."
 
-#: bibliography-builder.php:1281
+#: bibliography-builder.php:1479
+#: includes/abilities.php:249
 msgid "Sorry, you are not allowed to read this bibliography."
 msgstr "Nie masz uprawnień do odczytu tej bibliografii."
 
-#: bibliography-builder.php:1298
+#: bibliography-builder.php:1496
 msgid "Sorry, you are not allowed to format bibliographies."
 msgstr ""
 
-#: bibliography-builder.php:1315
+#: bibliography-builder.php:1513
 msgid "Sorry, you are not allowed to resolve PubMed citations."
 msgstr ""
 
-#: bibliography-builder.php:1351
+#: bibliography-builder.php:1583
 msgid "The citation formatting request is too large."
 msgstr ""
 
-#: bibliography-builder.php:1373
+#: bibliography-builder.php:1605
 msgid "Too many citations were sent for formatting."
 msgstr ""
 
-#: bibliography-builder.php:1422
+#: bibliography-builder.php:1805
 msgid "Invalid PubMed ID."
 msgstr ""
 
-#: bibliography-builder.php:1451
+#: bibliography-builder.php:1816
 msgid "The PubMed citation service could not be reached."
 msgstr ""
 
-#: bibliography-builder.php:1474
+#: bibliography-builder.php:1820
 msgid "The PubMed ID could not be resolved."
 msgstr ""
 
-#: bibliography-builder.php:1518
+#: bibliography-builder.php:1828
 msgid "The PubMed citation service returned an invalid response."
 msgstr ""
 
-#: bibliography-builder.php:1582
+#: bibliography-builder.php:2451
+#: includes/abilities.php:293
 msgid "Bibliography block not found for the requested index."
 msgstr "Nie znaleziono bloku bibliografii dla podanego indeksu."
 
-#: bibliography-builder.php:1629
+#: bibliography-builder.php:2498
 msgid "PubMed ID to resolve to CSL-JSON."
 msgstr ""
 
-#: bibliography-builder.php:1645
+#: bibliography-builder.php:2514
 msgid "Post ID to inspect for bibliography blocks."
 msgstr "ID wpisu do sprawdzenia pod kątem bloków bibliografii."
 
-#: bibliography-builder.php:1676
+#: bibliography-builder.php:2545
 msgid "Zero-based bibliography block index within the post."
 msgstr "Indeks bloku bibliografii we wpisie (numeracja od zera)."
 
-#: bibliography-builder.php:1687
+#: bibliography-builder.php:2556
 msgid "Response format: json, text, or csl-json."
 msgstr "Format odpowiedzi: json, text lub csl-json."
 
-#: bibliography-builder.php:1778
-msgid ""
-"Bibliography block has no heading. Screen reader users may not find this "
-"section."
+#: bibliography-builder.php:2741
+msgid "Bibliography block has no heading. Screen reader users may not find this section."
 msgstr ""
 
-#: bibliography-builder.php:1787 bibliography-builder.php:1788
+#: bibliography-builder.php:2751
+#: bibliography-builder.php:2752
 msgid "Bibliography block contains no citations."
 msgstr ""
 
-#: bibliography-builder.php:1789
+#: bibliography-builder.php:2753
 msgid "Add at least one citation before publishing."
 msgstr ""
 
-#: bibliography-builder.php:1801
-msgid ""
-"Add a heading in block settings so the bibliography is announced as a "
-"document section."
+#: bibliography-builder.php:2767
+msgid "Add a heading in block settings so the bibliography is announced as a document section."
 msgstr ""
 
-#: build/13.js:1 src/lib/parser.js:86
+#: src/lib/parser.js:166
 msgid "Fetch API unavailable for PMID resolution"
 msgstr ""
 
-#: build/13.js:1 src/lib/parser.js:566
+#: src/lib/parser.js:869
 msgid "Couldn't resolve the PMID. Check the number and try again."
 msgstr ""
 
-#: build/13.js:1 src/lib/parser.js:573
+#: src/lib/parser.js:897
 msgid "Couldn't parse the DOI. Check it and try again."
 msgstr ""
 
-#: build/13.js:1 src/lib/parser.js:580
+#: src/lib/parser.js:904
 msgid "Couldn't parse the BibTeX entry. Check it and try again."
 msgstr ""
 
-#: build/13.js:1 src/lib/parser.js:586
+#: src/lib/parser.js:910
 msgid "Couldn't parse the citation. Check it and try again."
 msgstr ""
 
-#: build/13.js:1 src/lib/parser.js:635
+#: src/lib/parser.js:959
 msgid "The pasted input is too large. Maximum size is 1 MB."
 msgstr ""
 
-#: build/13.js:1 src/lib/parser.js:551
-msgid ""
-"This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, BibTeX "
-"entry, or supported citation instead."
-msgstr ""
-
-#: build/index.js:1 src/components/editor-canvas-notices.js:40
+#: src/components/editor-canvas-notices.js:40
 msgid "Notification"
 msgstr "Powiadomienie"
 
-#: build/index.js:1 build/index.js:14
 #: src/components/structured-citation-editor.js:9
 #: src/hooks/use-manual-citation-actions.js:63
 msgid "Author(s)"
 msgstr "Autor(zy)"
 
-#: build/index.js:1 build/index.js:14
 #: src/components/structured-citation-editor.js:13
 #: src/hooks/use-manual-citation-actions.js:67
 msgid "Title"
 msgstr "Tytuł"
 
-#: build/index.js:1 build/index.js:14
 #: src/components/structured-citation-editor.js:17
 #: src/hooks/use-manual-citation-actions.js:71
 msgid "Container"
 msgstr "Publikacja nadrzędna"
 
-#: build/index.js:1 build/index.js:14
 #: src/components/structured-citation-editor.js:21
 #: src/hooks/use-manual-citation-actions.js:75
 msgid "Publisher"
 msgstr "Wydawca"
 
-#: build/index.js:1 build/index.js:14
 #: src/components/structured-citation-editor.js:25
 #: src/hooks/use-manual-citation-actions.js:79
 msgid "Year"
 msgstr "Rok"
 
-#: build/index.js:1 build/index.js:14
 #: src/components/structured-citation-editor.js:29
 #: src/hooks/use-manual-citation-actions.js:83
 msgid "Pages"
 msgstr "Strony"
 
-#: build/index.js:1 build/index.js:14
 #: src/components/structured-citation-editor.js:33
 #: src/hooks/use-manual-citation-actions.js:87
 msgid "DOI"
 msgstr "DOI"
 
-#: build/index.js:1 build/index.js:14
 #: src/components/structured-citation-editor.js:37
 #: src/hooks/use-manual-citation-actions.js:91
 msgid "URL"
 msgstr "URL"
 
-#: build/index.js:1 src/components/structured-citation-editor.js:93
+#: src/components/structured-citation-editor.js:93
 msgid "Publication Type"
 msgstr "Typ publikacji"
 
-#: build/index.js:1 src/components/structured-citation-editor.js:103
+#: src/components/structured-citation-editor.js:103
 msgid "Select a publication type"
 msgstr "Wybierz typ publikacji"
 
-#: build/index.js:1 src/components/structured-citation-editor.js:147
+#: src/components/structured-citation-editor.js:147
 msgid "Save"
 msgstr "Zapisz"
 
-#: build/index.js:1 src/components/structured-citation-editor.js:156
+#: src/components/structured-citation-editor.js:156
 msgid "Cancel"
 msgstr "Anuluj"
 
 #. translators: %s: citation label.
-#: build/index.js:2 src/components/citation-reorder-controls.js:15
+#: src/components/citation-reorder-controls.js:15
+#, js-format
 msgid "Move '%s' up"
 msgstr ""
 
-#: build/index.js:2 src/components/citation-reorder-controls.js:18
+#: src/components/citation-reorder-controls.js:18
 msgid "Move citation up"
 msgstr ""
 
 #. translators: %s: citation label.
-#: build/index.js:3 src/components/citation-reorder-controls.js:22
+#: src/components/citation-reorder-controls.js:22
+#, js-format
 msgid "Move '%s' down"
 msgstr ""
 
-#: build/index.js:3 src/components/citation-reorder-controls.js:25
+#: src/components/citation-reorder-controls.js:25
 msgid "Move citation down"
 msgstr ""
 
 #. translators: %s: citation label.
-#: build/index.js:4 src/components/citation-entry-body.js:64
+#: src/components/citation-entry-body.js:64
+#, js-format
 msgid "Editing: %s"
 msgstr ""
 
 #. translators: %s: citation label.
-#: build/index.js:5 src/components/citation-entry-body.js:90
+#: src/components/citation-entry-body.js:90
+#, js-format
 msgid "Edit %s"
 msgstr ""
 
 #. translators: %s: citation label.
-#: build/index.js:6 src/components/citation-entry-body.js:130
+#: src/components/citation-entry-body.js:130
+#, js-format
 msgid "Edit fields for %s"
 msgstr ""
 
 #. translators: %s: citation label.
-#: build/index.js:7 src/components/citation-entry-body.js:149
-#, fuzzy
+#: src/components/citation-entry-body.js:149
+#, fuzzy,js-format
 msgid "Copy citation: %s"
 msgstr "Dodaj źródła"
 
 #. translators: %s: citation label.
-#: build/index.js:8 src/components/citation-entry-body.js:164
-#, fuzzy
+#: src/components/citation-entry-body.js:164
+#, fuzzy,js-format
 msgid "Edit citation: %s"
 msgstr "Dodaj źródła"
 
-#: build/index.js:8 src/components/citation-entry-body.js:178
+#: src/components/citation-entry-body.js:178
 msgid "Reset edits"
 msgstr ""
 
 #. translators: %s: citation label.
-#: build/index.js:9 src/components/citation-entry-body.js:192
-#, fuzzy
+#: src/components/citation-entry-body.js:192
+#, fuzzy,js-format
 msgid "Delete citation: %s"
 msgstr "Dodaj źródła"
 
-#: build/index.js:9 src/lib/manual-entry.js:7
+#: src/lib/manual-entry.js:7
 msgid "Book"
 msgstr ""
 
-#: build/index.js:9 src/lib/manual-entry.js:11
+#: src/lib/manual-entry.js:11
 msgid "Journal article"
 msgstr ""
 
-#: build/index.js:9 src/lib/manual-entry.js:15
+#: src/lib/manual-entry.js:15
 msgid "Chapter"
 msgstr ""
 
-#: build/index.js:9 src/lib/manual-entry.js:19
+#: src/lib/manual-entry.js:19
 msgid "Edited collection"
 msgstr ""
 
-#: build/index.js:9 src/lib/manual-entry.js:23
+#: src/lib/manual-entry.js:23
 msgid "Thesis / dissertation"
 msgstr ""
 
-#: build/index.js:9 src/lib/manual-entry.js:27
+#: src/lib/manual-entry.js:27
 msgid "Webpage"
 msgstr ""
 
-#: build/index.js:9 src/lib/manual-entry.js:75
+#: src/lib/manual-entry.js:75
 msgid "Enter a valid DOI before adding."
 msgstr ""
 
-#: build/index.js:9 src/lib/manual-entry.js:85
+#: src/lib/manual-entry.js:85
 msgid "Enter a valid URL beginning with http:// or https:// before adding."
 msgstr ""
 
-#: build/index.js:9 src/hooks/use-citation-editor-state.js:22
+#: src/hooks/use-citation-editor-state.js:22
 msgid "Formatter unavailable; using fallback citation text."
 msgstr ""
 
-#: build/index.js:9 build/index.js:14 build/index.js:15 src/edit.js:79
+#: src/edit.js:79
 #: src/hooks/use-citation-import-actions.js:14
 #: src/hooks/use-manual-citation-actions.js:19
 msgid "Formatter unavailable; added fallback citation text."
 msgstr ""
 
-#. translators: 1: count, 2: singular/plural item label.
-#: build/index.js:10
-msgid "%1$d %2$s"
-msgstr ""
-
-#. translators: %s: citation count label, for example "2 citations".
-#: build/index.js:11
-msgid "Added %s."
-msgstr ""
-
-#: build/index.js:11 build/index.js:18 build/index.js:19 build/index.js:23
 #: src/hooks/use-citation-editor-state.js:623
-#: src/hooks/use-citation-editor-state.js:639 src/lib/citation-limits.js:25
+#: src/hooks/use-citation-editor-state.js:639
+#: src/lib/citation-limits.js:25
 #, fuzzy
 msgid "citation"
 msgid_plural "citations"
@@ -415,482 +393,392 @@ msgstr[0] "Dodaj źródła"
 msgstr[1] "Dodaj źródła"
 msgstr[2] "Dodaj źródła"
 
-#: build/index.js:11
-#, fuzzy
-msgid "citations"
-msgstr "Dodaj źródła"
-
-#: build/index.js:11 src/hooks/use-citation-import-actions.js:45
+#: src/hooks/use-citation-import-actions.js:45
 msgid "No new citations added."
 msgstr ""
 
-#. translators: %s: duplicate count label, for example "2 duplicates".
-#: build/index.js:12
-msgid "Skipped %s."
-msgstr ""
-
-#: build/index.js:12
-msgid "duplicate"
-msgstr ""
-
-#: build/index.js:12
-msgid "duplicates"
-msgstr ""
-
-#. translators: %s: item count label, for example "2 items".
-#: build/index.js:13
-msgid "Couldn't parse %s."
-msgstr ""
-
-#: build/index.js:13
-msgid "item"
-msgstr ""
-
-#: build/index.js:13
-msgid "items"
-msgstr ""
-
-#: build/index.js:13 src/hooks/use-citation-import-actions.js:81
+#: src/hooks/use-citation-import-actions.js:81
 msgid "Only the first 50 items were processed."
 msgstr ""
 
-#. translators: %s: imported record count label, for example "2 imported records".
-#: build/index.js:14
-msgid "Review %s before publishing."
-msgstr ""
-
-#: build/index.js:14
-msgid "imported record"
-msgstr ""
-
-#: build/index.js:14
-msgid "imported records"
-msgstr ""
-
-#: build/index.js:14 src/hooks/use-citation-import-actions.js:105
+#: src/hooks/use-citation-import-actions.js:105
 msgid "Unparsed items remain in the form."
 msgstr ""
 
-#: build/index.js:14 src/lib/manual-entry.js:153
+#: src/lib/manual-entry.js:153
 msgid "Enter a title before adding."
 msgstr ""
 
-#: build/index.js:14 src/lib/manual-entry.js:146
+#: src/lib/manual-entry.js:146
 #, fuzzy
 msgid "Choose a publication type before adding."
 msgstr "Wybierz typ publikacji"
 
-#: build/index.js:14 src/hooks/use-manual-citation-actions.js:143
+#: src/hooks/use-manual-citation-actions.js:143
 msgid "No new citations added. Skipped 1 duplicate."
 msgstr ""
 
 #. translators: %s: formatter fallback message.
-#: build/index.js:15 src/hooks/use-manual-citation-actions.js:217
-#, fuzzy
+#: src/hooks/use-manual-citation-actions.js:217
+#, fuzzy,js-format
 msgid "Added 1 citation. %s"
 msgstr "Dodaj źródła"
 
-#: build/index.js:15 src/hooks/use-manual-citation-actions.js:223
+#: src/hooks/use-manual-citation-actions.js:223
 #, fuzzy
 msgid "Added 1 citation."
 msgstr "Dodaj źródła"
 
-#: build/index.js:15 src/hooks/use-manual-citation-actions.js:234
+#: src/hooks/use-manual-citation-actions.js:234
 msgid "Something went wrong while adding the citation. Please try again."
 msgstr ""
 
-#: build/index.js:15 src/edit.js:64
+#: src/edit.js:64
 msgid "Imported metadata may be incomplete. Verify before publishing."
-msgstr ""
-"Zaimportowane metadane mogą być niekompletne. Sprawdź je przed publikacją."
+msgstr "Zaimportowane metadane mogą być niekompletne. Sprawdź je przed publikacją."
 
-#: build/index.js:15 src/edit.js:70
+#: src/edit.js:70
 msgid "Add citations"
 msgstr "Dodaj źródła"
 
-#: build/index.js:15 src/edit.js:71
+#: src/edit.js:71
 msgid "Paste / Import"
 msgstr "Wklej / Importuj"
 
-#: build/index.js:15 src/edit.js:75
+#: src/edit.js:75
 msgid "Manual Entry"
 msgstr "Wprowadzanie ręczne"
 
-#: build/index.js:15 src/save-markup.js:59
-#, fuzzy
-msgid "Bibliography"
-msgstr "Kopiuj bibliografię"
-
-#: build/index.js:15 src/save-markup.js:91
+#: src/save-markup.js:87
 msgid "Link to publication"
 msgstr ""
 
-#: build/index.js:15 src/save-markup.js:133
+#: src/save-markup.js:129
 msgid "Cite / Export"
 msgstr ""
 
-#: build/index.js:15 src/save-markup.js:148
+#: src/save-markup.js:144
 msgid "Copied"
 msgstr ""
 
-#: build/index.js:15 src/save-markup.js:153
+#: src/save-markup.js:149
 #, fuzzy
 msgid "Copy citation"
 msgstr "Dodaj źródła"
 
-#: build/index.js:15 src/save-markup.js:170
+#: src/save-markup.js:166
 msgid "RIS"
 msgstr ""
 
-#: build/index.js:15 src/save-markup.js:189
+#: src/save-markup.js:185
 msgid "CSL-JSON"
 msgstr ""
 
-#: build/index.js:15 src/save-markup.js:205
+#: src/save-markup.js:201
 msgid "BibTeX"
 msgstr ""
 
-#: build/index.js:15 src/save-markup.js:222
+#: src/save-markup.js:218
 msgid "BibLaTeX"
 msgstr ""
 
-#: build/index.js:15 build/index.js:19
 #: src/hooks/use-citation-editor-state.js:114
 #: src/hooks/use-citation-reorder.js:15
 msgid "Unknown"
 msgstr ""
 
-#: build/index.js:15 src/hooks/use-citation-editor-state.js:139
+#: src/hooks/use-citation-editor-state.js:139
 msgid "Editing citation. Press Escape to cancel."
 msgstr ""
 
-#: build/index.js:15 src/hooks/use-citation-editor-state.js:245
+#: src/hooks/use-citation-editor-state.js:245
 msgid "Editing fields. Review and save to reformat."
 msgstr ""
 
 #. translators: %s: formatter fallback message.
-#: build/index.js:16 src/hooks/use-citation-editor-state.js:455
+#: src/hooks/use-citation-editor-state.js:455
+#, js-format
 msgid "Fields updated. %s"
 msgstr ""
 
-#: build/index.js:16 src/hooks/use-citation-editor-state.js:458
+#: src/hooks/use-citation-editor-state.js:458
 msgid "Fields updated."
 msgstr ""
 
-#: build/index.js:16 src/hooks/use-citation-editor-state.js:497
+#: src/hooks/use-citation-editor-state.js:497
 msgid "Auto-format restored."
 msgstr ""
 
 #. translators: %s: citation style label.
-#: build/index.js:17 src/hooks/use-citation-editor-state.js:536
+#: src/hooks/use-citation-editor-state.js:536
+#, js-format
 msgid "Style changed to %s."
 msgstr ""
 
 #. translators: 1: citation style label, 2: reformatted citation count, 3: localized citation/citations label, 4: formatter fallback message.
-#: build/index.js:18 src/hooks/use-citation-editor-state.js:617
+#: src/hooks/use-citation-editor-state.js:617
+#, js-format
 msgid "Style changed to %1$s. Reformatted %2$d %3$s. %4$s"
 msgstr ""
 
 #. translators: 1: citation style label, 2: reformatted citation count, 3: localized citation/citations label.
-#: build/index.js:19 src/hooks/use-citation-editor-state.js:633
+#: src/hooks/use-citation-editor-state.js:633
+#, js-format
 msgid "Style changed to %1$s. Reformatted %2$d %3$s."
 msgstr ""
 
 #. translators: 1: citation label, 2: new position, 3: total citations.
-#: build/index.js:20 src/hooks/use-citation-reorder.js:53
+#: src/hooks/use-citation-reorder.js:53
+#, js-format
 msgid "Moved '%1$s' to position %2$d of %3$d."
 msgstr ""
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:47
+#: src/hooks/use-bibliography-export-actions.js:47
 #, fuzzy
 msgid "Copied bibliography."
 msgstr "Kopiuj bibliografię"
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:55
+#: src/hooks/use-bibliography-export-actions.js:55
 msgid "Could not copy bibliography in this browser."
 msgstr ""
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:70
+#: src/hooks/use-bibliography-export-actions.js:70
 #, fuzzy
 msgid "Copied citation."
 msgstr "Dodaj źródła"
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:78
+#: src/hooks/use-bibliography-export-actions.js:78
 msgid "Could not copy citation in this browser."
 msgstr ""
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:98
+#: src/hooks/use-bibliography-export-actions.js:98
 #, fuzzy
 msgid "Downloaded CSL-JSON export."
 msgstr "Pobierz CSL-JSON"
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:109
+#: src/hooks/use-bibliography-export-actions.js:109
 msgid "Could not download CSL-JSON export in this browser."
 msgstr ""
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:127
+#: src/hooks/use-bibliography-export-actions.js:127
 #, fuzzy
 msgid "Downloaded BibTeX export."
 msgstr "Pobierz BibTeX"
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:135
+#: src/hooks/use-bibliography-export-actions.js:135
 msgid "Could not download BibTeX export in this browser."
 msgstr ""
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:153
+#: src/hooks/use-bibliography-export-actions.js:153
 #, fuzzy
 msgid "Downloaded BibLaTeX export."
 msgstr "Pobierz BibTeX"
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:164
+#: src/hooks/use-bibliography-export-actions.js:164
 msgid "Could not download BibLaTeX export in this browser."
 msgstr ""
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:182
+#: src/hooks/use-bibliography-export-actions.js:182
 #, fuzzy
 msgid "Downloaded RIS export."
 msgstr "Pobierz RIS"
 
-#: build/index.js:20 src/hooks/use-bibliography-export-actions.js:190
+#: src/hooks/use-bibliography-export-actions.js:190
 msgid "Could not download RIS export in this browser."
 msgstr ""
 
-#: build/index.js:20 src/hooks/use-citation-import-actions.js:343
+#: src/hooks/use-citation-import-actions.js:343
 msgid "Something went wrong while parsing. Please try again."
 msgstr ""
 
-#: build/index.js:20 src/edit.js:349
+#: src/edit.js:349
 #, fuzzy
 msgid "Citation removed."
 msgstr "Styl cytowania"
 
 #. translators: %s: follow-up status message after removing a citation.
-#: build/index.js:21 build/index.js:22 src/edit.js:356 src/edit.js:362
+#: src/edit.js:356
+#: src/edit.js:362
+#, js-format
 msgid "Citation removed. %s"
 msgstr ""
 
-#: build/index.js:22 src/edit.js:550
-msgid ""
-"Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported "
-"styles for books, articles, chapters, and webpages. Separate multiple "
-"formatted citations with a blank line."
-msgstr ""
-
-#: build/index.js:22 src/edit.js:566
+#: src/edit.js:566
 msgid "Resolving…"
 msgstr "Pobieranie…"
 
-#: build/index.js:22 src/edit.js:570 src/edit.js:586
+#: src/edit.js:570
+#: src/edit.js:586
 msgid "Add"
 msgstr "Dodaj"
 
-#: build/index.js:22 src/edit.js:584
+#: src/edit.js:584
 msgid "Clear"
 msgstr "Wyczyść"
 
-#: build/index.js:22 src/edit.js:597
+#: src/edit.js:597
 msgid "Hide citation form"
 msgstr "Ukryj formularz cytowania"
 
-#: build/index.js:22 src/edit.js:598
+#: src/edit.js:598
 msgid "Show citation form"
 msgstr "Pokaż formularz cytowania"
 
-#: build/index.js:22 src/edit.js:635 src/edit.js:649
+#: src/edit.js:635
+#: src/edit.js:649
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: build/index.js:22 src/edit.js:640
+#: src/edit.js:640
 msgid "source"
 msgstr "źródło"
 
-#: build/index.js:22 src/edit.js:644
+#: src/edit.js:644
 msgid "sources"
 msgstr "źródła"
 
-#: build/index.js:22 src/edit.js:653
+#: src/edit.js:653
 msgid "Citation Style"
 msgstr "Styl cytowania"
 
-#: build/index.js:22 src/edit.js:662
-msgid ""
-"IEEE/Vancouver: arrange entries to match the order they're first cited in "
-"your text."
+#: src/edit.js:662
+msgid "IEEE/Vancouver: arrange entries to match the order they're first cited in your text."
 msgstr ""
 
-#: build/index.js:22 src/edit.js:666
-msgid ""
-"Changing styles reformats auto-generated citations and keeps manual "
-"overrides intact."
-msgstr ""
-"Zmiana stylu powoduje ponowne sformatowanie cytowań generowanych "
-"automatycznie, zachowując ręczne korekty."
+#: src/edit.js:666
+msgid "Changing styles reformats auto-generated citations and keeps manual overrides intact."
+msgstr "Zmiana stylu powoduje ponowne sformatowanie cytowań generowanych automatycznie, zachowując ręczne korekty."
 
-#: build/index.js:22 src/edit.js:678
-msgid ""
-"OSCOLA convention groups bibliographies by source type (cases, legislation, "
-"books, articles, online). Borges currently renders a single alphabetized "
-"list. See Epic-OSCOLA for tracking."
+#: src/edit.js:678
+msgid "OSCOLA convention groups bibliographies by source type (cases, legislation, books, articles, online). Borges currently renders a single alphabetized list. See Epic-OSCOLA for tracking."
 msgstr ""
 
-#: build/index.js:22 src/edit.js:685
+#: src/edit.js:685
 msgid "Visible Heading"
 msgstr "Widoczny nagłówek"
 
-#: build/index.js:22 src/edit.js:694
-msgid ""
-"Optional heading shown above the bibliography on the site front end when at "
-"least one citation exists."
-msgstr ""
-"Opcjonalny nagłówek wyświetlany nad bibliografią w publicznej części "
-"witryny, gdy istnieje co najmniej jedno cytowanie."
+#: src/edit.js:694
+msgid "Optional heading shown above the bibliography on the site front end when at least one citation exists."
+msgstr "Opcjonalny nagłówek wyświetlany nad bibliografią w publicznej części witryny, gdy istnieje co najmniej jedno cytowanie."
 
-#: build/index.js:22 src/edit.js:700
+#: src/edit.js:700
 msgid "Output JSON-LD"
 msgstr "Włącz JSON-LD"
 
-#: build/index.js:22 src/edit.js:708
+#: src/edit.js:708
 msgid "Helps search engines and other tools understand the bibliography."
 msgstr "Pomaga wyszukiwarkom i innym narzędziom rozpoznawać bibliografię."
 
-#: build/index.js:22 src/edit.js:714
+#: src/edit.js:714
 msgid "Output COinS"
 msgstr "Włącz COinS"
 
-#: build/index.js:22 src/edit.js:722
+#: src/edit.js:722
 msgid "Lets Zotero and similar tools detect citations on the page."
 msgstr "Pozwala Zotero i podobnym narzędziom wykrywać cytowania na stronie."
 
-#: build/index.js:22 src/edit.js:728
+#: src/edit.js:728
 msgid "Output CSL-JSON"
 msgstr "Włącz CSL-JSON"
 
-#: build/index.js:22 src/edit.js:736
+#: src/edit.js:736
 msgid "Makes citation data reusable by scholarly tools and services."
-msgstr ""
-"Umożliwia ponowne wykorzystanie danych cytowań przez narzędzia i usługi "
-"naukowe."
+msgstr "Umożliwia ponowne wykorzystanie danych cytowań przez narzędzia i usługi naukowe."
 
-#: build/index.js:22 src/edit.js:742
+#: src/edit.js:742
 msgid "Per-entry Cite / Export"
 msgstr ""
 
-#: build/index.js:22 src/edit.js:750
-msgid ""
-"Add per-entry disclosure panels with copy and download links for BibTeX, "
-"RIS, and CSL-JSON."
+#: src/edit.js:750
+msgid "Add per-entry disclosure panels with copy and download links for BibTeX, RIS, and CSL-JSON."
 msgstr ""
 
-#: build/index.js:22 src/edit.js:756
+#: src/edit.js:756
 msgid "Exports"
 msgstr "Eksport"
 
-#: build/index.js:22 src/edit.js:762
+#: src/edit.js:762
 msgid "Copy bibliography"
 msgstr "Kopiuj bibliografię"
 
-#: build/index.js:22 src/edit.js:765
-msgid ""
-"Copies the current bibliography as plain text in the current order and style."
-msgstr ""
-"Kopiuje bieżącą bibliografię jako zwykły tekst w bieżącej kolejności i stylu."
+#: src/edit.js:765
+msgid "Copies the current bibliography as plain text in the current order and style."
+msgstr "Kopiuje bieżącą bibliografię jako zwykły tekst w bieżącej kolejności i stylu."
 
-#: build/index.js:22 src/edit.js:775
+#: src/edit.js:775
 msgid "Download CSL-JSON"
 msgstr "Pobierz CSL-JSON"
 
-#: build/index.js:22 src/edit.js:778
+#: src/edit.js:778
 msgid "Downloads the current bibliography as structured citation data."
 msgstr "Pobiera bieżącą bibliografię jako ustrukturyzowane dane cytowań."
 
-#: build/index.js:22 src/edit.js:788
+#: src/edit.js:788
 msgid "Download BibTeX"
 msgstr "Pobierz BibTeX"
 
-#: build/index.js:22 src/edit.js:791
-msgid ""
-"Downloads the current bibliography as BibTeX for reference-manager and "
-"scholarly-writing workflows."
-msgstr ""
-"Pobiera bieżącą bibliografię jako BibTeX do menedżerów bibliografii i "
-"akademickich procesów pisania."
+#: src/edit.js:791
+msgid "Downloads the current bibliography as BibTeX for reference-manager and scholarly-writing workflows."
+msgstr "Pobiera bieżącą bibliografię jako BibTeX do menedżerów bibliografii i akademickich procesów pisania."
 
-#: build/index.js:22 src/edit.js:801
+#: src/edit.js:801
 msgid "Download BibLaTeX"
 msgstr ""
 
-#: build/index.js:22 src/edit.js:804
-msgid ""
-"Downloads the current bibliography as BibLaTeX for LaTeX/Biber workflows "
-"with full Unicode support."
+#: src/edit.js:804
+msgid "Downloads the current bibliography as BibLaTeX for LaTeX/Biber workflows with full Unicode support."
 msgstr ""
 
-#: build/index.js:22 src/edit.js:814
+#: src/edit.js:814
 msgid "Download RIS"
 msgstr "Pobierz RIS"
 
-#: build/index.js:22 src/edit.js:817
-msgid ""
-"Downloads the current bibliography as RIS for citation managers and import/"
-"export workflows."
-msgstr ""
-"Pobiera bieżącą bibliografię jako RIS dla menedżerów cytowań i procesów "
-"importu/eksportu."
+#: src/edit.js:817
+msgid "Downloads the current bibliography as RIS for citation managers and import/export workflows."
+msgstr "Pobiera bieżącą bibliografię jako RIS dla menedżerów cytowań i procesów importu/eksportu."
 
 #. translators: %d: maximum citation count.
-#: build/index.js:23 src/lib/citation-limits.js:11
-msgid ""
-"This bibliography already has the maximum of %d citations. Remove a citation "
-"before adding another."
+#: src/lib/citation-limits.js:11
+#, js-format
+msgid "This bibliography already has the maximum of %d citations. Remove a citation before adding another."
 msgstr ""
 
-#: build/index.js:23 src/lib/citation-limits.js:31
+#: src/lib/citation-limits.js:31
 msgid "slot"
 msgid_plural "slots"
 msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
 
-#: build/index.js:23 src/lib/citation-limits.js:39
+#: src/lib/citation-limits.js:39
 msgid "remains"
 msgstr ""
 
-#: build/index.js:23 src/lib/citation-limits.js:40
+#: src/lib/citation-limits.js:40
 msgid "remain"
 msgstr ""
 
 #. translators: 1: attempted citation count, 2: localized citation/citations label, 3: maximum citation count, 4: remaining slot count, 5: localized slot/slots label, 6: localized remains/remain verb.
-#: build/index.js:24 src/lib/citation-limits.js:44
-msgid ""
-"Adding %1$d %2$s would exceed the supported limit of %3$d citations per "
-"bibliography. %4$d %5$s %6$s; add fewer items or remove citations first."
+#: src/lib/citation-limits.js:44
+#, js-format
+msgid "Adding %1$d %2$s would exceed the supported limit of %3$d citations per bibliography. %4$d %5$s %6$s; add fewer items or remove citations first."
 msgstr ""
 
 #. translators: 1: current citation count, 2: maximum citation count.
-#: build/index.js:25 src/lib/citation-limits.js:63
-msgid ""
-"This bibliography has %1$d citations, which exceeds the supported limit of "
-"%2$d. Remove citations until it is within the supported limit before "
-"reformatting."
+#: src/lib/citation-limits.js:63
+#, js-format
+msgid "This bibliography has %1$d citations, which exceeds the supported limit of %2$d. Remove citations until it is within the supported limit before reformatting."
 msgstr ""
 
 #. translators: 1: current citation count, 2: soft warning threshold, 3: hard citation limit.
-#: build/index.js:26 src/lib/citation-limits.js:79
-msgid ""
-"This bibliography has %1$d citations — above the %2$d-entry threshold. "
-"Formatting may be slower on shared hosting. The hard limit is %3$d citations."
-msgstr ""
-
-#: build/index.js:26 src/lib/input-support.js:3
-msgid ""
-"Paste a DOI, PMID (PubMed ID), BibTeX entry, or supported citation for a "
-"book, article, chapter, or webpage. Separate multiple formatted citations "
-"with a blank line."
+#: src/lib/citation-limits.js:79
+#, js-format
+msgid "This bibliography has %1$d citations — above the %2$d-entry threshold. Formatting may be slower on shared hosting. The hard limit is %3$d citations."
 msgstr ""
 
 #. translators: %d: citation count.
 #: src/hooks/use-citation-import-actions.js:34
-#, fuzzy
+#, fuzzy,js-format
 msgid "Added %d citation."
 msgid_plural "Added %d citations."
 msgstr[0] "Dodaj źródła"
@@ -899,6 +787,7 @@ msgstr[2] "Dodaj źródła"
 
 #. translators: %d: duplicate citation count.
 #: src/hooks/use-citation-import-actions.js:53
+#, js-format
 msgid "Skipped %d duplicate."
 msgid_plural "Skipped %d duplicates."
 msgstr[0] ""
@@ -907,6 +796,7 @@ msgstr[2] ""
 
 #. translators: %d: unparseable item count.
 #: src/hooks/use-citation-import-actions.js:68
+#, js-format
 msgid "Couldn't parse %d item."
 msgid_plural "Couldn't parse %d items."
 msgstr[0] ""
@@ -915,6 +805,7 @@ msgstr[2] ""
 
 #. translators: %d: imported record count.
 #: src/hooks/use-citation-import-actions.js:92
+#, js-format
 msgid "Review %d imported record before publishing."
 msgid_plural "Review %d imported records before publishing."
 msgstr[0] ""
@@ -924,14 +815,6 @@ msgstr[2] ""
 #: block.json
 msgctxt "block title"
 msgid "Bibliography"
-msgstr ""
-
-#: block.json
-msgctxt "block description"
-msgid ""
-"A scholarly bibliography block. Add DOI(s), PubMed/PMID records, BibTeX "
-"entries, and supported citations to build a semantically rich, auto-sorted "
-"reference list."
 msgstr ""
 
 #: block.json
@@ -962,4 +845,188 @@ msgstr ""
 #: block.json
 msgctxt "block keyword"
 msgid "scholarly"
+msgstr ""
+
+#. Description of the plugin
+#: bibliography-builder.php
+msgid "Create accessible bibliographies from DOI, PubMed, BibTeX, CSL-JSON, and free text; export RIS."
+msgstr ""
+
+#. translators: %d: maximum length in bytes.
+#: bibliography-builder.php:935
+#, php-format
+msgid "A CSL field exceeds the maximum length of %d bytes."
+msgstr ""
+
+#: bibliography-builder.php:2385
+msgid "Invalid PubMed Central ID."
+msgstr ""
+
+#: bibliography-builder.php:2396
+msgid "The PubMed Central citation service could not be reached."
+msgstr ""
+
+#: bibliography-builder.php:2400
+msgid "The PubMed Central ID could not be resolved."
+msgstr ""
+
+#: bibliography-builder.php:2404
+msgid "The PubMed Central citation service returned an error."
+msgstr ""
+
+#: bibliography-builder.php:2408
+msgid "The PubMed Central citation service returned an invalid response."
+msgstr ""
+
+#: bibliography-builder.php:2587
+msgid "PubMed Central ID (PMCID) to resolve to CSL-JSON."
+msgstr ""
+
+#: bibliography-builder.php:2733
+msgid "One or more citations use a URL or DOI as link text. Add a descriptive title for screen readers."
+msgstr ""
+
+#: bibliography-builder.php:2737
+msgid "All machine-readable metadata outputs are disabled. Enable JSON-LD, COinS, or CSL-JSON for interoperability."
+msgstr ""
+
+#: bibliography-builder.php:2784
+msgid "Citations with a URL or DOI should have a descriptive title as link text."
+msgstr ""
+
+#: bibliography-builder.php:2801
+msgid "Enable at least one metadata output to improve citation-manager interoperability."
+msgstr ""
+
+#: src/lib/parser.js:890
+msgid "Couldn't resolve the PMCID. Check the number and try again."
+msgstr ""
+
+#: bibliography-builder.php:1530
+msgid "Sorry, you are not allowed to resolve arXiv citations."
+msgstr ""
+
+#: bibliography-builder.php:2018
+msgid "Invalid arXiv ID."
+msgstr ""
+
+#: bibliography-builder.php:2028
+msgid "The arXiv metadata service could not be reached."
+msgstr ""
+
+#: bibliography-builder.php:2032
+msgid "The arXiv ID could not be resolved."
+msgstr ""
+
+#: bibliography-builder.php:2036
+msgid "The arXiv metadata service returned an error."
+msgstr ""
+
+#: bibliography-builder.php:2040
+msgid "The arXiv metadata service returned an invalid response."
+msgstr ""
+
+#: bibliography-builder.php:2613
+msgid "arXiv ID (modern or legacy, optional version) to resolve to CSL-JSON."
+msgstr ""
+
+#: src/lib/parser.js:883
+msgid "Couldn't resolve the arXiv ID. Check it and try again."
+msgstr ""
+
+#: includes/abilities.php:49
+msgid "Bibliographies"
+msgstr ""
+
+#: includes/abilities.php:50
+msgid "Read and check scholarly bibliographies built with the Borges bibliography block."
+msgstr ""
+
+#: includes/abilities.php:87
+msgid "ID of the post that contains the bibliography blocks."
+msgstr ""
+
+#: includes/abilities.php:93
+msgid "Get bibliographies"
+msgstr ""
+
+#: includes/abilities.php:94
+msgid "Lists a post's Borges bibliography blocks with each citation's CSL-JSON and display text."
+msgstr ""
+
+#: includes/abilities.php:126
+msgid "Export a bibliography"
+msgstr ""
+
+#: includes/abilities.php:127
+msgid "Exports one Borges bibliography block as a CSL-JSON array or as plain text, one citation per line."
+msgstr ""
+
+#: includes/abilities.php:140
+msgid "Zero-based position of the bibliography block within the post."
+msgstr ""
+
+#: includes/abilities.php:149
+msgid "Export format: csl-json or text."
+msgstr ""
+
+#: includes/abilities.php:176
+msgid "Validate citations"
+msgstr ""
+
+#: includes/abilities.php:177
+msgid "Checks CSL-JSON records against the rules Borges applies before formatting. Saves nothing."
+msgstr ""
+
+#: includes/abilities.php:190
+msgid "CSL-JSON citation records to check."
+msgstr ""
+
+#: bibliography-builder.php:1547
+msgid "Sorry, you are not allowed to resolve book citations."
+msgstr ""
+
+#: bibliography-builder.php:2299
+msgid "Invalid ISBN."
+msgstr ""
+
+#: bibliography-builder.php:2309
+msgid "The ISBN could not be resolved."
+msgstr ""
+
+#: bibliography-builder.php:2636
+msgid "ISBN-10 or ISBN-13, without hyphens, to resolve to CSL-JSON."
+msgstr ""
+
+#: src/edit.js:550
+msgid "Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
+msgstr ""
+
+#: src/lib/input-support.js:3
+msgid "Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line."
+msgstr ""
+
+#: src/lib/parser.js:854
+msgid "This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead."
+msgstr ""
+
+#: src/lib/parser.js:876
+msgid "Couldn't resolve the ISBN. Check it and try again."
+msgstr ""
+
+#: block.json
+msgctxt "block description"
+msgid "A scholarly bibliography block. Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, and supported citations to build a semantically rich, auto-sorted reference list."
+msgstr ""
+
+#: bibliography-builder.php:2305
+msgid "The book metadata service could not be reached."
+msgstr ""
+
+#: bibliography-builder.php:2313
+msgid "The book metadata service returned an error."
+msgstr ""
+
+#: bibliography-builder.php:2317
+msgid "The book metadata service returned an invalid response."
 msgstr ""

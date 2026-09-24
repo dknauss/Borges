@@ -1,7 +1,8 @@
 /**
  * Input format detection and citation-js orchestration.
  *
- * Splits pasted input into individual entries, detects DOIs and BibTeX,
+ * Splits pasted input into individual entries, detects DOIs and BibTeX
+ * (including BibLaTeX, which shares the same detection and backend),
  * and resolves them to CSL-JSON via citation-js.
  */
 
@@ -13,6 +14,7 @@ import '@citation-js/plugin-bibtex';
 import apiFetch from '@wordpress/api-fetch';
 import { createCitationId } from './citation-id';
 import { validateAndSanitizeCsl, KNOWN_CSL_TYPES } from './csl-sanitize';
+import { normalizeBibtexCsl } from './bibtex-fields';
 import { normalizeCslNameCase } from './normalize-author-names';
 import { normalizeCslTitleCase } from './normalize-title-case';
 import { DEFAULT_CITATION_STYLE } from './formatting';
@@ -23,6 +25,9 @@ const DOI_ONLY_REGEX =
 	/^(?:(?:https?:\/\/)?(?:dx\.)?doi\.org\/|(?:https?:\/\/)?doi:)?10\.\d{4,}\/[^\s]+$/i;
 const BIBTEX_REGEX = /@\w+\{/;
 const PMID_REGEX = /^PMID:\s*(\d{1,8})$/i;
+// PMCID: the `PMC` prefix is what distinguishes it from a PMID, so it is
+// required; the `PMCID:` label is optional.
+const PMCID_REGEX = /^(?:PMCID:\s*)?PMC(\d{1,9})$/i;
 // Unanchored variants — find an identifier anywhere inside a longer free-text string.
 // EMBEDDED_DOI_REGEX: requires registrant prefix (10.\d{4,}/) plus at least one path
 // character to avoid matching bare decimals or chapter references like "Chapter 10.".
@@ -31,10 +36,51 @@ const EMBEDDED_DOI_REGEX =
 // EMBEDDED_PMID_REGEX: requires the "PMID" label (colon or space form) to avoid
 // matching bare 8-digit numbers in page ranges, ISBNs, and phone numbers.
 const EMBEDDED_PMID_REGEX = /\bPMID[:\s]\s*(\d{1,8})\b/iu;
+// EMBEDDED_PMCID_REGEX: `PMC` plus at least four digits, which is how PMCIDs
+// appear in published reference lists (with or without a `PMCID:` label).
+const EMBEDDED_PMCID_REGEX = /\bPMC(\d{4,9})\b/u;
+// arXiv IDs: modern `2301.00001` or legacy `hep-th/9901001`, optional `vN`.
+// Mirrors BIBLIOGRAPHY_BUILDER_ARXIV_ID_PATTERN in bibliography-builder.php.
+const ARXIV_ID_SOURCE =
+	'(?:\\d{4}\\.\\d{4,5}|[a-z-]+(?:\\.[a-z]{2})?\\/\\d{7})(?:v\\d+)?';
+const ARXIV_URL_PREFIX_SOURCE =
+	'(?:https?:\\/\\/)?(?:www\\.|export\\.)?arxiv\\.org\\/(?:abs|pdf)\\/';
+// Standalone: `arXiv:ID` or an arxiv.org abs/pdf URL. A bare `2301.00001` is
+// not accepted; without the label it is indistinguishable from a number.
+const ARXIV_REGEX = new RegExp(
+	`^(?:arxiv:\\s*|${ARXIV_URL_PREFIX_SOURCE})(${ARXIV_ID_SOURCE})(?:\\.pdf)?\\/?$`,
+	'iu'
+);
+// The lookbehind keeps an embedded link from matching inside a longer
+// hostname: `evilarxiv.org/abs/…` or `mirror.arxiv.org/abs/…` is not arXiv.
+const EMBEDDED_ARXIV_REGEX = new RegExp(
+	`(?:\\barxiv:\\s*|(?<![\\w.-])${ARXIV_URL_PREFIX_SOURCE})(${ARXIV_ID_SOURCE})`,
+	'iu'
+);
+// arXiv's own DataCite DOIs (10.48550/arXiv.ID) are not in CrossRef, so they
+// resolve through the arXiv backend instead of the DOI one.
+const ARXIV_DOI_REGEX = new RegExp(
+	`^(?:(?:https?:\\/\\/)?(?:dx\\.)?doi\\.org\\/|doi:)?10\\.48550\\/arxiv\\.(${ARXIV_ID_SOURCE})$`,
+	'iu'
+);
 const NCBI_CSL_API =
 	'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=';
+const NCBI_PMC_CSL_API =
+	'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pmc/?format=csl&id=';
 const CROSSREF_CSL_API = 'https://api.crossref.org/works/';
 const PMID_REST_ENDPOINT = '/bibliography/v1/pmid/';
+const PMCID_REST_ENDPOINT = '/bibliography/v1/pmcid/';
+const ARXIV_REST_ENDPOINT = '/bibliography/v1/arxiv';
+const ISBN_REST_ENDPOINT = '/bibliography/v1/isbn/';
+// Standalone ISBN: an `ISBN`/`ISBN-10`/`ISBN-13` label with either length, or
+// a bare 978/979 ISBN-13. A bare ISBN-10 is never accepted: too many ordinary
+// 10-digit numbers pass its checksum by chance. Checksums are verified in
+// normalizeIsbn(); these patterns only find candidates.
+const LABELED_ISBN_REGEX =
+	/^ISBN(?:-1[03])?:?\s*([0-9][0-9\s-]{8,15}[0-9X])$/iu;
+const BARE_ISBN13_REGEX = /^(97[89][0-9\s-]{10,14})$/u;
+const EMBEDDED_ISBN_REGEX =
+	/\bISBN(?:-1[03])?:?\s*([0-9][0-9\s-]{8,15}[0-9X])\b/iu;
 const MAX_INPUT_SIZE = 1024 * 1024; // 1 MB
 const PARSE_CONCURRENCY = 4;
 const MAX_DOI_METADATA_CACHE_ENTRIES = 100;
@@ -43,6 +89,10 @@ const LATEX_DOCUMENT_PATTERN =
 const DOI_METADATA_CACHE = new Map();
 const PENDING_DOI_RESOLUTIONS = new Map();
 let DOI_RESOLUTION_QUEUE = Promise.resolve();
+// arXiv and Open Library/Google Books ask API clients to space out requests,
+// so lookups against each upstream run one at a time even when a paste
+// contains several. One promise chain per queue name.
+const SERIAL_QUEUES = new Map();
 export { validateAndSanitizeCsl };
 
 function normalizePmidInput(value) {
@@ -57,37 +107,62 @@ function getDefaultFetchFn() {
 	return undefined;
 }
 
-async function resolvePmidViaFetch(pmid, fetchFn) {
-	const response = await fetchFn(`${NCBI_CSL_API}${pmid}`);
+function normalizePmcidInput(value) {
+	return value.replace(/^(?:PMCID:\s*)?PMC/iu, '').trim();
+}
+
+const NCBI_SOURCES = {
+	pmid: {
+		label: 'PMID',
+		fetchUrl: (id) => `${NCBI_CSL_API}${id}`,
+		restPath: (id) => `${PMID_REST_ENDPOINT}${encodeURIComponent(id)}`,
+	},
+	pmcid: {
+		label: 'PMCID',
+		// The PMC exporter rejects `id=PMC…` with HTTP 400; it takes digits.
+		fetchUrl: (id) => `${NCBI_PMC_CSL_API}${id}`,
+		restPath: (id) => `${PMCID_REST_ENDPOINT}PMC${encodeURIComponent(id)}`,
+	},
+};
+
+async function resolveNcbiViaFetch(source, id, fetchFn) {
+	const response = await fetchFn(source.fetchUrl(id));
 
 	if (!response.ok) {
 		throw new Error(
-			`NCBI API returned ${response.status} for PMID ${pmid}`
+			`NCBI API returned ${response.status} for ${source.label} ${id}`
 		);
 	}
 
 	return response.json();
 }
 
-async function resolvePmidViaRest(pmid) {
-	return apiFetch({
-		path: `${PMID_REST_ENDPOINT}${encodeURIComponent(pmid)}`,
-	});
-}
+/**
+ * Resolve a PubMed or PubMed Central record to CSL-JSON.
+ *
+ * Prefers an injected fetch (tests, benchmarks), then the authenticated
+ * WordPress REST proxy, then a direct browser fetch.
+ *
+ * @param {'pmid'|'pmcid'} sourceKey Which NCBI source to query.
+ * @param {string}         id        Digits only (no `PMC` prefix).
+ * @param {Function}       [fetchFn] Optional fetch implementation.
+ * @return {Promise<Object>} CSL-JSON item.
+ */
+async function resolveNcbiCsl(sourceKey, id, fetchFn) {
+	const source = NCBI_SOURCES[sourceKey];
 
-async function resolvePmidCsl(pmid, fetchFn) {
 	if (typeof fetchFn === 'function') {
-		return resolvePmidViaFetch(pmid, fetchFn);
+		return resolveNcbiViaFetch(source, id, fetchFn);
 	}
 
 	if (typeof apiFetch === 'function') {
-		return resolvePmidViaRest(pmid);
+		return apiFetch({ path: source.restPath(id) });
 	}
 
 	const defaultFetchFn = getDefaultFetchFn();
 
 	if (typeof defaultFetchFn === 'function') {
-		return resolvePmidViaFetch(pmid, defaultFetchFn);
+		return resolveNcbiViaFetch(source, id, defaultFetchFn);
 	}
 
 	throw new Error(
@@ -128,19 +203,31 @@ export function normalizeDoiValueForLookup(value) {
 }
 
 /**
- * Scan `chunk` for an embedded DOI or labeled PMID.
+ * Scan `chunk` for an embedded DOI, labeled PMID, or PMCID.
  *
  * DOI is preferred over PMID when both are present (DOI resolves via CrossRef
- * and returns richer structured metadata). Only the first match is extracted —
- * one citation, one identifier.
+ * and returns richer structured metadata). PMCID is tried last: a PMID
+ * resolves the same article through PubMed, and the unlabeled `PMC1234` form
+ * is the least specific of the three patterns. Only the first match is
+ * extracted — one citation, one identifier.
  *
  * @param {string} chunk Free-text citation string (already trimmed).
- * @return {{ format: 'doi'|'pmid', value: string, rawValue: string } | null} Extracted identifier result, or null if none found.
+ * @return {{ format: 'doi'|'pmid'|'pmcid'|'arxiv'|'isbn', value: string, rawValue: string } | null} Extracted identifier result, or null if none found.
  */
 export function extractEmbeddedIdentifier(chunk) {
 	// DOI first — higher authority than PMID when both co-occur.
 	const doiMatch = chunk.match(EMBEDDED_DOI_REGEX);
 	if (doiMatch) {
+		const arxivIdFromDoi = getArxivId(doiMatch[0]);
+
+		if (arxivIdFromDoi) {
+			return {
+				format: 'arxiv',
+				value: `arXiv:${arxivIdFromDoi}`,
+				rawValue: chunk,
+			};
+		}
+
 		return {
 			format: 'doi',
 			// Strip trailing punctuation (.,;:) and any doi: URL prefix via the
@@ -157,6 +244,35 @@ export function extractEmbeddedIdentifier(chunk) {
 			format: 'pmid',
 			// Normalized to the PMID:NNNN form that PARSER_BACKENDS.pmid expects.
 			value: `PMID:${pmidMatch[1]}`,
+			rawValue: chunk,
+		};
+	}
+
+	const pmcidMatch = chunk.match(EMBEDDED_PMCID_REGEX);
+	if (pmcidMatch) {
+		return {
+			format: 'pmcid',
+			value: `PMC${pmcidMatch[1]}`,
+			rawValue: chunk,
+		};
+	}
+
+	const arxivMatch = chunk.match(EMBEDDED_ARXIV_REGEX);
+	if (arxivMatch) {
+		return {
+			format: 'arxiv',
+			value: `arXiv:${arxivMatch[1]}`,
+			rawValue: chunk,
+		};
+	}
+
+	// ISBN last: a book DOI or PMID carries richer metadata when present.
+	const isbnMatch = chunk.match(EMBEDDED_ISBN_REGEX);
+	const embeddedIsbn = isbnMatch ? normalizeIsbn(isbnMatch[1]) : null;
+	if (embeddedIsbn) {
+		return {
+			format: 'isbn',
+			value: `ISBN ${embeddedIsbn}`,
 			rawValue: chunk,
 		};
 	}
@@ -231,6 +347,103 @@ export function clearDoiMetadataCache() {
 	DOI_METADATA_CACHE.clear();
 	PENDING_DOI_RESOLUTIONS.clear();
 	DOI_RESOLUTION_QUEUE = Promise.resolve();
+	SERIAL_QUEUES.clear();
+}
+
+/**
+ * Run `task` after every earlier task on the same named queue has settled.
+ *
+ * A failed task does not block the queue; its rejection still reaches the
+ * caller of that task.
+ *
+ * @param {string}             queueName Queue to serialize on, e.g. 'arxiv'.
+ * @param {() => Promise<any>} task      Work to run.
+ * @return {Promise<any>} The task's result.
+ */
+function runSerially(queueName, task) {
+	const previous = SERIAL_QUEUES.get(queueName) || Promise.resolve();
+	const run = previous.catch(() => {}).then(task);
+	SERIAL_QUEUES.set(
+		queueName,
+		run.catch(() => {})
+	);
+
+	return run;
+}
+
+/**
+ * Extract a bare arXiv ID from an `arXiv:` label, arxiv.org URL, or arXiv DOI.
+ *
+ * @param {string} value Standalone identifier text.
+ * @return {string|null} The arXiv ID, or null when the value is not one.
+ */
+function getArxivId(value) {
+	const trimmed = value.trim();
+	const match =
+		trimmed.match(ARXIV_REGEX) ||
+		normalizeDoiInput(trimmed).match(ARXIV_DOI_REGEX);
+
+	return match ? match[1] : null;
+}
+
+/**
+ * Reduce ISBN text to a checksum-valid ISBN-13.
+ *
+ * Mirrors bibliography_builder_normalize_isbn() in bibliography-builder.php.
+ *
+ * @param {string} value Digits (with optional hyphens/spaces), ISBN-10 or -13.
+ * @return {string|null} The ISBN-13, or null when the checksum fails.
+ */
+export function normalizeIsbn(value) {
+	const isbn = String(value).replace(/[\s-]/gu, '').toUpperCase();
+
+	const isbn13CheckDigit = (firstTwelve) => {
+		let sum = 0;
+		for (let i = 0; i < 12; i++) {
+			sum += Number(firstTwelve[i]) * (i % 2 === 0 ? 1 : 3);
+		}
+		return String((10 - (sum % 10)) % 10);
+	};
+
+	if (/^\d{9}[\dX]$/u.test(isbn)) {
+		let sum = 0;
+		for (let i = 0; i < 10; i++) {
+			sum += (isbn[i] === 'X' ? 10 : Number(isbn[i])) * (10 - i);
+		}
+		if (sum % 11 !== 0) {
+			return null;
+		}
+		const base = `978${isbn.slice(0, 9)}`;
+		return base + isbn13CheckDigit(base);
+	}
+
+	if (/^97[89]\d{10}$/u.test(isbn)) {
+		return isbn13CheckDigit(isbn.slice(0, 12)) === isbn[12] ? isbn : null;
+	}
+
+	return null;
+}
+
+function getStandaloneIsbn(value) {
+	const trimmed = value.trim();
+	const match =
+		trimmed.match(LABELED_ISBN_REGEX) || trimmed.match(BARE_ISBN13_REGEX);
+
+	return match ? normalizeIsbn(match[1]) : null;
+}
+
+function resolveArxivCsl(arxivId) {
+	if (typeof apiFetch !== 'function') {
+		return Promise.reject(
+			new Error('WordPress REST transport unavailable for arXiv')
+		);
+	}
+
+	return runSerially('arxiv', () =>
+		apiFetch({
+			path: `${ARXIV_REST_ENDPOINT}?id=${encodeURIComponent(arxivId)}`,
+		})
+	);
 }
 
 function enqueueDoiResolution(resolve) {
@@ -421,6 +634,19 @@ function detectFormat(chunk) {
 		return { format: 'pmid', value: chunk };
 	}
 
+	if (PMCID_REGEX.test(chunk)) {
+		return { format: 'pmcid', value: chunk };
+	}
+
+	// Before DOI: arXiv DOIs (10.48550/arXiv.ID) also match DOI_ONLY_REGEX.
+	if (getArxivId(chunk)) {
+		return { format: 'arxiv', value: chunk };
+	}
+
+	if (getStandaloneIsbn(chunk)) {
+		return { format: 'isbn', value: chunk };
+	}
+
 	if (DOI_ONLY_REGEX.test(chunk)) {
 		return { format: 'doi', value: chunk };
 	}
@@ -451,6 +677,8 @@ function createDetectedItem(
 	};
 }
 
+const IDENTIFIER_FORMATS = ['doi', 'pmid', 'pmcid', 'arxiv', 'isbn'];
+
 function looksLikeStandaloneCitationLine(line) {
 	const normalizedLine = line.trim();
 
@@ -460,7 +688,7 @@ function looksLikeStandaloneCitationLine(line) {
 
 	const format = detectFormat(normalizedLine).format;
 
-	if (format === 'doi' || format === 'pmid') {
+	if (IDENTIFIER_FORMATS.includes(format)) {
 		return true;
 	}
 
@@ -488,7 +716,7 @@ function splitChunkIntoDetectedItems(chunk) {
 	const allLinesAreIdentifiers =
 		lines.length > 1 &&
 		lines.every((line) =>
-			['doi', 'pmid'].includes(detectFormat(line).format)
+			IDENTIFIER_FORMATS.includes(detectFormat(line).format)
 		);
 
 	if (allLinesAreIdentifiers) {
@@ -529,7 +757,43 @@ function splitChunkIntoDetectedItems(chunk) {
 const PARSER_BACKENDS = {
 	pmid: async (value, { fetchFn } = {}) => {
 		const pmid = normalizePmidInput(value);
-		const csl = await resolvePmidCsl(pmid, fetchFn);
+		const csl = await resolveNcbiCsl('pmid', pmid, fetchFn);
+
+		return { cslItems: [csl] };
+	},
+	isbn: async (value) => {
+		const isbn13 =
+			getStandaloneIsbn(value) ||
+			normalizeIsbn(value.replace(/^ISBN(?:-1[03])?:?\s*/iu, ''));
+
+		if (!isbn13) {
+			throw new Error('Invalid ISBN');
+		}
+
+		if (typeof apiFetch !== 'function') {
+			throw new Error('WordPress REST transport unavailable for ISBN');
+		}
+
+		return {
+			cslItems: [
+				await runSerially('isbn', () =>
+					apiFetch({ path: `${ISBN_REST_ENDPOINT}${isbn13}` })
+				),
+			],
+		};
+	},
+	arxiv: async (value) => {
+		const arxivId = getArxivId(value);
+
+		if (!arxivId) {
+			throw new Error('Invalid arXiv ID');
+		}
+
+		return { cslItems: [await resolveArxivCsl(arxivId)] };
+	},
+	pmcid: async (value, { fetchFn } = {}) => {
+		const pmcid = normalizePmcidInput(value);
+		const csl = await resolveNcbiCsl('pmcid', pmcid, fetchFn);
 
 		return { cslItems: [csl] };
 	},
@@ -540,9 +804,13 @@ const PARSER_BACKENDS = {
 	},
 	bibtex: async (value) => {
 		const cite = await Cite.async(normalizeBibtexInput(value));
+		const cslItems = cite.get({ type: 'json' });
+		// Raw-field recovery (arXiv eprints) is only unambiguous when the
+		// segment produced exactly one item.
+		const rawEntry = cslItems.length === 1 ? value : undefined;
 
 		return {
-			cslItems: cite.get({ type: 'json' }),
+			cslItems: cslItems.map((csl) => normalizeBibtexCsl(csl, rawEntry)),
 		};
 	},
 	freetext: async (value) => {
@@ -607,7 +875,7 @@ function formatUnsupportedInputError() {
 
 function formatLatexDocumentError() {
 	return __(
-		'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, BibTeX entry, or supported citation instead.',
+		'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.',
 		'borges-bibliography-builder'
 	);
 }
@@ -623,6 +891,27 @@ function formatBackendParseError(format, err) {
 	if (format === 'pmid') {
 		return __(
 			"Couldn't resolve the PMID. Check the number and try again.",
+			'borges-bibliography-builder'
+		);
+	}
+
+	if (format === 'isbn') {
+		return __(
+			"Couldn't resolve the ISBN. Check it and try again.",
+			'borges-bibliography-builder'
+		);
+	}
+
+	if (format === 'arxiv') {
+		return __(
+			"Couldn't resolve the arXiv ID. Check it and try again.",
+			'borges-bibliography-builder'
+		);
+	}
+
+	if (format === 'pmcid') {
+		return __(
+			"Couldn't resolve the PMCID. Check the number and try again.",
 			'borges-bibliography-builder'
 		);
 	}

@@ -52,7 +52,7 @@ final class RestEndpointsTest extends TestCase {
 		bibliography_builder_register_rest_routes();
 		$routes = $GLOBALS['bibliography_builder_test_rest_routes'];
 
-		$this->assertCount( 4, $routes );
+		$this->assertCount( 7, $routes );
 		$this->assertSame( 'bibliography/v1', $routes[0]['namespace'] );
 		$this->assertSame( '/format', $routes[0]['route'] );
 		$this->assertSame( '/pmid/(?P<pmid>\d{1,8})', $routes[1]['route'] );
@@ -65,6 +65,38 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertTrue( $pmid_arg['validate_callback']( '26673779' ) );
 		$this->assertFalse( $pmid_arg['validate_callback']( '123456789' ) );
 		$this->assertFalse( $pmid_arg['validate_callback']( array( '26673779' ) ) );
+
+		// PMCID is registered last so the earlier route indices stay stable.
+		$this->assertSame( '/pmcid/(?P<pmcid>(?:PMC)?\d{1,9})', $routes[4]['route'] );
+		$this->assertSame( 'bibliography_builder_rest_resolve_pmcid', $routes[4]['args']['callback'] );
+		$this->assertSame( 'bibliography_builder_rest_pmid_permissions_check', $routes[4]['args']['permission_callback'] );
+
+		$pmcid_arg = $routes[4]['args']['args']['pmcid'];
+		$this->assertSame( '3531190', $pmcid_arg['sanitize_callback']( 'PMC3531190' ) );
+		$this->assertTrue( $pmcid_arg['validate_callback']( '3531190' ) );
+		$this->assertTrue( $pmcid_arg['validate_callback']( 'pmc3531190' ) );
+		$this->assertFalse( $pmcid_arg['validate_callback']( '1234567890' ) );
+		$this->assertFalse( $pmcid_arg['validate_callback']( 'PMC' ) );
+		$this->assertFalse( $pmcid_arg['validate_callback']( array( '3531190' ) ) );
+
+		$this->assertSame( '/arxiv', $routes[5]['route'] );
+		$this->assertSame( 'bibliography_builder_rest_resolve_arxiv', $routes[5]['args']['callback'] );
+		$this->assertSame( 'bibliography_builder_rest_arxiv_permissions_check', $routes[5]['args']['permission_callback'] );
+
+		$arxiv_arg = $routes[5]['args']['args']['id'];
+		$this->assertTrue( $arxiv_arg['validate_callback']( '1706.03762' ) );
+		$this->assertTrue( $arxiv_arg['validate_callback']( 'hep-th/9901001v2' ) );
+		$this->assertFalse( $arxiv_arg['validate_callback']( '../../etc/passwd' ) );
+		$this->assertFalse( $arxiv_arg['validate_callback']( array( '1706.03762' ) ) );
+
+		$this->assertSame( '/isbn/(?P<isbn>[0-9]{9}[0-9Xx]|97[89][0-9]{10})', $routes[6]['route'] );
+		$this->assertSame( 'bibliography_builder_rest_isbn_permissions_check', $routes[6]['args']['permission_callback'] );
+
+		$isbn_arg = $routes[6]['args']['args']['isbn'];
+		$this->assertTrue( $isbn_arg['validate_callback']( '9780140328721' ) );
+		$this->assertTrue( $isbn_arg['validate_callback']( '080442957X' ) );
+		$this->assertFalse( $isbn_arg['validate_callback']( '9780140328722' ) );
+		$this->assertFalse( $isbn_arg['validate_callback']( array( '9780140328721' ) ) );
 	}
 
 	public function test_published_posts_are_publicly_readable(): void {
@@ -323,6 +355,629 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertSame( 'Cached PubMed Record', $first['title'] );
 		$this->assertSame( $first, $second );
 		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_pmcid_endpoint_returns_csl_json_from_ncbi_pmc_exporter(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode(
+					array(
+						'id'    => 'pmc:3531190',
+						'type'  => 'article-journal',
+						'title' => 'PubMed Central Record',
+					)
+				),
+			)
+		);
+
+		$request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/PMC3531190' );
+		$request['pmcid'] = '3531190';
+
+		$response = bibliography_builder_rest_resolve_pmcid( $request );
+		$requests = bibliography_builder_test_get_http_requests();
+
+		$this->assertSame( 'PubMed Central Record', $response->get_data()['title'] );
+		$this->assertCount( 1, $requests );
+		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_PMC_CSL_API, $requests[0]['url'] );
+		$this->assertStringContainsString( 'format=csl', $requests[0]['url'] );
+		// NCBI's PMC exporter rejects `id=PMC…` with HTTP 400; it takes bare digits.
+		$this->assertStringContainsString( 'id=3531190', $requests[0]['url'] );
+		$this->assertStringNotContainsString( 'id=PMC', $requests[0]['url'] );
+		$this->assertSame( 'wp_safe_remote_get', $requests[0]['function'] );
+		$this->assertSame( 3, $requests[0]['args']['redirection'] );
+
+		// Second call is served from cache.
+		bibliography_builder_rest_resolve_pmcid( $request );
+		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_pmcid_and_pmid_caches_do_not_collide_on_equal_digits(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode( array( 'title' => 'PubMed record 1234567' ) ),
+			)
+		);
+
+		$pmid_request         = new WP_REST_Request( 'GET', '/bibliography/v1/pmid/1234567' );
+		$pmid_request['pmid'] = '1234567';
+		bibliography_builder_rest_resolve_pmid( $pmid_request );
+
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode( array( 'title' => 'PMC record 1234567' ) ),
+			)
+		);
+
+		$pmcid_request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/1234567' );
+		$pmcid_request['pmcid'] = '1234567';
+		$pmcid_result           = bibliography_builder_rest_resolve_pmcid( $pmcid_request );
+
+		$this->assertSame( 'PMC record 1234567', $pmcid_result->get_data()['title'] );
+		$this->assertCount( 2, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_pmcid_endpoint_uses_pmcid_error_codes(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 404 ),
+				'body'     => '',
+			)
+		);
+
+		$request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/99999999' );
+		$request['pmcid'] = '99999999';
+
+		$not_found = bibliography_builder_rest_resolve_pmcid( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $not_found );
+		$this->assertSame( 'bibliography_builder_pmcid_not_found', $not_found->get_error_code() );
+		$this->assertSame( 404, $not_found->get_error_data()['status'] );
+
+		$invalid_request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/x' );
+		$invalid_request['pmcid'] = 'PMC12';
+
+		$invalid = bibliography_builder_rest_resolve_pmcid( $invalid_request );
+
+		$this->assertInstanceOf( WP_Error::class, $invalid );
+		$this->assertSame( 'bibliography_builder_pmcid_invalid', $invalid->get_error_code() );
+		$this->assertSame( 400, $invalid->get_error_data()['status'] );
+		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_pmcid_endpoint_reports_unreachable_upstream(): void {
+		$request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/3531190' );
+		$request['pmcid'] = '3531190';
+
+		$result = bibliography_builder_rest_resolve_pmcid( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_pmcid_upstream_error', $result->get_error_code() );
+		$this->assertSame( 502, $result->get_error_data()['status'] );
+	}
+
+	public function test_pmcid_endpoint_rejects_non_json_response(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '<html>maintenance</html>',
+			)
+		);
+
+		$request          = new WP_REST_Request( 'GET', '/bibliography/v1/pmcid/3531190' );
+		$request['pmcid'] = '3531190';
+
+		$result = bibliography_builder_rest_resolve_pmcid( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_pmcid_invalid_response', $result->get_error_code() );
+	}
+
+	/**
+	 * Atom response in the shape export.arxiv.org returns for one entry.
+	 */
+	private function arxiv_atom_fixture(): string {
+		return '<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title type="html">ArXiv Query: id_list=1706.03762</title>
+  <entry>
+    <id>http://arxiv.org/abs/1706.03762v7</id>
+    <updated>2023-08-02T00:41:18Z</updated>
+    <published>2017-06-12T17:57:34Z</published>
+    <title>Attention Is All
+      You Need</title>
+    <summary>The dominant sequence transduction models...</summary>
+    <author><name>Ashish Vaswani</name></author>
+    <author><name>Ludwig van der Waals</name></author>
+    <author><name>Martin Luther King Jr.</name></author>
+    <author><name>ATLAS Collaboration</name></author>
+    <arxiv:doi>10.5555/published.version</arxiv:doi>
+    <link href="http://arxiv.org/abs/1706.03762v7" rel="alternate" type="text/html"/>
+  </entry>
+</feed>';
+	}
+
+	public function test_arxiv_endpoint_maps_atom_to_a_csl_preprint(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => $this->arxiv_atom_fixture(),
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = 'arXiv:1706.03762';
+
+		$data     = bibliography_builder_rest_resolve_arxiv( $request )->get_data();
+		$requests = bibliography_builder_test_get_http_requests();
+
+		$this->assertSame( 'article', $data['type'] );
+		$this->assertSame( 'Attention Is All You Need', $data['title'] );
+		$this->assertSame( 'arXiv', $data['publisher'] );
+		$this->assertSame( 'arXiv:1706.03762', $data['number'] );
+		// The preprint's own DataCite DOI, not the published version's DOI.
+		$this->assertSame( '10.48550/arXiv.1706.03762', $data['DOI'] );
+		$this->assertSame( 'https://arxiv.org/abs/1706.03762', $data['URL'] );
+		$this->assertSame( array( array( 2017, 6, 12 ) ), $data['issued']['date-parts'] );
+		$this->assertSame(
+			array(
+				array(
+					'family' => 'Vaswani',
+					'given'  => 'Ashish',
+				),
+				array(
+					'family' => 'van der Waals',
+					'given'  => 'Ludwig',
+				),
+				array(
+					'family' => 'King',
+					'given'  => 'Martin Luther',
+					'suffix' => 'Jr.',
+				),
+				array( 'literal' => 'ATLAS Collaboration' ),
+			),
+			$data['author']
+		);
+
+		$this->assertCount( 1, $requests );
+		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_ARXIV_API, $requests[0]['url'] );
+		$this->assertStringContainsString( 'id_list=1706.03762', $requests[0]['url'] );
+		$this->assertSame( 'wp_safe_remote_get', $requests[0]['function'] );
+
+		bibliography_builder_rest_resolve_arxiv( $request );
+		$this->assertCount( 1, bibliography_builder_test_get_http_requests(), 'Second call is cached.' );
+	}
+
+	public function test_arxiv_endpoint_keeps_the_requested_version_in_the_url_only(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => $this->arxiv_atom_fixture(),
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = 'https://arxiv.org/pdf/1706.03762v5.pdf';
+
+		$data = bibliography_builder_rest_resolve_arxiv( $request )->get_data();
+
+		$this->assertSame( 'https://arxiv.org/abs/1706.03762v5', $data['URL'] );
+		$this->assertSame( 'arXiv:1706.03762', $data['number'] );
+		$this->assertSame( '10.48550/arXiv.1706.03762', $data['DOI'] );
+	}
+
+	public function test_arxiv_endpoint_sends_legacy_ids_encoded_exactly_once(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => $this->arxiv_atom_fixture(),
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = 'arXiv:hep-th/9901001';
+
+		bibliography_builder_rest_resolve_arxiv( $request );
+		$url = bibliography_builder_test_get_http_requests()[0]['url'];
+
+		// add_query_arg() does not encode values (callers must), so the slash
+		// is encoded once here and decoded by arXiv back to hep-th/9901001.
+		$this->assertStringEndsWith( '?id_list=hep-th%2F9901001', $url );
+		$this->assertStringNotContainsString( '%252F', $url );
+	}
+
+	public function test_arxiv_endpoint_reports_api_error_entries_as_not_found(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry>'
+					. '<id>http://arxiv.org/api/errors#incorrect_id_format_for_9999.99999</id>'
+					. '<title>Error</title></entry></feed>',
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = '9999.99999';
+
+		$result = bibliography_builder_rest_resolve_arxiv( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_arxiv_not_found', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
+	}
+
+	public function test_arxiv_endpoint_reports_an_empty_feed_as_not_found(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Empty</title></feed>',
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = '2301.00001';
+
+		$result = bibliography_builder_rest_resolve_arxiv( $request );
+
+		$this->assertSame( 'bibliography_builder_arxiv_not_found', $result->get_error_code() );
+	}
+
+	public function test_arxiv_endpoint_rejects_malformed_xml(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '<html><body>Service unavailable</body',
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = '2301.00001';
+
+		$result = bibliography_builder_rest_resolve_arxiv( $request );
+
+		$this->assertSame( 'bibliography_builder_arxiv_invalid_response', $result->get_error_code() );
+	}
+
+	public function test_arxiv_endpoint_refuses_responses_that_declare_entities(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '<?xml version="1.0"?><!DOCTYPE feed [<!ENTITY x SYSTEM "file:///etc/passwd">]>'
+					. '<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>http://arxiv.org/abs/2301.00001v1</id>'
+					. '<title>&x;</title></entry></feed>',
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = '2301.00001';
+
+		$result = bibliography_builder_rest_resolve_arxiv( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_arxiv_invalid_response', $result->get_error_code() );
+	}
+
+	public function test_arxiv_endpoint_rejects_invalid_ids_without_a_request(): void {
+		foreach ( array( '', 'not-an-id', '1706.037', 'http://evil.example/abs/1706.03762' ) as $bad_id ) {
+			$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+			$request['id'] = $bad_id;
+
+			$result = bibliography_builder_rest_resolve_arxiv( $request );
+
+			$this->assertSame( 'bibliography_builder_arxiv_invalid', $result->get_error_code(), $bad_id );
+		}
+
+		$this->assertCount( 0, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_arxiv_endpoint_requires_editor_capability(): void {
+		$forbidden = bibliography_builder_rest_arxiv_permissions_check();
+
+		$this->assertInstanceOf( WP_Error::class, $forbidden );
+		$this->assertSame( 'bibliography_builder_arxiv_forbidden', $forbidden->get_error_code() );
+
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+
+		$this->assertTrue( bibliography_builder_rest_arxiv_permissions_check() );
+	}
+
+	/**
+	 * Open Library edition record, as served after the /isbn/ redirect.
+	 */
+	private function open_library_edition_fixture(): string {
+		return wp_json_encode(
+			array(
+				'title'           => 'Fantastic Mr. Fox',
+				'subtitle'        => 'A Story',
+				'authors'         => array( array( 'key' => '/authors/OL34184A' ) ),
+				'number_of_pages' => 96,
+				'publishers'      => array( 'Puffin' ),
+				'publish_places'  => array( 'New York' ),
+				'publish_date'    => 'October 1, 1988',
+				'isbn_13'         => array( '9780140328721' ),
+			)
+		);
+	}
+
+	private function open_library_ok(): array {
+		return array(
+			'response' => array( 'code' => 200 ),
+			'body'     => $this->open_library_edition_fixture(),
+		);
+	}
+
+	private function open_library_authors_ok(): array {
+		return array(
+			'response' => array( 'code' => 200 ),
+			'body'     => wp_json_encode(
+				array(
+					'numFound' => 1,
+					'docs'     => array( array( 'author_name' => array( 'Roald Dahl' ) ) ),
+				)
+			),
+		);
+	}
+
+	public function test_isbn_endpoint_maps_open_library_edition_and_authors_to_a_csl_book(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/isbn/', $this->open_library_ok() );
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/search.json', $this->open_library_authors_ok() );
+
+		// ISBN-10 input is normalized to the ISBN-13 used for lookup and cache.
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/0140328726' );
+		$request['isbn'] = '0140328726';
+
+		$data     = bibliography_builder_rest_resolve_isbn( $request )->get_data();
+		$requests = bibliography_builder_test_get_http_requests();
+
+		$this->assertSame(
+			array(
+				'type'            => 'book',
+				'title'           => 'Fantastic Mr. Fox: A Story',
+				'ISBN'            => '9780140328721',
+				'publisher'       => 'Puffin',
+				'publisher-place' => 'New York',
+				'issued'          => array( 'date-parts' => array( array( 1988 ) ) ),
+				'number-of-pages' => '96',
+				'author'          => array(
+					array(
+						'family' => 'Dahl',
+						'given'  => 'Roald',
+					),
+				),
+			),
+			$data
+		);
+		$this->assertCount( 2, $requests );
+		$this->assertSame( BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_HOST . '/isbn/9780140328721.json', $requests[0]['url'] );
+		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_HOST . '/search.json?', $requests[1]['url'] );
+		$this->assertStringContainsString( 'isbn=9780140328721', $requests[1]['url'] );
+		$this->assertStringContainsString( 'fields=author_name', $requests[1]['url'] );
+		$this->assertSame( 'wp_safe_remote_get', $requests[0]['function'] );
+		$this->assertSame( 'wp_safe_remote_get', $requests[1]['function'] );
+		$this->assertSame( 3, $requests[0]['args']['redirection'], 'The /isbn/ endpoint redirects to the edition record.' );
+
+		$request13         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+		$request13['isbn'] = '9780140328721';
+		bibliography_builder_rest_resolve_isbn( $request13 );
+		$this->assertCount( 2, bibliography_builder_test_get_http_requests(), 'ISBN-10 and ISBN-13 share one cached result.' );
+	}
+
+	public function test_isbn13_to_isbn10_conversion(): void {
+		$this->assertSame( '0140328726', bibliography_builder_isbn13_to_isbn10( '9780140328721' ) );
+		$this->assertSame( '080442957X', bibliography_builder_isbn13_to_isbn10( '9780804429573' ) );
+		$this->assertSame( '', bibliography_builder_isbn13_to_isbn10( '9791032300824' ) );
+	}
+
+	public function test_isbn_endpoint_keeps_the_edition_when_the_author_lookup_fails(): void {
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/isbn/', $this->open_library_ok() );
+		bibliography_builder_test_set_http_response_for(
+			'openlibrary.org/search.json',
+			array(
+				'response' => array( 'code' => 503 ),
+				'body'     => '',
+			)
+		);
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+		$request['isbn'] = '9780140328721';
+
+		$data = bibliography_builder_rest_resolve_isbn( $request )->get_data();
+
+		$this->assertSame( 'Fantastic Mr. Fox: A Story', $data['title'] );
+		$this->assertArrayNotHasKey( 'author', $data );
+	}
+
+	public function test_isbn_endpoint_reports_an_unknown_isbn_as_not_found(): void {
+		bibliography_builder_test_set_http_response_for(
+			'openlibrary.org',
+			array(
+				'response' => array( 'code' => 404 ),
+				'body'     => '',
+			)
+		);
+		bibliography_builder_test_set_http_response_for(
+			'googleapis.com',
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '{"kind":"books#volumes","totalItems":0}',
+			)
+		);
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780000000002' );
+		$request['isbn'] = '9780000000002';
+
+		$result = bibliography_builder_rest_resolve_isbn( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_isbn_not_found', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
+	}
+
+	public function test_isbn_endpoint_rejects_unusable_records_from_both_providers(): void {
+		bibliography_builder_test_set_http_response_for(
+			'openlibrary.org',
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '{"authors":[]}',
+			)
+		);
+		bibliography_builder_test_set_http_response_for(
+			'googleapis.com',
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => 'not json',
+			)
+		);
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+		$request['isbn'] = '9780140328721';
+
+		$result = bibliography_builder_rest_resolve_isbn( $request );
+
+		$this->assertSame( 'bibliography_builder_isbn_invalid_response', $result->get_error_code() );
+		// Edition + Google only: no author lookup is spent on an unusable edition.
+		$this->assertCount( 2, bibliography_builder_test_get_http_requests() );
+	}
+
+	/**
+	 * Google Books volumes search response for one ISBN.
+	 */
+	private function google_books_fixture( string $identifier = '9780140328721' ): string {
+		return wp_json_encode(
+			array(
+				'kind'       => 'books#volumes',
+				'totalItems' => 1,
+				'items'      => array(
+					array(
+						'volumeInfo' => array(
+							'title'               => 'Fantastic Mr. Fox',
+							'authors'             => array( 'Roald Dahl' ),
+							'publisher'           => 'Puffin',
+							'publishedDate'       => '1988-10-01',
+							'pageCount'           => 96,
+							'industryIdentifiers' => array(
+								array(
+									'type'       => 'ISBN_13',
+									'identifier' => $identifier,
+								),
+							),
+						),
+					),
+				),
+			)
+		);
+	}
+
+	public function test_isbn_endpoint_falls_back_to_google_books_when_open_library_fails(): void {
+		bibliography_builder_test_set_http_response_for(
+			'openlibrary.org',
+			array(
+				'response' => array( 'code' => 404 ),
+				'body'     => '',
+			)
+		);
+		bibliography_builder_test_set_http_response_for(
+			'googleapis.com',
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => $this->google_books_fixture(),
+			)
+		);
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+		$request['isbn'] = '9780140328721';
+
+		$data     = bibliography_builder_rest_resolve_isbn( $request )->get_data();
+		$requests = bibliography_builder_test_get_http_requests();
+
+		$this->assertSame(
+			array(
+				'type'            => 'book',
+				'title'           => 'Fantastic Mr. Fox',
+				'ISBN'            => '9780140328721',
+				'author'          => array(
+					array(
+						'family' => 'Dahl',
+						'given'  => 'Roald',
+					),
+				),
+				'publisher'       => 'Puffin',
+				'issued'          => array( 'date-parts' => array( array( 1988, 10, 1 ) ) ),
+				'number-of-pages' => '96',
+			),
+			$data
+		);
+		$this->assertCount( 2, $requests );
+		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API, $requests[1]['url'] );
+		$this->assertStringEndsWith( '?q=isbn%3A9780140328721', $requests[1]['url'] );
+		$this->assertStringContainsString( 'openlibrary.org/isbn/', $requests[0]['url'] );
+		$this->assertSame( 'wp_safe_remote_get', $requests[1]['function'] );
+
+		// Both providers' results are cached: a repeat lookup makes no request.
+		bibliography_builder_rest_resolve_isbn( $request );
+		$this->assertCount( 2, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_isbn_endpoint_does_not_call_google_books_when_open_library_succeeds(): void {
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/isbn/', $this->open_library_ok() );
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/search.json', $this->open_library_authors_ok() );
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+		$request['isbn'] = '9780140328721';
+
+		bibliography_builder_rest_resolve_isbn( $request );
+
+		$urls = array_column( bibliography_builder_test_get_http_requests(), 'url' );
+		$this->assertCount( 2, $urls );
+		$this->assertEmpty( preg_grep( '/googleapis\\.com/', $urls ) );
+	}
+
+	public function test_google_books_rejects_a_volume_for_a_different_isbn(): void {
+		$this->assertSame(
+			'not_found',
+			bibliography_builder_google_books_to_csl( $this->google_books_fixture( '9780000000002' ), '9780140328721' )
+		);
+		$this->assertSame(
+			'not_found',
+			bibliography_builder_google_books_to_csl( '{"kind":"books#volumes","totalItems":0}', '9780140328721' )
+		);
+		$this->assertIsArray(
+			bibliography_builder_google_books_to_csl( $this->google_books_fixture( '0140328726' ), '9780140328721' ),
+			'An ISBN-10 identifier for the same book matches.'
+		);
+	}
+
+	public function test_isbn_endpoint_rejects_invalid_checksums_without_a_request(): void {
+		foreach ( array( '9780140328722', '0140328727', '1234567890123', 'ISBN' ) as $bad_isbn ) {
+			$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/x' );
+			$request['isbn'] = $bad_isbn;
+
+			$result = bibliography_builder_rest_resolve_isbn( $request );
+
+			$this->assertSame( 'bibliography_builder_isbn_invalid', $result->get_error_code(), $bad_isbn );
+		}
+
+		$this->assertCount( 0, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_isbn_endpoint_requires_editor_capability(): void {
+		$this->assertInstanceOf( WP_Error::class, bibliography_builder_rest_isbn_permissions_check() );
+
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+
+		$this->assertTrue( bibliography_builder_rest_isbn_permissions_check() );
 	}
 
 	public function test_formatter_endpoint_supports_all_registered_styles(): void {

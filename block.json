@@ -6,7 +6,7 @@
 	"title": "Bibliography",
 	"category": "text",
 	"icon": "book-alt",
-	"description": "A scholarly bibliography block. Add DOI(s), PubMed/PMID records, BibTeX entries, and supported citations to build a semantically rich, auto-sorted reference list.",
+	"description": "A scholarly bibliography block. Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, and supported citations to build a semantically rich, auto-sorted reference list.",
 	"selectors": {
 		"root": ".wp-block-bibliography-builder-bibliography",
 		"typography": {

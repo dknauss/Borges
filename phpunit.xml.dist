@@ -12,6 +12,7 @@
 	<source>
 		<include>
 			<file>bibliography-builder.php</file>
+			<directory>includes</directory>
 		</include>
 	</source>
 </phpunit>

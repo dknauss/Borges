@@ -23,6 +23,12 @@ These are the most reliable import paths and should be treated as primary suppor
 | Partial DOI URL                          | Supported | Example: `doi.org/10.1000/xyz123`                                        |
 | `doi:` form                              | Supported | Common malformed-but-encountered variants are normalized where practical |
 | BibTeX                                   | Supported | Standard BibTeX entry types                                              |
+| BibLaTeX                                 | Supported | `date`, `journaltitle`, `location`, `urldate`, `@online`, `@report`, etc. |
+| PMCID                                    | Supported | `PMC3531190`, `PMCID: PMC3531190`; free text with `PMC` + 4 or more digits |
+| arXiv                                    | Supported | `arXiv:1706.03762`, arxiv.org abs/pdf URLs, `10.48550/arXiv.…` DOIs; legacy IDs too |
+| ISBN                                     | Supported | `ISBN 978-0-14-032872-1`, `ISBN-10: 0140328726`, bare 978/979 ISBN-13; checksum required |
+| BibTeX/BibLaTeX language fields          | Normalized | Babel names (`ngerman`, `british`) → BCP 47 (`de`, `en-GB`); others dropped |
+| BibTeX/BibLaTeX arXiv eprints            | Normalized | `eprint` + `eprinttype`/`archiveprefix = arxiv` → arXiv abstract URL     |
 | Multiple DOI / BibTeX entries in one add | Supported | Up to 50 entries per add                                                 |
 
 ### 2. Supported formatted citation categories

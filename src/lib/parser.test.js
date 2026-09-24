@@ -19,6 +19,7 @@ import {
 	clearDoiMetadataCache,
 	extractEmbeddedIdentifier,
 	normalizeCrossRefCsl,
+	normalizeIsbn,
 	parsePastedInput,
 	validateAndSanitizeCsl,
 } from './parser';
@@ -1018,7 +1019,7 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'Paste a DOI, PMID (PubMed ID), BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
+			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 		]);
 		expect(result.remainingInput).toBe(
 			'This input is not a parseable citation.'
@@ -1036,7 +1037,7 @@ Hallo world\\cite{einstein}
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, BibTeX entry, or supported citation instead.',
+			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.',
 		]);
 		expect(result.remainingInput).toContain('\\documentclass{article}');
 	});
@@ -1046,7 +1047,7 @@ Hallo world\\cite{einstein}
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, BibTeX entry, or supported citation instead.',
+			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.',
 		]);
 		expect(result.remainingInput).toBe('\\autocite{einstein}');
 	});
@@ -1803,5 +1804,488 @@ describe('parsePastedInput — embedded identifier resolution', () => {
 			);
 			expect(isAllowed).toBe(true);
 		}
+	});
+});
+
+describe('PMCID input resolution', () => {
+	const PMC_CSL = {
+		type: 'article-journal',
+		title: 'A PubMed Central Article',
+		'container-title': 'Journal of Open Access',
+		author: [{ family: 'Rivera', given: 'Ana' }],
+		issued: { 'date-parts': [[2012, 12]] },
+		DOI: '10.1000/pmc.example',
+		PMCID: 'PMC3531190',
+	};
+
+	function makeFetchFn(status = 200, body = PMC_CSL) {
+		return jest.fn().mockResolvedValue({
+			ok: status >= 200 && status < 300,
+			status,
+			json: jest.fn().mockResolvedValue(body),
+		});
+	}
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+	});
+
+	it.each([
+		'PMC3531190',
+		'pmc3531190',
+		'PMCID: PMC3531190',
+		'PMCID:PMC3531190',
+	])('detects %p and fetches from the NCBI PMC exporter', async (input) => {
+		const fetchFn = makeFetchFn();
+
+		const result = await parsePastedInput(input, 'apa', { fetchFn });
+
+		expect(fetchFn).toHaveBeenCalledWith(
+			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pmc/?format=csl&id=3531190'
+		);
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(1);
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'pmcid',
+			csl: { title: 'A PubMed Central Article' },
+		});
+	});
+
+	it('keeps routing PMID input to the PubMed exporter', async () => {
+		const fetchFn = makeFetchFn();
+
+		await parsePastedInput('PMID:26673779', 'apa', { fetchFn });
+
+		expect(fetchFn).toHaveBeenCalledWith(
+			expect.stringContaining('/pubmed/?format=csl&id=26673779')
+		);
+	});
+
+	it('uses the WordPress REST proxy for PMCID resolution by default', async () => {
+		apiFetch.mockResolvedValue(PMC_CSL);
+
+		const result = await parsePastedInput('PMC3531190', 'apa');
+
+		expect(apiFetch).toHaveBeenCalledWith({
+			path: '/bibliography/v1/pmcid/PMC3531190',
+		});
+		expect(result.entries).toHaveLength(1);
+		expect(result.errors).toHaveLength(0);
+	});
+
+	it('returns a PMCID error when resolution fails', async () => {
+		apiFetch.mockRejectedValue(new Error('Not found'));
+
+		const result = await parsePastedInput('PMC99999999', 'apa');
+
+		expect(result.entries).toHaveLength(0);
+		expect(result.errors).toEqual([
+			"Couldn't resolve the PMCID. Check the number and try again.",
+		]);
+	});
+
+	it('resolves a mixed list of DOI, PMID, and PMCID lines as separate items', async () => {
+		apiFetch.mockImplementation(({ path }) =>
+			Promise.resolve(
+				path.includes('/pmcid/')
+					? PMC_CSL
+					: { ...PMC_CSL, title: 'PubMed Article', DOI: '10.1000/pm' }
+			)
+		);
+
+		const result = await parsePastedInput(
+			'PMID:26673779\nPMC3531190',
+			'apa'
+		);
+
+		expect(result.errors).toEqual([]);
+		expect(result.entries.map((entry) => entry.inputFormat)).toEqual([
+			'pmid',
+			'pmcid',
+		]);
+	});
+
+	it('does not call Cite.async for PMCID inputs', async () => {
+		await parsePastedInput('PMC3531190', 'apa', { fetchFn: makeFetchFn() });
+
+		expect(Cite.async).not.toHaveBeenCalled();
+	});
+});
+
+describe('extractEmbeddedIdentifier — PMCID', () => {
+	it('extracts a labeled PMCID from a free-text citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Rivera A. A PubMed Central Article. J Open Access. 2012;4:1-9. PMCID: PMC3531190.'
+			)
+		).toMatchObject({ format: 'pmcid', value: 'PMC3531190' });
+	});
+
+	it('extracts an unlabeled PMC identifier', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Rivera A. A PubMed Central Article. 2012. PMC3531190'
+			)
+		).toMatchObject({ format: 'pmcid', value: 'PMC3531190' });
+	});
+
+	it('prefers a PMID over a PMCID in the same citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Rivera A. Article. 2012. PMID: 23300456; PMCID: PMC3531190.'
+			)
+		).toMatchObject({ format: 'pmid', value: 'PMID:23300456' });
+	});
+
+	it('prefers a DOI over a PMCID in the same citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Rivera A. Article. 2012. doi:10.1000/xyz123. PMC3531190'
+			)
+		).toMatchObject({ format: 'doi' });
+	});
+
+	it('ignores short PMC tokens that are unlikely to be identifiers', () => {
+		expect(extractEmbeddedIdentifier('Report PMC12, annex 3.')).toBeNull();
+		expect(extractEmbeddedIdentifier('The PMCs of 2012.')).toBeNull();
+	});
+});
+
+describe('arXiv input resolution', () => {
+	const ARXIV_CSL = {
+		type: 'article',
+		title: 'Attention Is All You Need',
+		author: [{ family: 'Vaswani', given: 'Ashish' }],
+		issued: { 'date-parts': [[2017, 6, 12]] },
+		publisher: 'arXiv',
+		number: 'arXiv:1706.03762',
+		DOI: '10.48550/arXiv.1706.03762',
+		URL: 'https://arxiv.org/abs/1706.03762',
+	};
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+		clearDoiMetadataCache();
+		apiFetch.mockResolvedValue(ARXIV_CSL);
+	});
+
+	it.each([
+		['arXiv:1706.03762', '1706.03762'],
+		['arxiv: 1706.03762v5', '1706.03762v5'],
+		['https://arxiv.org/abs/1706.03762', '1706.03762'],
+		['arxiv.org/pdf/1706.03762v2.pdf', '1706.03762v2'],
+		['https://export.arxiv.org/abs/hep-th/9901001', 'hep-th/9901001'],
+		['arXiv:math.GT/0309136', 'math.GT/0309136'],
+		['10.48550/arXiv.1706.03762', '1706.03762'],
+		['https://doi.org/10.48550/arXiv.1706.03762', '1706.03762'],
+	])('routes %p to the arXiv proxy as %p', async (input, expectedId) => {
+		const result = await parsePastedInput(input, 'apa');
+
+		expect(apiFetch).toHaveBeenCalledWith({
+			path: `/bibliography/v1/arxiv?id=${encodeURIComponent(expectedId)}`,
+		});
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(1);
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'arxiv',
+			csl: {
+				type: 'article',
+				publisher: 'arXiv',
+				DOI: '10.48550/arXiv.1706.03762',
+			},
+		});
+	});
+
+	it('does not treat a bare arXiv-shaped number as an arXiv ID', async () => {
+		const result = await parsePastedInput('1706.03762', 'apa');
+
+		expect(apiFetch).not.toHaveBeenCalledWith(
+			expect.objectContaining({
+				path: expect.stringContaining('/arxiv'),
+			})
+		);
+		expect(result.entries.every((e) => e.inputFormat !== 'arxiv')).toBe(
+			true
+		);
+	});
+
+	it('leaves ordinary DOIs on the DOI backend', async () => {
+		const fetchFn = jest.fn().mockResolvedValue({
+			ok: true,
+			status: 200,
+			json: jest.fn().mockResolvedValue({
+				type: 'journal-article',
+				title: 'Regular Article',
+				DOI: '10.1000/xyz123',
+			}),
+		});
+
+		const result = await parsePastedInput('10.1000/xyz123', 'apa', {
+			fetchFn,
+		});
+
+		expect(result.entries[0].inputFormat).toBe('doi');
+		expect(apiFetch).not.toHaveBeenCalled();
+	});
+
+	it('resolves several arXiv IDs one at a time', async () => {
+		let inFlight = 0;
+		let maxInFlight = 0;
+		apiFetch.mockImplementation(async () => {
+			inFlight += 1;
+			maxInFlight = Math.max(maxInFlight, inFlight);
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			inFlight -= 1;
+			return ARXIV_CSL;
+		});
+
+		const result = await parsePastedInput(
+			'arXiv:1706.03762\narXiv:2301.00001\narXiv:hep-th/9901001',
+			'apa'
+		);
+
+		expect(result.entries).toHaveLength(3);
+		expect(maxInFlight).toBe(1);
+	});
+
+	it('returns an arXiv error when resolution fails', async () => {
+		apiFetch.mockRejectedValue(new Error('Not found'));
+
+		const result = await parsePastedInput('arXiv:9999.99999', 'apa');
+
+		expect(result.entries).toHaveLength(0);
+		expect(result.errors).toEqual([
+			"Couldn't resolve the arXiv ID. Check it and try again.",
+		]);
+	});
+});
+
+describe('extractEmbeddedIdentifier — arXiv', () => {
+	it('extracts a labeled arXiv ID from a free-text citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Vaswani A, et al. Attention Is All You Need. 2017. arXiv:1706.03762.'
+			)
+		).toMatchObject({ format: 'arxiv', value: 'arXiv:1706.03762' });
+	});
+
+	it('extracts an arxiv.org URL from a free-text citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Vaswani A. Attention. Preprint, https://arxiv.org/abs/1706.03762v7'
+			)
+		).toMatchObject({ format: 'arxiv', value: 'arXiv:1706.03762v7' });
+	});
+
+	it('routes an embedded arXiv DOI to arXiv rather than CrossRef', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Vaswani A. Attention. 2017. https://doi.org/10.48550/arXiv.1706.03762'
+			)
+		).toMatchObject({ format: 'arxiv', value: 'arXiv:1706.03762' });
+	});
+
+	it('prefers a journal DOI over an arXiv label in the same citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Author. Title. Nature 1 (2020). doi:10.1038/s41586-020-2649-2. arXiv:2006.10256'
+			)
+		).toMatchObject({ format: 'doi' });
+	});
+});
+
+describe('normalizeIsbn', () => {
+	it.each([
+		['9780140328721', '9780140328721'],
+		['978-0-14-032872-1', '9780140328721'],
+		['0140328726', '9780140328721'],
+		['0-14-032872-6', '9780140328721'],
+		['080442957X', '9780804429573'],
+		['080442957x', '9780804429573'],
+	])('normalizes %p to %p', (input, expected) => {
+		expect(normalizeIsbn(input)).toBe(expected);
+	});
+
+	it.each(['9780140328722', '0140328727', '9770140328721', '12345', 'abc'])(
+		'rejects %p',
+		(input) => {
+			expect(normalizeIsbn(input)).toBeNull();
+		}
+	);
+});
+
+describe('ISBN input resolution', () => {
+	const BOOK_CSL = {
+		type: 'book',
+		title: 'Fantastic Mr. Fox',
+		author: [{ family: 'Dahl', given: 'Roald' }],
+		publisher: 'Puffin',
+		issued: { 'date-parts': [[1988]] },
+		ISBN: '9780140328721',
+	};
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+		apiFetch.mockResolvedValue(BOOK_CSL);
+	});
+
+	it.each([
+		'ISBN 9780140328721',
+		'ISBN: 978-0-14-032872-1',
+		'ISBN-13: 9780140328721',
+		'ISBN-10: 0-14-032872-6',
+		'isbn 0140328726',
+		'9780140328721',
+		'978-0-14-032872-1',
+	])('routes %p to the ISBN proxy as an ISBN-13', async (input) => {
+		const result = await parsePastedInput(input, 'apa');
+
+		expect(apiFetch).toHaveBeenCalledWith({
+			path: '/bibliography/v1/isbn/9780140328721',
+		});
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(1);
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'isbn',
+			csl: { type: 'book', ISBN: '9780140328721' },
+		});
+	});
+
+	it('does not treat a bare ISBN-10 or a bad checksum as an ISBN', async () => {
+		await parsePastedInput('0140328726', 'apa');
+		await parsePastedInput('ISBN 9780140328722', 'apa');
+
+		expect(apiFetch).not.toHaveBeenCalledWith(
+			expect.objectContaining({
+				path: expect.stringContaining('/isbn/'),
+			})
+		);
+	});
+
+	it('returns an ISBN error when resolution fails', async () => {
+		apiFetch.mockRejectedValue(new Error('Not found'));
+
+		const result = await parsePastedInput('ISBN 9780140328721', 'apa');
+
+		expect(result.entries).toHaveLength(0);
+		expect(result.errors).toEqual([
+			"Couldn't resolve the ISBN. Check it and try again.",
+		]);
+	});
+});
+
+describe('extractEmbeddedIdentifier — ISBN', () => {
+	it('extracts a labeled ISBN from a free-text book citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Dahl, Roald. Fantastic Mr. Fox. New York: Puffin, 1988. ISBN 978-0-14-032872-1.'
+			)
+		).toMatchObject({ format: 'isbn', value: 'ISBN 9780140328721' });
+	});
+
+	it('ignores an ISBN-shaped number with a bad checksum', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Some Book. 2001. ISBN 978-0-14-032872-2.'
+			)
+		).toBeNull();
+	});
+
+	it('prefers a DOI over an ISBN in the same citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Author. Book. Press, 2020. ISBN 9780140328721. doi:10.1000/book.1'
+			)
+		).toMatchObject({ format: 'doi' });
+	});
+});
+
+describe('arXiv link host boundary', () => {
+	it.each([
+		'Preprint. https://evilarxiv.org/abs/1706.03762',
+		'Mirror copy: https://mirror.arxiv.org/abs/1706.03762',
+		'Tagged notarxiv:1706.03762 in the text',
+	])('does not treat %p as an arXiv link', (text) => {
+		expect(extractEmbeddedIdentifier(text)).toBeNull();
+	});
+
+	it.each([
+		['See (https://arxiv.org/abs/1706.03762).', 'arXiv:1706.03762'],
+		['https://www.arxiv.org/pdf/1706.03762v2', 'arXiv:1706.03762v2'],
+	])('still extracts %p', (text, expected) => {
+		expect(extractEmbeddedIdentifier(text)).toMatchObject({
+			format: 'arxiv',
+			value: expected,
+		});
+	});
+});
+
+describe('ISBN request pacing', () => {
+	const BOOK = { type: 'book', title: 'Book', ISBN: '9780140328721' };
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+		clearDoiMetadataCache();
+	});
+
+	it('resolves several ISBNs one at a time', async () => {
+		let inFlight = 0;
+		let maxInFlight = 0;
+		apiFetch.mockImplementation(async () => {
+			inFlight += 1;
+			maxInFlight = Math.max(maxInFlight, inFlight);
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			inFlight -= 1;
+			return BOOK;
+		});
+
+		const result = await parsePastedInput(
+			'ISBN 9780140328721\nISBN 9780804429573\nISBN 0-14-032872-6',
+			'apa'
+		);
+
+		expect(result.entries).toHaveLength(3);
+		expect(maxInFlight).toBe(1);
+	});
+
+	it('keeps the queue moving after a failed lookup', async () => {
+		apiFetch
+			.mockRejectedValueOnce(new Error('upstream down'))
+			.mockResolvedValueOnce(BOOK);
+
+		const result = await parsePastedInput(
+			'ISBN 9780140328721\nISBN 9780804429573',
+			'apa'
+		);
+
+		expect(result.entries).toHaveLength(1);
+		expect(result.errors).toEqual([
+			"Couldn't resolve the ISBN. Check it and try again.",
+		]);
+		expect(apiFetch).toHaveBeenCalledTimes(2);
+	});
+
+	it('paces ISBN and arXiv lookups on separate queues', async () => {
+		let inFlight = 0;
+		let maxInFlight = 0;
+		apiFetch.mockImplementation(async ({ path }) => {
+			inFlight += 1;
+			maxInFlight = Math.max(maxInFlight, inFlight);
+			await new Promise((resolve) => setTimeout(resolve, 5));
+			inFlight -= 1;
+			return path.includes('/isbn/')
+				? BOOK
+				: { type: 'article', title: 'Preprint' };
+		});
+
+		const result = await parsePastedInput(
+			'ISBN 9780140328721\narXiv:1706.03762',
+			'apa'
+		);
+
+		expect(result.entries).toHaveLength(2);
+		// One ISBN and one arXiv lookup overlapped: each upstream has its own
+		// queue, so pacing one never delays the other.
+		expect(maxInFlight).toBe(2);
 	});
 });

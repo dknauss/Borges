@@ -16,7 +16,7 @@ Manual QA flow for the local Studio setup.
 -   [ ] Insert the **Bibliography** block
 -   [ ] Confirm the block appears in the inserter
 -   [ ] Confirm the add form is open by default
--   [ ] Confirm the textarea placeholder reads: `Add DOI(s), PubMed/PMID records, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.`
+-   [ ] Confirm the textarea placeholder reads: `Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.`
 
 ## Supported input checks
 

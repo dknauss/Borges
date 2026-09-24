@@ -255,3 +255,202 @@ test('bibliography block imports the demo DOI, PMID, and BibTeX content', async 
 
 	await importCitations(editorFrame, DEMO_IMPORT_INPUT, 4);
 });
+
+// Live check of the PMCID proxy against NCBI's PMC citation exporter. Kept
+// separate from the demo import so a PMC-side failure is attributed to PMCID.
+test('bibliography block imports a PubMed Central PMCID', async ({ page }) => {
+	test.setTimeout(120_000);
+
+	const editorFrame = await createPostWithBibliographyBlock(page);
+
+	// Hit the proxy route directly first. If NCBI rejects the request, the
+	// failure message carries the proxy's error code and upstream status
+	// instead of only "no entry appeared" from the UI assertion below.
+	const proxyResult = await page.evaluate(async () => {
+		try {
+			const data = await window.wp.apiFetch({
+				path: '/bibliography/v1/pmcid/PMC3531190',
+			});
+			return { ok: true, title: data?.title, type: data?.type };
+		} catch (error) {
+			return {
+				ok: false,
+				code: error?.code,
+				message: error?.message,
+				data: error?.data,
+			};
+		}
+	});
+
+	expect(
+		proxyResult.ok,
+		`PMCID proxy failed: ${JSON.stringify(proxyResult)}`
+	).toBe(true);
+	expect(typeof proxyResult.title).toBe('string');
+
+	await importCitations(editorFrame, 'PMCID: PMC3531190', 1);
+});
+
+// Live check of the arXiv proxy against export.arxiv.org. The direct proxy
+// call comes first so a failure reports the proxy's error code and upstream
+// status rather than only "no entry appeared".
+test('bibliography block imports an arXiv preprint', async ({ page }) => {
+	test.setTimeout(120_000);
+
+	const editorFrame = await createPostWithBibliographyBlock(page);
+
+	const proxyResult = await page.evaluate(async () => {
+		try {
+			const data = await window.wp.apiFetch({
+				path: '/bibliography/v1/arxiv?id=1706.03762',
+			});
+			return { ok: true, title: data?.title, doi: data?.DOI };
+		} catch (error) {
+			return {
+				ok: false,
+				code: error?.code,
+				message: error?.message,
+				data: error?.data,
+			};
+		}
+	});
+
+	expect(
+		proxyResult.ok,
+		`arXiv proxy failed: ${JSON.stringify(proxyResult)}`
+	).toBe(true);
+	expect(proxyResult.title).toMatch(/Attention/i);
+	expect(proxyResult.doi).toBe('10.48550/arXiv.1706.03762');
+
+	await importCitations(editorFrame, 'arXiv:1706.03762', 1);
+});
+
+// Live check of the read-only Abilities API integration (WordPress 6.9+).
+// Discovery first, then a run of borges/validate-citations, which needs no
+// post fixture. Read-only abilities run over GET with an `input` argument.
+test('Borges read-only abilities are discoverable and runnable', async ({
+	page,
+}) => {
+	test.setTimeout(90_000);
+
+	await ensurePluginActivated(page);
+	await page.goto('/wp-admin/post-new.php');
+	await page.waitForFunction(() => typeof window.wp?.apiFetch === 'function');
+
+	const result = await page.evaluate(async () => {
+		const call = async (options) => {
+			try {
+				return { ok: true, data: await window.wp.apiFetch(options) };
+			} catch (error) {
+				return {
+					ok: false,
+					code: error?.code,
+					message: error?.message,
+					data: error?.data,
+				};
+			}
+		};
+
+		const names = [
+			'borges/get-bibliographies',
+			'borges/export-bibliography',
+			'borges/validate-citations',
+		];
+		const discovered = {};
+		for (const name of names) {
+			discovered[name] = await call({
+				path: `/wp-abilities/v1/abilities/${name}`,
+			});
+		}
+
+		const query = new URLSearchParams({
+			'input[items][0][type]': 'book',
+			'input[items][0][title]': 'Live Ability Check',
+			'input[items][1][type]': 'not-a-csl-type',
+		});
+		const run = await call({
+			path: `/wp-abilities/v1/abilities/borges/validate-citations/run?${query}`,
+		});
+
+		return { discovered, run };
+	});
+
+	for (const [name, response] of Object.entries(result.discovered)) {
+		expect(
+			response.ok,
+			`${name} not discoverable: ${JSON.stringify(response)}`
+		).toBe(true);
+		expect(response.data?.category).toBe('bibliography');
+	}
+
+	expect(
+		result.run.ok,
+		`validate-citations run failed: ${JSON.stringify(result.run)}`
+	).toBe(true);
+	expect(result.run.data.valid).toBe(false);
+	expect(result.run.data.results[0].valid).toBe(true);
+	expect(result.run.data.results[1].valid).toBe(false);
+});
+
+// Live check of the ISBN proxy against Open Library's Books API. The ISBN is
+// the example Open Library's API documentation uses.
+test('bibliography block imports a book by ISBN', async ({ page }) => {
+	test.setTimeout(120_000);
+
+	const editorFrame = await createPostWithBibliographyBlock(page);
+
+	const proxyResult = await page.evaluate(async () => {
+		try {
+			const data = await window.wp.apiFetch({
+				path: '/bibliography/v1/isbn/9780140328721',
+			});
+			return { ok: true, type: data?.type, title: data?.title };
+		} catch (error) {
+			// Diagnostic only: ask Open Library directly, per ISBN form, so a
+			// failure shows what the upstream API itself returns.
+			// Probe candidate upstream endpoints so one failed run shows which
+			// ones answer from CI: the Books API with and without jscmd, the
+			// edition and search endpoints, Google Books, and the site root.
+			const probes = {
+				booksApiData:
+					'https://openlibrary.org/api/books?bibkeys=ISBN:9780140328721&format=json&jscmd=data',
+				booksApiPlain:
+					'https://openlibrary.org/api/books?bibkeys=ISBN:9780140328721&format=json',
+				edition: 'https://openlibrary.org/isbn/9780140328721.json',
+				search: 'https://openlibrary.org/search.json?isbn=9780140328721&fields=key,title,author_name,publisher,publish_date',
+				googleBooks:
+					'https://www.googleapis.com/books/v1/volumes?q=isbn:9780140328721',
+				openLibraryRoot: 'https://openlibrary.org/',
+			};
+			const direct = {};
+			for (const [name, url] of Object.entries(probes)) {
+				try {
+					const response = await window.fetch(url);
+					direct[name] = {
+						status: response.status,
+						url: response.url,
+						body: (await response.text()).slice(0, 200),
+					};
+				} catch (fetchError) {
+					direct[name] = { error: String(fetchError) };
+				}
+			}
+			return {
+				ok: false,
+				code: error?.code,
+				message: error?.message,
+				data: error?.data,
+				direct,
+			};
+		}
+	});
+
+	expect(
+		proxyResult.ok,
+		`ISBN proxy failed: ${JSON.stringify(proxyResult)}`
+	).toBe(true);
+	expect(proxyResult.type).toBe('book');
+	expect(proxyResult.title).toMatch(/Fantastic Mr\.? Fox/i);
+
+	await importCitations(editorFrame, 'ISBN 978-0-14-032872-1', 1);
+});

@@ -4,9 +4,12 @@
 	resolveFromConfigFile="true"
 	findUnusedBaselineEntry="true"
 	findUnusedCode="false"
+	allFunctionsGlobal="true"
+	allConstantsGlobal="true"
 >
 	<projectFiles>
 		<file name="bibliography-builder.php" />
+		<directory name="includes" />
 		<ignoreFiles>
 			<directory name="tests" />
 		</ignoreFiles>

@@ -5,19 +5,21 @@ Each source metric carries the exact command used to re-derive it. Package-size 
 identify their measurement or release-artifact source. Re-run the relevant command and update the
 number **in the same commit** whenever the underlying quantity changes.
 
-Source and LOC figures last verified: **2026-08-25** against `main` (commit `ce3a862`). The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.5.1 release asset.
+Source and LOC figures last verified: **2026-09-24** against the 1.6.0 candidate branch (PR #87) after merging `main` at `66b121f`. The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.5.1 release asset.
 
 ## Lines of code
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **2,070** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **2,168** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **8,889** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **2,859** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **3,299** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **9,380** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
-(REST registration + block registration); the CSL formatting engine under `vendor/` runs
+(REST registration + block registration) and `includes/abilities.php`, which only defines
+functions and adds two Abilities API hooks, which run only when WordPress initializes its
+Abilities registry and do no I/O. The CSL formatting engine under `vendor/` runs
 **only** for editor-time REST calls. `scripts/*.php` are dev tooling and are not packaged.
 
 ## Storage footprint (installed)
@@ -61,7 +63,7 @@ path therefore adds **zero** database queries and **zero** citeproc/PHP formatti
 | Overhead on the frontend (per published page) | Value | Re-derivation |
 |---|---|---|
 | Additional database queries | **0** | Static save; nothing on the block runs on the frontend — see audit below |
-| REST calls | **0** | `POST /format` and `GET /pmid/{pmid}` fire only in the editor |
+| REST calls | **0** | `POST /format`, `GET /pmid/{pmid}`, `GET /pmcid/{pmcid}`, `GET /arxiv`, and `GET /isbn/{isbn}` fire only in the editor |
 | `render_callback` invocations | **0** | Block registers no server render |
 | Autoloaded options / registered settings | **0** | No `add_option`/`update_option`/`register_setting` |
 | Cron events | **0** | No `wp_schedule_event` |

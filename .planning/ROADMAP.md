@@ -43,11 +43,25 @@ after completion.
     verifier passed 13/13, merged via PR #52. **Archived** to
     `.planning/archive/phases/`)
 
-**GSD `v1.3` milestone retired (2026-06-21):** the current public release baseline
-is `v1.4.1` (tags through `v1.4.0`, `v1.4.1`). The v1.3 milestone's in-scope feature
-work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories are archived.
-Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work is tracked
-against release versions rather than a GSD milestone label.
+**GSD `v1.3` milestone retired (2026-06-21):** the v1.3 milestone's in-scope
+feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories are
+archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
+is tracked against release versions rather than a GSD milestone label.
+
+**Current release baseline (reconciled 2026-09-24):** `v1.5.1` (2026-08-19).
+Releases since the milestone was retired, all outside any GSD phase:
+
+-   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
+    the cite/export E2E spec (PR #53) reached users.
+-   **1.5.0** (2026-08-04) — security hardening of formatter inputs, public
+    bibliography reads, generated links, script-block output, and PMID redirects;
+    Block Accessibility Checks 4.0 integration; main-build Playground demo; metrics
+    doc plus `composer verify:metrics` CI gate; deprecation-chain regression tests.
+-   **1.5.1** (2026-08-19) — WordPress 7.1 compatibility; clipboard fallback on
+    rejected `navigator.clipboard.writeText`.
+
+`CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
+contents; this note only anchors the roadmap to them.
 
 ## Phase detail
 
@@ -165,15 +179,15 @@ Completed:
    `journaltitle`, and full Unicode natively; filename is
    `bibliography.biblatex.bib` to distinguish from the BibTeX download.
 
+5. **Frontend Cite / Export affordances** — shipped in 1.4.0 (Phase 04, PR #37)
+   as `<details>` disclosure panels with BibTeX, BibLaTeX, RIS, and CSL-JSON
+   links on the static saved output.
+
 Planned:
 
-5. **Frontend Cite / Export affordances** — add optional Scholar-like controls
-   on the public bibliography output so readers can open/copy/download citation
-   data as BibTeX, RIS, and CSL-JSON. Preserve static save output and keep the
-   no-JS bibliography readable; use progressive enhancement or REST export
-   variants only where they do not undermine plugin-deactivation resilience.
-6. **BibLaTeX import** — `@citation-js/plugin-bibtex` already parses BibLaTeX;
-   wire into the parser/paste flow for completeness.
+6. **BibLaTeX import** — citation-js already parsed BibLaTeX through the
+   BibTeX path; import is now documented, pinned by an unmocked test suite,
+   and hardened (babel `langid` → BCP 47, arXiv `eprint` → URL). Unreleased.
 
 Deferred / demand-gated:
 
@@ -203,9 +217,9 @@ CSL-JSON script blocks.
 
 | Identifier            | Status                       | Evaluation                                                                                                                                                                                                                                                         |
 | --------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **ISBN-10 / ISBN-13** | Planned support              | High-value next book/monograph importer. Accept `ISBN:` prefixes plus bare, hyphenated, or spaced ISBNs; validate ISBN-10/ISBN-13 checksums before lookup; evaluate metadata providers and terms before choosing a resolver.                                       |
-| **PMCID**             | Planned support              | Strong biomedical follow-up to PMID. Resolve through the same authenticated WordPress REST proxy pattern; prefer NCBI-derived CSL/PMID/DOI metadata when available.                                                                                                |
-| **arXiv ID**          | Planned support              | High-value scholarly preprint importer. Accept modern and legacy arXiv identifiers; resolve through arXiv metadata APIs; map to CSL article/report-ish records while preserving DOI/journal data when present.                                                     |
+| **ISBN-10 / ISBN-13** | Done (unreleased)            | Open Library first via `/isbn/<isbn>.json` + `/search.json` for authors (its `/api/books` endpoint returns 404), Google Books fallback (approved 2026-09-24; keyless quota was exhausted in CI, so it is a best-effort fallback). Checksums verified in JS and PHP; ISBN-10 normalized to ISBN-13; bare ISBN-10 not accepted.                                                  |
+| **PMCID**             | Done (unreleased)            | `GET /bibliography/v1/pmcid/<pmcid>` proxies NCBI's fixed PMC citation exporter through the shared NCBI resolver used by PMID; bare `PMC…`, `PMCID:` labels, and free-text `PMC…` are detected.                                                                   |
+| **arXiv ID**          | Done (unreleased)            | `GET /bibliography/v1/arxiv?id=<id>` queries the fixed arXiv API and maps Atom to a CSL preprint in PHP; `arXiv:` labels, arxiv.org URLs, and arXiv DOIs are detected, standalone and in free text.                                                           |
 | **ISSN**              | Evaluate                     | Identifies a serial, not a specific cited work. Useful for journal/periodical enrichment and validation, but should not create a standalone bibliography entry unless paired with article-level metadata.                                                          |
 | **URL**               | Evaluate                     | Useful but risky and unreliable. Consider after fixed-host identifiers; require strict timeout, content-type, size, redirect, and allowlist/denylist controls; prefer standards-based metadata (`citation_*`, Open Graph, JSON-LD, COinS) over arbitrary scraping. |
 | **OCLC / WorldCat**   | Evaluate                     | Useful for library/book workflows and edition disambiguation. Needs API/access/licensing review and careful mapping from edition/work records to CSL `book`.                                                                                                       |
@@ -266,7 +280,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.4.1`.
+1.3.x release line. The current public release baseline is now `v1.5.1`.
 
 Completed Phase 2 outcomes:
 
@@ -293,8 +307,8 @@ Current fix priority:
    any DOI/PMID/BibTeX import change.
 2. Keep optional deeper splits as follow-up only if review finds a concrete
    blocker.
-3. Resume new development: frontend Cite/Export controls,
-   writable REST/Abilities design, and language-pack expansion.
+3. Resume new development (superseded — see "Immediate next-task priorities"
+   below; frontend Cite/Export has since shipped in 1.4.0).
 
 ## WordPress.org asset follow-up
 
@@ -358,20 +372,35 @@ Current operational note (2026-05-04):
 -   Post-launch cleanup should keep GitHub README, WordPress.org `readme.txt`,
     SPEC, release assets, and SVN output aligned.
 
-## Immediate next-task priorities (2026-05-11)
+## Immediate next-task priorities (2026-09-24)
 
-1. **Keep CI/runtime compatibility hygiene green**
-    - monitor release-package output, WordPress.org artifact alignment, PHP
-      deprecations in citeproc-php, and runtime smoke lanes
-2. **Keep Playground import coverage representative**
-    - maintain DOI, DOI batch, PubMed/PMID, and mixed DOI + PMID + BibTeX
-      coverage when demo starter content changes
-3. **Resume interoperability enhancements**
-    - frontend Cite/Export affordances are the next feature track
-    - writable REST/Abilities needs a design memo before implementation
-4. **Defer low-priority expansion work until the next focused pass**
-    - language-pack expansion, optional accessibility tooling integration, and
-      localized banner variants remain backlog items
+Replaces the 2026-05-11 list, whose feature item (frontend Cite/Export) shipped
+in 1.4.0. Suggested ordering for a 1.6.0 cut, in rough payoff-per-effort order:
+
+1. **Keep CI, runtime, and Playground hygiene green** (standing)
+    - release-package output, WordPress.org artifact alignment, citeproc-php
+      PHP deprecations, runtime smoke lanes, and representative DOI / PMID /
+      BibTeX / mixed Playground imports
+2. **BibLaTeX import** (Export backlog item 6) — **done, unreleased**
+    - citation-js already parsed BibLaTeX; the work was pinning it with real
+      (unmocked) tests and fixing `langid` → `lang` and dropped arXiv eprints
+3. **Reference-manager export corpus**
+    - pending todo `2026-06-23-test-reference-manager-exports.md`; targets the
+      paste/import coverage gap named in STATE.md
+4. ~~**PMCID resolver**~~, ~~**arXiv**~~, and ~~**ISBN**~~ (Open Library) — all done, unreleased
+    - PMCID reuses the PMID REST proxy pattern; arXiv is the highest-value new
+      source; ISBN needs a provider/terms decision first (see identifier table)
+5. **Phase 05 read-only Abilities** — **done, unreleased** (`includes/abilities.php`)
+    - re-check the design memo's "until the API stabilises in WP core" gate
+      against current core; a read-only first cut
+      (`borges/get-bibliographies`, `borges/export-bibliography`,
+      `borges/validate-citations`) avoids the static-output write problem
+6. **First-wave official language packs** — pending todo
+   `2026-06-14-coordinate-first-wave-language-packs.md`
+
+Still parked: Phase 06 CI optimization (CI job timeouts landed separately in
+#80), leaner root plugin file research, Option B child blocks, and niche media
+identifiers.
 
 ## Code quality backlog
 
@@ -530,6 +559,9 @@ Candidate Abilities:
 Status:
 
 -   backlog architecture investigation
+-   design memo drafted: `.planning/phases/05-writable-bibliography-rest/05-DESIGN-MEMO.md`
+-   2026-09-24: re-check whether the memo's core-Abilities-stability gate is
+    now met; a read-only Abilities cut is the proposed first step
 -   do not include in the current post-launch cleanup phase
 -   prefer a design memo before implementation because this changes Borges from
     read-mostly output tooling into remote content management infrastructure
@@ -602,10 +634,9 @@ Track the following as non-blocking cleanup / maintainability work:
 -   low-priority follow-up: periodically verify accessibility of the
     citation-row interaction model (click-to-edit, row action reveal, focus
     recovery) as Gutenberg/editor behavior evolves
--   low-priority follow-up: add a soft compatibility layer for Troy Chaplin's
-    Block Accessibility Checks framework so bibliography-specific authoring
-    guidance can appear in the editor when that plugin is present, without
-    making it a hard dependency
+-   ~~low-priority follow-up: add a soft compatibility layer for Troy Chaplin's
+    Block Accessibility Checks framework~~ — shipped as an optional integration
+    and updated for BAC 4.0 in 1.5.0 (requires BAC 4.0+; dormant otherwise)
 -   low-priority follow-up: reconsider global snackbars for pure success-only
     cases if future UX testing shows they improve clarity without weakening
     block-local validation feedback
@@ -694,7 +725,7 @@ Plans:
 Plans:
 
 -   [x] `.planning/archive/phases/03-1-3-0-release-prep/03-01-PLAN.md` —
-    1.3.x release prep; current public baseline is now `v1.4.1`
+    1.3.x release prep; current public baseline is now `v1.5.1`
 
 ### Phase 4: Frontend Cite/Export affordances
 

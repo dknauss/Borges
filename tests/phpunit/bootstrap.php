@@ -21,6 +21,9 @@ $GLOBALS['bibliography_builder_test_object_cache']        = array();
 $GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 $GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
 $GLOBALS['bibliography_builder_test_viewable_post_types'] = array();
+$GLOBALS['bibliography_builder_test_abilities']           = array();
+$GLOBALS['bibliography_builder_test_ability_categories']  = array();
+$GLOBALS['bibliography_builder_test_http_responses_for']  = array();
 
 function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_posts']           = array();
@@ -39,6 +42,34 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_using_ext_object_cache'] = false;
 	$GLOBALS['bibliography_builder_test_bac_register_calls']  = array();
 	$GLOBALS['bibliography_builder_test_viewable_post_types'] = array();
+	$GLOBALS['bibliography_builder_test_abilities']           = array();
+	$GLOBALS['bibliography_builder_test_ability_categories']  = array();
+	$GLOBALS['bibliography_builder_test_http_responses_for']  = array();
+}
+
+/**
+ * Serve a response only for request URLs containing $url_fragment. Checked
+ * before the single default response, so tests can script provider chains.
+ */
+function bibliography_builder_test_set_http_response_for( $url_fragment, $response ) {
+	$GLOBALS['bibliography_builder_test_http_responses_for'][ $url_fragment ] = $response;
+}
+
+/**
+ * Minimal Abilities API (WordPress 6.9) stubs that record registrations.
+ */
+function wp_register_ability_category( $slug, $args ) {
+	$GLOBALS['bibliography_builder_test_ability_categories'][ $slug ] = $args;
+	return (object) array( 'slug' => $slug );
+}
+
+function wp_has_ability_category( $slug ) {
+	return isset( $GLOBALS['bibliography_builder_test_ability_categories'][ $slug ] );
+}
+
+function wp_register_ability( $name, $args ) {
+	$GLOBALS['bibliography_builder_test_abilities'][ $name ] = $args;
+	return (object) array( 'name' => $name );
 }
 
 function bibliography_builder_test_set_post( $post_id, $status, $content, $password_required = false, $post_type = 'post' ) {
@@ -252,9 +283,18 @@ function wp_json_encode( $data, $flags = 0, $depth = 512 ) {
 	return json_encode( $data, $flags, $depth );
 }
 
+/**
+ * Mirrors core: new values are appended as given, without URL-encoding.
+ * Core documents that callers must encode values themselves, and builds
+ * the query with _http_build_query( ..., $urlencode = false ).
+ */
 function add_query_arg( $args, $url ) {
 	$separator = false === strpos( $url, '?' ) ? '?' : '&';
-	return $url . $separator . http_build_query( $args, '', '&', PHP_QUERY_RFC3986 );
+	$pairs     = array();
+	foreach ( $args as $key => $value ) {
+		$pairs[] = $key . '=' . $value;
+	}
+	return $url . $separator . implode( '&', $pairs );
 }
 
 /**
@@ -269,6 +309,12 @@ function bibliography_builder_test_record_http_request( $function, $url, $args )
 		'url'      => $url,
 		'args'     => $args,
 	);
+
+	foreach ( $GLOBALS['bibliography_builder_test_http_responses_for'] as $fragment => $response ) {
+		if ( false !== strpos( $url, $fragment ) ) {
+			return $response;
+		}
+	}
 
 	if ( null === $GLOBALS['bibliography_builder_test_http_response'] ) {
 		return new WP_Error( 'http_request_failed', 'No test HTTP response configured.' );
