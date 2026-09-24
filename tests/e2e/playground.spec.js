@@ -406,11 +406,28 @@ test('bibliography block imports a book by ISBN', async ({ page }) => {
 			});
 			return { ok: true, type: data?.type, title: data?.title };
 		} catch (error) {
+			// Diagnostic only: ask Open Library directly, per ISBN form, so a
+			// failure shows what the upstream API itself returns.
+			const direct = {};
+			for (const key of ['ISBN:9780140328721', 'ISBN:0140328726']) {
+				try {
+					const response = await window.fetch(
+						`https://openlibrary.org/api/books?bibkeys=${key}&format=json&jscmd=data`
+					);
+					direct[key] = {
+						status: response.status,
+						body: (await response.text()).slice(0, 300),
+					};
+				} catch (fetchError) {
+					direct[key] = { error: String(fetchError) };
+				}
+			}
 			return {
 				ok: false,
 				code: error?.code,
 				message: error?.message,
 				data: error?.data,
+				direct,
 			};
 		}
 	});

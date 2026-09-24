@@ -2100,6 +2100,27 @@ function bibliography_builder_isbn13_check_digit( $first_twelve ) {
 }
 
 /**
+ * Derive the ISBN-10 for a 978-prefixed ISBN-13.
+ *
+ * @param string $isbn13 Checksum-valid ISBN-13.
+ * @return string The ISBN-10, or an empty string for 979-prefixed ISBNs.
+ */
+function bibliography_builder_isbn13_to_isbn10( $isbn13 ) {
+	if ( 0 !== strpos( (string) $isbn13, '978' ) ) {
+		return '';
+	}
+
+	$core = substr( $isbn13, 3, 9 );
+	$sum  = 0;
+	for ( $i = 0; $i < 9; $i++ ) {
+		$sum += (int) $core[ $i ] * ( 10 - $i );
+	}
+	$check = ( 11 - $sum % 11 ) % 11;
+
+	return $core . ( 10 === $check ? 'X' : (string) $check );
+}
+
+/**
  * Convert an Open Library Books API response into a CSL-JSON book record.
  *
  * @param string $body   JSON response body (`jscmd=data` shape).
@@ -2118,6 +2139,7 @@ function bibliography_builder_open_library_to_csl( $body, $isbn13 ) {
 		return 'not_found';
 	}
 
+	// Both ISBN forms are requested; take whichever record Open Library found.
 	$record = reset( $decoded );
 
 	if ( ! is_array( $record ) || empty( $record['title'] ) || ! is_string( $record['title'] ) ) {
@@ -2189,10 +2211,19 @@ function bibliography_builder_rest_resolve_isbn( WP_REST_Request $request ) {
 		);
 	}
 
+	// Open Library matches bibkeys literally against each edition's stored
+	// identifiers, and many older editions carry only an ISBN-10, so ask for
+	// both forms in one request.
+	$bibkeys = 'ISBN:' . $isbn13;
+	$isbn10  = bibliography_builder_isbn13_to_isbn10( $isbn13 );
+	if ( '' !== $isbn10 ) {
+		$bibkeys .= ',ISBN:' . $isbn10;
+	}
+
 	return bibliography_builder_resolve_remote_csl(
 		add_query_arg(
 			array(
-				'bibkeys' => 'ISBN:' . $isbn13,
+				'bibkeys' => $bibkeys,
 				'format'  => 'json',
 				'jscmd'   => 'data',
 			),

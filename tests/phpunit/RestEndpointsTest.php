@@ -732,7 +732,8 @@ final class RestEndpointsTest extends TestCase {
 		);
 		$this->assertCount( 1, $requests );
 		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_BOOKS_API, $requests[0]['url'] );
-		$this->assertStringContainsString( 'ISBN%3A9780140328721', $requests[0]['url'] );
+		// Both forms are requested: Open Library matches stored identifiers literally.
+		$this->assertStringContainsString( 'ISBN%3A9780140328721%2CISBN%3A0140328726', $requests[0]['url'] );
 		$this->assertStringContainsString( 'jscmd=data', $requests[0]['url'] );
 		$this->assertSame( 'wp_safe_remote_get', $requests[0]['function'] );
 
@@ -740,6 +741,31 @@ final class RestEndpointsTest extends TestCase {
 		$request13['isbn'] = '9780140328721';
 		bibliography_builder_rest_resolve_isbn( $request13 );
 		$this->assertCount( 1, bibliography_builder_test_get_http_requests(), 'ISBN-10 and ISBN-13 share one cache entry.' );
+	}
+
+	public function test_isbn13_to_isbn10_conversion(): void {
+		$this->assertSame( '0140328726', bibliography_builder_isbn13_to_isbn10( '9780140328721' ) );
+		$this->assertSame( '080442957X', bibliography_builder_isbn13_to_isbn10( '9780804429573' ) );
+		$this->assertSame( '', bibliography_builder_isbn13_to_isbn10( '9791032300824' ) );
+	}
+
+	public function test_isbn_endpoint_accepts_a_record_keyed_by_the_isbn10_form(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode(
+					array( 'ISBN:0140328726' => array( 'title' => 'Fantastic Mr. Fox' ) )
+				),
+			)
+		);
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+		$request['isbn'] = '9780140328721';
+
+		$data = bibliography_builder_rest_resolve_isbn( $request )->get_data();
+
+		$this->assertSame( 'Fantastic Mr. Fox', $data['title'] );
+		$this->assertSame( '9780140328721', $data['ISBN'] );
 	}
 
 	public function test_isbn_endpoint_reports_an_unknown_isbn_as_not_found(): void {
