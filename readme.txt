@@ -52,7 +52,7 @@ The package includes seed PO/MO files for translator review and import in French
 
 = What citation input formats does the Borges Bibliography Builder support? =
 
-Bare DOIs, DOI URLs, PubMed/PMID identifiers, PubMed Central PMCIDs, arXiv IDs and links, BibTeX and BibLaTeX, CSL-JSON, manual citation entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. Free-text citations that include an inline DOI or labeled PMID are routed through the DOI/PubMed resolvers before falling back to the heuristic parser. RIS is supported as an export format, not as an import format. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
+Bare DOIs, DOI URLs, PubMed/PMID identifiers, PubMed Central PMCIDs, arXiv IDs and links, ISBNs, BibTeX and BibLaTeX, CSL-JSON, manual citation entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. Free-text citations that include an inline DOI or labeled PMID are routed through the DOI/PubMed resolvers before falling back to the heuristic parser. RIS is supported as an export format, not as an import format. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
 
 = Does the ABNT style implement NBR 6023:2018? =
 
@@ -137,7 +137,7 @@ Bug reports, feature requests, and pull requests are welcome. See CONTRIBUTING.m
 
 == External Services ==
 
-This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for the supported DOI or PMID lookups.
+This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for any of the supported DOI, PMID, PMCID, arXiv, or ISBN lookups.
 
 **DOI metadata**
 
@@ -148,13 +148,28 @@ DOI input connects to the **Crossref REST API** (https://api.crossref.org/) to r
 * Crossref privacy policy: https://www.crossref.org/privacy/
 * Crossref terms of service: https://www.crossref.org/terms/
 
-**PubMed/PMID metadata**
+**PubMed/PMID and PubMed Central/PMCID metadata**
 
-PubMed/PMID input connects through the plugin's authenticated WordPress REST proxy to the **NCBI/PMC Literature Citation Exporter** CSL endpoint. The proxy uses a fixed upstream host and validates the PMID before making the outbound request.
+PubMed/PMID and PubMed Central/PMCID input connects through the plugin's authenticated WordPress REST proxy to the **NCBI/PMC Literature Citation Exporter** CSL endpoints. The proxy uses a fixed upstream host and validates the identifier as numeric before making the outbound request. Only the identifier is sent.
 
 * NCBI APIs: https://www.ncbi.nlm.nih.gov/home/develop/api/
 * NCBI/PMC Literature Citation Exporter: https://pmc.ncbi.nlm.nih.gov/api/ctxp/
 * NLM Web Policies: https://www.nlm.nih.gov/web_policies.html
+
+**arXiv metadata**
+
+arXiv IDs, arxiv.org links, and arXiv DOIs connect through the plugin's authenticated WordPress REST proxy to the **arXiv API** (https://export.arxiv.org/api/query). The proxy uses a fixed upstream host and validates the arXiv ID pattern before making the outbound request. Only the arXiv ID is sent.
+
+* arXiv API: https://info.arxiv.org/help/api/index.html
+* arXiv API Terms of Use: https://info.arxiv.org/help/api/tou.html
+* arXiv privacy policy: https://info.arxiv.org/help/policies/privacy_policy.html
+
+**ISBN metadata**
+
+ISBN input connects through the plugin's authenticated WordPress REST proxy to the **Open Library Books API** (https://openlibrary.org/api/books), run by the Internet Archive. The proxy uses a fixed upstream host and verifies the ISBN checksum before making the outbound request. Only the ISBN is sent.
+
+* Open Library Books API: https://openlibrary.org/dev/docs/api/books
+* Internet Archive terms of use: https://archive.org/about/terms.php
 
 == Changelog ==
 

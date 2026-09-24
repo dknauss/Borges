@@ -11,9 +11,9 @@ Last verified: **2026-08-03** against `main` (commit `06df0fb`).
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **2,473** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **2,913** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **9,260** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **2,699** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **3,139** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **9,357** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
@@ -63,7 +63,7 @@ path therefore adds **zero** database queries and **zero** citeproc/PHP formatti
 | Overhead on the frontend (per published page) | Value | Re-derivation |
 |---|---|---|
 | Additional database queries | **0** | Static save; nothing on the block runs on the frontend — see audit below |
-| REST calls | **0** | `POST /format`, `GET /pmid/{pmid}`, `GET /pmcid/{pmcid}`, and `GET /arxiv` fire only in the editor |
+| REST calls | **0** | `POST /format`, `GET /pmid/{pmid}`, `GET /pmcid/{pmcid}`, `GET /arxiv`, and `GET /isbn/{isbn}` fire only in the editor |
 | `render_callback` invocations | **0** | Block registers no server render |
 | Autoloaded options / registered settings | **0** | No `add_option`/`update_option`/`register_setting` |
 | Cron events | **0** | No `wp_schedule_event` |

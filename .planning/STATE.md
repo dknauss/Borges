@@ -37,7 +37,7 @@ ordering. In short:
 1. **CI, runtime, and Playground hygiene** (standing)
 2. **BibLaTeX import** — done, unreleased (`[Unreleased]` in `CHANGELOG.md`)
 3. **Reference-manager export corpus** — addresses the paste/import coverage gap
-4. **Identifier resolvers** — PMCID and arXiv done (unreleased); ISBN next
+4. **Identifier resolvers** — PMCID, arXiv, and ISBN (Open Library) done (unreleased)
 5. **Phase 05 read-only Abilities** — done, unreleased (`includes/abilities.php`); writable abilities stay behind the memo's M0–M3
 6. **First-wave official language packs**
 

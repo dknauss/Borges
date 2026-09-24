@@ -15,7 +15,7 @@
 
 Borges Bibliography Builder is named after Jorge Luis Borges (1899–1986), the Argentine writer, essayist, poet, and librarian whose work imagined infinite libraries, invented books, and self-referential labyrinths.
 
-Borges, the plugin, adds a single bibliography builder block to the WordPress editor. It transforms pasted scholarly references — DOI numbers/URLs, PubMed/PMID and PubMed Central/PMCID identifiers, arXiv IDs, BibTeX and BibLaTeX entries, and supported formatted citations — into a semantically rich, auto-sorted bibliography with static saved output. Export your work as CSL-JSON, BibTeX, BibLaTeX, and RIS for Zotero, Mendeley, EndNote, JabRef, BibDesk, and similar tools.
+Borges, the plugin, adds a single bibliography builder block to the WordPress editor. It transforms pasted scholarly references — DOI numbers/URLs, PubMed/PMID and PubMed Central/PMCID identifiers, arXiv IDs, ISBNs, BibTeX and BibLaTeX entries, and supported formatted citations — into a semantically rich, auto-sorted bibliography with static saved output. Export your work as CSL-JSON, BibTeX, BibLaTeX, and RIS for Zotero, Mendeley, EndNote, JabRef, BibDesk, and similar tools.
 
 No shortcodes. No database storage. Static HTML output survives plugin deactivation.
 
@@ -97,7 +97,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Features
 
-- **Multiple input paths** — Add bare DOIs, DOI URLs, PubMed/PMID and PubMed Central/PMCID records, arXiv IDs and links, BibTeX and BibLaTeX entries, and supported formatted citations.
+- **Multiple input paths** — Add bare DOIs, DOI URLs, PubMed/PMID and PubMed Central/PMCID records, arXiv IDs and links, ISBNs, BibTeX and BibLaTeX entries, and supported formatted citations.
 - **Nine citation styles** — Chicago Notes-Bibliography by default, with Chicago Author-Date, APA 7, Harvard, Vancouver, IEEE, MLA 9, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2018) selectable.
 - **Structured editing** — Plain-text editing plus per-field editing for heuristic or warning-marked citations.
 - **Semantic output** — `role="doc-bibliography"`, `<cite>` wrappers, `lang` attributes, and hanging-indent styling without deprecated bibliography-entry ARIA roles.
@@ -207,6 +207,8 @@ The editor-only PubMed Central resolver accepts `GET /wp-json/bibliography/v1/pm
 
 The editor-only arXiv resolver accepts `GET /wp-json/bibliography/v1/arxiv?id=<arxiv-id>` (modern or legacy IDs, optional version), requires `edit_posts`, validates the ID pattern before any outbound request, queries the fixed arXiv API, and returns a CSL-JSON preprint record. It is used for pasted `arXiv:` IDs, arxiv.org links, and arXiv DOIs.
 
+The editor-only ISBN resolver accepts `GET /wp-json/bibliography/v1/isbn/<isbn>` (ISBN-10 or ISBN-13, no hyphens), requires `edit_posts`, verifies the checksum before any outbound request, queries the fixed Open Library Books API, and returns a CSL-JSON book record. It is used for pasted `ISBN` labels and bare 978/979 ISBN-13s.
+
 ## WordPress Abilities
 
 On WordPress 6.9 and later, Borges registers three read-only abilities with the core Abilities API, in a `bibliography` category. Automation tools and AI agents can discover them and run them through `/wp-json/wp-abilities/v1`. On earlier WordPress versions nothing is registered and nothing else changes.
@@ -221,7 +223,7 @@ All three are annotated `readonly`, non-destructive, and idempotent. None of the
 
 ## External Services
 
-This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for the supported DOI or PMID lookups.
+This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for any of the supported DOI, PMID, PMCID, arXiv, or ISBN lookups.
 
 ### DOI metadata
 
@@ -232,13 +234,28 @@ DOI input connects to the [CrossRef REST API](https://api.crossref.org/) to reso
 - [CrossRef privacy policy](https://www.crossref.org/privacy/)
 - [CrossRef terms of service](https://www.crossref.org/terms/)
 
-### PubMed/PMID metadata
+### PubMed/PMID and PubMed Central/PMCID metadata
 
-PubMed/PMID input connects through the plugin's authenticated WordPress REST proxy to the [NCBI/PMC Literature Citation Exporter](https://pmc.ncbi.nlm.nih.gov/api/ctxp/) CSL endpoint. The proxy uses a fixed upstream host and validates the PMID before making the outbound request.
+PubMed/PMID and PubMed Central/PMCID input connects through the plugin's authenticated WordPress REST proxy to the [NCBI/PMC Literature Citation Exporter](https://pmc.ncbi.nlm.nih.gov/api/ctxp/) CSL endpoints. The proxy uses a fixed upstream host and validates the identifier as numeric before making the outbound request. Only the identifier is sent.
 
 - [NCBI APIs](https://www.ncbi.nlm.nih.gov/home/develop/api/)
 - [NCBI/PMC Literature Citation Exporter](https://pmc.ncbi.nlm.nih.gov/api/ctxp/)
 - [NLM Web Policies](https://www.nlm.nih.gov/web_policies.html)
+
+### arXiv metadata
+
+arXiv IDs, arxiv.org links, and arXiv DOIs connect through the plugin's authenticated WordPress REST proxy to the [arXiv API](https://info.arxiv.org/help/api/index.html) (`export.arxiv.org/api/query`). The proxy uses a fixed upstream host and validates the arXiv ID pattern before making the outbound request. Only the arXiv ID is sent.
+
+- [arXiv API](https://info.arxiv.org/help/api/index.html)
+- [arXiv API Terms of Use](https://info.arxiv.org/help/api/tou.html)
+- [arXiv privacy policy](https://info.arxiv.org/help/policies/privacy_policy.html)
+
+### ISBN metadata
+
+ISBN input connects through the plugin's authenticated WordPress REST proxy to the [Open Library Books API](https://openlibrary.org/dev/docs/api/books) (`openlibrary.org/api/books`), run by the Internet Archive. The proxy uses a fixed upstream host and verifies the ISBN checksum before making the outbound request. Only the ISBN is sent.
+
+- [Open Library Books API](https://openlibrary.org/dev/docs/api/books)
+- [Internet Archive terms of use](https://archive.org/about/terms.php)
 
 ## Development
 

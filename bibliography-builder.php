@@ -65,6 +65,11 @@ const BIBLIOGRAPHY_BUILDER_PMC_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ctxp/
 const BIBLIOGRAPHY_BUILDER_ARXIV_API = 'https://export.arxiv.org/api/query';
 
 /**
+ * Open Library Books API endpoint used for ISBN resolution.
+ */
+const BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_BOOKS_API = 'https://openlibrary.org/api/books';
+
+/**
  * Modern (2301.00001) and legacy (hep-th/9901001, math.GT/0309136) arXiv IDs,
  * with an optional version suffix.
  */
@@ -1523,6 +1528,23 @@ function bibliography_builder_rest_arxiv_permissions_check() {
 }
 
 /**
+ * Permission callback for editor-only ISBN resolver requests.
+ *
+ * @return true|WP_Error
+ */
+function bibliography_builder_rest_isbn_permissions_check() {
+	if ( current_user_can( 'edit_posts' ) ) {
+		return true;
+	}
+
+	return new WP_Error(
+		'bibliography_builder_isbn_forbidden',
+		__( 'Sorry, you are not allowed to resolve book citations.', 'borges-bibliography-builder' ),
+		array( 'status' => 403 )
+	);
+}
+
+/**
  * Read JSON/body params from a REST request.
  *
  * @param WP_REST_Request $request REST request.
@@ -1828,9 +1850,9 @@ function bibliography_builder_normalize_arxiv_id( $value ) {
 }
 
 /**
- * Split an arXiv author string ("Given Middle Family") into a CSL name.
+ * Split an author display string ("Given Middle Family") into a CSL name.
  *
- * The arXiv Atom feed gives each author as one display string. Lowercase
+ * Both arXiv and Open Library give each author as one display string. Lowercase
  * particles (van, de, von, ...) stay with the family name, a trailing
  * generational suffix is kept separately, and single-word or collaboration
  * names become literals.
@@ -1838,7 +1860,7 @@ function bibliography_builder_normalize_arxiv_id( $value ) {
  * @param string $name Author display name.
  * @return array CSL name object, or an empty array for a blank name.
  */
-function bibliography_builder_split_arxiv_author( $name ) {
+function bibliography_builder_split_display_name( $name ) {
 	$name = trim( (string) preg_replace( '/\s+/u', ' ', (string) $name ) );
 
 	if ( '' === $name ) {
@@ -1933,7 +1955,7 @@ function bibliography_builder_arxiv_atom_to_csl( $body, $id ) {
 
 	$authors = array();
 	foreach ( $entry->author as $author ) {
-		$csl_name = bibliography_builder_split_arxiv_author( (string) $author->name );
+		$csl_name = bibliography_builder_split_display_name( (string) $author->name );
 
 		if ( ! empty( $csl_name ) ) {
 			$authors[] = $csl_name;
@@ -2017,6 +2039,187 @@ function bibliography_builder_rest_resolve_arxiv( WP_REST_Request $request ) {
 		),
 		static function ( $body ) use ( $arxiv_id ) {
 			return bibliography_builder_arxiv_atom_to_csl( $body, $arxiv_id );
+		}
+	);
+}
+
+/**
+ * Reduce pasted ISBN input to a checksum-valid ISBN-13.
+ *
+ * Accepts an optional `ISBN`, `ISBN-10`, or `ISBN-13` label and hyphens or
+ * spaces. ISBN-10 values are converted to their 978-prefixed ISBN-13 form so
+ * each book has one cache key.
+ *
+ * @param mixed $value Raw ISBN input.
+ * @return string The ISBN-13, or an empty string when the input is not valid.
+ */
+function bibliography_builder_normalize_isbn( $value ) {
+	if ( ! is_scalar( $value ) ) {
+		return '';
+	}
+
+	$isbn = (string) preg_replace( '/^\s*ISBN(?:-1[03])?:?\s*/i', '', (string) $value );
+	$isbn = strtoupper( (string) preg_replace( '/[\s-]/', '', $isbn ) );
+
+	if ( preg_match( '/^\d{9}[\dX]$/', $isbn ) ) {
+		$sum = 0;
+		for ( $i = 0; $i < 10; $i++ ) {
+			$digit = 'X' === $isbn[ $i ] ? 10 : (int) $isbn[ $i ];
+			$sum  += $digit * ( 10 - $i );
+		}
+
+		if ( 0 !== $sum % 11 ) {
+			return '';
+		}
+
+		$isbn = '978' . substr( $isbn, 0, 9 );
+
+		return $isbn . bibliography_builder_isbn13_check_digit( $isbn );
+	}
+
+	if ( preg_match( '/^97[89]\d{10}$/', $isbn ) ) {
+		return bibliography_builder_isbn13_check_digit( substr( $isbn, 0, 12 ) ) === $isbn[12] ? $isbn : '';
+	}
+
+	return '';
+}
+
+/**
+ * Compute the ISBN-13 check digit for the first twelve digits.
+ *
+ * @param string $first_twelve Twelve digits.
+ * @return string The check digit.
+ */
+function bibliography_builder_isbn13_check_digit( $first_twelve ) {
+	$sum = 0;
+	for ( $i = 0; $i < 12; $i++ ) {
+		$sum += (int) $first_twelve[ $i ] * ( 0 === $i % 2 ? 1 : 3 );
+	}
+
+	return (string) ( ( 10 - $sum % 10 ) % 10 );
+}
+
+/**
+ * Convert an Open Library Books API response into a CSL-JSON book record.
+ *
+ * @param string $body   JSON response body (`jscmd=data` shape).
+ * @param string $isbn13 The requested ISBN-13.
+ * @return array|string|null CSL item, `not_found`, or null when unusable.
+ */
+function bibliography_builder_open_library_to_csl( $body, $isbn13 ) {
+	$decoded = json_decode( (string) $body, true );
+
+	if ( ! is_array( $decoded ) ) {
+		return null;
+	}
+
+	// An unknown ISBN is a 200 with an empty object.
+	if ( empty( $decoded ) ) {
+		return 'not_found';
+	}
+
+	$record = reset( $decoded );
+
+	if ( ! is_array( $record ) || empty( $record['title'] ) || ! is_string( $record['title'] ) ) {
+		return null;
+	}
+
+	$title = trim( $record['title'] );
+	if ( ! empty( $record['subtitle'] ) && is_string( $record['subtitle'] ) ) {
+		$title .= ': ' . trim( $record['subtitle'] );
+	}
+
+	$csl = array(
+		'type'  => 'book',
+		'title' => $title,
+		'ISBN'  => $isbn13,
+	);
+
+	$authors        = array();
+	$record_authors = isset( $record['authors'] ) && is_array( $record['authors'] ) ? $record['authors'] : array();
+	foreach ( $record_authors as $author ) {
+		$csl_name = is_array( $author ) && isset( $author['name'] )
+			? bibliography_builder_split_display_name( (string) $author['name'] )
+			: array();
+
+		if ( ! empty( $csl_name ) ) {
+			$authors[] = $csl_name;
+		}
+	}
+	if ( ! empty( $authors ) ) {
+		$csl['author'] = $authors;
+	}
+
+	foreach ( array(
+		'publishers'     => 'publisher',
+		'publish_places' => 'publisher-place',
+	) as $source => $field ) {
+		if ( isset( $record[ $source ][0]['name'] ) && is_string( $record[ $source ][0]['name'] ) ) {
+			$csl[ $field ] = trim( $record[ $source ][0]['name'] );
+		}
+	}
+
+	$publish_date = isset( $record['publish_date'] ) ? (string) $record['publish_date'] : '';
+	if ( preg_match( '/\b(1\d{3}|20\d{2})\b/', $publish_date, $year ) ) {
+		$csl['issued'] = array( 'date-parts' => array( array( (int) $year[1] ) ) );
+	}
+
+	$pages = isset( $record['number_of_pages'] ) ? $record['number_of_pages'] : null;
+	if ( is_int( $pages ) && $pages > 0 ) {
+		$csl['number-of-pages'] = (string) $pages;
+	}
+
+	return $csl;
+}
+
+/**
+ * REST callback that resolves an ISBN to a CSL-JSON book record.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_resolve_isbn( WP_REST_Request $request ) {
+	$isbn13 = bibliography_builder_normalize_isbn( isset( $request['isbn'] ) ? $request['isbn'] : '' );
+
+	if ( '' === $isbn13 ) {
+		return new WP_Error(
+			'bibliography_builder_isbn_invalid',
+			__( 'Invalid ISBN.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	return bibliography_builder_resolve_remote_csl(
+		add_query_arg(
+			array(
+				'bibkeys' => 'ISBN:' . $isbn13,
+				'format'  => 'json',
+				'jscmd'   => 'data',
+			),
+			BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_BOOKS_API
+		),
+		'isbn_' . $isbn13,
+		'bibliography_builder_isbn',
+		array(
+			'unreachable'      => __(
+				'The Open Library book service could not be reached.',
+				'borges-bibliography-builder'
+			),
+			'not_found'        => __(
+				'The ISBN could not be resolved.',
+				'borges-bibliography-builder'
+			),
+			'upstream'         => __(
+				'The Open Library book service returned an error.',
+				'borges-bibliography-builder'
+			),
+			'invalid_response' => __(
+				'The Open Library book service returned an invalid response.',
+				'borges-bibliography-builder'
+			),
+		),
+		static function ( $body ) use ( $isbn13 ) {
+			return bibliography_builder_open_library_to_csl( $body, $isbn13 );
 		}
 	);
 }
@@ -2272,6 +2475,29 @@ function bibliography_builder_register_rest_routes() {
 					'required'          => true,
 					'validate_callback' => static function ( $value ) {
 						return '' !== bibliography_builder_normalize_arxiv_id( $value );
+					},
+				),
+			),
+		)
+	);
+
+	register_rest_route(
+		'bibliography/v1',
+		'/isbn/(?P<isbn>[0-9]{9}[0-9Xx]|97[89][0-9]{10})',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'bibliography_builder_rest_resolve_isbn',
+			'permission_callback' => 'bibliography_builder_rest_isbn_permissions_check',
+			'args'                => array(
+				'isbn' => array(
+					'description'       => __(
+						'ISBN-10 or ISBN-13, without hyphens, to resolve to CSL-JSON.',
+						'borges-bibliography-builder'
+					),
+					'type'              => 'string',
+					'required'          => true,
+					'validate_callback' => static function ( $value ) {
+						return '' !== bibliography_builder_normalize_isbn( $value );
 					},
 				),
 			),

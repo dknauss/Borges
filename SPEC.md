@@ -2,7 +2,7 @@
 
 ## Overview
 
-A standalone WordPress block plugin that transforms pasted scholarly citations (DOIs, PubMed/PMID and PMCID records, arXiv IDs, BibTeX entries, and supported formatted citations) into a semantically rich, auto-sorted bibliography list. No shortcodes. Static HTML output that survives plugin deactivation.
+A standalone WordPress block plugin that transforms pasted scholarly citations (DOIs, PubMed/PMID and PMCID records, arXiv IDs, ISBNs, BibTeX entries, and supported formatted citations) into a semantically rich, auto-sorted bibliography list. No shortcodes. Static HTML output that survives plugin deactivation.
 
 **Plugin slug:** `borges-bibliography-builder`
 **Block namespace:** `bibliography-builder/bibliography`
@@ -57,10 +57,11 @@ A standalone WordPress block plugin that transforms pasted scholarly citations (
 2. **PubMed/PMID** — one or more `PMID:<number>` entries per paste. Resolved through the authenticated WordPress REST proxy to a fixed NCBI/PMC CSL endpoint; PMID input is validated as numeric before any outbound request.
 3. **PubMed Central/PMCID** — one or more `PMC<number>` entries per paste, with or without a `PMCID:` label. Resolved through the same authenticated proxy pattern to NCBI's fixed PMC citation-exporter endpoint; the ID is reduced to its digits before any outbound request and sent upstream as bare digits (the exporter answers `id=PMC<digits>` with HTTP 400). Free-text citations carrying `PMC<4+ digits>` are routed here when they have no DOI or labeled PMID.
 4. **arXiv** — `arXiv:<id>`, arxiv.org `/abs/` or `/pdf/` URLs, or arXiv DataCite DOIs (`10.48550/arXiv.<id>`), in modern (`2301.00001`) or legacy (`hep-th/9901001`) form with an optional version. Resolved through `GET /bibliography/v1/arxiv?id=<id>`, which queries the fixed `export.arxiv.org` API and maps the Atom response to a CSL `article` preprint (publisher `arXiv`, number `arXiv:<id>`, the arXiv DOI, and the abstract URL). A bare number is not treated as an arXiv ID. arXiv lookups run one at a time in the editor to respect arXiv's request-rate guidance.
-5. **BibTeX** — one or more entries per paste. Detected by `@type{` boundaries. Parsed to CSL-JSON via `citation-js` (client-side).
-6. **Mixed** — a paste containing DOIs, PubMed/PMID, PMCID, and arXiv entries, and BibTeX entries, separated by blank lines.
-7. **Free-text formatted citations** — heuristic parser for books, journal articles, chapters, webpages/social posts, reviews, and theses/dissertations. Support is best-effort; unsupported inputs fail closed with a block-local notice.
-8. **Manual entry** — structured form with Publication Type, Author(s), Title, Container, Publisher, Year, Pages, DOI, and URL fields.
+5. **ISBN** — `ISBN`, `ISBN-10`, or `ISBN-13` labels with either length, or a bare 978/979 ISBN-13; hyphens and spaces allowed. Checksums are verified client- and server-side, and ISBN-10 is converted to ISBN-13. A bare ISBN-10 is not accepted. Resolved through `GET /bibliography/v1/isbn/<isbn>`, which queries the fixed Open Library Books API and maps the record to a CSL `book` (title and subtitle, authors, publisher, place, year, page count, ISBN).
+6. **BibTeX** — one or more entries per paste. Detected by `@type{` boundaries. Parsed to CSL-JSON via `citation-js` (client-side).
+7. **Mixed** — a paste containing DOIs, PubMed/PMID, PMCID, arXiv, and ISBN entries, and BibTeX entries, separated by blank lines.
+8. **Free-text formatted citations** — heuristic parser for books, journal articles, chapters, webpages/social posts, reviews, and theses/dissertations. Support is best-effort; unsupported inputs fail closed with a block-local notice.
+9. **Manual entry** — structured form with Publication Type, Author(s), Title, Container, Publisher, Year, Pages, DOI, and URL fields.
 
 ### Citation Styles (1.0)
 
@@ -151,7 +152,7 @@ Modeled on the core **Quote** and **List** blocks.
 
 When the block is first inserted, the add-citation form is open by default and the textarea uses the placeholder text:
 
-> Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.
+> Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.
 
 ### Paste & Parse Flow
 
@@ -647,7 +648,7 @@ The bibliography's hanging indent and typography must remain readable in Windows
 #### Paste Zone
 
 -   The paste zone is a standard `<textarea>` with an associated label (screen-reader-only is acceptable as long as it remains present).
--   Placeholder text ("Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.") must be supplemented by a label — placeholder text alone is not accessible, as it disappears on focus and is not announced by all screen readers.
+-   Placeholder text ("Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.") must be supplemented by a label — placeholder text alone is not accessible, as it disappears on focus and is not announced by all screen readers.
 
 #### Async State Communication (DOI Resolution)
 
@@ -657,7 +658,7 @@ DOI resolution requires a network fetch to CrossRef, which may take several seco
 2. **Completion announcement.** Use an `aria-live="polite"` region to announce the result when parsing completes. Current notice wording is short and action-oriented, for example:
     - `Added 3 citations.`
     - `No new citations added. Skipped 1 duplicate.`
-    - `This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, BibTeX entry, or supported citation instead.`
+    - `This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.`
 3. **Dismiss/clear behavior.** Inline notices need an explicit dismiss button, pure-success snackbars should auto-dismiss, and typing or mode-switching in the add UI should clear the current notice.
 4. **Notice locality.** The implementation intentionally keeps feedback block-local instead of sending all messages through the global editor snackbar region. Pure success states may use a local Gutenberg snackbar, while richer parse/import validation stays inline next to the add form. This preserves nearby context for mixed-result feedback and still aligns success handling more closely with Gutenberg norms.
 
@@ -926,7 +927,7 @@ PMID support shipped in 1.2. Future identifier support should use a resolver lay
 
 | Identifier | Status | Evaluation |
 | --- | --- | --- |
-| **ISBN-10 / ISBN-13** | Planned support | High-value next book/monograph importer. Accept `ISBN:` prefixes plus bare, hyphenated, or spaced ISBNs; validate ISBN-10/ISBN-13 checksums before lookup; evaluate metadata providers and terms before choosing a resolver. |
+| **ISBN-10 / ISBN-13** | Supported (unreleased) | Resolved through `GET /bibliography/v1/isbn/<isbn>` against the Open Library Books API (no key; open data) after checksum validation. Bare ISBN-10s are not accepted. |
 | **PMCID** | Supported (unreleased) | Resolved through `GET /bibliography/v1/pmcid/<pmcid>`, the same authenticated proxy pattern as PMID, against NCBI's fixed PMC citation exporter. |
 | **arXiv ID** | Supported (unreleased) | Resolved through `GET /bibliography/v1/arxiv?id=<id>` against the fixed arXiv API; Atom mapped to a CSL preprint server-side. arXiv DOIs (`10.48550/arXiv.…`) route here instead of CrossRef. |
 | **ISSN** | Evaluate | Identifies a serial, not a specific cited work. Useful for journal/periodical enrichment and validation, but should not create a standalone bibliography entry unless paired with article-level metadata. |

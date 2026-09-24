@@ -391,3 +391,36 @@ test('Borges read-only abilities are discoverable and runnable', async ({
 	expect(result.run.data.results[0].valid).toBe(true);
 	expect(result.run.data.results[1].valid).toBe(false);
 });
+
+// Live check of the ISBN proxy against Open Library's Books API. The ISBN is
+// the example Open Library's API documentation uses.
+test('bibliography block imports a book by ISBN', async ({ page }) => {
+	test.setTimeout(120_000);
+
+	const editorFrame = await createPostWithBibliographyBlock(page);
+
+	const proxyResult = await page.evaluate(async () => {
+		try {
+			const data = await window.wp.apiFetch({
+				path: '/bibliography/v1/isbn/9780140328721',
+			});
+			return { ok: true, type: data?.type, title: data?.title };
+		} catch (error) {
+			return {
+				ok: false,
+				code: error?.code,
+				message: error?.message,
+				data: error?.data,
+			};
+		}
+	});
+
+	expect(
+		proxyResult.ok,
+		`ISBN proxy failed: ${JSON.stringify(proxyResult)}`
+	).toBe(true);
+	expect(proxyResult.type).toBe('book');
+	expect(proxyResult.title).toMatch(/Fantastic Mr\.? Fox/i);
+
+	await importCitations(editorFrame, 'ISBN 978-0-14-032872-1', 1);
+});

@@ -69,6 +69,16 @@ const CROSSREF_CSL_API = 'https://api.crossref.org/works/';
 const PMID_REST_ENDPOINT = '/bibliography/v1/pmid/';
 const PMCID_REST_ENDPOINT = '/bibliography/v1/pmcid/';
 const ARXIV_REST_ENDPOINT = '/bibliography/v1/arxiv';
+const ISBN_REST_ENDPOINT = '/bibliography/v1/isbn/';
+// Standalone ISBN: an `ISBN`/`ISBN-10`/`ISBN-13` label with either length, or
+// a bare 978/979 ISBN-13. A bare ISBN-10 is never accepted: too many ordinary
+// 10-digit numbers pass its checksum by chance. Checksums are verified in
+// normalizeIsbn(); these patterns only find candidates.
+const LABELED_ISBN_REGEX =
+	/^ISBN(?:-1[03])?:?\s*([0-9][0-9\s-]{8,15}[0-9X])$/iu;
+const BARE_ISBN13_REGEX = /^(97[89][0-9\s-]{10,14})$/u;
+const EMBEDDED_ISBN_REGEX =
+	/\bISBN(?:-1[03])?:?\s*([0-9][0-9\s-]{8,15}[0-9X])\b/iu;
 const MAX_INPUT_SIZE = 1024 * 1024; // 1 MB
 const PARSE_CONCURRENCY = 4;
 const MAX_DOI_METADATA_CACHE_ENTRIES = 100;
@@ -199,7 +209,7 @@ export function normalizeDoiValueForLookup(value) {
  * extracted — one citation, one identifier.
  *
  * @param {string} chunk Free-text citation string (already trimmed).
- * @return {{ format: 'doi'|'pmid'|'pmcid'|'arxiv', value: string, rawValue: string } | null} Extracted identifier result, or null if none found.
+ * @return {{ format: 'doi'|'pmid'|'pmcid'|'arxiv'|'isbn', value: string, rawValue: string } | null} Extracted identifier result, or null if none found.
  */
 export function extractEmbeddedIdentifier(chunk) {
 	// DOI first — higher authority than PMID when both co-occur.
@@ -249,6 +259,17 @@ export function extractEmbeddedIdentifier(chunk) {
 		return {
 			format: 'arxiv',
 			value: `arXiv:${arxivMatch[1]}`,
+			rawValue: chunk,
+		};
+	}
+
+	// ISBN last: a book DOI or PMID carries richer metadata when present.
+	const isbnMatch = chunk.match(EMBEDDED_ISBN_REGEX);
+	const embeddedIsbn = isbnMatch ? normalizeIsbn(isbnMatch[1]) : null;
+	if (embeddedIsbn) {
+		return {
+			format: 'isbn',
+			value: `ISBN ${embeddedIsbn}`,
 			rawValue: chunk,
 		};
 	}
@@ -339,6 +360,52 @@ function getArxivId(value) {
 		normalizeDoiInput(trimmed).match(ARXIV_DOI_REGEX);
 
 	return match ? match[1] : null;
+}
+
+/**
+ * Reduce ISBN text to a checksum-valid ISBN-13.
+ *
+ * Mirrors bibliography_builder_normalize_isbn() in bibliography-builder.php.
+ *
+ * @param {string} value Digits (with optional hyphens/spaces), ISBN-10 or -13.
+ * @return {string|null} The ISBN-13, or null when the checksum fails.
+ */
+export function normalizeIsbn(value) {
+	const isbn = String(value).replace(/[\s-]/gu, '').toUpperCase();
+
+	const isbn13CheckDigit = (firstTwelve) => {
+		let sum = 0;
+		for (let i = 0; i < 12; i++) {
+			sum += Number(firstTwelve[i]) * (i % 2 === 0 ? 1 : 3);
+		}
+		return String((10 - (sum % 10)) % 10);
+	};
+
+	if (/^\d{9}[\dX]$/u.test(isbn)) {
+		let sum = 0;
+		for (let i = 0; i < 10; i++) {
+			sum += (isbn[i] === 'X' ? 10 : Number(isbn[i])) * (10 - i);
+		}
+		if (sum % 11 !== 0) {
+			return null;
+		}
+		const base = `978${isbn.slice(0, 9)}`;
+		return base + isbn13CheckDigit(base);
+	}
+
+	if (/^97[89]\d{10}$/u.test(isbn)) {
+		return isbn13CheckDigit(isbn.slice(0, 12)) === isbn[12] ? isbn : null;
+	}
+
+	return null;
+}
+
+function getStandaloneIsbn(value) {
+	const trimmed = value.trim();
+	const match =
+		trimmed.match(LABELED_ISBN_REGEX) || trimmed.match(BARE_ISBN13_REGEX);
+
+	return match ? normalizeIsbn(match[1]) : null;
 }
 
 function resolveArxivCsl(arxivId) {
@@ -555,6 +622,10 @@ function detectFormat(chunk) {
 		return { format: 'arxiv', value: chunk };
 	}
 
+	if (getStandaloneIsbn(chunk)) {
+		return { format: 'isbn', value: chunk };
+	}
+
 	if (DOI_ONLY_REGEX.test(chunk)) {
 		return { format: 'doi', value: chunk };
 	}
@@ -585,7 +656,7 @@ function createDetectedItem(
 	};
 }
 
-const IDENTIFIER_FORMATS = ['doi', 'pmid', 'pmcid', 'arxiv'];
+const IDENTIFIER_FORMATS = ['doi', 'pmid', 'pmcid', 'arxiv', 'isbn'];
 
 function looksLikeStandaloneCitationLine(line) {
 	const normalizedLine = line.trim();
@@ -668,6 +739,25 @@ const PARSER_BACKENDS = {
 		const csl = await resolveNcbiCsl('pmid', pmid, fetchFn);
 
 		return { cslItems: [csl] };
+	},
+	isbn: async (value) => {
+		const isbn13 =
+			getStandaloneIsbn(value) ||
+			normalizeIsbn(value.replace(/^ISBN(?:-1[03])?:?\s*/iu, ''));
+
+		if (!isbn13) {
+			throw new Error('Invalid ISBN');
+		}
+
+		if (typeof apiFetch !== 'function') {
+			throw new Error('WordPress REST transport unavailable for ISBN');
+		}
+
+		return {
+			cslItems: [
+				await apiFetch({ path: `${ISBN_REST_ENDPOINT}${isbn13}` }),
+			],
+		};
 	},
 	arxiv: async (value) => {
 		const arxivId = getArxivId(value);
@@ -762,7 +852,7 @@ function formatUnsupportedInputError() {
 
 function formatLatexDocumentError() {
 	return __(
-		'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, BibTeX entry, or supported citation instead.',
+		'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.',
 		'borges-bibliography-builder'
 	);
 }
@@ -778,6 +868,13 @@ function formatBackendParseError(format, err) {
 	if (format === 'pmid') {
 		return __(
 			"Couldn't resolve the PMID. Check the number and try again.",
+			'borges-bibliography-builder'
+		);
+	}
+
+	if (format === 'isbn') {
+		return __(
+			"Couldn't resolve the ISBN. Check it and try again.",
 			'borges-bibliography-builder'
 		);
 	}

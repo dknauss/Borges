@@ -19,6 +19,7 @@ import {
 	clearDoiMetadataCache,
 	extractEmbeddedIdentifier,
 	normalizeCrossRefCsl,
+	normalizeIsbn,
 	parsePastedInput,
 	validateAndSanitizeCsl,
 } from './parser';
@@ -1018,7 +1019,7 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
+			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 		]);
 		expect(result.remainingInput).toBe(
 			'This input is not a parseable citation.'
@@ -1036,7 +1037,7 @@ Hallo world\\cite{einstein}
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, BibTeX entry, or supported citation instead.',
+			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.',
 		]);
 		expect(result.remainingInput).toContain('\\documentclass{article}');
 	});
@@ -1046,7 +1047,7 @@ Hallo world\\cite{einstein}
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, BibTeX entry, or supported citation instead.',
+			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.',
 		]);
 		expect(result.remainingInput).toBe('\\autocite{einstein}');
 	});
@@ -2088,6 +2089,112 @@ describe('extractEmbeddedIdentifier — arXiv', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Author. Title. Nature 1 (2020). doi:10.1038/s41586-020-2649-2. arXiv:2006.10256'
+			)
+		).toMatchObject({ format: 'doi' });
+	});
+});
+
+describe('normalizeIsbn', () => {
+	it.each([
+		['9780140328721', '9780140328721'],
+		['978-0-14-032872-1', '9780140328721'],
+		['0140328726', '9780140328721'],
+		['0-14-032872-6', '9780140328721'],
+		['080442957X', '9780804429573'],
+		['080442957x', '9780804429573'],
+	])('normalizes %p to %p', (input, expected) => {
+		expect(normalizeIsbn(input)).toBe(expected);
+	});
+
+	it.each(['9780140328722', '0140328727', '9770140328721', '12345', 'abc'])(
+		'rejects %p',
+		(input) => {
+			expect(normalizeIsbn(input)).toBeNull();
+		}
+	);
+});
+
+describe('ISBN input resolution', () => {
+	const BOOK_CSL = {
+		type: 'book',
+		title: 'Fantastic Mr. Fox',
+		author: [{ family: 'Dahl', given: 'Roald' }],
+		publisher: 'Puffin',
+		issued: { 'date-parts': [[1988]] },
+		ISBN: '9780140328721',
+	};
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+		apiFetch.mockResolvedValue(BOOK_CSL);
+	});
+
+	it.each([
+		'ISBN 9780140328721',
+		'ISBN: 978-0-14-032872-1',
+		'ISBN-13: 9780140328721',
+		'ISBN-10: 0-14-032872-6',
+		'isbn 0140328726',
+		'9780140328721',
+		'978-0-14-032872-1',
+	])('routes %p to the ISBN proxy as an ISBN-13', async (input) => {
+		const result = await parsePastedInput(input, 'apa');
+
+		expect(apiFetch).toHaveBeenCalledWith({
+			path: '/bibliography/v1/isbn/9780140328721',
+		});
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(1);
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'isbn',
+			csl: { type: 'book', ISBN: '9780140328721' },
+		});
+	});
+
+	it('does not treat a bare ISBN-10 or a bad checksum as an ISBN', async () => {
+		await parsePastedInput('0140328726', 'apa');
+		await parsePastedInput('ISBN 9780140328722', 'apa');
+
+		expect(apiFetch).not.toHaveBeenCalledWith(
+			expect.objectContaining({
+				path: expect.stringContaining('/isbn/'),
+			})
+		);
+	});
+
+	it('returns an ISBN error when resolution fails', async () => {
+		apiFetch.mockRejectedValue(new Error('Not found'));
+
+		const result = await parsePastedInput('ISBN 9780140328721', 'apa');
+
+		expect(result.entries).toHaveLength(0);
+		expect(result.errors).toEqual([
+			"Couldn't resolve the ISBN. Check it and try again.",
+		]);
+	});
+});
+
+describe('extractEmbeddedIdentifier — ISBN', () => {
+	it('extracts a labeled ISBN from a free-text book citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Dahl, Roald. Fantastic Mr. Fox. New York: Puffin, 1988. ISBN 978-0-14-032872-1.'
+			)
+		).toMatchObject({ format: 'isbn', value: 'ISBN 9780140328721' });
+	});
+
+	it('ignores an ISBN-shaped number with a bad checksum', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Some Book. 2001. ISBN 978-0-14-032872-2.'
+			)
+		).toBeNull();
+	});
+
+	it('prefers a DOI over an ISBN in the same citation', () => {
+		expect(
+			extractEmbeddedIdentifier(
+				'Author. Book. Press, 2020. ISBN 9780140328721. doi:10.1000/book.1'
 			)
 		).toMatchObject({ format: 'doi' });
 	});

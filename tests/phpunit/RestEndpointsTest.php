@@ -52,7 +52,7 @@ final class RestEndpointsTest extends TestCase {
 		bibliography_builder_register_rest_routes();
 		$routes = $GLOBALS['bibliography_builder_test_rest_routes'];
 
-		$this->assertCount( 6, $routes );
+		$this->assertCount( 7, $routes );
 		$this->assertSame( 'bibliography/v1', $routes[0]['namespace'] );
 		$this->assertSame( '/format', $routes[0]['route'] );
 		$this->assertSame( '/pmid/(?P<pmid>\d{1,8})', $routes[1]['route'] );
@@ -88,6 +88,15 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertTrue( $arxiv_arg['validate_callback']( 'hep-th/9901001v2' ) );
 		$this->assertFalse( $arxiv_arg['validate_callback']( '../../etc/passwd' ) );
 		$this->assertFalse( $arxiv_arg['validate_callback']( array( '1706.03762' ) ) );
+
+		$this->assertSame( '/isbn/(?P<isbn>[0-9]{9}[0-9Xx]|97[89][0-9]{10})', $routes[6]['route'] );
+		$this->assertSame( 'bibliography_builder_rest_isbn_permissions_check', $routes[6]['args']['permission_callback'] );
+
+		$isbn_arg = $routes[6]['args']['args']['isbn'];
+		$this->assertTrue( $isbn_arg['validate_callback']( '9780140328721' ) );
+		$this->assertTrue( $isbn_arg['validate_callback']( '080442957X' ) );
+		$this->assertFalse( $isbn_arg['validate_callback']( '9780140328722' ) );
+		$this->assertFalse( $isbn_arg['validate_callback']( array( '9780140328721' ) ) );
 	}
 
 	public function test_published_posts_are_publicly_readable(): void {
@@ -659,6 +668,137 @@ final class RestEndpointsTest extends TestCase {
 		bibliography_builder_test_set_current_user( 7 );
 
 		$this->assertTrue( bibliography_builder_rest_arxiv_permissions_check() );
+	}
+
+	/**
+	 * Open Library Books API response (`jscmd=data`) for one ISBN.
+	 */
+	private function open_library_fixture(): string {
+		return wp_json_encode(
+			array(
+				'ISBN:9780140328721' => array(
+					'url'             => 'https://openlibrary.org/books/OL7353617M/Fantastic_Mr._Fox',
+					'title'           => 'Fantastic Mr. Fox',
+					'subtitle'        => 'A Story',
+					'authors'         => array(
+						array(
+							'url'  => 'https://openlibrary.org/authors/OL34184A/Roald_Dahl',
+							'name' => 'Roald Dahl',
+						),
+					),
+					'number_of_pages' => 96,
+					'publishers'      => array( array( 'name' => 'Puffin' ) ),
+					'publish_places'  => array( array( 'name' => 'New York' ) ),
+					'publish_date'    => 'October 1, 1988',
+				),
+			)
+		);
+	}
+
+	public function test_isbn_endpoint_maps_open_library_to_a_csl_book(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => $this->open_library_fixture(),
+			)
+		);
+
+		// ISBN-10 input is normalized to the ISBN-13 used for lookup and cache.
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/0140328726' );
+		$request['isbn'] = '0140328726';
+
+		$data     = bibliography_builder_rest_resolve_isbn( $request )->get_data();
+		$requests = bibliography_builder_test_get_http_requests();
+
+		$this->assertSame(
+			array(
+				'type'            => 'book',
+				'title'           => 'Fantastic Mr. Fox: A Story',
+				'ISBN'            => '9780140328721',
+				'author'          => array(
+					array(
+						'family' => 'Dahl',
+						'given'  => 'Roald',
+					),
+				),
+				'publisher'       => 'Puffin',
+				'publisher-place' => 'New York',
+				'issued'          => array( 'date-parts' => array( array( 1988 ) ) ),
+				'number-of-pages' => '96',
+			),
+			$data
+		);
+		$this->assertCount( 1, $requests );
+		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_BOOKS_API, $requests[0]['url'] );
+		$this->assertStringContainsString( 'ISBN%3A9780140328721', $requests[0]['url'] );
+		$this->assertStringContainsString( 'jscmd=data', $requests[0]['url'] );
+		$this->assertSame( 'wp_safe_remote_get', $requests[0]['function'] );
+
+		$request13         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+		$request13['isbn'] = '9780140328721';
+		bibliography_builder_rest_resolve_isbn( $request13 );
+		$this->assertCount( 1, bibliography_builder_test_get_http_requests(), 'ISBN-10 and ISBN-13 share one cache entry.' );
+	}
+
+	public function test_isbn_endpoint_reports_an_unknown_isbn_as_not_found(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => '{}',
+			)
+		);
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780000000002' );
+		$request['isbn'] = '9780000000002';
+
+		$result = bibliography_builder_rest_resolve_isbn( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_isbn_not_found', $result->get_error_code() );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
+	}
+
+	public function test_isbn_endpoint_rejects_unusable_records(): void {
+		foreach ( array( 'not json', '{"ISBN:9780140328721":{"authors":[]}}' ) as $body ) {
+			bibliography_builder_test_reset_state();
+			bibliography_builder_test_set_http_response(
+				array(
+					'response' => array( 'code' => 200 ),
+					'body'     => $body,
+				)
+			);
+
+			$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/9780140328721' );
+			$request['isbn'] = '9780140328721';
+
+			$result = bibliography_builder_rest_resolve_isbn( $request );
+
+			$this->assertSame( 'bibliography_builder_isbn_invalid_response', $result->get_error_code(), $body );
+		}
+	}
+
+	public function test_isbn_endpoint_rejects_invalid_checksums_without_a_request(): void {
+		foreach ( array( '9780140328722', '0140328727', '1234567890123', 'ISBN' ) as $bad_isbn ) {
+			$request         = new WP_REST_Request( 'GET', '/bibliography/v1/isbn/x' );
+			$request['isbn'] = $bad_isbn;
+
+			$result = bibliography_builder_rest_resolve_isbn( $request );
+
+			$this->assertSame( 'bibliography_builder_isbn_invalid', $result->get_error_code(), $bad_isbn );
+		}
+
+		$this->assertCount( 0, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_isbn_endpoint_requires_editor_capability(): void {
+		$this->assertInstanceOf( WP_Error::class, bibliography_builder_rest_isbn_permissions_check() );
+
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+
+		$this->assertTrue( bibliography_builder_rest_isbn_permissions_check() );
 	}
 
 	public function test_formatter_endpoint_supports_all_registered_styles(): void {
