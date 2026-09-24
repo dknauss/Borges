@@ -3,11 +3,11 @@ created: 2026-06-23T00:00:00Z
 title: Test more reference-manager exports (Mendeley, Zotero, EndNote, etc.)
 area: testing
 files:
-  - /Users/danknauss/Developer/GitHub/wp-bibliography-block/src/lib/parser.js
-  - /Users/danknauss/Developer/GitHub/wp-bibliography-block/src/lib/free-text-parser.js
-  - /Users/danknauss/Developer/GitHub/wp-bibliography-block/docs/supported-input-style-matrix.md
-  - /Users/danknauss/Developer/GitHub/wp-bibliography-block/docs/qa-matrix-checklist.md
-  - /Users/danknauss/Developer/GitHub/wp-bibliography-block/docs/free-text-samples.md
+  - src/lib/parser.js
+  - src/lib/free-text-parser.js
+  - docs/supported-input-style-matrix.md
+  - docs/qa-matrix-checklist.md
+  - docs/free-text-samples.md
 ---
 
 ## Problem
