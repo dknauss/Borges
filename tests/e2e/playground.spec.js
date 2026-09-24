@@ -408,18 +408,31 @@ test('bibliography block imports a book by ISBN', async ({ page }) => {
 		} catch (error) {
 			// Diagnostic only: ask Open Library directly, per ISBN form, so a
 			// failure shows what the upstream API itself returns.
+			// Probe candidate upstream endpoints so one failed run shows which
+			// ones answer from CI: the Books API with and without jscmd, the
+			// edition and search endpoints, Google Books, and the site root.
+			const probes = {
+				booksApiData:
+					'https://openlibrary.org/api/books?bibkeys=ISBN:9780140328721&format=json&jscmd=data',
+				booksApiPlain:
+					'https://openlibrary.org/api/books?bibkeys=ISBN:9780140328721&format=json',
+				edition: 'https://openlibrary.org/isbn/9780140328721.json',
+				search: 'https://openlibrary.org/search.json?isbn=9780140328721&fields=key,title,author_name,publisher,publish_date',
+				googleBooks:
+					'https://www.googleapis.com/books/v1/volumes?q=isbn:9780140328721',
+				openLibraryRoot: 'https://openlibrary.org/',
+			};
 			const direct = {};
-			for (const key of ['ISBN:9780140328721', 'ISBN:0140328726']) {
+			for (const [name, url] of Object.entries(probes)) {
 				try {
-					const response = await window.fetch(
-						`https://openlibrary.org/api/books?bibkeys=${key}&format=json&jscmd=data`
-					);
-					direct[key] = {
+					const response = await window.fetch(url);
+					direct[name] = {
 						status: response.status,
-						body: (await response.text()).slice(0, 300),
+						url: response.url,
+						body: (await response.text()).slice(0, 200),
 					};
 				} catch (fetchError) {
-					direct[key] = { error: String(fetchError) };
+					direct[name] = { error: String(fetchError) };
 				}
 			}
 			return {
