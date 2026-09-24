@@ -574,6 +574,26 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertSame( '10.48550/arXiv.1706.03762', $data['DOI'] );
 	}
 
+	public function test_arxiv_endpoint_sends_legacy_ids_encoded_exactly_once(): void {
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => $this->arxiv_atom_fixture(),
+			)
+		);
+
+		$request       = new WP_REST_Request( 'GET', '/bibliography/v1/arxiv' );
+		$request['id'] = 'arXiv:hep-th/9901001';
+
+		bibliography_builder_rest_resolve_arxiv( $request );
+		$url = bibliography_builder_test_get_http_requests()[0]['url'];
+
+		// add_query_arg() does not encode values (callers must), so the slash
+		// is encoded once here and decoded by arXiv back to hep-th/9901001.
+		$this->assertStringEndsWith( '?id_list=hep-th%2F9901001', $url );
+		$this->assertStringNotContainsString( '%252F', $url );
+	}
+
 	public function test_arxiv_endpoint_reports_api_error_entries_as_not_found(): void {
 		bibliography_builder_test_set_http_response(
 			array(
@@ -733,7 +753,7 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertCount( 1, $requests );
 		$this->assertStringStartsWith( BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_BOOKS_API, $requests[0]['url'] );
 		// Both forms are requested: Open Library matches stored identifiers literally.
-		$this->assertStringContainsString( 'ISBN%3A9780140328721%2CISBN%3A0140328726', $requests[0]['url'] );
+		$this->assertStringContainsString( 'bibkeys=ISBN:9780140328721,ISBN:0140328726', $requests[0]['url'] );
 		$this->assertStringContainsString( 'jscmd=data', $requests[0]['url'] );
 		$this->assertSame( 'wp_safe_remote_get', $requests[0]['function'] );
 

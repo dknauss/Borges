@@ -273,9 +273,18 @@ function wp_json_encode( $data, $flags = 0, $depth = 512 ) {
 	return json_encode( $data, $flags, $depth );
 }
 
+/**
+ * Mirrors core: new values are appended as given, without URL-encoding.
+ * Core documents that callers must encode values themselves, and builds
+ * the query with _http_build_query( ..., $urlencode = false ).
+ */
 function add_query_arg( $args, $url ) {
 	$separator = false === strpos( $url, '?' ) ? '?' : '&';
-	return $url . $separator . http_build_query( $args, '', '&', PHP_QUERY_RFC3986 );
+	$pairs     = array();
+	foreach ( $args as $key => $value ) {
+		$pairs[] = $key . '=' . $value;
+	}
+	return $url . $separator . implode( '&', $pairs );
 }
 
 /**
