@@ -29,6 +29,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 const BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN = '[A-Za-z0-9][A-Za-z0-9_-]{0,63}';
 
 /**
+ * Pattern a stable `bibliographyId` matches: a ref that is not all digits, so
+ * it can never be mistaken for an index.
+ */
+const BIBLIOGRAPHY_BUILDER_BLOCK_ID_PATTERN = '(?=[A-Za-z0-9_-]*[A-Za-z_-])[A-Za-z0-9][A-Za-z0-9_-]{0,63}';
+
+/**
  * CSL types whose entries normally name the work they appear in.
  */
 const BIBLIOGRAPHY_BUILDER_CONTAINER_TYPES = array(
@@ -54,19 +60,31 @@ function bibliography_builder_is_block_ref( $value ) {
 }
 
 /**
+ * Whether a value is a usable stable `bibliographyId`.
+ *
+ * @param mixed $value Raw value.
+ * @return bool
+ */
+function bibliography_builder_is_block_id( $value ) {
+	return is_string( $value ) && 1 === preg_match( '/^' . BIBLIOGRAPHY_BUILDER_BLOCK_ID_PATTERN . '$/D', $value );
+}
+
+/**
  * Find one bibliography by index or stable `bibliographyId`.
  *
- * An all-digit reference is an index. The editor only generates UUIDs, which
- * always contain hyphens, so a real `bibliographyId` never reads as one.
+ * With `auto`, an all-digit reference is an index; a stable `bibliographyId`
+ * is never all digits (bibliography_builder_is_block_id()), so it never reads
+ * as one.
  *
- * @param array $bibliographies Prepared bibliographies for a post.
- * @param mixed $ref            Index or `bibliographyId`.
+ * @param array  $bibliographies Prepared bibliographies for a post.
+ * @param mixed  $ref            Index or `bibliographyId`.
+ * @param string $kind           `auto`, `index`, or `id` (never an index).
  * @return array|null
  */
-function bibliography_builder_find_bibliography( $bibliographies, $ref ) {
+function bibliography_builder_find_bibliography( $bibliographies, $ref, $kind = 'auto' ) {
 	$ref = (string) $ref;
 
-	if ( ctype_digit( $ref ) ) {
+	if ( 'id' !== $kind && ctype_digit( $ref ) ) {
 		$index = (int) $ref;
 
 		return isset( $bibliographies[ $index ] ) ? $bibliographies[ $index ] : null;
@@ -84,14 +102,16 @@ function bibliography_builder_find_bibliography( $bibliographies, $ref ) {
 /**
  * Load one bibliography in a post by index or `bibliographyId`, or a 404.
  *
- * @param int   $post_id Post ID. The caller has already checked it exists.
- * @param mixed $ref     Index or `bibliographyId`.
+ * @param int    $post_id Post ID. The caller has already checked it exists.
+ * @param mixed  $ref     Index or `bibliographyId`.
+ * @param string $kind    See bibliography_builder_find_bibliography().
  * @return array|WP_Error
  */
-function bibliography_builder_resolve_bibliography( $post_id, $ref ) {
+function bibliography_builder_resolve_bibliography( $post_id, $ref, $kind = 'auto' ) {
 	$bibliography = bibliography_builder_find_bibliography(
 		bibliography_builder_get_bibliographies_for_post( get_post( absint( $post_id ) ) ),
-		$ref
+		$ref,
+		$kind
 	);
 
 	if ( null === $bibliography ) {
@@ -238,6 +258,33 @@ function bibliography_builder_has_csl_name( $names ) {
 }
 
 /**
+ * Whether a sanitized CSL date says anything: a year in `date-parts`, or a
+ * non-blank `literal` or `raw` value.
+ *
+ * @param mixed $date CSL date.
+ * @return bool
+ */
+function bibliography_builder_has_usable_date( $date ) {
+	if ( ! is_array( $date ) ) {
+		return false;
+	}
+
+	$year = isset( $date['date-parts'][0][0] ) ? $date['date-parts'][0][0] : null;
+
+	if ( is_scalar( $year ) && '' !== trim( (string) $year ) ) {
+		return true;
+	}
+
+	foreach ( array( 'literal', 'raw' ) as $field ) {
+		if ( isset( $date[ $field ] ) && is_string( $date[ $field ] ) && '' !== trim( $date[ $field ] ) ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
  * Whether a CSL ISBN value contains at least one checksum-valid ISBN.
  *
  * CSL allows several ISBNs in one field, often with qualifiers such as
@@ -342,7 +389,7 @@ function bibliography_builder_validate_citation( $citation ) {
 		);
 	}
 
-	if ( empty( $csl['issued'] ) ) {
+	if ( ! bibliography_builder_has_usable_date( isset( $csl['issued'] ) ? $csl['issued'] : null ) ) {
 		$issues[] = bibliography_builder_validation_issue(
 			'warning',
 			'missing-issued',
@@ -408,12 +455,13 @@ function bibliography_builder_validate_citation( $citation ) {
 /**
  * Validate every entry in one bibliography.
  *
- * @param int   $post_id Post ID.
- * @param mixed $ref     Index or `bibliographyId`.
+ * @param int    $post_id Post ID.
+ * @param mixed  $ref     Index or `bibliographyId`.
+ * @param string $kind    See bibliography_builder_find_bibliography().
  * @return array|WP_Error
  */
-function bibliography_builder_get_validation_report( $post_id, $ref ) {
-	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref );
+function bibliography_builder_get_validation_report( $post_id, $ref, $kind = 'auto' ) {
+	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref, $kind );
 
 	if ( is_wp_error( $bibliography ) ) {
 		return $bibliography;
@@ -561,12 +609,13 @@ function bibliography_builder_get_duplicate_reason( $first, $second ) {
 /**
  * List likely duplicate pairs in one bibliography.
  *
- * @param int   $post_id Post ID.
- * @param mixed $ref     Index or `bibliographyId`.
+ * @param int    $post_id Post ID.
+ * @param mixed  $ref     Index or `bibliographyId`.
+ * @param string $kind    See bibliography_builder_find_bibliography().
  * @return array|WP_Error
  */
-function bibliography_builder_get_duplicate_report( $post_id, $ref ) {
-	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref );
+function bibliography_builder_get_duplicate_report( $post_id, $ref, $kind = 'auto' ) {
+	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref, $kind );
 
 	if ( is_wp_error( $bibliography ) ) {
 		return $bibliography;
@@ -614,10 +663,11 @@ function bibliography_builder_get_duplicate_report( $post_id, $ref ) {
  * @param int    $post_id   Post ID.
  * @param mixed  $ref       Index or `bibliographyId`.
  * @param string $style_key Supported citation style key.
+ * @param string $kind      See bibliography_builder_find_bibliography().
  * @return array|WP_Error
  */
-function bibliography_builder_get_style_preview( $post_id, $ref, $style_key ) {
-	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref );
+function bibliography_builder_get_style_preview( $post_id, $ref, $style_key, $kind = 'auto' ) {
+	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref, $kind );
 
 	if ( is_wp_error( $bibliography ) ) {
 		return $bibliography;

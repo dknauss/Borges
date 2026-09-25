@@ -154,6 +154,24 @@ final class ReviewRoutesTest extends TestCase {
 		$this->assertFalse( $ref_arg['validate_callback']( '../0' ) );
 		$this->assertFalse( $ref_arg['validate_callback']( array( '0' ) ) );
 
+		// Reading one bibliography by ID is its own route, after the review
+		// routes, so the numeric route keeps its `index` parameter.
+		$this->assertSame( '/posts/(?P<post_id>\d+)/bibliographies/(?P<index>\d+)', $routes[3]['route'] );
+		$this->assertSame(
+			'/posts/(?P<post_id>\d+)/bibliographies/(?P<id>(?=[A-Za-z0-9_-]*[A-Za-z_-])[A-Za-z0-9][A-Za-z0-9_-]{0,63})',
+			$routes[10]['route']
+		);
+		$this->assertSame( 'bibliography_builder_rest_get_bibliography', $routes[10]['args']['callback'] );
+		$this->assertSame( 'bibliography_builder_rest_permissions_check', $routes[10]['args']['permission_callback'] );
+
+		foreach ( array( '0', '12', '12a', $this->block_id, 'abc' ) as $path ) {
+			$this->assertSame(
+				1 !== preg_match( '/^\d+$/', $path ),
+				1 === preg_match( '@^' . $routes[10]['route'] . '$@i', '/posts/1/bibliographies/' . $path ),
+				$path
+			);
+		}
+
 		$style_arg = $routes[9]['args']['args']['style'];
 		$this->assertTrue( $style_arg['required'] );
 		$this->assertTrue( $style_arg['validate_callback']( 'apa-7' ) );
@@ -350,7 +368,7 @@ final class ReviewRoutesTest extends TestCase {
 	public function test_single_bibliography_route_accepts_a_bibliography_id(): void {
 		$request            = new WP_REST_Request( 'GET', '/bibliography/v1/posts/201/bibliographies/' . $this->block_id );
 		$request['post_id'] = $this->post_id;
-		$request['ref']     = $this->block_id;
+		$request['id']      = $this->block_id;
 
 		$data = bibliography_builder_rest_get_bibliography( $request )->get_data();
 		$this->assertSame( 0, $data['index'] );
@@ -359,7 +377,7 @@ final class ReviewRoutesTest extends TestCase {
 		$request['format'] = 'csl-json';
 		$this->assertSame( 'Deep Learning', bibliography_builder_rest_get_bibliography( $request )->get_data()[0]['title'] );
 
-		$request['ref'] = 'no-such-block';
+		$request['id'] = 'no-such-block';
 		$this->assertSame( 404, bibliography_builder_rest_get_bibliography( $request )->get_error_data()['status'] );
 	}
 
@@ -449,5 +467,26 @@ final class ReviewRoutesTest extends TestCase {
 		$this->assertSame( array( 'empty-doi' ), $codes( '' ) );
 		$this->assertSame( array( 'malformed-doi' ), $codes( '10.12/short-prefix' ) );
 		$this->assertSame( array( 'malformed-doi' ), $codes( 'not a doi' ) );
+	}
+
+	public function test_blank_literal_and_raw_dates_count_as_missing(): void {
+		foreach ( array( array( 'literal' => '' ), array( 'raw' => '   ' ) ) as $issued ) {
+			$issues = bibliography_builder_validate_citation(
+				array(
+					'id'  => 'x',
+					'csl' => array(
+						'type'   => 'book',
+						'title'  => 'T',
+						'author' => array( array( 'family' => 'F' ) ),
+						'issued' => $issued,
+					),
+				)
+			);
+
+			$this->assertContains( 'missing-issued', array_column( $issues, 'code' ), wp_json_encode( $issued ) );
+		}
+
+		$this->assertTrue( bibliography_builder_has_usable_date( array( 'literal' => 'c. 1850' ) ) );
+		$this->assertTrue( bibliography_builder_has_usable_date( array( 'date-parts' => array( array( 2001 ) ) ) ) );
 	}
 }

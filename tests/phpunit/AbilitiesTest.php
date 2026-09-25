@@ -396,4 +396,23 @@ final class AbilitiesTest extends TestCase {
 		$this->assertSame( 'block-two', $result['bibliographyId'] );
 		$this->assertSame( 'Same Work', $result['content'][0]['title'] );
 	}
+
+	public function test_an_all_digit_bibliography_id_is_never_read_as_an_index(): void {
+		$post_id  = $this->set_up_review_post();
+		$validate = $this->ability( 'borges/validate-bibliography' )['execute_callback'];
+		$result   = $validate(
+			array(
+				'post_id'         => $post_id,
+				'bibliography_id' => '1',
+			)
+		);
+
+		// Block 1 exists, but "1" is not its ID: an ID lookup must not fall back to the index.
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 404, $result->get_error_data()['status'] );
+
+		$pattern = $this->ability( 'borges/validate-bibliography' )['input_schema']['properties']['bibliography_id']['pattern'];
+		$this->assertSame( 0, preg_match( '#' . $pattern . '#u', '1' ) );
+		$this->assertSame( 1, preg_match( '#' . $pattern . '#u', 'block-two' ) );
+	}
 }
