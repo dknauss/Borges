@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Internal: a PHP port of the block's `save()` markup (`includes/save-markup.php`), the groundwork for server-side bibliography writes (Phase 05 M2). It is not called yet. A parity harness (`tests/fixtures/save-parity/`, `SaveMarkupParityTest`, `src/save-parity.test.js`) checks it byte-for-byte against the JS `save()` and the real block validator.
 - The single-bibliography route (`GET …/bibliographies/<ref>`) and the `borges/export-bibliography` ability now also accept a block's `bibliographyId` in place of its index. Index requests behave as before; the export ability's output gains `bibliographyId`.
 - Internal: the PMID, PMCID, arXiv, and ISBN resolvers (route callbacks, provider constants, and NCBI cache helpers) moved from `bibliography-builder.php` into `includes/resolvers.php`, cutting the main plugin file from 2,859 to 1,931 lines. Every function and constant moved verbatim under the same name; route registration and permission callbacks stay in the main file. No behavior change.
 - The Playground demo post (release, main-build, and WordPress.org Preview blueprints) now includes PMCID (`PMC3531190`), arXiv (`arXiv:1706.03762`), and ISBN (`ISBN 978-0-14-032872-1`) samples alongside the DOI, PMID, and BibTeX examples, so the identifier types added in 1.6.0 can be tried without looking up an ID.

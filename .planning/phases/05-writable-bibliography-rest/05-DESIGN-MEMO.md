@@ -169,6 +169,26 @@ Every mutation that changes citation data or block settings must regenerate the 
 
 This splice approach is fragile for posts with many blocks. A safer alternative is to store the block index and use `str_replace` on the serialised block boundary. The correct approach needs a spike before Tier 2 ships.
 
+### Spike results (2026-09-25)
+
+**Question:** can PHP regenerate the block's saved HTML exactly enough that the editor, which re-validates `post_content` against the JS `save()` on every open, accepts it?
+
+**Answer: yes, for the current `save()`, with one prerequisite (below).** `includes/save-markup.php` ports `renderBibliographySave()` and everything it calls: style-family sorting, italic display segments, URL linking, JSON-LD, COinS, the Cite / Export panel (RIS and CSL-JSON data URIs, BibTeX/BibLaTeX links), and the block-supports wrapper (anchor, custom class, preset and custom font size, margin/padding). It is not called by anything yet.
+
+**How parity is enforced.** `tests/fixtures/save-parity/cases.json` holds block attributes. PHPUnit (`SaveMarkupParityTest`) renders each case in PHP and compares it with a committed `<case>.html`. Jest (`src/save-parity.test.js`) asserts the same committed file is **byte-identical** to the JS `save()` output, with the real `@wordpress/block-editor` supports hooks loaded, and that the full block validates in the real block registry against the current `save()` alone (no deprecations). A change to either side fails CI until both agree. Eight cases pass byte-for-byte, including adversarial ones: `'0'` strings (truthy in JS, falsy in PHP), whole-number floats, `null` page ranges, empty identifier arrays, astral characters, U+2028, NBSP-delimited and unparseable URLs, balanced parentheses in URLs, CJK export filenames, camel-case font-size slugs, and a 24-name multi-script collation mix.
+
+**What the spike surfaced:**
+
+1. **Translated strings in saved markup (prerequisite for M2).** `save()` bakes `__()` strings into post content: "Cite / Export", "Copy citation", "Copied", the link-type labels, and the "Link to publication" fallback link label. The editor gets those from the JS translation JSON of the *current user's* locale; PHP's `__()` reads the plugin's `.mo` files for the *request's* locale. So (a) today, once language packs ship, a post saved by an editor in one locale opens as invalid for an editor in another if Cite / Export is on or a citation has no title; and (b) a server write would disagree with the editor wherever JS and PHP translations differ. The seed `.po` files already differ: all 19 translate "Copy citation" as "Add citations" (apparently a stale msgmerge carry-over), which PHP would render and the editor would not. **Fix before M2 writes ship:** make saved markup locale-independent (English or data attributes in `save()`, localized by `view.js` at runtime), with a deprecation for existing markup; and correct the "Copy citation" translations.
+2. **`download` is a boolean attribute to `@wordpress/element`.** The serializer writes `download` bare and drops the filename; the port mirrors that, and `view.js` already restores filenames from `data-cite-export-filename`.
+3. **Wrapper attribute order depends on hook order.** With a custom class, `class` precedes `style`; without one, the generated and font-size classes are merged after the style hook, so `style` comes first. The validator ignores attribute order; the byte-level harness does not, so the port matches it.
+4. **ICU collation agrees across versions.** PHP's `Collator` (ICU 74) and Node's `localeCompare` (ICU 78) produce the same order for Latin, accented, Nordic, German, Cyrillic, Greek, CJK, punctuation, and digit-led names at base strength. The port requires `intl` (`Collator`, `Normalizer`); write routes must refuse (not guess) without it.
+5. **Known approximations**, documented in the code: the WHATWG URL parser is approximated for host validation; an empty JSON object in stored CSL (`{}`) round-trips as `[]` inside the JSON-LD/CSL-JSON scripts and CSL-JSON export link.
+
+**Splicing decision.** Re-serializing the whole post with `serialize_blocks( parse_blocks() )` is semantically lossless but can rewrite other blocks' comment JSON byte-for-byte (escaping), producing noisy revisions. Tier 2 should instead locate the target block's byte range with the block-delimiter grammar `WP_Block_Parser` uses (document order, matching `bibliography_builder_collect_blocks()` indexing), replace only that range with `serialize_block()` of the updated block, and verify by re-parsing that exactly one block changed before calling `wp_update_post()`.
+
+**Next (M2 proper):** fix finding 1; add the block-range locator with tests against real `parse_blocks()` in the runtime matrix; then the Tier 2 routes behind a companion-plugin flag, dry-run by default, with `If-Match`.
+
 ---
 
 ## Concurrency and ETag
@@ -225,7 +245,7 @@ This decision should be revisited once Tier 2 is prototyped and the static-save 
 |---|---|---|
 | M0 | Stable IDs (no routes) | None — implement in next feature sprint |
 | M1 | Validate + diff read extensions (Tier 1) — **done (unreleased)** | M0 complete |
-| M2 | Prototype Tier 2 add/update/delete (companion plugin) | M1 + static-save spike |
+| M2 | Prototype Tier 2 add/update/delete (companion plugin) — static-save spike **done**; locale-independent save markup is the next prerequisite | M1 + static-save spike |
 | M3 | Reformat, reorder, ETag (Tier 2 complete) | M2 validated |
 | M4 | Bulk routes (Tier 4) | M3 + rate-limiting design |
 | M5 | Abilities registration (Tier 5) | WP Abilities API stable |

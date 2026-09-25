@@ -1809,6 +1809,7 @@ add_action( 'rest_api_init', 'bibliography_builder_register_rest_routes' );
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/resolvers.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/abilities.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/review.php';
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/save-markup.php';
 add_filter( 'rest_pre_serve_request', 'bibliography_builder_rest_pre_serve_request', 10, 4 );
 
 /**
