@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Pasting a whole reference-manager `.bib` export no longer loses or misreads records:
+  - A field containing a blank line, such as a multi-paragraph abstract in a Zotero export, no longer splits its entry in two. Previously the whole record was lost and two errors were shown.
+  - `@comment` and `@preamble` blocks, and `%` comment lines outside entries (JabRef's `% Encoding:` header and `jabref-meta` footer), are ignored instead of each producing an error notice.
+  - `@string` macros now resolve, so a JabRef entry with `journal = nature` keeps its journal.
+- EndNote's BibTeX export writes its reference-type name into `type` (`type = {Journal Article}`), which became CSL `genre` and could print as "Journal Article" or "Book Section" in styles that show genre. Those names are now dropped. Genuine genres such as "Master's thesis" are kept.
+- Pasting a CSL-JSON (or other JSON) document produced a nonsense webpage citation titled "id". It is now rejected with the standard unsupported-input notice. CSL-JSON remains an export format; the README no longer lists it as pasteable.
+
+### Added
+
+- A reference-manager export corpus (`src/lib/__fixtures__/reference-manager-exports/`) with unmocked tests for Zotero BibTeX and BibLaTeX, Mendeley, EndNote, and JabRef exports and a Zotero CSL-JSON paste. The fixtures are hand-authored models of each manager's export style, to be replaced with real exports as they become available.
+
 ### Changed
 
 - The Playground demo post (release, main-build, and WordPress.org Preview blueprints) now includes PMCID (`PMC3531190`), arXiv (`arXiv:1706.03762`), and ISBN (`ISBN 978-0-14-032872-1`) samples alongside the DOI, PMID, and BibTeX examples, so the identifier types added in 1.6.0 can be tried without looking up an ID.

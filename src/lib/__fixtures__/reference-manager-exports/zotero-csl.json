@@ -1,0 +1,32 @@
+[
+	{
+		"id": "http://zotero.org/users/1234567/items/ABCD1234",
+		"type": "article-journal",
+		"container-title": "Nature",
+		"DOI": "10.1038/s41586-020-2649-2",
+		"ISSN": "1476-4687",
+		"issue": "7825",
+		"language": "en",
+		"page": "357-362",
+		"title": "Array programming with NumPy",
+		"URL": "https://www.nature.com/articles/s41586-020-2649-2",
+		"volume": "585",
+		"author": [
+			{ "family": "Harris", "given": "Charles R." },
+			{ "family": "Millman", "given": "K. Jarrod" }
+		],
+		"accessed": { "date-parts": [["2024", 3, 11]] },
+		"issued": { "date-parts": [["2020", 9]] }
+	},
+	{
+		"id": "http://zotero.org/users/1234567/items/EFGH5678",
+		"type": "book",
+		"event-place": "Chicago",
+		"ISBN": "978-0-226-45808-3",
+		"publisher": "University of Chicago Press",
+		"publisher-place": "Chicago",
+		"title": "The Structure of Scientific Revolutions",
+		"author": [{ "family": "Kuhn", "given": "Thomas S." }],
+		"issued": { "date-parts": [["1962"]] }
+	}
+]
