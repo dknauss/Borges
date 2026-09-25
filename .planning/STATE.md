@@ -41,11 +41,14 @@ ordering. In short:
 1. **CI, runtime, and Playground hygiene** (standing)
 2. **Reference-manager export corpus**: addresses the paste/import coverage gap
 3. ~~**Extract the resolvers**~~: done, unreleased (`includes/resolvers.php`)
-4. ~~**Phase 05 M0: stable entry IDs**~~: done, unreleased; M1 (Tier 1 read extensions) is next
+4. ~~**Phase 05 M0: stable entry IDs**~~ and ~~**M1 review routes**~~: done,
+   unreleased; M2 (Tier 2 writes) waits on the static-save coherence spike
 5. **First-wave official language packs**
 
 ## Last Activity
 
+- 2026-09-25: Phase 05 M1 review routes (`validate`, `duplicates`,
+  `preview`) in `includes/review.php`.
 - 2026-09-25: Demo-post samples for PMCID, arXiv, and ISBN (#89); planning
   docs moved to the post-1.6.0 priority list.
 - 2026-09-24: Released 1.6.0 (#84, #87, #88).
@@ -87,6 +90,6 @@ Three in `.planning/todos/pending/`:
 Shipped lines: 1.3.x (`v1.3.0`–`v1.3.4`), 1.4.x (`v1.4.0`–`v1.4.2`), 1.5.x
 (`v1.5.0`, `v1.5.1`), 1.6.x (`v1.6.0`). Phases 04 (Cite/Export) and 07
 (embedded identifiers) are shipped and archived. Phase 05 shipped its read-only
-Abilities cut in 1.6.0 and M0 (stable IDs) since; its writable milestones
-(M1–M4) remain behind the design memo. Phase 06 is an unplanned sketch. Future
+Abilities cut in 1.6.0, and M0 (stable IDs) and M1 (review routes) since; its
+writable milestones (M2–M4) remain behind the design memo. Phase 06 is an unplanned sketch. Future
 work is tracked against release versions, not a GSD milestone label.

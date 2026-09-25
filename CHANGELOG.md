@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Review routes for editors (Phase 05, Tier 1), all read-only and requiring `edit_post`: `GET …/bibliographies/<ref>/validate` reports per-entry CSL-JSON problems (invalid or missing data, missing title, malformed DOI, and warnings for missing author, date, or container title, or an ISBN with no valid checksum); `…/duplicates` lists likely duplicate pairs using the editor's own duplicate rules; `…/preview?style=<key>` shows each entry reformatted in another citation style next to its current text, without saving. `<ref>` is the block index or its stable `bibliographyId`. The routes live in `includes/review.php`.
 - Stable IDs (Phase 05, Tier 0). The read-only REST collection and single-bibliography routes, and the `borges/get-bibliographies` ability, now report each block's `bibliographyId`, a UUID that stays put when blocks before it are added or removed, as the future write routes will need. It is `null` for a block saved before IDs were assigned (or with an unusable value) until the post is next edited. Every citation already carried an `id`; the editor now guarantees one, unique within its block.
 
 ### Fixed

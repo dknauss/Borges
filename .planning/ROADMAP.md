@@ -401,6 +401,11 @@ payoff-per-effort order for the 1.7 line:
 4. ~~**Phase 05 M0: stable entry IDs**~~ — **done** (unreleased; design memo, Tier 0)
     - no routes and no dependencies; unblocks the M1–M3 writable milestones.
       Writable Abilities stay behind M3
+    - ~~**M1: Tier 1 review routes**~~ — **done** (unreleased):
+      `validate`, `duplicates`, and `preview?style=` under
+      `…/bibliographies/<ref>/`, `edit_post`-gated, addressable by index or
+      `bibliographyId`, in `includes/review.php`. M2 (Tier 2 entry writes,
+      companion plugin) waits on the static-save coherence spike
 5. **First-wave official language packs** — pending todo
    `2026-06-14-coordinate-first-wave-language-packs.md`
     - 1.6.0 changed several source strings, so first-wave locales (fr_FR,

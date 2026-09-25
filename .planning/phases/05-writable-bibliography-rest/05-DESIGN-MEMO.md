@@ -80,6 +80,13 @@ GET /bibliography/v1/posts/{post_id}/bibliographies/{index}/duplicates
 ```
 Returns pairs of entries that appear to be duplicates (same DOI, or same normalised title + author + year).
 
+**Status (2026-09-25): done (unreleased).** Shipped in `includes/review.php` with these changes from the sketch:
+- **Addressing.** Each route takes `{ref}`: the index, or the block's `bibliographyId` (all-digit refs are indexes; the editor only generates UUIDs). This answers open question 3 for new routes; the existing index route is unchanged.
+- **Diff is a sub-route.** `?format=diff` became `GET …/{ref}/preview?style=<key>`, because it needs `edit_post` and runs citeproc, while the existing single route is publicly readable for published posts and never formats. The style must be one of the supported `citationStyle` keys (`apa-7`, not `apa`). Blocks over the formatter's 50-item cap return 400 (open question 2 still applies to writes).
+- **Validate** reports `error`/`warning` issues per entry: the formatter's own CSL validator (`invalid-csl`), `missing-csl`, `missing-title`, `malformed-doi`, and warnings for `missing-author`, `missing-issued`, `missing-container-title` (journal, magazine, newspaper, chapter, conference paper), `invalid-isbn` (no checksum-valid ISBN), and `missing-id`.
+- **Duplicates** mirrors the editor's `citationsMatch()` in `src/lib/deduplicate.js` rather than the stricter title + author + year: same DOI, or same title with the same year, the same first author, or neither. Each pair carries its `reason`.
+- **Capability:** `edit_post` on the post for all three, as the matrix below says.
+
 ---
 
 ### Tier 2 — Entry-level mutations (post-scoped, reversible via revisions)
@@ -216,7 +223,7 @@ This decision should be revisited once Tier 2 is prototyped and the static-save 
 | Milestone | Scope | Blocker |
 |---|---|---|
 | M0 | Stable IDs (no routes) | None — implement in next feature sprint |
-| M1 | Validate + diff read extensions (Tier 1) | M0 complete |
+| M1 | Validate + diff read extensions (Tier 1) — **done (unreleased)** | M0 complete |
 | M2 | Prototype Tier 2 add/update/delete (companion plugin) | M1 + static-save spike |
 | M3 | Reformat, reorder, ETag (Tier 2 complete) | M2 validated |
 | M4 | Bulk routes (Tier 4) | M3 + rate-limiting design |
