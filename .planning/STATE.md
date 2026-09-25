@@ -1,6 +1,6 @@
 # Project State
 
-_Last reviewed: 2026-09-24._
+_Last reviewed: 2026-09-25._
 
 ## Current Focus
 
@@ -10,7 +10,10 @@ _Last reviewed: 2026-09-24._
    WordPress.org plugin page as canonical for the publicly available version.
 1. **1.6.0 shipped** PMCID, arXiv, and ISBN import, pinned BibLaTeX import,
    read-only Abilities, and the i18n catch-up (#87), after the README/metrics
-   drift fix (#84). The `[Unreleased]` changelog section is empty again.
+   drift fix (#84). `[Unreleased]` carries one change since: PMCID, arXiv,
+   and ISBN samples in the Playground demo post (#89). The release and
+   main-build demos pick it up without a release; the WordPress.org Preview
+   blueprint ships with the next deploy.
 2. **Releases since the GSD `v1.3` milestone was retired (2026-06-21):**
    - 1.4.2 (2026-06-21) — shipped Phase 07 embedded-identifier resolution (#52)
      and the cite/export E2E spec (#53).
@@ -23,28 +26,29 @@ _Last reviewed: 2026-09-24._
      rejected `writeText`.
    - 1.6.0 (2026-09-24) — PMCID/arXiv/ISBN resolvers, BibLaTeX import,
      read-only Abilities, i18n catch-up.
-3. **Active phases** are still only `05-writable-bibliography-rest` (design
-   memo; implementation deferred) and `06-ci-optimization` (unplanned strategy
-   sketch). Neither gates a release.
+3. **Active phases** are still only `05-writable-bibliography-rest` (read-only
+   Abilities shipped in 1.6.0; writable milestones deferred) and
+   `06-ci-optimization` (unplanned strategy sketch). Neither gates a release.
 4. Keep the release artifact, WordPress.org SVN output, Playground blueprints,
-   and docs aligned whenever DOI/PMID/BibTeX import behavior changes.
+   and docs aligned whenever import behavior changes for any supported input
+   (DOI, PMID, PMCID, arXiv, ISBN, BibTeX/BibLaTeX, free text).
 
 ## Current Priority Order
 
-See "Immediate next-task priorities (2026-09-24)" in `ROADMAP.md` for the full
+See "Immediate next-task priorities (2026-09-25)" in `ROADMAP.md` for the full
 ordering. In short:
 
 1. **CI, runtime, and Playground hygiene** (standing)
-2. **BibLaTeX import** — shipped in 1.6.0
-3. **Reference-manager export corpus** — addresses the paste/import coverage gap
-4. **Identifier resolvers** — PMCID, arXiv, and ISBN (Open Library) shipped in 1.6.0
-5. **Phase 05 read-only Abilities** — shipped in 1.6.0 (`includes/abilities.php`); writable abilities stay behind the memo's M0–M3
-6. **First-wave official language packs**
-
+2. **Reference-manager export corpus**: addresses the paste/import coverage gap
+3. **Extract the resolvers** from `bibliography-builder.php` into `includes/`
+4. **Phase 05 M0: stable entry IDs**: unblocks writable REST and Abilities
+5. **First-wave official language packs**
 
 ## Last Activity
 
-- 2026-09-24: Released 1.6.0 (#84, #87, release PR).
+- 2026-09-25: Demo-post samples for PMCID, arXiv, and ISBN (#89); planning
+  docs moved to the post-1.6.0 priority list.
+- 2026-09-24: Released 1.6.0 (#84, #87, #88).
 - 2026-09-24: Reconciled STATE/ROADMAP to the 1.5.1 baseline; updated the open
   documentation-drift PR (#84) against `main`.
 - 2026-08-19 → 2026-09: 1.5.1 release (#81), then #80, #82, #83, #86 on `main`.
@@ -64,9 +68,10 @@ ordering. In short:
 - **Dependabot:** #86 closed the open alerts that had an available fix. GitHub
   may still report alerts with no patched version; re-triage on the scheduled
   Dependency audit rather than tracking counts here.
-- **Coverage:** Broader browser/E2E coverage around paste/import behavior remains
-  the main quality gap, especially external metadata resolution paths and real
-  reference-manager exports.
+- **Coverage:** Real reference-manager exports remain the main paste/import
+  quality gap, now including BibLaTeX field mapping. Each external resolver
+  (DOI, PMID, PMCID, arXiv, ISBN) has a live Playground check, but those are
+  single-record happy paths against upstream services that can change.
 
 ## Pending Todos
 
@@ -80,7 +85,8 @@ Three in `.planning/todos/pending/`:
 ## Roadmap Alignment
 
 Shipped lines: 1.3.x (`v1.3.0`–`v1.3.4`), 1.4.x (`v1.4.0`–`v1.4.2`), 1.5.x
-(`v1.5.0`, `v1.5.1`), 1.6.x (`v1.6.0`). Phases 04 (Cite/Export) and 07 (embedded identifiers)
-are shipped and archived. Phase 05 is deferred behind its design memo; Phase 06
-is an unplanned sketch. Future work is tracked against release versions, not a
+(`v1.5.0`, `v1.5.1`), 1.6.x (`v1.6.0`). Phases 04 (Cite/Export) and 07
+(embedded identifiers) are shipped and archived. Phase 05 shipped its read-only
+Abilities cut in 1.6.0; its writable milestones (M0–M4) remain behind the
+design memo. Phase 06 is an unplanned sketch. Future work is tracked against release versions, not a
 GSD milestone label.
