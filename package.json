@@ -13,7 +13,7 @@
 		"lint:php": "composer lint:php",
 		"lint:i18n": "node scripts/check-i18n.js",
 		"test": "wp-scripts test-unit-js",
-		"test:js:coverage": "wp-scripts test-unit-js --runInBand --coverage --coverageReporters=clover --coverageReporters=text-summary --silent",
+		"test:js:coverage": "wp-scripts test-unit-js --runInBand --coverage --coverageReporters=lcovonly --coverageReporters=text-summary --silent",
 		"test:coordination": "node scripts/verify-sort-coordination.js",
 		"benchmark:perf": "RUN_PERF_BENCHMARK=1 wp-scripts test-unit-js --runInBand --runTestsByPath src/benchmarks/performance-benchmark.test.js",
 		"package:release": "sh ./scripts/package-release.sh",
