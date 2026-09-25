@@ -426,7 +426,7 @@ With static save and no Highwire meta tags in MVP, the PHP side is minimal:
 -   `bibliography-builder.php` — standard plugin header, calls `register_block_type()` pointing at `block.json`, enqueues editor and frontend assets.
 -   No custom database tables.
 -   Read-only REST API endpoints at `/wp-json/bibliography/v1/posts/<post_id>/bibliographies` and `/wp-json/bibliography/v1/posts/<post_id>/bibliographies/<index>` for programmatic bibliography access, including JSON, plain-text, and CSL-JSON response formats.
--   Read-only WordPress Abilities (WordPress 6.9+, unreleased): `borges/get-bibliographies`, `borges/export-bibliography`, and `borges/validate-citations` in a `bibliography` category, registered from `includes/abilities.php` on the core `wp_abilities_api_*` hooks. They reuse the REST routes' data and permission helpers, so no ability exposes more than the matching route; all are annotated `readonly` and shown in REST.
+-   Read-only WordPress Abilities (WordPress 6.9+, since 1.6.0): `borges/get-bibliographies`, `borges/export-bibliography`, and `borges/validate-citations` in a `bibliography` category, registered from `includes/abilities.php` on the core `wp_abilities_api_*` hooks. They reuse the REST routes' data and permission helpers, so no ability exposes more than the matching route; all are annotated `readonly` and shown in REST.
 -   No `render_callback`.
 -   No `wp_head` hooks.
 
