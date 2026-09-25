@@ -128,3 +128,31 @@ describe('hasEarlierDuplicate', () => {
 		expect(hasEarlierDuplicate('second', '', blocks)).toBe(false);
 	});
 });
+
+describe('stable-ids guards', () => {
+	it('treats missing or non-array citations as an empty list', () => {
+		expect(ensureStableIds({ bibliographyId: UUID })).toBeNull();
+		expect(
+			ensureStableIds({ bibliographyId: UUID, citations: 'bogus' })
+		).toBeNull();
+	});
+
+	it('passes non-object citation entries through untouched', () => {
+		const changes = ensureStableIds({
+			bibliographyId: UUID,
+			citations: [null, 'text', { csl: { title: 'A' } }],
+		});
+
+		expect(changes.citations[0]).toBeNull();
+		expect(changes.citations[1]).toBe('text');
+		expect(isStableCitationId(changes.citations[2].id)).toBe(true);
+	});
+
+	it('does not flag a block missing from the ordered list as a duplicate', () => {
+		expect(
+			hasEarlierDuplicate('absent', 'shared', [
+				{ clientId: 'first', bibliographyId: 'other' },
+			])
+		).toBe(false);
+	});
+});
