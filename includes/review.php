@@ -45,8 +45,8 @@ const BIBLIOGRAPHY_BUILDER_CONTAINER_TYPES = array(
  * An all-digit reference is an index. The editor only generates UUIDs, which
  * always contain hyphens, so a real `bibliographyId` never reads as one.
  *
- * @param array  $bibliographies Prepared bibliographies for a post.
- * @param mixed  $ref            Index or `bibliographyId`.
+ * @param array $bibliographies Prepared bibliographies for a post.
+ * @param mixed $ref            Index or `bibliographyId`.
  * @return array|null
  */
 function bibliography_builder_find_bibliography( $bibliographies, $ref ) {
