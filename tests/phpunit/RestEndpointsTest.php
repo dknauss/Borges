@@ -52,7 +52,7 @@ final class RestEndpointsTest extends TestCase {
 		bibliography_builder_register_rest_routes();
 		$routes = $GLOBALS['bibliography_builder_test_rest_routes'];
 
-		$this->assertCount( 7, $routes );
+		$this->assertCount( 10, $routes );
 		$this->assertSame( 'bibliography/v1', $routes[0]['namespace'] );
 		$this->assertSame( '/format', $routes[0]['route'] );
 		$this->assertSame( '/pmid/(?P<pmid>\d{1,8})', $routes[1]['route'] );

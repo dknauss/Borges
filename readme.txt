@@ -80,7 +80,7 @@ Yes. In the editor you can download the whole bibliography as CSL-JSON, BibTeX, 
 
 = Can I access bibliography data via API? =
 
-Yes. The plugin exposes read-only REST endpoints at `/wp-json/bibliography/v1/posts/<post_id>/bibliographies` and `/wp-json/bibliography/v1/posts/<post_id>/bibliographies/<index>`. Published posts are readable publicly; non-public posts require permission to edit the post. The single-bibliography route also supports `format=json`, `format=text`, and `format=csl-json`. Editor-only authenticated endpoints handle CSL formatting and PubMed/PMID resolution; they do not persist citations by themselves.
+Yes. The plugin exposes read-only REST endpoints at `/wp-json/bibliography/v1/posts/<post_id>/bibliographies` and `/wp-json/bibliography/v1/posts/<post_id>/bibliographies/<index>`. Published posts are readable publicly; non-public posts require permission to edit the post. The single-bibliography route also supports `format=json`, `format=text`, and `format=csl-json`. Users who can edit the post can also validate a bibliography's entries, list likely duplicates, and preview it in another citation style (`/validate`, `/duplicates`, and `/preview?style=` under the block's index or `bibliographyId`); none of these saves anything. Editor-only authenticated endpoints handle CSL formatting and PubMed/PMID resolution; they do not persist citations by themselves.
 
 = Does the Borges Bibliography Builder work on WordPress Multisite? =
 
