@@ -416,9 +416,15 @@
 							],
 							"issued": {
 								"date-parts": [[2020.0, 1.0]]
-							}
+							},
+							"custom": {},
+							"note-map": {
+								"0": "first",
+								"1": "second"
+							},
+							"editor": [{}]
 						},
-						"formattedText": "Zero. 0. See https://en.wikipedia.org/wiki/Foo_(bar)) and https://user@/nohost and https://ok.example/a tail and http://%zz.example/ now."
+						"formattedText": "Zero. 0. See https://en.wikipedia.org/wiki/Foo_(bar)) and https://user@/nohost and https://ok.example/a tail and http://%zz.example/ now. Also https://[dead] and https://[::1]/local and http://[2001:db8::1]:8080/p."
 					},
 					{
 						"id": "astral",

@@ -41,6 +41,49 @@ const BIBLIOGRAPHY_BUILDER_PAGE_RANGE_SEPARATOR = '/[' . BIBLIOGRAPHY_BUILDER_JS
 	. BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ']*/u';
 
 /**
+ * Decode a block's attribute JSON for bibliography_builder_render_save_markup().
+ *
+ * `parse_blocks()` decodes attributes into associative arrays, which turns an
+ * empty JSON object into `[]` and `{"0": …}` into a list. The CSL-JSON script
+ * and export links re-serialize stored CSL, so those would no longer match
+ * the editor's `JSON.stringify()`. This decodes objects into arrays except
+ * where an array cannot represent them, which stay `stdClass`.
+ *
+ * @param string $json Block attribute JSON.
+ * @return array|null Attributes, or null when the JSON is not an object.
+ */
+function bibliography_builder_decode_save_attributes( $json ) {
+	$decoded = json_decode( (string) $json );
+
+	return $decoded instanceof stdClass ? bibliography_builder_normalize_save_json( $decoded ) : null;
+}
+
+/**
+ * Convert a `json_decode()` object tree as bibliography_builder_decode_save_attributes()
+ * describes.
+ *
+ * @param mixed $value Decoded value.
+ * @return mixed
+ */
+function bibliography_builder_normalize_save_json( $value ) {
+	if ( is_array( $value ) ) {
+		return array_map( 'bibliography_builder_normalize_save_json', $value );
+	}
+
+	if ( ! $value instanceof stdClass ) {
+		return $value;
+	}
+
+	$properties = array_map( 'bibliography_builder_normalize_save_json', get_object_vars( $value ) );
+
+	if ( array() === $properties || bibliography_builder_is_list_array( $properties ) ) {
+		return (object) $properties;
+	}
+
+	return $properties;
+}
+
+/**
  * Whether this PHP can render save markup: sorting needs ICU collation and
  * export filenames need Unicode normalization, exactly as the browser has.
  *
@@ -87,6 +130,10 @@ function bibliography_builder_js_string( $value ) {
 		return bibliography_builder_js_number( $value );
 	}
 
+	if ( is_object( $value ) ) {
+		return '[object Object]';
+	}
+
 	if ( is_array( $value ) ) {
 		// String([a, b]) joins with commas; objects never reach here in practice.
 		return bibliography_builder_is_list_array( $value )
@@ -130,8 +177,9 @@ function bibliography_builder_js_number( $value ) {
  * Written out rather than using `json_encode()` because PHP differs from
  * JavaScript on whole-number floats (`1.0`) and indentation width.
  *
- * Known limit: an empty JSON object (`{}`) decodes to an empty PHP array and
- * is written back as `[]`.
+ * JSON objects that a PHP array cannot represent faithfully (empty ones, and
+ * ones whose keys look like list indexes) must arrive as `stdClass`; see
+ * bibliography_builder_decode_save_attributes().
  *
  * @param mixed    $value  Value.
  * @param int|null $indent Spaces per level, or null for compact output.
@@ -164,11 +212,18 @@ function bibliography_builder_json_stringify( $value, $indent = null, $depth = 0
 		return is_string( $encoded ) ? $encoded : '""';
 	}
 
-	if ( ! is_array( $value ) ) {
-		return 'null';
-	}
+	if ( $value instanceof stdClass ) {
+		$value   = get_object_vars( $value );
+		$is_list = false;
 
-	$is_list = bibliography_builder_is_list_array( $value );
+		if ( array() === $value ) {
+			return '{}';
+		}
+	} elseif ( ! is_array( $value ) ) {
+		return 'null';
+	} else {
+		$is_list = bibliography_builder_is_list_array( $value );
+	}
 
 	if ( array() === $value ) {
 		return '[]';
@@ -939,7 +994,13 @@ function bibliography_builder_save_is_linkable_url( $candidate ) {
 	$host_port = false === $at ? $authority : substr( $authority, $at + 1 );
 
 	if ( '' !== $host_port && '[' === $host_port[0] ) {
-		return 1 === preg_match( '/^\[[0-9A-Fa-f:.]+\](?::\d*)?$/', $host_port );
+		if ( 1 !== preg_match( '/^\[([^\]]*)\](?::(\d*))?$/D', $host_port, $ipv6 ) ) {
+			return false;
+		}
+
+		$valid_port = ! isset( $ipv6[2] ) || '' === $ipv6[2] || (int) $ipv6[2] <= 65535;
+
+		return $valid_port && false !== filter_var( $ipv6[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 );
 	}
 
 	$colon = strpos( $host_port, ':' );

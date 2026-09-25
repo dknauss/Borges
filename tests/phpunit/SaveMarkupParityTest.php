@@ -14,11 +14,13 @@ final class SaveMarkupParityTest extends TestCase {
 	private const DIR = __DIR__ . '/../fixtures/save-parity';
 
 	public static function cases(): array {
-		$data  = json_decode( (string) file_get_contents( self::DIR . '/cases.json' ), true );
+		$data  = json_decode( (string) file_get_contents( self::DIR . '/cases.json' ) );
 		$cases = array();
 
-		foreach ( $data['cases'] as $case ) {
-			$cases[ $case['name'] ] = array( $case['name'], $case['attributes'] );
+		foreach ( $data->cases as $case ) {
+			// Decode attributes the way a write route must: keeping JSON objects
+			// an array cannot represent (empty or list-like keys) as objects.
+			$cases[ $case->name ] = array( $case->name, bibliography_builder_normalize_save_json( $case->attributes ) );
 		}
 
 		return $cases;
@@ -40,5 +42,22 @@ final class SaveMarkupParityTest extends TestCase {
 
 		$this->assertFileExists( $path );
 		$this->assertSame( rtrim( (string) file_get_contents( $path ), "\n" ), $markup );
+	}
+
+	public function test_decoder_keeps_objects_an_array_cannot_represent(): void {
+		$attributes = bibliography_builder_decode_save_attributes( '{"a":{},"b":{"0":"x"},"c":{"k":{}},"d":[{}],"e":[]}' );
+
+		$this->assertSame( '{"a":{},"b":{"0":"x"},"c":{"k":{}},"d":[{}],"e":[]}', bibliography_builder_json_stringify( $attributes ) );
+		$this->assertIsArray( $attributes['c'] );
+		$this->assertNull( bibliography_builder_decode_save_attributes( '[1]' ) );
+		$this->assertNull( bibliography_builder_decode_save_attributes( 'not json' ) );
+	}
+
+	public function test_bracketed_hosts_must_be_valid_ipv6(): void {
+		$this->assertTrue( bibliography_builder_save_is_linkable_url( 'https://[::1]/x' ) );
+		$this->assertTrue( bibliography_builder_save_is_linkable_url( 'http://[2001:db8::1]:8080' ) );
+		$this->assertFalse( bibliography_builder_save_is_linkable_url( 'https://[dead]' ) );
+		$this->assertFalse( bibliography_builder_save_is_linkable_url( 'https://[::1]:99999' ) );
+		$this->assertFalse( bibliography_builder_save_is_linkable_url( 'https://[bad' ) );
 	}
 }
