@@ -375,35 +375,43 @@ Current operational note (2026-05-04):
 -   Post-launch cleanup should keep GitHub README, WordPress.org `readme.txt`,
     SPEC, release assets, and SVN output aligned.
 
-## Immediate next-task priorities (2026-09-24)
+## Immediate next-task priorities (2026-09-25)
 
-Replaces the 2026-05-11 list, whose feature item (frontend Cite/Export) shipped
-in 1.4.0. Suggested ordering for a 1.6.0 cut, in rough payoff-per-effort order:
+Replaces the 2026-09-24 list, whose feature items (BibLaTeX import, PMCID,
+arXiv, and ISBN resolvers, read-only Abilities) all shipped in 1.6.0. Rough
+payoff-per-effort order for the 1.7 line:
 
 1. **Keep CI, runtime, and Playground hygiene green** (standing)
     - release-package output, WordPress.org artifact alignment, citeproc-php
-      PHP deprecations, runtime smoke lanes, and representative DOI / PMID /
-      BibTeX / mixed Playground imports
-2. **BibLaTeX import** (Export backlog item 6) — **shipped in 1.6.0**
-    - citation-js already parsed BibLaTeX; the work was pinning it with real
-      (unmocked) tests and fixing `langid` → `lang` and dropped arXiv eprints
-3. **Reference-manager export corpus**
-    - pending todo `2026-06-23-test-reference-manager-exports.md`; targets the
-      paste/import coverage gap named in STATE.md
-4. ~~**PMCID resolver**~~, ~~**arXiv**~~, and ~~**ISBN**~~ (Open Library) — all shipped in 1.6.0
-    - PMCID reuses the PMID REST proxy pattern; arXiv is the highest-value new
-      source; ISBN needs a provider/terms decision first (see identifier table)
-5. **Phase 05 read-only Abilities** — **shipped in 1.6.0** (`includes/abilities.php`)
-    - re-check the design memo's "until the API stabilises in WP core" gate
-      against current core; a read-only first cut
-      (`borges/get-bibliographies`, `borges/export-bibliography`,
-      `borges/validate-citations`) avoids the static-output write problem
-6. **First-wave official language packs** — pending todo
+      PHP deprecations, runtime smoke lanes, and the live Playground resolver
+      checks (DOI, PMID, PMCID, arXiv, ISBN, Abilities)
+2. **Reference-manager export corpus** — pending todo
+   `2026-06-23-test-reference-manager-exports.md`
+    - the main quality gap named in STATE.md, widened by 1.6.0: BibLaTeX field
+      and entry-type mapping now comes straight from citation-js, and real
+      Zotero, Mendeley, EndNote, and JabRef exports each carry their own quirks
+    - needs a few genuine exports from the owner's libraries; hand-authored
+      approximations can seed the corpus but should be labeled as such
+3. **Extract the resolvers from the root plugin file** — pending todo
+   `2026-06-17-research-benefits-of-a-leaner-root-plugin-file.md`
+    - `bibliography-builder.php` grew from 2,070 to 2,859 lines in 1.6.0; the
+      NCBI, arXiv, ISBN, and shared remote-fetch code is a contiguous run of
+      roughly 800 lines, plus the NCBI cache-key helpers further up
+    - `includes/abilities.php` already proved the `includes/` loading, PHPCS,
+      Psalm, and coverage wiring, so a behavior-neutral move to
+      `includes/resolvers.php` under the existing PHPUnit suite is low-risk
+4. **Phase 05 M0: stable entry IDs** (design memo, Tier 0)
+    - no routes and no dependencies; unblocks the M1–M3 writable milestones.
+      Writable Abilities stay behind M3
+5. **First-wave official language packs** — pending todo
    `2026-06-14-coordinate-first-wave-language-packs.md`
+    - 1.6.0 changed several source strings, so first-wave locales (fr_FR,
+      de_DE, es_ES, pt_BR, ja) should be pushed on translate.wordpress.org
+      against the current Stable strings. Human-translator work, not code
 
 Still parked: Phase 06 CI optimization (CI job timeouts landed separately in
-#80), leaner root plugin file research, Option B child blocks, and niche media
-identifiers.
+#80), Option B child blocks, the remaining "Evaluate" identifiers (ISSN, URL,
+OCLC/WorldCat, ORCID enrichment), and niche media identifiers.
 
 ## Code quality backlog
 
