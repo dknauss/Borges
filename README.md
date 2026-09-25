@@ -73,7 +73,7 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 
 | Metric | Value |
 |---|---|
-| First-party PHP | ~1,954 LOC main plugin file; ~4,033 LOC total with `includes/` |
+| First-party PHP | ~1,942 LOC main plugin file; ~4,280 LOC total with `includes/` |
 | JS source (`src/`) | ~9,760 LOC |
 | Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, enqueued only when the block is present |
 | Installed footprint | ~1.9 MB (`vendor/` ~792 KB, translations 724 KB, build assets ~324 KB) |
@@ -187,10 +187,10 @@ Returns every Borges Bibliography block found in the post, including nested bloc
 ### Get one bibliography
 
 ```http
-GET /wp-json/bibliography/v1/posts/<post_id>/bibliographies/<index>
+GET /wp-json/bibliography/v1/posts/<post_id>/bibliographies/<ref>
 ```
 
-`<index>` is zero-based within the post. Supported formats:
+`<ref>` is the block's zero-based index within the post, or its `bibliographyId`. The ID keeps pointing at the same block when others are added or removed, so prefer it where you have it. Supported formats:
 
 - `?format=json` — normalized bibliography block data. This is the default.
 - `?format=text` — one visible citation per line, stripped to plain text.
@@ -229,15 +229,18 @@ The editor-only ISBN resolver accepts `GET /wp-json/bibliography/v1/isbn/<isbn>`
 
 ## WordPress Abilities
 
-On WordPress 6.9 and later, Borges registers three read-only abilities with the core Abilities API, in a `bibliography` category. Automation tools and AI agents can discover them and run them through `/wp-json/wp-abilities/v1`. On earlier WordPress versions nothing is registered and nothing else changes.
+On WordPress 6.9 and later, Borges registers six read-only abilities with the core Abilities API, in a `bibliography` category. Automation tools and AI agents can discover them and run them through `/wp-json/wp-abilities/v1`. On earlier WordPress versions nothing is registered and nothing else changes.
 
 | Ability | Input | Returns | Permission |
 |---|---|---|---|
 | `borges/get-bibliographies` | `post_id` | Every bibliography block in the post (same shape as the list route above) | Same as the public read routes |
-| `borges/export-bibliography` | `post_id`, `index` (default `0`), `format` (`csl-json` or `text`) | The block as a CSL-JSON array or plain text | Same as the public read routes |
+| `borges/export-bibliography` | `post_id`, `index` (default `0`) or `bibliography_id`, `format` (`csl-json` or `text`) | The block as a CSL-JSON array or plain text | Same as the public read routes |
 | `borges/validate-citations` | `items`: 1–50 CSL-JSON records | Per-item validity, the rejection reason, or the sanitized record | `edit_posts` |
+| `borges/validate-bibliography` | `post_id`, `index` or `bibliography_id` | Per-entry errors and warnings (same as the `validate` route) | `edit_post` on the post |
+| `borges/find-duplicate-citations` | `post_id`, `index` or `bibliography_id` | Likely duplicate pairs with a reason (same as the `duplicates` route) | `edit_post` on the post |
+| `borges/preview-bibliography-style` | `post_id`, `index` or `bibliography_id`, `style` | Each entry in another style next to its current text (same as the `preview` route) | `edit_post` on the post |
 
-All three are annotated `readonly`, non-destructive, and idempotent. None of them writes post content or any other stored data. Writable abilities remain a separate, later design decision; see the Phase 05 memo.
+`bibliography_id` takes precedence over `index` when both are given. All six are annotated `readonly`, non-destructive, and idempotent. None of them writes post content or any other stored data. Writable abilities remain a separate, later design decision; see the Phase 05 memo.
 
 ## External Services
 

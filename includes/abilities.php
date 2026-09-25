@@ -86,6 +86,41 @@ function bibliography_builder_register_abilities() {
 		'minimum'     => 1,
 		'description' => __( 'ID of the post that contains the bibliography blocks.', 'borges-bibliography-builder' ),
 	);
+	$block_schema   = array(
+		'index'           => array(
+			'type'        => 'integer',
+			'minimum'     => 0,
+			'default'     => 0,
+			'description' => __(
+				'Zero-based position of the bibliography block within the post.',
+				'borges-bibliography-builder'
+			),
+		),
+		'bibliography_id' => array(
+			'type'        => 'string',
+			'pattern'     => '^' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . '$',
+			'description' => __(
+				"The block's stable bibliographyId. Takes precedence over index when given.",
+				'borges-bibliography-builder'
+			),
+		),
+	);
+	$review_input   = array(
+		'type'                 => 'object',
+		'properties'           => array_merge( array( 'post_id' => $post_id_schema ), $block_schema ),
+		'required'             => array( 'post_id' ),
+		'additionalProperties' => false,
+	);
+	$review_base    = array(
+		'postId'         => array( 'type' => 'integer' ),
+		'index'          => array( 'type' => 'integer' ),
+		'bibliographyId' => array( 'type' => array( 'string', 'null' ) ),
+		'entryCount'     => array( 'type' => 'integer' ),
+	);
+	$entry_list     = array(
+		'type'  => 'array',
+		'items' => array( 'type' => 'object' ),
+	);
 
 	wp_register_ability(
 		'borges/get-bibliographies',
@@ -131,23 +166,17 @@ function bibliography_builder_register_abilities() {
 			'category'            => BIBLIOGRAPHY_BUILDER_ABILITY_CATEGORY,
 			'input_schema'        => array(
 				'type'                 => 'object',
-				'properties'           => array(
-					'post_id' => $post_id_schema,
-					'index'   => array(
-						'type'        => 'integer',
-						'minimum'     => 0,
-						'default'     => 0,
-						'description' => __(
-							'Zero-based position of the bibliography block within the post.',
-							'borges-bibliography-builder'
+				'properties'           => array_merge(
+					array( 'post_id' => $post_id_schema ),
+					$block_schema,
+					array(
+						'format' => array(
+							'type'        => 'string',
+							'enum'        => array( 'csl-json', 'text' ),
+							'default'     => 'csl-json',
+							'description' => __( 'Export format: csl-json or text.', 'borges-bibliography-builder' ),
 						),
-					),
-					'format'  => array(
-						'type'        => 'string',
-						'enum'        => array( 'csl-json', 'text' ),
-						'default'     => 'csl-json',
-						'description' => __( 'Export format: csl-json or text.', 'borges-bibliography-builder' ),
-					),
+					)
 				),
 				'required'             => array( 'post_id' ),
 				'additionalProperties' => false,
@@ -155,13 +184,14 @@ function bibliography_builder_register_abilities() {
 			'output_schema'       => array(
 				'type'       => 'object',
 				'properties' => array(
-					'postId'  => array( 'type' => 'integer' ),
-					'index'   => array( 'type' => 'integer' ),
-					'format'  => array(
+					'postId'         => array( 'type' => 'integer' ),
+					'index'          => array( 'type' => 'integer' ),
+					'bibliographyId' => array( 'type' => array( 'string', 'null' ) ),
+					'format'         => array(
 						'type' => 'string',
 						'enum' => array( 'csl-json', 'text' ),
 					),
-					'content' => array( 'type' => array( 'array', 'string' ) ),
+					'content'        => array( 'type' => array( 'array', 'string' ) ),
 				),
 			),
 			'execute_callback'    => 'bibliography_builder_ability_export_bibliography',
@@ -213,6 +243,89 @@ function bibliography_builder_register_abilities() {
 			),
 			'execute_callback'    => 'bibliography_builder_ability_validate_citations',
 			'permission_callback' => 'bibliography_builder_ability_can_validate',
+			'meta'                => bibliography_builder_get_readonly_ability_meta(),
+		)
+	);
+
+	wp_register_ability(
+		'borges/validate-bibliography',
+		array(
+			'label'               => __( 'Validate a bibliography', 'borges-bibliography-builder' ),
+			'description'         => __(
+				'Reports errors and warnings for each entry in one Borges bibliography. Saves nothing.',
+				'borges-bibliography-builder'
+			),
+			'category'            => BIBLIOGRAPHY_BUILDER_ABILITY_CATEGORY,
+			'input_schema'        => $review_input,
+			'output_schema'       => array(
+				'type'       => 'object',
+				'properties' => array_merge(
+					$review_base,
+					array(
+						'valid'        => array( 'type' => 'boolean' ),
+						'errorCount'   => array( 'type' => 'integer' ),
+						'warningCount' => array( 'type' => 'integer' ),
+						'entries'      => $entry_list,
+					)
+				),
+			),
+			'execute_callback'    => 'bibliography_builder_ability_validate_bibliography',
+			'permission_callback' => 'bibliography_builder_ability_can_review_post',
+			'meta'                => bibliography_builder_get_readonly_ability_meta(),
+		)
+	);
+
+	wp_register_ability(
+		'borges/find-duplicate-citations',
+		array(
+			'label'               => __( 'Find duplicate citations', 'borges-bibliography-builder' ),
+			'description'         => __(
+				'Lists pairs of entries in one Borges bibliography that look like the same work. Saves nothing.',
+				'borges-bibliography-builder'
+			),
+			'category'            => BIBLIOGRAPHY_BUILDER_ABILITY_CATEGORY,
+			'input_schema'        => $review_input,
+			'output_schema'       => array(
+				'type'       => 'object',
+				'properties' => array_merge( $review_base, array( 'pairs' => $entry_list ) ),
+			),
+			'execute_callback'    => 'bibliography_builder_ability_find_duplicate_citations',
+			'permission_callback' => 'bibliography_builder_ability_can_review_post',
+			'meta'                => bibliography_builder_get_readonly_ability_meta(),
+		)
+	);
+
+	$preview_input                        = $review_input;
+	$preview_input['properties']['style'] = array(
+		'type'        => 'string',
+		'enum'        => array_keys( bibliography_builder_get_formatter_style_definitions() ),
+		'description' => __( 'Citation style to preview.', 'borges-bibliography-builder' ),
+	);
+	$preview_input['required'][]          = 'style';
+
+	wp_register_ability(
+		'borges/preview-bibliography-style',
+		array(
+			'label'               => __( 'Preview a bibliography in another style', 'borges-bibliography-builder' ),
+			'description'         => __(
+				'Shows one Borges bibliography formatted in another citation style. Saves nothing.',
+				'borges-bibliography-builder'
+			),
+			'category'            => BIBLIOGRAPHY_BUILDER_ABILITY_CATEGORY,
+			'input_schema'        => $preview_input,
+			'output_schema'       => array(
+				'type'       => 'object',
+				'properties' => array_merge(
+					$review_base,
+					array(
+						'currentStyle' => array( 'type' => 'string' ),
+						'style'        => array( 'type' => 'string' ),
+						'entries'      => $entry_list,
+					)
+				),
+			),
+			'execute_callback'    => 'bibliography_builder_ability_preview_bibliography_style',
+			'permission_callback' => 'bibliography_builder_ability_can_review_post',
 			'meta'                => bibliography_builder_get_readonly_ability_meta(),
 		)
 	);
@@ -282,26 +395,104 @@ function bibliography_builder_ability_get_bibliographies( $input ) {
  * @return array|WP_Error
  */
 function bibliography_builder_ability_export_bibliography( $input ) {
-	$post_id        = absint( $input['post_id'] );
-	$index          = isset( $input['index'] ) ? absint( $input['index'] ) : 0;
-	$format         = isset( $input['format'] ) && 'text' === $input['format'] ? 'text' : 'csl-json';
-	$bibliographies = bibliography_builder_get_bibliographies_for_post( get_post( $post_id ) );
+	$post_id      = absint( $input['post_id'] );
+	$format       = isset( $input['format'] ) && 'text' === $input['format'] ? 'text' : 'csl-json';
+	$bibliography = bibliography_builder_resolve_bibliography(
+		$post_id,
+		bibliography_builder_ability_block_ref( $input )
+	);
 
-	if ( ! isset( $bibliographies[ $index ] ) ) {
-		return new WP_Error(
-			'bibliography_builder_not_found',
-			__( 'Bibliography block not found for the requested index.', 'borges-bibliography-builder' ),
-			array( 'status' => 404 )
-		);
+	if ( is_wp_error( $bibliography ) ) {
+		return $bibliography;
 	}
 
 	return array(
-		'postId'  => $post_id,
-		'index'   => $index,
-		'format'  => $format,
-		'content' => 'text' === $format
-			? bibliography_builder_build_plain_text( $bibliographies[ $index ] )
-			: bibliography_builder_build_csl_json( $bibliographies[ $index ] ),
+		'postId'         => $post_id,
+		'index'          => $bibliography['index'],
+		'bibliographyId' => $bibliography['bibliographyId'],
+		'format'         => $format,
+		'content'        => 'text' === $format
+			? bibliography_builder_build_plain_text( $bibliography )
+			: bibliography_builder_build_csl_json( $bibliography ),
+	);
+}
+
+/**
+ * The block an ability input names: `bibliography_id` when given, else `index`.
+ *
+ * @param array $input Validated ability input.
+ * @return int|string
+ */
+function bibliography_builder_ability_block_ref( $input ) {
+	$id = isset( $input['bibliography_id'] ) ? $input['bibliography_id'] : null;
+
+	if ( is_string( $id ) && '' !== $id ) {
+		return $id;
+	}
+
+	return isset( $input['index'] ) ? absint( $input['index'] ) : 0;
+}
+
+/**
+ * Permission callback for the review abilities: `edit_post` on the post,
+ * as for the matching review routes.
+ *
+ * @param mixed $input Ability input.
+ * @return true|WP_Error
+ */
+function bibliography_builder_ability_can_review_post( $input = null ) {
+	$post_id = is_array( $input ) && isset( $input['post_id'] ) ? $input['post_id'] : 0;
+
+	return bibliography_builder_can_review_post( $post_id );
+}
+
+/**
+ * Execute callback for `borges/validate-bibliography`.
+ *
+ * @param array $input Validated ability input.
+ * @return array|WP_Error
+ */
+function bibliography_builder_ability_validate_bibliography( $input ) {
+	return bibliography_builder_get_validation_report(
+		$input['post_id'],
+		bibliography_builder_ability_block_ref( $input )
+	);
+}
+
+/**
+ * Execute callback for `borges/find-duplicate-citations`.
+ *
+ * @param array $input Validated ability input.
+ * @return array|WP_Error
+ */
+function bibliography_builder_ability_find_duplicate_citations( $input ) {
+	return bibliography_builder_get_duplicate_report(
+		$input['post_id'],
+		bibliography_builder_ability_block_ref( $input )
+	);
+}
+
+/**
+ * Execute callback for `borges/preview-bibliography-style`.
+ *
+ * @param array $input Validated ability input.
+ * @return array|WP_Error
+ */
+function bibliography_builder_ability_preview_bibliography_style( $input ) {
+	$style = isset( $input['style'] ) ? (string) $input['style'] : '';
+
+	if ( ! array_key_exists( $style, bibliography_builder_get_formatter_style_definitions() ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_style',
+			__( 'Unsupported citation style.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	return bibliography_builder_get_style_preview(
+		$input['post_id'],
+		bibliography_builder_ability_block_ref( $input ),
+		$style
 	);
 }
 

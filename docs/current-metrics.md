@@ -5,14 +5,14 @@ Each source metric carries the exact command used to re-derive it. Package-size 
 identify their measurement or release-artifact source. Re-run the relevant command and update the
 number **in the same commit** whenever the underlying quantity changes.
 
-Source and LOC figures last verified: **2026-09-25** against the review-routes (Phase 05 M1) branch, based on `main` at `867d4f9`. The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.6.0 release asset.
+Source and LOC figures last verified: **2026-09-25** against the review-abilities (Phase 05 M1 follow-up) branch, based on `main` at `f92c3b3`. The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.6.0 release asset.
 
 ## Lines of code
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **1,954** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **4,033** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **1,942** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **4,280** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
 | JS source (`src/`, excl. `*.test.js`) | **9,760** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
@@ -40,7 +40,7 @@ otherwise `package:release` (and the `du -sh build` row below) fails with `canno
 | `vendor/` — citeproc-php engine + `seboettg/collection` + `myclabs/php-enum` + curated `citation-style-language/styles` & `/locales`, pruned | **792 KB** | `du -sh output/release/borges-bibliography-builder/vendor` (after `npm run package:release`) |
 | `languages/` — seed PO/MO/JSON translations | **724 KB** | `du -sh languages` |
 | `build/` — editor + frontend assets | **324 KB** | `du -sh build` |
-| PHP + `block.json` + `readme.txt` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` | **~170 KB** | `cat *.php includes/*.php block.json readme.txt LICENSE THIRD-PARTY-NOTICES.txt \| wc -c` |
+| PHP + `block.json` + `readme.txt` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` | **~180 KB** | `cat *.php includes/*.php block.json readme.txt LICENSE THIRD-PARTY-NOTICES.txt \| wc -c` |
 | **Total installed** | **~1.9 MB** | `du -sh output/release/borges-bibliography-builder` (after `npm run package:release`) |
 | Distributed ZIP (v1.6.0 release) | **~488 KB** (499,681 bytes) | GitHub release asset metadata for [v1.6.0](https://github.com/dknauss/Borges/releases/tag/v1.6.0) |
 

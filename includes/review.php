@@ -40,6 +40,20 @@ const BIBLIOGRAPHY_BUILDER_CONTAINER_TYPES = array(
 );
 
 /**
+ * Whether a value is a usable `{ref}`: an index or a stable block ID.
+ *
+ * @param mixed $value Raw value.
+ * @return bool
+ */
+function bibliography_builder_is_block_ref( $value ) {
+	if ( is_int( $value ) ) {
+		return $value >= 0;
+	}
+
+	return is_string( $value ) && 1 === preg_match( '/^' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . '$/', $value );
+}
+
+/**
  * Find one bibliography by index or stable `bibliographyId`.
  *
  * An all-digit reference is an index. The editor only generates UUIDs, which
@@ -68,16 +82,16 @@ function bibliography_builder_find_bibliography( $bibliographies, $ref ) {
 }
 
 /**
- * Load the bibliography a review request names, or a 404.
+ * Load one bibliography in a post by index or `bibliographyId`, or a 404.
  *
- * @param WP_REST_Request $request REST request.
+ * @param int   $post_id Post ID. The caller has already checked it exists.
+ * @param mixed $ref     Index or `bibliographyId`.
  * @return array|WP_Error
  */
-function bibliography_builder_get_requested_bibliography( WP_REST_Request $request ) {
-	$post         = get_post( absint( $request['post_id'] ) );
+function bibliography_builder_resolve_bibliography( $post_id, $ref ) {
 	$bibliography = bibliography_builder_find_bibliography(
-		bibliography_builder_get_bibliographies_for_post( $post ),
-		$request['ref']
+		bibliography_builder_get_bibliographies_for_post( get_post( absint( $post_id ) ) ),
+		$ref
 	);
 
 	if ( null === $bibliography ) {
@@ -94,13 +108,13 @@ function bibliography_builder_get_requested_bibliography( WP_REST_Request $reque
 /**
  * Fields shared by every review response.
  *
- * @param WP_REST_Request $request      REST request.
- * @param array           $bibliography Bibliography record.
+ * @param int   $post_id      Post ID.
+ * @param array $bibliography Bibliography record.
  * @return array
  */
-function bibliography_builder_review_response_base( WP_REST_Request $request, $bibliography ) {
+function bibliography_builder_review_response_base( $post_id, $bibliography ) {
 	return array(
-		'postId'         => absint( $request['post_id'] ),
+		'postId'         => absint( $post_id ),
 		'index'          => $bibliography['index'],
 		'bibliographyId' => $bibliography['bibliographyId'],
 		'entryCount'     => $bibliography['entryCount'],
@@ -122,15 +136,18 @@ function bibliography_builder_get_citation_id( $citation ) {
 }
 
 /**
- * Permission callback for the review routes: `edit_post` on the post.
+ * Whether the current user may review a post's bibliographies: `edit_post`.
  *
- * @param WP_REST_Request $request REST request.
+ * Shared by the review routes and the matching abilities.
+ *
+ * @param mixed $post_id Post ID.
  * @return true|WP_Error
  */
-function bibliography_builder_rest_review_permissions_check( WP_REST_Request $request ) {
-	$post = get_post( absint( $request['post_id'] ) );
+function bibliography_builder_can_review_post( $post_id ) {
+	$post_id = absint( $post_id );
+	$post    = 0 < $post_id ? get_post( $post_id ) : null;
 
-	if ( ! $post ) {
+	if ( ! is_object( $post ) ) {
 		return new WP_Error(
 			'bibliography_builder_post_not_found',
 			__( 'Post not found.', 'borges-bibliography-builder' ),
@@ -147,6 +164,16 @@ function bibliography_builder_rest_review_permissions_check( WP_REST_Request $re
 		__( 'Sorry, you are not allowed to review this bibliography.', 'borges-bibliography-builder' ),
 		array( 'status' => 403 )
 	);
+}
+
+/**
+ * Permission callback for the review routes.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return true|WP_Error
+ */
+function bibliography_builder_rest_review_permissions_check( WP_REST_Request $request ) {
+	return bibliography_builder_can_review_post( $request['post_id'] );
 }
 
 /**
@@ -351,13 +378,14 @@ function bibliography_builder_validate_citation( $citation ) {
 }
 
 /**
- * REST callback: validate every entry in one bibliography.
+ * Validate every entry in one bibliography.
  *
- * @param WP_REST_Request $request REST request.
- * @return WP_REST_Response|WP_Error
+ * @param int   $post_id Post ID.
+ * @param mixed $ref     Index or `bibliographyId`.
+ * @return array|WP_Error
  */
-function bibliography_builder_rest_validate_bibliography( WP_REST_Request $request ) {
-	$bibliography = bibliography_builder_get_requested_bibliography( $request );
+function bibliography_builder_get_validation_report( $post_id, $ref ) {
+	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref );
 
 	if ( is_wp_error( $bibliography ) ) {
 		return $bibliography;
@@ -388,15 +416,13 @@ function bibliography_builder_rest_validate_bibliography( WP_REST_Request $reque
 		);
 	}
 
-	return rest_ensure_response(
-		array_merge(
-			bibliography_builder_review_response_base( $request, $bibliography ),
-			array(
-				'valid'        => 0 === $error_count,
-				'errorCount'   => $error_count,
-				'warningCount' => $warning_count,
-				'entries'      => $entries,
-			)
+	return array_merge(
+		bibliography_builder_review_response_base( $post_id, $bibliography ),
+		array(
+			'valid'        => 0 === $error_count,
+			'errorCount'   => $error_count,
+			'warningCount' => $warning_count,
+			'entries'      => $entries,
 		)
 	);
 }
@@ -480,13 +506,14 @@ function bibliography_builder_get_duplicate_reason( $first, $second ) {
 }
 
 /**
- * REST callback: list likely duplicate pairs in one bibliography.
+ * List likely duplicate pairs in one bibliography.
  *
- * @param WP_REST_Request $request REST request.
- * @return WP_REST_Response|WP_Error
+ * @param int   $post_id Post ID.
+ * @param mixed $ref     Index or `bibliographyId`.
+ * @return array|WP_Error
  */
-function bibliography_builder_rest_get_bibliography_duplicates( WP_REST_Request $request ) {
-	$bibliography = bibliography_builder_get_requested_bibliography( $request );
+function bibliography_builder_get_duplicate_report( $post_id, $ref ) {
+	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref );
 
 	if ( is_wp_error( $bibliography ) ) {
 		return $bibliography;
@@ -519,25 +546,25 @@ function bibliography_builder_rest_get_bibliography_duplicates( WP_REST_Request 
 		}
 	}
 
-	return rest_ensure_response(
-		array_merge(
-			bibliography_builder_review_response_base( $request, $bibliography ),
-			array( 'pairs' => $pairs )
-		)
+	return array_merge(
+		bibliography_builder_review_response_base( $post_id, $bibliography ),
+		array( 'pairs' => $pairs )
 	);
 }
 
 /**
- * REST callback: preview one bibliography reformatted in another style.
+ * Preview one bibliography reformatted in another style.
  *
  * Nothing is saved. Entries whose stored CSL-JSON the formatter rejects get a
  * null preview and the reason, and the rest are still formatted.
  *
- * @param WP_REST_Request $request REST request.
- * @return WP_REST_Response|WP_Error
+ * @param int    $post_id   Post ID.
+ * @param mixed  $ref       Index or `bibliographyId`.
+ * @param string $style_key Supported citation style key.
+ * @return array|WP_Error
  */
-function bibliography_builder_rest_preview_bibliography( WP_REST_Request $request ) {
-	$bibliography = bibliography_builder_get_requested_bibliography( $request );
+function bibliography_builder_get_style_preview( $post_id, $ref, $style_key ) {
+	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref );
 
 	if ( is_wp_error( $bibliography ) ) {
 		return $bibliography;
@@ -555,7 +582,7 @@ function bibliography_builder_rest_preview_bibliography( WP_REST_Request $reques
 		);
 	}
 
-	$style_key = (string) $request['style'];
+	$style_key = (string) $style_key;
 	$valid     = array();
 	$errors    = array();
 
@@ -601,15 +628,59 @@ function bibliography_builder_rest_preview_bibliography( WP_REST_Request $reques
 		);
 	}
 
-	return rest_ensure_response(
-		array_merge(
-			bibliography_builder_review_response_base( $request, $bibliography ),
-			array(
-				'currentStyle' => $bibliography['citationStyle'],
-				'style'        => $style_key,
-				'entries'      => $entries,
-			)
+	return array_merge(
+		bibliography_builder_review_response_base( $post_id, $bibliography ),
+		array(
+			'currentStyle' => $bibliography['citationStyle'],
+			'style'        => $style_key,
+			'entries'      => $entries,
 		)
+	);
+}
+
+/**
+ * Wrap a review result for REST.
+ *
+ * @param array|WP_Error $result Review result.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_review_response( $result ) {
+	return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+}
+
+/**
+ * REST callback: validate every entry in one bibliography.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_validate_bibliography( WP_REST_Request $request ) {
+	return bibliography_builder_rest_review_response(
+		bibliography_builder_get_validation_report( $request['post_id'], $request['ref'] )
+	);
+}
+
+/**
+ * REST callback: list likely duplicate pairs in one bibliography.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_get_bibliography_duplicates( WP_REST_Request $request ) {
+	return bibliography_builder_rest_review_response(
+		bibliography_builder_get_duplicate_report( $request['post_id'], $request['ref'] )
+	);
+}
+
+/**
+ * REST callback: preview one bibliography reformatted in another style.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_preview_bibliography( WP_REST_Request $request ) {
+	return bibliography_builder_rest_review_response(
+		bibliography_builder_get_style_preview( $request['post_id'], $request['ref'], $request['style'] )
 	);
 }
 
@@ -634,10 +705,7 @@ function bibliography_builder_register_review_routes() {
 				'borges-bibliography-builder'
 			),
 			'type'              => 'string',
-			'validate_callback' => static function ( $value ) {
-				return is_string( $value )
-					&& 1 === preg_match( '/^' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . '$/', $value );
-			},
+			'validate_callback' => 'bibliography_builder_is_block_ref',
 		),
 	);
 

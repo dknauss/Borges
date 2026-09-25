@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Review routes for editors (Phase 05, Tier 1), all read-only and requiring `edit_post`: `GET …/bibliographies/<ref>/validate` reports per-entry CSL-JSON problems (invalid or missing data, missing title, malformed DOI, and warnings for missing author, date, or container title, or an ISBN with no valid checksum); `…/duplicates` lists likely duplicate pairs using the editor's own duplicate rules; `…/preview?style=<key>` shows each entry reformatted in another citation style next to its current text, without saving. `<ref>` is the block index or its stable `bibliographyId`. The routes live in `includes/review.php`.
+- Three matching read-only abilities on WordPress 6.9+, with the same `edit_post` requirement: `borges/validate-bibliography`, `borges/find-duplicate-citations`, and `borges/preview-bibliography-style`. Each takes `post_id` and either `index` or `bibliography_id`.
 - Stable IDs (Phase 05, Tier 0). The read-only REST collection and single-bibliography routes, and the `borges/get-bibliographies` ability, now report each block's `bibliographyId`, a UUID that stays put when blocks before it are added or removed, as the future write routes will need. It is `null` for a block saved before IDs were assigned (or with an unusable value) until the post is next edited. Every citation already carried an `id`; the editor now guarantees one, unique within its block.
 
 ### Fixed
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The single-bibliography route (`GET …/bibliographies/<ref>`) and the `borges/export-bibliography` ability now also accept a block's `bibliographyId` in place of its index. Index requests behave as before; the export ability's output gains `bibliographyId`.
 - Internal: the PMID, PMCID, arXiv, and ISBN resolvers (route callbacks, provider constants, and NCBI cache helpers) moved from `bibliography-builder.php` into `includes/resolvers.php`, cutting the main plugin file from 2,859 to 1,931 lines. Every function and constant moved verbatim under the same name; route registration and permission callbacks stay in the main file. No behavior change.
 - The Playground demo post (release, main-build, and WordPress.org Preview blueprints) now includes PMCID (`PMC3531190`), arXiv (`arXiv:1706.03762`), and ISBN (`ISBN 978-0-14-032872-1`) samples alongside the DOI, PMID, and BibTeX examples, so the identifier types added in 1.6.0 can be tried without looking up an ID.
 

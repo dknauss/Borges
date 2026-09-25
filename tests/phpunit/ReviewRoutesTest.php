@@ -346,4 +346,30 @@ final class ReviewRoutesTest extends TestCase {
 		$this->assertSame( 'bibliography_builder_too_many_items', $result->get_error_code() );
 		$this->assertSame( 400, $result->get_error_data()['status'] );
 	}
+
+	public function test_single_bibliography_route_accepts_a_bibliography_id(): void {
+		$request            = new WP_REST_Request( 'GET', '/bibliography/v1/posts/201/bibliographies/' . $this->block_id );
+		$request['post_id'] = $this->post_id;
+		$request['ref']     = $this->block_id;
+
+		$data = bibliography_builder_rest_get_bibliography( $request )->get_data();
+		$this->assertSame( 0, $data['index'] );
+		$this->assertSame( $this->block_id, $data['bibliographyId'] );
+
+		$request['format'] = 'csl-json';
+		$this->assertSame( 'Deep Learning', bibliography_builder_rest_get_bibliography( $request )->get_data()[0]['title'] );
+
+		$request['ref'] = 'no-such-block';
+		$this->assertSame( 404, bibliography_builder_rest_get_bibliography( $request )->get_error_data()['status'] );
+	}
+
+	public function test_block_ref_validator(): void {
+		foreach ( array( '0', '12', 0, 3, $this->block_id, 'citation-lx2k9-4f8a1b2c' ) as $valid ) {
+			$this->assertTrue( bibliography_builder_is_block_ref( $valid ), var_export( $valid, true ) );
+		}
+
+		foreach ( array( -1, '', '-1', '../0', 'has space', str_repeat( 'a', 65 ), array( '0' ), null, 1.5 ) as $invalid ) {
+			$this->assertFalse( bibliography_builder_is_block_ref( $invalid ), var_export( $invalid, true ) );
+		}
+	}
 }

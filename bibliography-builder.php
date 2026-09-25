@@ -1547,21 +1547,12 @@ function bibliography_builder_rest_get_bibliographies( WP_REST_Request $request 
  * @return WP_REST_Response|WP_Error
  */
 function bibliography_builder_rest_get_bibliography( WP_REST_Request $request ) {
-	$post_id        = absint( $request['post_id'] );
-	$index          = absint( $request['index'] );
-	$format         = isset( $request['format'] ) ? (string) $request['format'] : 'json';
-	$post           = get_post( $post_id );
-	$bibliographies = bibliography_builder_get_bibliographies_for_post( $post );
+	$format       = isset( $request['format'] ) ? (string) $request['format'] : 'json';
+	$bibliography = bibliography_builder_resolve_bibliography( $request['post_id'], $request['ref'] );
 
-	if ( ! isset( $bibliographies[ $index ] ) ) {
-		return new WP_Error(
-			'bibliography_builder_not_found',
-			__( 'Bibliography block not found for the requested index.', 'borges-bibliography-builder' ),
-			array( 'status' => 404 )
-		);
+	if ( is_wp_error( $bibliography ) ) {
+		return $bibliography;
 	}
-
-	$bibliography = $bibliographies[ $index ];
 
 	if ( 'text' === $format ) {
 		$response = new WP_REST_Response( bibliography_builder_build_plain_text( $bibliography ) );
@@ -1641,7 +1632,7 @@ function bibliography_builder_register_rest_routes() {
 
 	register_rest_route(
 		'bibliography/v1',
-		'/posts/(?P<post_id>\d+)/bibliographies/(?P<index>\d+)',
+		'/posts/(?P<post_id>\d+)/bibliographies/(?P<ref>' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . ')',
 		array(
 			'methods'             => WP_REST_Server::READABLE,
 			'callback'            => 'bibliography_builder_rest_get_bibliography',
@@ -1649,16 +1640,13 @@ function bibliography_builder_register_rest_routes() {
 			'args'                => array_merge(
 				$common_args,
 				array(
-					'index'  => array(
+					'ref'    => array(
 						'description'       => __(
-							'Zero-based bibliography block index within the post.',
+							'Zero-based bibliography block index, or the block\'s bibliographyId.',
 							'borges-bibliography-builder'
 						),
-						'type'              => 'integer',
-						'sanitize_callback' => 'absint',
-						'validate_callback' => static function ( $value ) {
-							return is_numeric( $value ) && (int) $value >= 0;
-						},
+						'type'              => 'string',
+						'validate_callback' => 'bibliography_builder_is_block_ref',
 					),
 					'format' => array(
 						'description'       => __(
