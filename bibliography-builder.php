@@ -68,7 +68,10 @@ const BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL = 3600;
 function bibliography_builder_get_stable_block_id( $attrs ) {
 	$id = isset( $attrs['bibliographyId'] ) ? $attrs['bibliographyId'] : null;
 
-	return is_string( $id ) && 1 === preg_match( '/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/', $id )
+	// An all-digit value would read as a block index in `{ref}` URL segments,
+	// so it is not a usable ID (the editor then replaces it, as in
+	// src/lib/stable-ids.js).
+	return is_string( $id ) && 1 === preg_match( '/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/D', $id ) && ! ctype_digit( $id )
 		? $id
 		: null;
 }
@@ -1645,7 +1648,7 @@ function bibliography_builder_register_rest_routes() {
 							'Zero-based bibliography block index, or the block\'s bibliographyId.',
 							'borges-bibliography-builder'
 						),
-						'type'              => 'string',
+						'type'              => array( 'string', 'integer' ),
 						'validate_callback' => 'bibliography_builder_is_block_ref',
 					),
 					'format' => array(

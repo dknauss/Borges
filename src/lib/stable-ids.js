@@ -17,8 +17,10 @@ import { createCitationId } from './citation-id';
 export const BIBLIOGRAPHY_BLOCK_NAME = 'bibliography-builder/bibliography';
 
 // Generated IDs are UUIDs (or the `citation-…` fallback). Anything else in a
-// block ID is replaced, since write routes will take it as a URL segment.
+// block ID is replaced, since routes take it as a URL segment. An all-digit
+// value is replaced too: in a `{ref}` segment it would read as a block index.
 const BLOCK_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/u;
+const ALL_DIGITS = /^\d+$/u;
 
 // Citation IDs are kept whenever they are usable as an HTML id, so existing
 // `#ref-…` links survive; only missing, blank, or whitespace-bearing IDs are
@@ -26,7 +28,11 @@ const BLOCK_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/u;
 const CITATION_ID_PATTERN = /^\S{1,128}$/u;
 
 export function isStableBlockId(value) {
-	return typeof value === 'string' && BLOCK_ID_PATTERN.test(value);
+	return (
+		typeof value === 'string' &&
+		BLOCK_ID_PATTERN.test(value) &&
+		!ALL_DIGITS.test(value)
+	);
 }
 
 export function isStableCitationId(value) {

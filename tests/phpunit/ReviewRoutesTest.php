@@ -270,7 +270,7 @@ final class ReviewRoutesTest extends TestCase {
 	}
 
 	public function test_duplicate_reason_mirrors_the_editor_rules(): void {
-		$keys = static function ( $title, $author = '', $year = '', $doi = '' ) {
+		$keys = static function ( $title, $author = '', $year = null, $doi = '' ) {
 			return compact( 'doi', 'title', 'author', 'year' );
 		};
 
@@ -282,7 +282,7 @@ final class ReviewRoutesTest extends TestCase {
 		$this->assertNull( bibliography_builder_get_duplicate_reason( $keys( '' ), $keys( '' ) ) );
 		$this->assertSame(
 			'doi',
-			bibliography_builder_get_duplicate_reason( $keys( 'a', '', '', '10.1/x' ), $keys( 'b', '', '', '10.1/x' ) )
+			bibliography_builder_get_duplicate_reason( $keys( 'a', '', null, '10.1/x' ), $keys( 'b', '', null, '10.1/x' ) )
 		);
 	}
 
@@ -371,5 +371,83 @@ final class ReviewRoutesTest extends TestCase {
 		foreach ( array( -1, '', '-1', '../0', 'has space', str_repeat( 'a', 65 ), array( '0' ), null, 1.5 ) as $invalid ) {
 			$this->assertFalse( bibliography_builder_is_block_ref( $invalid ), var_export( $invalid, true ) );
 		}
+	}
+
+	public function test_all_digit_bibliography_ids_are_not_advertised(): void {
+		$this->assertNull( bibliography_builder_get_stable_block_id( array( 'bibliographyId' => '1' ) ) );
+		$this->assertNull( bibliography_builder_get_stable_block_id( array( 'bibliographyId' => "abc\n" ) ) );
+		$this->assertSame( '1a', bibliography_builder_get_stable_block_id( array( 'bibliographyId' => '1a' ) ) );
+		$this->assertFalse( bibliography_builder_is_block_ref( "abc\n" ) );
+		$this->assertTrue( bibliography_builder_is_block_ref( 2 ) );
+	}
+
+	public function test_duplicate_years_compare_like_strict_javascript_equality(): void {
+		$keys = static function ( array $csl ) {
+			return bibliography_builder_get_duplicate_keys( array( 'csl' => $csl ) );
+		};
+		$book = static function ( $year, $family ) {
+			$csl = array(
+				'title'  => 'Same',
+				'author' => array( array( 'family' => $family ) ),
+			);
+
+			if ( null !== $year ) {
+				$csl['issued'] = array( 'date-parts' => array( array( $year ) ) );
+			}
+
+			return $csl;
+		};
+
+		// 2020 === "2020" is false in JS, so different first authors mean no match.
+		$this->assertNull( bibliography_builder_get_duplicate_reason( $keys( $book( 2020, 'A' ) ), $keys( $book( '2020', 'B' ) ) ) );
+		// A number decoded as int or float is still the same number.
+		$this->assertSame( 'title-year', bibliography_builder_get_duplicate_reason( $keys( $book( 2020, 'A' ) ), $keys( $book( 2020.0, 'B' ) ) ) );
+		// A year of 0 counts as missing (`|| null`).
+		$this->assertSame(
+			'title',
+			bibliography_builder_get_duplicate_reason(
+				$keys( array( 'title' => 'Same', 'issued' => array( 'date-parts' => array( array( 0 ) ) ) ) ),
+				$keys( array( 'title' => 'Same' ) )
+			)
+		);
+		// A family name of "0" is truthy in JS and is used.
+		$this->assertSame( 'title-author', bibliography_builder_get_duplicate_reason( $keys( $book( 1999, '0' ) ), $keys( $book( 2001, '0' ) ) ) );
+	}
+
+	public function test_isbn_check_accepts_lists_and_spaced_isbns(): void {
+		foreach ( array( '9780306406157 0306406152', '0-306-40615-2 978-0-306-40615-7', 'ISBN 978 0 306 40615 7', '978-0-306-40615-7 (pbk.); 0306406152', array( 'bad', '0306406152' ) ) as $value ) {
+			$this->assertTrue( bibliography_builder_has_valid_isbn( $value ), var_export( $value, true ) );
+		}
+
+		foreach ( array( '1234567890', '978 1234', '', array() ) as $value ) {
+			$this->assertFalse( bibliography_builder_has_valid_isbn( $value ), var_export( $value, true ) );
+		}
+	}
+
+	public function test_doi_check_accepts_common_prefixes_and_dotted_registrants(): void {
+		$codes = static function ( $doi ) {
+			$issues = bibliography_builder_validate_citation(
+				array(
+					'id'  => 'x',
+					'csl' => array(
+						'type'   => 'book',
+						'title'  => 'T',
+						'DOI'    => $doi,
+						'author' => array( array( 'family' => 'F' ) ),
+						'issued' => array( 'date-parts' => array( array( 2000 ) ) ),
+					),
+				)
+			);
+
+			return array_column( $issues, 'code' );
+		};
+
+		foreach ( array( '10.1000/xyz', 'doi:10.1000/xyz', 'DOI: 10.1000/xyz', 'https://www.doi.org/10.1000/xyz', 'https://dx.doi.org/10.1000/xyz', '10.1000.10/abc' ) as $doi ) {
+			$this->assertSame( array(), $codes( $doi ), $doi );
+		}
+
+		$this->assertSame( array( 'empty-doi' ), $codes( '' ) );
+		$this->assertSame( array( 'malformed-doi' ), $codes( '10.12/short-prefix' ) );
+		$this->assertSame( array( 'malformed-doi' ), $codes( 'not a doi' ) );
 	}
 }

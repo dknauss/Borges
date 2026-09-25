@@ -50,7 +50,7 @@ function bibliography_builder_is_block_ref( $value ) {
 		return $value >= 0;
 	}
 
-	return is_string( $value ) && 1 === preg_match( '/^' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . '$/', $value );
+	return is_string( $value ) && 1 === preg_match( '/^' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . '$/D', $value );
 }
 
 /**
@@ -252,11 +252,24 @@ function bibliography_builder_has_valid_isbn( $value ) {
 			continue;
 		}
 
-		preg_match_all( '/[0-9][0-9Xx -]{8,16}[0-9Xx]/', $candidate, $matches );
+		// Runs of digits, X, hyphens, and spaces. A run may hold one ISBN
+		// written with spaces ("978 0 306 40615 7") or several separated by
+		// spaces, so every contiguous group of its space-separated tokens is
+		// tried.
+		preg_match_all( '/[0-9][0-9Xx -]*[0-9Xx]/', $candidate, $matches );
 
-		foreach ( $matches[0] as $isbn ) {
-			if ( '' !== bibliography_builder_normalize_isbn( $isbn ) ) {
-				return true;
+		foreach ( $matches[0] as $run ) {
+			$tokens = preg_split( '/ +/', $run );
+			$count  = count( $tokens );
+
+			for ( $start = 0; $start < $count; $start++ ) {
+				for ( $end = $start; $end < $count; $end++ ) {
+					$isbn = implode( '', array_slice( $tokens, $start, $end - $start + 1 ) );
+
+					if ( '' !== bibliography_builder_normalize_isbn( $isbn ) ) {
+						return true;
+					}
+				}
 			}
 		}
 	}
@@ -353,16 +366,31 @@ function bibliography_builder_validate_citation( $citation ) {
 		);
 	}
 
-	if (
-		array_key_exists( 'DOI', $csl )
-		&& 1 !== preg_match( '#^10\.\d{4,9}/\S+$#u', bibliography_builder_normalize_review_doi( $csl['DOI'] ) )
-	) {
-		$issues[] = bibliography_builder_validation_issue(
-			'error',
-			'malformed-doi',
-			'DOI',
-			__( 'The DOI is not in the form 10.prefix/suffix.', 'borges-bibliography-builder' )
+	if ( array_key_exists( 'DOI', $csl ) ) {
+		// Accept the prefixes people paste (doi:, www.doi.org) and dotted
+		// registrant codes (10.1000.10/…), which the duplicate check's
+		// normalizer leaves alone.
+		$doi = (string) preg_replace(
+			'#^(?:doi:\s*|(?:https?://)?(?:www\.)?doi\.org/)#i',
+			'',
+			bibliography_builder_normalize_review_doi( $csl['DOI'] )
 		);
+
+		if ( '' === $doi ) {
+			$issues[] = bibliography_builder_validation_issue(
+				'warning',
+				'empty-doi',
+				'DOI',
+				__( 'The DOI field is empty.', 'borges-bibliography-builder' )
+			);
+		} elseif ( 1 !== preg_match( '#^10\.\d{4,9}(?:\.\d+)*/\S+$#Du', $doi ) ) {
+			$issues[] = bibliography_builder_validation_issue(
+				'error',
+				'malformed-doi',
+				'DOI',
+				__( 'The DOI is not in the form 10.prefix/suffix.', 'borges-bibliography-builder' )
+			);
+		}
 	}
 
 	if ( array_key_exists( 'ISBN', $csl ) && ! bibliography_builder_has_valid_isbn( $csl['ISBN'] ) ) {
@@ -455,20 +483,42 @@ function bibliography_builder_get_duplicate_keys( $citation ) {
 	$author = isset( $csl['author'][0] ) && is_array( $csl['author'][0] ) ? $csl['author'][0] : array();
 	$family = '';
 
-	if ( ! empty( $author['family'] ) ) {
+	// `firstAuthor.family || firstAuthor.literal || ''`, with JS truthiness.
+	if ( isset( $author['family'] ) && bibliography_builder_js_truthy( $author['family'] ) ) {
 		$family = $author['family'];
-	} elseif ( ! empty( $author['literal'] ) ) {
+	} elseif ( isset( $author['literal'] ) && bibliography_builder_js_truthy( $author['literal'] ) ) {
 		$family = $author['literal'];
 	}
 
-	$year = isset( $csl['issued']['date-parts'][0][0] ) ? $csl['issued']['date-parts'][0][0] : '';
+	// `date-parts[0][0] || null`: a falsy year (0, '') counts as missing, and
+	// the raw value is kept so the comparison can be type-strict like `===`.
+	$year = isset( $csl['issued']['date-parts'][0][0] ) ? $csl['issued']['date-parts'][0][0] : null;
 
 	return array(
 		'doi'    => isset( $csl['DOI'] ) ? bibliography_builder_normalize_review_doi( $csl['DOI'] ) : '',
 		'title'  => isset( $csl['title'] ) ? bibliography_builder_normalize_review_text( $csl['title'] ) : '',
 		'author' => bibliography_builder_normalize_review_text( $family ),
-		'year'   => is_scalar( $year ) ? (string) $year : '',
+		'year'   => is_scalar( $year ) && bibliography_builder_js_truthy( $year ) ? $year : null,
 	);
+}
+
+/**
+ * JavaScript `===` for two JSON scalars: numbers compare by value whether PHP
+ * decoded them as int or float; a number never equals a string.
+ *
+ * @param mixed $a First value.
+ * @param mixed $b Second value.
+ * @return bool
+ */
+function bibliography_builder_js_strict_equals( $a, $b ) {
+	$a_number = is_int( $a ) || is_float( $a );
+	$b_number = is_int( $b ) || is_float( $b );
+
+	if ( $a_number || $b_number ) {
+		return $a_number && $b_number && (float) $a === (float) $b;
+	}
+
+	return $a === $b;
 }
 
 /**
@@ -491,7 +541,10 @@ function bibliography_builder_get_duplicate_reason( $first, $second ) {
 		return null;
 	}
 
-	if ( '' !== $first['year'] && $first['year'] === $second['year'] ) {
+	$same_year = null !== $first['year'] && null !== $second['year']
+		&& bibliography_builder_js_strict_equals( $first['year'], $second['year'] );
+
+	if ( $same_year ) {
 		return 'title-year';
 	}
 
@@ -499,7 +552,7 @@ function bibliography_builder_get_duplicate_reason( $first, $second ) {
 		return 'title-author';
 	}
 
-	$all_missing = '' === $first['year'] && '' === $second['year']
+	$all_missing = null === $first['year'] && null === $second['year']
 		&& '' === $first['author'] && '' === $second['author'];
 
 	return $all_missing ? 'title' : null;
@@ -704,7 +757,7 @@ function bibliography_builder_register_review_routes() {
 				'Zero-based bibliography block index, or the block\'s bibliographyId.',
 				'borges-bibliography-builder'
 			),
-			'type'              => 'string',
+			'type'              => array( 'string', 'integer' ),
 			'validate_callback' => 'bibliography_builder_is_block_ref',
 		),
 	);
