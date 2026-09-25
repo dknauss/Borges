@@ -70,6 +70,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
   - `GET /isbn/{isbn}` — resolves checksum-valid ISBNs through Open Library's fixed ISBN edition endpoint (author names from its search endpoint), falling back to Google Books, mapping to a CSL book in PHP; requires `edit_posts`
   - `GET /posts/{post_id}/bibliographies` — list all bibliography blocks in post
   - `GET /posts/{post_id}/bibliographies/{index}` — single bibliography; supports `?format=json|text|csl-json`
+- The PMID, PMCID, arXiv, and ISBN route callbacks, their provider constants (fixed upstream URLs, timeout, cache TTLs), and the NCBI cache helpers live in `includes/resolvers.php`, loaded by `require_once` from the main file. Route registration and the `edit_posts` permission callbacks stay in `bibliography-builder.php`.
 - Read-only Abilities API integration (WordPress 6.9+) lives in `includes/abilities.php`: `borges/get-bibliographies`, `borges/export-bibliography`, `borges/validate-citations` in a `bibliography` category. They reuse the REST read/permission helpers; on older WordPress the `wp_abilities_api_*` hooks never fire.
 - Payload limits: 1 MB max body, 50 items max per `/format` request
 - `bibliography_builder_sanitize_formatted_text()` — all HTML from citeproc is run through this before storage or output

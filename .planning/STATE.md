@@ -40,7 +40,7 @@ ordering. In short:
 
 1. **CI, runtime, and Playground hygiene** (standing)
 2. **Reference-manager export corpus**: addresses the paste/import coverage gap
-3. **Extract the resolvers** from `bibliography-builder.php` into `includes/`
+3. ~~**Extract the resolvers**~~: done, unreleased (`includes/resolvers.php`)
 4. **Phase 05 M0: stable entry IDs**: unblocks writable REST and Abilities
 5. **First-wave official language packs**
 

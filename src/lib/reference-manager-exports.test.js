@@ -268,6 +268,39 @@ Two.},
 		expect(result.entries[0].csl.title).toBe('Only Entry');
 	});
 
+	it('keeps an entry whole when a field mentions another @type{ key', async () => {
+		const result = await parsePastedInput(`@article{outer,
+  title = {Outer Entry},
+  journal = {J},
+  year = {2020},
+  note = {Supersedes @misc{draft2019}}
+}`);
+
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(1);
+		expect(result.entries[0].csl.title).toBe('Outer Entry');
+	});
+
+	it('treats an escaped brace as text when finding where an entry ends', async () => {
+		// Counting `\{` as an opening brace would swallow the next entry into
+		// this one, and the arXiv link below is only recovered when a segment
+		// holds exactly one entry.
+		const result = await parsePastedInput(`@misc{braces,
+  title = {An Open \\{ Brace},
+  year = {2017},
+  eprint = {1706.03762},
+  archiveprefix = {arXiv}
+}
+
+@book{after, title = {Second Book}, publisher = {P}, year = {2002}}`);
+
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(2);
+		expect(result.entries[0].csl.URL).toBe(
+			'https://arxiv.org/abs/1706.03762'
+		);
+	});
+
 	it('keeps a % inside a field value', async () => {
 		const result = await parsePastedInput(
 			`@article{c, title = {Growth of 50% or More}, journal = {J}, year = {2020}}`

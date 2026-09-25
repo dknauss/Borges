@@ -392,14 +392,12 @@ payoff-per-effort order for the 1.7 line:
       Zotero, Mendeley, EndNote, and JabRef exports each carry their own quirks
     - needs a few genuine exports from the owner's libraries; hand-authored
       approximations can seed the corpus but should be labeled as such
-3. **Extract the resolvers from the root plugin file** — pending todo
-   `2026-06-17-research-benefits-of-a-leaner-root-plugin-file.md`
-    - `bibliography-builder.php` grew from 2,070 to 2,859 lines in 1.6.0; the
-      NCBI, arXiv, ISBN, and shared remote-fetch code is a contiguous run of
-      roughly 800 lines, plus the NCBI cache-key helpers further up
-    - `includes/abilities.php` already proved the `includes/` loading, PHPCS,
-      Psalm, and coverage wiring, so a behavior-neutral move to
-      `includes/resolvers.php` under the existing PHPUnit suite is low-risk
+3. ~~**Extract the resolvers from the root plugin file**~~ — **done**
+   (unreleased): 31 definitions moved verbatim to `includes/resolvers.php`,
+   taking `bibliography-builder.php` from 2,859 to 1,931 lines
+    - the remaining question in todo
+      `2026-06-17-research-benefits-of-a-leaner-root-plugin-file.md` is
+      whether further extraction (formatter, read routes, block data) pays off
 4. **Phase 05 M0: stable entry IDs** (design memo, Tier 0)
     - no routes and no dependencies; unblocks the M1–M3 writable milestones.
       Writable Abilities stay behind M3

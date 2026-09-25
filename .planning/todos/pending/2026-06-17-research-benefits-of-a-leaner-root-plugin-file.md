@@ -35,9 +35,12 @@ grounded read on whether it's actually worth it.
   `bibliography_builder_resolve_remote_csl()`, NCBI PMID/PMCID, arXiv, and
   ISBN via Open Library and Google Books) are a contiguous run of roughly 800
   lines, plus the NCBI cache-key helpers further up the file.
-- Suggested first phase, independent of the full memo: move the resolvers to
-  `includes/resolvers.php` with no renames and no behavior change, verified by
-  the existing PHPUnit suite and the live Playground resolver checks.
+- **First phase done (2026-09-25):** the resolvers moved to
+  `includes/resolvers.php`: 10 constants and 21 functions, byte-identical,
+  under the same names. The root file went from 2,859 to 1,931 lines, and all
+  85 original definitions are accounted for. Route registration and permission
+  callbacks stay in the root file. The memo below still decides whether the
+  formatter, read routes, and block-data helpers should follow.
 
 ## Solution
 
