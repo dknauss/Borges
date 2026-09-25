@@ -481,6 +481,11 @@
 							"type": "document"
 						},
 						"formattedText": "Mystery item."
+					},
+					{
+						"id": "empty-csl",
+						"csl": {},
+						"formattedText": "Empty record."
 					}
 				]
 			}

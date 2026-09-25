@@ -714,6 +714,17 @@ function bibliography_builder_sort_citations_for_save( $citations, $style_key ) 
 }
 
 /**
+ * A citation's `csl` value exactly as stored, for re-serialization: an empty
+ * object stays `stdClass` so it is written back as `{}`.
+ *
+ * @param mixed $citation Citation record.
+ * @return mixed
+ */
+function bibliography_builder_citation_raw_csl( $citation ) {
+	return is_array( $citation ) && array_key_exists( 'csl', $citation ) ? $citation['csl'] : null;
+}
+
+/**
  * A citation's CSL-JSON object, or an empty array.
  *
  * @param mixed $citation Citation record.
@@ -1549,7 +1560,7 @@ function bibliography_builder_save_cite_export( $citation ) {
 	);
 	$links .= bibliography_builder_save_export_link(
 		'application/vnd.citationstyles.csl+json',
-		bibliography_builder_json_stringify( $csl, 2 ) . "\n",
+		bibliography_builder_json_stringify( bibliography_builder_citation_raw_csl( $citation ), 2 ) . "\n",
 		$base . '.csl.json',
 		__( 'CSL-JSON', 'borges-bibliography-builder' )
 	);
@@ -1859,7 +1870,9 @@ function bibliography_builder_render_save_markup( $attrs ) {
 
 	if ( $flag( 'outputCslJson', false ) ) {
 		$html .= '<script type="application/vnd.citationstyles.csl+json">'
-			. bibliography_builder_escape_for_script( bibliography_builder_json_stringify( $csl_array ) )
+			. bibliography_builder_escape_for_script(
+				bibliography_builder_json_stringify( array_map( 'bibliography_builder_citation_raw_csl', $sorted ) )
+			)
 			. '</script>';
 	}
 
