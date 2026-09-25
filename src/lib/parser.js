@@ -754,6 +754,135 @@ function splitChunkIntoDetectedItems(chunk) {
 	];
 }
 
+const BIBTEX_ENTRY_START_REGEX = /@\s*([a-z][\w-]*)\s*\{/giu;
+const BIBTEX_IGNORED_ENTRY_TYPES = new Set(['comment', 'preamble']);
+
+/**
+ * Return the index just past the brace that closes the one at `openIndex`,
+ * or the input length when the entry is never closed.
+ *
+ * @param {string} input     Pasted text.
+ * @param {number} openIndex Index of an opening `{`.
+ * @return {number} End index (exclusive).
+ */
+function findBibtexEntryEnd(input, openIndex) {
+	let depth = 0;
+
+	for (let index = openIndex; index < input.length; index += 1) {
+		const char = input[index];
+
+		if (char === '\\') {
+			index += 1;
+		} else if (char === '{') {
+			depth += 1;
+		} else if (char === '}') {
+			depth -= 1;
+
+			if (depth === 0) {
+				return index + 1;
+			}
+		}
+	}
+
+	return input.length;
+}
+
+/**
+ * Split pasted input into whole BibTeX entries and the text between them.
+ *
+ * Entries are lifted out by brace matching before anything splits on blank
+ * lines, so a field containing a paragraph break (a multi-paragraph Zotero
+ * abstract, say) stays inside its entry. The file-level parts of a
+ * reference-manager export are consumed rather than parsed as citations:
+ * `@comment` and `@preamble` blocks are dropped, `@string` macros are
+ * prepended to every entry so `journal = nature` resolves, and `%` comment
+ * lines outside entries (JabRef's `% Encoding:` header) are removed, as
+ * BibTeX itself ignores them.
+ *
+ * @param {string} input Pasted text.
+ * @return {Array<{bibtex: boolean, value: string, raw?: string}>} Segments in paste order.
+ */
+function segmentPastedInput(input) {
+	const segments = [];
+	const macros = [];
+	let hasBibtex = false;
+	let cursor = 0;
+
+	for (const match of input.matchAll(BIBTEX_ENTRY_START_REGEX)) {
+		if (match.index < cursor) {
+			continue;
+		}
+
+		const end = findBibtexEntryEnd(
+			input,
+			match.index + match[0].length - 1
+		);
+		const entry = input.slice(match.index, end).trim();
+		const entryType = match[1].toLowerCase();
+
+		segments.push({
+			bibtex: false,
+			value: input.slice(cursor, match.index),
+		});
+		hasBibtex = true;
+		cursor = end;
+
+		if (entryType === 'string') {
+			macros.push(entry);
+		} else if (!BIBTEX_IGNORED_ENTRY_TYPES.has(entryType)) {
+			segments.push({ bibtex: true, value: entry, raw: entry });
+		}
+	}
+
+	segments.push({ bibtex: false, value: input.slice(cursor) });
+
+	return segments
+		.map((segment) => {
+			if (segment.bibtex) {
+				return macros.length
+					? {
+							...segment,
+							value: `${macros.join(
+								'\n'
+							)}\n${normalizeBibtexInput(segment.value)}`,
+					  }
+					: segment;
+			}
+
+			return hasBibtex
+				? {
+						...segment,
+						value: segment.value.replace(/^[ \t]*%.*$/gmu, ''),
+				  }
+				: segment;
+		})
+		.filter((segment) => segment.value.trim());
+}
+
+/**
+ * Whether the whole paste is a JSON document, such as a CSL-JSON export.
+ * JSON is not an import format; without this check it reaches the free-text
+ * parser and comes back as a nonsense webpage citation.
+ *
+ * @param {string} input Pasted text.
+ * @return {boolean} True when the input parses as a JSON object or array.
+ */
+function looksLikeJsonDocument(input) {
+	const trimmed = input.trim();
+
+	if (!/^[[{]/u.test(trimmed)) {
+		return false;
+	}
+
+	try {
+		const parsed = JSON.parse(trimmed);
+
+		return typeof parsed === 'object' && parsed !== null;
+	} catch (_error) {
+		return false;
+	}
+}
+
 const PARSER_BACKENDS = {
 	pmid: async (value, { fetchFn } = {}) => {
 		const pmid = normalizePmidInput(value);
@@ -998,14 +1127,28 @@ export async function parsePastedInput(
 		};
 	}
 
-	// Split on blank lines first; for multi-line chunks, use conservative
-	// line-based heuristics before falling back to a single normalized chunk.
-	const chunks = input
-		.split(/\n\s*\n/)
-		.map((c) => c.trim())
-		.filter(Boolean);
+	if (looksLikeJsonDocument(input)) {
+		return {
+			entries: [],
+			errors: [formatUnsupportedInputError()],
+			truncated: false,
+			remainingInput: input.trim(),
+		};
+	}
 
-	let detected = chunks.flatMap(splitChunkIntoDetectedItems);
+	let detected = segmentPastedInput(input).flatMap((segment) => {
+		if (segment.bibtex) {
+			return [createDetectedItem('bibtex', segment.value, segment.raw)];
+		}
+
+		// Split on blank lines first; for multi-line chunks, use conservative
+		// line-based heuristics before falling back to a single normalized chunk.
+		return segment.value
+			.split(/\n\s*\n/)
+			.map((c) => c.trim())
+			.filter(Boolean)
+			.flatMap(splitChunkIntoDetectedItems);
+	});
 	let overflowItems = [];
 
 	if (detected.length > MAX_ENTRIES_PER_PASTE) {

@@ -40,7 +40,7 @@ Both demo Blueprints explicitly request PHP `intl` support because editor-time C
 | Import form | Manual entry | Structured field editor |
 |---|---|---|
 | ![](.wordpress-org/screenshot-3.png) | ![](.wordpress-org/screenshot-4.png) | ![](.wordpress-org/screenshot-5.png) |
-| Paste DOIs, PubMed/PMID identifiers, BibTeX, CSL-JSON, or free-text citations into the import form. Hover any entry to reveal copy, edit, and delete actions. | Switch to Manual Entry to build a citation field by field: Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL. These fields are populated automatically from DOIs, PubMed/PMID records, and any pasted input that can be parsed. | Correct imported or free-text citations in place with the structured field editor — fix individual fields without retyping the whole entry. |
+| Paste DOIs, PubMed/PMID identifiers, BibTeX, or free-text citations into the import form. Hover any entry to reveal copy, edit, and delete actions. | Switch to Manual Entry to build a citation field by field: Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL. These fields are populated automatically from DOIs, PubMed/PMID records, and any pasted input that can be parsed. | Correct imported or free-text citations in place with the structured field editor — fix individual fields without retyping the whole entry. |
 
 | Numeric reorder | Settings sidebar | Exports |
 |---|---|---|
@@ -74,10 +74,10 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 | Metric | Value |
 |---|---|
 | First-party PHP | ~2,859 LOC main plugin file; ~3,299 LOC total with `includes/` |
-| JS source (`src/`) | ~9,380 LOC |
+| JS source (`src/`) | ~9,553 LOC |
 | Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, enqueued only when the block is present |
 | Installed footprint | ~1.9 MB (`vendor/` ~792 KB, translations 724 KB, build assets ~324 KB) |
-| Distributed ZIP (latest v1.5.1 release) | ~465 KB (475,778 bytes) |
+| Distributed ZIP (latest v1.6.0 release) | ~488 KB (499,681 bytes) |
 | **Added DB queries per page** | **0** — regardless of block or citation count |
 | Autoloaded options / registered settings / cron / custom tables / custom post types | none |
 | `render_callback` on the frontend | none (static `save()` only) |

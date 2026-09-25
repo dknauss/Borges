@@ -33,6 +33,12 @@ Use this checklist for live QA in the local Studio site.
 | BibTeX article            | `@article{...}`                                                                         | Citation added                   | ☐      |
 | BibTeX German alias       | `@artikel{...}`                                                                         | Citation added                   | ☐      |
 | BibTeX German alias       | `@buch{...}`                                                                            | Citation added                   | ☐      |
+| Zotero BibTeX export      | Whole `.bib` file, including a multi-paragraph abstract                                 | Every entry added, no errors     | ☐      |
+| Zotero BibLaTeX export    | Whole `.bib` file with `@thesis` and `@online`                                          | Every entry added, no errors     | ☐      |
+| Mendeley export           | Whole `.bib` file with LaTeX escapes and an arXiv eprint                                | Every entry added, no errors     | ☐      |
+| EndNote BibTeX export     | Whole `.bib` file with `type = {Journal Article}`                                       | Every entry added, no genre      | ☐      |
+| JabRef export             | Whole `.bib` file with `% Encoding`, `@String`, and `@Comment{jabref-meta…}`            | Only real entries added          | ☐      |
+| CSL-JSON paste            | Zotero "Export as CSL JSON" array                                                       | Unsupported-input notice         | ☐      |
 | Raw book citation         | `Binder, Amy J., and Jeffrey L. Kidder... University of Chicago Press, 2022.`           | Citation added                   | ☐      |
 | Raw journal citation      | `Ada Smith, "Learning Blocks," Journal of WordPress Studies 12, no. 3 (2024): 117-134.` | Citation added                   | ☐      |
 | Raw chapter citation      | `Doyle, Kathleen. “The Queen Mary Psalter.” In The Book by Design...`                   | Citation added                   | ☐      |

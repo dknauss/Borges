@@ -38,6 +38,26 @@ format. Reference-manager testing should focus first on BibTeX, CSL-JSON, DOI,
 PMID, and free-text export paths; revisit RIS import only as a separately scoped
 feature.
 
+## Progress (2026-09-25)
+
+A first corpus of **hand-authored** fixtures landed in
+`src/lib/__fixtures__/reference-manager-exports/` with
+`src/lib/reference-manager-exports.test.js`: Zotero BibTeX, Zotero BibLaTeX,
+Mendeley, EndNote, JabRef, and a Zotero CSL-JSON paste, across article, book,
+chapter, conference paper, thesis, and webpage records. It found and fixed
+four quirks:
+
+- a blank line inside a field (multi-paragraph Zotero abstract) split the
+  entry and lost the record;
+- JabRef's `% Encoding` header, `@String` macros, and `@Comment{jabref-meta}`
+  footer each raised an error, and macro-valued fields lost their value;
+- EndNote's `type = {Journal Article}` became a CSL `genre`;
+- a CSL-JSON paste came back as a nonsense webpage citation.
+
+Still open: replace the hand-authored fixtures with **real, anonymized
+exports** (at least Zotero and Mendeley), and add Papers, RefWorks, and
+BibDesk once real samples exist.
+
 ## Acceptance targets
 
 - A fixtures set of real (anonymized) exports from at least Zotero and Mendeley

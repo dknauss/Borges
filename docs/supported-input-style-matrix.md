@@ -29,6 +29,8 @@ These are the most reliable import paths and should be treated as primary suppor
 | ISBN                                     | Supported | `ISBN 978-0-14-032872-1`, `ISBN-10: 0140328726`, bare 978/979 ISBN-13; checksum required |
 | BibTeX/BibLaTeX language fields          | Normalized | Babel names (`ngerman`, `british`) → BCP 47 (`de`, `en-GB`); others dropped |
 | BibTeX/BibLaTeX arXiv eprints            | Normalized | `eprint` + `eprinttype`/`archiveprefix = arxiv` → arXiv abstract URL     |
+| Reference-manager `.bib` exports (whole file) | Supported | Zotero (BibTeX, BibLaTeX), Mendeley, EndNote, JabRef. Entries stay whole across blank lines inside fields; `@string` macros resolve; `@comment`, `@preamble`, and `%` lines outside entries are ignored. Corpus: `src/lib/__fixtures__/reference-manager-exports/` |
+| EndNote `type` field                     | Normalized | EndNote reference-type names (`Journal Article`, `Book Section`, …) are dropped instead of becoming CSL `genre` |
 | Multiple DOI / BibTeX entries in one add | Supported | Up to 50 entries per add                                                 |
 
 ### 2. Supported formatted citation categories
@@ -67,6 +69,8 @@ These should fail closed with a notice rather than being treated as supported in
 | Arbitrary random prose                       | Unsupported                    | Not all text that looks citation-adjacent is parseable            |
 | Broad multimedia / audiovisual raw citations | Limited / mostly unsupported   | Some may parse incidentally, but not yet a declared support class |
 | Broad multilingual BibTeX dialects           | Unsupported as a general claim | Only a small tested alias allowlist exists                        |
+| CSL-JSON / other JSON documents              | Unsupported as import          | Rejected with the unsupported-input notice; CSL-JSON is an export format |
+| RIS                                          | Unsupported as import          | RIS is an export format only                                      |
 
 ## Non-English BibTeX normalization policy
 

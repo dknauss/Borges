@@ -5,7 +5,7 @@ Each source metric carries the exact command used to re-derive it. Package-size 
 identify their measurement or release-artifact source. Re-run the relevant command and update the
 number **in the same commit** whenever the underlying quantity changes.
 
-Source and LOC figures last verified: **2026-09-24** against the 1.6.0 candidate branch (PR #87) after merging `main` at `66b121f`. The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.5.1 release asset.
+Source and LOC figures last verified: **2026-09-25** against the reference-manager export corpus branch, based on `main` at `e379351`. The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.6.0 release asset.
 
 ## Lines of code
 
@@ -13,7 +13,7 @@ Source and LOC figures last verified: **2026-09-24** against the 1.6.0 candidate
 |---|---|---|
 | Main plugin file (`bibliography-builder.php`) | **2,859** | `wc -l bibliography-builder.php` |
 | All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **3,299** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **9,380** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **9,553** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
@@ -39,7 +39,7 @@ otherwise `package:release` (and the `du -sh build` row below) fails with `canno
 | `build/` — editor + frontend assets | **324 KB** | `du -sh build` |
 | PHP + `block.json` + `readme.txt` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` | **~112 KB** | — |
 | **Total installed** | **~1.9 MB** | `du -sh output/release/borges-bibliography-builder` (after `npm run package:release`) |
-| Distributed ZIP (v1.5.1 release) | **~465 KB** (475,778 bytes) | GitHub release asset metadata for [v1.5.1](https://github.com/dknauss/Borges/releases/tag/v1.5.1) |
+| Distributed ZIP (v1.6.0 release) | **~488 KB** (499,681 bytes) | GitHub release asset metadata for [v1.6.0](https://github.com/dknauss/Borges/releases/tag/v1.6.0) |
 
 The source tree's `packages/` directory (60 KB) is **not** a separate shipped component: the
 release script (`scripts/package-release.sh`) Composer-installs those path packages into

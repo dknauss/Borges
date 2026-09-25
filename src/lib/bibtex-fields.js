@@ -2,7 +2,7 @@
  * BibTeX/BibLaTeX field normalization applied after citation-js parsing.
  *
  * citation-js maps BibLaTeX natively (`date`, `journaltitle`, `location`,
- * `urldate`, `@online`, `@report`, ...), but two fields reach CSL in a shape
+ * `urldate`, `@online`, `@report`, ...), but three fields reach CSL in a shape
  * Borges cannot use as-is:
  *
  * - `langid` / `language` carry babel/polyglossia names ("ngerman",
@@ -11,6 +11,8 @@
  *   BCP 47 tags, so assistive technology would receive an invalid language.
  * - `eprint` with `eprinttype = {arxiv}` (or BibTeX's `archiveprefix`) is
  *   dropped entirely, leaving arXiv preprints with no link.
+ * - `type` in EndNote's BibTeX export holds EndNote's reference-type name
+ *   ("Journal Article"), which would otherwise surface as CSL `genre`.
  */
 
 // Babel and polyglossia language names, lowercased, mapped to BCP 47 tags.
@@ -170,6 +172,27 @@ export function getArxivUrlFromRawEntry(rawEntry) {
 	return `https://arxiv.org/abs/${eprint}`;
 }
 
+// EndNote's BibTeX export writes its own reference-type name into `type`
+// (`type = {Journal Article}`), which citation-js maps to CSL `genre`. Styles
+// that print genre would then show "Book Section" or "Conference Proceedings"
+// in the citation. Only names that are EndNote reference types and never a
+// real genre are listed; "Thesis" and "Report" can be genuine, so they stay.
+const ENDNOTE_REFERENCE_TYPES = new Set([
+	'book',
+	'book section',
+	'conference paper',
+	'conference proceedings',
+	'edited book',
+	'electronic article',
+	'electronic book',
+	'electronic book section',
+	'generic',
+	'journal article',
+	'magazine article',
+	'newspaper article',
+	'web page',
+]);
+
 /**
  * Apply BibTeX/BibLaTeX-specific CSL fixes to one citation-js result.
  *
@@ -179,6 +202,13 @@ export function getArxivUrlFromRawEntry(rawEntry) {
  */
 export function normalizeBibtexCsl(csl, rawEntry) {
 	const normalized = { ...csl };
+
+	if (
+		typeof normalized.genre === 'string' &&
+		ENDNOTE_REFERENCE_TYPES.has(normalized.genre.trim().toLowerCase())
+	) {
+		delete normalized.genre;
+	}
 
 	if ('language' in normalized) {
 		const language = normalizeBibtexLanguage(normalized.language);
