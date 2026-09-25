@@ -1047,6 +1047,73 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertSame( 'References', $data['bibliographies'][0]['headingText'] );
 	}
 
+	public function test_collection_reports_null_bibliography_id_for_blocks_saved_without_one(): void {
+		$request            = new WP_REST_Request( 'GET', '/bibliography/v1/posts/101/bibliographies' );
+		$request['post_id'] = $this->published_post_id;
+
+		$data = bibliography_builder_rest_get_bibliographies( $request )->get_data();
+
+		$this->assertArrayHasKey( 'bibliographyId', $data['bibliographies'][0] );
+		$this->assertNull( $data['bibliographies'][0]['bibliographyId'] );
+		$this->assertSame( 'alpha-1', $data['bibliographies'][0]['citations'][0]['id'] );
+	}
+
+	public function test_collection_exposes_each_block_stable_bibliography_id(): void {
+		$content = '<!-- wp:bibliography-builder/bibliography {"bibliographyId":"x"} /-->';
+
+		bibliography_builder_test_set_post( 103, 'publish', $content );
+		bibliography_builder_test_set_parsed_blocks(
+			$content,
+			array(
+				array(
+					'blockName' => 'bibliography-builder/bibliography',
+					'attrs'     => array(
+						'bibliographyId' => '3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01',
+						'citations'      => array(),
+					),
+				),
+				array(
+					'blockName'   => 'core/group',
+					'attrs'       => array(),
+					'innerBlocks' => array(
+						array(
+							'blockName' => 'bibliography-builder/bibliography',
+							'attrs'     => array(
+								'bibliographyId' => 'citation-lx2k9-4f8a1b2c',
+								'citations'      => array(),
+							),
+						),
+					),
+				),
+			)
+		);
+
+		$request            = new WP_REST_Request( 'GET', '/bibliography/v1/posts/103/bibliographies' );
+		$request['post_id'] = 103;
+
+		$data = bibliography_builder_rest_get_bibliographies( $request )->get_data();
+
+		$this->assertSame(
+			array( '3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01', 'citation-lx2k9-4f8a1b2c' ),
+			array_column( $data['bibliographies'], 'bibliographyId' )
+		);
+	}
+
+	public function test_stable_block_id_rejects_unusable_values(): void {
+		foreach ( array( '', 'has space', '../etc', '-leading-dash', str_repeat( 'a', 65 ), 42, array( 'x' ) ) as $value ) {
+			$this->assertNull(
+				bibliography_builder_get_stable_block_id( array( 'bibliographyId' => $value ) ),
+				var_export( $value, true )
+			);
+		}
+
+		$this->assertNull( bibliography_builder_get_stable_block_id( array() ) );
+		$this->assertSame(
+			str_repeat( 'a', 64 ),
+			bibliography_builder_get_stable_block_id( array( 'bibliographyId' => str_repeat( 'a', 64 ) ) )
+		);
+	}
+
 	public function test_single_endpoint_supports_json_text_and_csl_json_formats(): void {
 		$request            = new WP_REST_Request( 'GET', '/bibliography/v1/posts/101/bibliographies/0' );
 		$request['post_id'] = $this->published_post_id;

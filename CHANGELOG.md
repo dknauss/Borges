@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Stable IDs (Phase 05, Tier 0). The read-only REST collection and single-bibliography routes, and the `borges/get-bibliographies` ability, now report each block's `bibliographyId`, a UUID that stays put when blocks before it are added or removed, as the future write routes will need. It is `null` for a block saved before IDs were assigned (or with an unusable value) until the post is next edited. Every citation already carried an `id`; the editor now guarantees one, unique within its block.
+
 ### Fixed
 
 - Pasting a whole reference-manager `.bib` export no longer loses or misreads records:
@@ -14,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `@comment` and `@preamble` blocks, and `%` comment lines outside entries (JabRef's `% Encoding:` header and `jabref-meta` footer), are ignored instead of each producing an error notice.
   - `@string` macros now resolve, so a JabRef entry with `journal = nature` keeps its journal.
 - EndNote's BibTeX export writes its reference-type name into `type` (`type = {Journal Article}`), which became CSL `genre` and could print as "Journal Article" or "Book Section" in styles that show genre. Those names are now dropped. Genuine genres such as "Master's thesis" are kept.
+- Duplicating or copy-pasting a bibliography block copied its `bibliographyId` and every citation `id`, so two blocks in one post shared an ID and the page carried duplicate `ref-…` element IDs (invalid HTML, and in-page links jumped to the wrong list). The later copy now takes a new block ID and new citation IDs when it is added; the original keeps its own. Citations saved without a usable ID, or with one repeated within the block, get a new one when the post is next edited. These automatic assignments add no undo step.
 - Pasting a CSL-JSON (or other JSON) document produced a nonsense webpage citation titled "id". It is now rejected with the standard unsupported-input notice. CSL-JSON remains an export format; the README no longer lists it as pasteable.
 
 ### Added

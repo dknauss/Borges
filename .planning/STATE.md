@@ -41,7 +41,7 @@ ordering. In short:
 1. **CI, runtime, and Playground hygiene** (standing)
 2. **Reference-manager export corpus**: addresses the paste/import coverage gap
 3. ~~**Extract the resolvers**~~: done, unreleased (`includes/resolvers.php`)
-4. **Phase 05 M0: stable entry IDs**: unblocks writable REST and Abilities
+4. ~~**Phase 05 M0: stable entry IDs**~~: done, unreleased; M1 (Tier 1 read extensions) is next
 5. **First-wave official language packs**
 
 ## Last Activity
@@ -87,6 +87,6 @@ Three in `.planning/todos/pending/`:
 Shipped lines: 1.3.x (`v1.3.0`–`v1.3.4`), 1.4.x (`v1.4.0`–`v1.4.2`), 1.5.x
 (`v1.5.0`, `v1.5.1`), 1.6.x (`v1.6.0`). Phases 04 (Cite/Export) and 07
 (embedded identifiers) are shipped and archived. Phase 05 shipped its read-only
-Abilities cut in 1.6.0; its writable milestones (M0–M4) remain behind the
-design memo. Phase 06 is an unplanned sketch. Future work is tracked against release versions, not a
-GSD milestone label.
+Abilities cut in 1.6.0 and M0 (stable IDs) since; its writable milestones
+(M1–M4) remain behind the design memo. Phase 06 is an unplanned sketch. Future
+work is tracked against release versions, not a GSD milestone label.

@@ -398,7 +398,7 @@ payoff-per-effort order for the 1.7 line:
     - the remaining question in todo
       `2026-06-17-research-benefits-of-a-leaner-root-plugin-file.md` is
       whether further extraction (formatter, read routes, block data) pays off
-4. **Phase 05 M0: stable entry IDs** (design memo, Tier 0)
+4. ~~**Phase 05 M0: stable entry IDs**~~ — **done** (unreleased; design memo, Tier 0)
     - no routes and no dependencies; unblocks the M1–M3 writable milestones.
       Writable Abilities stay behind M3
 5. **First-wave official language packs** — pending todo

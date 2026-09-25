@@ -73,8 +73,8 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 
 | Metric | Value |
 |---|---|
-| First-party PHP | ~1,931 LOC main plugin file; ~3,321 LOC total with `includes/` |
-| JS source (`src/`) | ~9,553 LOC |
+| First-party PHP | ~1,951 LOC main plugin file; ~3,341 LOC total with `includes/` |
+| JS source (`src/`) | ~9,760 LOC |
 | Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, enqueued only when the block is present |
 | Installed footprint | ~1.9 MB (`vendor/` ~792 KB, translations 724 KB, build assets ~324 KB) |
 | Distributed ZIP (latest v1.6.0 release) | ~488 KB (499,681 bytes) |
@@ -163,13 +163,14 @@ Borges exposes read-only bibliography data routes under `/wp-json/bibliography/v
 GET /wp-json/bibliography/v1/posts/<post_id>/bibliographies
 ```
 
-Returns every Borges Bibliography block found in the post, including nested blocks:
+Returns every Borges Bibliography block found in the post, including nested blocks. `bibliographyId` is the block's stable ID, which stays the same when blocks before it are added or removed; it is `null` for a block saved before IDs were assigned, until that post is next edited. Each citation carries a stable `id`, unique within its block:
 
 ```json
 {
   "postId": 123,
   "bibliographies": [
     {
+      "bibliographyId": "3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01",
       "index": 0,
       "entryCount": 2,
       "citationStyle": "chicago-notes-bibliography",

@@ -68,6 +68,11 @@ export function createWordpressDataNoticesMock() {
 
 			return selected;
 		},
+		// Block-editor reads (stable IDs) see an empty editor: no other blocks.
+		useRegistry: () => ({
+			select: () => ({ getClientIdsWithDescendants: () => [] }),
+			dispatch: () => ({}),
+		}),
 		__unstableResetNotices: () => {
 			notices = [];
 			removeAllCalls = [];
