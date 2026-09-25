@@ -57,7 +57,7 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertSame( '/format', $routes[0]['route'] );
 		$this->assertSame( '/pmid/(?P<pmid>\d{1,8})', $routes[1]['route'] );
 		$this->assertSame( '/posts/(?P<post_id>\d+)/bibliographies', $routes[2]['route'] );
-		$this->assertSame( '/posts/(?P<post_id>\d+)/bibliographies/(?P<index>\d+)', $routes[3]['route'] );
+		$this->assertSame( '/posts/(?P<post_id>\d+)/bibliographies/(?P<ref>[A-Za-z0-9][A-Za-z0-9_-]{0,63})', $routes[3]['route'] );
 		$this->assertSame( 'bibliography_builder_rest_pmid_permissions_check', $routes[1]['args']['permission_callback'] );
 
 		$pmid_arg = $routes[1]['args']['args']['pmid'];
@@ -1117,7 +1117,7 @@ final class RestEndpointsTest extends TestCase {
 	public function test_single_endpoint_supports_json_text_and_csl_json_formats(): void {
 		$request            = new WP_REST_Request( 'GET', '/bibliography/v1/posts/101/bibliographies/0' );
 		$request['post_id'] = $this->published_post_id;
-		$request['index']   = 0;
+		$request['ref']     = '0';
 
 		$json = bibliography_builder_rest_get_bibliography( $request );
 		$this->assertSame( 0, $json->get_data()['index'] );
@@ -1139,7 +1139,7 @@ final class RestEndpointsTest extends TestCase {
 	public function test_single_endpoint_returns_404_for_missing_index(): void {
 		$request            = new WP_REST_Request( 'GET', '/bibliography/v1/posts/101/bibliographies/99' );
 		$request['post_id'] = $this->published_post_id;
-		$request['index']   = 99;
+		$request['ref']     = '99';
 
 		$response = bibliography_builder_rest_get_bibliography( $request );
 

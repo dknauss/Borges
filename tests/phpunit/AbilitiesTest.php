@@ -47,10 +47,17 @@ final class AbilitiesTest extends TestCase {
 		return $GLOBALS['bibliography_builder_test_abilities'][ $name ];
 	}
 
-	public function test_registers_three_readonly_abilities_in_one_category(): void {
+	public function test_registers_six_readonly_abilities_in_one_category(): void {
 		$this->assertArrayHasKey( 'bibliography', $GLOBALS['bibliography_builder_test_ability_categories'] );
 		$this->assertSame(
-			array( 'borges/get-bibliographies', 'borges/export-bibliography', 'borges/validate-citations' ),
+			array(
+				'borges/get-bibliographies',
+				'borges/export-bibliography',
+				'borges/validate-citations',
+				'borges/validate-bibliography',
+				'borges/find-duplicate-citations',
+				'borges/preview-bibliography-style',
+			),
 			array_keys( $GLOBALS['bibliography_builder_test_abilities'] )
 		);
 
@@ -220,5 +227,173 @@ final class AbilitiesTest extends TestCase {
 
 		$this->assertContains( 'wp_abilities_api_categories_init', $hooks );
 		$this->assertContains( 'wp_abilities_api_init', $hooks );
+	}
+
+	private function set_up_review_post(): int {
+		$post_id = 203;
+		$content = '<!-- wp:bibliography-builder/bibliography {"review":1} /-->';
+
+		bibliography_builder_test_set_post( $post_id, 'draft', $content );
+		bibliography_builder_test_set_parsed_blocks(
+			$content,
+			array(
+				array(
+					'blockName' => 'bibliography-builder/bibliography',
+					'attrs'     => array( 'citations' => array() ),
+				),
+				array(
+					'blockName' => 'bibliography-builder/bibliography',
+					'attrs'     => array(
+						'bibliographyId' => 'block-two',
+						'citationStyle'  => 'chicago-author-date',
+						'citations'      => array(
+							array(
+								'id'  => 'one',
+								'csl' => array(
+									'type'   => 'book',
+									'title'  => 'Same Work',
+									'DOI'    => '10.1000/xyz',
+									'author' => array( array( 'family' => 'Doe' ) ),
+									'issued' => array( 'date-parts' => array( array( 2019 ) ) ),
+								),
+							),
+							array(
+								'id'  => 'two',
+								'csl' => array(
+									'type'  => 'book',
+									'title' => 'Same Work, Reprinted',
+									'DOI'   => 'doi.org/10.1000/XYZ',
+								),
+							),
+						),
+					),
+				),
+			)
+		);
+
+		bibliography_builder_test_grant_cap( 9, 'edit_post', $post_id );
+		bibliography_builder_test_set_current_user( 9 );
+
+		return $post_id;
+	}
+
+	public function test_review_abilities_need_edit_post_even_on_published_posts(): void {
+		foreach ( array( 'borges/validate-bibliography', 'borges/find-duplicate-citations', 'borges/preview-bibliography-style' ) as $name ) {
+			$ability = $this->ability( $name );
+			$check   = $ability['permission_callback'];
+
+			$this->assertSame( 'bibliography_builder_ability_can_review_post', $check, $name );
+			$this->assertSame( array( 'post_id' ), array_slice( $ability['input_schema']['required'], 0, 1 ), $name );
+			$this->assertArrayHasKey( 'bibliography_id', $ability['input_schema']['properties'], $name );
+
+			$published = $check( array( 'post_id' => $this->published_post_id ) );
+			$this->assertInstanceOf( WP_Error::class, $published, $name );
+			$this->assertSame( 403, $published->get_error_data()['status'], $name );
+			$this->assertSame( 404, $check( null )->get_error_data()['status'], $name );
+		}
+
+		bibliography_builder_test_grant_cap( 9, 'edit_post', $this->published_post_id );
+		bibliography_builder_test_set_current_user( 9 );
+		$this->assertTrue(
+			bibliography_builder_ability_can_review_post( array( 'post_id' => $this->published_post_id ) )
+		);
+
+		$preview_schema = $this->ability( 'borges/preview-bibliography-style' )['input_schema'];
+		$this->assertSame( array( 'post_id', 'style' ), $preview_schema['required'] );
+		$this->assertContains( 'apa-7', $preview_schema['properties']['style']['enum'] );
+	}
+
+	public function test_review_abilities_find_a_block_by_bibliography_id_or_index(): void {
+		$post_id  = $this->set_up_review_post();
+		$validate = $this->ability( 'borges/validate-bibliography' )['execute_callback'];
+
+		$by_id    = $validate(
+			array(
+				'post_id'         => $post_id,
+				'bibliography_id' => 'block-two',
+			)
+		);
+		$by_index = $validate(
+			array(
+				'post_id' => $post_id,
+				'index'   => 1,
+			)
+		);
+
+		$this->assertSame( $by_index, $by_id );
+		$this->assertSame( 1, $by_id['index'] );
+		$this->assertSame( 'block-two', $by_id['bibliographyId'] );
+		$this->assertTrue( $by_id['valid'] );
+		$this->assertSame( array( 'missing-author', 'missing-issued' ), array_column( $by_id['entries'][1]['issues'], 'code' ) );
+
+		// With no selector the first block is used, as for export.
+		$this->assertSame( 0, $validate( array( 'post_id' => $post_id ) )['index'] );
+
+		$missing = $validate(
+			array(
+				'post_id'         => $post_id,
+				'bibliography_id' => 'no-such-block',
+			)
+		);
+		$this->assertSame( 404, $missing->get_error_data()['status'] );
+	}
+
+	public function test_find_duplicate_citations_matches_the_review_route(): void {
+		$post_id = $this->set_up_review_post();
+		$execute = $this->ability( 'borges/find-duplicate-citations' )['execute_callback'];
+		$result  = $execute(
+			array(
+				'post_id'         => $post_id,
+				'bibliography_id' => 'block-two',
+			)
+		);
+
+		$this->assertCount( 1, $result['pairs'] );
+		$this->assertSame( 'doi', $result['pairs'][0]['reason'] );
+		$this->assertSame( 'one', $result['pairs'][0]['first']['id'] );
+		$this->assertSame( 'two', $result['pairs'][0]['second']['id'] );
+	}
+
+	public function test_preview_bibliography_style_formats_without_saving(): void {
+		$post_id = $this->set_up_review_post();
+		$execute = $this->ability( 'borges/preview-bibliography-style' )['execute_callback'];
+		$result  = $execute(
+			array(
+				'post_id'         => $post_id,
+				'bibliography_id' => 'block-two',
+				'style'           => 'ieee',
+			)
+		);
+
+		$this->assertSame( 'chicago-author-date', $result['currentStyle'] );
+		$this->assertSame( 'ieee', $result['style'] );
+		$this->assertStringContainsString( 'Same Work', $result['entries'][0]['preview'] );
+
+		$invalid = $execute(
+			array(
+				'post_id' => $post_id,
+				'style'   => 'not-a-style',
+			)
+		);
+		$this->assertInstanceOf( WP_Error::class, $invalid );
+		$this->assertSame( 'bibliography_builder_invalid_style', $invalid->get_error_code() );
+		$this->assertSame( 400, $invalid->get_error_data()['status'] );
+	}
+
+	public function test_export_accepts_a_bibliography_id(): void {
+		$post_id = $this->set_up_review_post();
+		$execute = $this->ability( 'borges/export-bibliography' )['execute_callback'];
+		$result  = $execute(
+			array(
+				'post_id'         => $post_id,
+				'bibliography_id' => 'block-two',
+				'index'           => 0,
+			)
+		);
+
+		// bibliography_id wins over index.
+		$this->assertSame( 1, $result['index'] );
+		$this->assertSame( 'block-two', $result['bibliographyId'] );
+		$this->assertSame( 'Same Work', $result['content'][0]['title'] );
 	}
 }

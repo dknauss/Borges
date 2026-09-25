@@ -563,6 +563,8 @@ Candidate Abilities:
 -   `borges/get-bibliographies`
 -   `borges/export-bibliography`
 -   `borges/validate-citations`
+-   `borges/validate-bibliography`, `borges/find-duplicate-citations`,
+    `borges/preview-bibliography-style` (shipped with M1, unreleased)
 -   `borges/preview-bibliography-update`
 -   `borges/apply-bibliography-update`
 -   `borges/add-citation`
