@@ -36,6 +36,7 @@ import { useCitationReorder } from './hooks/use-citation-reorder';
 import { useBibliographyExportActions } from './hooks/use-bibliography-export-actions';
 import { useCitationImportActions } from './hooks/use-citation-import-actions';
 import { useManualCitationActions } from './hooks/use-manual-citation-actions';
+import { useStableIds } from './hooks/use-stable-ids';
 import {
 	getHeadingPlaceholder,
 	getListSemantics,
@@ -44,7 +45,6 @@ import {
 } from './lib/formatting';
 import { SUPPORTED_INPUT_MESSAGE } from './lib/input-support';
 import { sortCitations } from './lib/sorter';
-import { createCitationId } from './lib/citation-id';
 import { computeExportStrings } from './hooks/compute-export-strings';
 import {
 	MAX_CITATIONS_PER_BIBLIOGRAPHY,
@@ -81,7 +81,7 @@ const FORMATTER_FALLBACK_MESSAGE = __(
 	'borges-bibliography-builder'
 );
 
-export default function Edit({ attributes, setAttributes }) {
+export default function Edit({ attributes, setAttributes, clientId }) {
 	const {
 		citations,
 		citationStyle,
@@ -183,12 +183,7 @@ export default function Edit({ attributes, setAttributes }) {
 		citationsRef.current = citations;
 	}, [citations]);
 
-	useEffect(() => {
-		if (!attributes.bibliographyId) {
-			setAttributes({ bibliographyId: createCitationId() });
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	useStableIds({ clientId, attributes, setAttributes });
 
 	// When Cite/Export is enabled, ensure existing citations have their async
 	// BibTeX/BibLaTeX export strings (RIS/CSL-JSON are computed in save()).

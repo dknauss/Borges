@@ -55,6 +55,25 @@ const BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES = 65536;
 const BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL = 3600;
 
 /**
+ * Return a block's stable `bibliographyId`, or null when it has none yet.
+ *
+ * The editor assigns a UUID to every bibliography block and keeps it unique
+ * within a post (Phase 05, Tier 0). Blocks saved before that, or edited by
+ * hand, may carry no ID or an unusable one; those report null rather than a
+ * value a client could not safely use as a URL segment.
+ *
+ * @param array $attrs Block attributes.
+ * @return string|null
+ */
+function bibliography_builder_get_stable_block_id( $attrs ) {
+	$id = isset( $attrs['bibliographyId'] ) ? $attrs['bibliographyId'] : null;
+
+	return is_string( $id ) && 1 === preg_match( '/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/', $id )
+		? $id
+		: null;
+}
+
+/**
  * Recursively gather bibliography block data from parsed blocks.
  *
  * @param array $blocks Parsed block tree.
@@ -67,16 +86,17 @@ function bibliography_builder_collect_blocks( $blocks, $results = array() ) {
 			$attrs = isset( $block['attrs'] ) && is_array( $block['attrs'] ) ? $block['attrs'] : array();
 
 			$results[] = array(
-				'citationStyle' => isset( $attrs['citationStyle'] )
+				'bibliographyId' => bibliography_builder_get_stable_block_id( $attrs ),
+				'citationStyle'  => isset( $attrs['citationStyle'] )
 					? (string) $attrs['citationStyle']
 					: 'chicago-notes-bibliography',
-				'headingText'   => isset( $attrs['headingText'] )
+				'headingText'    => isset( $attrs['headingText'] )
 					? (string) $attrs['headingText']
 					: '',
-				'outputJsonLd'  => isset( $attrs['outputJsonLd'] ) ? (bool) $attrs['outputJsonLd'] : true,
-				'outputCoins'   => ! empty( $attrs['outputCoins'] ),
-				'outputCslJson' => ! empty( $attrs['outputCslJson'] ),
-				'citations'     => isset( $attrs['citations'] )
+				'outputJsonLd'   => isset( $attrs['outputJsonLd'] ) ? (bool) $attrs['outputJsonLd'] : true,
+				'outputCoins'    => ! empty( $attrs['outputCoins'] ),
+				'outputCslJson'  => ! empty( $attrs['outputCslJson'] ),
+				'citations'      => isset( $attrs['citations'] )
 					&& is_array( $attrs['citations'] )
 						? array_values(
 							array_filter( $attrs['citations'], 'is_array' )

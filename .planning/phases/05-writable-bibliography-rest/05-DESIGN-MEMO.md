@@ -51,6 +51,14 @@ Before writable routes can exist, each bibliography block needs a stable `biblio
 
 **Risk:** low — existing blocks get IDs lazily on next save, no migration required.
 
+**Status (2026-09-25): done (unreleased).** `bibliographyId` and editor-side assignment shipped in 1.4.0 (#37). M0 closed the rest in `src/lib/stable-ids.js` and `src/hooks/use-stable-ids.js`:
+- **Uniqueness within a post.** A duplicated or pasted block (the later one in document order) takes a new `bibliographyId` *and* new citation IDs, since citation IDs are the `ref-<id>` element IDs in saved markup and must be unique on the page.
+- **Citation IDs.** Citations keep `id` as a top-level entry field, not inside the CSL-JSON object as sketched above; that is where every import path already put it. Missing, blank, whitespace-bearing, or repeated IDs are replaced on mount; any other existing ID is kept so `#ref-…` links survive.
+- **No undo step.** Assignments are marked non-persistent via `__unstableMarkNextChangeAsNotPersistent` where available.
+- **Read exposure.** The REST read routes and `borges/get-bibliographies` report `bibliographyId` (null until a post is next edited, or when the stored value is not `[A-Za-z0-9][A-Za-z0-9_-]{0,63}`).
+- **Open question 1 answered:** lazy assignment on next edit, no migration script.
+- **Known limit:** pasting a copy *above* the original leaves both IDs equal until the post is reopened, when the later block yields. The check runs at mount, and the original is already mounted.
+
 ---
 
 ### Tier 1 — Non-destructive read extensions (safe to ship independently)
