@@ -189,7 +189,16 @@ capture_http() {
 	url="$2"
 	body_file="$ARTIFACT_RESPONSE_DIR/${name}.body"
 	headers_file="$ARTIFACT_RESPONSE_DIR/${name}.headers"
-	curl -fsSL -D "$headers_file" "$url" -o "$body_file"
+	status=$(curl -sSL -D "$headers_file" -o "$body_file" -w '%{http_code}' "$url")
+
+	# Print the failing response in the job log: artifacts expire and are not
+	# always reachable, and the status alone does not say which layer refused.
+	if [ "$status" -ge 400 ]; then
+		echo "HTTP $status from $name: $url" >&2
+		head -c 2000 "$body_file" >&2
+		echo >&2
+		return 1
+	fi
 }
 
 ensure_wp_version() {
