@@ -26,6 +26,10 @@ const DEMO_BLUEPRINTS = [
 		intro: '<strong>Welcome to the Borges Bibliography Builder development build.</strong> This Playground runs the current <code>main</code> branch, not a stable release. It is a sandbox: nothing here is kept after you close the tab.',
 	},
 	{ file: '.wordpress-org/blueprints/blueprint.json', intro: RELEASE_INTRO },
+	{
+		file: 'playground/blueprint-write-api.json',
+		intro: '<strong>Borges write API (development).</strong> This Playground runs the current <code>main</code> build with the opt-in citation write routes enabled. Open your browser console here and try <code>await borgesWrite.list()</code>; every call dry-runs first, and <code>{ commit: true }</code> writes (see <code>docs/rest-write-routes.md</code>). Not for real sites.',
+	},
 ];
 
 function phpSingleQuoted(value) {

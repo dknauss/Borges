@@ -16,6 +16,25 @@ add_filter( 'bibliography_builder_enable_write_routes', '__return_true' );
 
 While the filter returns false, the routes are not registered and the read routes send no `ETag`.
 
+## Trying it
+
+To try the routes without a real site, use the development Playground: `https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint-write-api.json`.
+
+It runs the main build with the routes enabled. Open the demo post in the editor and use the browser console:
+
+```js
+await borgesWrite.list()
+await borgesWrite.add( 'demo-try-it', [ { type: 'book', title: 'Ficciones', author: [ { family: 'Borges', given: 'Jorge Luis' } ], issued: { 'date-parts': [ [ 1944 ] ] } } ] )
+await borgesWrite.add( 'demo-try-it', [ … ], { commit: true } )
+await borgesWrite.update( 'demo-apa-7', 'demo-apa-7-1', { title: 'New title' }, { commit: true } )
+await borgesWrite.remove( 'demo-chicago-notes', 'demo-chicago-notes-4', { commit: true } )
+await borgesWrite.reorder( 'demo-ieee', [ 'demo-ieee-3', 'demo-ieee-1', 'demo-ieee-2' ], { commit: true } )
+```
+
+Every call makes a dry run first. With `{ commit: true }`, it then writes, sending the dry run's ETag as `If-Match`, and reloads the editor, which would otherwise hold the old post and overwrite the write on save. The helper lives in `playground/dev/`.
+
+The runtime matrix also exercises the routes over real HTTP on every PHP and WordPress version it covers (`scripts/runtime-matrix/smoke.sh`).
+
 ## Routes
 
 All routes live under `/wp-json/bibliography/v1/posts/<post_id>/bibliographies/<ref>`. `<ref>` is the block's zero-based index, or its stable `bibliographyId`, as in the read routes.

@@ -337,6 +337,16 @@ The GitHub Actions runtime matrix currently covers:
 - Nginx + PHP 8.2 + latest WordPress
 - Nginx + PHP 8.3 + latest WordPress
 
+Every cell tests the packaged release, built with `npm run package:release` and including its production `vendor/`, not the source checkout. Each cell:
+
+- activates the plugin and checks the front-end render and the read routes;
+- formats the style corpus (`tests/fixtures/csl-styles/`) in all nine styles on that PHP version, and compares the output with the reviewed goldens byte for byte;
+- turns on the citation write routes with a test-only mu-plugin, then authenticates with an application password and, over real HTTP:
+  - runs a dry run;
+  - expects `428` without `If-Match` and `412` with a stale ETag;
+  - makes a real write;
+  - checks that the rewritten block's markup is exactly what `save()` renders.
+
 Each runtime smoke job uploads artifacts, including Docker logs, service status, HTTP responses, and environment summaries under `output/runtime-matrix/<matrix-name>`.
 
 Multisite runtime smoke coverage is included in CI. SQLite is not currently part of the GitHub runtime matrix; add it when a compatibility risk justifies the extra lane.
@@ -361,6 +371,7 @@ WordPress.org branding assets live in [.wordpress-org](./.wordpress-org/), edita
 The Playground demos and WordPress.org Preview all rely on the PHP formatter used by the editor REST endpoint. That formatter uses `citeproc-php`, which requires PHP `intl`. Keep the Blueprint files in sync:
 
 - `playground/blueprint.json` powers the GitHub README (Release badge) and WordPress.org readme demo link; it installs the latest GitHub Release ZIP through the WordPress Playground CORS proxy so the demo exercises the packaged release artifact without direct GitHub asset CORS failures.
+- `playground/blueprint-write-api.json` is for development only and is not linked from any badge. It boots the main build with the opt-in citation write routes enabled, and adds a `borgesWrite` helper to the block editor's browser console (`playground/dev/`, fetched from `main`). Open it with `https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint-write-api.json`.
 - `playground/blueprint-main.json` powers the GitHub README Main-build badge; it installs the `borges-bibliography-builder.zip` asset from the rolling `main-preview` pre-release through the same CORS proxy. CI's `publish-main-preview` job refreshes that pre-release on every push to `main` — after the full CI suite passes, and only when the commit is still `main`'s tip — while the `package-release` job just builds and uploads the artifact it consumes (`git:directory` is unavailable in live Playground, so a stable release asset is the reliable way to boot main HEAD).
 - `.wordpress-org/blueprints/blueprint.json` deploys to WordPress.org SVN as `assets/blueprints/blueprint.json` for the plugin-directory Preview button. WordPress.org installs the plugin automatically in that preview, so this blueprint does not install Borges itself.
 - All three files intentionally declare `phpExtensionBundles: ["kitchen-sink"]` and `features: { "networking": true, "intl": true }`. The bundle form follows WordPress.org Preview documentation; the `features.intl` flag is required by the live browser Playground runtime so formatter requests do not fall back with `bibliography_builder_formatter_extension_missing`.
