@@ -1619,11 +1619,14 @@ function bibliography_builder_rest_get_bibliographies( WP_REST_Request $request 
 	$post           = get_post( $post_id );
 	$bibliographies = bibliography_builder_get_bibliographies_for_post( $post );
 
-	return rest_ensure_response(
-		array(
-			'postId'         => $post_id,
-			'bibliographies' => $bibliographies,
-		)
+	return bibliography_builder_with_write_etag(
+		rest_ensure_response(
+			array(
+				'postId'         => $post_id,
+				'bibliographies' => $bibliographies,
+			)
+		),
+		$post
 	);
 }
 
@@ -1647,17 +1650,20 @@ function bibliography_builder_rest_get_bibliography( WP_REST_Request $request ) 
 		$response = new WP_REST_Response( bibliography_builder_build_plain_text( $bibliography ) );
 		$response->header( 'Content-Type', 'text/plain; charset=utf-8' );
 
-		return $response;
+		return bibliography_builder_with_write_etag( $response, get_post( absint( $request['post_id'] ) ) );
 	}
 
 	if ( 'csl-json' === $format ) {
 		$response = rest_ensure_response( bibliography_builder_build_csl_json( $bibliography ) );
 		$response->header( 'Content-Type', 'application/vnd.citationstyles.csl+json; charset=utf-8' );
 
-		return $response;
+		return bibliography_builder_with_write_etag( $response, get_post( absint( $request['post_id'] ) ) );
 	}
 
-	return rest_ensure_response( $bibliography );
+	return bibliography_builder_with_write_etag(
+		rest_ensure_response( $bibliography ),
+		get_post( absint( $request['post_id'] ) )
+	);
 }
 
 /**
@@ -1838,6 +1844,7 @@ function bibliography_builder_register_rest_routes() {
 	);
 
 	bibliography_builder_register_review_routes();
+	bibliography_builder_register_write_routes();
 
 	// The same read by stable ID, registered as its own route so numeric
 	// requests keep the `index` parameter they have always had.
@@ -1931,6 +1938,8 @@ require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/abilities.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/review.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/save-markup.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/frontend-labels.php';
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/block-locator.php';
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/write-routes.php';
 add_filter( 'rest_pre_serve_request', 'bibliography_builder_rest_pre_serve_request', 10, 4 );
 
 /**
