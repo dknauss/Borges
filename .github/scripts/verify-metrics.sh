@@ -71,6 +71,7 @@ actual_php="$(find . -name '*.php' \
 	-not -path './tests/*' \
 	-not -path './packages/*' \
 	-not -path './scripts/*' \
+	-not -path './playground/*' \
 	-not -path './output/*' \
 	-not -path './build/*' \
 	-print0 | xargs -0 wc -l | tail -1 | awk '{print $1}')"

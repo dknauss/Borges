@@ -28,7 +28,8 @@
 		"assets:screenshots": "node scripts/capture-screenshots.js",
 		"assets:icons": "node scripts/generate-icons.js",
 		"assets:banners": "python3 scripts/generate_brand_assets.py",
-		"assets:banners:quick": "python3 scripts/generate_brand_assets.py --skip-render"
+		"assets:banners:quick": "python3 scripts/generate_brand_assets.py --skip-render",
+		"playground:build": "node ./scripts/build-playground-blueprints.js"
 	},
 	"jest": {
 		"testEnvironment": "jsdom",
