@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The runtime matrix now tests the packaged release, including its production `vendor/`, instead of the source checkout, which had no `vendor/`, so the formatter could not run there. Every cell, from PHP 7.4 to 8.4, also:
+  - checks all nine styles against the reviewed golden output;
+  - exercises the opt-in write routes over real HTTP with an application password: dry run, `428`, `412`, a real write, and a check that the rewritten block still validates.
+
+  A development-only Playground blueprint (`playground/blueprint-write-api.json`) enables the write routes and adds a `borgesWrite` helper to the editor's browser console.
 - The nine citation styles and their locales are rewritten in full from each style manual:
   - Chicago notes-bibliography and author-date (17th ed.);
   - APA 7;

@@ -60,6 +60,18 @@ jobs:
             - name: Build plugin assets
               run: npm run build
 
+            - name: Set up PHP for packaging
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.3'
+                  coverage: none
+                  tools: composer
+
+            # Test what users install: the release package, with its
+            # production-only vendor/ (citeproc-php and the bundled styles).
+            - name: Package release plugin
+              run: npm run package:release
+
             - name: Run runtime smoke test
               env:
                   WP_BIBLIO_SERVER: ${{ matrix.server }}
@@ -69,6 +81,7 @@ jobs:
                   WP_BIBLIO_DB_PORT: ${{ matrix.db_port }}
                   WP_BIBLIO_DB_ENGINE: ${{ matrix.db_engine }}
                   WP_BIBLIO_MULTISITE: ${{ matrix.multisite }}
+                  WP_BIBLIO_PLUGIN_DIR: ${{ github.workspace }}/output/release/borges-bibliography-builder
                   WP_BIBLIO_ARTIFACT_DIR: ${{ github.workspace }}/output/runtime-matrix/${{ matrix.name }}
               run: sh ./scripts/runtime-matrix/smoke.sh
 
@@ -176,6 +189,18 @@ jobs:
             - name: Build plugin assets
               run: npm run build
 
+            - name: Set up PHP for packaging
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.3'
+                  coverage: none
+                  tools: composer
+
+            # Test what users install: the release package, with its
+            # production-only vendor/ (citeproc-php and the bundled styles).
+            - name: Package release plugin
+              run: npm run package:release
+
             - name: Run runtime smoke test
               env:
                   WP_BIBLIO_SERVER: ${{ matrix.server }}
@@ -185,6 +210,7 @@ jobs:
                   WP_BIBLIO_DB_PORT: ${{ matrix.db_port }}
                   WP_BIBLIO_DB_ENGINE: ${{ matrix.db_engine }}
                   WP_BIBLIO_MULTISITE: ${{ matrix.multisite }}
+                  WP_BIBLIO_PLUGIN_DIR: ${{ github.workspace }}/output/release/borges-bibliography-builder
                   WP_BIBLIO_ARTIFACT_DIR: ${{ github.workspace }}/output/runtime-matrix/${{ matrix.name }}
               run: sh ./scripts/runtime-matrix/smoke.sh
 

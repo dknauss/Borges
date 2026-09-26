@@ -15,7 +15,10 @@ WORKDIR="${RUNTIME_ROOT}/${SERVER}-php${PHP_VERSION}-wp${WP_VERSION}-${DB_ENGINE
 SITE_DIR="${WORKDIR}/site"
 COMPOSE_FILE="${WORKDIR}/docker-compose.yml"
 NGINX_CONF="${WORKDIR}/nginx.conf"
-PLUGIN_DIR="$ROOT_DIR"
+# The plugin to test. CI points this at the packaged release
+# (output/release/borges-bibliography-builder) so the matrix runs exactly what
+# users install, production vendor/ included; the default is the checkout.
+PLUGIN_DIR="${WP_BIBLIO_PLUGIN_DIR:-$ROOT_DIR}"
 ARTIFACT_DIR="${WP_BIBLIO_ARTIFACT_DIR:-$WORKDIR/artifacts}"
 ARTIFACT_RESPONSE_DIR="$ARTIFACT_DIR/http"
 WORDPRESS_IMAGE="wordpress:php${PHP_VERSION}-$([ "$SERVER" = "nginx" ] && printf 'fpm' || printf 'apache')"
@@ -139,6 +142,8 @@ cat >> "$COMPOSE_FILE" <<EOF2
     volumes:
       - ${SITE_DIR}:/var/www/html
       - ${PLUGIN_DIR}:/var/www/html/wp-content/plugins/bibliography
+      - ${ROOT_DIR}/scripts/runtime-matrix:/smoke:ro
+      - ${ROOT_DIR}/tests/fixtures/csl-styles:/smoke-fixtures:ro
 EOF2
 
 if [ "$SERVER" = "nginx" ]; then
@@ -204,6 +209,42 @@ wait_for_plugin_routes() {
 
 wp_exec() {
 	docker compose -f "$COMPOSE_FILE" exec -T wordpress sh -lc "$1"
+}
+
+# Call a REST route as the admin with an application password.
+# Usage: rest_call name method url expected_status [json_body] [if_match]
+# Leaves the body and headers under $ARTIFACT_RESPONSE_DIR/<name>.*.
+rest_call() {
+	name="$1"
+	method="$2"
+	url="$3"
+	expected="$4"
+	body="${5:-}"
+	if_match="${6:-}"
+	body_file="$ARTIFACT_RESPONSE_DIR/${name}.body"
+	headers_file="$ARTIFACT_RESPONSE_DIR/${name}.headers"
+
+	set -- -sS -X "$method" -u "admin:$APP_PASSWORD" -D "$headers_file" -o "$body_file" -w '%{http_code}'
+	if [ -n "$body" ]; then
+		set -- "$@" -H 'Content-Type: application/json' --data "$body"
+	fi
+	if [ -n "$if_match" ]; then
+		set -- "$@" -H "If-Match: $if_match"
+	fi
+
+	status=$(curl "$@" "$url")
+
+	if [ "$status" != "$expected" ]; then
+		echo "HTTP $status (expected $expected) from $name: $method $url" >&2
+		head -c 2000 "$body_file" >&2
+		echo >&2
+		return 1
+	fi
+}
+
+# The ETag response header of a captured response, quotes kept.
+header_etag() {
+	tr -d '\r' < "$ARTIFACT_RESPONSE_DIR/$1.headers" | sed -n 's/^[Ee][Tt][Aa][Gg]: *//p' | tail -1
 }
 
 capture_http() {
@@ -305,5 +346,52 @@ grep -q '"title":"Alpha Book"' "$ARTIFACT_RESPONSE_DIR/rest-csl-json.body"
 if [ "$DB_ENGINE" = "sqlite" ]; then
 	wp_exec 'wp eval '\''echo defined( "DB_ENGINE" ) ? DB_ENGINE : "undefined";'\'' --allow-root --path=/var/www/html' | grep -q '^sqlite$'
 fi
+
+# --- Formatter: every bundled style, on this PHP version -------------------
+#
+# PHPUnit pins the style output on one PHP version; this renders the same
+# corpus in every style here, from the tested plugin's own vendor/, and
+# compares it with the reviewed goldens byte for byte.
+wp_exec 'wp eval-file /smoke/format-styles.php --allow-root --path=/var/www/html' > "$ARTIFACT_DIR/format-styles.txt" 2>&1 || true
+if ! grep -q '^styles-ok ' "$ARTIFACT_DIR/format-styles.txt"; then
+	echo "Formatter output differs from tests/fixtures/csl-styles:" >&2
+	head -c 4000 "$ARTIFACT_DIR/format-styles.txt" >&2
+	exit 1
+fi
+
+# --- Write routes, over real HTTP ------------------------------------------
+#
+# Off by default, so a test-only mu-plugin enables them. An application
+# password authenticates, which also proves the Authorization, ETag, and
+# If-Match headers survive this web server.
+wp_exec 'wp config set WP_ENVIRONMENT_TYPE local --allow-root --path=/var/www/html'
+wp_exec 'mkdir -p /var/www/html/wp-content/mu-plugins && cp /smoke/enable-write-routes.php /var/www/html/wp-content/mu-plugins/borges-smoke-write-routes.php'
+APP_PASSWORD=$(wp_exec 'wp user application-password create admin runtime-smoke --porcelain --allow-root --path=/var/www/html' | tr -d '\r')
+
+CITATIONS_URL="$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies/0/citations"
+NEW_ITEM='{"items":[{"type":"article-journal","title":"Beta Findings","author":[{"family":"Beta","given":"Bea"}],"container-title":"Journal of Smoke Tests","volume":"3","issue":"1","page":"10-20","issued":{"date-parts":[[2021]]}}]}'
+
+rest_call write-read GET "$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies" 200
+rest_call write-dry-run POST "$CITATIONS_URL" 200 "$NEW_ITEM"
+grep -q '"dryRun":true' "$ARTIFACT_RESPONSE_DIR/write-dry-run.body"
+ETAG=$(header_etag write-dry-run)
+# Separate tests: under set -e, only the last command of an && list can fail the script.
+[ -n "$ETAG" ]
+[ "$ETAG" = "$(header_etag write-read)" ]
+
+rest_call write-no-if-match POST "$CITATIONS_URL&dry_run=false" 428 "$NEW_ITEM"
+rest_call write-stale POST "$CITATIONS_URL&dry_run=false" 412 "$NEW_ITEM" '"stale"'
+rest_call write-commit POST "$CITATIONS_URL&dry_run=false" 200 "$NEW_ITEM" "$ETAG"
+grep -q '"dryRun":false' "$ARTIFACT_RESPONSE_DIR/write-commit.body"
+[ "$(header_etag write-commit)" != "$ETAG" ]
+
+capture_http write-text "$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies/0&format=text"
+grep -q 'Beta, Bea' "$ARTIFACT_RESPONSE_DIR/write-text.body"
+grep -q 'Journal of Smoke Tests 3, no. 1 (2021): 10–20' "$ARTIFACT_RESPONSE_DIR/write-text.body"
+capture_http write-frontend "$SITE_URL/?p=$POST_ID"
+grep -q 'Beta Findings' "$ARTIFACT_RESPONSE_DIR/write-frontend.body"
+
+wp_exec "wp eval-file /smoke/check-blocks.php $POST_ID --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/check-blocks.txt" 2>&1 || true
+grep -q '^blocks-ok 1$' "$ARTIFACT_DIR/check-blocks.txt"
 
 echo "Runtime smoke passed: server=${SERVER} php=${PHP_VERSION} wp=${WP_VERSION} db=${DB_ENGINE} multisite=${MULTISITE}"
