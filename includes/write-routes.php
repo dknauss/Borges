@@ -1,6 +1,6 @@
 <?php
 /**
- * Citation write routes (Phase 05, M2 / Tier 2).
+ * Bibliography write routes (Phase 05, M2 and M3 / Tiers 2 and 3).
  *
  * Off unless a site opts in:
  *
@@ -14,6 +14,11 @@
  * - PATCH  /{citation_id} change fields on one citation
  * - DELETE /{citation_id} remove one citation
  * - PUT    /order         reorder a numeric-style bibliography
+ *
+ * and on the bibliography itself, /bibliography/v1/posts/{post_id}/bibliographies/{ref}:
+ *
+ * - PATCH                 change block settings (heading, output toggles)
+ * - POST   /reformat      switch the citation style and reformat every entry
  *
  * Every route needs `edit_post` on the post. Every route is a dry run unless
  * `dry_run=false`, and a real write needs an `If-Match` header carrying the
@@ -675,6 +680,300 @@ function bibliography_builder_rest_reorder_citations( WP_REST_Request $request )
 }
 
 /**
+ * The default visible heading for a citation style.
+ *
+ * `getDefaultHeadingText()` from `src/lib/formatting/style-registry.js`.
+ *
+ * @param string $style_key Citation style key.
+ * @return string
+ */
+function bibliography_builder_write_default_heading( $style_key ) {
+	$headings = array(
+		'chicago-notes-bibliography' => 'Bibliography',
+		'chicago-author-date'        => 'References',
+		'apa-7'                      => 'References',
+		'mla-9'                      => 'Works Cited',
+		'harvard'                    => 'References',
+		'ieee'                       => 'References',
+		'vancouver'                  => 'References',
+		'oscola'                     => 'Bibliography',
+		'abnt'                       => 'Referências',
+	);
+
+	return isset( $headings[ $style_key ] ) ? $headings[ $style_key ] : 'Bibliography';
+}
+
+/**
+ * Block settings a PATCH may change, with their `block.json` defaults.
+ *
+ * `citationStyle` is not here: changing it means reformatting every entry,
+ * which is what POST …/reformat does.
+ *
+ * @return array<string, string|bool>
+ */
+function bibliography_builder_write_setting_defaults() {
+	return array(
+		'headingText'      => '',
+		'outputJsonLd'     => true,
+		'outputCoins'      => false,
+		'outputCslJson'    => false,
+		'outputCiteExport' => false,
+	);
+}
+
+/**
+ * Set a block attribute the way the editor serializes it: an attribute equal
+ * to its `block.json` default is left out of the block comment.
+ *
+ * @param array  $attrs         Block attributes.
+ * @param string $name          Attribute name.
+ * @param mixed  $value         New value.
+ * @param mixed  $default_value Default value.
+ * @return array
+ */
+function bibliography_builder_write_set_attribute( $attrs, $name, $value, $default_value ) {
+	if ( $value === $default_value ) {
+		unset( $attrs[ $name ] );
+	} else {
+		$attrs[ $name ] = $value;
+	}
+
+	return $attrs;
+}
+
+/**
+ * PATCH …/bibliographies/{ref}: change block settings.
+ *
+ * Body: any of `headingText` (string) and the booleans `outputJsonLd`,
+ * `outputCoins`, `outputCslJson`, and `outputCiteExport`. Citations are not
+ * touched. `citationStyle` is refused with a pointer to POST …/reformat.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_update_bibliography_settings( WP_REST_Request $request ) {
+	$settings = $request->get_json_params();
+	$defaults = bibliography_builder_write_setting_defaults();
+
+	if ( ! is_array( $settings ) || array() === $settings || isset( $settings[0] ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_settings',
+			__( 'Send a JSON object of block settings to change.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	if ( array_key_exists( 'citationStyle', $settings ) ) {
+		return new WP_Error(
+			'bibliography_builder_style_needs_reformat',
+			__(
+				'Changing the citation style reformats every entry: use POST …/reformat with { "style": "…" }.',
+				'borges-bibliography-builder'
+			),
+			array( 'status' => 400 )
+		);
+	}
+
+	foreach ( $settings as $name => $value ) {
+		if ( ! array_key_exists( $name, $defaults ) ) {
+			return new WP_Error(
+				'bibliography_builder_invalid_settings',
+				sprintf(
+					/* translators: 1: setting name, 2: comma-separated setting names. */
+					__( '"%1$s" is not a block setting. Settings: %2$s.', 'borges-bibliography-builder' ),
+					$name,
+					implode( ', ', array_keys( $defaults ) )
+				),
+				array( 'status' => 400 )
+			);
+		}
+
+		$valid = is_bool( $defaults[ $name ] )
+			? is_bool( $value )
+			: is_string( $value ) && ! preg_match( '/[\x00-\x1F\x7F]/', $value );
+
+		if ( ! $valid ) {
+			return new WP_Error(
+				'bibliography_builder_invalid_settings',
+				sprintf(
+					/* translators: 1: setting name, 2: expected type. */
+					__( '"%1$s" must be %2$s.', 'borges-bibliography-builder' ),
+					$name,
+					is_bool( $defaults[ $name ] )
+						? __( 'true or false', 'borges-bibliography-builder' )
+						: __( 'a single line of text', 'borges-bibliography-builder' )
+				),
+				array( 'status' => 400 )
+			);
+		}
+	}
+
+	return bibliography_builder_write_bibliography(
+		$request,
+		static function ( $attrs ) use ( $settings, $defaults ) {
+			foreach ( $settings as $name => $value ) {
+				$attrs = bibliography_builder_write_set_attribute( $attrs, $name, $value, $defaults[ $name ] );
+			}
+
+			return array(
+				'attrs'   => $attrs,
+				'changes' => array( 'updated' => array_keys( $settings ) ),
+			);
+		}
+	);
+}
+
+/**
+ * POST …/bibliographies/{ref}/reformat: switch the citation style.
+ *
+ * Body: `{ "style": "<key>" }`, one of the supported `citationStyle` keys.
+ * Mirrors the editor's style switch: every entry is formatted in the new
+ * style (in chunks of the formatter's item limit), manual display text and
+ * export strings are kept because a style change does not invalidate them,
+ * the entries are stored in the new style's display order, and a heading
+ * still set to the old style's default becomes the new style's default.
+ * Sending the current style reformats in place, so the route is idempotent.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_reformat_bibliography( WP_REST_Request $request ) {
+	$params = $request->get_json_params();
+	$style  = is_array( $params ) && isset( $params['style'] ) && is_string( $params['style'] ) ? $params['style'] : '';
+
+	if ( ! array_key_exists( $style, bibliography_builder_get_formatter_style_definitions() ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_style',
+			sprintf(
+				/* translators: %s: comma-separated style keys. */
+				__( 'Send "style": one of %s.', 'borges-bibliography-builder' ),
+				implode( ', ', array_keys( bibliography_builder_get_formatter_style_definitions() ) )
+			),
+			array( 'status' => 400 )
+		);
+	}
+
+	return bibliography_builder_write_bibliography(
+		$request,
+		static function ( $attrs ) use ( $style ) {
+			$from      = bibliography_builder_write_style( $attrs );
+			$citations = bibliography_builder_write_citations( $attrs );
+
+			if ( count( $citations ) > BIBLIOGRAPHY_BUILDER_MAX_CITATIONS_PER_BIBLIOGRAPHY ) {
+				return new WP_Error(
+					'bibliography_builder_too_many_citations',
+					sprintf(
+						/* translators: %d: maximum citation count. */
+						__(
+							'Only bibliographies of %d citations or fewer can be reformatted.',
+							'borges-bibliography-builder'
+						),
+						BIBLIOGRAPHY_BUILDER_MAX_CITATIONS_PER_BIBLIOGRAPHY
+					),
+					array( 'status' => 400 )
+				);
+			}
+
+			// Format sanitized copies; the stored CSL-JSON stays as it is.
+			$items   = array();
+			$invalid = array();
+
+			foreach ( $citations as $position => $citation ) {
+				$csl = isset( $citation['csl'] ) && is_array( $citation['csl'] ) && array() !== $citation['csl']
+					? bibliography_builder_validate_and_sanitize_csl_item( $citation['csl'] )
+					: new WP_Error(
+						'bibliography_builder_invalid_csl_item',
+						__( 'The entry has no CSL-JSON data.', 'borges-bibliography-builder' )
+					);
+
+				if ( is_wp_error( $csl ) ) {
+					$invalid[] = array(
+						'index'   => $position,
+						'id'      => bibliography_builder_get_citation_id( $citation ),
+						'message' => $csl->get_error_message(),
+					);
+				} else {
+					$items[] = $csl;
+				}
+			}
+
+			if ( array() !== $invalid ) {
+				return new WP_Error(
+					'bibliography_builder_unformattable_entries',
+					__(
+						'Some entries cannot be formatted. Fix or remove them, then reformat.',
+						'borges-bibliography-builder'
+					),
+					array(
+						'status'  => 409,
+						'entries' => $invalid,
+					)
+				);
+			}
+
+			$formatted = array();
+
+			foreach ( array_chunk( $items, BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS ) as $chunk ) {
+				$texts = bibliography_builder_format_csl_items( $chunk, $style );
+
+				if ( is_wp_error( $texts ) ) {
+					return $texts;
+				}
+
+				$formatted = array_merge( $formatted, array_values( $texts ) );
+			}
+
+			$ids = array();
+
+			foreach ( $citations as $position => $citation ) {
+				if ( '' === (string) bibliography_builder_get_citation_id( $citation ) ) {
+					$citation['id'] = bibliography_builder_write_new_citation_id( $citations );
+				}
+
+				$citation['formattedText'] = $formatted[ $position ];
+				$citations[ $position ]    = $citation;
+				$ids[]                     = $citation['id'];
+			}
+
+			$changes = array(
+				'citationStyle' => array(
+					'from' => $from,
+					'to'   => $style,
+				),
+				'reformatted'   => $ids,
+			);
+
+			$heading = isset( $attrs['headingText'] ) ? (string) $attrs['headingText'] : '';
+
+			if ( bibliography_builder_write_default_heading( $from ) === $heading ) {
+				$next = bibliography_builder_write_default_heading( $style );
+
+				if ( $next !== $heading ) {
+					$attrs['headingText']   = $next;
+					$changes['headingText'] = array(
+						'from' => $heading,
+						'to'   => $next,
+					);
+				}
+			}
+
+			$attrs              = bibliography_builder_write_set_attribute(
+				$attrs,
+				'citationStyle',
+				$style,
+				'chicago-notes-bibliography'
+			);
+			$attrs['citations'] = bibliography_builder_sort_citations_for_save( $citations, $style );
+
+			return array(
+				'attrs'   => $attrs,
+				'changes' => $changes,
+			);
+		}
+	);
+}
+
+/**
  * Register the write routes when the site has enabled them.
  */
 function bibliography_builder_register_write_routes() {
@@ -682,8 +981,9 @@ function bibliography_builder_register_write_routes() {
 		return;
 	}
 
-	$base = '/posts/(?P<post_id>\d+)/bibliographies/(?P<ref>' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . ')/citations';
-	$args = array(
+	$block = '/posts/(?P<post_id>\d+)/bibliographies/(?P<ref>' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . ')';
+	$base  = $block . '/citations';
+	$args  = array(
 		'post_id' => array(
 			'type'              => 'integer',
 			'sanitize_callback' => 'absint',
@@ -700,6 +1000,28 @@ function bibliography_builder_register_write_routes() {
 			'type'        => 'boolean',
 			'default'     => true,
 		),
+	);
+
+	register_rest_route(
+		'bibliography/v1',
+		$block,
+		array(
+			'methods'             => 'PATCH',
+			'callback'            => 'bibliography_builder_rest_update_bibliography_settings',
+			'permission_callback' => 'bibliography_builder_rest_write_permissions_check',
+			'args'                => $args,
+		)
+	);
+
+	register_rest_route(
+		'bibliography/v1',
+		$block . '/reformat',
+		array(
+			'methods'             => 'POST',
+			'callback'            => 'bibliography_builder_rest_reformat_bibliography',
+			'permission_callback' => 'bibliography_builder_rest_write_permissions_check',
+			'args'                => $args,
+		)
 	);
 
 	register_rest_route(

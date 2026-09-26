@@ -412,6 +412,20 @@ grep -q 'Journal of Smoke Tests 3, no. 1 (2021): 10–20' "$ARTIFACT_RESPONSE_DI
 capture_http write-frontend "$SITE_URL/?p=$POST_ID"
 grep -q 'Beta Findings' "$ARTIFACT_RESPONSE_DIR/write-frontend.body"
 
+# Block settings and reformatting (Tier 3). The settings PATCH shares its path
+# with the public GET route, so this also proves the method falls through to it.
+BIBLIOGRAPHY_URL="$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies/0"
+rest_call write-settings PATCH "$BIBLIOGRAPHY_URL&dry_run=false" 200 '{"headingText":"Smoke Sources","outputCoins":true}' "$(header_etag write-commit)"
+grep -q '"headingText":"Smoke Sources"' "$ARTIFACT_RESPONSE_DIR/write-settings.body"
+rest_call write-reformat POST "$BIBLIOGRAPHY_URL/reformat&dry_run=false" 200 '{"style":"apa-7"}' "$(header_etag write-settings)"
+grep -q '"to":"apa-7"' "$ARTIFACT_RESPONSE_DIR/write-reformat.body"
+
+capture_http write-reformat-text "$BIBLIOGRAPHY_URL&format=text"
+grep -q 'Beta, B. (2021)' "$ARTIFACT_RESPONSE_DIR/write-reformat-text.body"
+capture_http write-reformat-frontend "$SITE_URL/?p=$POST_ID"
+grep -q 'Smoke Sources' "$ARTIFACT_RESPONSE_DIR/write-reformat-frontend.body"
+grep -q 'Z3988' "$ARTIFACT_RESPONSE_DIR/write-reformat-frontend.body"
+
 wp_exec "wp eval-file /smoke/check-blocks.php $POST_ID --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/check-blocks.txt" 2>&1 || true
 grep -q '^blocks-ok 1$' "$ARTIFACT_DIR/check-blocks.txt"
 

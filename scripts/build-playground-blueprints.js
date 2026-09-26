@@ -28,7 +28,7 @@ const DEMO_BLUEPRINTS = [
 	{ file: '.wordpress-org/blueprints/blueprint.json', intro: RELEASE_INTRO },
 	{
 		file: 'playground/blueprint-write-api.json',
-		intro: '<strong>Borges write API (development).</strong> This Playground runs the current <code>main</code> build with the opt-in citation write routes enabled. Open your browser console here and try <code>await borgesWrite.list()</code>; every call dry-runs first, and <code>{ commit: true }</code> writes (see <code>docs/rest-write-routes.md</code>). Not for real sites.',
+		intro: '<strong>Borges write API (development).</strong> This Playground runs the current <code>main</code> build with the opt-in bibliography write routes enabled. Open your browser console here and try <code>await borgesWrite.list()</code>; every call dry-runs first, and <code>{ commit: true }</code> writes (see <code>docs/rest-write-routes.md</code>). Not for real sites.',
 	},
 ];
 

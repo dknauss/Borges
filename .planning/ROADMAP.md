@@ -406,6 +406,14 @@ payoff-per-effort order for the 1.7 line:
       `…/bibliographies/<ref>/`, `edit_post`-gated, addressable by index or
       `bibliographyId`, in `includes/review.php`. M2 (Tier 2 entry writes,
       companion plugin) waits on the static-save coherence spike
+    - ~~**M2: Tier 2 citation writes**~~ — **done** (unreleased): add,
+      patch, delete, and reorder under `…/<ref>/citations`, off unless the
+      `bibliography_builder_enable_write_routes` filter is on, in
+      `includes/write-routes.php` (`docs/rest-write-routes.md`)
+    - ~~**M3: Tier 3 block writes**~~ — **done** (unreleased): `PATCH
+      …/<ref>` block settings and `POST …/<ref>/reformat`, behind the same
+      filter. Next: M4 bulk routes (needs a rate-limiting design) and M5
+      write abilities, whose M0–M3 blocker is now gone
 5. **First-wave official language packs** — pending todo
    `2026-06-14-coordinate-first-wave-language-packs.md`
     - 1.6.0 changed several source strings, so first-wave locales (fr_FR,
