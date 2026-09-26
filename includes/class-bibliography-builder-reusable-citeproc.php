@@ -70,7 +70,6 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 	 * @param bool $citationAsArray Passed through to citeproc-php.
 	 * @return void
 	 */
-	#[\Override]
 	public function init( $citationAsArray = false ) {
 		if ( null === $this->parsed_context ) {
 			parent::init( $citationAsArray );

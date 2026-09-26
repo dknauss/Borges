@@ -14,6 +14,11 @@
 			<directory name="tests" />
 		</ignoreFiles>
 	</projectFiles>
+	<issueHandlers>
+		<!-- The plugin supports PHP 7.4, where #[\Override] is only a comment
+		     and compatibility scanners flag it. -->
+		<MissingOverrideAttribute errorLevel="suppress" />
+	</issueHandlers>
 	<stubs>
 		<file name="vendor/php-stubs/wordpress-stubs/wordpress-stubs.php" />
 	</stubs>
