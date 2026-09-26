@@ -563,6 +563,13 @@ function createCitation({
 	};
 }
 
+// The mocked notices store is module-level state shared by every render in
+// this file; reset it per test so a notice left by one test (and its Dismiss
+// button) never leaks into another under --randomize.
+beforeEach(() => {
+	require('@wordpress/data').__unstableResetNotices();
+});
+
 describe('Edit focus management', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
@@ -575,7 +582,6 @@ describe('Edit focus management', () => {
 		downloadCslJsonExport.mockReset();
 		downloadRisExport.mockReset();
 		copyTextToClipboard.mockReset();
-		require('@wordpress/data').__unstableResetNotices();
 	});
 
 	it('shows DOI/BibTeX-only guidance when parsing fails without entries', async () => {
