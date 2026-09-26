@@ -25,6 +25,11 @@ import {
 } from './parser';
 import { formatBibliographyEntries } from './formatting/csl';
 
+// parsePastedInput lazily imports './formatting/csl' at call time, so the
+// module registry must keep resolving to these file-level mock instances.
+const formattingCslMock = jest.requireMock('./formatting/csl');
+const apiFetchMock = jest.requireMock('@wordpress/api-fetch');
+
 describe('validateAndSanitizeCsl', () => {
 	it('sanitizes nested values and normalizes issued date-parts', () => {
 		const sanitized = validateAndSanitizeCsl({
@@ -1458,8 +1463,12 @@ describe('PMID fallback resolution', () => {
 	}
 
 	afterEach(() => {
+		// Undo mockParserDependencies: after resetModules the registry would
+		// hand parser's lazy import a fresh formatter mock the other tests in
+		// this file never see, and api-fetch would stay mocked as undefined.
 		jest.resetModules();
-		jest.dontMock('@wordpress/api-fetch');
+		jest.doMock('./formatting/csl', () => formattingCslMock);
+		jest.doMock('@wordpress/api-fetch', () => apiFetchMock);
 	});
 
 	it('falls back to window.fetch when the WordPress REST helper is unavailable', async () => {
