@@ -368,6 +368,27 @@ wp_exec 'wp config set WP_ENVIRONMENT_TYPE local --allow-root --path=/var/www/ht
 wp_exec 'mkdir -p /var/www/html/wp-content/mu-plugins && cp /smoke/enable-write-routes.php /var/www/html/wp-content/mu-plugins/borges-smoke-write-routes.php'
 APP_PASSWORD=$(wp_exec 'wp user application-password create admin runtime-smoke --porcelain --allow-root --path=/var/www/html' | tr -d '\r')
 
+if [ -z "$APP_PASSWORD" ]; then
+	echo "Could not create an application password for admin" >&2
+	exit 1
+fi
+
+# Application passwords need HTTPS or a local environment type, and the web
+# server keeps running the cached wp-config.php without WP_ENVIRONMENT_TYPE
+# until opcache revalidates it (see wait_for_plugin_routes). Until then the
+# password is ignored and write requests arrive logged out, so wait for it.
+attempt=0
+until [ "$(curl -sS -o /dev/null -w '%{http_code}' -u "admin:$APP_PASSWORD" "$SITE_URL/?rest_route=/wp/v2/users/me")" = "200" ]; do
+	attempt=$((attempt + 1))
+	if [ "$attempt" -gt 30 ]; then
+		echo "Application password never authenticated at $SITE_URL" >&2
+		curl -sS -u "admin:$APP_PASSWORD" "$SITE_URL/?rest_route=/wp/v2/users/me" | head -c 2000 >&2 || true
+		echo >&2
+		exit 1
+	fi
+	sleep 1
+done
+
 CITATIONS_URL="$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies/0/citations"
 NEW_ITEM='{"items":[{"type":"article-journal","title":"Beta Findings","author":[{"family":"Beta","given":"Bea"}],"container-title":"Journal of Smoke Tests","volume":"3","issue":"1","page":"10-20","issued":{"date-parts":[[2021]]}}]}'
 
