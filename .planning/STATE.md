@@ -1,19 +1,18 @@
 # Project State
 
-_Last reviewed: 2026-09-25._
+_Last reviewed: 2026-09-26._
 
 ## Current Focus
 
-0. **`v1.6.0` (2026-09-24) is the current release baseline.** Version strings
+0. **`v1.7.0` (2026-09-26) is the current release baseline.** Version strings
    agree across the plugin header, `package.json`, `block.json`, and
-   `readme.txt` (`Stable tag: 1.6.0`, `Tested up to: 7.1`). Treat the live
+   `readme.txt` (`Stable tag: 1.7.0`, `Tested up to: 7.1`). Treat the live
    WordPress.org plugin page as canonical for the publicly available version.
-1. **1.6.0 shipped** PMCID, arXiv, and ISBN import, pinned BibLaTeX import,
-   read-only Abilities, and the i18n catch-up (#87), after the README/metrics
-   drift fix (#84). `[Unreleased]` carries one change since: PMCID, arXiv,
-   and ISBN samples in the Playground demo post (#89). The release and
-   main-build demos pick it up without a release; the WordPress.org Preview
-   blueprint ships with the next deploy.
+1. **1.7.0 shipped** the full GPL CSL styles and locales (#103), Phase 05
+   M0–M3 (stable IDs, review routes and abilities, opt-in citation and block
+   write routes: #104, #106), the save-markup language fix, reference-manager
+   `.bib` fixes, the demo page (#102), and the runtime matrix on the release
+   package with formatter-parity and write-route checks (#105).
 2. **Releases since the GSD `v1.3` milestone was retired (2026-06-21):**
    - 1.4.2 (2026-06-21) — shipped Phase 07 embedded-identifier resolution (#52)
      and the cite/export E2E spec (#53).
@@ -26,8 +25,10 @@ _Last reviewed: 2026-09-25._
      rejected `writeText`.
    - 1.6.0 (2026-09-24) — PMCID/arXiv/ISBN resolvers, BibLaTeX import,
      read-only Abilities, i18n catch-up.
-3. **Active phases** are still only `05-writable-bibliography-rest` (read-only
-   Abilities shipped in 1.6.0; writable milestones deferred) and
+   - 1.7.0 (2026-09-26) — full CSL styles, Phase 05 M0–M3, save-markup
+     language fix, `.bib` import fixes, release-package runtime matrix.
+3. **Active phases** are still only `05-writable-bibliography-rest` (M0–M3
+   shipped in 1.7.0; M4 bulk routes and M5 write abilities remain) and
    `06-ci-optimization` (unplanned strategy sketch). Neither gates a release.
 4. Keep the release artifact, WordPress.org SVN output, Playground blueprints,
    and docs aligned whenever import behavior changes for any supported input
@@ -41,12 +42,14 @@ ordering. In short:
 1. **CI, runtime, and Playground hygiene** (standing)
 2. **Reference-manager export corpus**: addresses the paste/import coverage gap
 3. ~~**Extract the resolvers**~~: done, unreleased (`includes/resolvers.php`)
-4. ~~**Phase 05 M0: stable entry IDs**~~ and ~~**M1 review routes**~~: done,
-   unreleased; M2 (Tier 2 writes) waits on the static-save coherence spike
+4. ~~**Phase 05 M0–M3**~~: shipped in 1.7.0; next are M5 write abilities
+   and M4 bulk routes (needs a rate-limiting design)
 5. **First-wave official language packs**
 
 ## Last Activity
 
+- 2026-09-26: Released 1.7.0 (#102–#106 and the fixes listed in the
+  CHANGELOG).
 - 2026-09-25: Phase 05 M1 review routes (`validate`, `duplicates`,
   `preview`) in `includes/review.php`.
 - 2026-09-25: Demo-post samples for PMCID, arXiv, and ISBN (#89); planning

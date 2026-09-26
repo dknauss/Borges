@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-26
+
 ### Added
 
 - Citation write routes (Phase 05, M2), **off by default**. A site opts in with the `bibliography_builder_enable_write_routes` filter. Under `/wp-json/bibliography/v1/posts/<id>/bibliographies/<ref>/citations`:
