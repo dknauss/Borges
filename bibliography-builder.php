@@ -1844,6 +1844,7 @@ require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/resolvers.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/abilities.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/review.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/save-markup.php';
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/frontend-labels.php';
 add_filter( 'rest_pre_serve_request', 'bibliography_builder_rest_pre_serve_request', 10, 4 );
 
 /**

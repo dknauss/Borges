@@ -14,6 +14,11 @@
  * enhancement. Likewise the export links still download (with the browser's
  * generic name) without this script, preserving the deactivation-resilient
  * contract.
+ *
+ * The panel's labels reach visitors already translated: save() writes them in
+ * fixed English (so saved markup is identical in every editor locale), and
+ * the block's render filter (includes/frontend-labels.php) translates them on
+ * the server. This script therefore needs no `wp-i18n`.
  */
 
 const COPY_LABEL_RESET_MS = 2000;

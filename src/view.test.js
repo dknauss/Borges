@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { applyExportFilenames, attachCiteCopy } from './view';
 
 describe('applyExportFilenames (cite/export download filename PE)', () => {
@@ -110,5 +112,26 @@ describe('attachCiteCopy (cite copy-to-clipboard PE)', () => {
 		jest.advanceTimersByTime(2000);
 		expect(button.textContent).toBe('Copy citation');
 		expect(button.classList.contains('is-copied')).toBe(false);
+	});
+
+	it('shows a server-supplied copied label', async () => {
+		const button = copyPanel('X');
+		button.setAttribute('data-copied-label', 'Copié');
+		attachCiteCopy(document);
+		button.click();
+		await Promise.resolve();
+
+		expect(button.textContent).toBe('Copié');
+	});
+});
+
+describe('view.js translation', () => {
+	it('loads no i18n library: labels arrive translated from the server', () => {
+		// includes/frontend-labels.php translates the saved labels as the block
+		// renders. Importing @wordpress/i18n here would add wp-i18n and
+		// wp-hooks to every page that shows a bibliography.
+		const source = readFileSync(join(__dirname, 'view.js'), 'utf8');
+
+		expect(source).not.toMatch(/@wordpress\/i18n|cite-export-labels/);
 	});
 });
