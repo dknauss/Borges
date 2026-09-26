@@ -206,3 +206,63 @@ describe('deprecated block versions', () => {
 		);
 	});
 });
+
+describe('locale-independence deprecation (deprecated[0])', () => {
+	const untitled = {
+		id: 'untitled',
+		csl: { type: 'webpage', author: [{ family: 'Beta' }] },
+		formattedText: 'Beta. https://example.com/x.',
+	};
+
+	it('falls back to the current translations when the markup gave no labels', () => {
+		const markup = renderToStaticMarkup(
+			deprecated[0].save({
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					citations: [untitled],
+				},
+			})
+		);
+
+		// outputCiteExport unset: no panel, and no legacy labels were sourced.
+		expect(markup).not.toContain('<details');
+		expect(markup).toContain(
+			'aria-label="Link to publication — https://example.com/x"'
+		);
+	});
+
+	it('reads the fallback label from a matching link and skips one that does not match', () => {
+		const markup = renderToStaticMarkup(
+			deprecated[0].save({
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					citations: [untitled],
+					legacyEntryLinks: [
+						// aria-label for a different href: not a fallback label.
+						{
+							ariaLabel: 'Ignored — https://example.com/other',
+							href: 'https://example.com/x',
+						},
+						{
+							ariaLabel:
+								'Lien vers la publication — https://example.com/x',
+							href: 'https://example.com/x',
+						},
+					],
+				},
+			})
+		);
+
+		expect(markup).toContain(
+			'aria-label="Lien vers la publication — https://example.com/x"'
+		);
+	});
+
+	it('renders nothing when the block has no citations', () => {
+		expect(
+			deprecated[0].save({
+				attributes: { citationStyle: 'chicago-notes-bibliography' },
+			})
+		).toBeNull();
+	});
+});
