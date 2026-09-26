@@ -4,15 +4,11 @@ import { useStableIds } from './use-stable-ids';
 
 const mockRegistry = { current: null };
 
-jest.mock(
-	'@wordpress/data',
-	() => ({ useRegistry: () => mockRegistry.current }),
-	{ virtual: true }
-);
+jest.mock('@wordpress/data', () => ({
+	useRegistry: () => mockRegistry.current,
+}));
 
-jest.mock('@wordpress/block-editor', () => ({ store: 'core/block-editor' }), {
-	virtual: true,
-});
+jest.mock('@wordpress/block-editor', () => ({ store: 'core/block-editor' }));
 
 const BLOCK = 'bibliography-builder/bibliography';
 
