@@ -28,6 +28,12 @@ Install the public release from [WordPress.org](https://wordpress.org/plugins/bo
 - **[Try the released version](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json)** — installs the latest GitHub Release ZIP (the same build published to WordPress.org) through the WordPress Playground CORS proxy. Use this to try the current stable plugin.
 - **[Try the current main build](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint-main.json)** — installs the development build of the `main` branch from the rolling `main-preview` pre-release, which CI refreshes on every push to `main`. Use this to preview unreleased changes ahead of the next release; it is not a stable build.
 
+Every demo opens the block editor on a ready-made demo page, with the Welcome Guide out of the way:
+
+- Copy-ready samples of every accepted input: DOIs (bare, `doi:`, and doi.org links), PMIDs, PMCIDs, arXiv IDs (modern, legacy, arxiv.org links, and arXiv DOIs), ISBN-13 and ISBN-10, BibTeX and BibLaTeX entries, and formatted book, article, chapter, and webpage citations. An empty Bibliography block waits below them.
+- Short notes on the key features: styles, editing, manual entry, duplicates, ordering, exports, per-entry Cite / Export, machine-readable output, and the REST data.
+- Three example bibliographies: Chicago notes-bibliography with Cite / Export, APA 7, and IEEE. These need a release with the PHP port of `save()` (1.7.0 or later); older releases show a note in their place.
+
 Both demo Blueprints explicitly request PHP `intl` support because editor-time CSL formatting runs through the plugin's local PHP formatter. The WordPress.org Preview blueprint is separate; WordPress.org installs Borges automatically there, and the blueprint only seeds demo content and auxiliary plugin setup.
 
 ## Screenshots
@@ -73,9 +79,9 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 
 | Metric | Value |
 |---|---|
-| First-party PHP | ~1,977 LOC main plugin file; ~6,315 LOC total with `includes/` |
-| JS source (`src/`) | ~9,766 LOC |
-| Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, enqueued only when the block is present |
+| First-party PHP | ~1,978 LOC main plugin file; ~6,428 LOC total with `includes/` |
+| JS source (`src/`) | ~9,956 LOC |
+| Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, no script dependencies, enqueued only when the block is present |
 | Installed footprint | ~1.9 MB (`vendor/` ~792 KB, translations 724 KB, build assets ~324 KB) |
 | Distributed ZIP (latest v1.6.0 release) | ~488 KB (499,681 bytes) |
 | **Added DB queries per page** | **0** — regardless of block or citation count |
@@ -357,7 +363,9 @@ The Playground demos and WordPress.org Preview all rely on the PHP formatter use
 - `.wordpress-org/blueprints/blueprint.json` deploys to WordPress.org SVN as `assets/blueprints/blueprint.json` for the plugin-directory Preview button. WordPress.org installs the plugin automatically in that preview, so this blueprint does not install Borges itself.
 - All three files intentionally declare `phpExtensionBundles: ["kitchen-sink"]` and `features: { "networking": true, "intl": true }`. The bundle form follows WordPress.org Preview documentation; the `features.intl` flag is required by the live browser Playground runtime so formatter requests do not fall back with `bibliography_builder_formatter_extension_missing`.
 
-Run `npm run test -- --runTestsByPath src/blueprint.test.js` after editing any Blueprint.
+The demo page is defined once, in `playground/demo-content.json` (samples, feature notes, example bibliographies) and `playground/demo-content.php` (the script that writes post 1 and turns off the Welcome Guide). Blueprints cannot load repository files, so `npm run playground:build` inlines both into each Blueprint's `runPHP` step; edit those two files, not the Blueprints' `runPHP` code. The example bibliographies are formatted by the plugin's own formatter and rendered by its PHP port of `save()` at boot, so they validate against whichever version the demo installs.
+
+Run `npm run test -- --runTestsByPath src/blueprint.test.js src/playground-demo.test.js` after editing any Blueprint or the demo content. The second file fails if a Blueprint is stale, if a sample stops reaching the parser backend it claims, or if an example's stored export strings drift from what the editor computes.
 
 ### Plugin File Structure
 

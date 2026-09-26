@@ -4,18 +4,14 @@ import { formatBibliographyEntries } from '../lib/formatting/csl';
 import { validateIdentifierFields } from '../lib/manual-entry';
 
 // Mock @wordpress/element → React hooks.
-jest.mock(
-	'@wordpress/element',
-	() => {
-		const React = require('react');
-		return {
-			useCallback: React.useCallback,
-			useRef: React.useRef,
-			useState: React.useState,
-		};
-	},
-	{ virtual: true }
-);
+jest.mock('@wordpress/element', () => {
+	const React = require('react');
+	return {
+		useCallback: React.useCallback,
+		useRef: React.useRef,
+		useState: React.useState,
+	};
+});
 
 // Stub formatting utilities — only the shapes matter here.
 const HEADING_DEFAULTS = {

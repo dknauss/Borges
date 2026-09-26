@@ -1,19 +1,15 @@
 import { act, renderHook } from '@testing-library/react';
 import { useEntryFocus } from './use-entry-focus';
 
-jest.mock(
-	'@wordpress/element',
-	() => {
-		const React = require('react');
-		return {
-			useCallback: React.useCallback,
-			useEffect: React.useEffect,
-			useRef: React.useRef,
-			useState: React.useState,
-		};
-	},
-	{ virtual: true }
-);
+jest.mock('@wordpress/element', () => {
+	const React = require('react');
+	return {
+		useCallback: React.useCallback,
+		useEffect: React.useEffect,
+		useRef: React.useRef,
+		useState: React.useState,
+	};
+});
 
 // --- Helpers ---
 

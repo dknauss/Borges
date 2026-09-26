@@ -2,17 +2,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import metadata from '../block.json';
 import { deprecated } from './deprecated';
 
-jest.mock(
-	'@wordpress/block-editor',
-	() => ({
-		useBlockProps: {
-			save: () => ({
-				className: 'wp-block-bibliography-builder-bibliography',
-			}),
-		},
-	}),
-	{ virtual: true }
-);
+jest.mock('@wordpress/block-editor', () => ({
+	useBlockProps: {
+		save: () => ({
+			className: 'wp-block-bibliography-builder-bibliography',
+		}),
+	},
+}));
 
 function createCitation({ id, family, title }) {
 	return {
@@ -40,7 +36,7 @@ describe('deprecated block versions', () => {
 
 	it('freezes the current pre-Phase-4 save shape: <li> with no <details>', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[0].save({
+			deprecated[1].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -61,7 +57,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the immediate prior save markup with deprecated entry roles', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[1].save({
+			deprecated[2].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -96,7 +92,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the prior save markup with linked URLs and static aria-label', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[2].save({
+			deprecated[3].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -129,7 +125,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the prior save markup variant without linked visible URLs', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[3].save({
+			deprecated[4].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
@@ -158,7 +154,7 @@ describe('deprecated block versions', () => {
 	});
 
 	it('migrate re-sorts citations into style order', () => {
-		const migrated = deprecated[4].migrate({
+		const migrated = deprecated[5].migrate({
 			citationStyle: 'chicago-author-date',
 			citations: [
 				createCitation({ id: 'z', family: 'Zulu', title: 'Zeta Book' }),
@@ -175,14 +171,14 @@ describe('deprecated block versions', () => {
 	});
 
 	it('migrate handles missing citations attribute with empty array fallback', () => {
-		const migrated = deprecated[4].migrate({ citationStyle: 'apa-7' });
+		const migrated = deprecated[5].migrate({ citationStyle: 'apa-7' });
 
 		expect(migrated.citations).toEqual([]);
 	});
 
 	it('supports the prior unsorted save markup variant', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[4].save({
+			deprecated[5].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
@@ -204,5 +200,65 @@ describe('deprecated block versions', () => {
 		expect(markup.indexOf('Marks citation')).toBeLessThan(
 			markup.indexOf('Borel citation')
 		);
+	});
+});
+
+describe('locale-independence deprecation (deprecated[0])', () => {
+	const untitled = {
+		id: 'untitled',
+		csl: { type: 'webpage', author: [{ family: 'Beta' }] },
+		formattedText: 'Beta. https://example.com/x.',
+	};
+
+	it('falls back to the current translations when the markup gave no labels', () => {
+		const markup = renderToStaticMarkup(
+			deprecated[0].save({
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					citations: [untitled],
+				},
+			})
+		);
+
+		// outputCiteExport unset: no panel, and no legacy labels were sourced.
+		expect(markup).not.toContain('<details');
+		expect(markup).toContain(
+			'aria-label="Link to publication — https://example.com/x"'
+		);
+	});
+
+	it('reads the fallback label from a matching link and skips one that does not match', () => {
+		const markup = renderToStaticMarkup(
+			deprecated[0].save({
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					citations: [untitled],
+					legacyEntryLinks: [
+						// aria-label for a different href: not a fallback label.
+						{
+							ariaLabel: 'Ignored — https://example.com/other',
+							href: 'https://example.com/x',
+						},
+						{
+							ariaLabel:
+								'Lien vers la publication — https://example.com/x',
+							href: 'https://example.com/x',
+						},
+					],
+				},
+			})
+		);
+
+		expect(markup).toContain(
+			'aria-label="Lien vers la publication — https://example.com/x"'
+		);
+	});
+
+	it('renders nothing when the block has no citations', () => {
+		expect(
+			deprecated[0].save({
+				attributes: { citationStyle: 'chicago-notes-bibliography' },
+			})
+		).toBeNull();
 	});
 });

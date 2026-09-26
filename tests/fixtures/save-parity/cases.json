@@ -813,6 +813,45 @@
 			}
 		},
 		{
+			"name": "untitled-links",
+			"note": "Locale-independent labels: a link whose citation has no title or container title carries no aria-label, and the Cite / Export panel labels are fixed English.",
+			"attributes": {
+				"citationStyle": "chicago-author-date",
+				"outputCiteExport": true,
+				"citations": [
+					{
+						"id": "untitled",
+						"csl": {
+							"id": "untitled",
+							"type": "webpage",
+							"author": [
+								{
+									"family": "Beta",
+									"given": "Bea"
+								}
+							]
+						},
+						"formattedText": "Beta, Bea. https://example.com/a?b=1&c=2.",
+						"exportBiblatex": "@online{beta}"
+					},
+					{
+						"id": "container-only",
+						"csl": {
+							"id": "container-only",
+							"type": "article-journal",
+							"container-title": "Journal of Examples",
+							"author": [
+								{
+									"family": "Gamma"
+								}
+							]
+						},
+						"formattedText": "Gamma. Journal of Examples. https://example.org/gamma."
+					}
+				]
+			}
+		},
+		{
 			"name": "empty",
 			"note": "No citations: save() returns null.",
 			"attributes": {

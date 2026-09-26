@@ -3,27 +3,23 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { CitationEntryBody } from './citation-entry-body';
 
-jest.mock(
-	'@wordpress/components',
-	() => {
-		const ReactLocal = require('react');
+jest.mock('@wordpress/components', () => {
+	const ReactLocal = require('react');
 
-		return {
-			Button: ({ label, className, onClick, children }) =>
-				ReactLocal.createElement(
-					'button',
-					{
-						type: 'button',
-						className,
-						'aria-label': label,
-						onClick,
-					},
-					children
-				),
-		};
-	},
-	{ virtual: true }
-);
+	return {
+		Button: ({ label, className, onClick, children }) =>
+			ReactLocal.createElement(
+				'button',
+				{
+					type: 'button',
+					className,
+					'aria-label': label,
+					onClick,
+				},
+				children
+			),
+	};
+});
 
 jest.mock('../lib/wp-icons', () => {
 	const ReactLocal = require('react');
