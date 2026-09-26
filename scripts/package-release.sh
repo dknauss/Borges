@@ -43,7 +43,7 @@ composer install \
 rm -f "$STAGING_DIR/composer.json" "$STAGING_DIR/composer.lock"
 
 find "$STAGING_DIR/vendor" \
-	-type d \( -iname tests -o -iname test -o -iname .github -o -iname .circleci -o -iname docs -o -iname doc -o -iname documentation -o -iname example -o -iname examples -o -iname image -o -iname images \) \
+	-type d \( -name .git -o -iname tests -o -iname test -o -iname .github -o -iname .circleci -o -iname docs -o -iname doc -o -iname documentation -o -iname example -o -iname examples -o -iname image -o -iname images \) \
 	-prune -exec rm -rf {} +
 find "$STAGING_DIR/vendor" \
 	-type f \( -iname README -o -iname 'README.*' -o -iname CHANGELOG -o -iname 'CHANGELOG.*' -o -iname UPGRADING -o -iname 'UPGRADING.*' -o -iname phpunit.xml -o -iname phpunit.xml.dist -o -iname phpcs.xml -o -iname phpcs.xml.dist -o -iname .scrutinizer.yml \) \

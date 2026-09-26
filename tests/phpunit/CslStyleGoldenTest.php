@@ -64,6 +64,31 @@ final class CslStyleGoldenTest extends TestCase {
 	}
 
 	/**
+	 * The formatter parses a style once and renders entry after entry on the
+	 * same parsed tree, restoring its state in between. No entry may depend
+	 * on the ones rendered before it: in reverse order, with the "et al." and
+	 * APA 21+ entries now ahead of the short author lists, every entry must
+	 * still match its golden line.
+	 */
+	#[DataProvider( 'styleProvider' )]
+	public function test_each_entry_is_independent_of_the_entries_before_it( $style_key ) {
+		$items   = array_reverse( json_decode( file_get_contents( self::fixture_dir() . '/items.json' ), true ) );
+		$golden  = array();
+		$results = bibliography_builder_format_csl_items( $items, $style_key );
+
+		foreach ( file( self::fixture_dir() . '/' . $style_key . '.txt', FILE_IGNORE_NEW_LINES ) as $line ) {
+			list( $id, $text )     = explode( "\t", $line, 2 );
+			$golden[ $id ]         = $text;
+		}
+
+		$this->assertIsArray( $results, $style_key . ' failed to format' );
+
+		foreach ( $items as $index => $item ) {
+			$this->assertSame( $golden[ $item['id'] ], $results[ $index ], $style_key . ': ' . $item['id'] );
+		}
+	}
+
+	/**
 	 * The formatter reads vendor/citation-style-language/, a Composer copy of
 	 * packages/. A stale copy once hid a style regression; fail on any drift.
 	 */

@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-09-24):** `v1.6.0` (2026-09-24).
+**Current release baseline (reconciled 2026-09-26):** `v1.7.0` (2026-09-26).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -62,6 +62,10 @@ Releases since the milestone was retired, all outside any GSD phase:
 -   **1.6.0** (2026-09-24) — PMCID, arXiv, and ISBN resolvers; BibLaTeX import
     pinned and hardened (`langid` → BCP 47); read-only WordPress Abilities;
     i18n template catch-up; External Services disclosure for the new providers.
+-   **1.7.0** (2026-09-26) — full GPL CSL styles and locales; Phase 05 M0–M3
+    (stable IDs, review routes and abilities, opt-in citation and block write
+    routes); save-markup language fix; reference-manager `.bib` fixes; runtime
+    matrix on the release package with formatter parity and write-route checks.
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -283,7 +287,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.6.0`.
+1.3.x release line. The current public release baseline is now `v1.7.0`.
 
 Completed Phase 2 outcomes:
 

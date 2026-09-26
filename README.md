@@ -79,7 +79,7 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 
 | Metric | Value |
 |---|---|
-| First-party PHP | ~2,073 LOC main plugin file; ~7,473 LOC total with `includes/` |
+| First-party PHP | ~2,077 LOC main plugin file; ~8,005 LOC total with `includes/` |
 | JS source (`src/`) | ~9,956 LOC |
 | Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, no script dependencies, enqueued only when the block is present |
 | Installed footprint | ~1.9 MB (`vendor/` ~792 KB, translations 724 KB, build assets ~324 KB) |
@@ -94,6 +94,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.7.0** — Rewrites all nine citation styles in full from their manuals (GPL, project-authored); fixes organization authors, invalid blocks across editor languages, mistranslated strings, and reference-manager `.bib` imports; adds review routes and abilities plus opt-in write routes for citations, block settings, and style changes; the runtime matrix now tests the release package, formatter parity, and the write routes on every PHP version.
 - **1.6.0** — Adds PubMed Central (PMCID), arXiv, and ISBN import (Open Library with a Google Books fallback), test-pinned BibLaTeX import, and three read-only WordPress Abilities on WordPress 6.9+; fixes invalid `lang` attributes from BibTeX/BibLaTeX language fields.
 - **1.5.1** — Adds WordPress 7.1 compatibility and fixes clipboard fallback behavior when the browser exposes clipboard access but rejects the write.
 - **1.5.0** — Security release that hardens public bibliography reads, formatter inputs, generated links, script-block output, and PubMed redirect handling; it also adds the current Block Accessibility Checks 4.0 integration.

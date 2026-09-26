@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -80,7 +80,7 @@ Yes. In the editor you can download the whole bibliography as CSL-JSON, BibTeX, 
 
 = Can I access bibliography data via API? =
 
-Yes. The plugin exposes read-only REST endpoints at `/wp-json/bibliography/v1/posts/<post_id>/bibliographies` and `/wp-json/bibliography/v1/posts/<post_id>/bibliographies/<index>` (or the block's `bibliographyId` in place of the index). Published posts are readable publicly; non-public posts require permission to edit the post. The single-bibliography route also supports `format=json`, `format=text`, and `format=csl-json`. Users who can edit the post can also validate a bibliography's entries, list likely duplicates, and preview it in another citation style (`/validate`, `/duplicates`, and `/preview?style=` under the block's index or `bibliographyId`); none of these saves anything. Editor-only authenticated endpoints handle CSL formatting and PubMed/PMID resolution; they do not persist citations by themselves.
+Yes. The plugin exposes read-only REST endpoints at `/wp-json/bibliography/v1/posts/<post_id>/bibliographies` and `/wp-json/bibliography/v1/posts/<post_id>/bibliographies/<index>` (or the block's `bibliographyId` in place of the index). Published posts are readable publicly; non-public posts require permission to edit the post. The single-bibliography route also supports `format=json`, `format=text`, and `format=csl-json`. Users who can edit the post can also validate a bibliography's entries, list likely duplicates, and preview it in another citation style (`/validate`, `/duplicates`, and `/preview?style=` under the block's index or `bibliographyId`); none of these saves anything. Editor-only authenticated endpoints handle CSL formatting and PubMed/PMID resolution; they do not persist citations by themselves. A site can also opt in to write routes that add, change, remove, and reorder citations, change block settings, and switch the citation style over REST. They are off unless a developer enables them with the `bibliography_builder_enable_write_routes` filter; see `docs/rest-write-routes.md` in the GitHub repository.
 
 = Does the Borges Bibliography Builder work on WordPress Multisite? =
 
@@ -176,6 +176,16 @@ ISBN input connects through the plugin's authenticated WordPress REST proxy to *
 * Google Privacy Policy: https://policies.google.com/privacy
 
 == Changelog ==
+
+= 1.7.0 =
+* **Better formatting in every citation style.** All nine styles are rewritten in full from their style manuals: Chicago (notes-bibliography and author-date), APA 7, MLA 9, Harvard, IEEE, Vancouver, OSCOLA, and ABNT. Entries now keep full given names, volume, issue, and pages, editors, translators, editions, and access dates, and follow each manual's author-list and "et al." rules. ABNT now prints in Portuguese, and Harvard uses British conventions. Existing bibliographies keep their saved text until an entry is added or edited or the style is changed.
+* **Fixed: organization authors** (such as "Open Research Alliance") no longer vanish from formatted entries, and an entry after one shortened to "et al." keeps the "and" before its last author.
+* **Fixed: "Attempt Block Recovery" in other languages.** A bibliography no longer opens as invalid when an editor using a different language from the one who saved it opens the post. Cite / Export labels are now translated for visitors as the page renders.
+* **Fixed: wrong translations.** In all 19 bundled translations, seven strings such as "Copy citation" showed as "Add citations". They now fall back to English until corrected.
+* **Fixed: whole `.bib` exports from reference managers.** Zotero abstracts with blank lines, JabRef comments and `@string` macros, and EndNote reference-type names no longer lose or garble records.
+* **Fixed: duplicated blocks** no longer share IDs with the original, and pasting CSL-JSON is rejected instead of producing a nonsense citation.
+* **New for developers: review and write routes.** Users who can edit a post can validate a bibliography, list likely duplicates, and preview it in another style over REST or as WordPress 6.9 abilities, without saving anything. Sites can also opt in to write routes that change citations, block settings, and the citation style over REST. They are off by default, preview every change first, and save through normal post revisions.
+* **Playground demo:** the live demos open on a page with copy-ready samples of every input format and three example bibliographies.
 
 = 1.6.0 =
 * **New: PubMed Central import.** Paste a PMCID (`PMC3531190`) and it is looked up through the same NCBI service as PubMed IDs.
@@ -309,6 +319,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.7.0 =
+Rewrites all nine citation styles in full, fixes organization authors, blocks that showed as invalid in another editor language, and seven wrong strings in the bundled translations. Adds opt-in REST routes for developers; they are off unless enabled. No new external services.
 
 = 1.6.0 =
 Adds PubMed Central, arXiv, ISBN, and BibLaTeX import, plus read-only WordPress Abilities on WordPress 6.9+. Lookups contact arXiv, Open Library, or Google Books only when you paste those identifiers. No configuration changes.

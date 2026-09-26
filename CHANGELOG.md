@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-26
+
 ### Added
 
 - Citation write routes (Phase 05, M2), **off by default**. A site opts in with the `bibliography_builder_enable_write_routes` filter. Under `/wp-json/bibliography/v1/posts/<id>/bibliographies/<ref>/citations`:
@@ -51,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The styles are still written for Borges and licensed GPL-2.0-or-later, not copied from the CC BY-SA CSL repository. `docs/csl-styles.md` lists each source and the few deliberate deviations.
 
   Existing bibliographies keep their saved text until an entry is added or edited or the style is changed.
+- Formatting is about 3.5 times faster than in the first full-style builds (about 25 ms instead of 90 ms for 50 entries). Each entry is still formatted on its own, so that no entry affects the next, but the style and locale are now parsed once per request rather than once per entry (`includes/class-bibliography-builder-reusable-citeproc.php`). A new test formats the style corpus in reverse order and requires every entry to match its golden output.
 
 ### Fixed
 

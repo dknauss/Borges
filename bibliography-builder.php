@@ -3,7 +3,7 @@
  * Plugin Name:       Borges Bibliography Builder
  * Plugin URI:        https://github.com/dknauss/Borges/
  * Description:       Create accessible bibliographies from DOI, PubMed, BibTeX, CSL-JSON, and free text; export RIS.
- * Version:           1.6.0
+ * Version:           1.7.0
  * Requires at least: 6.4
  * Tested up to:      7.1
  * Requires PHP:      7.4
@@ -1324,16 +1324,20 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		),
 	);
 
-	// One formatter per entry: citeproc-php keeps per-render state on its
-	// parsed name elements (once one entry is cut to "et al.", later entries
-	// in the same render lose their "and"), and no style here needs
-	// cross-entry context such as disambiguation or author substitution.
+	// One render per entry: citeproc-php keeps per-render state on its parsed
+	// name elements (once one entry is cut to "et al.", later entries in the
+	// same render lose their "and"), and no style here needs cross-entry
+	// context such as disambiguation or author substitution. The reusable
+	// formatter parses the style once and restores that state before each
+	// entry, instead of reparsing the style and locale for every entry.
 	try {
-		$html = '';
+		require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/class-bibliography-builder-reusable-citeproc.php';
+
+		$html      = '';
+		$formatter = new Bibliography_Builder_Reusable_CiteProc( $style_xml, $style['locale'], $markup_extension );
 
 		foreach ( $items_for_formatter as $item_for_formatter ) {
-			$formatter = new \Seboettg\CiteProc\CiteProc( $style_xml, $style['locale'], $markup_extension );
-			$html     .= $formatter->render( array( $item_for_formatter ), 'bibliography' );
+			$html .= $formatter->render( array( $item_for_formatter ), 'bibliography' );
 		}
 	} catch ( Throwable $error ) {
 		return new WP_Error(
