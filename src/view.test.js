@@ -1,4 +1,10 @@
-import { applyExportFilenames, attachCiteCopy } from './view';
+import { resetLocaleData, setLocaleData } from '@wordpress/i18n';
+import {
+	applyExportFilenames,
+	attachCiteCopy,
+	localizeCiteExport,
+	localizeLinkLabels,
+} from './view';
 
 describe('applyExportFilenames (cite/export download filename PE)', () => {
 	afterEach(() => {
@@ -110,5 +116,151 @@ describe('attachCiteCopy (cite copy-to-clipboard PE)', () => {
 		jest.advanceTimersByTime(2000);
 		expect(button.textContent).toBe('Copy citation');
 		expect(button.classList.contains('is-copied')).toBe(false);
+	});
+});
+
+describe('localizeCiteExport (runtime translation of saved labels)', () => {
+	const DOMAIN = 'borges-bibliography-builder';
+
+	beforeEach(() => {
+		setLocaleData(
+			{
+				'': { domain: DOMAIN },
+				'Cite / Export': ['Citer / Exporter'],
+				'Copy citation': ['Copier la citation'],
+				Copied: ['Copié'],
+				RIS: ['RIS-fr'],
+				'CSL-JSON': ['CSL-JSON-fr'],
+				BibTeX: ['BibTeX-fr'],
+				BibLaTeX: ['BibLaTeX-fr'],
+			},
+			DOMAIN
+		);
+	});
+
+	afterEach(() => {
+		resetLocaleData(undefined, DOMAIN);
+		document.body.innerHTML = '';
+		jest.useRealTimers();
+	});
+
+	function savedPanel(extraButtonAttributes = '') {
+		document.body.innerHTML = [
+			'<details class="bibliography-builder-cite-export">',
+			'<summary class="bibliography-builder-cite-export-toggle">Cite / Export</summary>',
+			'<div class="bibliography-builder-cite-export-panel">',
+			`<button type="button" class="bibliography-builder-cite-copy" data-cite-text="X"${extraButtonAttributes}>Copy citation</button>`,
+			'<ul class="bibliography-builder-export-links">',
+			'<li><a download data-cite-export-filename="c.ris">RIS</a></li>',
+			'<li><a download data-cite-export-filename="c.csl.json">CSL-JSON</a></li>',
+			'<li><a download data-cite-export-filename="c.bib">BibTeX</a></li>',
+			'<li><a download data-cite-export-filename="c.biblatex.bib">BibLaTeX</a></li>',
+			'</ul></div></details>',
+		].join('');
+	}
+
+	it('translates the canonical English labels saved in post content', () => {
+		savedPanel();
+
+		localizeCiteExport(document);
+
+		expect(document.querySelector('summary').textContent).toBe(
+			'Citer / Exporter'
+		);
+		expect(document.querySelector('button').textContent).toBe(
+			'Copier la citation'
+		);
+		expect(
+			[
+				...document.querySelectorAll(
+					'.bibliography-builder-export-links a'
+				),
+			].map((a) => a.textContent)
+		).toEqual(['RIS-fr', 'CSL-JSON-fr', 'BibTeX-fr', 'BibLaTeX-fr']);
+	});
+
+	it('leaves labels from older, already-localized markup alone', () => {
+		document.body.innerHTML =
+			'<details class="bibliography-builder-cite-export"><summary class="bibliography-builder-cite-export-toggle">Zitieren / Exportieren</summary></details>';
+
+		localizeCiteExport(document);
+
+		expect(document.querySelector('summary').textContent).toBe(
+			'Zitieren / Exportieren'
+		);
+	});
+
+	it('shows the translated copied label when the markup carries none', async () => {
+		jest.useFakeTimers();
+		const writeText = jest.fn().mockResolvedValue();
+		Object.defineProperty(window.navigator, 'clipboard', {
+			configurable: true,
+			value: { writeText },
+		});
+		savedPanel();
+		localizeCiteExport(document);
+		attachCiteCopy(document);
+
+		const button = document.querySelector('button');
+		button.click();
+		await Promise.resolve();
+		expect(button.textContent).toBe('Copié');
+		jest.advanceTimersByTime(2000);
+		expect(button.textContent).toBe('Copier la citation');
+	});
+
+	it('translates a legacy English copied label but keeps a localized one', async () => {
+		jest.useFakeTimers();
+		Object.defineProperty(window.navigator, 'clipboard', {
+			configurable: true,
+			value: { writeText: jest.fn().mockResolvedValue() },
+		});
+
+		savedPanel(' data-copied-label="Copied"');
+		attachCiteCopy(document);
+		document.querySelector('button').click();
+		await Promise.resolve();
+		expect(document.querySelector('button').textContent).toBe('Copié');
+
+		savedPanel(' data-copied-label="Kopiert"');
+		attachCiteCopy(document);
+		document.querySelector('button').click();
+		await Promise.resolve();
+		expect(document.querySelector('button').textContent).toBe('Kopiert');
+	});
+});
+
+describe('localizeLinkLabels (legacy fallback aria-label)', () => {
+	const DOMAIN = 'borges-bibliography-builder';
+
+	afterEach(() => {
+		resetLocaleData(undefined, DOMAIN);
+		document.body.innerHTML = '';
+	});
+
+	it('translates the English fallback prefix saved by older markup', () => {
+		setLocaleData(
+			{
+				'': { domain: DOMAIN },
+				'Link to publication': ['Lien vers la publication'],
+			},
+			DOMAIN
+		);
+		document.body.innerHTML = [
+			'<section class="wp-block-bibliography-builder-bibliography"><cite class="bibliography-builder-entry-text">',
+			'<a href="https://e.org/x" aria-label="Link to publication — https://e.org/x">https://e.org/x</a>',
+			'<a href="https://e.org/y" aria-label="Some Title — https://e.org/y">https://e.org/y</a>',
+			'</cite></section>',
+		].join('');
+
+		localizeLinkLabels(document);
+
+		const [fallback, titled] = document.querySelectorAll('a');
+		expect(fallback.getAttribute('aria-label')).toBe(
+			'Lien vers la publication — https://e.org/x'
+		);
+		expect(titled.getAttribute('aria-label')).toBe(
+			'Some Title — https://e.org/y'
+		);
 	});
 });

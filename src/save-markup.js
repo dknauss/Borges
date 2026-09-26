@@ -1,5 +1,4 @@
 import { useBlockProps } from '@wordpress/block-editor';
-import { __ } from '@wordpress/i18n';
 import { buildCoins } from './lib/coins';
 import {
 	getDisplaySegments,
@@ -10,6 +9,36 @@ import {
 import { buildJsonLdString, buildCslJsonString } from './lib/jsonld';
 import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
+import {
+	CITE_EXPORT_LABELS,
+	getTranslatedCiteExportLabels,
+	getTranslatedLinkFallbackLabel,
+} from './lib/cite-export-labels';
+
+/**
+ * Labels the current save() writes: fixed English, identical in every editor
+ * locale. The copied-state label is omitted (view.js supplies it), and a link
+ * whose citation has no title or container title carries no aria-label, so its
+ * accessible name is the visible URL.
+ */
+export const LOCALE_INDEPENDENT_SAVE_LABELS = Object.freeze({
+	...CITE_EXPORT_LABELS,
+	copied: null,
+	linkFallback: null,
+});
+
+/**
+ * Labels as save() wrote them before they were made locale-independent: every
+ * one translated into the saving editor's locale. Deprecations reproduce this.
+ *
+ * @return {Object} Labels keyed as LOCALE_INDEPENDENT_SAVE_LABELS.
+ */
+export function getLocalizedSaveLabels() {
+	return {
+		...getTranslatedCiteExportLabels(),
+		linkFallback: getTranslatedLinkFallbackLabel(),
+	};
+}
 
 export function renderBibliographySave(
 	attributes,
@@ -21,6 +50,7 @@ export function renderBibliographySave(
 		ariaLabel = null,
 		includeDeprecatedBiblioEntryRole = false,
 		includeCiteExport = false,
+		labels: labelOverrides = null,
 	} = {}
 ) {
 	const {
@@ -36,6 +66,7 @@ export function renderBibliographySave(
 		return null;
 	}
 
+	const labels = labelOverrides || getLocalizedSaveLabels();
 	const blockProps = useBlockProps.save();
 	const renderedCitations = sortEntries
 		? sortCitations(citations, citationStyle)
@@ -84,10 +115,7 @@ export function renderBibliographySave(
 									const linkLabel =
 										citation.csl.title ||
 										citation.csl['container-title'] ||
-										__(
-											'Link to publication',
-											'borges-bibliography-builder'
-										);
+										labels.linkFallback;
 									const content = linkVisibleUrls
 										? splitTextIntoLinkParts(segment.text, {
 												linkLabel,
@@ -97,7 +125,11 @@ export function renderBibliographySave(
 														key={`${citation.id}-${index}-${partIndex}`}
 														href={part.href}
 														rel="nofollow noopener noreferrer"
-														aria-label={`${part.label} — ${part.href}`}
+														aria-label={
+															linkLabel
+																? `${part.label} — ${part.href}`
+																: undefined
+														}
 													>
 														{part.text}
 													</a>
@@ -126,10 +158,7 @@ export function renderBibliographySave(
 							{includeCiteExport ? (
 								<details className="bibliography-builder-cite-export">
 									<summary className="bibliography-builder-cite-export-toggle">
-										{__(
-											'Cite / Export',
-											'borges-bibliography-builder'
-										)}
+										{labels.toggle}
 									</summary>
 									<div className="bibliography-builder-cite-export-panel">
 										<button
@@ -141,15 +170,11 @@ export function renderBibliographySave(
 												citation.formattedText ||
 												''
 											}
-											data-copied-label={__(
-												'Copied',
-												'borges-bibliography-builder'
-											)}
+											data-copied-label={
+												labels.copied || undefined
+											}
 										>
-											{__(
-												'Copy citation',
-												'borges-bibliography-builder'
-											)}
+											{labels.copy}
 										</button>
 										<ul className="bibliography-builder-export-links">
 											<li>
@@ -163,10 +188,7 @@ export function renderBibliographySave(
 													data-cite-export-filename={`${exportBase}.ris`}
 													rel="noopener"
 												>
-													{__(
-														'RIS',
-														'borges-bibliography-builder'
-													)}
+													{labels.ris}
 												</a>
 											</li>
 											<li>
@@ -182,10 +204,7 @@ export function renderBibliographySave(
 													data-cite-export-filename={`${exportBase}.csl.json`}
 													rel="noopener"
 												>
-													{__(
-														'CSL-JSON',
-														'borges-bibliography-builder'
-													)}
+													{labels.cslJson}
 												</a>
 											</li>
 											{citation.exportBibtex ? (
@@ -198,10 +217,7 @@ export function renderBibliographySave(
 														data-cite-export-filename={`${exportBase}.bib`}
 														rel="noopener"
 													>
-														{__(
-															'BibTeX',
-															'borges-bibliography-builder'
-														)}
+														{labels.bibtex}
 													</a>
 												</li>
 											) : null}
@@ -215,10 +231,7 @@ export function renderBibliographySave(
 														data-cite-export-filename={`${exportBase}.biblatex.bib`}
 														rel="noopener"
 													>
-														{__(
-															'BibLaTeX',
-															'borges-bibliography-builder'
-														)}
+														{labels.biblatex}
 													</a>
 												</li>
 											) : null}

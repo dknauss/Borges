@@ -657,7 +657,7 @@ describe('save', () => {
 		);
 	});
 
-	it('falls back to localized label when title and container-title are absent', () => {
+	it('omits the aria-label when title and container-title are absent, so the visible URL names the link', () => {
 		const markup = renderToStaticMarkup(
 			save({
 				attributes: {
@@ -675,8 +675,9 @@ describe('save', () => {
 		);
 
 		expect(markup).toContain(
-			'aria-label="Link to publication — https://example.org/resource"'
+			'<a href="https://example.org/resource" rel="nofollow noopener noreferrer">https://example.org/resource</a>'
 		);
+		expect(markup).not.toContain('aria-label="Link to publication');
 	});
 
 	it('includes the visible URL in the aria-label to satisfy label-in-name requirement', () => {
