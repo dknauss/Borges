@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The runtime matrix's nginx cells pass again. The smoke test sent the write routes' `PATCH`, `PUT`, and `DELETE` requests to `/?rest_route=…`, which nginx answers with its own `405` for those methods, so the request never reached WordPress. It now uses `/index.php?rest_route=…`, the form WordPress itself builds for plain permalinks. Sites were not affected. Pull requests now also run an nginx cell, so a server-specific failure shows up before merge.
+
 ## [1.7.0] - 2026-09-26
 
 ### Added

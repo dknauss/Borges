@@ -43,6 +43,13 @@ jobs:
                       multisite: '1'
                       http_port: '8901'
                       db_port: '33081'
+                    - name: nginx-php83-wplatest
+                      server: nginx
+                      php: '8.3'
+                      wp: latest
+                      db_engine: mysql
+                      http_port: '8897'
+                      db_port: '33077'
 
         steps:
             - name: Checkout

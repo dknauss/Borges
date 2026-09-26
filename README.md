@@ -338,6 +338,8 @@ The GitHub Actions runtime matrix currently covers:
 - Nginx + PHP 8.2 + latest WordPress
 - Nginx + PHP 8.3 + latest WordPress
 
+Pull requests run a four-cell subset: Apache with PHP 7.4 and WordPress 6.4, Apache with PHP 8.3 and latest WordPress (single site and Multisite), and Nginx with PHP 8.3. Pushes to `main` run all ten.
+
 Every cell tests the packaged release, built with `npm run package:release` and including its production `vendor/`, not the source checkout. Each cell:
 
 - activates the plugin and checks the front-end render and the read routes;
