@@ -48,7 +48,7 @@ otherwise `package:release` (and the `du -sh build` row below) fails with `canno
 | `build/` — editor + frontend assets | **324 KB** | `du -sh build` |
 | PHP + `block.json` + `readme.txt` + `LICENSE` + `THIRD-PARTY-NOTICES.txt` | **~230 KB** | `cat *.php includes/*.php block.json readme.txt LICENSE THIRD-PARTY-NOTICES.txt \| wc -c` |
 | **Total installed** | **~1.9 MB** | `du -sh output/release/borges-bibliography-builder` (after `npm run package:release`) |
-| Distributed ZIP (v1.6.0 release) | **~488 KB** (499,681 bytes) | GitHub release asset metadata for [v1.6.0](https://github.com/dknauss/Borges/releases/tag/v1.6.0) |
+| Distributed ZIP (v1.7.0 release) | **~541 KB** (553,699 bytes) | GitHub release asset metadata for [v1.7.0](https://github.com/dknauss/Borges/releases/tag/v1.7.0) |
 
 The source tree's `packages/` directory (60 KB) is **not** a separate shipped component: the
 release script (`scripts/package-release.sh`) Composer-installs those path packages into
