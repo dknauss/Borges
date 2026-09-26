@@ -107,6 +107,10 @@ function makeHookArgs(citations = [makeCitation()]) {
 
 beforeEach(() => {
 	jest.clearAllMocks();
+	// mockReset (not just clearAllMocks) drops queued *Once values: several
+	// race tests queue a pending format result the save never reaches, which
+	// would otherwise be handed to whichever test calls the formatter next.
+	formatBibliographyEntries.mockReset();
 	formatBibliographyEntries.mockImplementation((items) =>
 		items.map(() => 'Reformatted entry')
 	);
