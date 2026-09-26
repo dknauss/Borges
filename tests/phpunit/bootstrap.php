@@ -45,6 +45,7 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_abilities']           = array();
 	$GLOBALS['bibliography_builder_test_ability_categories']  = array();
 	$GLOBALS['bibliography_builder_test_http_responses_for']  = array();
+	$GLOBALS['bibliography_builder_test_translations']        = array();
 }
 
 /**
@@ -251,7 +252,9 @@ function sanitize_key( $value ) {
 }
 
 function __( $text ) {
-	return $text;
+	return isset( $GLOBALS['bibliography_builder_test_translations'][ $text ] )
+		? $GLOBALS['bibliography_builder_test_translations'][ $text ]
+		: $text;
 }
 
 /**

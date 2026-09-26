@@ -11,17 +11,20 @@ Source and LOC figures last verified: **2026-09-25** against the locale-independ
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **1,977** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **6,312** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **10,029** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
-| Shipped frontend runtime (`build/view.js`, minified) | **2,397 bytes** | `npm run build` then `wc -c < build/view.js` |
+| Main plugin file (`bibliography-builder.php`) | **1,978** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **6,428** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **9,956** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
-(REST registration + block registration) and the four `includes/` files it loads:
+(REST registration + block registration) and the five `includes/` files it loads:
 `includes/resolvers.php`, which only defines constants and functions (its remote requests run
 only inside editor-time REST callbacks); `includes/review.php`, which only defines constants,
 functions, and editor-only review routes registered with the others on `rest_api_init`;
-`includes/save-markup.php`, which only defines constants and functions (not yet called); and
+`includes/save-markup.php`, which only defines constants and functions (not yet called);
+`includes/frontend-labels.php`, whose `render_block` filter translates the saved Cite / Export
+labels with a few string replacements per bibliography block, only on non-English sites, and
+does no I/O; and
 `includes/abilities.php`, which only defines functions and adds two Abilities API hooks, which
 run only when WordPress initializes its Abilities registry and do no I/O. The CSL formatting engine under `vendor/` runs
 **only** for editor-time REST calls. `scripts/*.php` are dev tooling and are not packaged.
@@ -72,7 +75,7 @@ path therefore adds **zero** database queries and **zero** citeproc/PHP formatti
 | Autoloaded options / registered settings | **0** | No `add_option`/`update_option`/`register_setting` |
 | Cron events | **0** | No `wp_schedule_event` |
 | Custom post types / custom tables | **0** | No `register_post_type` / `dbDelta` |
-| Enqueued frontend assets (only when block present) | `view.js` 2,397 bytes + `style-index.css` 2,965 bytes, plus core's shared `wp-i18n` script (which `view.js` uses to localize the Cite / Export labels) | `wc -c build/view.js build/style-index.css` |
+| Enqueued frontend assets (only when block present) | `view.js` 1,449 bytes + `style-index.css` 2,965 bytes, no script dependencies (the Cite / Export labels are translated server-side as the block renders, so no `wp-i18n` or `wp-hooks`) | `wc -c build/view.js build/style-index.css` |
 
 Persistence/hook audit — no persistent settings, options, cron, CPTs, or custom tables
 (expected output: **NONE**):
