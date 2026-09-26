@@ -23,17 +23,13 @@ import save from './save';
 import { deprecated } from './deprecated';
 import { renderBibliographySave } from './save-markup';
 
-jest.mock(
-	'@wordpress/block-editor',
-	() => ({
-		useBlockProps: {
-			save: () => ({
-				className: 'wp-block-bibliography-builder-bibliography',
-			}),
-		},
-	}),
-	{ virtual: true }
-);
+jest.mock('@wordpress/block-editor', () => ({
+	useBlockProps: {
+		save: () => ({
+			className: 'wp-block-bibliography-builder-bibliography',
+		}),
+	},
+}));
 
 const DOMAIN = 'borges-bibliography-builder';
 
