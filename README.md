@@ -73,9 +73,9 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 
 | Metric | Value |
 |---|---|
-| First-party PHP | ~1,977 LOC main plugin file; ~6,312 LOC total with `includes/` |
-| JS source (`src/`) | ~10,029 LOC |
-| Frontend runtime shipped to visitors | `view.js` ~2.4 KB + `style-index.css` ~2.9 KB (plus core's shared `wp-i18n`), enqueued only when the block is present |
+| First-party PHP | ~1,978 LOC main plugin file; ~6,428 LOC total with `includes/` |
+| JS source (`src/`) | ~9,956 LOC |
+| Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, no script dependencies, enqueued only when the block is present |
 | Installed footprint | ~1.9 MB (`vendor/` ~792 KB, translations 724 KB, build assets ~324 KB) |
 | Distributed ZIP (latest v1.6.0 release) | ~488 KB (499,681 bytes) |
 | **Added DB queries per page** | **0** — regardless of block or citation count |

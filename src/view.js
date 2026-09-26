@@ -15,56 +15,13 @@
  * generic name) without this script, preserving the deactivation-resilient
  * contract.
  *
- * Finally, the panel's visible labels are localized here. save() writes them in
- * fixed English so saved markup is identical in every editor locale; this
- * script swaps each canonical English label for the visitor's translation.
- * Markup saved before that change carries labels already translated at save
- * time, which match no canonical string and are left as they are.
+ * The panel's labels reach visitors already translated: save() writes them in
+ * fixed English (so saved markup is identical in every editor locale), and
+ * the block's render filter (includes/frontend-labels.php) translates them on
+ * the server. This script therefore needs no `wp-i18n`.
  */
-
-import {
-	CITE_EXPORT_LABELS,
-	getTranslatedCiteExportLabels,
-	getTranslatedLinkFallbackLabel,
-	LEGACY_LINK_FALLBACK_LABEL,
-} from './lib/cite-export-labels';
 
 const COPY_LABEL_RESET_MS = 2000;
-
-/**
- * Translate a label if it is one of the canonical English strings save()
- * writes; return anything else unchanged.
- *
- * @param {string} text Label text from the markup.
- * @return {string} Label to display.
- */
-function localizeLabel(text) {
-	const translated = getTranslatedCiteExportLabels();
-	const key = Object.keys(CITE_EXPORT_LABELS).find(
-		(name) => CITE_EXPORT_LABELS[name] === text
-	);
-
-	return key ? translated[key] : text;
-}
-
-export function localizeCiteExport(root = document) {
-	const labelled = root.querySelectorAll(
-		[
-			'.bibliography-builder-cite-export-toggle',
-			'.bibliography-builder-cite-copy',
-			'.bibliography-builder-export-links a',
-		]
-			.map((selector) => `.bibliography-builder-cite-export ${selector}`)
-			.join(', ')
-	);
-
-	labelled.forEach((element) => {
-		const localized = localizeLabel(element.textContent);
-		if (localized !== element.textContent) {
-			element.textContent = localized;
-		}
-	});
-}
 
 export function applyExportFilenames(root = document) {
 	const links = root.querySelectorAll(
@@ -75,33 +32,6 @@ export function applyExportFilenames(root = document) {
 		const filename = link.getAttribute('data-cite-export-filename');
 		if (filename) {
 			link.setAttribute('download', filename);
-		}
-	});
-}
-
-/**
- * Translate the English "Link to publication — <url>" accessible name that
- * older saved markup gives links whose citation has no title.
- *
- * @param {Document|Element} root Root to search.
- */
-export function localizeLinkLabels(root = document) {
-	const prefix = `${LEGACY_LINK_FALLBACK_LABEL} — `;
-	const translated = getTranslatedLinkFallbackLabel();
-
-	if (translated === LEGACY_LINK_FALLBACK_LABEL) {
-		return;
-	}
-
-	root.querySelectorAll(
-		'.bibliography-builder-entry-text a[aria-label]'
-	).forEach((link) => {
-		const label = link.getAttribute('aria-label');
-		if (label.startsWith(prefix)) {
-			link.setAttribute(
-				'aria-label',
-				`${translated} — ${label.slice(prefix.length)}`
-			);
 		}
 	});
 }
@@ -139,9 +69,7 @@ function showCopied(button) {
 	}
 
 	button.classList.add('is-copied');
-	button.textContent = localizeLabel(
-		button.getAttribute('data-copied-label') || CITE_EXPORT_LABELS.copied
-	);
+	button.textContent = button.getAttribute('data-copied-label') || 'Copied';
 
 	window.clearTimeout(button.copyResetTimer);
 	button.copyResetTimer = window.setTimeout(() => {
@@ -177,8 +105,6 @@ export function attachCiteCopy(root = document) {
 
 if (typeof document !== 'undefined') {
 	const enhance = () => {
-		localizeCiteExport();
-		localizeLinkLabels();
 		applyExportFilenames();
 		attachCiteCopy();
 	};

@@ -4,8 +4,9 @@
  * Gutenberg re-validates a static block's saved markup against save() in the
  * *current* editor's locale, so a translated label baked into post content
  * makes the block invalid for an editor in any other locale. save() therefore
- * writes these canonical English strings, and the frontend view script swaps
- * in the visitor's translation at runtime.
+ * writes these canonical English strings, and the block's render filter
+ * (includes/frontend-labels.php) translates them for visitors. Keep the PHP
+ * list there in step with this one.
  */
 import { __ } from '@wordpress/i18n';
 
@@ -37,12 +38,12 @@ export function getTranslatedCiteExportLabels() {
 }
 
 /**
- * Accessible-name prefix that markup saved before labels were made
- * locale-independent gives links whose citation has no title. The current
- * save() writes no such label.
+ * The accessible-name prefix that markup saved before labels were made
+ * locale-independent gave links whose citation has no title, in the current
+ * locale. Only deprecations use it; the current save() writes no such label.
+ *
+ * @return {string} Translated label.
  */
-export const LEGACY_LINK_FALLBACK_LABEL = 'Link to publication';
-
 export function getTranslatedLinkFallbackLabel() {
 	return __('Link to publication', 'borges-bibliography-builder');
 }
