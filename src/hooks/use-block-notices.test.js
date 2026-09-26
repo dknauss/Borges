@@ -5,38 +5,27 @@ import { useBlockNotices } from './use-block-notices';
 
 jest.useFakeTimers();
 
-jest.mock(
-	'@wordpress/notices',
-	() => ({
-		store: 'core/notices',
-	}),
-	{ virtual: true }
+jest.mock('@wordpress/notices', () => ({
+	store: 'core/notices',
+}));
+
+jest.mock('@wordpress/data', () =>
+	require('../test-utils/wordpress-data-notices-mock').createWordpressDataNoticesMock()
 );
 
-jest.mock(
-	'@wordpress/data',
-	() =>
-		require('../test-utils/wordpress-data-notices-mock').createWordpressDataNoticesMock(),
-	{ virtual: true }
-);
+jest.mock('@wordpress/element', () => {
+	const ReactLocal = require('react');
 
-jest.mock(
-	'@wordpress/element',
-	() => {
-		const ReactLocal = require('react');
-
-		return {
-			createElement: ReactLocal.createElement,
-			Fragment: ReactLocal.Fragment,
-			useState: ReactLocal.useState,
-			useRef: ReactLocal.useRef,
-			useCallback: ReactLocal.useCallback,
-			useEffect: ReactLocal.useEffect,
-			useMemo: ReactLocal.useMemo,
-		};
-	},
-	{ virtual: true }
-);
+	return {
+		createElement: ReactLocal.createElement,
+		Fragment: ReactLocal.Fragment,
+		useState: ReactLocal.useState,
+		useRef: ReactLocal.useRef,
+		useCallback: ReactLocal.useCallback,
+		useEffect: ReactLocal.useEffect,
+		useMemo: ReactLocal.useMemo,
+	};
+});
 
 function NoticeHarness() {
 	const { announce, clearNotice, currentNotice } = useBlockNotices();

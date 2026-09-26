@@ -2,17 +2,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import save from './save';
 import { getListSemantics, STYLE_DEFINITIONS } from './lib/formatting';
 
-jest.mock(
-	'@wordpress/block-editor',
-	() => ({
-		useBlockProps: {
-			save: () => ({
-				className: 'wp-block-bibliography-builder-bibliography',
-			}),
-		},
-	}),
-	{ virtual: true }
-);
+jest.mock('@wordpress/block-editor', () => ({
+	useBlockProps: {
+		save: () => ({
+			className: 'wp-block-bibliography-builder-bibliography',
+		}),
+	},
+}));
 
 function createCitation(overrides = {}) {
 	return {

@@ -2,17 +2,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import metadata from '../block.json';
 import { deprecated } from './deprecated';
 
-jest.mock(
-	'@wordpress/block-editor',
-	() => ({
-		useBlockProps: {
-			save: () => ({
-				className: 'wp-block-bibliography-builder-bibliography',
-			}),
-		},
-	}),
-	{ virtual: true }
-);
+jest.mock('@wordpress/block-editor', () => ({
+	useBlockProps: {
+		save: () => ({
+			className: 'wp-block-bibliography-builder-bibliography',
+		}),
+	},
+}));
 
 function createCitation({ id, family, title }) {
 	return {
