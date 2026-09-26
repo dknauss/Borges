@@ -223,7 +223,7 @@ GET /wp-json/bibliography/v1/posts/<post_id>/bibliographies/<ref>/preview?style=
 - Missing posts, forbidden posts, and missing bibliography indexes return explicit REST errors.
 - The public bibliography data routes are read-only. They do not add, update, delete, reorder, or persist citations.
 
-Sites that opt in can also write citations over REST. The routes add, change, remove, and reorder citations. They require `edit_post`, are dry runs by default, and need `If-Match`. They are off unless the `bibliography_builder_enable_write_routes` filter returns true. See [docs/rest-write-routes.md](./docs/rest-write-routes.md).
+Sites that opt in can also write bibliographies over REST. The routes add, change, remove, and reorder citations, change a block's settings, and switch its citation style. They require `edit_post`, are dry runs by default, and need `If-Match`. They are off unless the `bibliography_builder_enable_write_routes` filter returns true. See [docs/rest-write-routes.md](./docs/rest-write-routes.md).
 
 The separate editor-only formatter endpoint accepts `POST /wp-json/bibliography/v1/format`, requires `edit_posts`, and returns formatted citation text for submitted CSL-JSON. It does not save changes.
 
@@ -341,10 +341,10 @@ Every cell tests the packaged release, built with `npm run package:release` and 
 
 - activates the plugin and checks the front-end render and the read routes;
 - formats the style corpus (`tests/fixtures/csl-styles/`) in all nine styles on that PHP version, and compares the output with the reviewed goldens byte for byte;
-- turns on the citation write routes with a test-only mu-plugin, then authenticates with an application password and, over real HTTP:
+- turns on the write routes with a test-only mu-plugin, then authenticates with an application password and, over real HTTP:
   - runs a dry run;
   - expects `428` without `If-Match` and `412` with a stale ETag;
-  - makes a real write;
+  - makes a real write, then changes the block's settings and reformats it in APA;
   - checks that the rewritten block's markup is exactly what `save()` renders.
 
 Each runtime smoke job uploads artifacts, including Docker logs, service status, HTTP responses, and environment summaries under `output/runtime-matrix/<matrix-name>`.

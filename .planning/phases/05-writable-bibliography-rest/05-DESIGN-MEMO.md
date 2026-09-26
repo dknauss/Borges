@@ -128,6 +128,12 @@ POST /bibliography/v1/posts/{post_id}/bibliographies/{index}/reformat
 ```
 Reformat all citations to a new CSL style. Updates both the block attribute and the rendered HTML. Body: `{ "style": "apa-7" }`. Idempotent.
 
+**Status (2026-09-26): done (unreleased), as M3.** Shipped in `includes/write-routes.php` behind the M2 filter, with M2's dry-run, `edit_post`, and `If-Match` rules and its splice-and-verify write path. Changes from the sketch:
+- **Settings PATCH leaves out `citationStyle`.** Changing the style without reformatting would leave every entry's text in the old style, so the PATCH refuses it (`400`, `bibliography_builder_style_needs_reformat`) and points to `…/reformat`. It takes `outputCiteExport` as well as the three output toggles. A setting sent with its `block.json` default is dropped from the block comment, as the editor's serializer drops it.
+- **Reformat mirrors the editor's `handleCitationStyleChange`.** It keeps manual display text and export strings, re-sorts for the new style, and swaps a heading still set to the old style's default for the new one's (a PHP copy of the registry's `headingPlaceholder`, pinned by a drift test). The stored CSL-JSON is untouched.
+- **Formatter cost (open question 2), for one block.** A reformat formats in chunks of the `/format` limit (50), up to the editor's 200-citation cap, in the request. Bulk reformat across posts stays with Tier 4.
+- **Unformattable entries fail the whole request** with `409` and the entries listed, rather than keeping old-style text for some entries.
+
 ---
 
 ### Tier 4 — Cross-block bulk operations (requires `edit_others_posts`)
@@ -262,7 +268,7 @@ This decision should be revisited once Tier 2 is prototyped and the static-save 
 | M0 | Stable IDs (no routes) | None — implement in next feature sprint |
 | M1 | Validate + diff read extensions (Tier 1) — **done (unreleased)** | M0 complete |
 | M2 | Tier 2 add/update/delete/reorder behind an opt-in filter — **done (unreleased)**; see `docs/rest-write-routes.md` | M1 + static-save spike |
-| M3 | Reformat, reorder, ETag (Tier 2 complete) | M2 validated |
+| M3 | Reformat, reorder, ETag (Tier 2 complete) — **done (unreleased)**: reorder and ETag shipped with M2, block settings and reformat (Tier 3) with M3 | M2 validated |
 | M4 | Bulk routes (Tier 4) | M3 + rate-limiting design |
 | M5 | Abilities registration (Tier 5) | WP Abilities API stable |
 

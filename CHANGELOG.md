@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   Each route needs `edit_post` and is a dry run unless `dry_run=false`. A write needs `If-Match` with the post's ETag, which dry runs and the read routes return; it gets `428` without one and `412` when the ETag is stale. A write rebuilds the block's markup with the PHP port of `save()`, replaces only that block's bytes in the post, and saves a normal revision. See `docs/rest-write-routes.md`.
 
+- Block-level write routes (Phase 05, M3), behind the same filter and with the same dry-run, `edit_post`, and `If-Match` rules, under `/wp-json/bibliography/v1/posts/<id>/bibliographies/<ref>`:
+  - `PATCH` changes block settings: the visible heading and the JSON-LD, COinS, CSL-JSON, and Cite / Export toggles;
+  - `POST …/reformat` switches the citation style the way the editor does. It reformats every entry, keeps manual display text and export strings, re-sorts for the new style, and swaps a heading still set to the old style's default.
+
 - Review routes for editors (Phase 05, Tier 1), all read-only and requiring `edit_post`: `GET …/bibliographies/<ref>/validate` reports per-entry CSL-JSON problems (invalid or missing data, missing title, malformed DOI, and warnings for missing author, date, or container title, or an ISBN with no valid checksum); `…/duplicates` lists likely duplicate pairs using the editor's own duplicate rules; `…/preview?style=<key>` shows each entry reformatted in another citation style next to its current text, without saving. `<ref>` is the block index or its stable `bibliographyId`. The routes live in `includes/review.php`.
 - Three matching read-only abilities on WordPress 6.9+, with the same `edit_post` requirement: `borges/validate-bibliography`, `borges/find-duplicate-citations`, and `borges/preview-bibliography-style`. Each takes `post_id` and either `index` or `bibliography_id`.
 - Stable IDs (Phase 05, Tier 0). The read-only REST collection and single-bibliography routes, and the `borges/get-bibliographies` ability, now report each block's `bibliographyId`, a UUID that stays put when blocks before it are added or removed, as the future write routes will need. It is `null` for a block saved before IDs were assigned (or with an unusable value) until the post is next edited. Every citation already carried an `id`; the editor now guarantees one, unique within its block.
@@ -27,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The runtime matrix now tests the packaged release, including its production `vendor/`, instead of the source checkout, which had no `vendor/`, so the formatter could not run there. Every cell, from PHP 7.4 to 8.4, also:
   - checks all nine styles against the reviewed golden output;
-  - exercises the opt-in write routes over real HTTP with an application password: dry run, `428`, `412`, a real write, and a check that the rewritten block still validates.
+  - exercises the opt-in write routes over real HTTP with an application password: dry run, `428`, `412`, a real write, a settings change and a reformat, and a check that the rewritten block still validates.
 
   A development-only Playground blueprint (`playground/blueprint-write-api.json`) enables the write routes and adds a `borgesWrite` helper to the editor's browser console.
 - The nine citation styles and their locales are rewritten in full from each style manual:

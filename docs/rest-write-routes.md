@@ -1,6 +1,6 @@
-# Citation write routes
+# Bibliography write routes
 
-Phase 05, M2 (Tier 2 of the [design memo](../.planning/phases/05-writable-bibliography-rest/05-DESIGN-MEMO.md)). Scripts, integrations, and agents can use these routes to add, change, remove, and reorder citations in a saved post, without opening the block editor.
+Phase 05, M2 and M3 (Tiers 2 and 3 of the [design memo](../.planning/phases/05-writable-bibliography-rest/05-DESIGN-MEMO.md)). Scripts, integrations, and agents can use these routes to change a saved post's bibliographies without opening the block editor. They add, change, remove, and reorder citations, change a block's settings, and switch its citation style.
 
 ## Enabling
 
@@ -29,6 +29,8 @@ await borgesWrite.add( 'demo-try-it', [ … ], { commit: true } )
 await borgesWrite.update( 'demo-apa-7', 'demo-apa-7-1', { title: 'New title' }, { commit: true } )
 await borgesWrite.remove( 'demo-chicago-notes', 'demo-chicago-notes-4', { commit: true } )
 await borgesWrite.reorder( 'demo-ieee', [ 'demo-ieee-3', 'demo-ieee-1', 'demo-ieee-2' ], { commit: true } )
+await borgesWrite.settings( 'demo-apa-7', { headingText: 'Sources', outputCoins: true }, { commit: true } )
+await borgesWrite.reformat( 'demo-apa-7', 'mla-9', { commit: true } )
 ```
 
 Every call makes a dry run first. With `{ commit: true }`, it then writes, sending the dry run's ETag as `If-Match`, and reloads the editor, which would otherwise hold the old post and overwrite the write on save. The helper lives in `playground/dev/`.
@@ -45,6 +47,8 @@ All routes live under `/wp-json/bibliography/v1/posts/<post_id>/bibliographies/<
 | `PATCH` | `…/citations/<citation_id>` | Partial CSL-JSON object | Change fields on one citation |
 | `DELETE` | `…/citations/<citation_id>` | none | Remove one citation |
 | `PUT` | `…/citations/order` | `{ "ids": [ … ] }` | Reorder a numeric-style bibliography |
+| `PATCH` | `…` (the bibliography itself) | Any of the block settings below | Change block settings |
+| `POST` | `…/reformat` | `{ "style": "<key>" }` | Switch the citation style and reformat every entry |
 
 Every route requires `edit_post` on the post.
 
@@ -90,6 +94,35 @@ The `changes` object depends on the route:
 | patch | `updated` |
 | delete | `removed`: the whole entry, so a client can put it back |
 | reorder | `order` |
+| settings | `updated` (the setting names sent) |
+| reformat | `citationStyle` (`{ from, to }`); `reformatted` (every citation ID); `headingText` (`{ from, to }`, only when the heading changed) |
+
+### Block settings
+
+`PATCH …/bibliographies/<ref>` takes a JSON object with any of:
+
+| Setting | Type | Default | Sidebar control |
+| --- | --- | --- | --- |
+| `headingText` | string, one line | `""` | Visible Heading |
+| `outputJsonLd` | boolean | `true` | Output JSON-LD |
+| `outputCoins` | boolean | `false` | Output COinS |
+| `outputCslJson` | boolean | `false` | Output CSL-JSON |
+| `outputCiteExport` | boolean | `false` | Per-entry Cite / Export |
+
+Citations are not touched. An unknown setting or a wrong type gets `400`. A setting sent with its default value is left out of the block comment, as the editor leaves it out. `citationStyle` is refused with `400` (`bibliography_builder_style_needs_reformat`), because changing the style means reformatting every entry. Use `…/reformat` for that.
+
+### Reformatting
+
+`POST …/bibliographies/<ref>/reformat` with `{ "style": "apa-7" }` does what choosing a style in the block sidebar does:
+
+- formats every entry in the new style;
+- keeps manual display text and the BibTeX and BibLaTeX export strings, which a style change does not invalidate;
+- stores the entries in the new style's display order (numeric styles keep the current order);
+- if the heading is still the old style's default ("Bibliography" for Chicago, for example), changes it to the new style's default ("References" for APA). Any other heading is kept.
+
+`style` must be one of the supported keys: `chicago-notes-bibliography`, `chicago-author-date`, `apa-7`, `mla-9`, `harvard`, `ieee`, `vancouver`, `oscola`, or `abnt`. Sending the current style reformats in place, so the request is idempotent.
+
+The stored CSL-JSON is not changed. If any entry has CSL-JSON the formatter cannot use (or none, as with some very old pasted entries), nothing is written: the response is `409` (`bibliography_builder_unformattable_entries`) and lists each such entry's `index`, `id`, and reason in `data.entries`. Fix those entries with `PATCH …/citations/<citation_id>` or remove them, then reformat.
 
 ## What a write does
 
@@ -107,12 +140,12 @@ The `changes` object depends on the route:
 
 ## Limits and caveats
 
-- **Size:** a request adds at most 50 items, and a bibliography holds at most 200 citations, the editor's limit.
+- **Size:** a request adds at most 50 items, and a bibliography holds at most 200 citations, the editor's limit. A reformat formats up to 200 entries, 50 at a time.
 - **Reordering:** only numeric styles (IEEE, Vancouver) can be reordered. Other styles sort their entries themselves, so they return `409`.
-- **Export strings:** BibTeX and BibLaTeX export strings for new or changed entries are computed only in the editor, because they need citation-js. With per-entry Cite / Export on, those entries show RIS and CSL-JSON links until someone next saves the post in the editor. The editor then adds the missing strings.
+- **Export strings:** BibTeX and BibLaTeX export strings for new or changed entries are computed only in the editor, because they need citation-js. With per-entry Cite / Export on, those entries show RIS and CSL-JSON links until someone next saves the post in the editor. The editor then adds the missing strings. The same applies to every entry that has no strings yet when `outputCiteExport` is turned on over REST.
 - **HTML filtering:** WordPress filters saved HTML for users without `unfiltered_html`, in exactly the same way as it does for the editor.
 - **intl:** the PHP `intl` extension is required. Without it, writes return `501`.
 
 ## Still to come
 
-Later milestones are Tier 3 (block settings and reformatting), bulk routes, and write abilities. See the design memo's sequencing table.
+Later milestones are bulk routes across posts (Tier 4) and write abilities (Tier 5). See the design memo's sequencing table.

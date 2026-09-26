@@ -1,5 +1,5 @@
 /**
- * `borgesWrite`: try Borges' citation write routes from the block editor's
+ * `borgesWrite`: try Borges' bibliography write routes from the block editor's
  * browser console (development Playground only).
  *
  * Every call makes a dry run first and prints what would change. Pass
@@ -14,16 +14,19 @@
  *   await borgesWrite.update('demo-apa-7', 'demo-apa-7-1', { title: 'New title' })
  *   await borgesWrite.remove('demo-chicago-notes', 'demo-chicago-notes-4', { commit: true })
  *   await borgesWrite.reorder('demo-ieee', ['demo-ieee-3', 'demo-ieee-1', 'demo-ieee-2'], { commit: true })
+ *   await borgesWrite.settings('demo-apa-7', { headingText: 'Sources', outputCoins: true }, { commit: true })
+ *   await borgesWrite.reformat('demo-apa-7', 'mla-9', { commit: true })
  *
  * `ref` is a block's bibliographyId or its zero-based index.
  */
 (function () {
 	const postId = () =>
 		window.wp.data.select('core/editor').getCurrentPostId();
-	const citations = (ref) =>
+	const bibliography = (ref) =>
 		`/bibliography/v1/posts/${postId()}/bibliographies/${encodeURIComponent(
 			ref
-		)}/citations`;
+		)}`;
+	const citations = (ref) => `${bibliography(ref)}/citations`;
 
 	async function send(path, method, data, etag) {
 		const response = await window.wp
@@ -112,5 +115,9 @@
 			),
 		reorder: (ref, ids, options) =>
 			write(`${citations(ref)}/order`, 'PUT', { ids }, options),
+		settings: (ref, settings, options) =>
+			write(bibliography(ref), 'PATCH', settings, options),
+		reformat: (ref, style, options) =>
+			write(`${bibliography(ref)}/reformat`, 'POST', { style }, options),
 	};
 })();

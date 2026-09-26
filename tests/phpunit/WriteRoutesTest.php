@@ -1,6 +1,6 @@
 <?php
 /**
- * Citation write routes (Phase 05, M2 / Tier 2).
+ * Bibliography write routes (Phase 05, M2 and M3 / Tiers 2 and 3).
  *
  * @package BibliographyBuilder
  */
@@ -102,6 +102,23 @@ final class WriteRoutesTest extends TestCase {
 		return $request;
 	}
 
+	private static function block_request( $method, $ref, $body, $suffix = '' ) {
+		$request = new WP_REST_Request( $method, '/bibliography/v1/posts/' . self::POST_ID . '/bibliographies/' . $ref . $suffix );
+		$request->set_query_params(
+			array(
+				'post_id' => self::POST_ID,
+				'ref'     => (string) $ref,
+				'dry_run' => true,
+			)
+		);
+
+		if ( array() !== $body ) {
+			$request->set_body_params( $body );
+		}
+
+		return $request;
+	}
+
 	private static function commit( WP_REST_Request $request, $etag = null ) {
 		$request['dry_run'] = false;
 		$request->set_header( 'If-Match', null === $etag ? bibliography_builder_post_etag( get_post( self::POST_ID ) ) : $etag );
@@ -138,10 +155,12 @@ final class WriteRoutesTest extends TestCase {
 		bibliography_builder_register_write_routes();
 
 		$routes = array_column( $GLOBALS['bibliography_builder_test_rest_routes'], 'route' );
-		$this->assertCount( 3, $routes );
-		$this->assertStringEndsWith( '/citations/order', $routes[0] );
-		$this->assertStringEndsWith( '/citations', $routes[1] );
-		$this->assertStringContainsString( '(?P<citation_id>', $routes[2] );
+		$this->assertCount( 5, $routes );
+		$this->assertStringEndsWith( ')', $routes[0] );
+		$this->assertStringEndsWith( '/reformat', $routes[1] );
+		$this->assertStringEndsWith( '/citations/order', $routes[2] );
+		$this->assertStringEndsWith( '/citations', $routes[3] );
+		$this->assertStringContainsString( '(?P<citation_id>', $routes[4] );
 	}
 
 	public function test_permission_needs_edit_post() {
@@ -345,4 +364,224 @@ final class WriteRoutesTest extends TestCase {
 		$this->assertSame( 'db_update_error', $result->get_error_code() );
 		$this->assertSame( $this->content, get_post( self::POST_ID )->post_content );
 	}
+
+	public function test_settings_patch_changes_only_block_settings() {
+		$request = self::block_request(
+			'PATCH',
+			'notes-block',
+			array(
+				'headingText' => 'Sources & <Notes>',
+				'outputCoins' => true,
+				'outputJsonLd' => false,
+			)
+		);
+		$data    = bibliography_builder_rest_update_bibliography_settings( self::commit( $request ) )->get_data();
+		$attrs   = bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] );
+
+		$this->assertSame( array( 'headingText', 'outputCoins', 'outputJsonLd' ), $data['changes']['updated'] );
+		$this->assertSame( 'Sources & <Notes>', $attrs['headingText'] );
+		$this->assertTrue( $attrs['outputCoins'] );
+		$this->assertFalse( $attrs['outputJsonLd'] );
+		$this->assertSame( array( 'c-knuth', 'c-turing' ), array_column( $attrs['citations'], 'id' ) );
+		$this->assertStringContainsString( 'Sources &amp; &lt;Notes&gt;', get_post( self::POST_ID )->post_content );
+		$this->assert_blocks_are_valid();
+
+		// Back to a default: left out of the block comment, as the editor does.
+		$reset = self::block_request(
+			'PATCH',
+			'notes-block',
+			array(
+				'headingText' => '',
+				'outputCoins' => false,
+			)
+		);
+		bibliography_builder_rest_update_bibliography_settings( self::commit( $reset ) );
+		$attrs = bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] );
+
+		$this->assertArrayNotHasKey( 'headingText', $attrs );
+		$this->assertArrayNotHasKey( 'outputCoins', $attrs );
+		$this->assertFalse( $attrs['outputJsonLd'] );
+		$this->assert_blocks_are_valid();
+	}
+
+	public function test_settings_patch_refuses_bad_settings() {
+		$cases = array(
+			'bibliography_builder_style_needs_reformat' => array( 'citationStyle' => 'apa-7' ),
+			'bibliography_builder_invalid_settings'     => array( 'citations' => array() ),
+		);
+
+		foreach ( $cases as $code => $body ) {
+			$this->assertSame( $code, bibliography_builder_rest_update_bibliography_settings( self::block_request( 'PATCH', 0, $body ) )->get_error_code() );
+		}
+
+		foreach ( array( array( 'outputCoins' => 'yes' ), array( 'headingText' => 5 ), array( 'headingText' => "Two\nlines" ) ) as $body ) {
+			$this->assertSame( 400, bibliography_builder_rest_update_bibliography_settings( self::block_request( 'PATCH', 0, $body ) )->get_error_data()['status'] );
+		}
+
+		$empty = new WP_REST_Request( 'PATCH', '/' );
+		$empty->set_query_params(
+			array(
+				'post_id' => self::POST_ID,
+				'ref'     => '0',
+			)
+		);
+		$this->assertSame( 400, bibliography_builder_rest_update_bibliography_settings( $empty )->get_error_data()['status'] );
+	}
+
+	public function test_reformat_switches_style_like_the_editor() {
+		$before = bibliography_builder_write_to_arrays( $this->saved_blocks()[1]['attrs'] );
+		$data   = bibliography_builder_rest_reformat_bibliography(
+			self::commit( self::block_request( 'POST', 'ieee-block', array( 'style' => 'apa-7' ), '/reformat' ) )
+		)->get_data();
+		$attrs  = bibliography_builder_write_to_arrays( $this->saved_blocks()[1]['attrs'] );
+
+		$this->assertSame(
+			array(
+				'from' => 'ieee',
+				'to'   => 'apa-7',
+			),
+			$data['changes']['citationStyle']
+		);
+		$this->assertSame( array( 'i-one', 'i-two' ), $data['changes']['reformatted'] );
+		$this->assertArrayNotHasKey( 'headingText', $data['changes'] );
+		$this->assertSame( 'apa-7', $attrs['citationStyle'] );
+
+		// APA sorts by author, so Abel now comes before Zed.
+		$this->assertSame( array( 'i-two', 'i-one' ), array_column( $attrs['citations'], 'id' ) );
+		$this->assertSame( $before['citations'][1]['csl'], $attrs['citations'][0]['csl'] );
+		$this->assertStringContainsString( 'Abel, B. (2002).', wp_strip_all_tags( $attrs['citations'][0]['formattedText'] ) );
+		$this->assert_blocks_are_valid();
+
+		// The other block is untouched.
+		$this->assertSame(
+			bibliography_builder_write_to_arrays( bibliography_builder_locate_bibliography_blocks( $this->content )[0]['attrs'] ),
+			bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] )
+		);
+	}
+
+	public function test_reformat_keeps_manual_text_and_exports_and_swaps_a_default_heading() {
+		$content = self::block(
+			array(
+				'bibliographyId' => 'default-heading',
+				'headingText'    => 'Bibliography',
+				'citations'      => array(
+					array_merge(
+						self::citation( 'm-one', 'Kept Override', 'Moss', 'Mo', 1990 ),
+						array(
+							'displayOverride' => 'Hand-written entry.',
+							'exportBibtex'    => '@article{moss}',
+						)
+					),
+				),
+			)
+		);
+		bibliography_builder_test_set_post( self::POST_ID, 'publish', $content );
+
+		$data     = bibliography_builder_rest_reformat_bibliography(
+			self::commit( self::block_request( 'POST', 0, array( 'style' => 'abnt' ), '/reformat' ) )
+		)->get_data();
+		$citation = bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] )['citations'][0];
+
+		$this->assertSame(
+			array(
+				'from' => 'Bibliography',
+				'to'   => 'Referências',
+			),
+			$data['changes']['headingText']
+		);
+		$this->assertSame( 'Hand-written entry.', $citation['displayOverride'] );
+		$this->assertSame( '@article{moss}', $citation['exportBibtex'] );
+		$this->assertStringContainsString( 'MOSS', $citation['formattedText'] );
+		$this->assert_blocks_are_valid();
+
+		// Back to the default style: the attribute leaves the block comment.
+		bibliography_builder_rest_reformat_bibliography(
+			self::commit( self::block_request( 'POST', 0, array( 'style' => 'chicago-notes-bibliography' ), '/reformat' ) )
+		);
+		$attrs = bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] );
+
+		$this->assertArrayNotHasKey( 'citationStyle', $attrs );
+		$this->assertSame( 'Bibliography', $attrs['headingText'] );
+		$this->assert_blocks_are_valid();
+	}
+
+	public function test_reformat_formats_past_the_per_request_limit() {
+		$citations = array();
+
+		for ( $i = 0; $i < 60; $i++ ) {
+			$citations[] = self::citation( sprintf( 'n-%02d', $i ), 'Title ' . $i, sprintf( 'Author%02d', $i ), 'A', 2000 );
+		}
+
+		bibliography_builder_test_set_post(
+			self::POST_ID,
+			'publish',
+			self::block(
+				array(
+					'bibliographyId' => 'long',
+					'citations'      => $citations,
+				)
+			)
+		);
+
+		$data = bibliography_builder_rest_reformat_bibliography( self::block_request( 'POST', 0, array( 'style' => 'ieee' ), '/reformat' ) )->get_data();
+
+		$this->assertCount( 60, $data['changes']['reformatted'] );
+		$this->assertSame( 'n-00', $data['changes']['reformatted'][0] );
+		$this->assertStringContainsString( 'Title 59', $data['bibliography']['citations'][59]['formattedText'] );
+	}
+
+	public function test_reformat_gives_a_citation_without_an_id_one() {
+		$citation       = self::citation( 'x', 'No ID', 'Nemo', 'N', 1999 );
+		$citation['id'] = '';
+		bibliography_builder_test_set_post( self::POST_ID, 'publish', self::block( array( 'citations' => array( $citation ) ) ) );
+
+		$data = bibliography_builder_rest_reformat_bibliography( self::block_request( 'POST', 0, array( 'style' => 'mla-9' ), '/reformat' ) )->get_data();
+		$id   = $data['changes']['reformatted'][0];
+
+		$this->assertTrue( bibliography_builder_is_block_id( $id ) );
+		$this->assertSame( $id, $data['bibliography']['citations'][0]['id'] );
+	}
+
+	public function test_reformat_refuses_unknown_styles_and_unformattable_entries() {
+		foreach ( array( array( 'style' => 'apa' ), array( 'style' => 7 ), array() ) as $body ) {
+			$request = self::block_request( 'POST', 0, $body, '/reformat' );
+			$this->assertSame( 'bibliography_builder_invalid_style', bibliography_builder_rest_reformat_bibliography( $request )->get_error_code() );
+		}
+
+		bibliography_builder_test_set_post(
+			self::POST_ID,
+			'publish',
+			self::block(
+				array(
+					'citations' => array(
+						self::citation( 'ok', 'Fine', 'Fine', 'F', 2000 ),
+						array(
+							'id'            => 'empty',
+							'formattedText' => 'Pasted text.',
+						),
+					),
+				)
+			)
+		);
+
+		$error = bibliography_builder_rest_reformat_bibliography( self::block_request( 'POST', 0, array( 'style' => 'apa-7' ), '/reformat' ) );
+		$this->assertSame( 409, $error->get_error_data()['status'] );
+		$this->assertSame( 'empty', $error->get_error_data()['entries'][0]['id'] );
+	}
+
+	/**
+	 * The PHP heading defaults must match the editor's style registry.
+	 */
+	public function test_default_headings_match_the_style_registry() {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$registry = file_get_contents( dirname( __DIR__, 2 ) . '/src/lib/formatting/style-registry.js' );
+		preg_match_all( "/\\n\\t'?([a-z0-9-]+)'?: \\{.*?headingPlaceholder: '([^']*)'/s", $registry, $matches, PREG_SET_ORDER );
+
+		$this->assertCount( count( bibliography_builder_get_formatter_style_definitions() ), $matches );
+
+		foreach ( $matches as $match ) {
+			$this->assertSame( $match[2], bibliography_builder_write_default_heading( $match[1] ), $match[1] );
+		}
+	}
+
 }
