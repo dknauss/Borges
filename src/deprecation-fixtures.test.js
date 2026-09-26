@@ -49,17 +49,13 @@ import { deprecated } from './deprecated';
 
 // The real useBlockProps.save() is editor-side; in Node it only contributes the
 // generated class name, which is what the saved markup actually carries.
-jest.mock(
-	'@wordpress/block-editor',
-	() => ({
-		useBlockProps: {
-			save: () => ({
-				className: 'wp-block-bibliography-builder-bibliography',
-			}),
-		},
-	}),
-	{ virtual: true }
-);
+jest.mock('@wordpress/block-editor', () => ({
+	useBlockProps: {
+		save: () => ({
+			className: 'wp-block-bibliography-builder-bibliography',
+		}),
+	},
+}));
 
 const FIXTURE_DIR = join(__dirname, '..', 'tests', 'fixtures', 'deprecations');
 const WRITE_MODE = Boolean(process.env.BORGES_WRITE_DEPRECATION_FIXTURES);

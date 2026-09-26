@@ -17,17 +17,13 @@ jest.mock('./lib/formatting/csl', () =>
 	require('./__test-utils__/citation-js-mocks').descriptiveFormattingFactory()
 );
 
-jest.mock(
-	'@wordpress/block-editor',
-	() => ({
-		useBlockProps: {
-			save: () => ({
-				className: 'wp-block-bibliography-builder-bibliography',
-			}),
-		},
-	}),
-	{ virtual: true }
-);
+jest.mock('@wordpress/block-editor', () => ({
+	useBlockProps: {
+		save: () => ({
+			className: 'wp-block-bibliography-builder-bibliography',
+		}),
+	},
+}));
 
 describe('parse → store → render integration', () => {
 	beforeEach(() => {
