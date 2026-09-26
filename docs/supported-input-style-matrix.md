@@ -93,7 +93,7 @@ This avoids overpromising broad multilingual BibTeX support.
 
 ## Selectable bibliography styles
 
-These are style outputs, not raw-input parsing promises.
+These are style outputs, not raw-input parsing promises. Each style is written for Borges from its manual; see [`docs/csl-styles.md`](./csl-styles.md) for sources and deviations.
 
 ### Enabled now
 

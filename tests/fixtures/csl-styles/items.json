@@ -1,0 +1,248 @@
+[
+	{
+		"id": "book-one-author",
+		"type": "book",
+		"title": "The Architecture of Small Libraries",
+		"author": [{ "family": "Alvarez", "given": "Marta Inés" }],
+		"edition": "3",
+		"publisher": "Northfield University Press",
+		"publisher-place": "Chicago",
+		"issued": { "date-parts": [[2019]] }
+	},
+	{
+		"id": "book-two-authors",
+		"type": "book",
+		"title": "Reading Machines: Catalogues, Indexes, and the Order of Knowledge",
+		"author": [
+			{ "family": "Becker", "given": "Thomas J." },
+			{ "family": "Nakamura", "given": "Yuki" }
+		],
+		"publisher": "Harbor House",
+		"publisher-place": "New York",
+		"issued": { "date-parts": [[2021]] }
+	},
+	{
+		"id": "book-translated",
+		"type": "book",
+		"title": "The Garden of Forking Paths",
+		"author": [{ "family": "Ferreira", "given": "João Paulo" }],
+		"translator": [{ "family": "Wright", "given": "Helen" }],
+		"publisher": "Meridian Books",
+		"publisher-place": "London",
+		"issued": { "date-parts": [[2015]] }
+	},
+	{
+		"id": "book-edited",
+		"type": "book",
+		"title": "Essays on Classification",
+		"editor": [
+			{ "family": "Okafor", "given": "Chidi" },
+			{ "family": "Lindqvist", "given": "Anna" }
+		],
+		"publisher": "Delta Academic",
+		"publisher-place": "Oxford",
+		"issued": { "date-parts": [[2018]] }
+	},
+	{
+		"id": "chapter",
+		"type": "chapter",
+		"title": "Indexing the Infinite",
+		"author": [{ "family": "Dubois", "given": "Claire" }],
+		"container-title": "Essays on Classification",
+		"editor": [
+			{ "family": "Okafor", "given": "Chidi" },
+			{ "family": "Lindqvist", "given": "Anna" }
+		],
+		"page": "45-67",
+		"publisher": "Delta Academic",
+		"publisher-place": "Oxford",
+		"issued": { "date-parts": [[2018]] }
+	},
+	{
+		"id": "article-one-author",
+		"type": "article-journal",
+		"title": "Metadata Drift in Institutional Repositories",
+		"author": [{ "family": "Green", "given": "Samuel" }],
+		"container-title": "Journal of Library Systems",
+		"volume": "27",
+		"issue": "2",
+		"page": "97-111",
+		"DOI": "10.1234/jls.2020.0027",
+		"issued": { "date-parts": [[2020, 4]] }
+	},
+	{
+		"id": "article-three-authors",
+		"type": "article-journal",
+		"title": "Citation Styles as Data",
+		"author": [
+			{ "family": "Hughes", "given": "Rebecca" },
+			{ "family": "Iqbal", "given": "Omar" },
+			{ "family": "Jensen", "given": "Lars" }
+		],
+		"container-title": "Scholarly Communication Review",
+		"volume": "12",
+		"issue": "4",
+		"page": "301-322",
+		"DOI": "10.5555/scr.12.4.301",
+		"issued": { "date-parts": [[2022]] }
+	},
+	{
+		"id": "article-eight-authors",
+		"type": "article-journal",
+		"title": "A Shared Corpus of Reference Metadata",
+		"author": [
+			{ "family": "Kim", "given": "Ji-woo" },
+			{ "family": "Lopez", "given": "Ana" },
+			{ "family": "Moreau", "given": "Paul" },
+			{ "family": "Novak", "given": "Petra" },
+			{ "family": "Osei", "given": "Kwame" },
+			{ "family": "Park", "given": "Min" },
+			{ "family": "Quinn", "given": "Aoife" },
+			{ "family": "Rossi", "given": "Marco" }
+		],
+		"container-title": "Data in Brief",
+		"volume": "41",
+		"page": "107-118",
+		"issued": { "date-parts": [[2023]] }
+	},
+	{
+		"id": "article-twenty-two-authors",
+		"type": "article-journal",
+		"title": "Large Collaborations and Author Lists",
+		"author": [
+			{ "family": "Abbott", "given": "A." },
+			{ "family": "Baker", "given": "B." },
+			{ "family": "Clark", "given": "C." },
+			{ "family": "Davis", "given": "D." },
+			{ "family": "Evans", "given": "E." },
+			{ "family": "Foster", "given": "F." },
+			{ "family": "Gray", "given": "G." },
+			{ "family": "Hall", "given": "H." },
+			{ "family": "Irwin", "given": "I." },
+			{ "family": "Jones", "given": "J." },
+			{ "family": "King", "given": "K." },
+			{ "family": "Lewis", "given": "L." },
+			{ "family": "Moore", "given": "M." },
+			{ "family": "Nash", "given": "N." },
+			{ "family": "Owen", "given": "O." },
+			{ "family": "Price", "given": "P." },
+			{ "family": "Quill", "given": "Q." },
+			{ "family": "Reed", "given": "R." },
+			{ "family": "Stone", "given": "S." },
+			{ "family": "Turner", "given": "T." },
+			{ "family": "Upton", "given": "U." },
+			{ "family": "Vance", "given": "V." }
+		],
+		"container-title": "Physical Review Letters",
+		"volume": "130",
+		"issue": "5",
+		"page": "051801",
+		"DOI": "10.1103/example.130.051801",
+		"issued": { "date-parts": [[2023]] }
+	},
+	{
+		"id": "article-magazine",
+		"type": "article-magazine",
+		"title": "The Return of the Card Catalogue",
+		"author": [{ "family": "Tanaka", "given": "Emi" }],
+		"container-title": "The Atlantic Review",
+		"issued": { "date-parts": [[2021, 3, 15]] },
+		"URL": "https://example.com/magazine/card-catalogue"
+	},
+	{
+		"id": "article-newspaper",
+		"type": "article-newspaper",
+		"title": "City Library Opens New Wing",
+		"author": [{ "family": "Usman", "given": "Bola" }],
+		"container-title": "The Daily Courier",
+		"issued": { "date-parts": [[2022, 11, 2]] }
+	},
+	{
+		"id": "webpage-organization",
+		"type": "webpage",
+		"title": "Guide to Persistent Identifiers",
+		"author": [{ "literal": "Open Research Alliance" }],
+		"container-title": "Open Research Alliance",
+		"issued": { "date-parts": [[2024, 1, 10]] },
+		"accessed": { "date-parts": [[2025, 6, 3]] },
+		"URL": "https://example.org/guides/pids"
+	},
+	{
+		"id": "webpage-no-date",
+		"type": "webpage",
+		"title": "About the Collection",
+		"container-title": "Museum of Printed Books",
+		"accessed": { "date-parts": [[2025, 2, 14]] },
+		"URL": "https://example.org/about"
+	},
+	{
+		"id": "thesis",
+		"type": "thesis",
+		"title": "Authority Control in Multilingual Catalogues",
+		"author": [{ "family": "Varga", "given": "Dóra" }],
+		"genre": "PhD diss.",
+		"publisher": "University of Toronto",
+		"publisher-place": "Toronto",
+		"issued": { "date-parts": [[2017]] }
+	},
+	{
+		"id": "report",
+		"type": "report",
+		"title": "State of Open Metadata",
+		"author": [{ "literal": "National Library Council" }],
+		"number": "NLC-2020-4",
+		"publisher": "National Library Council",
+		"publisher-place": "Washington, DC",
+		"issued": { "date-parts": [[2020]] }
+	},
+	{
+		"id": "paper-conference",
+		"type": "paper-conference",
+		"title": "Fast Deduplication of Bibliographic Records",
+		"author": [
+			{ "family": "Weber", "given": "Jonas" },
+			{ "family": "Xu", "given": "Li" }
+		],
+		"container-title": "Proceedings of the Conference on Digital Libraries",
+		"page": "210-219",
+		"publisher": "ACM",
+		"publisher-place": "New York",
+		"DOI": "10.1145/0000000.0000001",
+		"issued": { "date-parts": [[2019]] }
+	},
+	{
+		"id": "preprint",
+		"type": "article",
+		"title": "Learning Citation Formats from Examples",
+		"author": [
+			{ "family": "Young", "given": "Grace" },
+			{ "family": "Zhao", "given": "Wei" }
+		],
+		"publisher": "arXiv",
+		"number": "2401.01234",
+		"DOI": "10.48550/arXiv.2401.01234",
+		"issued": { "date-parts": [[2024]] }
+	},
+	{
+		"id": "book-no-author-no-date",
+		"type": "book",
+		"title": "A Handbook of Bookbinding",
+		"publisher": "Guild Press",
+		"publisher-place": "Boston"
+	},
+	{
+		"id": "legal-case",
+		"type": "legal_case",
+		"title": "Smith v Jones",
+		"container-title": "UKSC",
+		"number": "12",
+		"issued": { "date-parts": [[2019]] },
+		"authority": "Supreme Court"
+	},
+	{
+		"id": "legislation",
+		"type": "legislation",
+		"title": "Copyright, Designs and Patents Act",
+		"issued": { "date-parts": [[1988]] }
+	}
+]

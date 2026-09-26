@@ -482,7 +482,7 @@ These handle:
 -   `plugin-doi`: DOI string → CSL-JSON fallback support when direct CrossRef fetch is unavailable
 -   `plugin-bibtex`: BibTeX string → CSL-JSON
 
-Formatted bibliography strings are generated locally through `citeproc-php` using plugin-owned GPL-compatible CSL style and locale fixtures. Do not bundle the official CSL style or locale repositories in the WordPress.org release package.
+Formatted bibliography strings are generated locally through `citeproc-php` using plugin-owned GPL-2.0-or-later CSL styles and locales, written from each style manual's rules (see `docs/csl-styles.md`). Do not bundle the official CSL style or locale repositories in the WordPress.org release package.
 
 ---
 

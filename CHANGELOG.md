@@ -15,8 +15,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The Playground demos (release, main build, and WordPress.org Preview) open on a demo page with copy-ready samples of every accepted input format, an empty Bibliography block to paste them into, brief notes on the key features, and three example bibliographies (Chicago notes-bibliography with Cite / Export, APA 7, IEEE). The Welcome Guide no longer covers the page. The page is defined once in `playground/demo-content.json` and `playground/demo-content.php`, and `npm run playground:build` writes it into every Blueprint.
 
+### Changed
+
+- The nine citation styles and their locales are rewritten in full from each style manual:
+  - Chicago notes-bibliography and author-date (17th ed.);
+  - APA 7;
+  - MLA 9;
+  - Harvard (Cite Them Right);
+  - IEEE;
+  - Vancouver (*Citing Medicine*);
+  - OSCOLA;
+  - ABNT NBR 6023.
+
+  The earlier files were about 2 KB stand-ins. They initialized every given name and dropped volume, issue, pages, editors, translators, editions, and access dates. Every manual's author-list rules now apply: "and" or "&", "et al." thresholds, and APA's 21+ ellipsis. So do its journal, chapter, webpage, thesis, report, conference-paper, and preprint forms.
+
+  The en-US, en-GB, and pt-BR locales now carry month names, quotation marks, and role terms. pt-BR was an English copy, so ABNT printed "and" and "accessed"; it is now written in Portuguese. Harvard now uses British conventions.
+
+  The styles are still written for Borges and licensed GPL-2.0-or-later, not copied from the CC BY-SA CSL repository. `docs/csl-styles.md` lists each source and the few deliberate deviations.
+
+  Existing bibliographies keep their saved text until an entry is added or edited or the style is changed.
+
 ### Fixed
 
+- Organization authors (CSL `literal` names, such as "Open Research Alliance") no longer vanish from formatted entries.
+- An entry after one shortened to "et al." no longer loses the "and" before its last author. Each entry is now formatted on its own.
 - A bibliography block no longer opens as invalid ("Attempt Block Recovery") when an editor using a different language from the one who saved it opens the post. `save()` used to write the Cite / Export labels ("Cite / Export", "Copy citation", "Copied", "RIS", "CSL-JSON", "BibTeX", "BibLaTeX") and the "Link to publication" link label into post content in the saving editor's language. The editor checks saved markup against `save()` in the *current* editor's language, so the two did not match. Saved markup is now the same in every language: the panel labels are stored in English and translated for visitors on the server as the block renders (`includes/frontend-labels.php`, a `render_block` filter), so they are translated without JavaScript and the view script loads no `wp-i18n`, and a link whose citation has no title or container title carries no `aria-label`, so screen readers announce its visible URL. Existing posts still validate in any language, because the new deprecation reads the labels back from the saved markup. The exception is blocks saved in the oldest markup shapes (before the biblioentry role was removed) that contain a linked URL in a citation with no title or container title: those still validate only in the language they were saved in, as before. They switch to the new markup the next time they are saved. The PHP port of `save()` (`includes/save-markup.php`) matches.
 - In all 19 bundled translations, seven strings were compiled as "Add citations" even though they mean something else: "Copy citation", "Copy citation: %s", "Copied citation.", "Edit citation: %s", "Delete citation: %s", "Added 1 citation.", and "Added 1 citation. %s". These were stale fuzzy matches, and `wp i18n make-mo` compiles fuzzy entries. The translations are cleared so these strings fall back to English, and the `.mo` files are rebuilt.
 - Pasting a whole reference-manager `.bib` export no longer loses or misreads records:

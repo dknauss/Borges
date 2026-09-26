@@ -1,21 +1,293 @@
 <?xml version="1.0" encoding="utf-8"?>
-<style xmlns="http://purl.org/net/xbiblio/csl" class="note" version="1.0" default-locale="en-US">
+<!--
+  Chicago notes and bibliography (bibliography entries), following The Chicago
+  Manual of Style, 17th ed., chapter 14. Project-authored for Borges
+  Bibliography Builder from the manual's rules; GPL-2.0-or-later. Not derived
+  from the CSL project's chicago-note-bibliography.csl.
+
+  Conventions shared by every Borges style (see docs/csl-styles.md):
+  - No <sort>: entries are matched back by ID and the block sorts them itself.
+  - Titles are never case-transformed; the block re-applies italics by
+    matching the stored title text.
+  - Each part carries its own "." or "," suffix inside a space-delimited group:
+    citeproc-php moves punctuation inside closing quotes, and drops a doubled
+    period, only for a suffix that is exactly "." or ",".
+  - Role phrases use <text term form="verb"> before the names, not <label>.
+  - No page-range-format: without it citeproc-php joins ranges with an en dash.
+-->
+<style xmlns="http://purl.org/net/xbiblio/csl" class="note" version="1.0" default-locale="en-US" demote-non-dropping-particle="display-and-sort">
   <info>
-    <title>Borges Bibliography Builder Notes Bibliography</title>
-    <id>https://example.invalid/borges-bibliography-builder/notes</id>
-    <link href="https://example.invalid/borges-bibliography-builder/notes" rel="self"/>
+    <title>Borges: Chicago Notes and Bibliography</title>
+    <id>https://github.com/dknauss/Borges/styles/chicago-notes-bibliography</id>
     <author><name>Borges Bibliography Builder contributors</name></author>
     <category citation-format="note"/>
-    <updated>2026-05-03T00:00:00+00:00</updated>
+    <updated>2026-09-26T00:00:00+00:00</updated>
     <rights license="https://www.gnu.org/licenses/gpl-2.0.html">GPL-2.0-or-later</rights>
   </info>
-  <macro name="contributors"><names variable="author"><name name-as-sort-order="all" sort-separator=", " initialize-with=". " delimiter=", " delimiter-precedes-last="always"/><substitute><names variable="editor"><name name-as-sort-order="all" sort-separator=", " initialize-with=". " delimiter=", " delimiter-precedes-last="always"/><label form="short" prefix=", "/></names><text variable="title"/></substitute></names></macro>
-  <macro name="date"><choose><if variable="issued"><date variable="issued"><date-part name="year"/></date></if><else><text term="no date"/></else></choose></macro>
-  <macro name="title"><choose><if type="article-journal article-magazine article-newspaper chapter paper-conference post post-weblog review review-book webpage" match="any"><text variable="title" quotes="true"/></if><else><text variable="title" font-style="italic"/></else></choose></macro>
-  <macro name="container"><choose><if variable="container-title"><text variable="container-title" font-style="italic"/></if></choose></macro>
-  <macro name="access"><choose><if variable="DOI"><text variable="DOI" prefix="https://doi.org/"/></if><else-if variable="URL"><text variable="URL"/></else-if></choose></macro>
-  <bibliography>
-    <sort><key macro="contributors"/><key variable="title"/></sort>
-    <layout suffix="."><group delimiter=" "><text macro="contributors" suffix="."/><text macro="title" suffix="."/><text macro="container" suffix="."/><text variable="publisher" suffix=","/><text macro="date" suffix="."/><text macro="access"/></group></layout>
+
+  <macro name="creators">
+    <names variable="author">
+      <name and="text" delimiter=", " delimiter-precedes-last="always" name-as-sort-order="first" sort-separator=", "/>
+      <label form="short" prefix=", "/>
+      <substitute>
+        <names variable="editor"/>
+        <names variable="translator"/>
+      </substitute>
+    </names>
+  </macro>
+
+  <macro name="title">
+    <choose>
+      <if type="book report legislation legal_case motion_picture software dataset map" match="any">
+        <text variable="title"/>
+      </if>
+      <else>
+        <text variable="title" quotes="true"/>
+      </else>
+    </choose>
+  </macro>
+
+  <macro name="editors-verb">
+    <group delimiter=" ">
+      <text term="editor" form="verb"/>
+      <names variable="editor">
+        <name and="text" delimiter=", "/>
+      </names>
+    </group>
+  </macro>
+
+  <macro name="editors-verb-capitalized">
+    <group delimiter=" ">
+      <text term="editor" form="verb" text-case="capitalize-first"/>
+      <names variable="editor">
+        <name and="text" delimiter=", "/>
+      </names>
+    </group>
+  </macro>
+
+  <macro name="translators-verb">
+    <group delimiter=" ">
+      <text term="translator" form="verb"/>
+      <names variable="translator">
+        <name and="text" delimiter=", "/>
+      </names>
+    </group>
+  </macro>
+
+  <macro name="translators-verb-capitalized">
+    <group delimiter=" ">
+      <text term="translator" form="verb" text-case="capitalize-first"/>
+      <names variable="translator">
+        <name and="text" delimiter=", "/>
+      </names>
+    </group>
+  </macro>
+
+  <macro name="edition">
+    <choose>
+      <if is-numeric="edition">
+        <group delimiter=" ">
+          <number variable="edition" form="ordinal"/>
+          <text term="edition" form="short"/>
+        </group>
+      </if>
+      <else>
+        <text variable="edition"/>
+      </else>
+    </choose>
+  </macro>
+
+  <macro name="year">
+    <choose>
+      <if variable="issued">
+        <date variable="issued">
+          <date-part name="year"/>
+        </date>
+      </if>
+      <else>
+        <text term="no date" form="short"/>
+      </else>
+    </choose>
+  </macro>
+
+  <macro name="full-date">
+    <date variable="issued">
+      <date-part name="month" suffix=" "/>
+      <date-part name="day" suffix=", "/>
+      <date-part name="year"/>
+    </date>
+  </macro>
+
+  <macro name="journal-date">
+    <choose>
+      <if variable="issued">
+        <date variable="issued">
+          <date-part name="month" suffix=" "/>
+          <date-part name="year"/>
+        </date>
+      </if>
+      <else>
+        <text term="no date" form="short"/>
+      </else>
+    </choose>
+  </macro>
+
+  <macro name="accessed">
+    <group delimiter=" ">
+      <text term="accessed" text-case="capitalize-first"/>
+      <date variable="accessed">
+        <date-part name="month" suffix=" "/>
+        <date-part name="day" suffix=", "/>
+        <date-part name="year"/>
+      </date>
+    </group>
+  </macro>
+
+  <macro name="publication">
+    <group delimiter=", ">
+      <group delimiter=": ">
+        <text variable="publisher-place"/>
+        <text variable="publisher"/>
+      </group>
+      <text macro="year"/>
+    </group>
+  </macro>
+
+  <macro name="access">
+    <choose>
+      <if variable="DOI">
+        <text variable="DOI" prefix="https://doi.org/"/>
+      </if>
+      <else-if variable="URL">
+        <text variable="URL"/>
+      </else-if>
+    </choose>
+  </macro>
+
+  <!-- Sort keys for the PHP/JS sort-coordination tests. Output order is not
+       used by the block (it sorts entries itself), and these macros share no
+       elements with the display macros, whose name state they would disturb. -->
+  <macro name="sort-contributors">
+    <names variable="author">
+      <name name-as-sort-order="all" sort-separator=", " delimiter=", "/>
+      <substitute>
+        <names variable="editor"/>
+        <names variable="translator"/>
+        <text variable="title"/>
+      </substitute>
+    </names>
+  </macro>
+
+  <macro name="sort-year">
+    <date variable="issued">
+      <date-part name="year"/>
+    </date>
+  </macro>
+
+  <bibliography hanging-indent="true" et-al-min="11" et-al-use-first="7">
+    <sort>
+      <key macro="sort-contributors"/>
+      <key variable="title"/>
+    </sort>
+    <layout>
+      <group delimiter=" " suffix=".">
+        <text macro="creators" suffix="."/>
+        <text macro="title" suffix="."/>
+        <choose>
+          <if type="article-journal review review-book" match="any">
+            <group delimiter=": " suffix=".">
+              <group delimiter=" ">
+                <text variable="container-title"/>
+                <group delimiter=", ">
+                  <text variable="volume"/>
+                  <group delimiter=" ">
+                    <text term="issue" form="short"/>
+                    <text variable="issue"/>
+                  </group>
+                </group>
+                <text macro="journal-date" prefix="(" suffix=")"/>
+              </group>
+              <text variable="page"/>
+            </group>
+          </if>
+          <else-if type="article-magazine article-newspaper" match="any">
+            <group delimiter=", " suffix=".">
+              <text variable="container-title"/>
+              <text macro="full-date"/>
+            </group>
+          </else-if>
+          <else-if type="webpage post post-weblog" match="any">
+            <text variable="container-title" suffix="."/>
+            <choose>
+              <if variable="issued">
+                <text macro="full-date" suffix="."/>
+              </if>
+              <else-if variable="accessed">
+                <text macro="accessed" suffix="."/>
+              </else-if>
+              <else>
+                <text term="no date" form="short" suffix="."/>
+              </else>
+            </choose>
+          </else-if>
+          <else-if type="chapter paper-conference entry entry-encyclopedia entry-dictionary" match="any">
+            <group delimiter=", " suffix=".">
+              <group delimiter=" ">
+                <text term="in" text-case="capitalize-first"/>
+                <text variable="container-title"/>
+              </group>
+              <text macro="editors-verb"/>
+              <text variable="page"/>
+            </group>
+            <text macro="translators-verb-capitalized" suffix="."/>
+            <text macro="publication" suffix="."/>
+          </else-if>
+          <else-if type="thesis">
+            <group delimiter=", " suffix=".">
+              <text variable="genre"/>
+              <text variable="publisher"/>
+              <text macro="year"/>
+            </group>
+          </else-if>
+          <else-if type="article">
+            <group delimiter=", " suffix=".">
+              <text value="Preprint"/>
+              <text variable="publisher"/>
+              <text macro="year"/>
+            </group>
+          </else-if>
+          <else-if type="legal_case">
+            <group delimiter=" " suffix=".">
+              <text variable="container-title"/>
+              <text variable="number"/>
+              <text macro="year" prefix="(" suffix=")"/>
+            </group>
+          </else-if>
+          <else-if type="legislation">
+            <text macro="year" suffix="."/>
+          </else-if>
+          <else>
+            <choose>
+              <if variable="author">
+                <text macro="editors-verb-capitalized" suffix="."/>
+              </if>
+            </choose>
+            <choose>
+              <if variable="author editor" match="any">
+                <text macro="translators-verb-capitalized" suffix="."/>
+              </if>
+            </choose>
+            <text macro="edition" suffix="."/>
+            <group delimiter=" " suffix=".">
+              <text term="volume" form="short" text-case="capitalize-first"/>
+              <number variable="volume"/>
+            </group>
+            <text variable="number" suffix="."/>
+            <text macro="publication" suffix="."/>
+          </else>
+        </choose>
+        <text macro="access"/>
+      </group>
+    </layout>
   </bibliography>
 </style>
