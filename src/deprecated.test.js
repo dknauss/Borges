@@ -40,7 +40,7 @@ describe('deprecated block versions', () => {
 
 	it('freezes the current pre-Phase-4 save shape: <li> with no <details>', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[0].save({
+			deprecated[1].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -61,7 +61,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the immediate prior save markup with deprecated entry roles', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[1].save({
+			deprecated[2].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -96,7 +96,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the prior save markup with linked URLs and static aria-label', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[2].save({
+			deprecated[3].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -129,7 +129,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the prior save markup variant without linked visible URLs', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[3].save({
+			deprecated[4].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
@@ -158,7 +158,7 @@ describe('deprecated block versions', () => {
 	});
 
 	it('migrate re-sorts citations into style order', () => {
-		const migrated = deprecated[4].migrate({
+		const migrated = deprecated[5].migrate({
 			citationStyle: 'chicago-author-date',
 			citations: [
 				createCitation({ id: 'z', family: 'Zulu', title: 'Zeta Book' }),
@@ -175,14 +175,14 @@ describe('deprecated block versions', () => {
 	});
 
 	it('migrate handles missing citations attribute with empty array fallback', () => {
-		const migrated = deprecated[4].migrate({ citationStyle: 'apa-7' });
+		const migrated = deprecated[5].migrate({ citationStyle: 'apa-7' });
 
 		expect(migrated.citations).toEqual([]);
 	});
 
 	it('supports the prior unsorted save markup variant', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[4].save({
+			deprecated[5].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [

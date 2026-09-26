@@ -5,16 +5,16 @@ Each source metric carries the exact command used to re-derive it. Package-size 
 identify their measurement or release-artifact source. Re-run the relevant command and update the
 number **in the same commit** whenever the underlying quantity changes.
 
-Source and LOC figures last verified: **2026-09-25** against the save-markup spike (Phase 05 M2) branch, based on `main` at `774f50b`. The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.6.0 release asset.
+Source and LOC figures last verified: **2026-09-25** against the locale-independent save() branch, based on `main` at `4911b2d`. The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.6.0 release asset.
 
 ## Lines of code
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
 | Main plugin file (`bibliography-builder.php`) | **1,977** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **6,315** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **9,766** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
-| Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
+| All first-party PHP (excl. vendor, tests, scripts, packages, output, node_modules, generated `build/`) | **6,312** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **10,029** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| Shipped frontend runtime (`build/view.js`, minified) | **2,397 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
 (REST registration + block registration) and the four `includes/` files it loads:
@@ -72,7 +72,7 @@ path therefore adds **zero** database queries and **zero** citeproc/PHP formatti
 | Autoloaded options / registered settings | **0** | No `add_option`/`update_option`/`register_setting` |
 | Cron events | **0** | No `wp_schedule_event` |
 | Custom post types / custom tables | **0** | No `register_post_type` / `dbDelta` |
-| Enqueued frontend assets (only when block present) | `view.js` 1,449 bytes + `style-index.css` 2,965 bytes | `wc -c build/view.js build/style-index.css` |
+| Enqueued frontend assets (only when block present) | `view.js` 2,397 bytes + `style-index.css` 2,965 bytes, plus core's shared `wp-i18n` script (which `view.js` uses to localize the Cite / Export labels) | `wc -c build/view.js build/style-index.css` |
 
 Persistence/hook audit — no persistent settings, options, cron, CPTs, or custom tables
 (expected output: **NONE**):
