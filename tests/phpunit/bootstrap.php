@@ -46,6 +46,9 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_ability_categories']  = array();
 	$GLOBALS['bibliography_builder_test_http_responses_for']  = array();
 	$GLOBALS['bibliography_builder_test_translations']        = array();
+	$GLOBALS['bibliography_builder_test_filters']             = array();
+	$GLOBALS['bibliography_builder_test_post_updates']        = array();
+	$GLOBALS['bibliography_builder_test_update_error']        = null;
 }
 
 /**
@@ -157,7 +160,73 @@ function add_action( $hook_name = '', $callback = null, $priority = 10, $accepte
 	return true;
 }
 
-function add_filter() {}
+function add_filter( $hook_name = '', $callback = null ) {
+	if ( '' !== $hook_name && null !== $callback ) {
+		$GLOBALS['bibliography_builder_test_filters'][ $hook_name ][] = $callback;
+	}
+}
+
+function remove_all_filters( $hook_name ) {
+	unset( $GLOBALS['bibliography_builder_test_filters'][ $hook_name ] );
+}
+
+function apply_filters( $hook_name, $value, ...$args ) {
+	foreach ( $GLOBALS['bibliography_builder_test_filters'][ $hook_name ] ?? array() as $callback ) {
+		$value = $callback( $value, ...$args );
+	}
+
+	return $value;
+}
+
+function __return_true() {
+	return true;
+}
+
+function wp_generate_uuid4() {
+	return sprintf(
+		'%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+		mt_rand( 0, 0xffff ),
+		mt_rand( 0, 0xffff ),
+		mt_rand( 0, 0xffff ),
+		mt_rand( 0, 0x0fff ) | 0x4000,
+		mt_rand( 0, 0x3fff ) | 0x8000,
+		mt_rand( 0, 0xffff ),
+		mt_rand( 0, 0xffff ),
+		mt_rand( 0, 0xffff )
+	);
+}
+
+function wp_slash( $value ) {
+	return is_string( $value ) ? addslashes( $value ) : $value;
+}
+
+function rest_sanitize_boolean( $value ) {
+	if ( is_string( $value ) ) {
+		$value = strtolower( $value );
+		if ( in_array( $value, array( 'false', '0' ), true ) ) {
+			return false;
+		}
+	}
+
+	return (bool) $value;
+}
+
+/**
+ * Stand-in for wp_update_post(): stores the unslashed content, as core does,
+ * and records the call. Set $GLOBALS['bibliography_builder_test_update_error']
+ * to make it fail.
+ */
+function wp_update_post( $postarr, $wp_error = false ) {
+	if ( ! empty( $GLOBALS['bibliography_builder_test_update_error'] ) ) {
+		return $GLOBALS['bibliography_builder_test_update_error'];
+	}
+
+	$post_id = (int) $postarr['ID'];
+	$GLOBALS['bibliography_builder_test_posts'][ $post_id ]->post_content = stripslashes( $postarr['post_content'] );
+	$GLOBALS['bibliography_builder_test_post_updates'][]                 = $postarr;
+
+	return $post_id;
+}
 
 function ba11yc_register_block_check( $block_type, $args ) {
 	$GLOBALS['bibliography_builder_test_bac_register_calls'][] = array(
@@ -194,6 +263,28 @@ function register_rest_route( $namespace, $route, $args ) {
 		'args'      => $args,
 	);
 }
+
+// WordPress core's serialize_block_attributes(), verbatim in behavior.
+function serialize_block_attributes( $block_attributes ) {
+	$encoded_attributes = wp_json_encode( $block_attributes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+
+	return strtr(
+		$encoded_attributes,
+		array(
+			'\\\\' => '\\u005c',
+			'--'   => '\\u002d\\u002d',
+			'<'    => '\\u003c',
+			'>'    => '\\u003e',
+			'&'    => '\\u0026',
+			'\\"'  => '\\u0022',
+		)
+	);
+}
+
+// WordPress core's block parser, for tests that need the real parse_blocks().
+require_once __DIR__ . '/wp-block-parser/class-wp-block-parser-block.php';
+require_once __DIR__ . '/wp-block-parser/class-wp-block-parser-frame.php';
+require_once __DIR__ . '/wp-block-parser/class-wp-block-parser.php';
 
 function parse_blocks( $content ) {
 	return $GLOBALS['bibliography_builder_test_parsed_blocks'][ $content ] ?? array();
@@ -412,6 +503,16 @@ class WP_REST_Request implements ArrayAccess {
 
 	public function get_route() {
 		return $this->route;
+	}
+
+	private $headers = array();
+
+	public function set_header( $key, $value ) {
+		$this->headers[ strtolower( str_replace( '-', '_', $key ) ) ] = $value;
+	}
+
+	public function get_header( $key ) {
+		return $this->headers[ strtolower( str_replace( '-', '_', $key ) ) ] ?? null;
 	}
 
 	public function offsetExists( $offset ): bool {

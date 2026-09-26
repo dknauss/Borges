@@ -187,7 +187,23 @@ This splice approach is fragile for posts with many blocks. A safer alternative 
 
 **Splicing decision.** Re-serializing the whole post with `serialize_blocks( parse_blocks() )` is semantically lossless but can rewrite other blocks' comment JSON byte-for-byte (escaping), producing noisy revisions. Tier 2 should instead locate the target block's byte range with the block-delimiter grammar `WP_Block_Parser` uses (document order, matching `bibliography_builder_collect_blocks()` indexing), replace only that range with `serialize_block()` of the updated block, and verify by re-parsing that exactly one block changed before calling `wp_update_post()`.
 
-**Next (M2 proper):** add the block-range locator with tests against real `parse_blocks()` in the runtime matrix; then the Tier 2 routes behind a companion-plugin flag, dry-run by default, with `If-Match`.
+**M2 (2026-09-26): implemented, unreleased.** See `docs/rest-write-routes.md`.
+
+- **Block-range locator** (`includes/block-locator.php`):
+  - uses core's delimiter grammar and document-order indexing;
+  - refuses malformed structure;
+  - re-locates after every splice to prove only the target changed;
+  - is tested against a vendored copy of the real `WP_Block_Parser` (`tests/phpunit/wp-block-parser/`), not the runtime matrix. Unit tests run it on every push.
+- **Tier 2 routes** (`includes/write-routes.php`):
+  - add, patch, delete, and reorder (numeric styles only);
+  - off unless the `bibliography_builder_enable_write_routes` filter is true, which is the companion-plugin flag;
+  - dry run unless `dry_run=false`;
+  - `If-Match` required (428 without it, 412 when stale).
+- **Decisions made on the way:**
+  - **ETag.** It is a hash of `post_content`, not `post_modified_gmt`, because two saves in one second share a modified time.
+  - **Add skips duplicates.** It skips entries that are duplicates by the editor's rules, and reports them.
+  - **Patch mirrors the editor's field editor.** It clears manual display text and stale export strings.
+  - **Where the routes ship.** They ship in the main plugin behind the filter, not as a separate distribution. Revisit if review asks for the code itself to be split out.
 
 ---
 
@@ -245,7 +261,7 @@ This decision should be revisited once Tier 2 is prototyped and the static-save 
 |---|---|---|
 | M0 | Stable IDs (no routes) | None — implement in next feature sprint |
 | M1 | Validate + diff read extensions (Tier 1) — **done (unreleased)** | M0 complete |
-| M2 | Prototype Tier 2 add/update/delete (companion plugin) — static-save spike **done**; locale-independent save markup is the next prerequisite | M1 + static-save spike |
+| M2 | Tier 2 add/update/delete/reorder behind an opt-in filter — **done (unreleased)**; see `docs/rest-write-routes.md` | M1 + static-save spike |
 | M3 | Reformat, reorder, ETag (Tier 2 complete) | M2 validated |
 | M4 | Bulk routes (Tier 4) | M3 + rate-limiting design |
 | M5 | Abilities registration (Tier 5) | WP Abilities API stable |

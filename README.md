@@ -79,7 +79,7 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 
 | Metric | Value |
 |---|---|
-| First-party PHP | ~2,064 LOC main plugin file; ~6,514 LOC total with `includes/` |
+| First-party PHP | ~2,073 LOC main plugin file; ~7,473 LOC total with `includes/` |
 | JS source (`src/`) | ~9,956 LOC |
 | Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, no script dependencies, enqueued only when the block is present |
 | Installed footprint | ~1.9 MB (`vendor/` ~792 KB, translations 724 KB, build assets ~324 KB) |
@@ -222,6 +222,8 @@ GET /wp-json/bibliography/v1/posts/<post_id>/bibliographies/<ref>/preview?style=
 - Password-protected, draft, private, or otherwise non-public posts require `edit_post` permission.
 - Missing posts, forbidden posts, and missing bibliography indexes return explicit REST errors.
 - The public bibliography data routes are read-only. They do not add, update, delete, reorder, or persist citations.
+
+Sites that opt in can also write citations over REST. The routes add, change, remove, and reorder citations. They require `edit_post`, are dry runs by default, and need `If-Match`. They are off unless the `bibliography_builder_enable_write_routes` filter returns true. See [docs/rest-write-routes.md](./docs/rest-write-routes.md).
 
 The separate editor-only formatter endpoint accepts `POST /wp-json/bibliography/v1/format`, requires `edit_posts`, and returns formatted citation text for submitted CSL-JSON. It does not save changes.
 
