@@ -44,6 +44,26 @@ check across every bundled style). Three styles had regressed to the localized
 form and dropped the year: `chicago-notes-bibliography`, `oscola`,
 `modern-language-association`.
 
+## citeproc-php 2.7: rendering quirks the bundled styles work around
+
+Found while writing full styles to replace the minimal ones (2026-09). Each one was reproduced against `seboettg/citeproc-php` 2.7.1 source. The style-side conventions are in `docs/csl-styles.md`; the formatter-side fixes are in `bibliography_builder_format_csl_items()` and its helpers.
+
+| Symptom | Cause in citeproc-php | Workaround |
+| --- | --- | --- |
+| Organization authors (`{ "literal": … }`) vanish | `Name::getNamesString()` returns "" for a name without `family` | `bibliography_builder_prepare_csl_for_formatter()` maps literal to family-only |
+| Entries after an "et al." entry lose their "and" | `Name` keeps `$etAl` (and `$and`) set across the items of one render | One `CiteProc` instance per entry |
+| "and" missing when a display macro is also a `<sort>` key | Rendering a sort key leaves the shared `Name` object in sort mode | Separate `sort-*` macros |
+| "Lindqvist , eds." | `Names::appendLabel()` adds a space unless the trimmed prefix is in its punctuation list, and "," is not | Formatter removes " ," |
+| "Translated byHelen" | A label rendered before names is trimmed, and its suffix space is lost | `<text term form="verb">` followed by `<names>` |
+| “Title”. and “Title”, | Punctuation moves inside the quote only for an element suffix that is exactly `.`, `,` or `;` | Suffix each part; formatter moves `,` and `.` inside quotes for en-US |
+| Title missing from an edited book | A variable used by `<substitute>` counts as absent in later `<if variable>` tests | Choose the creator explicitly |
+| "15.Available" | A nested `<choose>` joins its children without the parent group's delimiter | Wrap the branch children in a delimited `<group>` |
+| Page ranges with "-" | Any `page-range-format` returns `"$from-$to"`; none returns an en dash | Omit it where an en dash is wanted |
+| "J.- woo" | `StringHelper::initializeBySpaceOrHyphen()` keeps a lowercase part after a hyphen as a particle | Formatter initializes it ("J.-W.") |
+| `page-first` empty | Not derived from `page` | Derived in `bibliography_builder_prepare_csl_for_formatter()` |
+
+These are upstream behaviors, not Borges bugs. The literal-name and cross-entry state issues are worth reporting upstream (pkp/citeproc-php) if they are still present in a newer release.
+
 ## Build: the formatter renders from `vendor/`, not `packages/`
 
 The PHP formatter (`bibliography_builder_format_csl_items`) loads style XML from

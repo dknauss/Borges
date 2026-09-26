@@ -1,22 +1,278 @@
 <?xml version="1.0" encoding="utf-8"?>
-<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" default-locale="en-US">
+<!--
+  Harvard author-date (reference list entries), in the widely taught form of
+  Cite Them Right, 12th ed. Project-authored for Borges Bibliography Builder
+  from that guide's rules; GPL-2.0-or-later. Not derived from the CSL
+  project's harvard styles. Shared conventions: docs/csl-styles.md.
+-->
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" default-locale="en-GB" demote-non-dropping-particle="never" initialize-with-hyphen="true">
   <info>
-    <title>Borges Bibliography Builder Author-Date</title>
-    <id>https://example.invalid/borges-bibliography-builder/author-date</id>
-    <link href="https://example.invalid/borges-bibliography-builder/author-date" rel="self"/>
+    <title>Borges: Harvard (Cite Them Right)</title>
+    <id>https://github.com/dknauss/Borges/styles/harvard1</id>
     <author><name>Borges Bibliography Builder contributors</name></author>
     <category citation-format="author-date"/>
-    <updated>2026-05-03T00:00:00+00:00</updated>
+    <updated>2026-09-26T00:00:00+00:00</updated>
     <rights license="https://www.gnu.org/licenses/gpl-2.0.html">GPL-2.0-or-later</rights>
   </info>
-  <macro name="contributors"><names variable="author"><name name-as-sort-order="all" sort-separator=", " initialize-with=". " delimiter=", " delimiter-precedes-last="always"/><substitute><names variable="editor"><name name-as-sort-order="all" sort-separator=", " initialize-with=". " delimiter=", " delimiter-precedes-last="always"/><label form="short" prefix=", "/></names><text variable="title"/></substitute></names></macro>
-  <macro name="year"><choose><if variable="issued"><date variable="issued"><date-part name="year"/></date></if><else><text term="no date"/></else></choose></macro>
-  <macro name="title"><choose><if type="article-journal article-magazine article-newspaper chapter paper-conference post post-weblog review review-book webpage" match="any"><text variable="title" quotes="true"/></if><else><text variable="title" font-style="italic"/></else></choose></macro>
-  <macro name="container"><choose><if variable="container-title"><text variable="container-title" font-style="italic"/></if></choose></macro>
-  <macro name="publisher"><choose><if variable="publisher"><text variable="publisher"/></if></choose></macro>
-  <macro name="access"><choose><if variable="DOI"><text variable="DOI" prefix="https://doi.org/"/></if><else-if variable="URL"><text variable="URL"/></else-if></choose></macro>
-  <bibliography>
-    <sort><key macro="contributors"/><key macro="year"/><key variable="title"/></sort>
-    <layout suffix="."><group delimiter=" "><text macro="contributors" suffix="."/><text macro="year" suffix="."/><text macro="title" suffix="."/><text macro="container" suffix="."/><text macro="publisher" suffix="."/><text macro="access"/></group></layout>
+
+  <locale xml:lang="en">
+    <terms>
+      <term name="editor" form="short"><single>ed.</single><multiple>eds</multiple></term>
+      <term name="edition" form="short"><single>edn</single><multiple>edns</multiple></term>
+      <term name="no date" form="short">no date</term>
+    </terms>
+  </locale>
+
+  <!-- An explicit choice, not <substitute>: citeproc-php treats a substituted
+       variable as absent in later conditions, which would drop the title. -->
+  <macro name="creators">
+    <choose>
+      <if variable="author">
+        <names variable="author">
+          <name and="text" delimiter=", " delimiter-precedes-last="never" name-as-sort-order="all" sort-separator=", " initialize-with="."/>
+        </names>
+      </if>
+      <else-if variable="editor">
+        <names variable="editor">
+          <name and="text" delimiter=", " delimiter-precedes-last="never" name-as-sort-order="all" sort-separator=", " initialize-with="."/>
+          <label form="short" prefix=" (" suffix=")"/>
+        </names>
+      </else-if>
+      <else-if variable="translator">
+        <names variable="translator">
+          <name and="text" delimiter=", " delimiter-precedes-last="never" name-as-sort-order="all" sort-separator=", " initialize-with="."/>
+          <label form="short" prefix=" (" suffix=")"/>
+        </names>
+      </else-if>
+    </choose>
+  </macro>
+
+  <macro name="container-editors">
+    <names variable="editor">
+      <name and="text" delimiter=", " delimiter-precedes-last="never" name-as-sort-order="all" sort-separator=", " initialize-with="."/>
+      <label form="short" prefix=" (" suffix=")"/>
+    </names>
+  </macro>
+
+  <macro name="translators-verb">
+    <group delimiter=" ">
+      <text term="translator" form="verb" text-case="capitalize-first"/>
+      <names variable="translator">
+        <name and="text" delimiter=", " initialize-with="."/>
+      </names>
+    </group>
+  </macro>
+
+  <macro name="year">
+    <choose>
+      <if variable="issued">
+        <date variable="issued">
+          <date-part name="year"/>
+        </date>
+      </if>
+      <else>
+        <text term="no date" form="short"/>
+      </else>
+    </choose>
+  </macro>
+
+  <macro name="day-month">
+    <date variable="issued">
+      <date-part name="day" suffix=" "/>
+      <date-part name="month"/>
+    </date>
+  </macro>
+
+  <macro name="edition">
+    <choose>
+      <if is-numeric="edition">
+        <group delimiter=" ">
+          <number variable="edition" form="ordinal"/>
+          <text term="edition" form="short"/>
+        </group>
+      </if>
+      <else>
+        <text variable="edition"/>
+      </else>
+    </choose>
+  </macro>
+
+  <macro name="title">
+    <choose>
+      <if type="book report thesis webpage post post-weblog legislation legal_case motion_picture software dataset map" match="any">
+        <text variable="title"/>
+      </if>
+      <else>
+        <text variable="title" quotes="true"/>
+      </else>
+    </choose>
+  </macro>
+
+  <macro name="place-publisher">
+    <group delimiter=": ">
+      <text variable="publisher-place"/>
+      <text variable="publisher"/>
+    </group>
+  </macro>
+
+  <macro name="pages">
+    <group delimiter=" ">
+      <label variable="page" form="short"/>
+      <text variable="page"/>
+    </group>
+  </macro>
+
+  <macro name="access">
+    <group delimiter=" ">
+      <choose>
+        <if variable="DOI">
+          <text variable="DOI" prefix="Available at: https://doi.org/"/>
+        </if>
+        <else-if variable="URL">
+          <text variable="URL" prefix="Available at: "/>
+          <group delimiter=" " prefix="(" suffix=")">
+            <text term="accessed" text-case="capitalize-first" suffix=":"/>
+            <date variable="accessed">
+              <date-part name="day" suffix=" "/>
+              <date-part name="month" suffix=" "/>
+              <date-part name="year"/>
+            </date>
+          </group>
+        </else-if>
+      </choose>
+    </group>
+  </macro>
+
+  <!-- Sort keys for the PHP/JS sort-coordination tests. Output order is not
+       used by the block (it sorts entries itself), and these macros share no
+       elements with the display macros, whose name state they would disturb. -->
+  <macro name="sort-contributors">
+    <names variable="author">
+      <name name-as-sort-order="all" sort-separator=", " delimiter=", "/>
+      <substitute>
+        <names variable="editor"/>
+        <names variable="translator"/>
+        <text variable="title"/>
+      </substitute>
+    </names>
+  </macro>
+
+  <macro name="sort-year">
+    <date variable="issued">
+      <date-part name="year"/>
+    </date>
+  </macro>
+
+  <bibliography hanging-indent="true" et-al-min="4" et-al-use-first="1">
+    <sort>
+      <key macro="sort-contributors"/>
+      <key macro="sort-year"/>
+      <key variable="title"/>
+    </sort>
+    <layout>
+      <group delimiter=" " suffix=".">
+        <choose>
+          <if variable="author editor translator" match="any">
+            <group delimiter=" ">
+              <text macro="creators"/>
+              <text macro="year" prefix="(" suffix=")"/>
+            </group>
+          </if>
+          <else>
+            <group delimiter=" ">
+              <text macro="title"/>
+              <text macro="year" prefix="(" suffix=")"/>
+            </group>
+          </else>
+        </choose>
+        <choose>
+          <if type="article-journal review review-book" match="any">
+            <group delimiter=", " suffix=".">
+              <text macro="title"/>
+              <text variable="container-title"/>
+              <group>
+                <text variable="volume"/>
+                <text variable="issue" prefix="(" suffix=")"/>
+              </group>
+              <text macro="pages"/>
+            </group>
+          </if>
+          <else-if type="article-magazine article-newspaper" match="any">
+            <group delimiter=", " suffix=".">
+              <text macro="title"/>
+              <text variable="container-title"/>
+              <text macro="day-month"/>
+              <text macro="pages"/>
+            </group>
+          </else-if>
+          <else-if type="chapter paper-conference entry entry-encyclopedia entry-dictionary" match="any">
+            <group delimiter=", " suffix=".">
+              <text macro="title"/>
+              <group delimiter=" ">
+                <text term="in"/>
+                <text macro="container-editors"/>
+                <text variable="container-title"/>
+              </group>
+            </group>
+            <group delimiter=", " suffix=".">
+              <text macro="place-publisher"/>
+              <text macro="pages"/>
+            </group>
+          </else-if>
+          <else-if type="thesis">
+            <choose>
+              <if variable="author editor translator" match="any">
+                <text macro="title" suffix="."/>
+              </if>
+            </choose>
+            <group delimiter=". " suffix=".">
+              <text variable="genre"/>
+              <text variable="publisher"/>
+            </group>
+          </else-if>
+          <else-if type="webpage post post-weblog" match="any">
+            <choose>
+              <if variable="author editor translator" match="any">
+                <text macro="title" suffix="."/>
+              </if>
+            </choose>
+          </else-if>
+          <else-if type="article">
+            <choose>
+              <if variable="author editor translator" match="any">
+                <text macro="title" suffix="."/>
+              </if>
+            </choose>
+            <group delimiter=" " suffix=".">
+              <text variable="publisher"/>
+              <text value="[Preprint]"/>
+            </group>
+          </else-if>
+          <else-if type="legal_case">
+            <group delimiter=" " suffix=".">
+              <text variable="container-title"/>
+              <text variable="number"/>
+            </group>
+          </else-if>
+          <else-if type="legislation"/>
+          <else>
+            <choose>
+              <if variable="author editor translator" match="any">
+                <text macro="title" suffix="."/>
+              </if>
+            </choose>
+            <choose>
+              <if variable="author editor" match="any">
+                <text macro="translators-verb" suffix="."/>
+              </if>
+            </choose>
+            <text macro="edition" suffix="."/>
+            <text variable="number" suffix="."/>
+            <text macro="place-publisher" suffix="."/>
+          </else>
+        </choose>
+        <text macro="access"/>
+      </group>
+    </layout>
   </bibliography>
 </style>

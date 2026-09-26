@@ -1,0 +1,20 @@
+book-one-author	Alvarez MI, The Architecture of Small Libraries (3rd edn, Northfield University Press 2019)
+book-two-authors	Becker TJ and Nakamura Y, Reading Machines: Catalogues, Indexes, and the Order of Knowledge (Harbor House 2021)
+book-translated	Ferreira JP, The Garden of Forking Paths (Helen Wright tr, Meridian Books 2015)
+book-edited	Okafor C and Lindqvist A (eds), Essays on Classification (Delta Academic 2018)
+chapter	Dubois C, ‘Indexing the Infinite’ in Chidi Okafor and Anna Lindqvist (eds), Essays on Classification (Delta Academic 2018)
+article-one-author	Green S, ‘Metadata Drift in Institutional Repositories’ (2020) 27 Journal of Library Systems 97
+article-three-authors	Hughes R, Iqbal O and Jensen L, ‘Citation Styles as Data’ (2022) 12 Scholarly Communication Review 301
+article-eight-authors	Kim J-W and others, ‘A Shared Corpus of Reference Metadata’ (2023) 41 Data in Brief 107
+article-twenty-two-authors	Abbott A and others, ‘Large Collaborations and Author Lists’ (2023) 130 Physical Review Letters 051801
+article-magazine	Tanaka E, ‘The Return of the Card Catalogue’ The Atlantic Review (15 March 2021) https://example.com/magazine/card-catalogue
+article-newspaper	Usman B, ‘City Library Opens New Wing’ The Daily Courier (2 November 2022)
+webpage-organization	Open Research Alliance, ‘Guide to Persistent Identifiers’ (Open Research Alliance, 10 January 2024) https://example.org/guides/pids accessed 3 June 2025
+webpage-no-date	‘About the Collection’ (Museum of Printed Books) https://example.org/about accessed 14 February 2025
+thesis	Varga D, ‘Authority Control in Multilingual Catalogues’ (PhD diss., University of Toronto 2017)
+report	National Library Council, State of Open Metadata (National Library Council 2020)
+paper-conference	Weber J and Xu L, ‘Fast Deduplication of Bibliographic Records’ (Proceedings of the Conference on Digital Libraries, ACM 2019) https://doi.org/10.1145/0000000.0000001
+preprint	Young G and Zhao W, ‘Learning Citation Formats from Examples’ (arXiv 2024) https://doi.org/10.48550/arXiv.2401.01234
+book-no-author-no-date	A Handbook of Bookbinding (Guild Press)
+legal-case	Smith v Jones [2019] UKSC 12
+legislation	Copyright, Designs and Patents Act 1988

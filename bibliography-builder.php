@@ -232,7 +232,7 @@ function bibliography_builder_get_formatter_style_definitions() {
 		),
 		'harvard'                    => array(
 			'template' => 'harvard1',
-			'locale'   => 'en-US',
+			'locale'   => 'en-GB',
 			'family'   => 'author-date',
 		),
 		'ieee'                       => array(
@@ -1112,6 +1112,27 @@ function bibliography_builder_normalize_formatted_text( $text, $style ) {
 		$text = preg_replace( '/\bp\.\s+p{1,2}\.\s+/u', 'p. ', $text );
 	}
 
+	// citeproc-php puts a space between a name and a label whose prefix is
+	// ", " ("Lindqvist , eds."); a space before a comma is never wanted.
+	$text = str_replace( ' ,', ',', $text );
+
+	// American styles put commas and periods inside closing quotes. citeproc-php
+	// only does so for an element's own suffix, not for a group delimiter
+	// (“Title”, in IEEE).
+	if ( isset( $style['locale'] ) && 'en-US' === $style['locale'] ) {
+		$text = str_replace( array( '”,', '”.' ), array( ',”', '.”' ), $text );
+	}
+
+	// citeproc-php initializes only capitalized parts of a hyphenated given
+	// name, so "Ji-woo" comes out "J.- woo". Initialize the second part too.
+	$text = preg_replace_callback(
+		'/(\p{Lu})(\.?)- (\p{Ll})\p{Ll}*/u',
+		static function ( $parts ) {
+			return $parts[1] . $parts[2] . '-' . mb_strtoupper( $parts[3], 'UTF-8' ) . $parts[2];
+		},
+		$text
+	);
+
 	return str_replace( 'and et al.', 'et al.', $text );
 }
 
@@ -1170,6 +1191,63 @@ function bibliography_builder_extract_citeproc_entries( $html, $style ) {
 }
 
 /**
+ * Adapt a CSL-JSON item to what citeproc-php 2.7 can render.
+ *
+ * - Literal names (organizations, one-name authors): citeproc-php renders a
+ *   name only from its `family` part, so `{ "literal": "Open Research
+ *   Alliance" }` would vanish. As a family-only name it prints whole, never
+ *   inverted or initialized.
+ * - `page-first`: citeproc-php does not derive it from `page`, and OSCOLA
+ *   cites a journal article by its first page.
+ *
+ * @param array $item CSL-JSON item.
+ * @return array
+ */
+function bibliography_builder_prepare_csl_for_formatter( $item ) {
+	$name_variables = array(
+		'author',
+		'collection-editor',
+		'composer',
+		'container-author',
+		'director',
+		'editor',
+		'editorial-director',
+		'illustrator',
+		'interviewer',
+		'original-author',
+		'recipient',
+		'reviewed-author',
+		'translator',
+	);
+
+	foreach ( $name_variables as $variable ) {
+		if ( empty( $item[ $variable ] ) || ! is_array( $item[ $variable ] ) ) {
+			continue;
+		}
+
+		foreach ( $item[ $variable ] as $position => $name ) {
+			$is_literal = is_array( $name ) && empty( $name['family'] )
+				&& isset( $name['literal'] ) && is_string( $name['literal'] );
+			$literal    = $is_literal ? trim( $name['literal'] ) : '';
+
+			if ( '' !== $literal ) {
+				$item[ $variable ][ $position ] = array( 'family' => $literal );
+			}
+		}
+	}
+
+	if ( empty( $item['page-first'] ) && isset( $item['page'] ) && is_scalar( $item['page'] ) ) {
+		$first = trim( preg_split( '/[-\x{2013}\x{2014},&]/u', (string) $item['page'] )[0] );
+
+		if ( '' !== $first ) {
+			$item['page-first'] = $first;
+		}
+	}
+
+	return $item;
+}
+
+/**
  * Format CSL-JSON items as plain-text bibliography entries.
  *
  * @param array  $csl_items CSL-JSON objects.
@@ -1216,7 +1294,7 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 	$prepared_items = array();
 
 	foreach ( array_values( $csl_items ) as $index => $item ) {
-		$item_array       = is_array( $item ) ? $item : array();
+		$item_array       = bibliography_builder_prepare_csl_for_formatter( is_array( $item ) ? $item : array() );
 		$item_array['id'] = 'bibliography-builder-format-' . $index;
 		$prepared_items[] = $item_array;
 	}
@@ -1246,9 +1324,17 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		),
 	);
 
+	// One formatter per entry: citeproc-php keeps per-render state on its
+	// parsed name elements (once one entry is cut to "et al.", later entries
+	// in the same render lose their "and"), and no style here needs
+	// cross-entry context such as disambiguation or author substitution.
 	try {
-		$formatter = new \Seboettg\CiteProc\CiteProc( $style_xml, $style['locale'], $markup_extension );
-		$html      = $formatter->render( $items_for_formatter, 'bibliography' );
+		$html = '';
+
+		foreach ( $items_for_formatter as $item_for_formatter ) {
+			$formatter = new \Seboettg\CiteProc\CiteProc( $style_xml, $style['locale'], $markup_extension );
+			$html     .= $formatter->render( array( $item_for_formatter ), 'bibliography' );
+		}
 	} catch ( Throwable $error ) {
 		return new WP_Error(
 			'bibliography_builder_formatter_failed',

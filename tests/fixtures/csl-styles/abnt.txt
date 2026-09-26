@@ -1,0 +1,20 @@
+book-one-author	ALVAREZ, Marta Inés. The Architecture of Small Libraries. 3. ed. Chicago: Northfield University Press, 2019.
+book-two-authors	BECKER, Thomas J.; NAKAMURA, Yuki. Reading Machines: Catalogues, Indexes, and the Order of Knowledge. New York: Harbor House, 2021.
+book-translated	FERREIRA, João Paulo. The Garden of Forking Paths. Tradução de Helen Wright. London: Meridian Books, 2015.
+book-edited	OKAFOR, Chidi; LINDQVIST, Anna (org.). Essays on Classification. Oxford: Delta Academic, 2018.
+chapter	DUBOIS, Claire. Indexing the Infinite. In: OKAFOR, Chidi; LINDQVIST, Anna (org.). Essays on Classification. Oxford: Delta Academic, 2018. p. 45-67.
+article-one-author	GREEN, Samuel. Metadata Drift in Institutional Repositories. Journal of Library Systems, v. 27, n. 2, p. 97-111, abr. 2020. DOI: https://doi.org/10.1234/jls.2020.0027.
+article-three-authors	HUGHES, Rebecca; IQBAL, Omar; JENSEN, Lars. Citation Styles as Data. Scholarly Communication Review, v. 12, n. 4, p. 301-322, 2022. DOI: https://doi.org/10.5555/scr.12.4.301.
+article-eight-authors	KIM, Ji-woo et al. A Shared Corpus of Reference Metadata. Data in Brief, v. 41, p. 107-118, 2023.
+article-twenty-two-authors	ABBOTT, A. et al. Large Collaborations and Author Lists. Physical Review Letters, v. 130, n. 5, p. 051801, 2023. DOI: https://doi.org/10.1103/example.130.051801.
+article-magazine	TANAKA, Emi. The Return of the Card Catalogue. The Atlantic Review, 15 mar. 2021. Disponível em: https://example.com/magazine/card-catalogue.
+article-newspaper	USMAN, Bola. City Library Opens New Wing. The Daily Courier, 2 nov. 2022.
+webpage-organization	OPEN RESEARCH ALLIANCE. Guide to Persistent Identifiers. Open Research Alliance, 10 jan. 2024. Disponível em: https://example.org/guides/pids. Acesso em: 3 jun. 2025.
+webpage-no-date	About the Collection. Museum of Printed Books, [s. d.]. Disponível em: https://example.org/about. Acesso em: 14 fev. 2025.
+thesis	VARGA, Dóra. Authority Control in Multilingual Catalogues. 2017. PhD diss. – University of Toronto, Toronto, 2017.
+report	NATIONAL LIBRARY COUNCIL. State of Open Metadata. Washington, DC: National Library Council, 2020. (NLC-2020-4).
+paper-conference	WEBER, Jonas; XU, Li. Fast Deduplication of Bibliographic Records. In: Proceedings of the Conference on Digital Libraries. New York: ACM, 2019. p. 210-219. DOI: https://doi.org/10.1145/0000000.0000001.
+preprint	YOUNG, Grace; ZHAO, Wei. Learning Citation Formats from Examples. arXiv, 2024. Preprint. DOI: https://doi.org/10.48550/arXiv.2401.01234.
+book-no-author-no-date	A Handbook of Bookbinding. Boston: Guild Press, [s. d.].
+legal-case	Smith v Jones. UKSC 12, 2019.
+legislation	Copyright, Designs and Patents Act. 1988.

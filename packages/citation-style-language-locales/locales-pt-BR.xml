@@ -1,19 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
-<locale xmlns="http://purl.org/net/xbiblio/csl" version="1.0" xml:lang="en-US">
-  <style-options punctuation-in-quote="true"/>
+<!--
+  Brazilian Portuguese locale for Borges Bibliography Builder.
+  Project-authored for this plugin; GPL-2.0-or-later. Not the CSL project's
+  locales-pt-BR.xml. Month abbreviations follow ABNT NBR 6023.
+-->
+<locale xmlns="http://purl.org/net/xbiblio/csl" version="1.0" xml:lang="pt-BR">
+  <style-options punctuation-in-quote="false"/>
+  <date form="text">
+    <date-part name="day" suffix=" de "/>
+    <date-part name="month" suffix=" de "/>
+    <date-part name="year"/>
+  </date>
+  <date form="numeric">
+    <date-part name="day" form="numeric-leading-zeros" suffix="/"/>
+    <date-part name="month" form="numeric-leading-zeros" suffix="/"/>
+    <date-part name="year"/>
+  </date>
   <terms>
-    <term name="and">and</term>
+    <term name="open-quote">“</term>
+    <term name="close-quote">”</term>
+    <term name="open-inner-quote">‘</term>
+    <term name="close-inner-quote">’</term>
+    <term name="accessed">acesso em</term>
+    <term name="and">e</term>
+    <term name="and" form="symbol">&amp;</term>
+    <term name="and others">e outros</term>
+    <term name="anonymous">anônimo</term>
+    <term name="anonymous" form="short">anôn.</term>
+    <term name="at">em</term>
+    <term name="available at">disponível em</term>
+    <term name="by">por</term>
+    <term name="circa">cerca de</term>
+    <term name="circa" form="short">ca.</term>
+    <term name="cited">citado</term>
     <term name="et-al">et al.</term>
-    <term name="no date">n.d.</term>
-    <term name="editor"><single>editor</single><multiple>editors</multiple></term>
-    <term name="editor" form="short"><single>ed.</single><multiple>eds.</multiple></term>
-    <term name="translator"><single>translator</single><multiple>translators</multiple></term>
-    <term name="translator" form="short"><single>trans.</single><multiple>trans.</multiple></term>
-    <term name="page" form="short"><single>p.</single><multiple>pp.</multiple></term>
-    <term name="volume" form="short"><single>vol.</single><multiple>vols.</multiple></term>
-    <term name="issue" form="short"><single>no.</single><multiple>nos.</multiple></term>
+    <term name="forthcoming">no prelo</term>
+    <term name="from">de</term>
+    <term name="ibid">ibid.</term>
     <term name="in">in</term>
-    <term name="accessed">accessed</term>
-    <term name="available at">available at</term>
+    <term name="in press">no prelo</term>
+    <term name="internet">internet</term>
+    <term name="no date">sem data</term>
+    <term name="no date" form="short">s. d.</term>
+    <term name="online">online</term>
+    <term name="presented at">apresentado em</term>
+    <term name="retrieved">recuperado</term>
+    <term name="version">versão</term>
+    <term name="page-range-delimiter">-</term>
+
+    <term name="ordinal">º</term>
+    <term name="long-ordinal-01">primeira</term>
+    <term name="long-ordinal-02">segunda</term>
+    <term name="long-ordinal-03">terceira</term>
+    <term name="long-ordinal-04">quarta</term>
+    <term name="long-ordinal-05">quinta</term>
+    <term name="long-ordinal-06">sexta</term>
+    <term name="long-ordinal-07">sétima</term>
+    <term name="long-ordinal-08">oitava</term>
+    <term name="long-ordinal-09">nona</term>
+    <term name="long-ordinal-10">décima</term>
+
+    <term name="book"><single>livro</single><multiple>livros</multiple></term>
+    <term name="chapter"><single>capítulo</single><multiple>capítulos</multiple></term>
+    <term name="figure"><single>figura</single><multiple>figuras</multiple></term>
+    <term name="issue"><single>número</single><multiple>números</multiple></term>
+    <term name="line"><single>linha</single><multiple>linhas</multiple></term>
+    <term name="note"><single>nota</single><multiple>notas</multiple></term>
+    <term name="page"><single>página</single><multiple>páginas</multiple></term>
+    <term name="paragraph"><single>parágrafo</single><multiple>parágrafos</multiple></term>
+    <term name="part"><single>parte</single><multiple>partes</multiple></term>
+    <term name="section"><single>seção</single><multiple>seções</multiple></term>
+    <term name="volume"><single>volume</single><multiple>volumes</multiple></term>
+    <term name="edition"><single>edição</single><multiple>edições</multiple></term>
+
+    <term name="chapter" form="short"><single>cap.</single><multiple>caps.</multiple></term>
+    <term name="figure" form="short"><single>fig.</single><multiple>figs.</multiple></term>
+    <term name="issue" form="short"><single>n.</single><multiple>n.</multiple></term>
+    <term name="line" form="short"><single>l.</single><multiple>l.</multiple></term>
+    <term name="note" form="short"><single>n.</single><multiple>n.</multiple></term>
+    <term name="page" form="short"><single>p.</single><multiple>p.</multiple></term>
+    <term name="paragraph" form="short"><single>par.</single><multiple>par.</multiple></term>
+    <term name="part" form="short"><single>pt.</single><multiple>pts.</multiple></term>
+    <term name="section" form="short"><single>seç.</single><multiple>seç.</multiple></term>
+    <term name="volume" form="short"><single>v.</single><multiple>v.</multiple></term>
+    <term name="edition" form="short"><single>ed.</single><multiple>ed.</multiple></term>
+
+    <term name="section" form="symbol"><single>§</single><multiple>§§</multiple></term>
+    <term name="paragraph" form="symbol"><single>¶</single><multiple>¶¶</multiple></term>
+
+    <term name="director"><single>diretor</single><multiple>diretores</multiple></term>
+    <term name="editor"><single>organizador</single><multiple>organizadores</multiple></term>
+    <term name="editorial-director"><single>editor</single><multiple>editores</multiple></term>
+    <term name="illustrator"><single>ilustrador</single><multiple>ilustradores</multiple></term>
+    <term name="translator"><single>tradutor</single><multiple>tradutores</multiple></term>
+    <term name="editortranslator"><single>organizador e tradutor</single><multiple>organizadores e tradutores</multiple></term>
+
+    <term name="director" form="short"><single>dir.</single><multiple>dirs.</multiple></term>
+    <term name="editor" form="short"><single>org.</single><multiple>org.</multiple></term>
+    <term name="editorial-director" form="short"><single>ed.</single><multiple>ed.</multiple></term>
+    <term name="illustrator" form="short"><single>il.</single><multiple>il.</multiple></term>
+    <term name="translator" form="short"><single>trad.</single><multiple>trad.</multiple></term>
+    <term name="editortranslator" form="short"><single>org. e trad.</single><multiple>org. e trad.</multiple></term>
+
+    <term name="container-author" form="verb">por</term>
+    <term name="director" form="verb">dirigido por</term>
+    <term name="editor" form="verb">organizado por</term>
+    <term name="editorial-director" form="verb">editado por</term>
+    <term name="illustrator" form="verb">ilustrado por</term>
+    <term name="interviewer" form="verb">entrevista de</term>
+    <term name="recipient" form="verb">para</term>
+    <term name="reviewed-author" form="verb">por</term>
+    <term name="translator" form="verb">tradução de</term>
+    <term name="editortranslator" form="verb">organizado e traduzido por</term>
+
+    <term name="director" form="verb-short">dir.</term>
+    <term name="editor" form="verb-short">org.</term>
+    <term name="editorial-director" form="verb-short">ed.</term>
+    <term name="illustrator" form="verb-short">il.</term>
+    <term name="translator" form="verb-short">trad.</term>
+    <term name="editortranslator" form="verb-short">org. e trad.</term>
+
+    <term name="month-01">janeiro</term>
+    <term name="month-02">fevereiro</term>
+    <term name="month-03">março</term>
+    <term name="month-04">abril</term>
+    <term name="month-05">maio</term>
+    <term name="month-06">junho</term>
+    <term name="month-07">julho</term>
+    <term name="month-08">agosto</term>
+    <term name="month-09">setembro</term>
+    <term name="month-10">outubro</term>
+    <term name="month-11">novembro</term>
+    <term name="month-12">dezembro</term>
+
+    <term name="month-01" form="short">jan.</term>
+    <term name="month-02" form="short">fev.</term>
+    <term name="month-03" form="short">mar.</term>
+    <term name="month-04" form="short">abr.</term>
+    <term name="month-05" form="short">maio</term>
+    <term name="month-06" form="short">jun.</term>
+    <term name="month-07" form="short">jul.</term>
+    <term name="month-08" form="short">ago.</term>
+    <term name="month-09" form="short">set.</term>
+    <term name="month-10" form="short">out.</term>
+    <term name="month-11" form="short">nov.</term>
+    <term name="month-12" form="short">dez.</term>
+
+    <term name="season-01">primavera</term>
+    <term name="season-02">verão</term>
+    <term name="season-03">outono</term>
+    <term name="season-04">inverno</term>
   </terms>
 </locale>
