@@ -83,7 +83,7 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 | JS source (`src/`) | ~9,956 LOC |
 | Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, no script dependencies, enqueued only when the block is present |
 | Installed footprint | ~1.9 MB (`vendor/` ~792 KB, translations 724 KB, build assets ~324 KB) |
-| Distributed ZIP (latest v1.6.0 release) | ~488 KB (499,681 bytes) |
+| Distributed ZIP (latest v1.7.0 release) | ~541 KB (553,699 bytes) |
 | **Added DB queries per page** | **0** — regardless of block or citation count |
 | Autoloaded options / registered settings / cron / custom tables / custom post types | none |
 | `render_callback` on the frontend | none (static `save()` only) |
