@@ -1536,6 +1536,10 @@ function bibliography_builder_save_export_link( $mime, $content, $filename, $lab
 /**
  * The per-entry Cite / Export panel.
  *
+ * Labels are fixed English, never translated: saved markup must be identical
+ * in every editor locale (the editor re-validates it in its own), and the
+ * frontend view script localizes them at runtime.
+ *
  * @param array $citation Citation record.
  * @return string
  */
@@ -1556,13 +1560,13 @@ function bibliography_builder_save_cite_export( $citation ) {
 		'application/x-research-info-systems',
 		bibliography_builder_save_ris_entry( $csl ),
 		$base . '.ris',
-		__( 'RIS', 'borges-bibliography-builder' )
+		'RIS'
 	);
 	$links .= bibliography_builder_save_export_link(
 		'application/vnd.citationstyles.csl+json',
 		bibliography_builder_json_stringify( bibliography_builder_citation_raw_csl( $citation ), 2 ) . "\n",
 		$base . '.csl.json',
-		__( 'CSL-JSON', 'borges-bibliography-builder' )
+		'CSL-JSON'
 	);
 
 	foreach ( array(
@@ -1574,28 +1578,25 @@ function bibliography_builder_save_cite_export( $citation ) {
 				'text/x-bibtex',
 				bibliography_builder_js_string( $citation[ $field ] ),
 				$base . $meta[0],
-				'BibTeX' === $meta[1]
-					? __( 'BibTeX', 'borges-bibliography-builder' )
-					: __( 'BibLaTeX', 'borges-bibliography-builder' )
+				$meta[1]
 			);
 		}
 	}
 
 	return '<details class="bibliography-builder-cite-export">'
 		. '<summary class="bibliography-builder-cite-export-toggle">'
-		. bibliography_builder_escape_save_text( __( 'Cite / Export', 'borges-bibliography-builder' ) )
+		. 'Cite / Export'
 		. '</summary>'
 		. '<div class="bibliography-builder-cite-export-panel">'
 		. '<button' . bibliography_builder_save_attributes(
 			array(
-				'type'              => 'button',
-				'class'             => 'bibliography-builder-cite-copy',
-				'aria-live'         => 'polite',
-				'data-cite-text'    => $cite_text,
-				'data-copied-label' => __( 'Copied', 'borges-bibliography-builder' ),
+				'type'           => 'button',
+				'class'          => 'bibliography-builder-cite-copy',
+				'aria-live'      => 'polite',
+				'data-cite-text' => $cite_text,
 			)
 		) . '>'
-		. bibliography_builder_escape_save_text( __( 'Copy citation', 'borges-bibliography-builder' ) )
+		. 'Copy citation'
 		. '</button>'
 		. '<ul class="bibliography-builder-export-links">' . $links . '</ul>'
 		. '</div></details>';
@@ -1743,10 +1744,6 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 		}
 	}
 
-	if ( '' === $link_label ) {
-		$link_label = __( 'Link to publication', 'borges-bibliography-builder' );
-	}
-
 	$text = '';
 
 	foreach ( bibliography_builder_save_display_segments( $citation ) as $segment ) {
@@ -1758,7 +1755,7 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 					array(
 						'href'       => $part['href'],
 						'rel'        => 'nofollow noopener noreferrer',
-						'aria-label' => $part['label'] . ' — ' . $part['href'],
+						'aria-label' => '' !== $link_label ? $part['label'] . ' — ' . $part['href'] : null,
 					)
 				) . '>' . bibliography_builder_escape_save_text( $part['text'] ) . '</a>'
 				: bibliography_builder_escape_save_text( $part['text'] );

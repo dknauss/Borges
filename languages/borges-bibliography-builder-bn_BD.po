@@ -321,15 +321,15 @@ msgstr ""
 
 #. translators: %s: citation label.
 #: src/components/citation-entry-body.js:149
-#, fuzzy,js-format
+#, js-format
 msgid "Copy citation: %s"
-msgstr "উদ্ধৃতি যোগ করুন"
+msgstr ""
 
 #. translators: %s: citation label.
 #: src/components/citation-entry-body.js:164
-#, fuzzy,js-format
+#, js-format
 msgid "Edit citation: %s"
-msgstr "উদ্ধৃতি যোগ করুন"
+msgstr ""
 
 #: src/components/citation-entry-body.js:178
 msgid "Reset edits"
@@ -337,9 +337,9 @@ msgstr ""
 
 #. translators: %s: citation label.
 #: src/components/citation-entry-body.js:192
-#, fuzzy,js-format
+#, js-format
 msgid "Delete citation: %s"
-msgstr "উদ্ধৃতি যোগ করুন"
+msgstr ""
 
 #: src/lib/manual-entry.js:7
 msgid "Book"
@@ -419,14 +419,13 @@ msgstr ""
 
 #. translators: %s: formatter fallback message.
 #: src/hooks/use-manual-citation-actions.js:217
-#, fuzzy,js-format
+#, js-format
 msgid "Added 1 citation. %s"
-msgstr "উদ্ধৃতি যোগ করুন"
+msgstr ""
 
 #: src/hooks/use-manual-citation-actions.js:223
-#, fuzzy
 msgid "Added 1 citation."
-msgstr "উদ্ধৃতি যোগ করুন"
+msgstr ""
 
 #: src/hooks/use-manual-citation-actions.js:234
 msgid "Something went wrong while adding the citation. Please try again."
@@ -461,9 +460,8 @@ msgid "Copied"
 msgstr ""
 
 #: src/save-markup.js:149
-#, fuzzy
 msgid "Copy citation"
-msgstr "উদ্ধৃতি যোগ করুন"
+msgstr ""
 
 #: src/save-markup.js:166
 msgid "RIS"
@@ -542,9 +540,8 @@ msgid "Could not copy bibliography in this browser."
 msgstr ""
 
 #: src/hooks/use-bibliography-export-actions.js:70
-#, fuzzy
 msgid "Copied citation."
-msgstr "উদ্ধৃতি যোগ করুন"
+msgstr ""
 
 #: src/hooks/use-bibliography-export-actions.js:78
 msgid "Could not copy citation in this browser."
