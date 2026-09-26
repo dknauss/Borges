@@ -68,9 +68,10 @@ const BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL = 3600;
 function bibliography_builder_get_stable_block_id( $attrs ) {
 	$id = isset( $attrs['bibliographyId'] ) ? $attrs['bibliographyId'] : null;
 
-	return is_string( $id ) && 1 === preg_match( '/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/', $id )
-		? $id
-		: null;
+	// An all-digit value would read as a block index in `{ref}` URL segments,
+	// so it is not a usable ID (the editor then replaces it, as in
+	// src/lib/stable-ids.js).
+	return bibliography_builder_is_block_id( $id ) ? $id : null;
 }
 
 /**
@@ -1548,7 +1549,9 @@ function bibliography_builder_rest_get_bibliographies( WP_REST_Request $request 
  */
 function bibliography_builder_rest_get_bibliography( WP_REST_Request $request ) {
 	$format       = isset( $request['format'] ) ? (string) $request['format'] : 'json';
-	$bibliography = bibliography_builder_resolve_bibliography( $request['post_id'], $request['ref'] );
+	$bibliography = null !== $request['id']
+		? bibliography_builder_resolve_bibliography( $request['post_id'], $request['id'], 'id' )
+		: bibliography_builder_resolve_bibliography( $request['post_id'], (int) $request['index'], 'index' );
 
 	if ( is_wp_error( $bibliography ) ) {
 		return $bibliography;
@@ -1630,9 +1633,28 @@ function bibliography_builder_register_rest_routes() {
 		)
 	);
 
+	$format_arg = array(
+		'description'       => __(
+			'Response format: json, text, or csl-json.',
+			'borges-bibliography-builder'
+		),
+		'type'              => 'string',
+		'default'           => 'json',
+		'sanitize_callback' => static function ( $value ) {
+			return sanitize_key( $value );
+		},
+		'validate_callback' => static function ( $value ) {
+			return in_array(
+				$value,
+				array( 'json', 'text', 'csl-json' ),
+				true
+			);
+		},
+	);
+
 	register_rest_route(
 		'bibliography/v1',
-		'/posts/(?P<post_id>\d+)/bibliographies/(?P<ref>' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . ')',
+		'/posts/(?P<post_id>\d+)/bibliographies/(?P<index>\d+)',
 		array(
 			'methods'             => WP_REST_Server::READABLE,
 			'callback'            => 'bibliography_builder_rest_get_bibliography',
@@ -1640,32 +1662,18 @@ function bibliography_builder_register_rest_routes() {
 			'args'                => array_merge(
 				$common_args,
 				array(
-					'ref'    => array(
+					'index'  => array(
 						'description'       => __(
-							'Zero-based bibliography block index, or the block\'s bibliographyId.',
+							'Zero-based bibliography block index within the post.',
 							'borges-bibliography-builder'
 						),
-						'type'              => 'string',
-						'validate_callback' => 'bibliography_builder_is_block_ref',
-					),
-					'format' => array(
-						'description'       => __(
-							'Response format: json, text, or csl-json.',
-							'borges-bibliography-builder'
-						),
-						'type'              => 'string',
-						'default'           => 'json',
-						'sanitize_callback' => static function ( $value ) {
-							return sanitize_key( $value );
-						},
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
 						'validate_callback' => static function ( $value ) {
-							return in_array(
-								$value,
-								array( 'json', 'text', 'csl-json' ),
-								true
-							);
+							return is_numeric( $value ) && (int) $value >= 0;
 						},
 					),
+					'format' => $format_arg,
 				)
 			),
 		)
@@ -1744,6 +1752,32 @@ function bibliography_builder_register_rest_routes() {
 	);
 
 	bibliography_builder_register_review_routes();
+
+	// The same read by stable ID, registered as its own route so numeric
+	// requests keep the `index` parameter they have always had.
+	register_rest_route(
+		'bibliography/v1',
+		'/posts/(?P<post_id>\d+)/bibliographies/(?P<id>' . BIBLIOGRAPHY_BUILDER_BLOCK_ID_PATTERN . ')',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'bibliography_builder_rest_get_bibliography',
+			'permission_callback' => 'bibliography_builder_rest_permissions_check',
+			'args'                => array_merge(
+				$common_args,
+				array(
+					'id'     => array(
+						'description'       => __(
+							"The block's stable bibliographyId.",
+							'borges-bibliography-builder'
+						),
+						'type'              => 'string',
+						'validate_callback' => 'bibliography_builder_is_block_id',
+					),
+					'format' => $format_arg,
+				)
+			),
+		)
+	);
 }
 
 
@@ -1809,6 +1843,7 @@ add_action( 'rest_api_init', 'bibliography_builder_register_rest_routes' );
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/resolvers.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/abilities.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/review.php';
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/save-markup.php';
 add_filter( 'rest_pre_serve_request', 'bibliography_builder_rest_pre_serve_request', 10, 4 );
 
 /**

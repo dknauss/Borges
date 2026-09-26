@@ -180,6 +180,28 @@ wait_for_http() {
 	done
 }
 
+# Wait until the web server has loaded the plugin's REST routes.
+#
+# The WordPress image writes wp-config.php at container start, and the first
+# readiness request caches it in opcache. `wp core multisite-install` then
+# rewrites it, but opcache only re-checks a file's timestamp every couple of
+# seconds (revalidate_freq), so a request inside that window still runs as a
+# single site, where a network-activated plugin is not loaded and every route
+# 404s with rest_no_route. Poll the REST index instead of racing it.
+wait_for_plugin_routes() {
+	attempt=0
+	until curl -fsS "$SITE_URL/?rest_route=/" 2>/dev/null | grep -q 'bibliography\\*/v1'; do
+		attempt=$((attempt + 1))
+		if [ "$attempt" -gt 30 ]; then
+			echo "Timed out waiting for bibliography/v1 routes at $SITE_URL" >&2
+			curl -sS "$SITE_URL/?rest_route=/" | head -c 2000 >&2 || true
+			echo >&2
+			exit 1
+		fi
+		sleep 1
+	done
+}
+
 wp_exec() {
 	docker compose -f "$COMPOSE_FILE" exec -T wordpress sh -lc "$1"
 }
@@ -267,6 +289,8 @@ BLOCKEOF
 
 POST_ID=$(docker compose -f "$COMPOSE_FILE" exec -T -e BLOCK_CONTENT="$BLOCK_CONTENT" wordpress sh -lc 'wp post create --allow-root --path=/var/www/html --post_type=post --post_status=publish --post_title="Runtime Matrix Smoke" --post_content="$BLOCK_CONTENT" --porcelain')
 printf '%s\n' "$POST_ID" > "$ARTIFACT_DIR/post-id.txt"
+
+wait_for_plugin_routes
 
 capture_http frontend "$SITE_URL/?p=$POST_ID"
 capture_http rest-collection "$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies"

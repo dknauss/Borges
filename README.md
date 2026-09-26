@@ -73,8 +73,8 @@ Borges is a static-output block: formatted bibliography HTML, JSON-LD, and COinS
 
 | Metric | Value |
 |---|---|
-| First-party PHP | ~1,942 LOC main plugin file; ~4,280 LOC total with `includes/` |
-| JS source (`src/`) | ~9,760 LOC |
+| First-party PHP | ~1,977 LOC main plugin file; ~6,315 LOC total with `includes/` |
+| JS source (`src/`) | ~9,766 LOC |
 | Frontend runtime shipped to visitors | `view.js` ~1.4 KB + `style-index.css` ~2.9 KB, enqueued only when the block is present |
 | Installed footprint | ~1.9 MB (`vendor/` ~792 KB, translations 724 KB, build assets ~324 KB) |
 | Distributed ZIP (latest v1.6.0 release) | ~488 KB (499,681 bytes) |
@@ -206,7 +206,7 @@ GET /wp-json/bibliography/v1/posts/<post_id>/bibliographies/<ref>/duplicates
 GET /wp-json/bibliography/v1/posts/<post_id>/bibliographies/<ref>/preview?style=apa-7
 ```
 
-- `validate` checks each entry's stored CSL-JSON. Errors (`invalid-csl`, `missing-csl`, `missing-title`, `malformed-doi`) mean the entry can't be formatted as stored or a reader couldn't find the work. Warnings (`missing-author`, `missing-issued`, `missing-container-title`, `invalid-isbn`, `missing-id`) are gaps some works legitimately have. The response carries `valid`, `errorCount`, `warningCount`, and per-entry `issues` with `severity`, `code`, `field`, and `message`.
+- `validate` checks each entry's stored CSL-JSON. Errors (`invalid-csl`, `missing-csl`, `missing-title`, `malformed-doi`) mean the entry can't be formatted as stored or a reader couldn't find the work. Warnings (`missing-author`, `missing-issued`, `missing-container-title`, `invalid-isbn`, `empty-doi`, `missing-id`) are gaps some works legitimately have. The response carries `valid`, `errorCount`, `warningCount`, and per-entry `issues` with `severity`, `code`, `field`, and `message`.
 - `duplicates` lists pairs the editor's own duplicate check would treat as one work, with a `reason`: `doi` (same DOI, ignoring case and a `doi.org` prefix), or the same normalized title with the same year (`title-year`), the same first author (`title-author`), or neither (`title`).
 - `preview` formats each entry in another supported style (the `citationStyle` keys, such as `apa-7`, `mla-9`, or `ieee`) and returns it next to the current text as `current`, `preview`, and `changed`. Entries the formatter rejects get a `null` preview and an `error`. Nothing is saved. Blocks of more than 50 entries return a 400, the same limit as the formatter endpoint.
 

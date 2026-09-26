@@ -15,6 +15,10 @@ describe('isStableBlockId / isStableCitationId', () => {
 		expect(isStableBlockId('has space')).toBe(false);
 		expect(isStableBlockId('../etc')).toBe(false);
 		expect(isStableBlockId(42)).toBe(false);
+		// Would read as a block index in a `{ref}` URL segment.
+		expect(isStableBlockId('12')).toBe(false);
+		expect(isStableBlockId('12a')).toBe(true);
+		expect(isStableBlockId('abc\n')).toBe(false);
 
 		expect(isStableCitationId('alpha-1')).toBe(true);
 		expect(isStableCitationId('legacy.id:1')).toBe(true);

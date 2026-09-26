@@ -29,6 +29,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 const BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN = '[A-Za-z0-9][A-Za-z0-9_-]{0,63}';
 
 /**
+ * Pattern a stable `bibliographyId` matches: a ref that is not all digits, so
+ * it can never be mistaken for an index.
+ */
+const BIBLIOGRAPHY_BUILDER_BLOCK_ID_PATTERN = '(?=[A-Za-z0-9_-]*[A-Za-z_-])[A-Za-z0-9][A-Za-z0-9_-]{0,63}';
+
+/**
  * CSL types whose entries normally name the work they appear in.
  */
 const BIBLIOGRAPHY_BUILDER_CONTAINER_TYPES = array(
@@ -50,23 +56,35 @@ function bibliography_builder_is_block_ref( $value ) {
 		return $value >= 0;
 	}
 
-	return is_string( $value ) && 1 === preg_match( '/^' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . '$/', $value );
+	return is_string( $value ) && 1 === preg_match( '/^' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . '$/D', $value );
+}
+
+/**
+ * Whether a value is a usable stable `bibliographyId`.
+ *
+ * @param mixed $value Raw value.
+ * @return bool
+ */
+function bibliography_builder_is_block_id( $value ) {
+	return is_string( $value ) && 1 === preg_match( '/^' . BIBLIOGRAPHY_BUILDER_BLOCK_ID_PATTERN . '$/D', $value );
 }
 
 /**
  * Find one bibliography by index or stable `bibliographyId`.
  *
- * An all-digit reference is an index. The editor only generates UUIDs, which
- * always contain hyphens, so a real `bibliographyId` never reads as one.
+ * With `auto`, an all-digit reference is an index; a stable `bibliographyId`
+ * is never all digits (bibliography_builder_is_block_id()), so it never reads
+ * as one.
  *
- * @param array $bibliographies Prepared bibliographies for a post.
- * @param mixed $ref            Index or `bibliographyId`.
+ * @param array  $bibliographies Prepared bibliographies for a post.
+ * @param mixed  $ref            Index or `bibliographyId`.
+ * @param string $kind           `auto`, `index`, or `id` (never an index).
  * @return array|null
  */
-function bibliography_builder_find_bibliography( $bibliographies, $ref ) {
+function bibliography_builder_find_bibliography( $bibliographies, $ref, $kind = 'auto' ) {
 	$ref = (string) $ref;
 
-	if ( ctype_digit( $ref ) ) {
+	if ( 'id' !== $kind && ctype_digit( $ref ) ) {
 		$index = (int) $ref;
 
 		return isset( $bibliographies[ $index ] ) ? $bibliographies[ $index ] : null;
@@ -84,14 +102,16 @@ function bibliography_builder_find_bibliography( $bibliographies, $ref ) {
 /**
  * Load one bibliography in a post by index or `bibliographyId`, or a 404.
  *
- * @param int   $post_id Post ID. The caller has already checked it exists.
- * @param mixed $ref     Index or `bibliographyId`.
+ * @param int    $post_id Post ID. The caller has already checked it exists.
+ * @param mixed  $ref     Index or `bibliographyId`.
+ * @param string $kind    See bibliography_builder_find_bibliography().
  * @return array|WP_Error
  */
-function bibliography_builder_resolve_bibliography( $post_id, $ref ) {
+function bibliography_builder_resolve_bibliography( $post_id, $ref, $kind = 'auto' ) {
 	$bibliography = bibliography_builder_find_bibliography(
 		bibliography_builder_get_bibliographies_for_post( get_post( absint( $post_id ) ) ),
-		$ref
+		$ref,
+		$kind
 	);
 
 	if ( null === $bibliography ) {
@@ -238,6 +258,33 @@ function bibliography_builder_has_csl_name( $names ) {
 }
 
 /**
+ * Whether a sanitized CSL date says anything: a year in `date-parts`, or a
+ * non-blank `literal` or `raw` value.
+ *
+ * @param mixed $date CSL date.
+ * @return bool
+ */
+function bibliography_builder_has_usable_date( $date ) {
+	if ( ! is_array( $date ) ) {
+		return false;
+	}
+
+	$year = isset( $date['date-parts'][0][0] ) ? $date['date-parts'][0][0] : null;
+
+	if ( is_scalar( $year ) && '' !== trim( (string) $year ) ) {
+		return true;
+	}
+
+	foreach ( array( 'literal', 'raw' ) as $field ) {
+		if ( isset( $date[ $field ] ) && is_string( $date[ $field ] ) && '' !== trim( $date[ $field ] ) ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
  * Whether a CSL ISBN value contains at least one checksum-valid ISBN.
  *
  * CSL allows several ISBNs in one field, often with qualifiers such as
@@ -252,11 +299,24 @@ function bibliography_builder_has_valid_isbn( $value ) {
 			continue;
 		}
 
-		preg_match_all( '/[0-9][0-9Xx -]{8,16}[0-9Xx]/', $candidate, $matches );
+		// Runs of digits, X, hyphens, and spaces. A run may hold one ISBN
+		// written with spaces ("978 0 306 40615 7") or several separated by
+		// spaces, so every contiguous group of its space-separated tokens is
+		// tried.
+		preg_match_all( '/[0-9][0-9Xx -]*[0-9Xx]/', $candidate, $matches );
 
-		foreach ( $matches[0] as $isbn ) {
-			if ( '' !== bibliography_builder_normalize_isbn( $isbn ) ) {
-				return true;
+		foreach ( $matches[0] as $run ) {
+			$tokens = preg_split( '/ +/', $run );
+			$count  = count( $tokens );
+
+			for ( $start = 0; $start < $count; $start++ ) {
+				for ( $end = $start; $end < $count; $end++ ) {
+					$isbn = implode( '', array_slice( $tokens, $start, $end - $start + 1 ) );
+
+					if ( '' !== bibliography_builder_normalize_isbn( $isbn ) ) {
+						return true;
+					}
+				}
 			}
 		}
 	}
@@ -329,7 +389,7 @@ function bibliography_builder_validate_citation( $citation ) {
 		);
 	}
 
-	if ( empty( $csl['issued'] ) ) {
+	if ( ! bibliography_builder_has_usable_date( isset( $csl['issued'] ) ? $csl['issued'] : null ) ) {
 		$issues[] = bibliography_builder_validation_issue(
 			'warning',
 			'missing-issued',
@@ -353,16 +413,31 @@ function bibliography_builder_validate_citation( $citation ) {
 		);
 	}
 
-	if (
-		array_key_exists( 'DOI', $csl )
-		&& 1 !== preg_match( '#^10\.\d{4,9}/\S+$#u', bibliography_builder_normalize_review_doi( $csl['DOI'] ) )
-	) {
-		$issues[] = bibliography_builder_validation_issue(
-			'error',
-			'malformed-doi',
-			'DOI',
-			__( 'The DOI is not in the form 10.prefix/suffix.', 'borges-bibliography-builder' )
+	if ( array_key_exists( 'DOI', $csl ) ) {
+		// Accept the prefixes people paste (doi:, www.doi.org) and dotted
+		// registrant codes (10.1000.10/…), which the duplicate check's
+		// normalizer leaves alone.
+		$doi = (string) preg_replace(
+			'#^(?:doi:\s*|(?:https?://)?(?:www\.)?doi\.org/)#i',
+			'',
+			bibliography_builder_normalize_review_doi( $csl['DOI'] )
 		);
+
+		if ( '' === $doi ) {
+			$issues[] = bibliography_builder_validation_issue(
+				'warning',
+				'empty-doi',
+				'DOI',
+				__( 'The DOI field is empty.', 'borges-bibliography-builder' )
+			);
+		} elseif ( 1 !== preg_match( '#^10\.\d{4,9}(?:\.\d+)*/\S+$#Du', $doi ) ) {
+			$issues[] = bibliography_builder_validation_issue(
+				'error',
+				'malformed-doi',
+				'DOI',
+				__( 'The DOI is not in the form 10.prefix/suffix.', 'borges-bibliography-builder' )
+			);
+		}
 	}
 
 	if ( array_key_exists( 'ISBN', $csl ) && ! bibliography_builder_has_valid_isbn( $csl['ISBN'] ) ) {
@@ -380,12 +455,13 @@ function bibliography_builder_validate_citation( $citation ) {
 /**
  * Validate every entry in one bibliography.
  *
- * @param int   $post_id Post ID.
- * @param mixed $ref     Index or `bibliographyId`.
+ * @param int    $post_id Post ID.
+ * @param mixed  $ref     Index or `bibliographyId`.
+ * @param string $kind    See bibliography_builder_find_bibliography().
  * @return array|WP_Error
  */
-function bibliography_builder_get_validation_report( $post_id, $ref ) {
-	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref );
+function bibliography_builder_get_validation_report( $post_id, $ref, $kind = 'auto' ) {
+	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref, $kind );
 
 	if ( is_wp_error( $bibliography ) ) {
 		return $bibliography;
@@ -455,20 +531,42 @@ function bibliography_builder_get_duplicate_keys( $citation ) {
 	$author = isset( $csl['author'][0] ) && is_array( $csl['author'][0] ) ? $csl['author'][0] : array();
 	$family = '';
 
-	if ( ! empty( $author['family'] ) ) {
+	// `firstAuthor.family || firstAuthor.literal || ''`, with JS truthiness.
+	if ( isset( $author['family'] ) && bibliography_builder_js_truthy( $author['family'] ) ) {
 		$family = $author['family'];
-	} elseif ( ! empty( $author['literal'] ) ) {
+	} elseif ( isset( $author['literal'] ) && bibliography_builder_js_truthy( $author['literal'] ) ) {
 		$family = $author['literal'];
 	}
 
-	$year = isset( $csl['issued']['date-parts'][0][0] ) ? $csl['issued']['date-parts'][0][0] : '';
+	// `date-parts[0][0] || null`: a falsy year (0, '') counts as missing, and
+	// the raw value is kept so the comparison can be type-strict like `===`.
+	$year = isset( $csl['issued']['date-parts'][0][0] ) ? $csl['issued']['date-parts'][0][0] : null;
 
 	return array(
 		'doi'    => isset( $csl['DOI'] ) ? bibliography_builder_normalize_review_doi( $csl['DOI'] ) : '',
 		'title'  => isset( $csl['title'] ) ? bibliography_builder_normalize_review_text( $csl['title'] ) : '',
 		'author' => bibliography_builder_normalize_review_text( $family ),
-		'year'   => is_scalar( $year ) ? (string) $year : '',
+		'year'   => is_scalar( $year ) && bibliography_builder_js_truthy( $year ) ? $year : null,
 	);
+}
+
+/**
+ * JavaScript `===` for two JSON scalars: numbers compare by value whether PHP
+ * decoded them as int or float; a number never equals a string.
+ *
+ * @param mixed $a First value.
+ * @param mixed $b Second value.
+ * @return bool
+ */
+function bibliography_builder_js_strict_equals( $a, $b ) {
+	$a_number = is_int( $a ) || is_float( $a );
+	$b_number = is_int( $b ) || is_float( $b );
+
+	if ( $a_number || $b_number ) {
+		return $a_number && $b_number && (float) $a === (float) $b;
+	}
+
+	return $a === $b;
 }
 
 /**
@@ -491,7 +589,10 @@ function bibliography_builder_get_duplicate_reason( $first, $second ) {
 		return null;
 	}
 
-	if ( '' !== $first['year'] && $first['year'] === $second['year'] ) {
+	$same_year = null !== $first['year'] && null !== $second['year']
+		&& bibliography_builder_js_strict_equals( $first['year'], $second['year'] );
+
+	if ( $same_year ) {
 		return 'title-year';
 	}
 
@@ -499,7 +600,7 @@ function bibliography_builder_get_duplicate_reason( $first, $second ) {
 		return 'title-author';
 	}
 
-	$all_missing = '' === $first['year'] && '' === $second['year']
+	$all_missing = null === $first['year'] && null === $second['year']
 		&& '' === $first['author'] && '' === $second['author'];
 
 	return $all_missing ? 'title' : null;
@@ -508,12 +609,13 @@ function bibliography_builder_get_duplicate_reason( $first, $second ) {
 /**
  * List likely duplicate pairs in one bibliography.
  *
- * @param int   $post_id Post ID.
- * @param mixed $ref     Index or `bibliographyId`.
+ * @param int    $post_id Post ID.
+ * @param mixed  $ref     Index or `bibliographyId`.
+ * @param string $kind    See bibliography_builder_find_bibliography().
  * @return array|WP_Error
  */
-function bibliography_builder_get_duplicate_report( $post_id, $ref ) {
-	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref );
+function bibliography_builder_get_duplicate_report( $post_id, $ref, $kind = 'auto' ) {
+	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref, $kind );
 
 	if ( is_wp_error( $bibliography ) ) {
 		return $bibliography;
@@ -561,10 +663,11 @@ function bibliography_builder_get_duplicate_report( $post_id, $ref ) {
  * @param int    $post_id   Post ID.
  * @param mixed  $ref       Index or `bibliographyId`.
  * @param string $style_key Supported citation style key.
+ * @param string $kind      See bibliography_builder_find_bibliography().
  * @return array|WP_Error
  */
-function bibliography_builder_get_style_preview( $post_id, $ref, $style_key ) {
-	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref );
+function bibliography_builder_get_style_preview( $post_id, $ref, $style_key, $kind = 'auto' ) {
+	$bibliography = bibliography_builder_resolve_bibliography( $post_id, $ref, $kind );
 
 	if ( is_wp_error( $bibliography ) ) {
 		return $bibliography;
@@ -704,7 +807,7 @@ function bibliography_builder_register_review_routes() {
 				'Zero-based bibliography block index, or the block\'s bibliographyId.',
 				'borges-bibliography-builder'
 			),
-			'type'              => 'string',
+			'type'              => array( 'string', 'integer' ),
 			'validate_callback' => 'bibliography_builder_is_block_ref',
 		),
 	);

@@ -1,0 +1,825 @@
+{
+	"cases": [
+		{
+			"name": "notes-full-metadata",
+			"note": "Chicago notes: every output layer, sorting by author/title/year, links with trailing punctuation, quoted vs italic titles, escaping, cite/export with BibTeX.",
+			"attributes": {
+				"bibliographyId": "3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01",
+				"citationStyle": "chicago-notes-bibliography",
+				"headingText": "Works & <Sources>",
+				"outputJsonLd": true,
+				"outputCoins": true,
+				"outputCslJson": true,
+				"outputCiteExport": true,
+				"citations": [
+					{
+						"id": "zeta",
+						"csl": {
+							"id": "zeta",
+							"type": "article-journal",
+							"title": "Zeta: \"Quoted\" & <Tagged>",
+							"container-title": "Journal of Block Testing",
+							"volume": "4",
+							"issue": "2",
+							"page": "10–20",
+							"DOI": "10.1000/abc(def)<1>",
+							"ISSN": ["1234-5678", "8765-4321"],
+							"URL": "https://example.com/zeta",
+							"language": "en-GB",
+							"author": [
+								{
+									"family": "Zeta",
+									"given": "Zoë",
+									"ORCID": "0000-0002-1825-0097"
+								},
+								{
+									"literal": "Block Consortium"
+								}
+							],
+							"issued": {
+								"date-parts": [[2020, 3, 7]]
+							}
+						},
+						"formattedText": "Zeta, Zoë, and Block Consortium. “Zeta: \"Quoted\" & <Tagged>.” Journal of Block Testing 4, no. 2 (2020): 10–20. https://doi.org/10.1000/abc(def)<1>. See (https://example.com/a?b=1&c=2).",
+						"exportBibtex": "@article{zeta2020,\n  title = {Zeta},\n}\n"
+					},
+					{
+						"id": "the-alpha",
+						"csl": {
+							"id": "the-alpha",
+							"type": "book",
+							"title": "The Alpha Book",
+							"publisher": "Test University Press",
+							"publisher-place": "Cambridge",
+							"ISBN": ["", "978-0-14-032872-1"],
+							"citation-key": "alpha:2018 é",
+							"author": [
+								{
+									"family": "Alpha",
+									"given": "Ada"
+								}
+							],
+							"issued": {
+								"date-parts": [[2018]]
+							}
+						},
+						"formattedText": "Alpha, Ada. The Alpha Book. Cambridge: Test University Press, 2018.",
+						"exportBibtex": "@book{alpha2018}",
+						"exportBiblatex": "@book{alpha2018, date = {2018}}"
+					},
+					{
+						"id": "alpha-older",
+						"csl": {
+							"type": "book",
+							"title": "An Alpha Book",
+							"author": [
+								{
+									"family": "alpha",
+									"given": "Ada"
+								}
+							],
+							"issued": {
+								"date-parts": [[2010]]
+							}
+						},
+						"formattedText": "Alpha, Ada. An Alpha Book. 2010."
+					},
+					{
+						"id": "undated",
+						"csl": {
+							"type": "webpage",
+							"title": "Untitled Page on ÉCOLE",
+							"URL": "https://example.org/page"
+						},
+						"formattedText": "Untitled Page on ÉCOLE. https://example.org/page, https://[bad, http://x."
+					},
+					{
+						"id": "thesis-1",
+						"csl": {
+							"type": "thesis",
+							"title": "A Thesis",
+							"publisher": "Uni",
+							"genre": "PhD",
+							"author": [
+								{
+									"given": "Solo"
+								}
+							],
+							"issued": {
+								"date-parts": [["2019", "11"]]
+							}
+						},
+						"formattedText": "Solo. A Thesis. PhD, Uni, 2019."
+					},
+					{
+						"id": "chapter-1",
+						"csl": {
+							"type": "chapter",
+							"title": "Chapter Title",
+							"container-title": "Edited Volume",
+							"editor": [
+								{
+									"family": "Editor",
+									"given": "Ed"
+								}
+							],
+							"page": "5-9",
+							"issued": {
+								"date-parts": [[2021]]
+							}
+						},
+						"formattedText": "Editor, Ed, ed. “Chapter Title.” In Edited Volume, 5–9. 2021.",
+						"displayOverride": ""
+					}
+				]
+			}
+		},
+		{
+			"name": "author-date-chains",
+			"note": "APA: author chains, editors as primary contributors, same-author ordering by year then title, display override skips italics.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "",
+				"outputJsonLd": false,
+				"citations": [
+					{
+						"id": "b2",
+						"csl": {
+							"type": "article-journal",
+							"title": "Second",
+							"container-title": "Periodical",
+							"author": [
+								{
+									"family": "Brown",
+									"given": "B."
+								},
+								{
+									"family": "Young",
+									"given": "Y."
+								}
+							],
+							"issued": {
+								"date-parts": [[2001]]
+							}
+						},
+						"formattedText": "Brown, B., & Young, Y. (2001). Second. Periodical."
+					},
+					{
+						"id": "b1",
+						"csl": {
+							"type": "article-journal",
+							"title": "First",
+							"container-title": "Periodical",
+							"author": [
+								{
+									"family": "Brown",
+									"given": "B."
+								}
+							],
+							"issued": {
+								"date-parts": [[2005]]
+							}
+						},
+						"formattedText": "Brown, B. (2005). First. Periodical."
+					},
+					{
+						"id": "b3",
+						"csl": {
+							"type": "article-journal",
+							"title": "Third",
+							"container-title": "Periodical",
+							"author": [
+								{
+									"family": "Brown",
+									"given": "B."
+								},
+								{
+									"family": "Adams",
+									"given": "A."
+								}
+							],
+							"issued": {
+								"date-parts": [[1999]]
+							}
+						},
+						"formattedText": "Brown, B., & Adams, A. (1999). Third. Periodical."
+					},
+					{
+						"id": "e1",
+						"csl": {
+							"type": "book",
+							"title": "Edited Collection",
+							"editor": [
+								{
+									"family": "Evans",
+									"given": "E."
+								}
+							]
+						},
+						"formattedText": "Evans, E. (Ed.). (n.d.). Edited collection.",
+						"displayOverride": "EVANS (ed.), Edited collection — custom text"
+					},
+					{
+						"id": "o1",
+						"csl": {
+							"type": "report",
+							"title": "Annual Report",
+							"author": [
+								{
+									"literal": "Organisation for Things"
+								}
+							],
+							"issued": {
+								"date-parts": [[2003, 1]]
+							}
+						},
+						"formattedText": "Organisation for Things. (2003). Annual report."
+					}
+				]
+			}
+		},
+		{
+			"name": "numeric-with-supports",
+			"note": "IEEE keeps input order; block supports (anchor, class, font size, spacing) on the wrapper.",
+			"attributes": {
+				"citationStyle": "ieee",
+				"headingText": "References",
+				"anchor": "refs",
+				"className": "is-style-compact extra",
+				"fontSize": "small",
+				"style": {
+					"spacing": {
+						"padding": {
+							"top": "1em",
+							"bottom": "var:preset|spacing|40"
+						},
+						"margin": {
+							"top": "0"
+						}
+					}
+				},
+				"citations": [
+					{
+						"id": "z",
+						"csl": {
+							"type": "paper-conference",
+							"title": "Zed Paper",
+							"container-title": "Proc. Conf.",
+							"author": [
+								{
+									"family": "Zed"
+								}
+							],
+							"issued": {
+								"date-parts": [[2022]]
+							}
+						},
+						"formattedText": "[1] Zed, “Zed Paper,” in Proc. Conf., 2022."
+					},
+					{
+						"id": "a",
+						"csl": {
+							"type": "article-journal",
+							"title": "Ay",
+							"author": [
+								{
+									"family": "Ay"
+								}
+							]
+						},
+						"formattedText": "[2] Ay, “Ay.”"
+					}
+				]
+			}
+		},
+		{
+			"name": "abnt-accents",
+			"note": "ABNT sorts with pt-BR collation, where accents are ignored at base strength.",
+			"attributes": {
+				"citationStyle": "abnt",
+				"headingText": "Referências",
+				"outputCoins": true,
+				"citations": [
+					{
+						"id": "c2",
+						"csl": {
+							"type": "book",
+							"title": "Obra",
+							"author": [
+								{
+									"family": "Ávila",
+									"given": "Beatriz"
+								}
+							],
+							"issued": {
+								"date-parts": [[2015]]
+							}
+						},
+						"formattedText": "ÁVILA, Beatriz. Obra. 2015."
+					},
+					{
+						"id": "c1",
+						"csl": {
+							"type": "book",
+							"title": "Outra obra",
+							"author": [
+								{
+									"family": "Avila",
+									"given": "Ana"
+								}
+							],
+							"issued": {
+								"date-parts": [[2010]]
+							}
+						},
+						"formattedText": "AVILA, Ana. Outra obra. 2010."
+					},
+					{
+						"id": "c3",
+						"csl": {
+							"type": "book",
+							"title": "Livro",
+							"author": [
+								{
+									"family": "Çelik",
+									"given": "Can"
+								}
+							],
+							"issued": {
+								"date-parts": [[2012]]
+							}
+						},
+						"formattedText": "ÇELIK, Can. Livro. 2012."
+					}
+				]
+			}
+		},
+		{
+			"name": "oscola-defaults",
+			"note": "OSCOLA with default output flags; a citation without formatted text falls back to its title.",
+			"attributes": {
+				"citationStyle": "oscola",
+				"citations": [
+					{
+						"id": "case",
+						"csl": {
+							"type": "legal_case",
+							"title": "Donoghue v Stevenson",
+							"issued": {
+								"date-parts": [[1932]]
+							}
+						}
+					},
+					{
+						"id": "stat",
+						"csl": {
+							"type": "legislation",
+							"title": "Human Rights Act 1998"
+						},
+						"formattedText": "Human Rights Act 1998"
+					}
+				]
+			}
+		},
+		{
+			"name": "edge-values",
+			"note": "Values where PHP and JavaScript semantics part ways: '0' strings, whole-number floats, null page, empty identifier arrays, astral characters, U+2028, NBSP-delimited URLs, balanced parentheses, unparseable hosts, CJK export names, and camel-case font sizes.",
+			"attributes": {
+				"citationStyle": "chicago-author-date",
+				"headingText": "0",
+				"outputCoins": true,
+				"outputCslJson": true,
+				"outputCiteExport": true,
+				"fontSize": "extraLarge2",
+				"style": {
+					"spacing": {
+						"margin": "2rem"
+					},
+					"typography": {
+						"fontSize": "clamp(1rem, 2vw, 2rem)"
+					}
+				},
+				"citations": [
+					{
+						"id": "zero",
+						"csl": {
+							"type": "book",
+							"title": "0",
+							"page": null,
+							"ISBN": [],
+							"ISSN": [],
+							"author": [
+								{
+									"family": "Zero",
+									"ORCID": "https://orcid.org/0000-0001-2345-6789"
+								}
+							],
+							"issued": {
+								"date-parts": [[2020.0, 1.0]]
+							},
+							"custom": {},
+							"note-map": {
+								"0": "first",
+								"1": "second"
+							},
+							"editor": [{}]
+						},
+						"formattedText": "Zero. 0. See https://en.wikipedia.org/wiki/Foo_(bar)) and https://user@/nohost and https://ok.example/a tail and http://%zz.example/ now. Also https://[dead] and https://[::1]/local and http://[2001:db8::1]:8080/p."
+					},
+					{
+						"id": "astral",
+						"csl": {
+							"type": "article-journal",
+							"title": "Emoji 😀 Study Line",
+							"container-title": "𝓙ournal of Scripts",
+							"DOI": "10.1000/über",
+							"author": [
+								{
+									"family": "山田",
+									"given": "太郎"
+								}
+							],
+							"issued": {
+								"date-parts": [["2021"]]
+							}
+						},
+						"formattedText": "山田太郎. “Emoji 😀 Study Line.” 𝓙ournal of Scripts, 2021. https://doi.org/10.1000/über."
+					},
+					{
+						"id": "cjk",
+						"csl": {
+							"type": "webpage",
+							"title": "漢字のタイトル"
+						},
+						"formattedText": "漢字のタイトル."
+					},
+					{
+						"id": "no-author-a",
+						"csl": {
+							"type": "report",
+							"title": "A Report Without Authors",
+							"issued": {
+								"date-parts": [[1990]]
+							}
+						},
+						"formattedText": "A Report Without Authors. 1990."
+					},
+					{
+						"id": "no-author-b",
+						"csl": {
+							"type": "report",
+							"title": "An Earlier Report",
+							"issued": {
+								"date-parts": [[1980]]
+							}
+						},
+						"formattedText": "An Earlier Report. 1980."
+					},
+					{
+						"id": "nothing",
+						"csl": {
+							"type": "document"
+						},
+						"formattedText": "Mystery item."
+					},
+					{
+						"id": "empty-csl",
+						"csl": {},
+						"formattedText": "Empty record."
+					}
+				]
+			}
+		},
+		{
+			"name": "collation-mix",
+			"note": "Mixed scripts and diacritics in en-US collation; checks the server's ICU agrees with the browser's.",
+			"attributes": {
+				"citationStyle": "chicago-notes-bibliography",
+				"outputJsonLd": false,
+				"citations": [
+					{
+						"id": "n0",
+						"csl": {
+							"type": "book",
+							"title": "T0",
+							"author": [
+								{
+									"family": "Zimmermann"
+								}
+							]
+						},
+						"formattedText": "Zimmermann. T0."
+					},
+					{
+						"id": "n1",
+						"csl": {
+							"type": "book",
+							"title": "T1",
+							"author": [
+								{
+									"family": "Öztürk"
+								}
+							]
+						},
+						"formattedText": "Öztürk. T1."
+					},
+					{
+						"id": "n2",
+						"csl": {
+							"type": "book",
+							"title": "T2",
+							"author": [
+								{
+									"family": "Oster"
+								}
+							]
+						},
+						"formattedText": "Oster. T2."
+					},
+					{
+						"id": "n3",
+						"csl": {
+							"type": "book",
+							"title": "T3",
+							"author": [
+								{
+									"family": "Ångström"
+								}
+							]
+						},
+						"formattedText": "Ångström. T3."
+					},
+					{
+						"id": "n4",
+						"csl": {
+							"type": "book",
+							"title": "T4",
+							"author": [
+								{
+									"family": "Angstrom"
+								}
+							]
+						},
+						"formattedText": "Angstrom. T4."
+					},
+					{
+						"id": "n5",
+						"csl": {
+							"type": "book",
+							"title": "T5",
+							"author": [
+								{
+									"family": "Østergaard"
+								}
+							]
+						},
+						"formattedText": "Østergaard. T5."
+					},
+					{
+						"id": "n6",
+						"csl": {
+							"type": "book",
+							"title": "T6",
+							"author": [
+								{
+									"family": "Ostergard"
+								}
+							]
+						},
+						"formattedText": "Ostergard. T6."
+					},
+					{
+						"id": "n7",
+						"csl": {
+							"type": "book",
+							"title": "T7",
+							"author": [
+								{
+									"family": "Straße"
+								}
+							]
+						},
+						"formattedText": "Straße. T7."
+					},
+					{
+						"id": "n8",
+						"csl": {
+							"type": "book",
+							"title": "T8",
+							"author": [
+								{
+									"family": "Strasse"
+								}
+							]
+						},
+						"formattedText": "Strasse. T8."
+					},
+					{
+						"id": "n9",
+						"csl": {
+							"type": "book",
+							"title": "T9",
+							"author": [
+								{
+									"family": "Иванов"
+								}
+							]
+						},
+						"formattedText": "Иванов. T9."
+					},
+					{
+						"id": "n10",
+						"csl": {
+							"type": "book",
+							"title": "T10",
+							"author": [
+								{
+									"family": "de la Cruz"
+								}
+							]
+						},
+						"formattedText": "de la Cruz. T10."
+					},
+					{
+						"id": "n11",
+						"csl": {
+							"type": "book",
+							"title": "T11",
+							"author": [
+								{
+									"family": "De Witt"
+								}
+							]
+						},
+						"formattedText": "De Witt. T11."
+					},
+					{
+						"id": "n12",
+						"csl": {
+							"type": "book",
+							"title": "T12",
+							"author": [
+								{
+									"family": "d'Alembert"
+								}
+							]
+						},
+						"formattedText": "d'Alembert. T12."
+					},
+					{
+						"id": "n13",
+						"csl": {
+							"type": "book",
+							"title": "T13",
+							"author": [
+								{
+									"family": "O'Brien"
+								}
+							]
+						},
+						"formattedText": "O'Brien. T13."
+					},
+					{
+						"id": "n14",
+						"csl": {
+							"type": "book",
+							"title": "T14",
+							"author": [
+								{
+									"family": "Obrien"
+								}
+							]
+						},
+						"formattedText": "Obrien. T14."
+					},
+					{
+						"id": "n15",
+						"csl": {
+							"type": "book",
+							"title": "T15",
+							"author": [
+								{
+									"family": "Mc-Donald"
+								}
+							]
+						},
+						"formattedText": "Mc-Donald. T15."
+					},
+					{
+						"id": "n16",
+						"csl": {
+							"type": "book",
+							"title": "T16",
+							"author": [
+								{
+									"family": "McDonald"
+								}
+							]
+						},
+						"formattedText": "McDonald. T16."
+					},
+					{
+						"id": "n17",
+						"csl": {
+							"type": "book",
+							"title": "T17",
+							"author": [
+								{
+									"family": "émile"
+								}
+							]
+						},
+						"formattedText": "émile. T17."
+					},
+					{
+						"id": "n18",
+						"csl": {
+							"type": "book",
+							"title": "T18",
+							"author": [
+								{
+									"family": "Emile"
+								}
+							]
+						},
+						"formattedText": "Emile. T18."
+					},
+					{
+						"id": "n19",
+						"csl": {
+							"type": "book",
+							"title": "T19",
+							"author": [
+								{
+									"family": "123 Group"
+								}
+							]
+						},
+						"formattedText": "123 Group. T19."
+					},
+					{
+						"id": "n20",
+						"csl": {
+							"type": "book",
+							"title": "T20",
+							"author": [
+								{
+									"family": "Σωκράτης"
+								}
+							]
+						},
+						"formattedText": "Σωκράτης. T20."
+					},
+					{
+						"id": "n21",
+						"csl": {
+							"type": "book",
+							"title": "T21",
+							"author": [
+								{
+									"family": "李"
+								}
+							]
+						},
+						"formattedText": "李. T21."
+					},
+					{
+						"id": "n22",
+						"csl": {
+							"type": "book",
+							"title": "T22",
+							"author": [
+								{
+									"family": "  Padded  "
+								}
+							]
+						},
+						"formattedText": "  Padded  . T22."
+					},
+					{
+						"id": "n23",
+						"csl": {
+							"type": "book",
+							"title": "T23",
+							"author": [
+								{
+									"family": ""
+								}
+							]
+						},
+						"formattedText": ". T23."
+					}
+				]
+			}
+		},
+		{
+			"name": "empty",
+			"note": "No citations: save() returns null.",
+			"attributes": {
+				"citationStyle": "mla-9",
+				"headingText": "Works Cited",
+				"citations": []
+			}
+		}
+	]
+}

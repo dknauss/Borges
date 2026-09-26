@@ -154,6 +154,24 @@ final class ReviewRoutesTest extends TestCase {
 		$this->assertFalse( $ref_arg['validate_callback']( '../0' ) );
 		$this->assertFalse( $ref_arg['validate_callback']( array( '0' ) ) );
 
+		// Reading one bibliography by ID is its own route, after the review
+		// routes, so the numeric route keeps its `index` parameter.
+		$this->assertSame( '/posts/(?P<post_id>\d+)/bibliographies/(?P<index>\d+)', $routes[3]['route'] );
+		$this->assertSame(
+			'/posts/(?P<post_id>\d+)/bibliographies/(?P<id>(?=[A-Za-z0-9_-]*[A-Za-z_-])[A-Za-z0-9][A-Za-z0-9_-]{0,63})',
+			$routes[10]['route']
+		);
+		$this->assertSame( 'bibliography_builder_rest_get_bibliography', $routes[10]['args']['callback'] );
+		$this->assertSame( 'bibliography_builder_rest_permissions_check', $routes[10]['args']['permission_callback'] );
+
+		foreach ( array( '0', '12', '12a', $this->block_id, 'abc' ) as $path ) {
+			$this->assertSame(
+				1 !== preg_match( '/^\d+$/', $path ),
+				1 === preg_match( '@^' . $routes[10]['route'] . '$@i', '/posts/1/bibliographies/' . $path ),
+				$path
+			);
+		}
+
 		$style_arg = $routes[9]['args']['args']['style'];
 		$this->assertTrue( $style_arg['required'] );
 		$this->assertTrue( $style_arg['validate_callback']( 'apa-7' ) );
@@ -270,7 +288,7 @@ final class ReviewRoutesTest extends TestCase {
 	}
 
 	public function test_duplicate_reason_mirrors_the_editor_rules(): void {
-		$keys = static function ( $title, $author = '', $year = '', $doi = '' ) {
+		$keys = static function ( $title, $author = '', $year = null, $doi = '' ) {
 			return compact( 'doi', 'title', 'author', 'year' );
 		};
 
@@ -282,7 +300,7 @@ final class ReviewRoutesTest extends TestCase {
 		$this->assertNull( bibliography_builder_get_duplicate_reason( $keys( '' ), $keys( '' ) ) );
 		$this->assertSame(
 			'doi',
-			bibliography_builder_get_duplicate_reason( $keys( 'a', '', '', '10.1/x' ), $keys( 'b', '', '', '10.1/x' ) )
+			bibliography_builder_get_duplicate_reason( $keys( 'a', '', null, '10.1/x' ), $keys( 'b', '', null, '10.1/x' ) )
 		);
 	}
 
@@ -350,7 +368,7 @@ final class ReviewRoutesTest extends TestCase {
 	public function test_single_bibliography_route_accepts_a_bibliography_id(): void {
 		$request            = new WP_REST_Request( 'GET', '/bibliography/v1/posts/201/bibliographies/' . $this->block_id );
 		$request['post_id'] = $this->post_id;
-		$request['ref']     = $this->block_id;
+		$request['id']      = $this->block_id;
 
 		$data = bibliography_builder_rest_get_bibliography( $request )->get_data();
 		$this->assertSame( 0, $data['index'] );
@@ -359,7 +377,7 @@ final class ReviewRoutesTest extends TestCase {
 		$request['format'] = 'csl-json';
 		$this->assertSame( 'Deep Learning', bibliography_builder_rest_get_bibliography( $request )->get_data()[0]['title'] );
 
-		$request['ref'] = 'no-such-block';
+		$request['id'] = 'no-such-block';
 		$this->assertSame( 404, bibliography_builder_rest_get_bibliography( $request )->get_error_data()['status'] );
 	}
 
@@ -371,5 +389,104 @@ final class ReviewRoutesTest extends TestCase {
 		foreach ( array( -1, '', '-1', '../0', 'has space', str_repeat( 'a', 65 ), array( '0' ), null, 1.5 ) as $invalid ) {
 			$this->assertFalse( bibliography_builder_is_block_ref( $invalid ), var_export( $invalid, true ) );
 		}
+	}
+
+	public function test_all_digit_bibliography_ids_are_not_advertised(): void {
+		$this->assertNull( bibliography_builder_get_stable_block_id( array( 'bibliographyId' => '1' ) ) );
+		$this->assertNull( bibliography_builder_get_stable_block_id( array( 'bibliographyId' => "abc\n" ) ) );
+		$this->assertSame( '1a', bibliography_builder_get_stable_block_id( array( 'bibliographyId' => '1a' ) ) );
+		$this->assertFalse( bibliography_builder_is_block_ref( "abc\n" ) );
+		$this->assertTrue( bibliography_builder_is_block_ref( 2 ) );
+	}
+
+	public function test_duplicate_years_compare_like_strict_javascript_equality(): void {
+		$keys = static function ( array $csl ) {
+			return bibliography_builder_get_duplicate_keys( array( 'csl' => $csl ) );
+		};
+		$book = static function ( $year, $family ) {
+			$csl = array(
+				'title'  => 'Same',
+				'author' => array( array( 'family' => $family ) ),
+			);
+
+			if ( null !== $year ) {
+				$csl['issued'] = array( 'date-parts' => array( array( $year ) ) );
+			}
+
+			return $csl;
+		};
+
+		// 2020 === "2020" is false in JS, so different first authors mean no match.
+		$this->assertNull( bibliography_builder_get_duplicate_reason( $keys( $book( 2020, 'A' ) ), $keys( $book( '2020', 'B' ) ) ) );
+		// A number decoded as int or float is still the same number.
+		$this->assertSame( 'title-year', bibliography_builder_get_duplicate_reason( $keys( $book( 2020, 'A' ) ), $keys( $book( 2020.0, 'B' ) ) ) );
+		// A year of 0 counts as missing (`|| null`).
+		$this->assertSame(
+			'title',
+			bibliography_builder_get_duplicate_reason(
+				$keys( array( 'title' => 'Same', 'issued' => array( 'date-parts' => array( array( 0 ) ) ) ) ),
+				$keys( array( 'title' => 'Same' ) )
+			)
+		);
+		// A family name of "0" is truthy in JS and is used.
+		$this->assertSame( 'title-author', bibliography_builder_get_duplicate_reason( $keys( $book( 1999, '0' ) ), $keys( $book( 2001, '0' ) ) ) );
+	}
+
+	public function test_isbn_check_accepts_lists_and_spaced_isbns(): void {
+		foreach ( array( '9780306406157 0306406152', '0-306-40615-2 978-0-306-40615-7', 'ISBN 978 0 306 40615 7', '978-0-306-40615-7 (pbk.); 0306406152', array( 'bad', '0306406152' ) ) as $value ) {
+			$this->assertTrue( bibliography_builder_has_valid_isbn( $value ), var_export( $value, true ) );
+		}
+
+		foreach ( array( '1234567890', '978 1234', '', array() ) as $value ) {
+			$this->assertFalse( bibliography_builder_has_valid_isbn( $value ), var_export( $value, true ) );
+		}
+	}
+
+	public function test_doi_check_accepts_common_prefixes_and_dotted_registrants(): void {
+		$codes = static function ( $doi ) {
+			$issues = bibliography_builder_validate_citation(
+				array(
+					'id'  => 'x',
+					'csl' => array(
+						'type'   => 'book',
+						'title'  => 'T',
+						'DOI'    => $doi,
+						'author' => array( array( 'family' => 'F' ) ),
+						'issued' => array( 'date-parts' => array( array( 2000 ) ) ),
+					),
+				)
+			);
+
+			return array_column( $issues, 'code' );
+		};
+
+		foreach ( array( '10.1000/xyz', 'doi:10.1000/xyz', 'DOI: 10.1000/xyz', 'https://www.doi.org/10.1000/xyz', 'https://dx.doi.org/10.1000/xyz', '10.1000.10/abc' ) as $doi ) {
+			$this->assertSame( array(), $codes( $doi ), $doi );
+		}
+
+		$this->assertSame( array( 'empty-doi' ), $codes( '' ) );
+		$this->assertSame( array( 'malformed-doi' ), $codes( '10.12/short-prefix' ) );
+		$this->assertSame( array( 'malformed-doi' ), $codes( 'not a doi' ) );
+	}
+
+	public function test_blank_literal_and_raw_dates_count_as_missing(): void {
+		foreach ( array( array( 'literal' => '' ), array( 'raw' => '   ' ) ) as $issued ) {
+			$issues = bibliography_builder_validate_citation(
+				array(
+					'id'  => 'x',
+					'csl' => array(
+						'type'   => 'book',
+						'title'  => 'T',
+						'author' => array( array( 'family' => 'F' ) ),
+						'issued' => $issued,
+					),
+				)
+			);
+
+			$this->assertContains( 'missing-issued', array_column( $issues, 'code' ), wp_json_encode( $issued ) );
+		}
+
+		$this->assertTrue( bibliography_builder_has_usable_date( array( 'literal' => 'c. 1850' ) ) );
+		$this->assertTrue( bibliography_builder_has_usable_date( array( 'date-parts' => array( array( 2001 ) ) ) ) );
 	}
 }

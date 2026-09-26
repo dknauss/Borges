@@ -98,7 +98,7 @@ function bibliography_builder_register_abilities() {
 		),
 		'bibliography_id' => array(
 			'type'        => 'string',
-			'pattern'     => '^' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . '$',
+			'pattern'     => '^' . BIBLIOGRAPHY_BUILDER_BLOCK_ID_PATTERN . '$',
 			'description' => __(
 				"The block's stable bibliographyId. Takes precedence over index when given.",
 				'borges-bibliography-builder'
@@ -399,7 +399,8 @@ function bibliography_builder_ability_export_bibliography( $input ) {
 	$format       = isset( $input['format'] ) && 'text' === $input['format'] ? 'text' : 'csl-json';
 	$bibliography = bibliography_builder_resolve_bibliography(
 		$post_id,
-		bibliography_builder_ability_block_ref( $input )
+		bibliography_builder_ability_block_ref( $input ),
+		bibliography_builder_ability_block_kind( $input )
 	);
 
 	if ( is_wp_error( $bibliography ) ) {
@@ -434,6 +435,19 @@ function bibliography_builder_ability_block_ref( $input ) {
 }
 
 /**
+ * How to read bibliography_builder_ability_block_ref(): a `bibliography_id`
+ * is always an ID, never an index, even if it is all digits.
+ *
+ * @param array $input Validated ability input.
+ * @return string `id` or `index`.
+ */
+function bibliography_builder_ability_block_kind( $input ) {
+	$id = isset( $input['bibliography_id'] ) ? $input['bibliography_id'] : null;
+
+	return is_string( $id ) && '' !== $id ? 'id' : 'index';
+}
+
+/**
  * Permission callback for the review abilities: `edit_post` on the post,
  * as for the matching review routes.
  *
@@ -455,7 +469,8 @@ function bibliography_builder_ability_can_review_post( $input = null ) {
 function bibliography_builder_ability_validate_bibliography( $input ) {
 	return bibliography_builder_get_validation_report(
 		$input['post_id'],
-		bibliography_builder_ability_block_ref( $input )
+		bibliography_builder_ability_block_ref( $input ),
+		bibliography_builder_ability_block_kind( $input )
 	);
 }
 
@@ -468,7 +483,8 @@ function bibliography_builder_ability_validate_bibliography( $input ) {
 function bibliography_builder_ability_find_duplicate_citations( $input ) {
 	return bibliography_builder_get_duplicate_report(
 		$input['post_id'],
-		bibliography_builder_ability_block_ref( $input )
+		bibliography_builder_ability_block_ref( $input ),
+		bibliography_builder_ability_block_kind( $input )
 	);
 }
 
@@ -492,7 +508,8 @@ function bibliography_builder_ability_preview_bibliography_style( $input ) {
 	return bibliography_builder_get_style_preview(
 		$input['post_id'],
 		bibliography_builder_ability_block_ref( $input ),
-		$style
+		$style,
+		bibliography_builder_ability_block_kind( $input )
 	);
 }
 
