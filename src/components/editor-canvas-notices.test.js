@@ -3,77 +3,67 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { EditorCanvasNotices } from './editor-canvas-notices';
 
-jest.mock(
-	'@wordpress/components',
-	() => {
-		const ReactLocal = require('react');
+jest.mock('@wordpress/components', () => {
+	const ReactLocal = require('react');
 
-		return {
-			Notice: ({ status = 'info', onRemove, children, className }) =>
-				ReactLocal.createElement(
-					'div',
-					{
-						role: 'status',
-						className: `${
-							className || ''
-						} components-notice is-${status}`.trim(),
-					},
-					children,
-					onRemove
-						? ReactLocal.createElement(
-								'button',
-								{
-									type: 'button',
-									'aria-label': 'Dismiss',
-									onClick: onRemove,
-								},
-								'Dismiss'
-						  )
-						: null
-				),
-			Snackbar: ({ onRemove, children, className }) =>
-				ReactLocal.createElement(
-					'div',
-					{
-						role: 'status',
-						className: `${
-							className || ''
-						} components-snackbar`.trim(),
-					},
-					children,
-					onRemove
-						? ReactLocal.createElement(
-								'button',
-								{
-									type: 'button',
-									'aria-label': 'Dismiss',
-									onClick: onRemove,
-								},
-								'Dismiss'
-						  )
-						: null
-				),
-		};
-	},
-	{ virtual: true }
-);
+	return {
+		Notice: ({ status = 'info', onRemove, children, className }) =>
+			ReactLocal.createElement(
+				'div',
+				{
+					role: 'status',
+					className: `${
+						className || ''
+					} components-notice is-${status}`.trim(),
+				},
+				children,
+				onRemove
+					? ReactLocal.createElement(
+							'button',
+							{
+								type: 'button',
+								'aria-label': 'Dismiss',
+								onClick: onRemove,
+							},
+							'Dismiss'
+					  )
+					: null
+			),
+		Snackbar: ({ onRemove, children, className }) =>
+			ReactLocal.createElement(
+				'div',
+				{
+					role: 'status',
+					className: `${className || ''} components-snackbar`.trim(),
+				},
+				children,
+				onRemove
+					? ReactLocal.createElement(
+							'button',
+							{
+								type: 'button',
+								'aria-label': 'Dismiss',
+								onClick: onRemove,
+							},
+							'Dismiss'
+					  )
+					: null
+			),
+	};
+});
 
-jest.mock(
-	'@wordpress/element',
-	() => {
-		const ReactLocal = require('react');
+jest.mock('@wordpress/element', () => {
+	const ReactLocal = require('react');
 
-		return {
-			createElement: ReactLocal.createElement,
-			Fragment: ReactLocal.Fragment,
-			useState: ReactLocal.useState,
-			useRef: ReactLocal.useRef,
-			useCallback: ReactLocal.useCallback,
-			useEffect: ReactLocal.useEffect,
-		};
-	},
-	{ virtual: true }
-);
+	return {
+		createElement: ReactLocal.createElement,
+		Fragment: ReactLocal.Fragment,
+		useState: ReactLocal.useState,
+		useRef: ReactLocal.useRef,
+		useCallback: ReactLocal.useCallback,
+		useEffect: ReactLocal.useEffect,
+	};
+});
 
 describe('EditorCanvasNotices', () => {
 	it('renders nothing when there is no current notice', () => {

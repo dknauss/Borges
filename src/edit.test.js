@@ -23,224 +23,191 @@ import {
 	formatBibliographyEntry,
 } from './lib/formatting/csl';
 
-jest.mock(
-	'@wordpress/i18n',
-	() => ({
-		__: (text) => text,
-		_n: (single, plural, count) => (count === 1 ? single : plural),
-		sprintf: (template, ...values) =>
-			template.replace(/%((\d+)\$)?[sd]/g, (match, _pos, index) => {
-				const valueIndex = index ? Number(index) - 1 : 0;
-				return String(values[valueIndex] ?? '');
-			}),
-	}),
-	{ virtual: true }
+jest.mock('@wordpress/i18n', () => ({
+	__: (text) => text,
+	_n: (single, plural, count) => (count === 1 ? single : plural),
+	sprintf: (template, ...values) =>
+		template.replace(/%((\d+)\$)?[sd]/g, (match, _pos, index) => {
+			const valueIndex = index ? Number(index) - 1 : 0;
+			return String(values[valueIndex] ?? '');
+		}),
+}));
+
+jest.mock('@wordpress/notices', () => ({
+	store: 'core/notices',
+}));
+
+jest.mock('@wordpress/data', () =>
+	require('./test-utils/wordpress-data-notices-mock').createWordpressDataNoticesMock()
 );
 
-jest.mock(
-	'@wordpress/notices',
-	() => ({
-		store: 'core/notices',
-	}),
-	{ virtual: true }
-);
+jest.mock('@wordpress/block-editor', () => {
+	const ReactLocal = require('react');
 
-jest.mock(
-	'@wordpress/data',
-	() =>
-		require('./test-utils/wordpress-data-notices-mock').createWordpressDataNoticesMock(),
-	{ virtual: true }
-);
+	return {
+		useBlockProps: () => ({
+			className: 'wp-block-bibliography-builder-bibliography',
+		}),
+		InspectorControls: ({ children }) =>
+			ReactLocal.createElement(ReactLocal.Fragment, null, children),
+		BlockControls: ({ children }) =>
+			ReactLocal.createElement(ReactLocal.Fragment, null, children),
+	};
+});
 
-jest.mock(
-	'@wordpress/block-editor',
-	() => {
-		const ReactLocal = require('react');
+jest.mock('@wordpress/components', () => {
+	const ReactLocal = require('react');
 
-		return {
-			useBlockProps: () => ({
-				className: 'wp-block-bibliography-builder-bibliography',
-			}),
-			InspectorControls: ({ children }) =>
-				ReactLocal.createElement(ReactLocal.Fragment, null, children),
-			BlockControls: ({ children }) =>
-				ReactLocal.createElement(ReactLocal.Fragment, null, children),
-		};
-	},
-	{ virtual: true }
-);
-
-jest.mock(
-	'@wordpress/components',
-	() => {
-		const ReactLocal = require('react');
-
-		return {
-			PanelBody: ({ title, children }) =>
+	return {
+		PanelBody: ({ title, children }) =>
+			ReactLocal.createElement(
+				'section',
+				null,
+				ReactLocal.createElement('h2', null, title),
+				children
+			),
+		SelectControl: ({ label, value, options, onChange, help }) =>
+			ReactLocal.createElement(
+				ReactLocal.Fragment,
+				null,
 				ReactLocal.createElement(
-					'section',
+					'label',
 					null,
-					ReactLocal.createElement('h2', null, title),
-					children
-				),
-			SelectControl: ({ label, value, options, onChange, help }) =>
-				ReactLocal.createElement(
-					ReactLocal.Fragment,
-					null,
+					label,
 					ReactLocal.createElement(
-						'label',
-						null,
-						label,
-						ReactLocal.createElement(
-							'select',
-							{
-								'aria-label': label,
-								value,
-								onChange: (event) =>
-									onChange?.(event.target.value),
-							},
-							options.map((option) =>
-								ReactLocal.createElement(
-									'option',
-									{
-										key: option.value,
-										value: option.value,
-									},
-									option.label
-								)
+						'select',
+						{
+							'aria-label': label,
+							value,
+							onChange: (event) => onChange?.(event.target.value),
+						},
+						options.map((option) =>
+							ReactLocal.createElement(
+								'option',
+								{
+									key: option.value,
+									value: option.value,
+								},
+								option.label
 							)
 						)
-					),
-					help ? ReactLocal.createElement('p', null, help) : null
+					)
 				),
-			Placeholder: ({
-				label,
-				instructions,
-				notices,
-				className,
+				help ? ReactLocal.createElement('p', null, help) : null
+			),
+		Placeholder: ({ label, instructions, notices, className, children }) =>
+			ReactLocal.createElement(
+				'section',
+				{ className },
+				label ? ReactLocal.createElement('h2', null, label) : null,
+				instructions
+					? ReactLocal.createElement('p', null, instructions)
+					: null,
+				notices || null,
+				children
+			),
+		Notice: ({ status = 'info', onRemove, children, className }) =>
+			ReactLocal.createElement(
+				'div',
+				{
+					role: 'status',
+					className: `${
+						className || ''
+					} components-notice is-${status}`.trim(),
+				},
 				children,
-			}) =>
-				ReactLocal.createElement(
-					'section',
-					{ className },
-					label ? ReactLocal.createElement('h2', null, label) : null,
-					instructions
-						? ReactLocal.createElement('p', null, instructions)
-						: null,
-					notices || null,
-					children
-				),
-			Notice: ({ status = 'info', onRemove, children, className }) =>
-				ReactLocal.createElement(
-					'div',
-					{
-						role: 'status',
-						className: `${
-							className || ''
-						} components-notice is-${status}`.trim(),
-					},
-					children,
-					onRemove
-						? ReactLocal.createElement(
-								'button',
-								{
-									type: 'button',
-									'aria-label': 'Dismiss',
-									onClick: onRemove,
-								},
-								'Dismiss'
-						  )
-						: null
-				),
-			Snackbar: ({ onRemove, children, className }) =>
-				ReactLocal.createElement(
-					'div',
-					{
-						role: 'status',
-						className: `${
-							className || ''
-						} components-snackbar`.trim(),
-					},
-					children,
-					onRemove
-						? ReactLocal.createElement(
-								'button',
-								{
-									type: 'button',
-									'aria-label': 'Dismiss',
-									onClick: onRemove,
-								},
-								'Dismiss'
-						  )
-						: null
-				),
-			BaseControl: ({ label, children }) =>
-				ReactLocal.createElement('label', null, label, children),
-			Button: ({ label, className, onClick, children, ...rest }) =>
-				ReactLocal.createElement(
-					'button',
-					{
-						type: 'button',
-						className,
-						'aria-label': label,
-						'aria-expanded': rest['aria-expanded'],
-						disabled: rest.disabled,
-						onClick,
-					},
-					children || 'icon'
-				),
-			TextControl: ({ label, value, disabled, onChange }) =>
-				ReactLocal.createElement('input', {
+				onRemove
+					? ReactLocal.createElement(
+							'button',
+							{
+								type: 'button',
+								'aria-label': 'Dismiss',
+								onClick: onRemove,
+							},
+							'Dismiss'
+					  )
+					: null
+			),
+		Snackbar: ({ onRemove, children, className }) =>
+			ReactLocal.createElement(
+				'div',
+				{
+					role: 'status',
+					className: `${className || ''} components-snackbar`.trim(),
+				},
+				children,
+				onRemove
+					? ReactLocal.createElement(
+							'button',
+							{
+								type: 'button',
+								'aria-label': 'Dismiss',
+								onClick: onRemove,
+							},
+							'Dismiss'
+					  )
+					: null
+			),
+		BaseControl: ({ label, children }) =>
+			ReactLocal.createElement('label', null, label, children),
+		Button: ({ label, className, onClick, children, ...rest }) =>
+			ReactLocal.createElement(
+				'button',
+				{
+					type: 'button',
+					className,
 					'aria-label': label,
-					value,
-					disabled,
-					readOnly: !onChange,
-					onChange: (event) => onChange?.(event.target.value),
-				}),
-			ToggleControl: ({ label, checked, onChange, help }) =>
+					'aria-expanded': rest['aria-expanded'],
+					disabled: rest.disabled,
+					onClick,
+				},
+				children || 'icon'
+			),
+		TextControl: ({ label, value, disabled, onChange }) =>
+			ReactLocal.createElement('input', {
+				'aria-label': label,
+				value,
+				disabled,
+				readOnly: !onChange,
+				onChange: (event) => onChange?.(event.target.value),
+			}),
+		ToggleControl: ({ label, checked, onChange, help }) =>
+			ReactLocal.createElement(
+				ReactLocal.Fragment,
+				null,
 				ReactLocal.createElement(
-					ReactLocal.Fragment,
+					'label',
 					null,
-					ReactLocal.createElement(
-						'label',
-						null,
-						ReactLocal.createElement('input', {
-							type: 'checkbox',
-							'aria-label': label,
-							checked,
-							onChange: (event) =>
-								onChange?.(event.target.checked),
-						}),
-						label
-					),
-					help ? ReactLocal.createElement('p', null, help) : null
-				),
-			ToolbarGroup: ({ children }) =>
-				ReactLocal.createElement('div', null, children),
-			ToolbarButton: ({ label, isPressed, onClick, icon }) =>
-				ReactLocal.createElement(
-					'button',
-					{
-						type: 'button',
+					ReactLocal.createElement('input', {
+						type: 'checkbox',
 						'aria-label': label,
-						'aria-pressed': isPressed ? 'true' : 'false',
-						onClick,
-					},
-					icon ? ReactLocal.createElement(icon) : label
+						checked,
+						onChange: (event) => onChange?.(event.target.checked),
+					}),
+					label
 				),
-		};
-	},
-	{ virtual: true }
-);
+				help ? ReactLocal.createElement('p', null, help) : null
+			),
+		ToolbarGroup: ({ children }) =>
+			ReactLocal.createElement('div', null, children),
+		ToolbarButton: ({ label, isPressed, onClick, icon }) =>
+			ReactLocal.createElement(
+				'button',
+				{
+					type: 'button',
+					'aria-label': label,
+					'aria-pressed': isPressed ? 'true' : 'false',
+					onClick,
+				},
+				icon ? ReactLocal.createElement(icon) : label
+			),
+	};
+});
 
-jest.mock(
-	'@wordpress/icons',
-	() => ({
-		chevronDown: 'chevron-down',
-		chevronUp: 'chevron-up',
-	}),
-	{ virtual: true }
-);
+jest.mock('@wordpress/icons', () => ({
+	chevronDown: 'chevron-down',
+	chevronUp: 'chevron-up',
+}));
 
 jest.mock('./lib/wp-icons', () => {
 	const ReactLocal = require('react');
@@ -261,25 +228,21 @@ jest.mock('./lib/wp-icons', () => {
 		CancelIcon: MockIcon,
 	};
 });
-jest.mock(
-	'@wordpress/element',
-	() => {
-		const ReactLocal = require('react');
-		const ReactDOMLocal = require('react-dom');
+jest.mock('@wordpress/element', () => {
+	const ReactLocal = require('react');
+	const ReactDOMLocal = require('react-dom');
 
-		return {
-			createElement: ReactLocal.createElement,
-			createPortal: ReactDOMLocal.createPortal,
-			Fragment: ReactLocal.Fragment,
-			useState: ReactLocal.useState,
-			useRef: ReactLocal.useRef,
-			useCallback: ReactLocal.useCallback,
-			useEffect: ReactLocal.useEffect,
-			useMemo: ReactLocal.useMemo,
-		};
-	},
-	{ virtual: true }
-);
+	return {
+		createElement: ReactLocal.createElement,
+		createPortal: ReactDOMLocal.createPortal,
+		Fragment: ReactLocal.Fragment,
+		useState: ReactLocal.useState,
+		useRef: ReactLocal.useRef,
+		useCallback: ReactLocal.useCallback,
+		useEffect: ReactLocal.useEffect,
+		useMemo: ReactLocal.useMemo,
+	};
+});
 
 jest.mock('./lib/parser', () => ({
 	parsePastedInput: jest.fn(),

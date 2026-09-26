@@ -4,32 +4,24 @@ import { computeExportStrings } from './compute-export-strings';
 import { findDuplicateCitation } from '../lib/deduplicate';
 import { validateManualEntry } from '../lib/manual-entry';
 
-jest.mock(
-	'@wordpress/element',
-	() => {
-		const React = require('react');
-		return {
-			useCallback: React.useCallback,
-			useMemo: React.useMemo,
-			useState: React.useState,
-		};
-	},
-	{ virtual: true }
-);
+jest.mock('@wordpress/element', () => {
+	const React = require('react');
+	return {
+		useCallback: React.useCallback,
+		useMemo: React.useMemo,
+		useState: React.useState,
+	};
+});
 
-jest.mock(
-	'@wordpress/i18n',
-	() => ({
-		__: (text) => text,
-		_n: (single, plural, count) => (count === 1 ? single : plural),
-		sprintf: (template, ...values) =>
-			template.replace(/%((\d+)\$)?[sd]/g, (match, _pos, index) => {
-				const valueIndex = index ? Number(index) - 1 : 0;
-				return String(values[valueIndex] ?? '');
-			}),
-	}),
-	{ virtual: true }
-);
+jest.mock('@wordpress/i18n', () => ({
+	__: (text) => text,
+	_n: (single, plural, count) => (count === 1 ? single : plural),
+	sprintf: (template, ...values) =>
+		template.replace(/%((\d+)\$)?[sd]/g, (match, _pos, index) => {
+			const valueIndex = index ? Number(index) - 1 : 0;
+			return String(values[valueIndex] ?? '');
+		}),
+}));
 
 jest.mock('../lib/deduplicate', () => ({
 	findDuplicateCitation: jest.fn(() => null),

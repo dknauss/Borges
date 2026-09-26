@@ -1,16 +1,12 @@
 import { act, renderHook } from '@testing-library/react';
 import { useCitationReorder } from './use-citation-reorder';
 
-jest.mock(
-	'@wordpress/element',
-	() => {
-		const React = require('react');
-		return {
-			useCallback: React.useCallback,
-		};
-	},
-	{ virtual: true }
-);
+jest.mock('@wordpress/element', () => {
+	const React = require('react');
+	return {
+		useCallback: React.useCallback,
+	};
+});
 
 function makeCitation(id, family, year) {
 	return {
