@@ -11,6 +11,11 @@ MULTISITE="${WP_BIBLIO_MULTISITE:-0}"
 HTTP_PORT="${WP_BIBLIO_HTTP_PORT:-8899}"
 DB_PORT="${WP_BIBLIO_DB_PORT:-33069}"
 SITE_URL="http://127.0.0.1:${HTTP_PORT}"
+# REST requests use index.php?rest_route=, the form WordPress itself builds
+# for plain permalinks. A bare /?rest_route= only works for GET, HEAD, and
+# POST on nginx: its index module hands the directory request to index.php
+# for those methods alone, so PATCH, PUT, and DELETE get nginx's own 405.
+REST_URL="${SITE_URL}/index.php?rest_route="
 WORKDIR="${RUNTIME_ROOT}/${SERVER}-php${PHP_VERSION}-wp${WP_VERSION}-${DB_ENGINE}$([ "$MULTISITE" = "1" ] && printf '%s' '-multisite' || true)"
 SITE_DIR="${WORKDIR}/site"
 COMPOSE_FILE="${WORKDIR}/docker-compose.yml"
@@ -195,11 +200,11 @@ wait_for_http() {
 # 404s with rest_no_route. Poll the REST index instead of racing it.
 wait_for_plugin_routes() {
 	attempt=0
-	until curl -fsS "$SITE_URL/?rest_route=/" 2>/dev/null | grep -q 'bibliography\\*/v1'; do
+	until curl -fsS "${REST_URL}/" 2>/dev/null | grep -q 'bibliography\\*/v1'; do
 		attempt=$((attempt + 1))
 		if [ "$attempt" -gt 30 ]; then
 			echo "Timed out waiting for bibliography/v1 routes at $SITE_URL" >&2
-			curl -sS "$SITE_URL/?rest_route=/" | head -c 2000 >&2 || true
+			curl -sS "${REST_URL}/" | head -c 2000 >&2 || true
 			echo >&2
 			exit 1
 		fi
@@ -334,9 +339,9 @@ printf '%s\n' "$POST_ID" > "$ARTIFACT_DIR/post-id.txt"
 wait_for_plugin_routes
 
 capture_http frontend "$SITE_URL/?p=$POST_ID"
-capture_http rest-collection "$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies"
-capture_http rest-text "$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies/0&format=text"
-capture_http rest-csl-json "$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies/0&format=csl-json"
+capture_http rest-collection "${REST_URL}/bibliography/v1/posts/$POST_ID/bibliographies"
+capture_http rest-text "${REST_URL}/bibliography/v1/posts/$POST_ID/bibliographies/0&format=text"
+capture_http rest-csl-json "${REST_URL}/bibliography/v1/posts/$POST_ID/bibliographies/0&format=csl-json"
 
 grep -q 'bibliography-builder-entry-text' "$ARTIFACT_RESPONSE_DIR/frontend.body"
 grep -q '"entryCount":1' "$ARTIFACT_RESPONSE_DIR/rest-collection.body"
@@ -378,21 +383,21 @@ fi
 # until opcache revalidates it (see wait_for_plugin_routes). Until then the
 # password is ignored and write requests arrive logged out, so wait for it.
 attempt=0
-until [ "$(curl -sS -o /dev/null -w '%{http_code}' -u "admin:$APP_PASSWORD" "$SITE_URL/?rest_route=/wp/v2/users/me")" = "200" ]; do
+until [ "$(curl -sS -o /dev/null -w '%{http_code}' -u "admin:$APP_PASSWORD" "${REST_URL}/wp/v2/users/me")" = "200" ]; do
 	attempt=$((attempt + 1))
 	if [ "$attempt" -gt 30 ]; then
 		echo "Application password never authenticated at $SITE_URL" >&2
-		curl -sS -u "admin:$APP_PASSWORD" "$SITE_URL/?rest_route=/wp/v2/users/me" | head -c 2000 >&2 || true
+		curl -sS -u "admin:$APP_PASSWORD" "${REST_URL}/wp/v2/users/me" | head -c 2000 >&2 || true
 		echo >&2
 		exit 1
 	fi
 	sleep 1
 done
 
-CITATIONS_URL="$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies/0/citations"
+CITATIONS_URL="${REST_URL}/bibliography/v1/posts/$POST_ID/bibliographies/0/citations"
 NEW_ITEM='{"items":[{"type":"article-journal","title":"Beta Findings","author":[{"family":"Beta","given":"Bea"}],"container-title":"Journal of Smoke Tests","volume":"3","issue":"1","page":"10-20","issued":{"date-parts":[[2021]]}}]}'
 
-rest_call write-read GET "$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies" 200
+rest_call write-read GET "${REST_URL}/bibliography/v1/posts/$POST_ID/bibliographies" 200
 rest_call write-dry-run POST "$CITATIONS_URL" 200 "$NEW_ITEM"
 grep -q '"dryRun":true' "$ARTIFACT_RESPONSE_DIR/write-dry-run.body"
 ETAG=$(header_etag write-dry-run)
@@ -406,7 +411,7 @@ rest_call write-commit POST "$CITATIONS_URL&dry_run=false" 200 "$NEW_ITEM" "$ETA
 grep -q '"dryRun":false' "$ARTIFACT_RESPONSE_DIR/write-commit.body"
 [ "$(header_etag write-commit)" != "$ETAG" ]
 
-capture_http write-text "$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies/0&format=text"
+capture_http write-text "${REST_URL}/bibliography/v1/posts/$POST_ID/bibliographies/0&format=text"
 grep -q 'Beta, Bea' "$ARTIFACT_RESPONSE_DIR/write-text.body"
 grep -q 'Journal of Smoke Tests 3, no. 1 (2021): 10–20' "$ARTIFACT_RESPONSE_DIR/write-text.body"
 capture_http write-frontend "$SITE_URL/?p=$POST_ID"
@@ -414,7 +419,7 @@ grep -q 'Beta Findings' "$ARTIFACT_RESPONSE_DIR/write-frontend.body"
 
 # Block settings and reformatting (Tier 3). The settings PATCH shares its path
 # with the public GET route, so this also proves the method falls through to it.
-BIBLIOGRAPHY_URL="$SITE_URL/?rest_route=/bibliography/v1/posts/$POST_ID/bibliographies/0"
+BIBLIOGRAPHY_URL="${REST_URL}/bibliography/v1/posts/$POST_ID/bibliographies/0"
 rest_call write-settings PATCH "$BIBLIOGRAPHY_URL&dry_run=false" 200 '{"headingText":"Smoke Sources","outputCoins":true}' "$(header_etag write-commit)"
 grep -q '"headingText":"Smoke Sources"' "$ARTIFACT_RESPONSE_DIR/write-settings.body"
 rest_call write-reformat POST "$BIBLIOGRAPHY_URL/reformat&dry_run=false" 200 '{"style":"apa-7"}' "$(header_etag write-settings)"
