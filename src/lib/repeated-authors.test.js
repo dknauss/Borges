@@ -5,10 +5,12 @@ import {
 } from './repeated-authors';
 
 function entry(id, author, text, extra = {}) {
-	return { id, csl: { type: 'book', author }, text, ...extra };
+	return { id, csl: { type: 'book', author }, formattedText: text, ...extra };
 }
 
-const displayText = (citation) => citation.text;
+// The block's getDisplayText(): manual text, else formatted text, else title.
+const displayText = (citation) =>
+	citation.displayOverride || citation.formattedText || citation.csl.title;
 const prefixes = (citations, style = 'mla-9') =>
 	getRepeatedAuthorPrefixes(citations, style, displayText);
 
@@ -121,16 +123,44 @@ describe('getRepeatedAuthorPrefixes', () => {
 
 	it('never mistakes a title for the names', () => {
 		const lee = [{ family: 'Lee', given: 'Kim' }];
+		// Unformatted: the display text falls back to the title alone.
+		const titleOnly = (id, title) => ({
+			id,
+			csl: { type: 'article-journal', author: lee, title },
+			formattedText: '',
+		});
 
-		// The formatter fell back to titles alone, and the titles name the author.
 		expect(
 			prefixes([
 				entry('a', lee, '“About Lee, Kim. Part One.”'),
 				entry('b', lee, '“About Lee, Kim. Part Two.”'),
 				entry('c', lee, 'About Lee, Kim. Part Three.'),
 				entry('d', lee, 'About Lee, Kim. Part Four.'),
+				// Titles that start with the exact names.
+				titleOnly('e', 'Lee, Kim. Part Five'),
+				titleOnly('f', 'Lee, Kim. Part Six'),
+				// A formatted entry after a title-only one, and the reverse.
+				entry('g', lee, 'Lee, Kim. Part Seven.'),
+				titleOnly('h', 'Lee, Kim. Part Eight'),
 			])
-		).toEqual([null, null, null, null]);
+		).toEqual([null, null, null, null, null, null, null, null]);
+	});
+
+	it('tells apart two people with the same name by ORCID', () => {
+		const first = [
+			{ family: 'Lee', given: 'Kim', ORCID: '0000-0001-0000-0001' },
+		];
+		const second = [
+			{ family: 'Lee', given: 'Kim', ORCID: '0000-0002-0000-0002' },
+		];
+
+		expect(
+			prefixes([
+				entry('a', first, 'Lee, Kim. One.'),
+				entry('b', second, 'Lee, Kim. Two.'),
+				entry('c', second, 'Lee, Kim. Three.'),
+			])
+		).toEqual([null, null, 'Lee, Kim']);
 	});
 
 	it('writes a second author with a literal name as it is', () => {

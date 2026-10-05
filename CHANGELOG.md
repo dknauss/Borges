@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   Every current edition writes a repeated author out in full, as Borges already does: Chicago 18 dropped the 3-em dash, and ABNT dropped the underscore line in 2018. `docs/csl-styles.md` lists each style's edition. Already-saved bibliographies keep their text until an entry is added or edited, or the style is changed.
 
+- The formatter cache key now includes a hash of the bundled style's contents, so text cached from an older style edition is never served after an upgrade.
+
 - The runtime matrix's nginx cells pass again. The smoke test sent the write routes' `PATCH`, `PUT`, and `DELETE` requests to `/?rest_route=…`, which nginx answers with its own `405` for those methods, so the request never reached WordPress. It now uses `/index.php?rest_route=…`, the form WordPress itself builds for plain permalinks. Sites were not affected. Pull requests now also run an nginx cell, so a server-specific failure shows up before merge.
 
 ## [1.7.0] - 2026-09-26

@@ -1159,6 +1159,94 @@
 						"formattedText": "van Gogh, Vincent. Sketches. New Directions, 1991."
 					},
 					{
+						"id": "f1",
+						"csl": {
+							"id": "f1",
+							"type": "article-journal",
+							"title": "Lee, Kim. Part One",
+							"author": [
+								{
+									"family": "Lee",
+									"given": "Kim"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2018
+									]
+								]
+							}
+						}
+					},
+					{
+						"id": "f2",
+						"csl": {
+							"id": "f2",
+							"type": "article-journal",
+							"title": "Lee, Kim. Part Two",
+							"author": [
+								{
+									"family": "Lee",
+									"given": "Kim"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2019
+									]
+								]
+							}
+						}
+					},
+					{
+						"id": "o1",
+						"csl": {
+							"id": "o1",
+							"type": "book",
+							"title": "Tides",
+							"author": [
+								{
+									"family": "Ng",
+									"given": "Ada",
+									"ORCID": "0000-0001-0000-0001"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2020
+									]
+								]
+							}
+						},
+						"formattedText": "Ng, Ada. Tides. 2020."
+					},
+					{
+						"id": "o2",
+						"csl": {
+							"id": "o2",
+							"type": "book",
+							"title": "Currents",
+							"author": [
+								{
+									"family": "Ng",
+									"given": "Ada",
+									"ORCID": "0000-0002-0000-0002"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2021
+									]
+								]
+							}
+						},
+						"formattedText": "Ng, Ada. Currents. 2021."
+					},
+					{
 						"id": "t1",
 						"csl": {
 							"id": "t1",

@@ -983,7 +983,7 @@ function bibliography_builder_save_author_key( $citation ) {
 		return null;
 	}
 
-	$keys  = array( 'family', 'given', 'literal', 'suffix', 'dropping-particle', 'non-dropping-particle' );
+	$keys  = array( 'family', 'given', 'literal', 'suffix', 'dropping-particle', 'non-dropping-particle', 'ORCID' );
 	$names = array();
 
 	foreach ( $authors as $name ) {
@@ -1115,6 +1115,17 @@ function bibliography_builder_save_author_prefix( $authors ) {
 }
 
 /**
+ * Whether a citation field holds a JS-truthy value.
+ *
+ * @param array  $citation Citation record.
+ * @param string $field    Field name.
+ * @return bool
+ */
+function bibliography_builder_save_has_text( $citation, $field ) {
+	return isset( $citation[ $field ] ) && bibliography_builder_js_truthy( $citation[ $field ] );
+}
+
+/**
  * `getRepeatedAuthorPrefixes()`: for each citation in display order, the
  * author names MLA 9 replaces with three hyphens, or null.
  *
@@ -1135,12 +1146,22 @@ function bibliography_builder_save_repeated_author_prefixes( $citations, $style_
 
 		$citation = is_array( $citation ) ? $citation : array();
 
-		if ( isset( $citation['displayOverride'] ) && bibliography_builder_js_truthy( $citation['displayOverride'] ) ) {
+		$previous = is_array( $citations[ $index - 1 ] ) ? $citations[ $index - 1 ] : array();
+
+		// Only formatted entries: without formattedText the display text is a
+		// title-only fallback, which can start with the very names it names.
+		if (
+			bibliography_builder_save_has_text( $citation, 'displayOverride' )
+			|| ! bibliography_builder_save_has_text( $citation, 'formattedText' )
+			|| ! (
+				bibliography_builder_save_has_text( $previous, 'displayOverride' )
+				|| bibliography_builder_save_has_text( $previous, 'formattedText' )
+			)
+		) {
 			continue;
 		}
 
-		$previous = is_array( $citations[ $index - 1 ] ) ? $citations[ $index - 1 ] : array();
-		$key      = bibliography_builder_save_author_key( $citation );
+		$key = bibliography_builder_save_author_key( $citation );
 
 		if ( null === $key || bibliography_builder_save_author_key( $previous ) !== $key ) {
 			continue;

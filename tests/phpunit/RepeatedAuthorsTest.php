@@ -97,6 +97,50 @@ final class RepeatedAuthorsTest extends TestCase {
 		);
 	}
 
+	public function test_title_only_fallbacks_and_orcids_keep_full_names() {
+		$lee        = array(
+			array(
+				'family' => 'Lee',
+				'given'  => 'Kim',
+			),
+		);
+		$title_only = static function ( $id, $title ) use ( $lee ) {
+			return array(
+				'id'            => $id,
+				'csl'           => array(
+					'type'   => 'article-journal',
+					'title'  => $title,
+					'author' => $lee,
+				),
+				'formattedText' => '',
+			);
+		};
+		$orcid      = static function ( $id ) {
+			return array(
+				array(
+					'family' => 'Lee',
+					'given'  => 'Kim',
+					'ORCID'  => $id,
+				),
+			);
+		};
+
+		$this->assertSame(
+			array( null, null, null, null, null, null, 'Lee, Kim' ),
+			self::prefixes(
+				array(
+					$title_only( 'a', 'Lee, Kim. Part One' ),
+					$title_only( 'b', 'Lee, Kim. Part Two' ),
+					self::entry( 'c', $lee, 'Lee, Kim. Part Three.' ),
+					$title_only( 'd', 'Lee, Kim. Part Four' ),
+					self::entry( 'e', $orcid( '0000-0001-0000-0001' ), 'Lee, Kim. Five.' ),
+					self::entry( 'f', $orcid( '0000-0002-0000-0002' ), 'Lee, Kim. Six.' ),
+					self::entry( 'g', $orcid( '0000-0002-0000-0002' ), 'Lee, Kim. Seven.' ),
+				)
+			)
+		);
+	}
+
 	public function test_keeps_full_names_whenever_in_doubt() {
 		$lee        = array(
 			array(

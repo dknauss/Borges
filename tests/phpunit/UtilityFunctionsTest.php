@@ -387,6 +387,16 @@ final class UtilityFunctionsTest extends TestCase {
 		);
 	}
 
+	public function test_formatter_cache_key_tracks_the_bundled_style_contents() {
+		$path = BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'vendor/citation-style-language/styles/harvard1.csl';
+
+		// A style edit (a new manual edition) changes the hash, so entries
+		// cached from the older style are never served after an upgrade.
+		$this->assertSame( md5_file( $path ), bibliography_builder_get_formatter_style_hash( 'harvard1' ) );
+		$this->assertSame( '', bibliography_builder_get_formatter_style_hash( 'no-such-style' ) );
+		$this->assertSame( '', bibliography_builder_get_formatter_style_hash( '' ) );
+	}
+
 	public function test_format_csl_items_returns_warm_cache_without_formatter_bootstrap() {
 		$style_key = 'apa-7';
 		$style     = bibliography_builder_get_formatter_style_definition( $style_key );

@@ -34,6 +34,8 @@ const NAME_KEYS = [
 	'suffix',
 	'dropping-particle',
 	'non-dropping-particle',
+	// Two people can share a name; a differing ORCID tells them apart.
+	'ORCID',
 ];
 
 function namePart(name, key) {
@@ -168,11 +170,19 @@ export function getRepeatedAuthorPrefixes(citations, styleKey, displayText) {
 	}
 
 	return citations.map((citation, index) => {
-		if (index === 0 || citation.displayOverride) {
+		const previous = citations[index - 1];
+
+		// Only formatted entries: without formattedText the display text is a
+		// title-only fallback, which can start with the very names it names.
+		if (
+			index === 0 ||
+			citation.displayOverride ||
+			!citation.formattedText ||
+			!(previous?.displayOverride || previous?.formattedText)
+		) {
 			return null;
 		}
 
-		const previous = citations[index - 1];
 		const key = getAuthorKey(citation);
 
 		if (key === null || key !== getAuthorKey(previous)) {

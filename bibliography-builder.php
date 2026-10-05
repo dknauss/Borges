@@ -1054,6 +1054,26 @@ function bibliography_builder_sort_for_cache_key( $value ) {
 }
 
 /**
+ * MD5 of a bundled CSL style file's contents, or '' when it cannot be read.
+ * Memoized per request.
+ *
+ * @param string $template Style template name (file name without .csl).
+ * @return string
+ */
+function bibliography_builder_get_formatter_style_hash( $template ) {
+	static $hashes = array();
+
+	if ( ! isset( $hashes[ $template ] ) ) {
+		$dir                 = BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'vendor/citation-style-language/styles/';
+		$path                = $dir . $template . '.csl';
+		$hash                = '' !== $template && is_readable( $path ) ? md5_file( $path ) : false;
+		$hashes[ $template ] = is_string( $hash ) ? $hash : '';
+	}
+
+	return $hashes[ $template ];
+}
+
+/**
  * Build a stable cache key for a full bibliography formatting request.
  *
  * @param array  $csl_items CSL-JSON items.
@@ -1062,14 +1082,19 @@ function bibliography_builder_sort_for_cache_key( $value ) {
  * @return string
  */
 function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style ) {
-	$payload = array(
-		'version'   => 1,
-		'style'     => sanitize_key( $style_key ),
-		'template'  => isset( $style['template'] ) ? (string) $style['template'] : '',
-		'locale'    => isset( $style['locale'] ) ? (string) $style['locale'] : '',
-		'csl_items' => bibliography_builder_sort_for_cache_key( array_values( $csl_items ) ),
+	$template = isset( $style['template'] ) ? (string) $style['template'] : '';
+	$payload  = array(
+		'version'    => 2,
+		'style'      => sanitize_key( $style_key ),
+		'template'   => $template,
+		// The bundled styles change between releases (new manual editions), so
+		// key on their contents: a cached entry from an older style is never
+		// served after an upgrade.
+		'style_hash' => bibliography_builder_get_formatter_style_hash( $template ),
+		'locale'     => isset( $style['locale'] ) ? (string) $style['locale'] : '',
+		'csl_items'  => bibliography_builder_sort_for_cache_key( array_values( $csl_items ) ),
 	);
-	$encoded = bibliography_builder_json_encode( $payload );
+	$encoded  = bibliography_builder_json_encode( $payload );
 
 	if ( ! is_string( $encoded ) ) {
 		$encoded = bibliography_builder_json_encode(
