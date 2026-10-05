@@ -144,8 +144,20 @@ export function renderBibliographySave(
 							<EntryTag className="bibliography-builder-entry-text">
 								{replacesAuthors ? (
 									<span className="bibliography-builder-repeated-author">
-										<span aria-hidden="true">
-											{REPEATED_AUTHOR_MARK}
+										<span
+											className="bibliography-builder-repeated-author-mark"
+											aria-hidden="true"
+										>
+											{/* One span per hyphen: wptexturize
+											turns "---" in a text run into an em
+											dash on the front end. */}
+											{[...REPEATED_AUTHOR_MARK].map(
+												(hyphen, hyphenIndex) => (
+													<span key={hyphenIndex}>
+														{hyphen}
+													</span>
+												)
+											)}
 										</span>
 										<span className="bibliography-builder-visually-hidden">
 											{repeatedPrefix}

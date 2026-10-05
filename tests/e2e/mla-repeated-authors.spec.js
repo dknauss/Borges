@@ -175,7 +175,14 @@ async function expectHyphensOnFrontend(page, link) {
 	await expect(entries.nth(0).locator(REPEATED)).toHaveCount(0);
 
 	const repeated = entries.nth(1).locator(REPEATED);
-	await expect(repeated.locator('[aria-hidden="true"]')).toHaveText('---');
+	// Three hyphens, not the em dash wptexturize makes of "---" in one run.
+	await expect(
+		repeated.locator('.bibliography-builder-repeated-author-mark')
+	).toHaveText('---');
+	await expect(
+		repeated.locator('.bibliography-builder-repeated-author-mark')
+	).toHaveAttribute('aria-hidden', 'true');
+	await expect(entries.nth(1)).not.toContainText('\u2014');
 	await expect(
 		repeated.locator('.bibliography-builder-visually-hidden')
 	).toHaveText('Borges, Jorge Luis');
