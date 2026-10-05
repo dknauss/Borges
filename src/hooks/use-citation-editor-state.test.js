@@ -579,6 +579,16 @@ describe('handleStructuredEditSave guard branches', () => {
 		expect((await save(journal, '')).csl).not.toHaveProperty('number');
 		expect((await save(journal)).csl.number).toBe('108125');
 
+		// Editing or clearing the number drops CrossRef's stale copy too.
+		const imported = { ...journal, 'article-number': '108125' };
+		const corrected = await save(imported, '108126');
+		expect(corrected.csl).toMatchObject({ number: '108126' });
+		expect(corrected.csl).not.toHaveProperty('article-number');
+		expect((await save(imported, '')).csl).not.toHaveProperty(
+			'article-number'
+		);
+		expect((await save(imported)).csl['article-number']).toBe('108125');
+
 		// A numeric CSL number loads as text and survives an unchanged save.
 		const numeric = await save({ ...journal, number: 108125 });
 		expect(numeric.loaded).toBe('108125');

@@ -339,10 +339,15 @@ export function useCitationEditorState({
 			).trim();
 			const original = citation.csl.number;
 
-			if (!articleNumber) {
-				delete updatedCsl.number;
-			} else if (String(original ?? '').trim() !== articleNumber) {
-				updatedCsl.number = articleNumber;
+			if (String(original ?? '').trim() !== articleNumber) {
+				if (articleNumber) {
+					updatedCsl.number = articleNumber;
+				} else {
+					delete updatedCsl.number;
+				}
+				// CrossRef's own copy, kept from a DOI import, would now
+				// contradict `number` in the CSL-JSON output.
+				delete updatedCsl['article-number'];
 			}
 			// Otherwise unchanged: the original value, numeric or not, stays.
 		}
