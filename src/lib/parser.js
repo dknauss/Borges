@@ -311,7 +311,7 @@ export function normalizeCrossRefCsl(csl) {
 		// CrossRef sends a journal's article number as `article-number`, which
 		// CSL processors do not read; CSL's own variable for it is `number`.
 		...(mappedType === 'article-journal' && !csl.number && articleNumber
-			? { number: articleNumber }
+			? { number: articleNumber, 'article-number': articleNumber }
 			: {}),
 		// CrossRef emits types that aren't valid CSL types (e.g. "monograph"
 		// for books). validateAndSanitizeCsl rejects unknown types and aborts

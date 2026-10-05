@@ -181,6 +181,8 @@ describe('normalizeCrossRefCsl (CrossRef type mapping)', () => {
 		).toMatchObject({
 			type: 'article-journal',
 			number: '108125',
+			// Trimmed too, so the editor can match the copy against it.
+			'article-number': '108125',
 			page: '108125',
 		});
 		// An existing number wins, and other types are left alone.

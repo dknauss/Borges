@@ -570,6 +570,11 @@ describe('handleStructuredEditSave guard branches', () => {
 		expect(edited.page).toBe('108126');
 		expect(edited).not.toHaveProperty('number');
 
+		// Saved before article-number was trimmed on import.
+		expect(
+			await save({ ...imported, 'article-number': ' 108125 ' }, '108126')
+		).not.toHaveProperty('number');
+
 		// Untouched Pages, or a number that is not the imported copy, stays.
 		expect((await save(imported)).number).toBe('108125');
 		expect(
