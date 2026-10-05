@@ -129,6 +129,11 @@ describe('getRepeatedAuthorPrefixes', () => {
 			csl: { type: 'article-journal', author: lee, title },
 			formattedText: '',
 		});
+		const failed = (id, text, field) => ({
+			id,
+			csl: { type: 'article-journal', author: lee, [field]: text },
+			formattedText: text,
+		});
 
 		expect(
 			prefixes([
@@ -142,8 +147,14 @@ describe('getRepeatedAuthorPrefixes', () => {
 				// A formatted entry after a title-only one, and the reverse.
 				entry('g', lee, 'Lee, Kim. Part Seven.'),
 				titleOnly('h', 'Lee, Kim. Part Eight'),
+				// Formatting failed: formattedText holds the title itself.
+				failed('i', 'Lee, Kim. Part Nine', 'title'),
+				failed('j', 'Lee, Kim. Part Ten', 'title'),
+				// ...or the container title when there is no title.
+				failed('k', 'Lee, Kim. Collected', 'container-title'),
+				failed('l', 'Lee, Kim. Collected', 'container-title'),
 			])
-		).toEqual([null, null, null, null, null, null, null, null]);
+		).toEqual(Array(12).fill(null));
 	});
 
 	it('tells apart two people with the same name by ORCID', () => {

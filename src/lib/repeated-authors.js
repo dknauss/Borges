@@ -156,6 +156,24 @@ function getAuthorPrefix(authors) {
 }
 
 /**
+ * Whether a citation's formattedText is missing or only the fallback the
+ * editor stores when formatting fails: its title, else its container title
+ * (getFallbackText() in src/lib/formatting/csl.js).
+ *
+ * @param {Object} citation Citation record.
+ * @return {boolean} Whether it is unformatted.
+ */
+function isUnformatted(citation) {
+	const text = citation?.formattedText;
+
+	return (
+		!text ||
+		text === citation.csl?.title ||
+		text === citation.csl?.['container-title']
+	);
+}
+
+/**
  * For each citation in display order, the author names to replace with
  * three hyphens, or null.
  *
@@ -172,13 +190,13 @@ export function getRepeatedAuthorPrefixes(citations, styleKey, displayText) {
 	return citations.map((citation, index) => {
 		const previous = citations[index - 1];
 
-		// Only formatted entries: without formattedText the display text is a
-		// title-only fallback, which can start with the very names it names.
+		// Only formatted entries: a title-only fallback can start with the very
+		// names it names.
 		if (
 			index === 0 ||
 			citation.displayOverride ||
-			!citation.formattedText ||
-			!(previous?.displayOverride || previous?.formattedText)
+			isUnformatted(citation) ||
+			(!previous?.displayOverride && isUnformatted(previous))
 		) {
 			return null;
 		}

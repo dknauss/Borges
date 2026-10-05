@@ -1247,6 +1247,50 @@
 						"formattedText": "Ng, Ada. Currents. 2021."
 					},
 					{
+						"id": "g1",
+						"csl": {
+							"id": "g1",
+							"type": "article-journal",
+							"title": "Lee, Kim. Part Three",
+							"author": [
+								{
+									"family": "Lee",
+									"given": "Kim"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2020
+									]
+								]
+							}
+						},
+						"formattedText": "Lee, Kim. Part Three"
+					},
+					{
+						"id": "g2",
+						"csl": {
+							"id": "g2",
+							"type": "article-journal",
+							"title": "Lee, Kim. Part Four",
+							"author": [
+								{
+									"family": "Lee",
+									"given": "Kim"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2021
+									]
+								]
+							}
+						},
+						"formattedText": "Lee, Kim. Part Four"
+					},
+					{
 						"id": "t1",
 						"csl": {
 							"id": "t1",

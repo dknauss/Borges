@@ -1126,6 +1126,32 @@ function bibliography_builder_save_has_text( $citation, $field ) {
 }
 
 /**
+ * `isUnformatted()`: whether formattedText is missing or only the editor's
+ * formatting-failure fallback, the title or else the container title.
+ *
+ * @param array $citation Citation record.
+ * @return bool
+ */
+function bibliography_builder_save_is_unformatted( $citation ) {
+	if ( ! bibliography_builder_save_has_text( $citation, 'formattedText' ) ) {
+		return true;
+	}
+
+	$text = bibliography_builder_js_string( $citation['formattedText'] );
+	$csl  = bibliography_builder_citation_csl( $citation );
+
+	foreach ( array( 'title', 'container-title' ) as $field ) {
+		$value = bibliography_builder_csl_field( $csl, $field );
+
+		if ( is_string( $value ) && $value === $text ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
  * `getRepeatedAuthorPrefixes()`: for each citation in display order, the
  * author names MLA 9 replaces with three hyphens, or null.
  *
@@ -1148,14 +1174,14 @@ function bibliography_builder_save_repeated_author_prefixes( $citations, $style_
 
 		$previous = is_array( $citations[ $index - 1 ] ) ? $citations[ $index - 1 ] : array();
 
-		// Only formatted entries: without formattedText the display text is a
-		// title-only fallback, which can start with the very names it names.
+		// Only formatted entries: a title-only fallback can start with the very
+		// names it names.
 		if (
 			bibliography_builder_save_has_text( $citation, 'displayOverride' )
-			|| ! bibliography_builder_save_has_text( $citation, 'formattedText' )
-			|| ! (
-				bibliography_builder_save_has_text( $previous, 'displayOverride' )
-				|| bibliography_builder_save_has_text( $previous, 'formattedText' )
+			|| bibliography_builder_save_is_unformatted( $citation )
+			|| (
+				! bibliography_builder_save_has_text( $previous, 'displayOverride' )
+				&& bibliography_builder_save_is_unformatted( $previous )
 			)
 		) {
 			continue;

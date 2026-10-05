@@ -125,6 +125,24 @@ final class RepeatedAuthorsTest extends TestCase {
 			);
 		};
 
+		$failed = static function ( $id, $text ) use ( $lee ) {
+			return array(
+				'id'            => $id,
+				'csl'           => array(
+					'type'   => 'article-journal',
+					'title'  => $text,
+					'author' => $lee,
+				),
+				'formattedText' => $text,
+			);
+		};
+
+		// Formatting failed: formattedText holds the title itself.
+		$this->assertSame(
+			array( null, null ),
+			self::prefixes( array( $failed( 'x', 'Lee, Kim. Part One' ), $failed( 'y', 'Lee, Kim. Part Two' ) ) )
+		);
+
 		$this->assertSame(
 			array( null, null, null, null, null, null, 'Lee, Kim' ),
 			self::prefixes(
