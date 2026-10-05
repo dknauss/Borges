@@ -81,6 +81,78 @@ describe('getRepeatedAuthorPrefixes', () => {
 		).toEqual([null, names]);
 	});
 
+	it('writes particles and suffixes the way the MLA style does', () => {
+		const gogh = [
+			{
+				family: 'Gogh',
+				given: 'Vincent',
+				'non-dropping-particle': 'van',
+			},
+		];
+		const beauvoir = [
+			{ family: 'Beauvoir', given: 'Simone', 'dropping-particle': 'de' },
+		];
+		const juniors = [
+			{ family: 'Smith', given: 'John', suffix: 'Jr.' },
+			{ family: 'Doe', given: 'James', suffix: 'Jr.' },
+		];
+		const pair = 'Smith, John, Jr., and James Doe Jr';
+
+		expect(
+			prefixes([
+				entry('a', gogh, 'van Gogh, Vincent. One.'),
+				entry('b', gogh, 'van Gogh, Vincent. Two.'),
+				entry('c', beauvoir, 'Beauvoir, Simone de. Three.'),
+				entry('d', beauvoir, 'Beauvoir, Simone de. Four.'),
+				entry('e', juniors, `${pair}. Five.`),
+				entry('f', juniors, `${pair}. Six.`),
+			])
+		).toEqual([
+			null,
+			'van Gogh, Vincent',
+			null,
+			'Beauvoir, Simone de',
+			null,
+			pair,
+		]);
+	});
+
+	it('never mistakes a title for the names', () => {
+		const lee = [{ family: 'Lee', given: 'Kim' }];
+
+		// The formatter fell back to titles alone, and the titles name the author.
+		expect(
+			prefixes([
+				entry('a', lee, '“About Lee, Kim. Part One.”'),
+				entry('b', lee, '“About Lee, Kim. Part Two.”'),
+				entry('c', lee, 'About Lee, Kim. Part Three.'),
+				entry('d', lee, 'About Lee, Kim. Part Four.'),
+			])
+		).toEqual([null, null, null, null]);
+	});
+
+	it('writes a second author with a literal name as it is', () => {
+		const pair = [{ family: 'Becker', given: 'T.' }, { literal: 'NASA' }];
+
+		expect(
+			prefixes([
+				entry('a', pair, 'Becker, T., and NASA. One.'),
+				entry('b', pair, 'Becker, T., and NASA. Two.'),
+			])
+		).toEqual([null, 'Becker, T., and NASA']);
+	});
+
+	it('keeps full names when a second author has no name to write', () => {
+		const pair = [{ family: 'Lee', given: 'Kim' }, { given: 'Ann' }];
+
+		expect(
+			prefixes([
+				entry('a', pair, 'Lee, Kim, and Ann. One.'),
+				entry('b', pair, 'Lee, Kim, and Ann. Two.'),
+			])
+		).toEqual([null, null]);
+	});
+
 	it('keeps full names whenever the match is not exact', () => {
 		const norah = [{ family: 'Borges', given: 'Norah' }];
 
@@ -108,13 +180,13 @@ describe('getRepeatedAuthorPrefixes', () => {
 		expect(
 			prefixes([
 				entry('a', lee, 'Lee, Kim. One.'),
-				// The given name never appears.
+				// The names are abbreviated.
 				entry('b', lee, 'Lee, K. Two.'),
 				entry('c', lee, 'Lee, Kim. Three.'),
-				// The given name is not followed by a period.
+				// The names are not followed by a period.
 				entry('d', lee, 'Lee, Kim, ed. Four.'),
 				entry('e', lee, 'Lee, Kim. Five.'),
-				// The names found do not include the first author's.
+				// Someone else's names.
 				entry('f', lee, 'Park, Kim. Six.'),
 				entry('g', lee, 'Lee, Kim. Seven.'),
 				// The previous entry starts differently.

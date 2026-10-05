@@ -1000,62 +1000,118 @@ function bibliography_builder_save_author_key( $citation ) {
 }
 
 /**
- * `getAuthorEnd()`.
+ * `joinParts()`: the non-empty parts, joined with spaces.
  *
- * @param array $authors CSL names.
+ * @param array $parts Strings.
  * @return string
  */
-function bibliography_builder_save_author_end( $authors ) {
-	if ( count( $authors ) >= 3 ) {
-		return 'et al.';
-	}
-
-	$name       = $authors[ count( $authors ) - 1 ];
-	$candidates = 2 === count( $authors )
-		? array( 'suffix', 'literal', 'family' )
-		: array( 'suffix', 'given', 'literal', 'family' );
-
-	foreach ( $candidates as $key ) {
-		$value = bibliography_builder_save_name_part( $name, $key );
-
-		if ( '' !== $value ) {
-			return $value;
-		}
-	}
-
-	return '';
+function bibliography_builder_save_join_name_parts( $parts ) {
+	return implode(
+		' ',
+		array_filter(
+			$parts,
+			static function ( $part ) {
+				return '' !== $part;
+			}
+		)
+	);
 }
 
 /**
- * `getAuthorPrefix()`.
+ * `getInvertedName()`: a name as the MLA style writes the first author.
  *
- * @param array  $citation Citation record.
- * @param string $text     Its display text.
+ * @param mixed $name CSL name.
+ * @return string
+ */
+function bibliography_builder_save_inverted_name( $name ) {
+	$literal = bibliography_builder_save_name_part( $name, 'literal' );
+
+	if ( '' !== $literal ) {
+		return $literal;
+	}
+
+	if ( '' === bibliography_builder_save_name_part( $name, 'family' ) ) {
+		return '';
+	}
+
+	$parts = array(
+		bibliography_builder_save_join_name_parts(
+			array(
+				bibliography_builder_save_name_part( $name, 'non-dropping-particle' ),
+				bibliography_builder_save_name_part( $name, 'family' ),
+			)
+		),
+		bibliography_builder_save_join_name_parts(
+			array(
+				bibliography_builder_save_name_part( $name, 'given' ),
+				bibliography_builder_save_name_part( $name, 'dropping-particle' ),
+			)
+		),
+		bibliography_builder_save_name_part( $name, 'suffix' ),
+	);
+
+	return implode(
+		', ',
+		array_filter(
+			$parts,
+			static function ( $part ) {
+				return '' !== $part;
+			}
+		)
+	);
+}
+
+/**
+ * `getDisplayName()`: a name as the MLA style writes the second author.
+ *
+ * @param mixed $name CSL name.
+ * @return string
+ */
+function bibliography_builder_save_display_name( $name ) {
+	$literal = bibliography_builder_save_name_part( $name, 'literal' );
+
+	if ( '' !== $literal ) {
+		return $literal;
+	}
+
+	if ( '' === bibliography_builder_save_name_part( $name, 'family' ) ) {
+		return '';
+	}
+
+	return bibliography_builder_save_join_name_parts(
+		array(
+			bibliography_builder_save_name_part( $name, 'given' ),
+			bibliography_builder_save_name_part( $name, 'dropping-particle' ),
+			bibliography_builder_save_name_part( $name, 'non-dropping-particle' ),
+			bibliography_builder_save_name_part( $name, 'family' ),
+			bibliography_builder_save_name_part( $name, 'suffix' ),
+		)
+	);
+}
+
+/**
+ * `getAuthorPrefix()`: the author names an MLA entry starts with, without the
+ * period after them, built from the CSL names.
+ *
+ * @param array $authors CSL names.
  * @return string|null
  */
-function bibliography_builder_save_author_prefix( $citation, $text ) {
-	$authors = bibliography_builder_citation_csl( $citation )['author'];
-	$end     = bibliography_builder_save_author_end( $authors );
-	$first   = bibliography_builder_save_name_part( $authors[0], 'literal' );
-	$first   = '' !== $first ? $first : bibliography_builder_save_name_part( $authors[0], 'family' );
+function bibliography_builder_save_author_prefix( $authors ) {
+	$first = bibliography_builder_save_inverted_name( $authors[0] );
+	$block = $first;
 
-	if ( '' === $end || '' === $first ) {
+	if ( 2 === count( $authors ) ) {
+		$second = bibliography_builder_save_display_name( $authors[1] );
+		$block  = '' === $second ? '' : $first . ', and ' . $second;
+	} elseif ( count( $authors ) >= 3 ) {
+		$block = $first . ', et al.';
+	}
+
+	if ( '' === $first || '' === $block ) {
 		return null;
 	}
 
-	// Search for the names' closing period with them: two authors can share
-	// a family name ("Smith, John, and Jane Smith."), and only the last one
-	// is followed by it.
-	$target = '.' === substr( $end, -1 ) ? $end : $end . '.';
-	$index  = strpos( $text, $target );
-
-	if ( false === $index ) {
-		return null;
-	}
-
-	$prefix = substr( $text, 0, $index + strlen( $target ) - 1 );
-
-	return false !== strpos( $prefix, $first ) ? $prefix : null;
+	return '.' === substr( $block, -1 ) ? substr( $block, 0, -1 ) : $block;
 }
 
 /**
@@ -1090,18 +1146,18 @@ function bibliography_builder_save_repeated_author_prefixes( $citations, $style_
 			continue;
 		}
 
-		$prefix = bibliography_builder_save_author_prefix(
-			$citation,
-			bibliography_builder_save_display_text( $citation )
-		);
+		$prefix = bibliography_builder_save_author_prefix( bibliography_builder_citation_csl( $citation )['author'] );
 
 		if ( null === $prefix ) {
 			continue;
 		}
 
-		$previous_text = bibliography_builder_save_display_text( $previous );
+		$start = $prefix . '.';
 
-		if ( 0 !== strncmp( $previous_text, $prefix . '.', strlen( $prefix ) + 1 ) ) {
+		if (
+			0 !== strncmp( bibliography_builder_save_display_text( $citation ), $start, strlen( $start ) )
+			|| 0 !== strncmp( bibliography_builder_save_display_text( $previous ), $start, strlen( $start ) )
+		) {
 			continue;
 		}
 

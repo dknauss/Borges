@@ -10,8 +10,8 @@
  * when it sorts at save time, so it is applied there rather than by the CSL
  * style. It is deliberately strict: an entry gets the hyphens only when its
  * author list matches the previous entry's field for field, it has no manual
- * display text, and the names it would replace are literally where both
- * entries start. Anything else keeps the full names.
+ * display text, and both entries start with exactly the names the MLA style
+ * writes for that list. Anything else keeps the full names.
  *
  * Mirrored by bibliography_builder_save_repeated_author_prefixes() in
  * includes/save-markup.php; the save-parity fixtures pin the two together.
@@ -54,66 +54,97 @@ function getAuthorKey(citation) {
 		.join('\u0002');
 }
 
-/**
- * The text that ends the author part of an MLA entry: "et al." for three or
- * more authors, the second author's last name for two, and the first
- * author's given name (written after the family name) for one.
- *
- * @param {Array} authors CSL names.
- * @return {string} Text, or '' when it cannot be told.
- */
-function getAuthorEnd(authors) {
-	if (authors.length >= 3) {
-		return 'et al.';
-	}
-
-	const name = authors[authors.length - 1];
-	const candidates =
-		authors.length === 2
-			? ['suffix', 'literal', 'family']
-			: ['suffix', 'given', 'literal', 'family'];
-
-	for (const key of candidates) {
-		const value = namePart(name, key);
-		if (value !== '') {
-			return value;
-		}
-	}
-
-	return '';
+function joinParts(parts) {
+	return parts.filter((part) => part !== '').join(' ');
 }
 
 /**
- * The author names an entry's display text starts with, without the period
- * after them, or null when they cannot be found.
+ * A name as the MLA style writes the first author: "van Gogh, Vincent",
+ * "Beauvoir, Simone de", "King, Martin Luther, Jr.".
  *
- * @param {Object} citation Citation record.
- * @param {string} text     Its display text.
+ * @param {Object} name CSL name.
+ * @return {string} Name, or '' when it has no family name or literal.
+ */
+function getInvertedName(name) {
+	const literal = namePart(name, 'literal');
+
+	if (literal !== '') {
+		return literal;
+	}
+
+	if (namePart(name, 'family') === '') {
+		return '';
+	}
+
+	return [
+		joinParts([
+			namePart(name, 'non-dropping-particle'),
+			namePart(name, 'family'),
+		]),
+		joinParts([
+			namePart(name, 'given'),
+			namePart(name, 'dropping-particle'),
+		]),
+		namePart(name, 'suffix'),
+	]
+		.filter((part) => part !== '')
+		.join(', ');
+}
+
+/**
+ * A name as the MLA style writes the second author: "James Doe Jr.".
+ *
+ * @param {Object} name CSL name.
+ * @return {string} Name, or '' when it has no family name or literal.
+ */
+function getDisplayName(name) {
+	const literal = namePart(name, 'literal');
+
+	if (literal !== '') {
+		return literal;
+	}
+
+	if (namePart(name, 'family') === '') {
+		return '';
+	}
+
+	return joinParts([
+		namePart(name, 'given'),
+		namePart(name, 'dropping-particle'),
+		namePart(name, 'non-dropping-particle'),
+		namePart(name, 'family'),
+		namePart(name, 'suffix'),
+	]);
+}
+
+/**
+ * The author names an MLA entry starts with, without the period after them:
+ * "Smith, John", "Smith, John, and Jane Smith", "Kim, Ji-woo, et al", or null
+ * when a name cannot be written.
+ *
+ * Built from the CSL names, not searched for in the text, so a title or a
+ * suffix that repeats part of a name cannot be mistaken for the names.
+ *
+ * @param {Array} authors CSL names.
  * @return {string|null} Names.
  */
-function getAuthorPrefix(citation, text) {
-	const authors = citation.csl.author;
-	const end = getAuthorEnd(authors);
-	const first =
-		namePart(authors[0], 'literal') || namePart(authors[0], 'family');
+function getAuthorPrefix(authors) {
+	const first = getInvertedName(authors[0]);
+	let block = first;
 
-	if (end === '' || first === '') {
+	if (authors.length === 2) {
+		const second = getDisplayName(authors[1]);
+		block = second === '' ? '' : `${first}, and ${second}`;
+	} else if (authors.length >= 3) {
+		block = `${first}, et al.`;
+	}
+
+	if (first === '' || block === '') {
 		return null;
 	}
 
-	// Search for the names' closing period with them: two authors can share
-	// a family name ("Smith, John, and Jane Smith."), and only the last one
-	// is followed by it.
-	const target = end.endsWith('.') ? end : `${end}.`;
-	const index = text.indexOf(target);
-
-	if (index === -1) {
-		return null;
-	}
-
-	const prefix = text.slice(0, index + target.length - 1);
-
-	return prefix.includes(first) ? prefix : null;
+	// A name ending in a period ("Jr.", "et al.") shares it with the entry.
+	return block.endsWith('.') ? block.slice(0, -1) : block;
 }
 
 /**
@@ -142,11 +173,11 @@ export function getRepeatedAuthorPrefixes(citations, styleKey, displayText) {
 			return null;
 		}
 
-		const text = displayText(citation);
-		const prefix = getAuthorPrefix(citation, text);
+		const prefix = getAuthorPrefix(citation.csl.author);
 
 		if (
 			prefix === null ||
+			!displayText(citation).startsWith(`${prefix}.`) ||
 			!displayText(previous).startsWith(`${prefix}.`)
 		) {
 			return null;

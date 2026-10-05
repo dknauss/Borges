@@ -1007,6 +1007,158 @@
 						"formattedText": "Smith, John, and Jane Smith. Shared Again. New Directions, 2012."
 					},
 					{
+						"id": "j1",
+						"csl": {
+							"id": "j1",
+							"type": "book",
+							"title": "Junior One",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "John",
+									"suffix": "Jr."
+								},
+								{
+									"family": "Doe",
+									"given": "James",
+									"suffix": "Jr."
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2014
+									]
+								]
+							}
+						},
+						"formattedText": "Smith, John, Jr., and James Doe Jr. Junior One. New Directions, 2014."
+					},
+					{
+						"id": "j2",
+						"csl": {
+							"id": "j2",
+							"type": "book",
+							"title": "Junior Two",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "John",
+									"suffix": "Jr."
+								},
+								{
+									"family": "Doe",
+									"given": "James",
+									"suffix": "Jr."
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2015
+									]
+								]
+							}
+						},
+						"formattedText": "Smith, John, Jr., and James Doe Jr. Junior Two. New Directions, 2015."
+					},
+					{
+						"id": "l1",
+						"csl": {
+							"id": "l1",
+							"type": "book",
+							"title": "About Lee, Kim. Part One",
+							"author": [
+								{
+									"family": "Lee",
+									"given": "Kim"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2016
+									]
+								]
+							}
+						},
+						"formattedText": "About Lee, Kim. Part One."
+					},
+					{
+						"id": "l2",
+						"csl": {
+							"id": "l2",
+							"type": "book",
+							"title": "About Lee, Kim. Part Two",
+							"author": [
+								{
+									"family": "Lee",
+									"given": "Kim"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2017
+									]
+								]
+							}
+						},
+						"formattedText": "About Lee, Kim. Part Two."
+					},
+					{
+						"id": "v1",
+						"csl": {
+							"id": "v1",
+							"type": "book",
+							"title": "Letters",
+							"author": [
+								{
+									"family": "Gogh",
+									"given": "Vincent",
+									"non-dropping-particle": "van"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										1990
+									]
+								]
+							}
+						},
+						"formattedText": "van Gogh, Vincent. Letters. New Directions, 1990."
+					},
+					{
+						"id": "v2",
+						"csl": {
+							"id": "v2",
+							"type": "book",
+							"title": "Sketches",
+							"author": [
+								{
+									"family": "Gogh",
+									"given": "Vincent",
+									"non-dropping-particle": "van"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										1991
+									]
+								]
+							}
+						},
+						"formattedText": "van Gogh, Vincent. Sketches. New Directions, 1991."
+					},
+					{
 						"id": "t1",
 						"csl": {
 							"id": "t1",
