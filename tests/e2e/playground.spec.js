@@ -1,5 +1,6 @@
 /* eslint-disable jest/no-done-callback */
 const { test, expect } = require('@playwright/test');
+const { insertBlock, waitForEditorReady } = require('./helpers/editor');
 
 const DOI_SAMPLES = ['10.1145/3368089.3409742', '10.1038/s41586-020-2649-2'];
 const DEMO_IMPORT_INPUT = `${DOI_SAMPLES.join('\n\n')}
@@ -122,52 +123,20 @@ async function openInserterAndSearch(page, query) {
 	await inserterSearch.fill(query);
 }
 
-async function getEditorFrame(page) {
-	const editorIframe = page.frameLocator('iframe[name="editor-canvas"]');
-	const iframeBody = editorIframe.locator('body');
-
-	if (await iframeBody.isVisible({ timeout: 3000 }).catch(() => false)) {
-		return editorIframe;
-	}
-
-	return page;
-}
-
 async function insertBibliographyBlock(page) {
-	await page.waitForFunction(
-		() =>
-			window.wp?.blocks?.getBlockType(
-				'bibliography-builder/bibliography'
-			) &&
-			window.wp?.blocks?.createBlock &&
-			window.wp?.data?.dispatch('core/block-editor')?.insertBlock,
-		null,
-		{ timeout: 20_000 }
+	const { canvas } = await insertBlock(
+		page,
+		'bibliography-builder/bibliography'
 	);
 
-	await page.evaluate(() => {
-		const block = window.wp.blocks.createBlock(
-			'bibliography-builder/bibliography'
-		);
-		const editor = window.wp.data.dispatch('core/block-editor');
-		editor.insertBlock(block);
-		editor.selectBlock(block.clientId);
-	});
-
-	const editorFrame = await getEditorFrame(page);
-	await expect(
-		editorFrame
-			.locator('.wp-block-bibliography-builder-bibliography')
-			.first()
-	).toBeVisible({ timeout: 30_000 });
-
-	return editorFrame;
+	return canvas;
 }
 
 async function createPostWithBibliographyBlock(page) {
 	await ensurePluginActivated(page);
 	await page.goto('/wp-admin/post-new.php');
 	await page.waitForLoadState('domcontentloaded');
+	await waitForEditorReady(page);
 	await dismissEditorOverlay(page);
 
 	return insertBibliographyBlock(page);
@@ -209,6 +178,7 @@ test('bibliography block is discoverable in the editor inserter', async ({
 	await ensurePluginActivated(page);
 	await page.goto('/wp-admin/post-new.php');
 	await page.waitForLoadState('domcontentloaded');
+	await waitForEditorReady(page);
 
 	await dismissEditorOverlay(page);
 

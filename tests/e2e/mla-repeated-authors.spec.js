@@ -15,6 +15,7 @@
 const { readFileSync } = require('fs');
 const { join } = require('path');
 const { test, expect } = require('@playwright/test');
+const { waitForEditorReady } = require('./helpers/editor');
 
 const BLOCK_NAME = 'bibliography-builder/bibliography';
 const REPEATED = '.bibliography-builder-repeated-author';
@@ -105,14 +106,7 @@ async function dismissEditorOverlay(page) {
 }
 
 async function waitForBlockEditor(page) {
-	await page.waitForFunction(
-		() =>
-			window.wp?.blocks?.getBlockType(
-				'bibliography-builder/bibliography'
-			) && window.wp?.data?.select('core/block-editor')?.getBlocks,
-		null,
-		{ timeout: 30_000 }
-	);
+	await waitForEditorReady(page);
 	await dismissEditorOverlay(page);
 }
 
