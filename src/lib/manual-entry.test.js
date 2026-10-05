@@ -153,6 +153,13 @@ describe('manual-entry', () => {
 				articleNumber: '108125',
 			})
 		).not.toHaveProperty('number');
+		expect(
+			buildManualCsl({
+				type: 'article-journal',
+				title: 'Numbered',
+				articleNumber: '<em>108125</em>',
+			}).number
+		).toBe('108125');
 	});
 
 	it('builds sparse manual CSL records with only required data', () => {

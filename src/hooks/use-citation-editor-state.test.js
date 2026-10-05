@@ -589,6 +589,11 @@ describe('handleStructuredEditSave guard branches', () => {
 		);
 		expect((await save(imported)).csl['article-number']).toBe('108125');
 
+		// Markup typed into the field is stripped before saving.
+		expect((await save(journal, '<em>108127</em>')).csl.number).toBe(
+			'108127'
+		);
+
 		// A numeric CSL number loads as text and survives an unchanged save.
 		const numeric = await save({ ...journal, number: 108125 });
 		expect(numeric.loaded).toBe('108125');

@@ -18,6 +18,7 @@ import {
 } from '../lib/citation-limits';
 import { computeExportStrings } from './compute-export-strings';
 import { createCitationId } from '../lib/citation-id';
+import { stripHtmlTags } from '../lib/csl-sanitize';
 
 const FORMATTER_FALLBACK_MESSAGE = __(
 	'Formatter unavailable; using fallback citation text.',
@@ -334,8 +335,8 @@ export function useCitationEditorState({
 		// A journal's article number (CSL `number`) has its own field; other
 		// types keep whatever `number` they carry.
 		if (citation.csl.type === 'article-journal') {
-			const articleNumber = String(
-				structuredFields.articleNumber ?? ''
+			const articleNumber = stripHtmlTags(
+				String(structuredFields.articleNumber ?? '')
 			).trim();
 			const original = citation.csl.number;
 

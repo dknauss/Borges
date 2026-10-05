@@ -51,6 +51,7 @@ const STRING_FIELDS = new Set([
 	'container-title',
 	'publisher',
 	'page',
+	'number',
 	'volume',
 	'issue',
 	'DOI',
@@ -217,7 +218,7 @@ function sanitizeIssued(issued) {
 	return sanitizedIssued;
 }
 
-function stripHtmlTags(text) {
+export function stripHtmlTags(text) {
 	let result = text;
 	let previous;
 	do {
