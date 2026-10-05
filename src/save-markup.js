@@ -2,6 +2,7 @@ import { useBlockProps } from '@wordpress/block-editor';
 import { buildCoins } from './lib/coins';
 import {
 	getDisplaySegments,
+	getDisplayText,
 	getListSemantics,
 	splitTextIntoLinkParts,
 	getStyleDefinition,
@@ -9,6 +10,10 @@ import {
 import { buildJsonLdString, buildCslJsonString } from './lib/jsonld';
 import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
+import {
+	REPEATED_AUTHOR_MARK,
+	getRepeatedAuthorPrefixes,
+} from './lib/repeated-authors';
 import {
 	CITE_EXPORT_LABELS,
 	getTranslatedCiteExportLabels,
@@ -50,6 +55,7 @@ export function renderBibliographySave(
 		ariaLabel = null,
 		includeDeprecatedBiblioEntryRole = false,
 		includeCiteExport = false,
+		repeatedAuthors = false,
 		labels: labelOverrides = null,
 	} = {}
 ) {
@@ -72,6 +78,13 @@ export function renderBibliographySave(
 		? sortCitations(citations, citationStyle)
 		: citations;
 	const cslArray = renderedCitations.map((c) => c.csl);
+	const repeatedAuthorPrefixes = repeatedAuthors
+		? getRepeatedAuthorPrefixes(
+				renderedCitations,
+				citationStyle,
+				getDisplayText
+		  )
+		: [];
 	const styleDefinition = getStyleDefinition(citationStyle);
 	const ListTag = getListSemantics(citationStyle);
 	const listClassName = `bibliography-builder-list bibliography-builder-list-${
@@ -92,8 +105,26 @@ export function renderBibliographySave(
 				</HeadingTag>
 			) : null}
 			<ListTag className={listClassName}>
-				{renderedCitations.map((citation) => {
+				{renderedCitations.map((citation, citationIndex) => {
 					const displaySegments = getDisplaySegments(citation);
+					const repeatedPrefix =
+						repeatedAuthorPrefixes[citationIndex] || null;
+					const replacesAuthors =
+						repeatedPrefix !== null &&
+						displaySegments.length > 0 &&
+						!displaySegments[0].italic &&
+						displaySegments[0].text.startsWith(repeatedPrefix);
+					const shownSegments = replacesAuthors
+						? [
+								{
+									...displaySegments[0],
+									text: displaySegments[0].text.slice(
+										repeatedPrefix.length
+									),
+								},
+								...displaySegments.slice(1),
+						  ]
+						: displaySegments;
 					const coinsTitle = outputCoins
 						? buildCoins(citation.csl)
 						: null;
@@ -111,7 +142,17 @@ export function renderBibliographySave(
 							lang={citation.csl.language || undefined}
 						>
 							<EntryTag className="bibliography-builder-entry-text">
-								{displaySegments.map((segment, index) => {
+								{replacesAuthors ? (
+									<span className="bibliography-builder-repeated-author">
+										<span aria-hidden="true">
+											{REPEATED_AUTHOR_MARK}
+										</span>
+										<span className="bibliography-builder-visually-hidden">
+											{repeatedPrefix}
+										</span>
+									</span>
+								) : null}
+								{shownSegments.map((segment, index) => {
 									const linkLabel =
 										citation.csl.title ||
 										citation.csl['container-title'] ||

@@ -852,6 +852,316 @@
 			}
 		},
 		{
+			"name": "mla-repeated-authors",
+			"note": "MLA 9 works cited: an entry by exactly the same authors as the one before it shows three hyphens, with the names kept for screen readers. Covers one author, initials, two authors, et al., a different given name, manual display text, and editors only.",
+			"attributes": {
+				"citationStyle": "mla-9",
+				"headingText": "Works Cited",
+				"outputJsonLd": false,
+				"citations": [
+					{
+						"id": "b1",
+						"csl": {
+							"id": "b1",
+							"type": "book",
+							"title": "Ficciones",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										1944
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Jorge Luis. Ficciones. New Directions, 1944."
+					},
+					{
+						"id": "b2",
+						"csl": {
+							"id": "b2",
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										1962
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Jorge Luis. Labyrinths. New Directions, 1962."
+					},
+					{
+						"id": "b3",
+						"csl": {
+							"id": "b3",
+							"type": "book",
+							"title": "The Aleph",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										1949
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Jorge Luis. The Aleph. New Directions, 1949.",
+						"displayOverride": "Borges, Jorge Luis. The Aleph and Other Stories. Manual text."
+					},
+					{
+						"id": "b4",
+						"csl": {
+							"id": "b4",
+							"type": "book",
+							"title": "Sketches",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Norah"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										1950
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Norah. Sketches. New Directions, 1950."
+					},
+					{
+						"id": "t1",
+						"csl": {
+							"id": "t1",
+							"type": "book",
+							"title": "Reading Machines",
+							"author": [
+								{
+									"family": "Becker",
+									"given": "Thomas J."
+								},
+								{
+									"family": "Nakamura",
+									"given": "Yuki"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2021
+									]
+								]
+							}
+						},
+						"formattedText": "Becker, Thomas J., and Yuki Nakamura. Reading Machines. New Directions, 2021."
+					},
+					{
+						"id": "t2",
+						"csl": {
+							"id": "t2",
+							"type": "book",
+							"title": "Writing Machines",
+							"author": [
+								{
+									"family": "Becker",
+									"given": "Thomas J."
+								},
+								{
+									"family": "Nakamura",
+									"given": "Yuki"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2023
+									]
+								]
+							}
+						},
+						"formattedText": "Becker, Thomas J., and Yuki Nakamura. Writing Machines. New Directions, 2023."
+					},
+					{
+						"id": "k1",
+						"csl": {
+							"id": "k1",
+							"type": "book",
+							"title": "A Shared Corpus",
+							"author": [
+								{
+									"family": "Kim",
+									"given": "Ji-woo"
+								},
+								{
+									"family": "Lopez",
+									"given": "Ana"
+								},
+								{
+									"family": "Moreau",
+									"given": "Paul"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2023
+									]
+								]
+							}
+						},
+						"formattedText": "Kim, Ji-woo, et al. A Shared Corpus. New Directions, 2023."
+					},
+					{
+						"id": "k2",
+						"csl": {
+							"id": "k2",
+							"type": "book",
+							"title": "Another Corpus",
+							"author": [
+								{
+									"family": "Kim",
+									"given": "Ji-woo"
+								},
+								{
+									"family": "Lopez",
+									"given": "Ana"
+								},
+								{
+									"family": "Moreau",
+									"given": "Paul"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2024
+									]
+								]
+							}
+						},
+						"formattedText": "Kim, Ji-woo, et al. Another Corpus. New Directions, 2024."
+					},
+					{
+						"id": "s1",
+						"csl": {
+							"id": "s1",
+							"type": "book",
+							"title": "First Light",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "J. R."
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2001
+									]
+								]
+							}
+						},
+						"formattedText": "Smith, J. R. First Light. New Directions, 2001."
+					},
+					{
+						"id": "s2",
+						"csl": {
+							"id": "s2",
+							"type": "book",
+							"title": "Second Light",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "J. R."
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2002
+									]
+								]
+							}
+						},
+						"formattedText": "Smith, J. R. Second Light. New Directions, 2002."
+					},
+					{
+						"id": "e1",
+						"csl": {
+							"id": "e1",
+							"type": "book",
+							"title": "Essays One",
+							"editor": [
+								{
+									"family": "Okafor",
+									"given": "Chidi"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2018
+									]
+								]
+							}
+						},
+						"formattedText": "Okafor, Chidi, editor. Essays One. 2018."
+					},
+					{
+						"id": "e2",
+						"csl": {
+							"id": "e2",
+							"type": "book",
+							"title": "Essays Two",
+							"editor": [
+								{
+									"family": "Okafor",
+									"given": "Chidi"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2019
+									]
+								]
+							}
+						},
+						"formattedText": "Okafor, Chidi, editor. Essays Two. 2019."
+					}
+				]
+			}
+		},
+		{
 			"name": "empty",
 			"note": "No citations: save() returns null.",
 			"attributes": {

@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import metadata from '../block.json';
 import { deprecated } from './deprecated';
+import save from './save';
 
 jest.mock('@wordpress/block-editor', () => ({
 	useBlockProps: {
@@ -36,7 +37,7 @@ describe('deprecated block versions', () => {
 
 	it('freezes the current pre-Phase-4 save shape: <li> with no <details>', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[1].save({
+			deprecated[2].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -57,7 +58,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the immediate prior save markup with deprecated entry roles', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[2].save({
+			deprecated[3].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -92,7 +93,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the prior save markup with linked URLs and static aria-label', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[3].save({
+			deprecated[4].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -125,7 +126,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the prior save markup variant without linked visible URLs', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[4].save({
+			deprecated[5].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
@@ -154,7 +155,7 @@ describe('deprecated block versions', () => {
 	});
 
 	it('migrate re-sorts citations into style order', () => {
-		const migrated = deprecated[5].migrate({
+		const migrated = deprecated[6].migrate({
 			citationStyle: 'chicago-author-date',
 			citations: [
 				createCitation({ id: 'z', family: 'Zulu', title: 'Zeta Book' }),
@@ -171,14 +172,14 @@ describe('deprecated block versions', () => {
 	});
 
 	it('migrate handles missing citations attribute with empty array fallback', () => {
-		const migrated = deprecated[5].migrate({ citationStyle: 'apa-7' });
+		const migrated = deprecated[6].migrate({ citationStyle: 'apa-7' });
 
 		expect(migrated.citations).toEqual([]);
 	});
 
 	it('supports the prior unsorted save markup variant', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[5].save({
+			deprecated[6].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
@@ -203,7 +204,7 @@ describe('deprecated block versions', () => {
 	});
 });
 
-describe('locale-independence deprecation (deprecated[0])', () => {
+describe('locale-independence deprecation (deprecated[1])', () => {
 	const untitled = {
 		id: 'untitled',
 		csl: { type: 'webpage', author: [{ family: 'Beta' }] },
@@ -212,7 +213,7 @@ describe('locale-independence deprecation (deprecated[0])', () => {
 
 	it('falls back to the current translations when the markup gave no labels', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[0].save({
+			deprecated[1].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [untitled],
@@ -229,7 +230,7 @@ describe('locale-independence deprecation (deprecated[0])', () => {
 
 	it('reads the fallback label from a matching link and skips one that does not match', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[0].save({
+			deprecated[1].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [untitled],
@@ -256,9 +257,36 @@ describe('locale-independence deprecation (deprecated[0])', () => {
 
 	it('renders nothing when the block has no citations', () => {
 		expect(
-			deprecated[0].save({
+			deprecated[1].save({
 				attributes: { citationStyle: 'chicago-notes-bibliography' },
 			})
 		).toBeNull();
+	});
+});
+
+describe('pre-repeated-author deprecation (deprecated[0])', () => {
+	const borges = (id, title) => ({
+		id,
+		csl: {
+			type: 'book',
+			title,
+			author: [{ family: 'Borges', given: 'Jorge Luis' }],
+		},
+		formattedText: `Borges, Jorge Luis. ${title}. Sur, 1944.`,
+		displayOverride: null,
+	});
+	const attributes = {
+		citationStyle: 'mla-9',
+		citations: [borges('b1', 'Ficciones'), borges('b2', 'El Aleph')],
+	};
+
+	it('writes repeated MLA authors in full, as save() did before', () => {
+		const old = renderToStaticMarkup(deprecated[0].save({ attributes }));
+		const current = renderToStaticMarkup(save({ attributes }));
+
+		expect(old).not.toContain('bibliography-builder-repeated-author');
+		expect(old).toContain('Borges, Jorge Luis. <i>El Aleph</i>');
+		expect(current).toContain('bibliography-builder-repeated-author');
+		expect(current).not.toBe(old);
 	});
 });

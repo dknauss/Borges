@@ -952,6 +952,171 @@ function bibliography_builder_save_display_segments( $citation ) {
 	return $segments;
 }
 
+// ── MLA repeated authors: src/lib/repeated-authors.js ───────────────────────
+
+/**
+ * `namePart()`.
+ *
+ * @param mixed  $name CSL name.
+ * @param string $key  Name part.
+ * @return string
+ */
+function bibliography_builder_save_name_part( $name, $key ) {
+	if ( is_object( $name ) ) {
+		$name = get_object_vars( $name );
+	}
+
+	return is_array( $name ) && isset( $name[ $key ] ) && is_string( $name[ $key ] ) ? $name[ $key ] : '';
+}
+
+/**
+ * `getAuthorKey()`.
+ *
+ * @param mixed $citation Citation record.
+ * @return string|null
+ */
+function bibliography_builder_save_author_key( $citation ) {
+	$csl     = bibliography_builder_citation_csl( $citation );
+	$authors = isset( $csl['author'] ) ? $csl['author'] : null;
+
+	if ( ! is_array( $authors ) || ! bibliography_builder_is_list_array( $authors ) || array() === $authors ) {
+		return null;
+	}
+
+	$keys  = array( 'family', 'given', 'literal', 'suffix', 'dropping-particle', 'non-dropping-particle' );
+	$names = array();
+
+	foreach ( $authors as $name ) {
+		$parts = array();
+
+		foreach ( $keys as $key ) {
+			$parts[] = bibliography_builder_save_name_part( $name, $key );
+		}
+
+		$names[] = implode( "\u{0001}", $parts );
+	}
+
+	return implode( "\u{0002}", $names );
+}
+
+/**
+ * `getAuthorEnd()`.
+ *
+ * @param array $authors CSL names.
+ * @return string
+ */
+function bibliography_builder_save_author_end( $authors ) {
+	if ( count( $authors ) >= 3 ) {
+		return 'et al.';
+	}
+
+	$name       = $authors[ count( $authors ) - 1 ];
+	$candidates = 2 === count( $authors )
+		? array( 'suffix', 'literal', 'family' )
+		: array( 'suffix', 'given', 'literal', 'family' );
+
+	foreach ( $candidates as $key ) {
+		$value = bibliography_builder_save_name_part( $name, $key );
+
+		if ( '' !== $value ) {
+			return $value;
+		}
+	}
+
+	return '';
+}
+
+/**
+ * `getAuthorPrefix()`.
+ *
+ * @param array  $citation Citation record.
+ * @param string $text     Its display text.
+ * @return string|null
+ */
+function bibliography_builder_save_author_prefix( $citation, $text ) {
+	$authors = bibliography_builder_citation_csl( $citation )['author'];
+	$end     = bibliography_builder_save_author_end( $authors );
+	$first   = bibliography_builder_save_name_part( $authors[0], 'literal' );
+	$first   = '' !== $first ? $first : bibliography_builder_save_name_part( $authors[0], 'family' );
+
+	if ( '' === $end || '' === $first ) {
+		return null;
+	}
+
+	$index = strpos( $text, $end );
+
+	if ( false === $index ) {
+		return null;
+	}
+
+	$length = $index + strlen( $end );
+
+	if ( '.' === substr( $end, -1 ) ) {
+		--$length;
+	}
+
+	if ( '.' !== substr( $text, $length, 1 ) ) {
+		return null;
+	}
+
+	$prefix = substr( $text, 0, $length );
+
+	return false !== strpos( $prefix, $first ) ? $prefix : null;
+}
+
+/**
+ * `getRepeatedAuthorPrefixes()`: for each citation in display order, the
+ * author names MLA 9 replaces with three hyphens, or null.
+ *
+ * @param array  $citations Citations in display order.
+ * @param string $style_key Citation style.
+ * @return array<int, string|null>
+ */
+function bibliography_builder_save_repeated_author_prefixes( $citations, $style_key ) {
+	$citations = array_values( $citations );
+	$prefixes  = array();
+
+	foreach ( $citations as $index => $citation ) {
+		$prefixes[ $index ] = null;
+
+		if ( 'mla-9' !== $style_key || 0 === $index ) {
+			continue;
+		}
+
+		$citation = is_array( $citation ) ? $citation : array();
+
+		if ( isset( $citation['displayOverride'] ) && bibliography_builder_js_truthy( $citation['displayOverride'] ) ) {
+			continue;
+		}
+
+		$previous = is_array( $citations[ $index - 1 ] ) ? $citations[ $index - 1 ] : array();
+		$key      = bibliography_builder_save_author_key( $citation );
+
+		if ( null === $key || bibliography_builder_save_author_key( $previous ) !== $key ) {
+			continue;
+		}
+
+		$prefix = bibliography_builder_save_author_prefix(
+			$citation,
+			bibliography_builder_save_display_text( $citation )
+		);
+
+		if ( null === $prefix ) {
+			continue;
+		}
+
+		$previous_text = bibliography_builder_save_display_text( $previous );
+
+		if ( 0 !== strncmp( $previous_text, $prefix . '.', strlen( $prefix ) + 1 ) ) {
+			continue;
+		}
+
+		$prefixes[ $index ] = $prefix;
+	}
+
+	return $prefixes;
+}
+
 /**
  * `splitTrailingUrlPunctuation()`.
  *
@@ -1730,9 +1895,10 @@ function bibliography_builder_save_block_props( $attrs ) {
  * @param array $citation     Citation record.
  * @param bool  $output_coins Whether to emit COinS.
  * @param bool  $cite_export  Whether to emit the Cite / Export panel.
+ * @param mixed $repeated_prefix MLA author names to show as three hyphens, or null.
  * @return string
  */
-function bibliography_builder_save_entry( $citation, $output_coins, $cite_export ) {
+function bibliography_builder_save_entry( $citation, $output_coins, $cite_export, $repeated_prefix = null ) {
 	$csl        = bibliography_builder_citation_csl( $citation );
 	$link_label = '';
 
@@ -1744,9 +1910,19 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 		}
 	}
 
-	$text = '';
+	$text     = '';
+	$segments = bibliography_builder_save_display_segments( $citation );
 
-	foreach ( bibliography_builder_save_display_segments( $citation ) as $segment ) {
+	if ( is_string( $repeated_prefix ) && array() !== $segments && ! $segments[0]['italic']
+		&& 0 === strncmp( $segments[0]['text'], $repeated_prefix, strlen( $repeated_prefix ) ) ) {
+		$segments[0]['text'] = (string) substr( $segments[0]['text'], strlen( $repeated_prefix ) );
+		$text               .= '<span class="bibliography-builder-repeated-author"><span aria-hidden="true">---</span>'
+			. '<span class="bibliography-builder-visually-hidden">'
+			. bibliography_builder_escape_save_text( $repeated_prefix )
+			. '</span></span>';
+	}
+
+	foreach ( $segments as $segment ) {
 		$content = '';
 
 		foreach ( bibliography_builder_save_link_parts( $segment['text'], $link_label ) as $part ) {
@@ -1845,11 +2021,14 @@ function bibliography_builder_render_save_markup( $attrs ) {
 		. ' bibliography-builder-list-' . $style_css
 	) . '">';
 
-	foreach ( $sorted as $citation ) {
+	$repeated = bibliography_builder_save_repeated_author_prefixes( $sorted, $style_key );
+
+	foreach ( array_values( $sorted ) as $index => $citation ) {
 		$html .= bibliography_builder_save_entry(
 			is_array( $citation ) ? $citation : array(),
 			$flag( 'outputCoins', false ),
-			$flag( 'outputCiteExport', false )
+			$flag( 'outputCiteExport', false ),
+			$repeated[ $index ]
 		);
 	}
 

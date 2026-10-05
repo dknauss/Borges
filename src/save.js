@@ -19,6 +19,7 @@ export default function save({ attributes }) {
 		headingTag: 'p',
 		entryTag: 'cite',
 		includeCiteExport: attributes.outputCiteExport ?? false,
+		repeatedAuthors: true,
 		labels: LOCALE_INDEPENDENT_SAVE_LABELS,
 	});
 }

@@ -33,7 +33,12 @@ Deviations shared by every style, all forced by how the block stores and renders
 
 - **Titles keep their stored capitalization.** APA's sentence case is not applied, and neither is ABNT's capitalized first word for title-first entries. The block re-applies italics by finding the stored title text in the formatted entry, so a case-transformed title would lose its italics.
 - **URLs and DOIs stay linkable.** The block links `https://` URLs up to the next space. So OSCOLA prints URLs without angle brackets, and ABNT prints DOIs as `https://doi.org/` links.
-- **Repeated authors are written out in full.** That is what Chicago 18, Cite Them Right, OSCOLA 5, ABNT (since 2018), APA, IEEE, and Vancouver all ask for. MLA 9's three hyphens (`---.`) are not applied yet: the substitution depends on list order, and the block sorts entries itself, after formatting.
+- **Repeated authors are written out in full,** as Chicago 18, Cite Them Right, OSCOLA 5, ABNT (since 2018), APA, IEEE, and Vancouver all ask. MLA 9 is the exception: an entry by exactly the same author or authors as the entry before it starts with three hyphens (`---. Title`). The hyphens depend on list order, which the block sets when it sorts, so `save()` adds them (`src/lib/repeated-authors.js`, mirrored in `includes/save-markup.php`), not the CSL style. Screen readers hear the names, not the hyphens. The rule is strict, and any doubt keeps the full names:
+  - the two author lists must match field for field, so "Borges, Jorge Luis" and "Borges, J. L." stay apart;
+  - an entry with manually edited display text is never shortened, nor is one whose text does not start with its own author names;
+  - an entry with editors but no author keeps its names (MLA's `---, editor.` form is not applied).
+
+  Only the saved bibliography carries the hyphens. The editor's list, copied text, and the exports keep the full names, so each entry still stands on its own.
 - **Chicago keeps no place of publication for pre-1900 books.** The 18th edition still gives a place for books published before 1900, but CSL cannot compare years, so the place is dropped for every book.
 - **No citation numbers.** Numeric styles number with the list element.
 - **Journal titles print as stored.** They are not abbreviated (IEEE, Vancouver).

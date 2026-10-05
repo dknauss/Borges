@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **MLA 9 repeated authors.** In an MLA works-cited list, an entry by exactly the same author or authors as the entry before it now starts with three hyphens (`---. Title`), as the MLA Handbook asks. The names stay in the markup for screen readers, and the editor list, copied text, and exports keep them in full. Only exact matches are shortened; see `docs/csl-styles.md`. Existing MLA bibliographies stay valid and pick up the hyphens the next time they are saved from the editor.
+
 ### Changed
 
 - Four styles move to their manuals' current editions:
