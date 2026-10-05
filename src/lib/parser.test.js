@@ -171,6 +171,37 @@ describe('validateAndSanitizeCsl', () => {
 });
 
 describe('normalizeCrossRefCsl (CrossRef type mapping)', () => {
+	it('copies a journal article number to the CSL number variable', () => {
+		expect(
+			normalizeCrossRefCsl({
+				type: 'journal-article',
+				'article-number': ' 108125 ',
+				page: '108125',
+			})
+		).toMatchObject({
+			type: 'article-journal',
+			number: '108125',
+			page: '108125',
+		});
+		// An existing number wins, and other types are left alone.
+		expect(
+			normalizeCrossRefCsl({
+				type: 'journal-article',
+				number: '7',
+				'article-number': '108125',
+			}).number
+		).toBe('7');
+		expect(
+			normalizeCrossRefCsl({ type: 'book', 'article-number': '5' }).number
+		).toBeUndefined();
+		expect(
+			normalizeCrossRefCsl({
+				type: 'journal-article',
+				'article-number': 5,
+			}).number
+		).toBeUndefined();
+	});
+
 	it('maps CrossRef "monograph" to the CSL "book" type', () => {
 		expect(normalizeCrossRefCsl({ type: 'monograph' }).type).toBe('book');
 	});

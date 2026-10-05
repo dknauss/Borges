@@ -129,6 +129,11 @@ final class CslStyleGoldenTest extends TestCase {
 		};
 
 		$this->assertSame( array( 'Moss, A. (2020) ‘Numbered Article’, Diabetes Research, 162, article 108125.' ), $text( array( $article ), 'harvard' ) );
+		// CrossRef also copies the article number into page; it is not a page.
+		$this->assertSame(
+			array( 'Moss, A. (2020) ‘Numbered Article’, Diabetes Research, 162, article 108125.' ),
+			$text( array( array_merge( $article, array( 'page' => '108125' ) ) ), 'harvard' )
+		);
 
 		$this->assertSame(
 			array(

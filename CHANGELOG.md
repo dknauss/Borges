@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Four styles move to their manuals' current editions:
   - **Chicago 18th ed. (2024)**, notes-bibliography and author-date: up to six authors are listed, and seven or more become the first three and "et al." (was eleven or more, cut to seven); books give the publisher without a place; a journal article with both a volume and an issue omits the month.
-  - **Cite Them Right 13th ed. (2025)** (Harvard): books give the publisher without a place, and a journal that numbers its articles instead of paging them gives `article 108125`.
+  - **Cite Them Right 13th ed. (2025)** (Harvard): books give the publisher without a place, and a journal that numbers its articles instead of paging them gives `article 108125`. DOI imports now carry CrossRef's article number into CSL's `number`, where every style can read it.
   - **OSCOLA 5th ed. (2026)**: a DOI is preferred to a URL and needs no access date.
   - **ABNT NBR 6023:2025**: a DOI needs no "Disponível em" or "Acesso em".
 
