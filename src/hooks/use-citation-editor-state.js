@@ -237,9 +237,11 @@ export function useCitationEditorState({
 					String(entry.csl.issued?.['date-parts']?.[0]?.[0] || '') ||
 					'',
 				page: entry.csl.page || '',
+				// CSL allows a numeric number; the field edits text.
 				articleNumber:
-					entry.csl.type === 'article-journal'
-						? entry.csl.number || ''
+					entry.csl.type === 'article-journal' &&
+					(entry.csl.number || entry.csl.number === 0)
+						? String(entry.csl.number)
 						: '',
 				doi: entry.csl.DOI || '',
 				url: entry.csl.URL || '',
@@ -332,13 +334,17 @@ export function useCitationEditorState({
 		// A journal's article number (CSL `number`) has its own field; other
 		// types keep whatever `number` they carry.
 		if (citation.csl.type === 'article-journal') {
-			const articleNumber = (structuredFields.articleNumber || '').trim();
+			const articleNumber = String(
+				structuredFields.articleNumber ?? ''
+			).trim();
+			const original = citation.csl.number;
 
-			if (articleNumber) {
-				updatedCsl.number = articleNumber;
-			} else {
+			if (!articleNumber) {
 				delete updatedCsl.number;
+			} else if (String(original ?? '').trim() !== articleNumber) {
+				updatedCsl.number = articleNumber;
 			}
+			// Otherwise unchanged: the original value, numeric or not, stays.
 		}
 
 		const normalizedDoi = normalizeDoiValue(structuredFields.doi);

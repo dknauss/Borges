@@ -579,6 +579,14 @@ describe('handleStructuredEditSave guard branches', () => {
 		expect((await save(journal, '')).csl).not.toHaveProperty('number');
 		expect((await save(journal)).csl.number).toBe('108125');
 
+		// A numeric CSL number loads as text and survives an unchanged save.
+		const numeric = await save({ ...journal, number: 108125 });
+		expect(numeric.loaded).toBe('108125');
+		expect(numeric.csl.number).toBe(108125);
+		expect((await save({ ...journal, number: 7 }, '8')).csl.number).toBe(
+			'8'
+		);
+
 		// Other types keep their number (a report's, say) untouched.
 		const report = await save({
 			type: 'report',
