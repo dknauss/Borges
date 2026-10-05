@@ -543,43 +543,50 @@ describe('handleStructuredEditSave guard branches', () => {
 		expect(savedCsl).not.toHaveProperty('issued');
 	});
 
-	it('drops an imported article number when Pages is edited', async () => {
-		const imported = {
-			type: 'article-journal',
-			title: 'Numbered',
-			page: '108125',
-			number: '108125',
-			'article-number': '108125',
-		};
-		const save = async (csl, page) => {
+	it('edits a journal article number through its own field', async () => {
+		const save = async (csl, articleNumber) => {
 			const args = makeHookArgs([makeCitation({ csl })]);
 			const { result } = renderHook(() => useCitationEditorState(args));
 
 			act(() => result.current.handleStructuredEditStart('cit-1'));
-			if (page !== undefined) {
+			const loaded = result.current.structuredFields.articleNumber;
+			if (articleNumber !== undefined) {
 				act(() =>
-					result.current.handleStructuredFieldChange('page', page)
+					result.current.handleStructuredFieldChange(
+						'articleNumber',
+						articleNumber
+					)
 				);
 			}
 			await act(() => result.current.handleStructuredEditSave());
 
-			return args.setAttributes.mock.calls[0][0].citations[0].csl;
+			return {
+				loaded,
+				csl: args.setAttributes.mock.calls[0][0].citations[0].csl,
+			};
+		};
+		const journal = {
+			type: 'article-journal',
+			title: 'Numbered',
+			page: '108125',
+			number: '108125',
 		};
 
-		const edited = await save(imported, '108126');
-		expect(edited.page).toBe('108126');
-		expect(edited).not.toHaveProperty('number');
+		const edited = await save(journal, ' 108126 ');
+		expect(edited.loaded).toBe('108125');
+		expect(edited.csl).toMatchObject({ page: '108125', number: '108126' });
 
-		// Saved before article-number was trimmed on import.
-		expect(
-			await save({ ...imported, 'article-number': ' 108125 ' }, '108126')
-		).not.toHaveProperty('number');
+		expect((await save(journal, '')).csl).not.toHaveProperty('number');
+		expect((await save(journal)).csl.number).toBe('108125');
 
-		// Untouched Pages, or a number that is not the imported copy, stays.
-		expect((await save(imported)).number).toBe('108125');
-		expect(
-			(await save({ ...imported, number: '7' }, '108126')).number
-		).toBe('7');
+		// Other types keep their number (a report's, say) untouched.
+		const report = await save({
+			type: 'report',
+			title: 'Report',
+			number: 'NLC-2020-4',
+		});
+		expect(report.loaded).toBe('');
+		expect(report.csl.number).toBe('NLC-2020-4');
 	});
 
 	it('parses semicolon author edits and keeps optional structured fields', async () => {

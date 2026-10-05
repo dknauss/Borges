@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **MLA 9 repeated authors.** In an MLA works-cited list, an entry by exactly the same author or authors as the entry before it now starts with three hyphens (`---. Title`), as the MLA Handbook asks. The names stay in the markup for screen readers, and the editor list, copied text, and exports keep them in full. Only exact matches are shortened; see `docs/csl-styles.md`. Existing MLA bibliographies stay valid and pick up the hyphens the next time they are saved from the editor.
+- **Article number field.** The edit form and manual entry show an Article number field for journal articles. It sets CSL `number`, which Cite Them Right 13 prints as `article 108125` instead of a page. A DOI import fills it from CrossRef's article number.
 
 ### Changed
 

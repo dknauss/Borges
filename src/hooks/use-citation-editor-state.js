@@ -237,6 +237,10 @@ export function useCitationEditorState({
 					String(entry.csl.issued?.['date-parts']?.[0]?.[0] || '') ||
 					'',
 				page: entry.csl.page || '',
+				articleNumber:
+					entry.csl.type === 'article-journal'
+						? entry.csl.number || ''
+						: '',
 				doi: entry.csl.DOI || '',
 				url: entry.csl.URL || '',
 			});
@@ -325,19 +329,16 @@ export function useCitationEditorState({
 			delete updatedCsl.page;
 		}
 
-		// A DOI import copies CrossRef's article-number into `number`, which
-		// this form does not show and which some styles prefer to `page`. When
-		// the user changes Pages, drop that hidden copy so the edit shows.
-		const trimmed = (value) =>
-			typeof value === 'string' ? value.trim() : value;
+		// A journal's article number (CSL `number`) has its own field; other
+		// types keep whatever `number` they carry.
+		if (citation.csl.type === 'article-journal') {
+			const articleNumber = (structuredFields.articleNumber || '').trim();
 
-		if (
-			(structuredFields.page || '') !== (citation.csl.page || '') &&
-			citation.csl.number &&
-			trimmed(citation.csl.number) ===
-				trimmed(citation.csl['article-number'])
-		) {
-			delete updatedCsl.number;
+			if (articleNumber) {
+				updatedCsl.number = articleNumber;
+			} else {
+				delete updatedCsl.number;
+			}
 		}
 
 		const normalizedDoi = normalizeDoiValue(structuredFields.doi);

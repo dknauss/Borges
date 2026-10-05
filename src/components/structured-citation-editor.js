@@ -29,6 +29,12 @@ export const STRUCTURED_FIELD_DEFINITIONS = [
 		label: __('Pages', 'borges-bibliography-builder'),
 	},
 	{
+		// CSL `number`: a journal's article number, used in place of pages.
+		key: 'articleNumber',
+		label: __('Article number', 'borges-bibliography-builder'),
+		types: ['article-journal'],
+	},
+	{
 		key: 'doi',
 		label: __('DOI', 'borges-bibliography-builder'),
 	},
@@ -54,6 +60,8 @@ export function StructuredCitationEditor({
 	onTypeChange,
 }) {
 	const firstInteractiveFieldRef = useRef(null);
+	// Type-specific fields follow the type being entered, else the citation's.
+	const entryType = showTypeSelector ? fields.type : citation.csl?.type;
 
 	useEffect(() => {
 		firstInteractiveFieldRef.current?.focus();
@@ -113,30 +121,32 @@ export function StructuredCitationEditor({
 					</select>
 				</div>
 			)}
-			{fieldDefinitions.map(({ key, label }, index) => (
-				<div
-					key={key}
-					className="bibliography-builder-structured-field"
-				>
-					<label htmlFor={getStructuredFieldId(citation.id, key)}>
-						{label}
-					</label>
-					<input
-						id={getStructuredFieldId(citation.id, key)}
-						ref={
-							!showTypeSelector && index === 0
-								? setFirstFieldNode
-								: undefined
-						}
-						type="text"
-						value={fields[key] || ''}
-						onChange={(event) =>
-							onFieldChange(key, event.target.value)
-						}
-						onKeyDown={handleKeyDown}
-					/>
-				</div>
-			))}
+			{fieldDefinitions
+				.filter(({ types }) => !types || types.includes(entryType))
+				.map(({ key, label }, index) => (
+					<div
+						key={key}
+						className="bibliography-builder-structured-field"
+					>
+						<label htmlFor={getStructuredFieldId(citation.id, key)}>
+							{label}
+						</label>
+						<input
+							id={getStructuredFieldId(citation.id, key)}
+							ref={
+								!showTypeSelector && index === 0
+									? setFirstFieldNode
+									: undefined
+							}
+							type="text"
+							value={fields[key] || ''}
+							onChange={(event) =>
+								onFieldChange(key, event.target.value)
+							}
+							onKeyDown={handleKeyDown}
+						/>
+					</div>
+				))}
 			<div className="bibliography-builder-structured-actions">
 				<Button
 					variant="primary"

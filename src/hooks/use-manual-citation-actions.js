@@ -83,6 +83,11 @@ export function useManualCitationActions({
 				label: __('Pages', 'borges-bibliography-builder'),
 			},
 			{
+				key: 'articleNumber',
+				label: __('Article number', 'borges-bibliography-builder'),
+				types: ['article-journal'],
+			},
+			{
 				key: 'doi',
 				label: __('DOI', 'borges-bibliography-builder'),
 			},

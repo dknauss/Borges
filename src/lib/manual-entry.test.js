@@ -138,6 +138,23 @@ describe('manual-entry', () => {
 		}
 	});
 
+	it('maps Article number to CSL number for journal articles only', () => {
+		expect(
+			buildManualCsl({
+				type: 'article-journal',
+				title: 'Numbered',
+				articleNumber: ' 108125 ',
+			}).number
+		).toBe('108125');
+		expect(
+			buildManualCsl({
+				type: 'book',
+				title: 'Book',
+				articleNumber: '108125',
+			})
+		).not.toHaveProperty('number');
+	});
+
 	it('builds sparse manual CSL records with only required data', () => {
 		const csl = buildManualCsl({
 			type: 'webpage',
