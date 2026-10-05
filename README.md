@@ -102,13 +102,13 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 - **1.3.3** — Restores DOI imports in WordPress Playground with direct CrossRef CSL transform lookups, serializes DOI requests for CrossRef's public concurrency limit, and adds a PubMed sample to the demo starter content.
 - **1.3.0** — Enforces an explicit 50-citation cap with editor warnings, guards all editor mutation flows against stale async results, removes a redundant formatter call in the manual-entry path, prunes non-runtime vendor dead weight from the release zip, and caches successful PMID responses while deduplicating concurrent DOI requests.
 - **1.2.0** — Adds PubMed/PMID import through an authenticated REST proxy, BibLaTeX export, manual reordering for numeric styles, full-bibliography reformat parity, and compact matrix coverage across all nine styles.
-- **ABNT / NBR 6023:2018** — Brazilian bibliography output is available as ABNT (Associação Brasileira de Normas Técnicas) with `pt-BR` defaults and the `Referências` heading.
+- **ABNT / NBR 6023:2025** — Brazilian bibliography output is available as ABNT (Associação Brasileira de Normas Técnicas) with `pt-BR` defaults and the `Referências` heading.
 - **1.1.x accessibility** — Adds optional Block Accessibility Checks integration and restores visible keyboard focus on editor row actions.
 
 ## Features
 
 - **Multiple input paths** — Add bare DOIs, DOI URLs, PubMed/PMID and PubMed Central/PMCID records, arXiv IDs and links, ISBNs, BibTeX and BibLaTeX entries, and supported formatted citations.
-- **Nine citation styles** — Chicago Notes-Bibliography by default, with Chicago Author-Date, APA 7, Harvard, Vancouver, IEEE, MLA 9, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2018) selectable.
+- **Nine citation styles** — Chicago Notes-Bibliography by default, with Chicago Author-Date, APA 7, Harvard, Vancouver, IEEE, MLA 9, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) selectable, each following its manual's current edition (see [docs/csl-styles.md](./docs/csl-styles.md)).
 - **Structured editing** — Plain-text editing plus per-field editing for heuristic or warning-marked citations.
 - **Semantic output** — `role="doc-bibliography"`, `<cite>` wrappers, `lang` attributes, and hanging-indent styling without deprecated bibliography-entry ARIA roles.
 - **JSON-LD** — Schema.org structured data for search engines, AI systems, and semantic consumers (on by default).

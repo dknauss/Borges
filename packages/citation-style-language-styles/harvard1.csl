@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Harvard author-date (reference list entries), in the widely taught form of
-  Cite Them Right, 12th ed. Project-authored for Borges Bibliography Builder
-  from that guide's rules; GPL-2.0-or-later. Not derived from the CSL
+  Cite Them Right, 13th ed. (2025). Project-authored for Borges Bibliography
+  Builder from that guide's rules; GPL-2.0-or-later. Not derived from the CSL
   project's harvard styles. Shared conventions: docs/csl-styles.md.
+
+  13th-edition rules: no place of publication; a journal that numbers its
+  articles instead of paging them gives "article" and the number.
 -->
 <style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" default-locale="en-GB" demote-non-dropping-particle="never" initialize-with-hyphen="true">
   <info>
@@ -11,7 +14,7 @@
     <id>https://github.com/dknauss/Borges/styles/harvard1</id>
     <author><name>Borges Bibliography Builder contributors</name></author>
     <category citation-format="author-date"/>
-    <updated>2026-09-26T00:00:00+00:00</updated>
+    <updated>2026-10-05T00:00:00+00:00</updated>
     <rights license="https://www.gnu.org/licenses/gpl-2.0.html">GPL-2.0-or-later</rights>
   </info>
 
@@ -108,18 +111,28 @@
     </choose>
   </macro>
 
-  <macro name="place-publisher">
-    <group delimiter=": ">
-      <text variable="publisher-place"/>
-      <text variable="publisher"/>
-    </group>
+  <macro name="publisher">
+    <text variable="publisher"/>
   </macro>
 
   <macro name="pages">
-    <group delimiter=" ">
-      <label variable="page" form="short"/>
-      <text variable="page"/>
-    </group>
+    <!-- A journal article's CSL number is its article number, which Cite Them
+         Right 13 gives in place of pages, even when a source also copies it
+         into page. -->
+    <choose>
+      <if type="article-journal" variable="number" match="all">
+        <group delimiter=" ">
+          <text value="article"/>
+          <text variable="number"/>
+        </group>
+      </if>
+      <else-if variable="page">
+        <group delimiter=" ">
+          <label variable="page" form="short"/>
+          <text variable="page"/>
+        </group>
+      </else-if>
+    </choose>
   </macro>
 
   <macro name="access">
@@ -215,7 +228,7 @@
               </group>
             </group>
             <group delimiter=", " suffix=".">
-              <text macro="place-publisher"/>
+              <text macro="publisher"/>
               <text macro="pages"/>
             </group>
           </else-if>
@@ -268,7 +281,7 @@
             </choose>
             <text macro="edition" suffix="."/>
             <text variable="number" suffix="."/>
-            <text macro="place-publisher" suffix="."/>
+            <text macro="publisher" suffix="."/>
           </else>
         </choose>
         <text macro="access"/>

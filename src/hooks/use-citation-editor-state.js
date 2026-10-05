@@ -325,6 +325,21 @@ export function useCitationEditorState({
 			delete updatedCsl.page;
 		}
 
+		// A DOI import copies CrossRef's article-number into `number`, which
+		// this form does not show and which some styles prefer to `page`. When
+		// the user changes Pages, drop that hidden copy so the edit shows.
+		const trimmed = (value) =>
+			typeof value === 'string' ? value.trim() : value;
+
+		if (
+			(structuredFields.page || '') !== (citation.csl.page || '') &&
+			citation.csl.number &&
+			trimmed(citation.csl.number) ===
+				trimmed(citation.csl['article-number'])
+		) {
+			delete updatedCsl.number;
+		}
+
 		const normalizedDoi = normalizeDoiValue(structuredFields.doi);
 		if (normalizedDoi) {
 			updatedCsl.DOI = normalizedDoi;

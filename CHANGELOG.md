@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **MLA 9 repeated authors.** In an MLA works-cited list, an entry by exactly the same author or authors as the entry before it now starts with three hyphens (`---. Title`), as the MLA Handbook asks. The names stay in the markup for screen readers, and the editor list, copied text, and exports keep them in full. Only exact matches are shortened; see `docs/csl-styles.md`. Existing MLA bibliographies stay valid and pick up the hyphens the next time they are saved from the editor.
+
 ### Changed
+
+- Four styles move to their manuals' current editions:
+  - **Chicago 18th ed. (2024)**, notes-bibliography and author-date: up to six authors are listed, and seven or more become the first three and "et al." (was eleven or more, cut to seven); books give the publisher without a place; a journal article with both a volume and an issue omits the month.
+  - **Cite Them Right 13th ed. (2025)** (Harvard): books give the publisher without a place, and a journal that numbers its articles instead of paging them gives `article 108125`. DOI imports now carry CrossRef's article number into CSL's `number`, where every style can read it.
+  - **OSCOLA 5th ed. (2026)**: a DOI is preferred to a URL and needs no access date.
+  - **ABNT NBR 6023:2025**: a DOI needs no "Disponível em" or "Acesso em".
+
+  Every current edition writes a repeated author out in full, as Borges already does: Chicago 18 dropped the 3-em dash, and ABNT dropped the underscore line in 2018. `docs/csl-styles.md` lists each style's edition. Already-saved bibliographies keep their text until an entry is added or edited, or the style is changed.
+
+- The formatter cache key now includes a hash of the bundled style's contents, so text cached from an older style edition is never served after an upgrade.
 
 - The runtime matrix's nginx cells pass again. The smoke test sent the write routes' `PATCH`, `PUT`, and `DELETE` requests to `/?rest_route=…`, which nginx answers with its own `405` for those methods, so the request never reached WordPress. It now uses `/index.php?rest_route=…`, the form WordPress itself builds for plain permalinks. Sites were not affected. Pull requests now also run an nginx cell, so a server-specific failure shows up before merge.
 

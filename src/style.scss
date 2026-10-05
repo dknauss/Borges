@@ -132,3 +132,21 @@ details.bibliography-builder-cite-export
 	padding: 0;
 	list-style: none;
 }
+
+/*
+ * MLA repeated authors: the visible mark is hidden from assistive technology,
+ * and the author names it stands for are read instead. The names also carry
+ * WordPress's screen-reader-text class, which themes and core style, so they
+ * stay hidden if this plugin's stylesheet is gone; this rule is the fallback.
+ */
+.wp-block-bibliography-builder-bibliography .bibliography-builder-visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

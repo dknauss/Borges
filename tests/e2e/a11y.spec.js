@@ -1,6 +1,11 @@
 /* eslint-disable jest/no-done-callback, @wordpress/no-global-active-element */
 const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
+const {
+	getEditorCanvas,
+	insertBlock,
+	waitForEditorReady,
+} = require('./helpers/editor');
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -85,55 +90,14 @@ async function ensurePluginActivated(page) {
 }
 
 async function getEditorFrame(page) {
-	const editorIframe = page.frameLocator('iframe[name="editor-canvas"]');
-	const iframeBody = editorIframe.locator('body');
-	if (await iframeBody.isVisible({ timeout: 3000 }).catch(() => false)) {
-		return editorIframe;
-	}
-	return page;
+	await waitForEditorReady(page);
+	return getEditorCanvas(page);
 }
 
 async function insertBibliographyBlock(page) {
 	// Keep the a11y gate focused on the block UI itself. Inserter behavior is
-	// covered by tests/e2e/playground.spec.js, and the editor's inserter is
-	// intentionally dynamic enough to be flaky on slower CI runners.
-	await page.waitForFunction(
-		() =>
-			window.wp?.blocks?.getBlockType(
-				'bibliography-builder/bibliography'
-			) &&
-			window.wp?.blocks?.createBlock &&
-			window.wp?.data?.dispatch('core/block-editor')?.insertBlock,
-		null,
-		{ timeout: 20000 }
-	);
-
-	await page.evaluate(() => {
-		const block = window.wp.blocks.createBlock(
-			'bibliography-builder/bibliography'
-		);
-		const editor = window.wp.data.dispatch('core/block-editor');
-		editor.insertBlock(block);
-		editor.selectBlock(block.clientId);
-	});
-
-	// Confirm the block appeared in the canvas before returning.
-	// Playwright FrameLocator does not support .or(), so try iframe first.
-	const inIframe = page
-		.frameLocator('iframe[name="editor-canvas"]')
-		.locator('.wp-block-bibliography-builder-bibliography')
-		.first();
-	const iframeVisible = await inIframe
-		.waitFor({ state: 'visible', timeout: 30000 })
-		.then(() => true)
-		.catch(() => false);
-	if (!iframeVisible) {
-		// Fallback for WP installs without the editor-canvas iframe.
-		await page
-			.locator('.wp-block-bibliography-builder-bibliography')
-			.first()
-			.waitFor({ state: 'visible', timeout: 10000 });
-	}
+	// covered by tests/e2e/playground.spec.js.
+	await insertBlock(page, 'bibliography-builder/bibliography');
 }
 
 async function selectBibliographyBlock(page, editorFrame) {
@@ -299,12 +263,8 @@ test.describe('Bibliography block accessibility gate', () => {
 		await test.step('set up a post with the Bibliography block', async () => {
 			await page.goto('/wp-admin/post-new.php');
 			await page.waitForLoadState('domcontentloaded');
+			await waitForEditorReady(page);
 			await dismissEditorOverlay(page);
-			await expect(
-				page.getByRole('button', {
-					name: /Block Inserter|Toggle block inserter/i,
-				})
-			).toBeVisible({ timeout: 30000 });
 			await insertBibliographyBlock(page);
 			await dismissEditorOverlay(page);
 			editorFrame = await getEditorFrame(page);

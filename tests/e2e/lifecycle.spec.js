@@ -1,5 +1,6 @@
 /* eslint-disable jest/no-done-callback */
 const { test, expect } = require('@playwright/test');
+const { waitForEditorReady } = require('./helpers/editor');
 
 /**
  * Plugin lifecycle tests: activate, create content, deactivate, verify content
@@ -122,12 +123,14 @@ async function deactivatePlugin(page) {
  * Create a post with a bibliography block, publish it, and return the
  * front-end URL.
  * @param {import('@playwright/test').Page} page
+ * @param {Object|null}                     attributes Block attributes, or null for the default Chicago post.
  */
-async function createPostWithBibliography(page) {
+async function createPostWithBibliography(page, attributes = null) {
 	await page.goto('/wp-admin/post-new.php');
+	await waitForEditorReady(page);
 	await dismissEditorOverlay(page);
 
-	const postData = await page.evaluate(async () => {
+	const postData = await page.evaluate(async (customAttributes) => {
 		const { blocks, data } = window.wp || {};
 		if (!blocks || !data) {
 			throw new Error('Gutenberg editor APIs are not available.');
@@ -135,28 +138,31 @@ async function createPostWithBibliography(page) {
 
 		const dispatch = data.dispatch('core/editor');
 		const select = data.select('core/editor');
-		const block = blocks.createBlock('bibliography-builder/bibliography', {
-			citationStyle: 'chicago-notes-bibliography',
-			headingText: 'References',
-			outputJsonLd: true,
-			outputCoins: false,
-			outputCslJson: false,
-			citations: [
-				{
-					id: 'lifecycle2024',
-					displayText:
-						'Test Author. Lifecycle Test Article. Test Journal (2024).',
-					csl: {
+		const block = blocks.createBlock(
+			'bibliography-builder/bibliography',
+			customAttributes || {
+				citationStyle: 'chicago-notes-bibliography',
+				headingText: 'References',
+				outputJsonLd: true,
+				outputCoins: false,
+				outputCslJson: false,
+				citations: [
+					{
 						id: 'lifecycle2024',
-						type: 'article-journal',
-						title: 'Lifecycle Test Article',
-						'container-title': 'Test Journal',
-						author: [{ family: 'Author', given: 'Test' }],
-						issued: { 'date-parts': [[2024]] },
+						displayText:
+							'Test Author. Lifecycle Test Article. Test Journal (2024).',
+						csl: {
+							id: 'lifecycle2024',
+							type: 'article-journal',
+							title: 'Lifecycle Test Article',
+							'container-title': 'Test Journal',
+							author: [{ family: 'Author', given: 'Test' }],
+							issued: { 'date-parts': [[2024]] },
+						},
 					},
-				},
-			],
-		});
+				],
+			}
+		);
 
 		dispatch.resetBlocks([block]);
 		dispatch.editPost({
@@ -170,7 +176,7 @@ async function createPostWithBibliography(page) {
 			id: currentPost?.id || select.getCurrentPostId(),
 			link: currentPost?.link || null,
 		};
-	});
+	}, attributes);
 
 	if (postData.link) {
 		return postData.link;
@@ -222,6 +228,50 @@ test.describe('Plugin lifecycle', () => {
 		expect(body).not.toContain('There has been a critical error');
 
 		// Reactivate for subsequent tests.
+		await ensurePluginActive(page);
+	});
+
+	test('MLA repeated-author names stay hidden after deactivation', async ({
+		page,
+	}) => {
+		await ensurePluginActive(page);
+
+		const borges = (id, title) => ({
+			id,
+			formattedText: `Borges, Jorge Luis. ${title}. Sur, 1944.`,
+			displayOverride: null,
+			csl: {
+				id,
+				type: 'book',
+				title,
+				author: [{ family: 'Borges', given: 'Jorge Luis' }],
+				issued: { 'date-parts': [[1944]] },
+			},
+		});
+		const postUrl = await createPostWithBibliography(page, {
+			citationStyle: 'mla-9',
+			headingText: 'Works Cited',
+			citations: [borges('b1', 'Ficciones'), borges('b2', 'El Aleph')],
+		});
+
+		await deactivatePlugin(page);
+
+		// Without the plugin's stylesheet, the names the mark stands for must
+		// still be visually hidden (WordPress's screen-reader-text class) and
+		// the mark must still read as three hyphens on one line.
+		await page.goto(postUrl);
+		const repeated = page
+			.locator('.bibliography-builder-repeated-author')
+			.first();
+		await expect(
+			repeated.locator('.bibliography-builder-repeated-author-mark')
+		).toHaveText('\u2011\u2011\u2011');
+
+		const names = repeated.locator('.screen-reader-text');
+		await expect(names).toHaveText('Borges, Jorge Luis');
+		const box = await names.boundingBox();
+		expect(box === null || (box.width <= 1 && box.height <= 1)).toBe(true);
+
 		await ensurePluginActive(page);
 	});
 

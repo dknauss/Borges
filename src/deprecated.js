@@ -1,6 +1,10 @@
 import metadata from '../block.json';
 import { sortCitations } from './lib/sorter';
-import { getLocalizedSaveLabels, renderBibliographySave } from './save-markup';
+import {
+	LOCALE_INDEPENDENT_SAVE_LABELS,
+	getLocalizedSaveLabels,
+	renderBibliographySave,
+} from './save-markup';
 
 const deprecatedAttributes = metadata.attributes;
 
@@ -117,6 +121,19 @@ function migrateSortedAttributes(attributes) {
 }
 
 export const deprecated = [
+	{
+		// Freezes the save() shape from before MLA 9 repeated authors became
+		// three hyphens: every entry writes its author names out in full.
+		attributes: deprecatedAttributes,
+		save: ({ attributes }) =>
+			renderBibliographySave(attributes, {
+				sortEntries: true,
+				headingTag: 'p',
+				entryTag: 'cite',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			}),
+	},
 	{
 		// Freezes the save() shape from before labels were made
 		// locale-independent: Cite / Export labels and the link fallback label

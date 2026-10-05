@@ -75,7 +75,7 @@ Default: **Chicago Manual of Style — Notes-Bibliography**. Nine styles are sel
 -   IEEE
 -   MLA 9
 -   OSCOLA
--   ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2018)
+-   ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025)
 
 Changing styles reformats all auto-generated citations and preserves manual display overrides. Future phases may extend this to custom CSL file uploads.
 

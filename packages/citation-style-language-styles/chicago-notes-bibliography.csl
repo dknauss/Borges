@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Chicago notes and bibliography (bibliography entries), following The Chicago
-  Manual of Style, 17th ed., chapter 14. Project-authored for Borges
+  Manual of Style, 18th ed. (2024), chapter 14. Project-authored for Borges
   Bibliography Builder from the manual's rules; GPL-2.0-or-later. Not derived
   from the CSL project's chicago-note-bibliography.csl.
 
@@ -14,6 +14,12 @@
     period, only for a suffix that is exactly "." or ",".
   - Role phrases use <text term form="verb"> before the names, not <label>.
   - No page-range-format: without it citeproc-php joins ranges with an en dash.
+
+  18th-edition rules: up to six authors are listed, seven or more as the first
+  three and "et al."; no place of publication (the manual keeps it for books
+  published before 1900, which CSL cannot test, so it is dropped throughout);
+  a journal article with both a volume and an issue number omits the month;
+  a repeated author is written out in full, not replaced with a 3-em dash.
 -->
 <style xmlns="http://purl.org/net/xbiblio/csl" class="note" version="1.0" default-locale="en-US" demote-non-dropping-particle="display-and-sort">
   <info>
@@ -21,7 +27,7 @@
     <id>https://github.com/dknauss/Borges/styles/chicago-notes-bibliography</id>
     <author><name>Borges Bibliography Builder contributors</name></author>
     <category citation-format="note"/>
-    <updated>2026-09-26T00:00:00+00:00</updated>
+    <updated>2026-10-05T00:00:00+00:00</updated>
     <rights license="https://www.gnu.org/licenses/gpl-2.0.html">GPL-2.0-or-later</rights>
   </info>
 
@@ -120,12 +126,15 @@
 
   <macro name="journal-date">
     <choose>
-      <if variable="issued">
+      <if variable="volume issue" match="all">
+        <text macro="year"/>
+      </if>
+      <else-if variable="issued">
         <date variable="issued">
           <date-part name="month" suffix=" "/>
           <date-part name="year"/>
         </date>
-      </if>
+      </else-if>
       <else>
         <text term="no date" form="short"/>
       </else>
@@ -145,10 +154,7 @@
 
   <macro name="publication">
     <group delimiter=", ">
-      <group delimiter=": ">
-        <text variable="publisher-place"/>
-        <text variable="publisher"/>
-      </group>
+      <text variable="publisher"/>
       <text macro="year"/>
     </group>
   </macro>
@@ -184,7 +190,7 @@
     </date>
   </macro>
 
-  <bibliography hanging-indent="true" et-al-min="11" et-al-use-first="7">
+  <bibliography hanging-indent="true" et-al-min="7" et-al-use-first="3">
     <sort>
       <key macro="sort-contributors"/>
       <key variable="title"/>

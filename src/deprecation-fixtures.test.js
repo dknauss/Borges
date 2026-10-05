@@ -126,13 +126,62 @@ const FIXTURE_ATTRIBUTES = {
 };
 
 /**
+ * Attributes for fixtures whose save() shape FIXTURE_ATTRIBUTES cannot show,
+ * keyed by fixture version (the NN in vNN-deprecated.html).
+ *
+ * v08 froze save() from before MLA 9 repeated authors became three hyphens.
+ * That only changes an MLA list with two entries by the same author in a row,
+ * so its fixture is one; under FIXTURE_ATTRIBUTES it would match v00 exactly.
+ */
+const FIXTURE_ATTRIBUTES_BY_VERSION = {
+	8: {
+		...FIXTURE_ATTRIBUTES,
+		citationStyle: 'mla-9',
+		headingText: 'Works Cited',
+		citations: [
+			{
+				id: 'borges1944',
+				csl: {
+					id: 'borges1944',
+					type: 'book',
+					title: 'Ficciones',
+					publisher: 'Sur',
+					author: [{ family: 'Borges', given: 'Jorge Luis' }],
+					issued: { 'date-parts': [[1944]] },
+				},
+				formattedText: 'Borges, Jorge Luis. Ficciones. Sur, 1944.',
+				displayOverride: null,
+			},
+			{
+				id: 'borges1949',
+				csl: {
+					id: 'borges1949',
+					type: 'book',
+					title: 'El Aleph',
+					publisher: 'Losada',
+					author: [{ family: 'Borges', given: 'Jorge Luis' }],
+					issued: { 'date-parts': [[1949]] },
+				},
+				formattedText: 'Borges, Jorge Luis. El Aleph. Losada, 1949.',
+				displayOverride: null,
+			},
+		],
+	},
+};
+
+function fixtureAttributes(version) {
+	return FIXTURE_ATTRIBUTES_BY_VERSION[version] || FIXTURE_ATTRIBUTES;
+}
+
+/**
  * Register the block under a throwaway name with a specific save implementation,
  * serialize one instance, then unregister. Used only to mint fixtures.
  *
  * @param {Function} saveImplementation The save function to serialize with.
+ * @param {Object}   attributes         Block attributes.
  * @return {string} Serialized block markup.
  */
-function serializeWith(saveImplementation) {
+function serializeWith(saveImplementation, attributes = FIXTURE_ATTRIBUTES) {
 	const name = metadata.name;
 	if (getBlockTypes().some((type) => type.name === name)) {
 		unregisterBlockType(name);
@@ -141,7 +190,7 @@ function serializeWith(saveImplementation) {
 		...metadata,
 		save: saveImplementation,
 	});
-	const markup = serialize(createBlock(name, FIXTURE_ATTRIBUTES));
+	const markup = serialize(createBlock(name, attributes));
 	unregisterBlockType(name);
 	return markup;
 }
@@ -220,7 +269,10 @@ if (WRITE_MODE) {
 				const name = fixtureName(index);
 				writeFileSync(
 					join(FIXTURE_DIR, name),
-					`${serializeWith(entry.save).trim()}\n`
+					`${serializeWith(
+						entry.save,
+						fixtureAttributes(deprecated.length - index)
+					).trim()}\n`
 				);
 				written.push(name);
 			});

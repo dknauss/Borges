@@ -89,6 +89,70 @@ final class CslStyleGoldenTest extends TestCase {
 	}
 
 	/**
+	 * Current-edition rules the corpus does not reach: Cite Them Right 13's
+	 * "article" numbers, and OSCOLA 5 and NBR 6023:2025 dropping the access
+	 * date when there is a DOI.
+	 */
+	public function test_current_edition_rules_outside_the_corpus() {
+		$webpage = array(
+			'type'            => 'webpage',
+			'title'           => 'A Page',
+			'author'          => array(
+				array(
+					'family' => 'Lee',
+					'given'  => 'Kim',
+				),
+			),
+			'container-title' => 'Site',
+			'URL'             => 'https://example.org/a',
+			'accessed'        => array( 'date-parts' => array( array( 2024, 5, 1 ) ) ),
+			'issued'          => array( 'date-parts' => array( array( 2024, 4, 2 ) ) ),
+		);
+		$with_doi = array_merge( $webpage, array( 'DOI' => '10.5555/web.1' ) );
+		$article  = array(
+			'type'            => 'article-journal',
+			'title'           => 'Numbered Article',
+			'author'          => array(
+				array(
+					'family' => 'Moss',
+					'given'  => 'Ann',
+				),
+			),
+			'container-title' => 'Diabetes Research',
+			'volume'          => '162',
+			'number'          => '108125',
+			'issued'          => array( 'date-parts' => array( array( 2020 ) ) ),
+		);
+
+		$text = static function ( $items, $style ) {
+			return array_map( 'wp_strip_all_tags', bibliography_builder_format_csl_items( $items, $style ) );
+		};
+
+		$this->assertSame( array( 'Moss, A. (2020) ‘Numbered Article’, Diabetes Research, 162, article 108125.' ), $text( array( $article ), 'harvard' ) );
+		// CrossRef also copies the article number into page; it is not a page.
+		$this->assertSame(
+			array( 'Moss, A. (2020) ‘Numbered Article’, Diabetes Research, 162, article 108125.' ),
+			$text( array( array_merge( $article, array( 'page' => '108125' ) ) ), 'harvard' )
+		);
+
+		$this->assertSame(
+			array(
+				'Lee K, ‘A Page’ (Site, 2 April 2024) https://doi.org/10.5555/web.1',
+				'Lee K, ‘A Page’ (Site, 2 April 2024) https://example.org/a accessed 1 May 2024',
+			),
+			$text( array( $with_doi, $webpage ), 'oscola' )
+		);
+
+		$this->assertSame(
+			array(
+				'LEE, Kim. A Page. Site, 2 abr. 2024. DOI: https://doi.org/10.5555/web.1.',
+				'LEE, Kim. A Page. Site, 2 abr. 2024. Disponível em: https://example.org/a. Acesso em: 1 maio 2024.',
+			),
+			$text( array( $with_doi, $webpage ), 'abnt' )
+		);
+	}
+
+	/**
 	 * The formatter reads vendor/citation-style-language/, a Composer copy of
 	 * packages/. A stale copy once hid a style regression; fail on any drift.
 	 */
