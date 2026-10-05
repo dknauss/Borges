@@ -17,7 +17,9 @@ const borges = [{ family: 'Borges', given: 'Jorge Luis' }];
 describe('getRepeatedAuthorPrefixes', () => {
 	it('applies to MLA 9 only, with three hyphens', () => {
 		expect(REPEATED_AUTHOR_STYLES).toEqual(['mla-9']);
-		expect(REPEATED_AUTHOR_MARK).toBe('---');
+		// Non-breaking hyphens (U+2011), which wptexturize leaves alone.
+		expect(REPEATED_AUTHOR_MARK).toBe('\u2011\u2011\u2011');
+		expect(REPEATED_AUTHOR_MARK).not.toMatch(/-/);
 
 		const list = [
 			entry('a', borges, 'Borges, Jorge Luis. Ficciones. 1944.'),

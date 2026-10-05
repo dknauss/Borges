@@ -1,5 +1,4 @@
 import { useBlockProps } from '@wordpress/block-editor';
-import { RawHTML } from '@wordpress/element';
 import { buildCoins } from './lib/coins';
 import {
 	getDisplaySegments,
@@ -12,7 +11,7 @@ import { buildJsonLdString, buildCslJsonString } from './lib/jsonld';
 import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
 import {
-	REPEATED_AUTHOR_MARK_HTML,
+	REPEATED_AUTHOR_MARK,
 	getRepeatedAuthorPrefixes,
 } from './lib/repeated-authors';
 import {
@@ -149,11 +148,9 @@ export function renderBibliographySave(
 											className="bibliography-builder-repeated-author-mark"
 											aria-hidden="true"
 										>
-											<RawHTML>
-												{REPEATED_AUTHOR_MARK_HTML}
-											</RawHTML>
+											{REPEATED_AUTHOR_MARK}
 										</span>
-										<span className="bibliography-builder-visually-hidden">
+										<span className="bibliography-builder-visually-hidden screen-reader-text">
 											{repeatedPrefix}
 										</span>
 									</span>

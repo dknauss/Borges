@@ -169,10 +169,10 @@ async function expectHyphensOnFrontend(page, link) {
 	await expect(entries.nth(0).locator(REPEATED)).toHaveCount(0);
 
 	const repeated = entries.nth(1).locator(REPEATED);
-	// Three hyphens, not the dashes wptexturize makes of literal "-".
+	// Three non-breaking hyphens, not the dashes wptexturize makes of "-".
 	await expect(
 		repeated.locator('.bibliography-builder-repeated-author-mark')
-	).toHaveText('---');
+	).toHaveText('\u2011\u2011\u2011');
 	await expect(
 		repeated.locator('.bibliography-builder-repeated-author-mark')
 	).toHaveAttribute('aria-hidden', 'true');

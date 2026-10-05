@@ -97,7 +97,6 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
 
 - PHPUnit uses custom mock WordPress functions — no WP installation required. See `tests/phpunit/bootstrap.php`.
 - Jest mocks citation-js via `src/__test-utils__/citation-js-mocks.js`
-- Jest maps every `@wordpress/element` import to the root copy (`moduleNameMapper` in `package.json`), as webpack's `wp.element` external does in production. Without it, `@wordpress/blocks` serializes with its own nested copy and renders a `RawHTML` from `save()` as a `<div>`.
 - Combined JS + PHP Codecov target: 80%+. Badge may show "unknown" intermittently (uploads are continue-on-error).
 
 ### Playground

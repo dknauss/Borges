@@ -1966,11 +1966,11 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 	if ( is_string( $repeated_prefix ) && array() !== $segments && ! $segments[0]['italic']
 		&& 0 === strncmp( $segments[0]['text'], $repeated_prefix, strlen( $repeated_prefix ) ) ) {
 		$segments[0]['text'] = (string) substr( $segments[0]['text'], strlen( $repeated_prefix ) );
-		// Character references, not "-": see REPEATED_AUTHOR_MARK_HTML.
+		// U+2011 non-breaking hyphens, not "-": see REPEATED_AUTHOR_MARK.
 		$text .= '<span class="bibliography-builder-repeated-author">'
 			. '<span class="bibliography-builder-repeated-author-mark" aria-hidden="true">'
-			. '&#45;&#45;&#45;</span>'
-			. '<span class="bibliography-builder-visually-hidden">'
+			. "\u{2011}\u{2011}\u{2011}</span>"
+			. '<span class="bibliography-builder-visually-hidden screen-reader-text">'
 			. bibliography_builder_escape_save_text( $repeated_prefix )
 			. '</span></span>';
 	}

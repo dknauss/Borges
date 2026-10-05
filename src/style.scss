@@ -134,14 +134,11 @@ details.bibliography-builder-cite-export
 }
 
 /*
- * MLA repeated authors: the visible "---" is hidden from assistive technology,
- * and the author names it stands for are read instead. The three hyphens are
- * character references (see repeated-authors.js), kept on one line.
+ * MLA repeated authors: the visible mark is hidden from assistive technology,
+ * and the author names it stands for are read instead. The names also carry
+ * WordPress's screen-reader-text class, which themes and core style, so they
+ * stay hidden if this plugin's stylesheet is gone; this rule is the fallback.
  */
-.wp-block-bibliography-builder-bibliography .bibliography-builder-repeated-author-mark {
-	white-space: nowrap;
-}
-
 .wp-block-bibliography-builder-bibliography .bibliography-builder-visually-hidden {
 	position: absolute;
 	width: 1px;

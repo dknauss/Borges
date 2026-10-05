@@ -65,9 +65,6 @@
 				"functions": 90,
 				"lines": 90
 			}
-		},
-		"moduleNameMapper": {
-			"^@wordpress/element$": "<rootDir>/node_modules/@wordpress/element"
 		}
 	},
 	"dependencies": {
