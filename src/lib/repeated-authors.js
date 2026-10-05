@@ -21,6 +21,13 @@ export const REPEATED_AUTHOR_STYLES = Object.freeze(['mla-9']);
 
 export const REPEATED_AUTHOR_MARK = '---';
 
+/**
+ * The mark as saved: character references, not "-" characters. On the front
+ * end wptexturize turns "---" into an em dash, and a "-" alone between tags
+ * into an en dash; it never sees a hyphen written as "&#45;".
+ */
+export const REPEATED_AUTHOR_MARK_HTML = '&#45;&#45;&#45;';
+
 const NAME_KEYS = [
 	'family',
 	'given',

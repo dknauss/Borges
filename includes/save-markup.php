@@ -1966,11 +1966,10 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 	if ( is_string( $repeated_prefix ) && array() !== $segments && ! $segments[0]['italic']
 		&& 0 === strncmp( $segments[0]['text'], $repeated_prefix, strlen( $repeated_prefix ) ) ) {
 		$segments[0]['text'] = (string) substr( $segments[0]['text'], strlen( $repeated_prefix ) );
-		// One span per hyphen: wptexturize turns "---" in a text run into an
-		// em dash on the front end.
+		// Character references, not "-": see REPEATED_AUTHOR_MARK_HTML.
 		$text .= '<span class="bibliography-builder-repeated-author">'
 			. '<span class="bibliography-builder-repeated-author-mark" aria-hidden="true">'
-			. '<span>-</span><span>-</span><span>-</span></span>'
+			. '&#45;&#45;&#45;</span>'
 			. '<span class="bibliography-builder-visually-hidden">'
 			. bibliography_builder_escape_save_text( $repeated_prefix )
 			. '</span></span>';

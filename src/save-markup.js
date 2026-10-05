@@ -1,4 +1,5 @@
 import { useBlockProps } from '@wordpress/block-editor';
+import { RawHTML } from '@wordpress/element';
 import { buildCoins } from './lib/coins';
 import {
 	getDisplaySegments,
@@ -11,7 +12,7 @@ import { buildJsonLdString, buildCslJsonString } from './lib/jsonld';
 import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
 import {
-	REPEATED_AUTHOR_MARK,
+	REPEATED_AUTHOR_MARK_HTML,
 	getRepeatedAuthorPrefixes,
 } from './lib/repeated-authors';
 import {
@@ -148,16 +149,9 @@ export function renderBibliographySave(
 											className="bibliography-builder-repeated-author-mark"
 											aria-hidden="true"
 										>
-											{/* One span per hyphen: wptexturize
-											turns "---" in a text run into an em
-											dash on the front end. */}
-											{[...REPEATED_AUTHOR_MARK].map(
-												(hyphen, hyphenIndex) => (
-													<span key={hyphenIndex}>
-														{hyphen}
-													</span>
-												)
-											)}
+											<RawHTML>
+												{REPEATED_AUTHOR_MARK_HTML}
+											</RawHTML>
 										</span>
 										<span className="bibliography-builder-visually-hidden">
 											{repeatedPrefix}

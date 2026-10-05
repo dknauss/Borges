@@ -175,7 +175,7 @@ async function expectHyphensOnFrontend(page, link) {
 	await expect(entries.nth(0).locator(REPEATED)).toHaveCount(0);
 
 	const repeated = entries.nth(1).locator(REPEATED);
-	// Three hyphens, not the em dash wptexturize makes of "---" in one run.
+	// Three hyphens, not the dashes wptexturize makes of literal "-".
 	await expect(
 		repeated.locator('.bibliography-builder-repeated-author-mark')
 	).toHaveText('---');
@@ -183,6 +183,7 @@ async function expectHyphensOnFrontend(page, link) {
 		repeated.locator('.bibliography-builder-repeated-author-mark')
 	).toHaveAttribute('aria-hidden', 'true');
 	await expect(entries.nth(1)).not.toContainText('\u2014');
+	await expect(entries.nth(1)).not.toContainText('\u2013');
 	await expect(
 		repeated.locator('.bibliography-builder-visually-hidden')
 	).toHaveText('Borges, Jorge Luis');
