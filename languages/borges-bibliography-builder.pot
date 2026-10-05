@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Borges Bibliography Builder 1.7.0\n"
+"Project-Id-Version: Borges Bibliography Builder 1.8.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/borges-bibliography-builder\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -445,6 +445,11 @@ msgstr ""
 #: src/components/structured-citation-editor.js:29
 #: src/hooks/use-manual-citation-actions.js:83
 msgid "Pages"
+msgstr ""
+
+#: src/components/structured-citation-editor.js:34
+#: src/hooks/use-manual-citation-actions.js:87
+msgid "Article number"
 msgstr ""
 
 #: src/components/structured-citation-editor.js:33

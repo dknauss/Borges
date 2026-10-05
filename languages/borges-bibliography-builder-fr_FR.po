@@ -255,6 +255,11 @@ msgstr "Année"
 msgid "Pages"
 msgstr "Pages"
 
+#: src/components/structured-citation-editor.js:34
+#: src/hooks/use-manual-citation-actions.js:87
+msgid "Article number"
+msgstr ""
+
 #: src/components/structured-citation-editor.js:33
 #: src/hooks/use-manual-citation-actions.js:87
 msgid "DOI"

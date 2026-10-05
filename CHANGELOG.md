@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-05
+
 ### Added
 
 - **MLA 9 repeated authors.** In an MLA works-cited list, an entry by exactly the same author or authors as the entry before it now starts with three hyphens (`---. Title`), as the MLA Handbook asks. The names stay in the markup for screen readers, and the editor list, copied text, and exports keep them in full. Only exact matches are shortened; see `docs/csl-styles.md`. Existing MLA bibliographies stay valid and pick up the hyphens the next time they are saved from the editor.
@@ -20,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **OSCOLA 5th ed. (2026)**: a DOI is preferred to a URL and needs no access date.
   - **ABNT NBR 6023:2025**: a DOI needs no "Disponível em" or "Acesso em".
 
-  Every current edition writes a repeated author out in full, as Borges already does: Chicago 18 dropped the 3-em dash, and ABNT dropped the underscore line in 2018. `docs/csl-styles.md` lists each style's edition. Already-saved bibliographies keep their text until an entry is added or edited, or the style is changed.
+  These four editions write a repeated author out in full, as Borges already did for them: Chicago 18 dropped the 3-em dash, and ABNT dropped the underscore line in 2018. `docs/csl-styles.md` lists each style's edition. Already-saved bibliographies keep their text until an entry is added or edited, or the style is changed.
 
 - The formatter cache key now includes a hash of the bundled style's contents, so text cached from an older style edition is never served after an upgrade.
 
