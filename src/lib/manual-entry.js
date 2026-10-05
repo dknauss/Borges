@@ -37,6 +37,7 @@ export const DEFAULT_MANUAL_ENTRY_FIELDS = {
 	publisher: '',
 	year: '',
 	page: '',
+	articleNumber: '',
 	doi: '',
 	url: '',
 };
@@ -188,6 +189,13 @@ export function buildManualCsl(fields) {
 
 	if (normalizeFieldValue(fields.page)) {
 		csl.page = normalizeFieldValue(fields.page);
+	}
+
+	if (
+		type === 'article-journal' &&
+		normalizeFieldValue(fields.articleNumber)
+	) {
+		csl.number = normalizeFieldValue(fields.articleNumber);
 	}
 
 	const normalizedDoi = normalizeDoiValue(fields.doi);

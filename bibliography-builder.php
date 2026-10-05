@@ -477,6 +477,7 @@ function bibliography_builder_get_csl_string_fields() {
 		'container-title',
 		'publisher',
 		'page',
+		'number',
 		'volume',
 		'issue',
 		'DOI',

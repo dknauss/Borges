@@ -18,6 +18,7 @@ import {
 } from '../lib/citation-limits';
 import { computeExportStrings } from './compute-export-strings';
 import { createCitationId } from '../lib/citation-id';
+import { stripHtmlTags } from '../lib/csl-sanitize';
 
 const FORMATTER_FALLBACK_MESSAGE = __(
 	'Formatter unavailable; using fallback citation text.',
@@ -237,6 +238,12 @@ export function useCitationEditorState({
 					String(entry.csl.issued?.['date-parts']?.[0]?.[0] || '') ||
 					'',
 				page: entry.csl.page || '',
+				// CSL allows a numeric number; the field edits text.
+				articleNumber:
+					entry.csl.type === 'article-journal' &&
+					(entry.csl.number || entry.csl.number === 0)
+						? String(entry.csl.number)
+						: '',
 				doi: entry.csl.DOI || '',
 				url: entry.csl.URL || '',
 			});
@@ -325,19 +332,25 @@ export function useCitationEditorState({
 			delete updatedCsl.page;
 		}
 
-		// A DOI import copies CrossRef's article-number into `number`, which
-		// this form does not show and which some styles prefer to `page`. When
-		// the user changes Pages, drop that hidden copy so the edit shows.
-		const trimmed = (value) =>
-			typeof value === 'string' ? value.trim() : value;
+		// A journal's article number (CSL `number`) has its own field; other
+		// types keep whatever `number` they carry.
+		if (citation.csl.type === 'article-journal') {
+			const articleNumber = stripHtmlTags(
+				String(structuredFields.articleNumber ?? '')
+			).trim();
+			const original = citation.csl.number;
 
-		if (
-			(structuredFields.page || '') !== (citation.csl.page || '') &&
-			citation.csl.number &&
-			trimmed(citation.csl.number) ===
-				trimmed(citation.csl['article-number'])
-		) {
-			delete updatedCsl.number;
+			if (String(original ?? '').trim() !== articleNumber) {
+				if (articleNumber) {
+					updatedCsl.number = articleNumber;
+				} else {
+					delete updatedCsl.number;
+				}
+				// CrossRef's own copy, kept from a DOI import, would now
+				// contradict `number` in the CSL-JSON output.
+				delete updatedCsl['article-number'];
+			}
+			// Otherwise unchanged: the original value, numeric or not, stays.
 		}
 
 		const normalizedDoi = normalizeDoiValue(structuredFields.doi);

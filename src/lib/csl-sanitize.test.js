@@ -298,11 +298,23 @@ describe('validateAndSanitizeCsl', () => {
 			volume: 12,
 			issue: 3,
 			edition: 2,
+			number: 108125,
 		});
 
 		expect(result.volume).toBe('12');
+		expect(result.number).toBe('108125');
 		expect(result.issue).toBe('3');
 		expect(result.edition).toBe('2');
+	});
+
+	it('strips markup from number, as from every string field', () => {
+		expect(
+			validateAndSanitizeCsl({
+				type: 'article-journal',
+				title: 'Good',
+				number: '<em>108125</em>',
+			}).number
+		).toBe('108125');
 	});
 
 	it('throws when a string field contains a non-string non-number value', () => {

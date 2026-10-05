@@ -165,6 +165,7 @@ final class RestEdgeCasesTest extends TestCase {
 				'type'        => 'book',
 				'title'       => '<b>Safe</b> <script>alert(1)</script>',
 				'ISBN'        => array( '<b>9780000000000</b>' ),
+				'number'      => '<em>108125</em>',
 				'__proto__'   => array( 'polluted' => true ),
 				'constructor' => array( 'polluted' => true ),
 			)
@@ -178,6 +179,7 @@ final class RestEdgeCasesTest extends TestCase {
 		// strip_tags() stand-in, not WordPress.
 		$this->assertSame( 'Safe', $sanitized['title'] );
 		$this->assertSame( array( '9780000000000' ), $sanitized['ISBN'] );
+		$this->assertSame( '108125', $sanitized['number'] );
 		$this->assertArrayNotHasKey( '__proto__', $sanitized );
 		$this->assertArrayNotHasKey( 'constructor', $sanitized );
 	}
