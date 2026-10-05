@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Four styles move to their manuals' current editions:
+  - **Chicago 18th ed. (2024)**, notes-bibliography and author-date: up to six authors are listed, and seven or more become the first three and "et al." (was eleven or more, cut to seven); books give the publisher without a place; a journal article with both a volume and an issue omits the month.
+  - **Cite Them Right 13th ed. (2025)** (Harvard): books give the publisher without a place, and a journal that numbers its articles instead of paging them gives `article 108125`.
+  - **OSCOLA 5th ed. (2026)**: a DOI is preferred to a URL and needs no access date.
+  - **ABNT NBR 6023:2025**: a DOI needs no "Disponível em" or "Acesso em".
+
+  Every current edition writes a repeated author out in full, as Borges already does: Chicago 18 dropped the 3-em dash, and ABNT dropped the underscore line in 2018. `docs/csl-styles.md` lists each style's edition. Already-saved bibliographies keep their text until an entry is added or edited, or the style is changed.
+
 - The runtime matrix's nginx cells pass again. The smoke test sent the write routes' `PATCH`, `PUT`, and `DELETE` requests to `/?rest_route=…`, which nginx answers with its own `405` for those methods, so the request never reached WordPress. It now uses `/index.php?rest_route=…`, the form WordPress itself builds for plain permalinks. Sites were not affected. Pull requests now also run an nginx cell, so a server-specific failure shows up before merge.
 
 ## [1.7.0] - 2026-09-26

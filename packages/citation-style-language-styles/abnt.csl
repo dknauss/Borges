@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ABNT (reference list entries), following ABNT NBR 6023:2018 (Informação e
-  documentação: Referências). Project-authored for Borges Bibliography
+  ABNT (reference list entries), following ABNT NBR 6023:2025 (Informação e
+  documentação: Referências), 3rd ed. Project-authored for Borges Bibliography
   Builder from the standard's rules; GPL-2.0-or-later. Not derived from the
   CSL project's ABNT styles. Shared conventions: docs/csl-styles.md.
 
   Deviations: an entry that starts with its title keeps the title as stored
   (NBR 6023 capitalizes its first word), and DOIs print as https://doi.org/
   links so the block can link them.
+
+  2025 rules: a DOI is written as a full https://doi.org/ address and needs no
+  access date; a plain URL keeps "Disponível em" and "Acesso em" (the standard
+  asks for the access date only for content that can change, which the
+  CSL-JSON cannot tell apart, so every URL keeps it). A repeated author is
+  written out in full (the underscore line was dropped in 2018).
 -->
 <style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" default-locale="pt-BR" demote-non-dropping-particle="never" page-range-format="expanded">
   <info>
@@ -15,7 +21,7 @@
     <id>https://github.com/dknauss/Borges/styles/abnt</id>
     <author><name>Borges Bibliography Builder contributors</name></author>
     <category citation-format="author-date"/>
-    <updated>2026-09-26T00:00:00+00:00</updated>
+    <updated>2026-10-05T00:00:00+00:00</updated>
     <rights license="https://www.gnu.org/licenses/gpl-2.0.html">GPL-2.0-or-later</rights>
   </info>
 
@@ -142,20 +148,27 @@
   </macro>
 
   <macro name="online">
-    <group delimiter=" ">
-      <group delimiter=" " suffix=".">
-        <text term="available at" text-case="capitalize-first" suffix=":"/>
-        <text variable="URL"/>
-      </group>
-      <group delimiter=" " suffix=".">
-        <text term="accessed" text-case="capitalize-first" suffix=":"/>
-        <date variable="accessed">
-          <date-part name="day" suffix=" "/>
-          <date-part name="month" form="short" suffix=" "/>
-          <date-part name="year"/>
-        </date>
-      </group>
-    </group>
+    <choose>
+      <if variable="DOI">
+        <text macro="doi" suffix="."/>
+      </if>
+      <else-if variable="URL">
+        <group delimiter=" ">
+          <group delimiter=" " suffix=".">
+            <text term="available at" text-case="capitalize-first" suffix=":"/>
+            <text variable="URL"/>
+          </group>
+          <group delimiter=" " suffix=".">
+            <text term="accessed" text-case="capitalize-first" suffix=":"/>
+            <date variable="accessed">
+              <date-part name="day" suffix=" "/>
+              <date-part name="month" form="short" suffix=" "/>
+              <date-part name="year"/>
+            </date>
+          </group>
+        </group>
+      </else-if>
+    </choose>
   </macro>
 
   <!-- Sort keys for the PHP/JS sort-coordination tests. Output order is not
@@ -204,12 +217,7 @@
                 <text macro="pages"/>
                 <text macro="month-year"/>
               </group>
-              <text macro="doi" suffix="."/>
-              <choose>
-                <if variable="DOI" match="none">
-                  <text macro="online"/>
-                </if>
-              </choose>
+              <text macro="online"/>
             </group>
           </if>
           <else-if type="article-magazine article-newspaper webpage post post-weblog" match="any">

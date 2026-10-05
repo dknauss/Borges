@@ -17,21 +17,24 @@ Earlier releases shipped about 2 KB stand-ins. Those initialized every given nam
 
 | Key | File | Source | Notes |
 | --- | --- | --- | --- |
-| `chicago-notes-bibliography` | `chicago-notes-bibliography.csl` | Chicago Manual of Style, 17th ed., ch. 14 (bibliography entries) | First author inverted, "and" before the last name, 11+ authors cut to 7 + "et al." |
-| `chicago-author-date` | `chicago-author-date.csl` | Chicago Manual of Style, 17th ed., ch. 15 | Year after the author; journal form `27 (2): 97–111` |
+| `chicago-notes-bibliography` | `chicago-notes-bibliography.csl` | Chicago Manual of Style, 18th ed. (2024), ch. 14 (bibliography entries) | First author inverted, "and" before the last name, 7+ authors cut to 3 + "et al."; publisher without place; no month when a journal has volume and issue |
+| `chicago-author-date` | `chicago-author-date.csl` | Chicago Manual of Style, 18th ed. (2024), ch. 15 | Year after the author; 7+ authors cut to 3 + "et al."; publisher without place; journal form `27 (2): 97–111` |
 | `apa-7` | `apa.csl` | APA Publication Manual, 7th ed., ch. 9–10 | Initials, `&`, up to 20 authors, 21+ as the first 19, "…", and the last; no publisher place |
 | `mla-9` | `modern-language-association.csl` | MLA Handbook, 9th ed., ch. 5 | 3+ authors as "First, et al."; MLA month abbreviations (June, July, Sept.) |
-| `harvard` | `harvard1.csl` | Cite Them Right, 12th ed. | en-GB; initials without spaces, 4+ authors "et al.", `(eds)`, `edn`, single quotes, "Available at: … (Accessed: …)" |
+| `harvard` | `harvard1.csl` | Cite Them Right, 13th ed. (2025) | en-GB; publisher without place; `article 108125` for numbered articles; initials without spaces, 4+ authors "et al.", `(eds)`, `edn`, single quotes, "Available at: … (Accessed: …)" |
 | `ieee` | `ieee.csl` | IEEE Reference Guide (2023) | Initials first; 7+ authors as first + "et al."; `doi:` form; "[Online]. Available:" |
 | `vancouver` | `vancouver.csl` | NLM *Citing Medicine*, 2nd ed. (ICMJE) | `Green S`; 7+ authors as 6 + "et al."; `2020 Apr;27(2):97-111`; "[Internet] … [cited …]" |
-| `oscola` | `oscola.csl` | OSCOLA, 4th ed. (bibliography) | en-GB; `Alvarez MI`, 4+ "and others"; `(2020) 27 Journal 97`; `Smith v Jones [2019] UKSC 12`; no final full stop |
-| `abnt` | `abnt.csl` | ABNT NBR 6023:2018 | pt-BR; SURNAMES in capitals, `;` between authors, 4+ "et al."; `3. ed.`, `(org.)`, `In:`, `[S. l.]`, `[s. d.]`, "Disponível em: … Acesso em: …" |
+| `oscola` | `oscola.csl` | OSCOLA, 5th ed. (2026) (bibliography) | en-GB; a DOI is preferred and needs no access date; `Alvarez MI`, 4+ "and others"; `(2020) 27 Journal 97`; `Smith v Jones [2019] UKSC 12`; no final full stop |
+| `abnt` | `abnt.csl` | ABNT NBR 6023:2025 | pt-BR; a DOI needs no access date; SURNAMES in capitals, `;` between authors, 4+ "et al."; `3. ed.`, `(org.)`, `In:`, `[S. l.]`, `[s. d.]`, "Disponível em: … Acesso em: …" |
+
+Each style follows its manual's current edition, last checked on 2026-10-05. When a manual publishes a new edition, update the style's rules, the edition named in its header comment, this table, and the goldens in `tests/fixtures/csl-styles/` (review every changed line), in one change. Already-saved bibliographies keep their text until an entry is added or edited, or the style is changed.
 
 Deviations shared by every style, all forced by how the block stores and renders entries:
 
 - **Titles keep their stored capitalization.** APA's sentence case is not applied, and neither is ABNT's capitalized first word for title-first entries. The block re-applies italics by finding the stored title text in the formatted entry, so a case-transformed title would lose its italics.
 - **URLs and DOIs stay linkable.** The block links `https://` URLs up to the next space. So OSCOLA prints URLs without angle brackets, and ABNT prints DOIs as `https://doi.org/` links.
-- **No Chicago 3-em dash for repeated authors.** It depends on list order, and the block sorts entries itself, after formatting.
+- **Repeated authors are written out in full.** That is what Chicago 18, Cite Them Right, OSCOLA 5, ABNT (since 2018), APA, IEEE, and Vancouver all ask for. MLA 9's three hyphens (`---.`) are not applied yet: the substitution depends on list order, and the block sorts entries itself, after formatting.
+- **Chicago keeps no place of publication for pre-1900 books.** The 18th edition still gives a place for books published before 1900, but CSL cannot compare years, so the place is dropped for every book.
 - **No citation numbers.** Numeric styles number with the list element.
 - **Journal titles print as stored.** They are not abbreviated (IEEE, Vancouver).
 

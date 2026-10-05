@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Chicago author-date (reference list entries), following The Chicago Manual
-  of Style, 17th ed., chapter 15. Project-authored for Borges Bibliography
+  of Style, 18th ed. (2024), chapter 15. Project-authored for Borges Bibliography
   Builder from the manual's rules; GPL-2.0-or-later. Not derived from the CSL
   project's chicago-author-date.csl. Shared conventions: docs/csl-styles.md.
+
+  18th-edition rules: up to six authors are listed, seven or more as the first
+  three and "et al."; no place of publication (the manual keeps it for books
+  published before 1900, which CSL cannot test, so it is dropped throughout);
+  a repeated author is written out in full, not replaced with a 3-em dash.
 -->
 <style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" default-locale="en-US" demote-non-dropping-particle="display-and-sort">
   <info>
@@ -11,7 +16,7 @@
     <id>https://github.com/dknauss/Borges/styles/chicago-author-date</id>
     <author><name>Borges Bibliography Builder contributors</name></author>
     <category citation-format="author-date"/>
-    <updated>2026-09-26T00:00:00+00:00</updated>
+    <updated>2026-10-05T00:00:00+00:00</updated>
     <rights license="https://www.gnu.org/licenses/gpl-2.0.html">GPL-2.0-or-later</rights>
   </info>
 
@@ -110,11 +115,8 @@
     </group>
   </macro>
 
-  <macro name="place-publisher">
-    <group delimiter=": ">
-      <text variable="publisher-place"/>
-      <text variable="publisher"/>
-    </group>
+  <macro name="publisher">
+    <text variable="publisher"/>
   </macro>
 
   <macro name="access">
@@ -148,7 +150,7 @@
     </date>
   </macro>
 
-  <bibliography hanging-indent="true" et-al-min="11" et-al-use-first="7">
+  <bibliography hanging-indent="true" et-al-min="7" et-al-use-first="3">
     <sort>
       <key macro="sort-contributors"/>
       <key macro="sort-year"/>
@@ -205,7 +207,7 @@
               <text variable="page"/>
             </group>
             <text macro="translators-verb-capitalized" suffix="."/>
-            <text macro="place-publisher" suffix="."/>
+            <text macro="publisher" suffix="."/>
           </else-if>
           <else-if type="thesis">
             <group delimiter=", " suffix=".">
@@ -243,7 +245,7 @@
               <number variable="volume"/>
             </group>
             <text variable="number" suffix="."/>
-            <text macro="place-publisher" suffix="."/>
+            <text macro="publisher" suffix="."/>
           </else>
         </choose>
         <text macro="access"/>
