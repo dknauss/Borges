@@ -543,6 +543,40 @@ describe('handleStructuredEditSave guard branches', () => {
 		expect(savedCsl).not.toHaveProperty('issued');
 	});
 
+	it('drops an imported article number when Pages is edited', async () => {
+		const imported = {
+			type: 'article-journal',
+			title: 'Numbered',
+			page: '108125',
+			number: '108125',
+			'article-number': '108125',
+		};
+		const save = async (csl, page) => {
+			const args = makeHookArgs([makeCitation({ csl })]);
+			const { result } = renderHook(() => useCitationEditorState(args));
+
+			act(() => result.current.handleStructuredEditStart('cit-1'));
+			if (page !== undefined) {
+				act(() =>
+					result.current.handleStructuredFieldChange('page', page)
+				);
+			}
+			await act(() => result.current.handleStructuredEditSave());
+
+			return args.setAttributes.mock.calls[0][0].citations[0].csl;
+		};
+
+		const edited = await save(imported, '108126');
+		expect(edited.page).toBe('108126');
+		expect(edited).not.toHaveProperty('number');
+
+		// Untouched Pages, or a number that is not the imported copy, stays.
+		expect((await save(imported)).number).toBe('108125');
+		expect(
+			(await save({ ...imported, number: '7' }, '108126')).number
+		).toBe('7');
+	});
+
 	it('parses semicolon author edits and keeps optional structured fields', async () => {
 		const args = makeHookArgs();
 		const { result } = renderHook(() => useCitationEditorState(args));
