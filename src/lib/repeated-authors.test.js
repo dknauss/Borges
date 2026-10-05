@@ -66,6 +66,21 @@ describe('getRepeatedAuthorPrefixes', () => {
 		]);
 	});
 
+	it('finds the last of two authors who share a family name', () => {
+		const smiths = [
+			{ family: 'Smith', given: 'John' },
+			{ family: 'Smith', given: 'Jane' },
+		];
+		const names = 'Smith, John, and Jane Smith';
+
+		expect(
+			prefixes([
+				entry('a', smiths, `${names}. One.`),
+				entry('b', smiths, `${names}. Two.`),
+			])
+		).toEqual([null, names]);
+	});
+
 	it('keeps full names whenever the match is not exact', () => {
 		const norah = [{ family: 'Borges', given: 'Norah' }];
 

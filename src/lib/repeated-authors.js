@@ -101,23 +101,17 @@ function getAuthorPrefix(citation, text) {
 		return null;
 	}
 
-	const index = text.indexOf(end);
+	// Search for the names' closing period with them: two authors can share
+	// a family name ("Smith, John, and Jane Smith."), and only the last one
+	// is followed by it.
+	const target = end.endsWith('.') ? end : `${end}.`;
+	const index = text.indexOf(target);
 
 	if (index === -1) {
 		return null;
 	}
 
-	let length = index + end.length;
-
-	if (end.endsWith('.')) {
-		length -= 1;
-	}
-
-	if (text.charAt(length) !== '.') {
-		return null;
-	}
-
-	const prefix = text.slice(0, length);
+	const prefix = text.slice(0, index + target.length - 1);
 
 	return prefix.includes(first) ? prefix : null;
 }

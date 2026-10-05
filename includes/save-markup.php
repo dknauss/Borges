@@ -1043,23 +1043,17 @@ function bibliography_builder_save_author_prefix( $citation, $text ) {
 		return null;
 	}
 
-	$index = strpos( $text, $end );
+	// Search for the names' closing period with them: two authors can share
+	// a family name ("Smith, John, and Jane Smith."), and only the last one
+	// is followed by it.
+	$target = '.' === substr( $end, -1 ) ? $end : $end . '.';
+	$index  = strpos( $text, $target );
 
 	if ( false === $index ) {
 		return null;
 	}
 
-	$length = $index + strlen( $end );
-
-	if ( '.' === substr( $end, -1 ) ) {
-		--$length;
-	}
-
-	if ( '.' !== substr( $text, $length, 1 ) ) {
-		return null;
-	}
-
-	$prefix = substr( $text, 0, $length );
+	$prefix = substr( $text, 0, $index + strlen( $target ) - 1 );
 
 	return false !== strpos( $prefix, $first ) ? $prefix : null;
 }

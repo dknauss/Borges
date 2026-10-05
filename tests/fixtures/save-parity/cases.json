@@ -953,6 +953,60 @@
 						"formattedText": "Borges, Norah. Sketches. New Directions, 1950."
 					},
 					{
+						"id": "m1",
+						"csl": {
+							"id": "m1",
+							"type": "book",
+							"title": "Shared Names",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "John"
+								},
+								{
+									"family": "Smith",
+									"given": "Jane"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2010
+									]
+								]
+							}
+						},
+						"formattedText": "Smith, John, and Jane Smith. Shared Names. New Directions, 2010."
+					},
+					{
+						"id": "m2",
+						"csl": {
+							"id": "m2",
+							"type": "book",
+							"title": "Shared Again",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "John"
+								},
+								{
+									"family": "Smith",
+									"given": "Jane"
+								}
+							],
+							"publisher": "New Directions",
+							"issued": {
+								"date-parts": [
+									[
+										2012
+									]
+								]
+							}
+						},
+						"formattedText": "Smith, John, and Jane Smith. Shared Again. New Directions, 2012."
+					},
+					{
 						"id": "t1",
 						"csl": {
 							"id": "t1",
