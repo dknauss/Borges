@@ -20,6 +20,7 @@ export default function save({ attributes }) {
 		entryTag: 'cite',
 		includeCiteExport: attributes.outputCiteExport ?? false,
 		repeatedAuthors: true,
+		inlineMarkup: true,
 		labels: LOCALE_INDEPENDENT_SAVE_LABELS,
 	});
 }

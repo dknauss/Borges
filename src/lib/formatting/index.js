@@ -8,6 +8,95 @@ export {
 	getSelectableStyles,
 } from './style-registry';
 
+/**
+ * An HTML tag: a name that starts with a letter, then anything but angle
+ * brackets. "a < b" and "<3" are not tags. Mirrored in includes/save-markup.php.
+ */
+const INLINE_TAG_PATTERN = /<\/?([A-Za-z][A-Za-z0-9]*)\b[^<>]*>/g;
+const ITALIC_TAGS = new Set(['i', 'em']);
+
+/**
+ * Split text that may carry inline HTML into plain text and italic ranges.
+ *
+ * Formatted text and titles are stored as plain text, but HTML can reach them
+ * through the code editor, pasted block markup, the REST write routes, or a
+ * reference source (CrossRef titles often carry `<i>` for taxon names). This
+ * keeps `<i>` and `<em>` as italics and drops every other tag, so no tag is
+ * ever shown as text.
+ *
+ * @param {string} text Text that may contain inline HTML.
+ * @return {{text: string, ranges: Array<{start: number, end: number}>}} Plain
+ *     text, and the italic ranges in it.
+ *
+ * @since 1.8.1
+ */
+export function parseInlineMarkup(text) {
+	const value = String(text ?? '');
+	const ranges = [];
+	let plain = '';
+	let cursor = 0;
+	let depth = 0;
+	let start = 0;
+
+	for (const match of value.matchAll(INLINE_TAG_PATTERN)) {
+		plain += value.slice(cursor, match.index);
+		cursor = match.index + match[0].length;
+
+		if (!ITALIC_TAGS.has(match[1].toLowerCase())) {
+			continue;
+		}
+
+		if (match[0][1] === '/') {
+			if (depth > 0) {
+				depth -= 1;
+
+				if (depth === 0 && plain.length > start) {
+					ranges.push({ start, end: plain.length });
+				}
+			}
+		} else if (!match[0].endsWith('/>')) {
+			if (depth === 0) {
+				start = plain.length;
+			}
+
+			depth += 1;
+		}
+	}
+
+	plain += value.slice(cursor);
+
+	// An unclosed <i> runs to the end, as it would in a browser.
+	if (depth > 0 && plain.length > start) {
+		ranges.push({ start, end: plain.length });
+	}
+
+	return { text: plain, ranges };
+}
+
+/**
+ * Text with any inline HTML tags removed.
+ *
+ * @param {string} text Text that may contain inline HTML.
+ * @return {string} Plain text.
+ *
+ * @since 1.8.1
+ */
+export function stripInlineMarkup(text) {
+	return parseInlineMarkup(text).text;
+}
+
+/**
+ * Display text as plain text: what a reader sees, without markup.
+ *
+ * @param {Object} citation Citation object.
+ * @return {string} Plain display text.
+ *
+ * @since 1.8.1
+ */
+export function getPlainDisplayText(citation) {
+	return stripInlineMarkup(getDisplayText(citation));
+}
+
 export function getAutoFormattedText(citation) {
 	return citation.formattedText || citation.csl.title || '';
 }
@@ -266,30 +355,80 @@ function getItalicizedFields(citation) {
 /**
  * Get display segments for a citation with italic formatting.
  *
- * @param {Object} citation Citation object.
+ * With `inlineMarkup`, `<i>`/`<em>` in the display text become italic and
+ * other tags are dropped (see parseInlineMarkup()), and titles are matched
+ * without their tags. Without it, text is used as stored: the shape save()
+ * had before 1.8.1, which the deprecations reproduce.
+ *
+ * @param {Object}  citation               Citation object.
+ * @param {Object}  [options]              Options.
+ * @param {boolean} [options.inlineMarkup] Read inline HTML in the text.
  * @return {DisplaySegment[]} Array of text segments with italic flags.
  *
  * @since 0.1.0
  */
-export function getDisplaySegments(citation) {
-	const displayText = getDisplayText(citation);
+export function getDisplaySegments(citation, { inlineMarkup = false } = {}) {
+	const rawText = getDisplayText(citation);
+	const { text: displayText, ranges: markupRanges } = inlineMarkup
+		? parseInlineMarkup(rawText)
+		: { text: rawText, ranges: [] };
 
 	if (!displayText || citation.displayOverride) {
-		return [{ text: displayText || '', italic: false }];
+		return markupRanges.length
+			? buildSegments(displayText, markupRanges)
+			: [{ text: displayText || '', italic: false }];
 	}
 
-	const italicRanges = [];
+	const titleRanges = [];
 
 	for (const value of getItalicizedFields(citation)) {
-		addRange(italicRanges, displayText, value);
+		addRange(
+			titleRanges,
+			displayText,
+			inlineMarkup && value ? stripInlineMarkup(value) : value
+		);
 	}
+
+	const italicRanges = mergeRanges([...titleRanges, ...markupRanges]);
 
 	if (!italicRanges.length) {
 		return [{ text: displayText, italic: false }];
 	}
 
-	italicRanges.sort((left, right) => left.start - right.start);
+	return buildSegments(displayText, italicRanges);
+}
 
+/**
+ * Sort ranges and join the ones that overlap. Ranges that only touch stay
+ * apart, so title matches render exactly as they did before inline markup.
+ *
+ * @param {Array<{start: number, end: number}>} ranges Ranges.
+ * @return {Array<{start: number, end: number}>} Sorted, non-overlapping ranges.
+ */
+function mergeRanges(ranges) {
+	const merged = [];
+
+	for (const range of [...ranges].sort(
+		(left, right) => left.start - right.start
+	)) {
+		const last = merged[merged.length - 1];
+
+		if (last && range.start < last.end) {
+			last.end = Math.max(last.end, range.end);
+		} else {
+			merged.push({ ...range });
+		}
+	}
+
+	return merged;
+}
+
+/**
+ * @param {string}                              displayText  Plain display text.
+ * @param {Array<{start: number, end: number}>} italicRanges Sorted ranges.
+ * @return {DisplaySegment[]} Segments.
+ */
+function buildSegments(displayText, italicRanges) {
 	const segments = [];
 	let cursor = 0;
 

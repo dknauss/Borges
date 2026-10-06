@@ -8,7 +8,7 @@ import {
 	downloadCslJsonExport,
 	downloadRisExport,
 } from '../lib/export';
-import { getDisplayText } from '../lib/formatting';
+import { getPlainDisplayText } from '../lib/formatting';
 
 /**
  * Own clipboard/export actions for the editor shell.
@@ -64,7 +64,7 @@ export function useBibliographyExportActions({
 	const handleCopyCitation = useCallback(
 		async (citation) => {
 			try {
-				await copyTextToClipboard(getDisplayText(citation));
+				await copyTextToClipboard(getPlainDisplayText(citation));
 				announce(
 					'success',
 					__('Copied citation.', 'borges-bibliography-builder'),

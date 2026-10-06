@@ -1,4 +1,4 @@
-import { getDisplayText } from './formatting';
+import { getPlainDisplayText } from './formatting';
 import { getPrimaryIdentifierValue } from './csl-utils';
 import { sortCitations } from './sorter';
 
@@ -213,7 +213,7 @@ export function buildPlainTextBibliographyContent(citations, citationStyle) {
 	const sortedCitations = sortCitations(citations, citationStyle);
 
 	return `${sortedCitations
-		.map((citation) => getDisplayText(citation))
+		.map((citation) => getPlainDisplayText(citation))
 		.join('\n')}\n`;
 }
 

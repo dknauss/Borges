@@ -3,6 +3,8 @@ import { buildCoins } from './lib/coins';
 import {
 	getDisplaySegments,
 	getDisplayText,
+	getPlainDisplayText,
+	stripInlineMarkup,
 	getListSemantics,
 	splitTextIntoLinkParts,
 	getStyleDefinition,
@@ -56,6 +58,7 @@ export function renderBibliographySave(
 		includeDeprecatedBiblioEntryRole = false,
 		includeCiteExport = false,
 		repeatedAuthors = false,
+		inlineMarkup = false,
 		labels: labelOverrides = null,
 	} = {}
 ) {
@@ -82,7 +85,7 @@ export function renderBibliographySave(
 		? getRepeatedAuthorPrefixes(
 				renderedCitations,
 				citationStyle,
-				getDisplayText
+				inlineMarkup ? getPlainDisplayText : getDisplayText
 		  )
 		: [];
 	const styleDefinition = getStyleDefinition(citationStyle);
@@ -106,7 +109,9 @@ export function renderBibliographySave(
 			) : null}
 			<ListTag className={listClassName}>
 				{renderedCitations.map((citation, citationIndex) => {
-					const displaySegments = getDisplaySegments(citation);
+					const displaySegments = getDisplaySegments(citation, {
+						inlineMarkup,
+					});
 					const repeatedPrefix =
 						repeatedAuthorPrefixes[citationIndex] || null;
 					const replacesAuthors =
@@ -156,9 +161,13 @@ export function renderBibliographySave(
 									</span>
 								) : null}
 								{shownSegments.map((segment, index) => {
-									const linkLabel =
+									const titleLabel =
 										citation.csl.title ||
-										citation.csl['container-title'] ||
+										citation.csl['container-title'];
+									const linkLabel =
+										(inlineMarkup && titleLabel
+											? stripInlineMarkup(titleLabel)
+											: titleLabel) ||
 										labels.linkFallback;
 									const content = linkVisibleUrls
 										? splitTextIntoLinkParts(segment.text, {
@@ -210,9 +219,15 @@ export function renderBibliographySave(
 											className="bibliography-builder-cite-copy"
 											aria-live="polite"
 											data-cite-text={
-												citation.displayOverride ||
-												citation.formattedText ||
-												''
+												inlineMarkup
+													? stripInlineMarkup(
+															citation.displayOverride ||
+																citation.formattedText ||
+																''
+													  )
+													: citation.displayOverride ||
+													  citation.formattedText ||
+													  ''
 											}
 											data-copied-label={
 												labels.copied || undefined

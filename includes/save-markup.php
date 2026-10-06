@@ -757,6 +757,94 @@ function bibliography_builder_save_display_text( $citation ) {
 }
 
 /**
+ * `parseInlineMarkup()`: plain text, and the ranges `<i>`/`<em>` italicize.
+ * Every other tag is dropped. Offsets are bytes.
+ *
+ * @param mixed $text Text that may contain inline HTML.
+ * @return array{text: string, ranges: array<int, array{start: int, end: int}>}
+ */
+function bibliography_builder_save_parse_inline_markup( $text ) {
+	$value  = (string) $text;
+	$plain  = '';
+	$ranges = array();
+	$cursor = 0;
+	$depth  = 0;
+	$start  = 0;
+
+	// Mirrors INLINE_TAG_PATTERN in src/lib/formatting/index.js.
+	$pattern = '/<\/?([A-Za-z][A-Za-z0-9]*)\b[^<>]*>/';
+
+	if ( preg_match_all( $pattern, $value, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE ) ) {
+		foreach ( $matches as $match ) {
+			$tag    = $match[0][0];
+			$offset = $match[0][1];
+			$plain .= substr( $value, $cursor, $offset - $cursor );
+			$cursor = $offset + strlen( $tag );
+
+			if ( ! in_array( strtolower( $match[1][0] ), array( 'i', 'em' ), true ) ) {
+				continue;
+			}
+
+			if ( '/' === $tag[1] ) {
+				if ( $depth > 0 ) {
+					--$depth;
+
+					if ( 0 === $depth && strlen( $plain ) > $start ) {
+						$ranges[] = array(
+							'start' => $start,
+							'end'   => strlen( $plain ),
+						);
+					}
+				}
+			} elseif ( '/>' !== substr( $tag, -2 ) ) {
+				if ( 0 === $depth ) {
+					$start = strlen( $plain );
+				}
+
+				++$depth;
+			}
+		}
+	}
+
+	$plain .= (string) substr( $value, $cursor );
+
+	// An unclosed <i> runs to the end, as it would in a browser.
+	if ( $depth > 0 && strlen( $plain ) > $start ) {
+		$ranges[] = array(
+			'start' => $start,
+			'end'   => strlen( $plain ),
+		);
+	}
+
+	return array(
+		'text'   => $plain,
+		'ranges' => $ranges,
+	);
+}
+
+/**
+ * `stripInlineMarkup()`.
+ *
+ * @param mixed $text Text that may contain inline HTML.
+ * @return string
+ */
+function bibliography_builder_save_strip_inline_markup( $text ) {
+	$parsed = bibliography_builder_save_parse_inline_markup( $text );
+
+	return $parsed['text'];
+}
+
+/**
+ * `getPlainDisplayText()`.
+ *
+ * @param array $citation Citation record.
+ * @return string
+ */
+function bibliography_builder_save_plain_display_text( $citation ) {
+	return bibliography_builder_save_strip_inline_markup( bibliography_builder_save_display_text( $citation ) );
+}
+
+/**
  * `getItalicizedFields()`.
  *
  * @param array $csl CSL-JSON item.
@@ -881,32 +969,45 @@ function bibliography_builder_save_find_last_range( $text, $value, $ranges ) {
  * @return array<int, array{text: string, italic: bool}>
  */
 function bibliography_builder_save_display_segments( $citation ) {
-	$text = bibliography_builder_save_display_text( $citation );
+	$raw_text      = bibliography_builder_save_display_text( $citation );
+	$parsed        = bibliography_builder_save_parse_inline_markup( $raw_text );
+	$text          = $parsed['text'];
+	$markup_ranges = $parsed['ranges'];
 
 	$override = isset( $citation['displayOverride'] ) && bibliography_builder_js_truthy( $citation['displayOverride'] );
 
 	if ( '' === $text || $override ) {
-		return array(
-			array(
-				'text'   => $text,
-				'italic' => false,
-			),
-		);
+		return array() !== $markup_ranges
+			? bibliography_builder_save_build_segments( $text, $markup_ranges )
+			: array(
+				array(
+					'text'   => $text,
+					'italic' => false,
+				),
+			);
 	}
 
-	$ranges = array();
+	$title_ranges = array();
 
 	foreach ( bibliography_builder_save_italic_fields( bibliography_builder_citation_csl( $citation ) ) as $value ) {
 		if ( ! bibliography_builder_js_truthy( $value ) ) {
 			continue;
 		}
 
-		$range = bibliography_builder_save_find_last_range( $text, bibliography_builder_js_string( $value ), $ranges );
+		$needle = bibliography_builder_save_strip_inline_markup( bibliography_builder_js_string( $value ) );
+
+		if ( '' === $needle ) {
+			continue;
+		}
+
+		$range = bibliography_builder_save_find_last_range( $text, $needle, $title_ranges );
 
 		if ( null !== $range ) {
-			$ranges[] = $range;
+			$title_ranges[] = $range;
 		}
 	}
+
+	$ranges = bibliography_builder_save_merge_ranges( array_merge( $title_ranges, $markup_ranges ) );
 
 	if ( array() === $ranges ) {
 		return array(
@@ -917,6 +1018,17 @@ function bibliography_builder_save_display_segments( $citation ) {
 		);
 	}
 
+	return bibliography_builder_save_build_segments( $text, $ranges );
+}
+
+/**
+ * `mergeRanges()`: sorted, with overlapping ranges joined. Ranges that only
+ * touch stay apart.
+ *
+ * @param array<int, array{start: int, end: int}> $ranges Ranges.
+ * @return array<int, array{start: int, end: int}>
+ */
+function bibliography_builder_save_merge_ranges( $ranges ) {
 	usort(
 		$ranges,
 		static function ( $left, $right ) {
@@ -924,6 +1036,45 @@ function bibliography_builder_save_display_segments( $citation ) {
 		}
 	);
 
+	$merged = array();
+	$start  = null;
+	$end    = 0;
+
+	foreach ( $ranges as $range ) {
+		if ( null !== $start && $range['start'] < $end ) {
+			$end = max( $end, (int) $range['end'] );
+			continue;
+		}
+
+		if ( null !== $start ) {
+			$merged[] = array(
+				'start' => $start,
+				'end'   => $end,
+			);
+		}
+
+		$start = (int) $range['start'];
+		$end   = (int) $range['end'];
+	}
+
+	if ( null !== $start ) {
+		$merged[] = array(
+			'start' => $start,
+			'end'   => $end,
+		);
+	}
+
+	return $merged;
+}
+
+/**
+ * `buildSegments()`.
+ *
+ * @param string                                  $text   Plain display text.
+ * @param array<int, array{start: int, end: int}> $ranges Sorted italic ranges.
+ * @return array<int, array{text: string, italic: bool}>
+ */
+function bibliography_builder_save_build_segments( $text, $ranges ) {
 	$segments = array();
 	$cursor   = 0;
 
@@ -1202,8 +1353,8 @@ function bibliography_builder_save_repeated_author_prefixes( $citations, $style_
 		$start = $prefix . '.';
 
 		if (
-			0 !== strncmp( bibliography_builder_save_display_text( $citation ), $start, strlen( $start ) )
-			|| 0 !== strncmp( bibliography_builder_save_display_text( $previous ), $start, strlen( $start ) )
+			0 !== strncmp( bibliography_builder_save_plain_display_text( $citation ), $start, strlen( $start ) )
+			|| 0 !== strncmp( bibliography_builder_save_plain_display_text( $previous ), $start, strlen( $start ) )
 		) {
 			continue;
 		}
@@ -1818,6 +1969,10 @@ function bibliography_builder_save_cite_export( $citation ) {
 		}
 	}
 
+	// Strip after choosing, as save() does: an override of nothing but tags
+	// copies as empty rather than falling through to the formatted text.
+	$cite_text = bibliography_builder_save_strip_inline_markup( $cite_text );
+
 	$links  = bibliography_builder_save_export_link(
 		'application/x-research-info-systems',
 		bibliography_builder_save_ris_entry( $csl ),
@@ -2006,6 +2161,8 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 			$link_label = bibliography_builder_js_string( $value );
 		}
 	}
+
+	$link_label = bibliography_builder_save_strip_inline_markup( $link_label );
 
 	$text     = '';
 	$segments = bibliography_builder_save_display_segments( $citation );
