@@ -93,6 +93,11 @@ Changing styles reformats all auto-generated citations and preserves manual disp
 		"type": "string",
 		"default": ""
 	},
+	"headingLevel": {
+		"type": "integer",
+		"enum": [0, 2, 3, 4, 5, 6],
+		"default": 0
+	},
 	"outputJsonLd": {
 		"type": "boolean",
 		"default": true
@@ -202,6 +207,7 @@ Three buttons in the block toolbar control the add-citation form:
 
 -   **Citation Style** — selectable. The default is **Chicago Notes-Bibliography**.
 -   **Visible Heading** — optional text shown above the bibliography on the front end only when at least one citation exists.
+-   **Heading Level** — the element the visible heading is printed as: a paragraph (the default) or a heading, level 2 to 6.
 -   **Metadata output controls** — JSON-LD on by default, with optional COinS and CSL-JSON toggles.
 -   **Entry count** — e.g., "Settings (12 sources)"
 -   **Exports** — Copy bibliography, Download CSL-JSON, Download BibTeX, Download RIS.
@@ -308,6 +314,7 @@ The `save()` function produces the following HTML structure. All content is bake
 ### 2. Semantic HTML Details
 
 -   **`<section role="doc-bibliography" aria-label="Bibliography">`** — DPUB-ARIA landmark with explicit label for screen reader landmark navigation. The `aria-label` ensures discoverability even when no visible heading is present.
+-   **`<p class="bibliography-builder-heading">`, or `<h2>`–`<h6>` with the same class** — the visible heading, printed only when `headingText` is set; the same text is the section's `aria-label`. `headingLevel` chooses the element. `0`, the default, is a paragraph, which is what the block printed before the setting existed, so older saved blocks stay valid without a deprecation. `2` to `6` print a heading that is part of the page's heading outline; pick the level that fits the page (level 2 under the page title, for example). There is no level 1, and any other value falls back to the paragraph. The level does not change the heading's size: the block's stylesheet sets its font size, weight, margin, and alignment on the class, with a selector more specific than a theme's `h2`–`h6` rules. Properties the block does not set, such as a theme's heading font family, color, or line height, do apply to a heading-level heading.
 -   **`<ul>`** — unordered list for notes-based and author-date bibliography styles such as Chicago Notes-Bibliography, Chicago Author-Date, and APA.
 -   **`<ol>`** — ordered list for numbered styles such as Vancouver and IEEE.
 -   **`<li id="ref-{uuid}" lang="...">`** — each entry has a stable ID for potential future deep-linking. The `lang` attribute is set from CSL-JSON `language` when present, enabling correct screen reader pronunciation of foreign-language titles and author names. Newly saved output intentionally omits the older `doc-biblioentry` role; deprecated block versions retain it only so existing saved posts continue to validate.
