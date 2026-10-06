@@ -33,10 +33,18 @@ jobs:
             - name: Package release zip
               run: npm run package:release
 
+            # The release body is this version's CHANGELOG section, followed by
+            # GitHub's generated pull-request list (the action prepends the body
+            # to the generated notes). Fails if CHANGELOG.md has no entry for
+            # the tag, before anything is published.
+            - name: Extract release notes from CHANGELOG
+              run: node scripts/extract-changelog-section.js "$GITHUB_REF_NAME" > output/release/release-notes.md
+
             - name: Create GitHub Release
               uses: softprops/action-gh-release@v3
               with:
                   files: output/release/borges-bibliography-builder.zip
+                  body_path: output/release/release-notes.md
                   generate_release_notes: true
                   fail_on_unmatched_files: true
                   overwrite_files: true

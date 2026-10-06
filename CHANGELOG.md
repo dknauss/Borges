@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- GitHub Releases now open with the version's CHANGELOG section, ahead of the generated list of pull requests. The release workflow stops before publishing if `CHANGELOG.md` has no entry for the tag.
+
 ## [1.8.0] - 2026-10-05
 
 ### Added
