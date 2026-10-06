@@ -60,4 +60,101 @@ final class SaveMarkupParityTest extends TestCase {
 		$this->assertFalse( bibliography_builder_save_is_linkable_url( 'https://[::1]:99999' ) );
 		$this->assertFalse( bibliography_builder_save_is_linkable_url( 'https://[bad' ) );
 	}
+
+	/**
+	 * Mirrors the parser cases in src/lib/formatting/index.test.js. Offsets
+	 * are bytes: "Œ " is three, and "Œuvr" five.
+	 */
+	public function test_inline_markup_keeps_italics_and_drops_other_tags(): void {
+		$this->assertSame(
+			array(
+				'text'   => 'A Book, an Essay, bold end',
+				'ranges' => array(
+					array(
+						'start' => 2,
+						'end'   => 6,
+					),
+					array(
+						'start' => 11,
+						'end'   => 16,
+					),
+				),
+			),
+			bibliography_builder_save_parse_inline_markup( 'A <i>Book</i>, an <EM class="x">Essay</EM>, <b>bold</b> <img src=x onerror=alert(1)>end' )
+		);
+		$this->assertSame(
+			array(
+				'text'   => 'a < b and b > c, <3',
+				'ranges' => array(),
+			),
+			bibliography_builder_save_parse_inline_markup( 'a < b and b > c, <3' )
+		);
+		$this->assertSame(
+			array(
+				array(
+					'start' => 0,
+					'end'   => 5,
+				),
+			),
+			bibliography_builder_save_parse_inline_markup( '<i>a <em>b</em> c</i>' )['ranges']
+		);
+		$this->assertSame(
+			array(
+				'text'   => 'a b',
+				'ranges' => array(),
+			),
+			bibliography_builder_save_parse_inline_markup( 'a</i> <i/>b' )
+		);
+		$this->assertSame(
+			array(
+				'text'   => 'a b c',
+				'ranges' => array(
+					array(
+						'start' => 2,
+						'end'   => 5,
+					),
+				),
+			),
+			bibliography_builder_save_parse_inline_markup( 'a <i>b c' )
+		);
+		$this->assertSame(
+			array(
+				array(
+					'start' => 3,
+					'end'   => 8,
+				),
+			),
+			bibliography_builder_save_parse_inline_markup( 'Œ <i>Œuvr</i>' )['ranges']
+		);
+		$this->assertSame( '', bibliography_builder_save_strip_inline_markup( null ) );
+	}
+
+	public function test_display_segments_read_markup_in_an_override(): void {
+		$this->assertSame(
+			array(
+				array(
+					'text'   => 'Ostrom, E. ',
+					'italic' => false,
+				),
+				array(
+					'text'   => 'Governing',
+					'italic' => true,
+				),
+				array(
+					'text'   => ', 1990.',
+					'italic' => false,
+				),
+			),
+			bibliography_builder_save_display_segments(
+				array(
+					'csl'             => array(
+						'type'  => 'book',
+						'title' => 'Ignored',
+					),
+					'formattedText'   => 'Ignored.',
+					'displayOverride' => 'Ostrom, E. <em>Governing</em>, 1990.',
+				)
+			)
+		);
+	}
 }
