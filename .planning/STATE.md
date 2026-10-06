@@ -4,11 +4,12 @@ _Last reviewed: 2026-10-06._
 
 ## Current Focus
 
-0. **`v1.8.1` (2026-10-06) is the current release baseline.** Version strings
+0. **`v1.8.2` (2026-10-06) is the current release baseline.** Version strings
    agree across the plugin header, `package.json`, `block.json`, and
-   `readme.txt` (`Stable tag: 1.8.1`, `Tested up to: 7.1`). Treat the live
+   `readme.txt` (`Stable tag: 1.8.2`, `Tested up to: 7.1`). Treat the live
    WordPress.org plugin page as canonical for the publicly available version.
-1. **1.8.1 fixed** literal HTML tags in stored citation text (#116; `<i>`/`<em>`
+1. **1.8.2** stores every structured-edit text field as plain text (#118).
+   **1.8.1 fixed** literal HTML tags in stored citation text (#116; `<i>`/`<em>`
    render as italics, other tags are dropped) and opens GitHub Releases with the
    CHANGELOG section (#115). **1.8.0 shipped** current editions of Chicago (18th), Cite Them Right 13,
    OSCOLA 5, and ABNT NBR 6023:2025, MLA 9 repeated-author hyphens (#111), the
@@ -36,6 +37,7 @@ _Last reviewed: 2026-10-06._
    - 1.8.0 (2026-10-05) — current Chicago/Harvard/OSCOLA/ABNT editions, MLA
      repeated authors, Article number field, style-keyed formatter cache.
    - 1.8.1 (2026-10-06) — inline `<i>`/`<em>` rendered, other tags stripped.
+   - 1.8.2 (2026-10-06) — structured-edit text fields saved as plain text.
 3. **Active phases** are still only `05-writable-bibliography-rest` (M0–M3
    shipped in 1.7.0; M4 bulk routes and M5 write abilities remain) and
    `06-ci-optimization` (unplanned strategy sketch). Neither gates a release.
@@ -57,6 +59,7 @@ ordering. In short:
 
 ## Last Activity
 
+- 2026-10-06: Released 1.8.2 (#118).
 - 2026-10-06: Released 1.8.1 (#114, #115, #116).
 - 2026-10-05: Released 1.8.0 (#108, #109, #111, #112).
 - 2026-09-26: Released 1.7.0 (#102–#106 and the fixes listed in the
