@@ -441,6 +441,7 @@ function EditHarness({
 	initialCitations = [],
 	initialStyle = 'chicago-notes-bibliography',
 	initialHeadingText = '',
+	initialHeadingLevel = 0,
 	initialOutputJsonLd = true,
 	initialOutputCoins = false,
 	initialOutputCslJson = false,
@@ -448,6 +449,7 @@ function EditHarness({
 	const [attributes, setAttributes] = React.useState({
 		citationStyle: initialStyle,
 		headingText: initialHeadingText,
+		headingLevel: initialHeadingLevel,
 		outputJsonLd: initialOutputJsonLd,
 		outputCoins: initialOutputCoins,
 		outputCslJson: initialOutputCslJson,
@@ -1295,6 +1297,53 @@ describe('Edit focus management', () => {
 		expect(screen.getByLabelText('Visible Heading')).toHaveValue(
 			'Works Cited'
 		);
+	});
+
+	it('previews the heading as a paragraph until a heading level is chosen', async () => {
+		const { container } = render(
+			<EditHarness initialHeadingText="Sources" />
+		);
+
+		expect(screen.getByLabelText('Heading Level')).toHaveValue('0');
+		expect(
+			container.querySelector('p.bibliography-builder-heading-preview')
+		).toHaveTextContent('Sources');
+
+		await userEvent.selectOptions(
+			screen.getByLabelText('Heading Level'),
+			'2'
+		);
+
+		expect(screen.getByLabelText('Heading Level')).toHaveValue('2');
+		expect(
+			container.querySelector('h2.bibliography-builder-heading-preview')
+		).toHaveTextContent('Sources');
+		expect(
+			container.querySelector('p.bibliography-builder-heading-preview')
+		).toBeNull();
+	});
+
+	it('stores the heading level as a number', async () => {
+		const setAttributes = jest.fn();
+
+		render(
+			<Edit
+				attributes={{
+					citationStyle: 'chicago-notes-bibliography',
+					headingText: 'Sources',
+					citations: [],
+				}}
+				setAttributes={setAttributes}
+				clientId="heading-level"
+			/>
+		);
+
+		await userEvent.selectOptions(
+			screen.getByLabelText('Heading Level'),
+			'3'
+		);
+
+		expect(setAttributes).toHaveBeenCalledWith({ headingLevel: 3 });
 	});
 
 	it('renders notices inline within the block UI', async () => {
