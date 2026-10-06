@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.7.0
+Stable tag: 1.8.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -177,6 +177,12 @@ ISBN input connects through the plugin's authenticated WordPress REST proxy to *
 
 == Changelog ==
 
+= 1.8.0 =
+* **Current editions of four styles.** Chicago moves to the 18th edition (2024), Harvard to Cite Them Right 13 (2025), OSCOLA to its 5th edition (2026), and ABNT to NBR 6023:2025. Chicago now lists up to six authors before "et al.", books drop the place of publication in Chicago and Harvard, and OSCOLA and ABNT need no access date for a DOI. Existing bibliographies keep their saved text until an entry is added or edited or the style is changed.
+* **New: MLA repeated authors.** In an MLA works-cited list, an entry by exactly the same authors as the one before it now starts with three hyphens, as the MLA Handbook asks. Screen readers still hear the names, and copied text and exports keep them in full. Existing MLA bibliographies stay valid and pick up the hyphens the next time they are saved.
+* **New: Article number field.** Journal articles get an Article number field in the edit form and manual entry. Cite Them Right prints it as "article 108125" in place of pages, and DOI imports fill it automatically.
+* **Fixed:** after an upgrade, cached formatting from an older style edition is no longer reused.
+
 = 1.7.0 =
 * **Better formatting in every citation style.** All nine styles are rewritten in full from their style manuals: Chicago (notes-bibliography and author-date), APA 7, MLA 9, Harvard, IEEE, Vancouver, OSCOLA, and ABNT. Entries now keep full given names, volume, issue, and pages, editors, translators, editions, and access dates, and follow each manual's author-list and "et al." rules. ABNT now prints in Portuguese, and Harvard uses British conventions. Existing bibliographies keep their saved text until an entry is added or edited or the style is changed.
 * **Fixed: organization authors** (such as "Open Research Alliance") no longer vanish from formatted entries, and an entry after one shortened to "et al." keeps the "and" before its last author.
@@ -319,6 +325,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.8.0 =
+Moves Chicago, Harvard, OSCOLA, and ABNT to their current editions, adds MLA's three hyphens for repeated authors, and adds an Article number field for journal articles. No configuration changes; no new external services.
 
 = 1.7.0 =
 Rewrites all nine citation styles in full, fixes organization authors, blocks that showed as invalid in another editor language, and seven wrong strings in the bundled translations. Adds opt-in REST routes for developers; they are off unless enabled. No new external services.

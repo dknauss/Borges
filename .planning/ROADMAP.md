@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-09-26):** `v1.7.0` (2026-09-26).
+**Current release baseline (reconciled 2026-10-05):** `v1.8.0` (2026-10-05).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -66,6 +66,10 @@ Releases since the milestone was retired, all outside any GSD phase:
     (stable IDs, review routes and abilities, opt-in citation and block write
     routes); save-markup language fix; reference-manager `.bib` fixes; runtime
     matrix on the release package with formatter parity and write-route checks.
+-   **1.8.0** (2026-10-05) — Chicago 18, Cite Them Right 13, OSCOLA 5, and ABNT
+    NBR 6023:2025; MLA 9 repeated-author hyphens (accessible, deactivation-safe);
+    Article number field mapped from CrossRef; formatter cache keyed on style
+    contents; nginx runtime-matrix fix.
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -287,7 +291,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.7.0`.
+1.3.x release line. The current public release baseline is now `v1.8.0`.
 
 Completed Phase 2 outcomes:
 

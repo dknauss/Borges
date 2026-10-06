@@ -1,14 +1,18 @@
 # Project State
 
-_Last reviewed: 2026-09-26._
+_Last reviewed: 2026-10-05._
 
 ## Current Focus
 
-0. **`v1.7.0` (2026-09-26) is the current release baseline.** Version strings
+0. **`v1.8.0` (2026-10-05) is the current release baseline.** Version strings
    agree across the plugin header, `package.json`, `block.json`, and
-   `readme.txt` (`Stable tag: 1.7.0`, `Tested up to: 7.1`). Treat the live
+   `readme.txt` (`Stable tag: 1.8.0`, `Tested up to: 7.1`). Treat the live
    WordPress.org plugin page as canonical for the publicly available version.
-1. **1.7.0 shipped** the full GPL CSL styles and locales (#103), Phase 05
+1. **1.8.0 shipped** current editions of Chicago (18th), Cite Them Right 13,
+   OSCOLA 5, and ABNT NBR 6023:2025, MLA 9 repeated-author hyphens (#111), the
+   Article number field (#112), a formatter cache keyed on style contents, the
+   nginx runtime fix (#109), and an editor-readiness helper for the E2E specs.
+   1.7.0 shipped the full GPL CSL styles and locales (#103), Phase 05
    M0–M3 (stable IDs, review routes and abilities, opt-in citation and block
    write routes: #104, #106), the save-markup language fix, reference-manager
    `.bib` fixes, the demo page (#102), and the runtime matrix on the release
@@ -27,6 +31,8 @@ _Last reviewed: 2026-09-26._
      read-only Abilities, i18n catch-up.
    - 1.7.0 (2026-09-26) — full CSL styles, Phase 05 M0–M3, save-markup
      language fix, `.bib` import fixes, release-package runtime matrix.
+   - 1.8.0 (2026-10-05) — current Chicago/Harvard/OSCOLA/ABNT editions, MLA
+     repeated authors, Article number field, style-keyed formatter cache.
 3. **Active phases** are still only `05-writable-bibliography-rest` (M0–M3
    shipped in 1.7.0; M4 bulk routes and M5 write abilities remain) and
    `06-ci-optimization` (unplanned strategy sketch). Neither gates a release.
@@ -48,6 +54,7 @@ ordering. In short:
 
 ## Last Activity
 
+- 2026-10-05: Released 1.8.0 (#108, #109, #111, #112).
 - 2026-09-26: Released 1.7.0 (#102–#106 and the fixes listed in the
   CHANGELOG).
 - 2026-09-25: Phase 05 M1 review routes (`validate`, `duplicates`,
