@@ -2227,15 +2227,17 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
  * The element for the block heading at a `headingLevel` attribute value:
  * `h2` to `h6`, or `p` for 0 (the default) and anything else.
  *
- * `getHeadingTag()` from `src/lib/heading-level.js`.
+ * `getHeadingTag()` from `src/lib/heading-level.js`. JSON `2.0` is the number
+ * 2 in JavaScript and a float in PHP, so a whole-number float counts.
  *
  * @param mixed $heading_level The `headingLevel` attribute.
  * @return string
  */
 function bibliography_builder_save_heading_tag( $heading_level ) {
-	return is_int( $heading_level ) && $heading_level >= 2 && $heading_level <= 6
-		? 'h' . $heading_level
-		: 'p';
+	$is_level = ( is_int( $heading_level ) || is_float( $heading_level ) )
+		&& in_array( (float) $heading_level, array( 2.0, 3.0, 4.0, 5.0, 6.0 ), true );
+
+	return $is_level ? 'h' . (int) $heading_level : 'p';
 }
 
 /**

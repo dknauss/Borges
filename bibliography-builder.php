@@ -94,6 +94,13 @@ function bibliography_builder_collect_blocks( $blocks, $results = array() ) {
 				'headingText'    => isset( $attrs['headingText'] )
 					? (string) $attrs['headingText']
 					: '',
+				// The level save() prints: "h3" gives 3, and "p" gives 0.
+				'headingLevel'   => (int) substr(
+					bibliography_builder_save_heading_tag(
+						isset( $attrs['headingLevel'] ) ? $attrs['headingLevel'] : 0
+					),
+					1
+				),
 				'outputJsonLd'   => isset( $attrs['outputJsonLd'] ) ? (bool) $attrs['outputJsonLd'] : true,
 				'outputCoins'    => ! empty( $attrs['outputCoins'] ),
 				'outputCslJson'  => ! empty( $attrs['outputCslJson'] ),

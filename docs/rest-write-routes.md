@@ -104,6 +104,7 @@ The `changes` object depends on the route:
 | Setting | Type | Default | Sidebar control |
 | --- | --- | --- | --- |
 | `headingText` | string, one line | `""` | Visible Heading |
+| `headingLevel` | integer: `0` (a paragraph) or `2` to `6` | `0` | Heading Level |
 | `outputJsonLd` | boolean | `true` | Output JSON-LD |
 | `outputCoins` | boolean | `false` | Output COinS |
 | `outputCslJson` | boolean | `false` | Output CSL-JSON |

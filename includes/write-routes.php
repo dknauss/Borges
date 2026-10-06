@@ -709,11 +709,12 @@ function bibliography_builder_write_default_heading( $style_key ) {
  * `citationStyle` is not here: changing it means reformatting every entry,
  * which is what POST …/reformat does.
  *
- * @return array<string, string|bool>
+ * @return array<string, string|bool|int>
  */
 function bibliography_builder_write_setting_defaults() {
 	return array(
 		'headingText'      => '',
+		'headingLevel'     => 0,
 		'outputJsonLd'     => true,
 		'outputCoins'      => false,
 		'outputCslJson'    => false,
@@ -744,8 +745,9 @@ function bibliography_builder_write_set_attribute( $attrs, $name, $value, $defau
 /**
  * PATCH …/bibliographies/{ref}: change block settings.
  *
- * Body: any of `headingText` (string) and the booleans `outputJsonLd`,
- * `outputCoins`, `outputCslJson`, and `outputCiteExport`. Citations are not
+ * Body: any of `headingText` (string), `headingLevel` (0 for a paragraph, or
+ * 2 to 6), and the booleans `outputJsonLd`, `outputCoins`, `outputCslJson`,
+ * and `outputCiteExport`. Citations are not
  * touched. `citationStyle` is refused with a pointer to POST …/reformat.
  *
  * @param WP_REST_Request $request REST request.
@@ -788,9 +790,17 @@ function bibliography_builder_rest_update_bibliography_settings( WP_REST_Request
 			);
 		}
 
-		$valid = is_bool( $defaults[ $name ] )
-			? is_bool( $value )
-			: is_string( $value ) && ! preg_match( '/[\x00-\x1F\x7F]/', $value );
+		if ( is_bool( $defaults[ $name ] ) ) {
+			$valid    = is_bool( $value );
+			$expected = __( 'true or false', 'borges-bibliography-builder' );
+		} elseif ( is_int( $defaults[ $name ] ) ) {
+			// headingLevel: 0 or a level bibliography_builder_save_heading_tag() prints.
+			$valid    = is_int( $value ) && ( 0 === $value || 'p' !== bibliography_builder_save_heading_tag( $value ) );
+			$expected = __( '0 (a paragraph) or a heading level from 2 to 6', 'borges-bibliography-builder' );
+		} else {
+			$valid    = is_string( $value ) && ! preg_match( '/[\x00-\x1F\x7F]/', $value );
+			$expected = __( 'a single line of text', 'borges-bibliography-builder' );
+		}
 
 		if ( ! $valid ) {
 			return new WP_Error(
@@ -799,9 +809,7 @@ function bibliography_builder_rest_update_bibliography_settings( WP_REST_Request
 					/* translators: 1: setting name, 2: expected type. */
 					__( '"%1$s" must be %2$s.', 'borges-bibliography-builder' ),
 					$name,
-					is_bool( $defaults[ $name ] )
-						? __( 'true or false', 'borges-bibliography-builder' )
-						: __( 'a single line of text', 'borges-bibliography-builder' )
+					$expected
 				),
 				array( 'status' => 400 )
 			);

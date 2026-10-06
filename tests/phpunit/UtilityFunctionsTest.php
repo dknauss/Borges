@@ -231,6 +231,13 @@ final class UtilityFunctionsTest extends TestCase {
 		$this->assertCount( 1, $result );
 		$this->assertSame( 'apa-7', $result[0]['citationStyle'] );
 		$this->assertSame( 'Works Cited', $result[0]['headingText'] );
+		$this->assertSame( 0, $result[0]['headingLevel'] );
+
+		$blocks[0]['attrs']['headingLevel'] = 3;
+		$this->assertSame( 3, bibliography_builder_collect_blocks( $blocks )[0]['headingLevel'] );
+
+		$blocks[0]['attrs']['headingLevel'] = 9;
+		$this->assertSame( 0, bibliography_builder_collect_blocks( $blocks )[0]['headingLevel'] );
 	}
 
 	public function test_collect_blocks_uses_default_citation_style_when_absent() {
