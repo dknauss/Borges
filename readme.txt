@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.8.0
+Stable tag: 1.8.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -177,6 +177,9 @@ ISBN input connects through the plugin's authenticated WordPress REST proxy to *
 
 == Changelog ==
 
+= 1.8.1 =
+* **Fixed:** HTML tags in a citation no longer show as text. An entry whose stored text or title carried tags, such as `<i>Governing the Commons</i>`, printed them literally; now `<i>` and `<em>` render as italics and other tags are dropped, in the bibliography, the editor, copied text, and exports. Affected bibliographies stay valid and pick up the fix the next time they are saved.
+
 = 1.8.0 =
 * **Current editions of four styles.** Chicago moves to the 18th edition (2024), Harvard to Cite Them Right 13 (2025), OSCOLA to its 5th edition (2026), and ABNT to NBR 6023:2025. Chicago now lists up to six authors before "et al.", books drop the place of publication in Chicago and Harvard, and OSCOLA and ABNT need no access date for a DOI. Existing bibliographies keep their saved text until an entry is added or edited or the style is changed.
 * **New: MLA repeated authors.** In an MLA works-cited list, an entry by exactly the same authors as the one before it now starts with three hyphens, as the MLA Handbook asks. Screen readers still hear the names, and copied text and exports keep them in full. Existing MLA bibliographies stay valid and pick up the hyphens the next time they are saved.
@@ -325,6 +328,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.8.1 =
+Fixes HTML tags such as `<i>` showing as literal text in a bibliography. No configuration changes; no new external services.
 
 = 1.8.0 =
 Moves Chicago, Harvard, OSCOLA, and ABNT to their current editions, adds MLA's three hyphens for repeated authors, and adds an Article number field for journal articles. No configuration changes; no new external services.

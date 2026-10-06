@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-10-06
+
 ### Fixed
 
 - **HTML tags no longer show as text in a bibliography.** A citation whose stored text or title carried HTML, such as `<i>Governing the Commons</i>` (entered through the code editor, pasted block markup, the write routes, or a CrossRef title with an italic taxon name), printed the tags literally. Now `<i>` and `<em>` render as italics and every other tag is dropped, in the saved bibliography, the editor list, copied text, and plain-text export. A title with tags is matched for italics without them. Blocks saved with the old output stay valid and pick up the fix the next time they are saved.
@@ -14,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - GitHub Releases now open with the version's CHANGELOG section, ahead of the generated list of pull requests. The release workflow stops before publishing if `CHANGELOG.md` has no entry for the tag.
+- Development dependencies refreshed to clear security advisories (axios, proxy-addr, qs, basic-ftp, brace-expansion, OpenTelemetry, and others). None of them ship in the plugin; the production audit was already clean.
 
 ## [1.8.0] - 2026-10-05
 
