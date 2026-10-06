@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The structured edit form now stores its text fields as plain text, as imports and manual entry already do. Markup typed or pasted into Title, Authors, Container title, Publisher, or Pages is dropped on save instead of being stored in the citation, and a field that loaded with tags is cleaned when the entry is saved.
+
 ## [1.8.1] - 2026-10-06
 
 ### Fixed
