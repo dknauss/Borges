@@ -105,7 +105,7 @@ The Playground blueprint at `playground/blueprint.json` configures the GitHub/re
 
 ### Release
 
-`npm run package:release` builds the production zip (strips dev dependencies). Pushing a `v*` tag triggers `release.yml`, which builds the ZIP, publishes the GitHub Release, and dispatches `wp-deploy.yml`. `wp-deploy.yml` also runs on published GitHub releases and can be run manually.
+`npm run package:release` builds the production zip (strips dev dependencies). Pushing a `v*` tag triggers `release.yml`, which builds the ZIP, publishes the GitHub Release (its body is the tag's `CHANGELOG.md` section, extracted by `scripts/extract-changelog-section.js`, followed by GitHub's generated PR list; the job fails if that section is missing), and dispatches `wp-deploy.yml`. `wp-deploy.yml` also runs on published GitHub releases and can be run manually.
 
 ## CI overview
 
