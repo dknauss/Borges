@@ -167,6 +167,44 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 			},
 		],
 	},
+	// v09 froze save() from before inline HTML was read, when a tag in stored
+	// text was escaped and shown. FIXTURE_ATTRIBUTES carry no tags, so under
+	// them it would match v00 exactly; this entry has the counterfoil.org case,
+	// an <i> title in formatted text, plus a CrossRef-style tagged CSL title.
+	9: {
+		...FIXTURE_ATTRIBUTES,
+		citationStyle: 'chicago-notes-bibliography',
+		citations: [
+			{
+				id: 'ostrom1990',
+				csl: {
+					id: 'ostrom1990',
+					type: 'book',
+					title: 'Governing the Commons',
+					publisher: 'Cambridge University Press',
+					author: [{ family: 'Ostrom', given: 'Elinor' }],
+					issued: { 'date-parts': [[1990]] },
+				},
+				formattedText:
+					'Ostrom, Elinor. <i>Governing the Commons</i>. Cambridge University Press, 1990.',
+				displayOverride: null,
+			},
+			{
+				id: 'lee2021',
+				csl: {
+					id: 'lee2021',
+					type: 'book',
+					title: 'Growth of <i>Escherichia coli</i> in Soil',
+					publisher: 'Test Press',
+					author: [{ family: 'Lee', given: 'Kim' }],
+					issued: { 'date-parts': [[2021]] },
+				},
+				formattedText:
+					'Lee, Kim. Growth of Escherichia coli in Soil. Test Press, 2021.',
+				displayOverride: null,
+			},
+		],
+	},
 };
 
 function fixtureAttributes(version) {

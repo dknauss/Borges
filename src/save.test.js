@@ -345,16 +345,18 @@ describe('save', () => {
 			})
 		);
 
+		// Tags in stored text are dropped, never emitted or shown as text.
 		expect(markup).toContain(
-			'&lt;/cite&gt;&lt;script&gt;alert(&quot;citation&quot;)&lt;/script&gt;'
+			'<cite class="bibliography-builder-entry-text">alert(&quot;citation&quot;)</cite>'
 		);
+		expect(markup).not.toContain('&lt;script');
 		expect(markup).toContain(
 			'\\u003c/script>\\u003cscript>alert(\\"jsonld\\")\\u003c/script>'
 		);
 		expect(markup).not.toContain('<script>alert("citation")</script>');
 	});
 
-	it('escapes HTML and event-handler payloads in visible citation text safely', () => {
+	it('strips HTML and event-handler payloads from visible citation text', () => {
 		const markup = renderToStaticMarkup(
 			save({
 				attributes: {
@@ -370,14 +372,16 @@ describe('save', () => {
 		);
 
 		expect(markup).toContain(
-			'&lt;img src=x onerror=alert(1)&gt;&lt;svg onload=alert(1)&gt;&lt;/svg&gt;&lt;div onmouseover=alert(1)&gt;hover&lt;/div&gt;'
+			'<cite class="bibliography-builder-entry-text">hover</cite>'
 		);
+		expect(markup).not.toContain('onerror');
+		expect(markup).not.toContain('&lt;');
 		expect(markup).not.toContain('<img');
 		expect(markup).not.toContain('<svg');
 		expect(markup).not.toContain('<div onmouseover=');
 	});
 
-	it('escapes displayOverride script payloads without executing or preserving HTML', () => {
+	it('strips displayOverride script tags without executing or preserving HTML', () => {
 		const markup = renderToStaticMarkup(
 			save({
 				attributes: {
@@ -393,12 +397,13 @@ describe('save', () => {
 		);
 
 		expect(markup).toContain(
-			'&lt;script&gt;alert(&quot;override&quot;)&lt;/script&gt;'
+			'<cite class="bibliography-builder-entry-text">alert(&quot;override&quot;)</cite>'
 		);
+		expect(markup).not.toContain('&lt;script');
 		expect(markup).not.toContain('<script>alert("override")</script>');
 	});
 
-	it('escapes img and svg payloads in auto-formatted citation text safely', () => {
+	it('strips img and svg payloads from auto-formatted citation text', () => {
 		const markup = renderToStaticMarkup(
 			save({
 				attributes: {
@@ -413,9 +418,8 @@ describe('save', () => {
 			})
 		);
 
-		expect(markup).toContain(
-			'&lt;img src=x onerror=alert(1)&gt;&lt;svg onload=alert(1)&gt;&lt;/svg&gt;'
-		);
+		expect(markup).not.toContain('onerror');
+		expect(markup).not.toContain('&lt;img');
 		expect(markup).not.toContain('<img');
 		expect(markup).not.toContain('<svg');
 	});
@@ -821,5 +825,44 @@ describe('save cite/export disclosure panels', () => {
 		});
 		expect(markup).toContain('%3Cscript%3E');
 		expect(markup).not.toContain('<script>alert(1)</script>');
+	});
+});
+
+describe('save inline markup', () => {
+	it('renders a title stored with <i> as italics, never as literal tags', () => {
+		const markup = renderToStaticMarkup(
+			save({
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					outputCiteExport: true,
+					citations: [
+						createCitation({
+							csl: {
+								type: 'book',
+								title: '<i>Governing the Commons</i>',
+								URL: 'https://example.com/ostrom',
+								author: [{ family: 'Ostrom', given: 'Elinor' }],
+							},
+							formattedText:
+								'Ostrom, Elinor. <i>Governing the Commons</i>. Cambridge University Press, 1990. https://example.com/ostrom.',
+						}),
+					],
+				},
+			})
+		);
+
+		expect(markup).toContain(
+			'<cite class="bibliography-builder-entry-text">Ostrom, Elinor. <i>Governing the Commons</i>. Cambridge University Press, 1990. '
+		);
+		// No escaped tag anywhere: not in the text, the link's aria-label, or
+		// the copy text.
+		expect(markup).not.toContain('&lt;i&gt;');
+		expect(markup).not.toContain('&lt;i>');
+		expect(markup).toContain(
+			'aria-label="Governing the Commons — https://example.com/ostrom"'
+		);
+		expect(markup).toContain(
+			'data-cite-text="Ostrom, Elinor. Governing the Commons. Cambridge University Press, 1990. https://example.com/ostrom."'
+		);
 	});
 });

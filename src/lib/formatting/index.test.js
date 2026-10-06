@@ -2,7 +2,10 @@ import {
 	getAutoFormattedText,
 	getDisplaySegments,
 	getDisplayText,
+	getPlainDisplayText,
+	parseInlineMarkup,
 	splitTextIntoLinkParts,
+	stripInlineMarkup,
 } from './index';
 
 function createCitation(overrides = {}) {
@@ -364,5 +367,108 @@ describe('formatting helpers', () => {
 		);
 		const nonLink = parts.filter((p) => !p.link);
 		expect(nonLink.every((p) => !('label' in p))).toBe(true);
+	});
+});
+
+describe('inline markup', () => {
+	it('keeps <i> and <em> as italic ranges and drops every other tag', () => {
+		expect(
+			parseInlineMarkup(
+				'A <i>Book</i>, an <EM class="x">Essay</EM>, <b>bold</b> <img src=x onerror=alert(1)>end'
+			)
+		).toEqual({
+			text: 'A Book, an Essay, bold end',
+			ranges: [
+				{ start: 2, end: 6 },
+				{ start: 11, end: 16 },
+			],
+		});
+	});
+
+	it('leaves text that only looks like markup alone', () => {
+		expect(parseInlineMarkup('a < b and b > c, <3')).toEqual({
+			text: 'a < b and b > c, <3',
+			ranges: [],
+		});
+	});
+
+	it('handles nesting, stray closers, self-closing and unclosed tags', () => {
+		expect(parseInlineMarkup('<i>a <em>b</em> c</i>')).toEqual({
+			text: 'a b c',
+			ranges: [{ start: 0, end: 5 }],
+		});
+		expect(parseInlineMarkup('a</i> <i/>b')).toEqual({
+			text: 'a b',
+			ranges: [],
+		});
+		expect(parseInlineMarkup('a <i>b c')).toEqual({
+			text: 'a b c',
+			ranges: [{ start: 2, end: 5 }],
+		});
+		expect(stripInlineMarkup(undefined)).toBe('');
+	});
+
+	it('renders an <i> title as italics instead of showing the tags', () => {
+		// The counterfoil.org case: an Ostrom entry whose stored formatted
+		// text and CSL title both carry <i>.
+		const citation = {
+			csl: {
+				type: 'book',
+				title: '<i>Governing the Commons</i>',
+			},
+			formattedText:
+				'Ostrom, Elinor. <i>Governing the Commons</i>. Cambridge University Press, 1990.',
+			displayOverride: null,
+		};
+
+		expect(getDisplaySegments(citation, { inlineMarkup: true })).toEqual([
+			{ text: 'Ostrom, Elinor. ', italic: false },
+			{ text: 'Governing the Commons', italic: true },
+			{ text: '. Cambridge University Press, 1990.', italic: false },
+		]);
+		expect(getPlainDisplayText(citation)).toBe(
+			'Ostrom, Elinor. Governing the Commons. Cambridge University Press, 1990.'
+		);
+		// Without the option, the text is used as stored (the deprecated shape).
+		expect(
+			getDisplaySegments(citation)
+				.map((segment) => segment.text)
+				.join('')
+		).toBe(citation.formattedText);
+	});
+
+	it('matches a tagged title against plain formatted text', () => {
+		const citation = {
+			csl: {
+				type: 'book',
+				title: 'Growth of <i>Escherichia coli</i> in Soil',
+			},
+			formattedText:
+				'Lee, Kim. Growth of Escherichia coli in Soil. Test Press, 2021.',
+			displayOverride: null,
+		};
+
+		expect(getDisplaySegments(citation, { inlineMarkup: true })).toEqual([
+			{ text: 'Lee, Kim. ', italic: false },
+			{ text: 'Growth of Escherichia coli in Soil', italic: true },
+			{ text: '. Test Press, 2021.', italic: false },
+		]);
+	});
+
+	it('reads <i> in a manual display override', () => {
+		expect(
+			getDisplaySegments(
+				{
+					csl: { type: 'book', title: 'Ignored' },
+					formattedText: 'Ignored.',
+					displayOverride: 'Ostrom, E. <em>Governing</em>, 1990.',
+				},
+				{ inlineMarkup: true }
+			)
+		).toEqual([
+			{ text: 'Ostrom, E. ', italic: false },
+			{ text: 'Governing', italic: true },
+			{ text: ', 1990.', italic: false },
+		]);
 	});
 });

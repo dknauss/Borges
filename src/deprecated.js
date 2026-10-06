@@ -122,6 +122,21 @@ function migrateSortedAttributes(attributes) {
 
 export const deprecated = [
 	{
+		// Freezes the save() shape from before inline HTML was read: a tag in
+		// formatted text, a title, or a manual override was escaped and shown
+		// as text, and titles carrying tags were not matched for italics.
+		attributes: deprecatedAttributes,
+		save: ({ attributes }) =>
+			renderBibliographySave(attributes, {
+				sortEntries: true,
+				headingTag: 'p',
+				entryTag: 'cite',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			}),
+	},
+	{
 		// Freezes the save() shape from before MLA 9 repeated authors became
 		// three hyphens: every entry writes its author names out in full.
 		attributes: deprecatedAttributes,

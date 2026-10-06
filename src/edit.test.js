@@ -288,6 +288,13 @@ jest.mock('./lib/formatting', () => ({
 			citation.csl.title ||
 			'Formatted citation'
 	),
+	getPlainDisplayText: jest.fn(
+		(citation) =>
+			citation.displayOverride ||
+			citation.formattedText ||
+			citation.csl.title ||
+			'Formatted citation'
+	),
 	getDisplaySegments: jest.fn((citation) => [
 		{
 			text:

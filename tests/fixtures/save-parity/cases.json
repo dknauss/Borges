@@ -1500,6 +1500,97 @@
 			}
 		},
 		{
+			"name": "inline-markup",
+			"note": "Inline HTML in stored text: <i>/<em> render as italics, other tags are dropped, tagged titles match plain text, repeated MLA authors and non-ASCII text inside tags.",
+			"attributes": {
+				"citationStyle": "mla-9",
+				"headingText": "Works Cited",
+				"outputCiteExport": true,
+				"citations": [
+					{
+						"id": "ostrom1990",
+						"csl": {
+							"id": "ostrom1990",
+							"type": "book",
+							"title": "<i>Governing the Commons</i>",
+							"publisher": "Cambridge University Press",
+							"URL": "https://example.com/ostrom",
+							"author": [
+								{
+									"family": "Ostrom",
+									"given": "Elinor"
+								}
+							],
+							"issued": {
+								"date-parts": [[1990]]
+							}
+						},
+						"formattedText": "Ostrom, Elinor. <i>Governing the Commons</i>. Cambridge University Press, 1990. https://example.com/ostrom.",
+						"displayOverride": null
+					},
+					{
+						"id": "ostrom2005",
+						"csl": {
+							"id": "ostrom2005",
+							"type": "book",
+							"title": "Understanding Institutional Diversity",
+							"publisher": "Princeton University Press",
+							"author": [
+								{
+									"family": "Ostrom",
+									"given": "Elinor"
+								}
+							],
+							"issued": {
+								"date-parts": [[2005]]
+							}
+						},
+						"formattedText": "Ostrom, Elinor. <I>Understanding Institutional Diversity</I>. Princeton University Press, 2005.",
+						"displayOverride": null
+					},
+					{
+						"id": "lee2021",
+						"csl": {
+							"id": "lee2021",
+							"type": "article-journal",
+							"title": "Growth of <i>Escherichia coli</i> in Soil",
+							"container-title": "<i>Soil</i> Biology",
+							"author": [
+								{
+									"family": "Lee",
+									"given": "Kim"
+								}
+							],
+							"issued": {
+								"date-parts": [[2021]]
+							}
+						},
+						"formattedText": "Lee, Kim. “Growth of Escherichia coli in Soil.” Soil Biology, 2021.",
+						"displayOverride": null
+					},
+					{
+						"id": "zola1885",
+						"csl": {
+							"id": "zola1885",
+							"type": "book",
+							"title": "Germinal",
+							"author": [
+								{
+									"family": "Zola",
+									"given": "Émile"
+								}
+							],
+							"issued": {
+								"date-parts": [[1885]]
+							}
+						},
+						"formattedText": "Zola, Émile. Germinal.",
+						"displayOverride": "Zola, Émile. <em class=\"x\">Œuvres complètes</em>, <b>tome</b> 1. <script>alert(1)</script>Paris, 1885."
+					}
+				]
+			}
+		},
+		{
 			"name": "empty",
 			"note": "No citations: save() returns null.",
 			"attributes": {
