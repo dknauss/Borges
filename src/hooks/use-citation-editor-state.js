@@ -303,31 +303,43 @@ export function useCitationEditorState({
 
 		const operationId = beginAsyncOperation();
 
+		// Text fields are stored as plain text, as imports and manual entry
+		// store them (validateAndSanitizeCsl): markup typed or pasted into
+		// the form is dropped, not saved. A field that loaded with tags is
+		// cleaned on save as well.
+		const fieldText = (field) =>
+			stripHtmlTags(String(structuredFields[field] ?? '')).trim();
+		const title = fieldText('title');
+		const authors = fieldText('authors');
+		const containerTitle = fieldText('containerTitle');
+		const publisher = fieldText('publisher');
+		const page = fieldText('page');
+
 		const updatedCsl = {
 			...citation.csl,
-			title: structuredFields.title || citation.csl.title,
+			title: title || citation.csl.title,
 		};
 
-		if (structuredFields.authors) {
-			updatedCsl.author = parseAuthorFieldList(structuredFields.authors);
+		if (authors) {
+			updatedCsl.author = parseAuthorFieldList(authors);
 		} else {
 			delete updatedCsl.author;
 		}
 
-		if (structuredFields.containerTitle) {
-			updatedCsl['container-title'] = structuredFields.containerTitle;
+		if (containerTitle) {
+			updatedCsl['container-title'] = containerTitle;
 		} else {
 			delete updatedCsl['container-title'];
 		}
 
-		if (structuredFields.publisher) {
-			updatedCsl.publisher = structuredFields.publisher;
+		if (publisher) {
+			updatedCsl.publisher = publisher;
 		} else {
 			delete updatedCsl.publisher;
 		}
 
-		if (structuredFields.page) {
-			updatedCsl.page = structuredFields.page;
+		if (page) {
+			updatedCsl.page = page;
 		} else {
 			delete updatedCsl.page;
 		}
@@ -335,9 +347,7 @@ export function useCitationEditorState({
 		// A journal's article number (CSL `number`) has its own field; other
 		// types keep whatever `number` they carry.
 		if (citation.csl.type === 'article-journal') {
-			const articleNumber = stripHtmlTags(
-				String(structuredFields.articleNumber ?? '')
-			).trim();
+			const articleNumber = fieldText('articleNumber');
 			const original = citation.csl.number;
 
 			if (String(original ?? '').trim() !== articleNumber) {

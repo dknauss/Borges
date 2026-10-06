@@ -612,6 +612,62 @@ describe('handleStructuredEditSave guard branches', () => {
 		expect(report.csl.number).toBe('NLC-2020-4');
 	});
 
+	it('strips markup from every structured text field before saving', async () => {
+		const args = makeHookArgs([
+			makeCitation({
+				csl: {
+					type: 'book',
+					// Loaded with tags, as a write route or pasted markup can
+					// leave it: cleaned on save even if not edited.
+					title: '<i>Governing the Commons</i>',
+				},
+			}),
+		]);
+		const { result } = renderHook(() => useCitationEditorState(args));
+
+		act(() => result.current.handleStructuredEditStart('cit-1'));
+		expect(result.current.structuredFields.title).toBe(
+			'<i>Governing the Commons</i>'
+		);
+		for (const [field, value] of [
+			['authors', '<b>Ostrom</b>, Elinor'],
+			['containerTitle', 'Series <span class="x">One</span>'],
+			['publisher', ' <em>Cambridge</em> University Press '],
+			['page', '<sup>1</sup>-10'],
+		]) {
+			act(() => result.current.handleStructuredFieldChange(field, value));
+		}
+
+		await act(() => result.current.handleStructuredEditSave());
+
+		const savedCsl = args.setAttributes.mock.calls[0][0].citations[0].csl;
+		expect(savedCsl).toMatchObject({
+			title: 'Governing the Commons',
+			author: [{ family: 'Ostrom', given: 'Elinor' }],
+			'container-title': 'Series One',
+			publisher: 'Cambridge University Press',
+			page: '1-10',
+		});
+		expect(JSON.stringify(savedCsl)).not.toMatch(/[<>]/);
+	});
+
+	it('keeps the original title when the edited title is only markup', async () => {
+		const args = makeHookArgs([
+			makeCitation({ csl: { type: 'book', title: 'Kept Title' } }),
+		]);
+		const { result } = renderHook(() => useCitationEditorState(args));
+
+		act(() => result.current.handleStructuredEditStart('cit-1'));
+		act(() =>
+			result.current.handleStructuredFieldChange('title', '<b></b> ')
+		);
+		await act(() => result.current.handleStructuredEditSave());
+
+		expect(args.setAttributes.mock.calls[0][0].citations[0].csl.title).toBe(
+			'Kept Title'
+		);
+	});
+
 	it('parses semicolon author edits and keeps optional structured fields', async () => {
 		const args = makeHookArgs();
 		const { result } = renderHook(() => useCitationEditorState(args));
