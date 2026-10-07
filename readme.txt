@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.9.0
+Stable tag: 1.9.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -177,6 +177,12 @@ ISBN input connects through the plugin's authenticated WordPress REST proxy to *
 
 == Changelog ==
 
+= 1.9.1 =
+* **Added:** pasting CSL-JSON, such as a reference manager's "CSL JSON" export, now imports each item as a citation. Items that are not valid citations are skipped and named, and JSON that is not CSL-JSON gets its own message.
+* **Fixed:** a title the citation style puts in quotation marks, such as a web page in Chicago, is no longer also italicized.
+* **Fixed:** the structured data (JSON-LD) link for a DOI keeps its slash, matching the visible link.
+* Bibliographies saved with the old output stay valid and pick up the fixes the next time they are saved.
+
 = 1.9.0 =
 * **Added:** a Heading Level setting for the block's visible heading. Choose a level from 2 to 6 to print it as a real heading, so the bibliography appears in the page's heading outline and screen reader users can reach it by heading navigation. The default is still a paragraph, so existing bibliographies are unchanged. The heading keeps the same size at every level.
 
@@ -334,6 +340,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.9.1 =
+Imports pasted CSL-JSON and stops italicizing quoted titles such as Chicago web pages. No configuration changes; no new external services.
 
 = 1.9.0 =
 Adds a Heading Level setting so the bibliography's heading can be a real heading (h2–h6). Existing bibliographies are unchanged. No configuration changes; no new external services.
