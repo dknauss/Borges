@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.8.2
+Stable tag: 1.9.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -177,6 +177,9 @@ ISBN input connects through the plugin's authenticated WordPress REST proxy to *
 
 == Changelog ==
 
+= 1.9.0 =
+* **Added:** a Heading Level setting for the block's visible heading. Choose a level from 2 to 6 to print it as a real heading, so the bibliography appears in the page's heading outline and screen reader users can reach it by heading navigation. The default is still a paragraph, so existing bibliographies are unchanged. The heading keeps the same size at every level.
+
 = 1.8.2 =
 * **Fixed:** the edit form stores Title, Authors, Container title, Publisher, and Pages as plain text, as imports and manual entry already do. Markup typed or pasted into those fields is dropped on save instead of being stored in the citation.
 
@@ -331,6 +334,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.9.0 =
+Adds a Heading Level setting so the bibliography's heading can be a real heading (h2–h6). Existing bibliographies are unchanged. No configuration changes; no new external services.
 
 = 1.8.2 =
 The edit form now drops HTML typed or pasted into citation fields. No configuration changes; no new external services.

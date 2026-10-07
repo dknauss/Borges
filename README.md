@@ -94,6 +94,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.9.0** — A Heading Level setting prints the block's visible heading as a real heading (`<h2>`–`<h6>`), so the bibliography appears in the page's heading outline; the default stays a paragraph.
 - **1.8.2** — The structured edit form stores every text field as plain text, dropping markup typed or pasted into it.
 - **1.8.1** — Renders `<i>`/`<em>` in stored citation text as italics and drops other tags instead of printing them; GitHub Releases now open with the version's CHANGELOG section.
 - **1.8.0** — Moves Chicago (18th ed.), Harvard (Cite Them Right 13), OSCOLA (5th ed.), and ABNT (NBR 6023:2025) to their current editions; adds MLA 9's three hyphens for repeated authors, accessible and stable without the plugin; adds an Article number field for journal articles, filled from DOI imports; keys the formatter cache on each style's contents.
