@@ -2331,3 +2331,108 @@ describe('ISBN request pacing', () => {
 		expect(maxInFlight).toBe(2);
 	});
 });
+
+describe('CSL-JSON paste', () => {
+	const webpage = {
+		type: 'webpage',
+		title: 'Usage Statistics for Drupal Core',
+		URL: 'https://www.drupal.org/project/usage/drupal',
+	};
+	const paper = {
+		type: 'paper-conference',
+		title: 'A Paper',
+		DOI: '10.14722/ndss.2019.23386',
+		author: [{ family: 'Lee', given: 'Kim' }],
+	};
+
+	it('imports an array of CSL items and a single item', async () => {
+		const result = await parsePastedInput(JSON.stringify([webpage, paper]));
+
+		expect(result.errors).toEqual([]);
+		expect(result.remainingInput).toBe('');
+		expect(result.entries).toHaveLength(2);
+		expect(result.entries[0]).toMatchObject({
+			csl: { type: 'webpage', title: webpage.title },
+			formattedText: null,
+			displayOverride: null,
+			inputFormat: 'csl-json',
+		});
+
+		const single = await parsePastedInput(JSON.stringify(paper));
+		expect(single.entries.map((entry) => entry.csl.type)).toEqual([
+			'paper-conference',
+		]);
+	});
+
+	it('sanitizes items like every other import', async () => {
+		const result = await parsePastedInput(
+			JSON.stringify([{ ...webpage, title: '<b>Usage</b> Statistics' }])
+		);
+
+		expect(result.entries[0].csl.title).toBe('Usage Statistics');
+	});
+
+	it('skips invalid items, says which, and keeps only them to retry', async () => {
+		const bad = { type: 'not-a-type', title: 'Bad' };
+		const result = await parsePastedInput(
+			JSON.stringify([webpage, bad, paper])
+		);
+
+		expect(result.entries).toHaveLength(2);
+		expect(result.errors).toEqual([
+			'Skipped CSL-JSON items that are not valid citations (item 2).',
+		]);
+		expect(JSON.parse(result.remainingInput)).toEqual([bad]);
+	});
+
+	it('says plainly when the JSON is not CSL-JSON', async () => {
+		const input = '{ "name": "package", "version": "1.0.0" }';
+		const result = await parsePastedInput(input);
+
+		expect(result.entries).toEqual([]);
+		expect(result.errors).toEqual([
+			'This JSON is not CSL-JSON. Paste a CSL-JSON array, such as a reference manager’s CSL JSON export, or use BibTeX or manual entry.',
+		]);
+		expect(result.remainingInput).toBe(input);
+	});
+
+	it('skips items whose DOI is already in the bibliography', async () => {
+		const result = await parsePastedInput(
+			JSON.stringify([webpage, paper]),
+			undefined,
+			{ existingDoiValues: ['https://doi.org/10.14722/ndss.2019.23386'] }
+		);
+
+		expect(result.entries.map((entry) => entry.csl.type)).toEqual([
+			'webpage',
+		]);
+		expect(result.skippedDuplicateCount).toBe(1);
+		expect(result.errors).toEqual([]);
+	});
+
+	it('formats the items when formatting is not deferred', async () => {
+		formatBibliographyEntries.mockResolvedValueOnce(['Formatted.']);
+
+		const result = await parsePastedInput(
+			JSON.stringify([webpage]),
+			'chicago-notes-bibliography',
+			{ deferFormatting: false }
+		);
+
+		expect(result.entries[0].formattedText).toBe('Formatted.');
+	});
+
+	it('keeps items over the per-paste limit to retry', async () => {
+		const items = Array.from({ length: 52 }, (_, index) => ({
+			...webpage,
+			title: `Page ${index + 1}`,
+		}));
+		const result = await parsePastedInput(JSON.stringify(items));
+
+		expect(result.entries).toHaveLength(50);
+		expect(result.truncated).toBe(true);
+		expect(
+			JSON.parse(result.remainingInput).map((item) => item.title)
+		).toEqual(['Page 51', 'Page 52']);
+	});
+});

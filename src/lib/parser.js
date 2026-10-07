@@ -7,7 +7,7 @@
  */
 
 import { Cite } from '@citation-js/core';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { MAX_ENTRIES_PER_PASTE } from './citation-limits';
 import '@citation-js/plugin-doi';
 import '@citation-js/plugin-bibtex';
@@ -869,26 +869,141 @@ function segmentPastedInput(input) {
 }
 
 /**
- * Whether the whole paste is a JSON document, such as a CSL-JSON export.
- * JSON is not an import format; without this check it reaches the free-text
- * parser and comes back as a nonsense webpage citation.
+ * The paste parsed as a JSON document, or null when it is not one.
+ *
+ * A whole-paste JSON document is read as CSL-JSON (a reference manager's
+ * "CSL JSON" export, or Borges's own CSL-JSON download). It must not reach
+ * the free-text parser, which would turn it into a nonsense webpage citation.
  *
  * @param {string} input Pasted text.
- * @return {boolean} True when the input parses as a JSON object or array.
+ * @return {Object|Array|null} The parsed object or array.
  */
-function looksLikeJsonDocument(input) {
+function parseJsonDocument(input) {
 	const trimmed = input.trim();
 
 	if (!/^[[{]/u.test(trimmed)) {
-		return false;
+		return null;
 	}
 
 	try {
 		const parsed = JSON.parse(trimmed);
 
-		return typeof parsed === 'object' && parsed !== null;
+		return typeof parsed === 'object' && parsed !== null ? parsed : null;
 	} catch (_error) {
-		return false;
+		return null;
+	}
+}
+
+function formatNotCslJsonError() {
+	return __(
+		'This JSON is not CSL-JSON. Paste a CSL-JSON array, such as a reference manager’s CSL JSON export, or use BibTeX or manual entry.',
+		'borges-bibliography-builder'
+	);
+}
+
+function formatInvalidCslJsonItemsError(positions) {
+	return sprintf(
+		/* translators: %s: comma-separated positions of the skipped items, such as "2, 5". */
+		__(
+			'Skipped CSL-JSON items that are not valid citations (item %s).',
+			'borges-bibliography-builder'
+		),
+		positions.join(', ')
+	);
+}
+
+/**
+ * Read a pasted CSL-JSON document: an array of CSL items, or one item.
+ *
+ * Each item passes through validateAndSanitizeCsl(), as every other import
+ * does; an item it rejects is skipped and reported by position. A JSON
+ * document with no valid item at all gets its own message rather than the
+ * generic help text, so the paste does not look ignored.
+ *
+ * The items left to retry (skipped as invalid, or over the per-paste limit)
+ * stay in the paste box as a CSL-JSON array; the imported ones do not, so a
+ * retry cannot duplicate them.
+ *
+ * @param {Object|Array} document       Parsed JSON.
+ * @param {Set<string>}  existingDoiSet Normalized DOIs already in the block.
+ * @param {string}       input          The paste, kept whole when nothing in
+ *                                      it is CSL-JSON.
+ * @return {Object} parsePastedInput() result.
+ */
+function readCslJsonDocument(document, existingDoiSet, input) {
+	const items = Array.isArray(document) ? document : [document];
+	const entries = [];
+	const invalidPositions = [];
+	const remainingItems = items.slice(MAX_ENTRIES_PER_PASTE);
+	let skippedDuplicateCount = 0;
+
+	items.slice(0, MAX_ENTRIES_PER_PASTE).forEach((item, index) => {
+		let csl;
+
+		try {
+			csl = validateAndSanitizeCsl(item);
+		} catch (_error) {
+			invalidPositions.push(index + 1);
+			remainingItems.splice(invalidPositions.length - 1, 0, item);
+			return;
+		}
+
+		if (
+			typeof csl.DOI === 'string' &&
+			existingDoiSet.has(normalizeDoiValueForLookup(csl.DOI))
+		) {
+			skippedDuplicateCount += 1;
+			return;
+		}
+
+		entries.push({
+			id: createCitationId(),
+			csl,
+			formattedText: null,
+			displayOverride: null,
+			inputFormat: 'csl-json',
+			parseWarnings: [],
+		});
+	});
+
+	if (!entries.length && !skippedDuplicateCount) {
+		return {
+			entries,
+			errors: [formatNotCslJsonError()],
+			truncated: false,
+			remainingInput: input.trim(),
+			skippedDuplicateCount,
+		};
+	}
+
+	return {
+		entries,
+		errors: invalidPositions.length
+			? [formatInvalidCslJsonItemsError(invalidPositions)]
+			: [],
+		truncated: items.length > MAX_ENTRIES_PER_PASTE,
+		remainingInput: remainingItems.length
+			? JSON.stringify(remainingItems, null, 2)
+			: '',
+		skippedDuplicateCount,
+	};
+}
+
+/**
+ * Fill in formattedText for parsed entries.
+ *
+ * @param {Array}  entries  Parsed entries; updated in place.
+ * @param {string} styleKey Citation style key.
+ */
+async function formatParsedEntries(entries, styleKey) {
+	const { formatBibliographyEntries } = await import('./formatting/csl');
+	const formattedTexts = await formatBibliographyEntries(
+		entries.map((entry) => entry.csl),
+		styleKey
+	);
+
+	for (const [index, entry] of entries.entries()) {
+		entry.formattedText = formattedTexts[index];
 	}
 }
 
@@ -1136,13 +1251,21 @@ export async function parsePastedInput(
 		};
 	}
 
-	if (looksLikeJsonDocument(input)) {
-		return {
-			entries: [],
-			errors: [formatUnsupportedInputError()],
-			truncated: false,
-			remainingInput: input.trim(),
-		};
+	const existingDoiSet = new Set(
+		existingDoiValues
+			.filter((value) => typeof value === 'string' && value.trim())
+			.map(normalizeDoiValueForLookup)
+	);
+	const jsonDocument = parseJsonDocument(input);
+
+	if (jsonDocument) {
+		const result = readCslJsonDocument(jsonDocument, existingDoiSet, input);
+
+		if (!deferFormatting && result.entries.length) {
+			await formatParsedEntries(result.entries, styleKey);
+		}
+
+		return result;
 	}
 
 	let detected = segmentPastedInput(input).flatMap((segment) => {
@@ -1166,11 +1289,6 @@ export async function parsePastedInput(
 		detected = detected.slice(0, MAX_ENTRIES_PER_PASTE);
 	}
 
-	const existingDoiSet = new Set(
-		existingDoiValues
-			.filter((value) => typeof value === 'string' && value.trim())
-			.map(normalizeDoiValueForLookup)
-	);
 	detected = detected.filter((item) => {
 		if (item.format !== 'doi') {
 			return true;
@@ -1275,15 +1393,7 @@ export async function parsePastedInput(
 	}
 
 	if (!deferFormatting && entries.length) {
-		const { formatBibliographyEntries } = await import('./formatting/csl');
-		const formattedTexts = await formatBibliographyEntries(
-			entries.map((entry) => entry.csl),
-			styleKey
-		);
-
-		for (const [index, entry] of entries.entries()) {
-			entry.formattedText = formattedTexts[index];
-		}
+		await formatParsedEntries(entries, styleKey);
 	}
 
 	return {

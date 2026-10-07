@@ -221,6 +221,16 @@ msgstr ""
 msgid "The pasted input is too large. Maximum size is 1 MB."
 msgstr ""
 
+#: src/lib/parser.js:898
+msgid "This JSON is not CSL-JSON. Paste a CSL-JSON array, such as a reference manager’s CSL JSON export, or use BibTeX or manual entry."
+msgstr ""
+
+#. translators: %s: comma-separated positions of the skipped items, such as "2, 5".
+#: src/lib/parser.js:905
+#, js-format
+msgid "Skipped CSL-JSON items that are not valid citations (item %s)."
+msgstr ""
+
 #: src/components/editor-canvas-notices.js:40
 msgid "Notification"
 msgstr "알림"
