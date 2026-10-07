@@ -22,6 +22,8 @@ export default function save({ attributes }) {
 		includeCiteExport: attributes.outputCiteExport ?? false,
 		repeatedAuthors: true,
 		inlineMarkup: true,
+		quoteAwareItalics: true,
+		canonicalDoiUrl: true,
 		labels: LOCALE_INDEPENDENT_SAVE_LABELS,
 	});
 }

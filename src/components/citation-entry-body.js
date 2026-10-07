@@ -95,6 +95,7 @@ export function CitationEntryBody({
 					<span className="bibliography-builder-entry-text">
 						{getDisplaySegments(citation, {
 							inlineMarkup: true,
+							quoteAwareItalics: true,
 						}).map((segment, index) =>
 							segment.italic ? (
 								<i key={`${citation.id}-${index}`}>

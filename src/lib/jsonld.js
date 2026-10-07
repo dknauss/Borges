@@ -22,12 +22,18 @@ function isLikelyOrganizationAuthor(author) {
 /**
  * Map a single CSL-JSON object to a Schema.org JSON-LD object.
  *
- * @param {Object} csl CSL-JSON object.
+ * @param {Object}  csl                       CSL-JSON object.
+ * @param {Object}  [options]                 Options.
+ * @param {boolean} [options.canonicalDoiUrl] Keep the DOI's slash in `url`
+ *                                            (`https://doi.org/10.1/x`), as
+ *                                            the visible link has it. False
+ *                                            encodes it, as save() did before
+ *                                            1.9.1.
  * @return {Object} Schema.org typed object.
  *
  * @since 0.1.0
  */
-export function cslToJsonLd(csl) {
+export function cslToJsonLd(csl, { canonicalDoiUrl = true } = {}) {
 	const schemaType = TYPE_MAP[csl.type] || 'CreativeWork';
 
 	const result = {
@@ -117,7 +123,10 @@ export function cslToJsonLd(csl) {
 		};
 		// Note: Uses https://doi.org/ for Schema.org JSON-LD compatibility.
 		// COinS output (coins.js) uses info:doi/ per OpenURL convention.
-		result.url = 'https://doi.org/' + encodeURIComponent(csl.DOI);
+		result.url = canonicalDoiUrl
+			? 'https://doi.org/' +
+			  String(csl.DOI).split('/').map(encodeURIComponent).join('/')
+			: 'https://doi.org/' + encodeURIComponent(csl.DOI);
 	}
 
 	const isbn = getPrimaryIdentifierValue(csl.ISBN);
@@ -164,13 +173,14 @@ function escapeForScriptContext(json) {
 /**
  * Convert an array of CSL-JSON objects to a JSON-LD array and serialize.
  *
- * @param {Array} cslArray Array of CSL-JSON objects.
+ * @param {Array}  cslArray  Array of CSL-JSON objects.
+ * @param {Object} [options] Options for cslToJsonLd().
  * @return {string} Safe JSON string for embedding in a <script> tag.
  *
  * @since 0.1.0
  */
-export function buildJsonLdString(cslArray) {
-	const data = cslArray.map(cslToJsonLd);
+export function buildJsonLdString(cslArray, options = {}) {
+	const data = cslArray.map((csl) => cslToJsonLd(csl, options));
 	return escapeForScriptContext(JSON.stringify(data));
 }
 

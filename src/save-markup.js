@@ -59,6 +59,8 @@ export function renderBibliographySave(
 		includeCiteExport = false,
 		repeatedAuthors = false,
 		inlineMarkup = false,
+		quoteAwareItalics = false,
+		canonicalDoiUrl = false,
 		labels: labelOverrides = null,
 	} = {}
 ) {
@@ -111,6 +113,7 @@ export function renderBibliographySave(
 				{renderedCitations.map((citation, citationIndex) => {
 					const displaySegments = getDisplaySegments(citation, {
 						inlineMarkup,
+						quoteAwareItalics,
 					});
 					const repeatedPrefix =
 						repeatedAuthorPrefixes[citationIndex] || null;
@@ -307,7 +310,9 @@ export function renderBibliographySave(
 				<script
 					type="application/ld+json"
 					dangerouslySetInnerHTML={{
-						__html: buildJsonLdString(cslArray),
+						__html: buildJsonLdString(cslArray, {
+							canonicalDoiUrl,
+						}),
 					}}
 				/>
 			) : null}

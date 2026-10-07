@@ -472,3 +472,52 @@ describe('inline markup', () => {
 		]);
 	});
 });
+
+describe('quoted titles', () => {
+	const webpage = {
+		csl: { type: 'webpage', title: 'Usage Statistics for Drupal Core' },
+		formattedText:
+			'Drupal.org. “Usage Statistics for Drupal Core.” Accessed October 6, 2026.',
+		displayOverride: null,
+	};
+
+	it('does not italicize a title quoted with punctuation inside the quote', () => {
+		expect(
+			getDisplaySegments(webpage, { quoteAwareItalics: true })
+		).toEqual([{ text: webpage.formattedText, italic: false }]);
+		expect(
+			getDisplaySegments(
+				{
+					...webpage,
+					formattedText:
+						'Lee. "Usage Statistics for Drupal Core,?" 2024.',
+				},
+				{ quoteAwareItalics: true }
+			)
+		).toEqual([
+			{
+				text: 'Lee. "Usage Statistics for Drupal Core,?" 2024.',
+				italic: false,
+			},
+		]);
+	});
+
+	it('still italicizes an unquoted title, and a period alone is no quote', () => {
+		const apa = {
+			...webpage,
+			formattedText:
+				'Drupal.org. (2026). Usage Statistics for Drupal Core. https://drupal.org.',
+		};
+
+		expect(getDisplaySegments(apa, { quoteAwareItalics: true })[1]).toEqual(
+			{ text: 'Usage Statistics for Drupal Core', italic: true }
+		);
+	});
+
+	it('italicizes it as before without the option (the pre-1.9.1 shape)', () => {
+		expect(getDisplaySegments(webpage)[1]).toEqual({
+			text: 'Usage Statistics for Drupal Core',
+			italic: true,
+		});
+	});
+});

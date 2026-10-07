@@ -250,20 +250,45 @@ function isClosingQuote(character) {
 	return character === '"' || character === '”';
 }
 
-function isQuotedAt(text, start, end) {
+/**
+ * Punctuation a style may place between a quoted title and its closing quote:
+ * American styles put the element's period or comma inside the quotes
+ * (Chicago's `"Usage Statistics for Drupal Core."`).
+ */
+const PUNCTUATION_INSIDE_QUOTES = /^[.,;:!?]+/u;
+
+/**
+ * Whether the text puts quotation marks around this occurrence of a title.
+ * A quoted title is never also italicized.
+ *
+ * @param {string}  text                    Display text.
+ * @param {number}  start                   Start of the occurrence.
+ * @param {number}  end                     End of the occurrence.
+ * @param {boolean} punctuationInsideQuotes Allow punctuation before the
+ *                                          closing quote. Off reproduces the
+ *                                          check save() made before 1.9.1.
+ * @return {boolean} True when the occurrence is quoted.
+ */
+function isQuotedAt(text, start, end, punctuationInsideQuotes = false) {
 	const before = text[start - 1];
-	const after = text[end];
-	return isOpeningQuote(before) && isClosingQuote(after);
+	let closeAt = end;
+
+	if (punctuationInsideQuotes) {
+		const punctuation = text.slice(end).match(PUNCTUATION_INSIDE_QUOTES);
+		closeAt += punctuation ? punctuation[0].length : 0;
+	}
+
+	return isOpeningQuote(before) && isClosingQuote(text[closeAt]);
 }
 
-function findLastRange(text, value, ranges) {
+function findLastRange(text, value, ranges, punctuationInsideQuotes) {
 	let start = text.lastIndexOf(value);
 
 	while (start !== -1) {
 		const end = start + value.length;
 
 		if (
-			!isQuotedAt(text, start, end) &&
+			!isQuotedAt(text, start, end, punctuationInsideQuotes) &&
 			!ranges.some((range) => start < range.end && end > range.start)
 		) {
 			return { start, end };
@@ -275,12 +300,12 @@ function findLastRange(text, value, ranges) {
 	return null;
 }
 
-function addRange(ranges, text, value) {
+function addRange(ranges, text, value, punctuationInsideQuotes = false) {
 	if (!value) {
 		return;
 	}
 
-	const range = findLastRange(text, value, ranges);
+	const range = findLastRange(text, value, ranges, punctuationInsideQuotes);
 
 	if (!range) {
 		return;
@@ -360,14 +385,24 @@ function getItalicizedFields(citation) {
  * without their tags. Without it, text is used as stored: the shape save()
  * had before 1.8.1, which the deprecations reproduce.
  *
- * @param {Object}  citation               Citation object.
- * @param {Object}  [options]              Options.
- * @param {boolean} [options.inlineMarkup] Read inline HTML in the text.
+ * With `quoteAwareItalics`, a title the formatted text quotes is not
+ * italicized even when the style puts punctuation inside the closing quote
+ * (`"Title."`); without it, only a title directly followed by the quote
+ * counts as quoted, the shape save() had before 1.9.1.
+ *
+ * @param {Object}  citation                    Citation object.
+ * @param {Object}  [options]                   Options.
+ * @param {boolean} [options.inlineMarkup]      Read inline HTML in the text.
+ * @param {boolean} [options.quoteAwareItalics] Skip quoted titles that end in
+ *                                              punctuation.
  * @return {DisplaySegment[]} Array of text segments with italic flags.
  *
  * @since 0.1.0
  */
-export function getDisplaySegments(citation, { inlineMarkup = false } = {}) {
+export function getDisplaySegments(
+	citation,
+	{ inlineMarkup = false, quoteAwareItalics = false } = {}
+) {
 	const rawText = getDisplayText(citation);
 	const { text: displayText, ranges: markupRanges } = inlineMarkup
 		? parseInlineMarkup(rawText)
@@ -385,7 +420,8 @@ export function getDisplaySegments(citation, { inlineMarkup = false } = {}) {
 		addRange(
 			titleRanges,
 			displayText,
-			inlineMarkup && value ? stripInlineMarkup(value) : value
+			inlineMarkup && value ? stripInlineMarkup(value) : value,
+			quoteAwareItalics
 		);
 	}
 

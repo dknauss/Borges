@@ -906,7 +906,9 @@ function bibliography_builder_save_italic_fields( $csl ) {
 }
 
 /**
- * `isQuotedAt()`: the match is wrapped in straight or curly double quotes.
+ * `isQuotedAt()`: the match is wrapped in straight or curly double quotes,
+ * allowing punctuation before the closing quote (Chicago's `"Title."`), as
+ * save() does with `quoteAwareItalics`.
  *
  * @param string $text  Display text.
  * @param int    $start Byte offset.
@@ -915,7 +917,8 @@ function bibliography_builder_save_italic_fields( $csl ) {
  */
 function bibliography_builder_save_is_quoted( $text, $start, $end ) {
 	$before = substr( $text, 0, $start );
-	$after  = substr( $text, $end );
+	$after  = (string) substr( $text, $end );
+	$after  = (string) substr( $after, strspn( $after, '.,;:!?' ) );
 
 	$opens  = '"' === substr( $before, -1 ) || "\u{201C}" === substr( $before, -3 );
 	$closes = '"' === substr( $after, 0, 1 ) || "\u{201D}" === substr( $after, 0, 3 );
@@ -1631,8 +1634,14 @@ function bibliography_builder_save_csl_to_json_ld( $csl ) {
 			'propertyID' => 'DOI',
 			'value'      => $doi,
 		);
-		$result['url']        = 'https://doi.org/'
-			. bibliography_builder_encode_uri_component( bibliography_builder_js_string( $doi ) );
+		// Each part encoded, the slash kept: `https://doi.org/10.1/x`.
+		$result['url'] = 'https://doi.org/' . implode(
+			'/',
+			array_map(
+				'bibliography_builder_encode_uri_component',
+				explode( '/', bibliography_builder_js_string( $doi ) )
+			)
+		);
 	}
 
 	$isbn = bibliography_builder_get_primary_identifier( bibliography_builder_csl_field( $csl, 'ISBN' ) );
