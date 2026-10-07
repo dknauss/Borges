@@ -1045,6 +1045,7 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertCount( 1, $data['bibliographies'] );
 		$this->assertSame( 1, $data['bibliographies'][0]['entryCount'] );
 		$this->assertSame( 'References', $data['bibliographies'][0]['headingText'] );
+		$this->assertSame( 0, $data['bibliographies'][0]['headingLevel'] );
 	}
 
 	public function test_collection_reports_null_bibliography_id_for_blocks_saved_without_one(): void {

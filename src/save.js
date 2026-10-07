@@ -8,6 +8,7 @@
  * the next editor uses. The frontend view script localizes the visible labels.
  */
 
+import { getHeadingTag } from './lib/heading-level';
 import {
 	LOCALE_INDEPENDENT_SAVE_LABELS,
 	renderBibliographySave,
@@ -16,7 +17,7 @@ import {
 export default function save({ attributes }) {
 	return renderBibliographySave(attributes, {
 		sortEntries: true,
-		headingTag: 'p',
+		headingTag: getHeadingTag(attributes.headingLevel),
 		entryTag: 'cite',
 		includeCiteExport: attributes.outputCiteExport ?? false,
 		repeatedAuthors: true,

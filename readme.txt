@@ -104,7 +104,7 @@ Version 4.0 replaced the plugin's registration API, so the integration requires 
 4. Switch to Manual Entry to build a citation field by field — Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL.
 5. Correct imported or free-text citations in place with the structured field editor — fix individual fields without retyping the whole entry.
 6. For numbered styles such as IEEE and Vancouver, reorder entries with the up and down controls (or Alt+Arrow keys) to set citation numbering.
-7. Choose the citation style and visible heading and toggle metadata output — JSON-LD, COinS, CSL-JSON, and the per-entry Cite / Export panel — from the block settings sidebar.
+7. Choose the citation style, the visible heading and its heading level, and toggle metadata output — JSON-LD, COinS, CSL-JSON, and the per-entry Cite / Export panel — from the block settings sidebar.
 8. Export the whole bibliography from the sidebar: copy as plain text, or download CSL-JSON, BibTeX, BibLaTeX, or RIS.
 9. Readers can expand the per-entry Cite / Export panel on the published page to copy a citation or download it as RIS, CSL-JSON, BibTeX, or BibLaTeX.
 

@@ -2224,6 +2224,23 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 }
 
 /**
+ * The element for the block heading at a `headingLevel` attribute value:
+ * `h2` to `h6`, or `p` for 0 (the default) and anything else.
+ *
+ * `getHeadingTag()` from `src/lib/heading-level.js`. JSON `2.0` is the number
+ * 2 in JavaScript and a float in PHP, so a whole-number float counts.
+ *
+ * @param mixed $heading_level The `headingLevel` attribute.
+ * @return string
+ */
+function bibliography_builder_save_heading_tag( $heading_level ) {
+	$is_level = ( is_int( $heading_level ) || is_float( $heading_level ) )
+		&& in_array( (float) $heading_level, array( 2.0, 3.0, 4.0, 5.0, 6.0 ), true );
+
+	return $is_level ? 'h' . (int) $heading_level : 'p';
+}
+
+/**
  * Render the block's saved inner HTML from its attributes, as the current
  * `save()` would. Returns an empty string when there are no citations, where
  * `save()` returns null.
@@ -2268,9 +2285,13 @@ function bibliography_builder_render_save_markup( $attrs ) {
 	) . '>';
 
 	if ( '' !== $heading ) {
-		$html .= '<p class="bibliography-builder-heading">'
+		$heading_tag = bibliography_builder_save_heading_tag(
+			isset( $attrs['headingLevel'] ) ? $attrs['headingLevel'] : 0
+		);
+
+		$html .= '<' . $heading_tag . ' class="bibliography-builder-heading">'
 			. bibliography_builder_escape_save_text( $heading )
-			. '</p>';
+			. '</' . $heading_tag . '>';
 	}
 
 	$html .= '<' . $list_tag . ' class="' . bibliography_builder_escape_save_attribute(

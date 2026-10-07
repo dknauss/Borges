@@ -51,7 +51,7 @@ Both demo Blueprints explicitly request PHP `intl` support because editor-time C
 | Numeric reorder | Settings sidebar | Exports |
 |---|---|---|
 | ![](.wordpress-org/screenshot-6.png) | ![](.wordpress-org/screenshot-7.png) | ![](.wordpress-org/screenshot-8.png) |
-| For numbered styles such as IEEE and Vancouver, reorder entries with the up and down controls (or Alt+Arrow keys) to set citation numbering. | Choose the citation style and visible heading and toggle metadata output — JSON-LD, COinS, CSL-JSON, and the per-entry Cite / Export panel — from the block settings sidebar. | Export the whole bibliography from the sidebar: copy as plain text, or download CSL-JSON, BibTeX, BibLaTeX, or RIS. |
+| For numbered styles such as IEEE and Vancouver, reorder entries with the up and down controls (or Alt+Arrow keys) to set citation numbering. | Choose the citation style, the visible heading and its heading level, and toggle metadata output — JSON-LD, COinS, CSL-JSON, and the per-entry Cite / Export panel — from the block settings sidebar. | Export the whole bibliography from the sidebar: copy as plain text, or download CSL-JSON, BibTeX, BibLaTeX, or RIS. |
 
 | Reader Cite / Export |
 |---|
@@ -185,6 +185,7 @@ Returns every Borges Bibliography block found in the post, including nested bloc
       "entryCount": 2,
       "citationStyle": "chicago-notes-bibliography",
       "headingText": "References",
+      "headingLevel": 0,
       "outputJsonLd": true,
       "outputCoins": false,
       "outputCslJson": false,

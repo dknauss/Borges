@@ -43,6 +43,7 @@ import {
 	getSelectableStyles,
 	getStyleDefinition,
 } from './lib/formatting';
+import { HEADING_LEVELS, getHeadingTag } from './lib/heading-level';
 import { SUPPORTED_INPUT_MESSAGE } from './lib/input-support';
 import { sortCitations } from './lib/sorter';
 import { computeExportStrings } from './hooks/compute-export-strings';
@@ -86,6 +87,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		citations,
 		citationStyle,
 		headingText,
+		headingLevel = 0,
 		outputJsonLd = true,
 		outputCoins = false,
 		outputCslJson = false,
@@ -94,6 +96,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	const selectableStyles = useMemo(() => getSelectableStyles(), []);
 	const blockProps = useBlockProps();
 	const headingPlaceholder = getHeadingPlaceholder(citationStyle);
+	const HeadingTag = getHeadingTag(headingLevel);
 	const listStyleDefinition = getStyleDefinition(citationStyle);
 	const isNumericFamily = listStyleDefinition.family === 'numeric';
 	const ListTag = getListSemantics(citationStyle);
@@ -691,6 +694,44 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							'borges-bibliography-builder'
 						)}
 					/>
+					<SelectControl
+						label={__(
+							'Heading Level',
+							'borges-bibliography-builder'
+						)}
+						value={String(
+							HEADING_LEVELS.includes(headingLevel)
+								? headingLevel
+								: 0
+						)}
+						options={[
+							{
+								label: __(
+									'Paragraph (not a heading)',
+									'borges-bibliography-builder'
+								),
+								value: '0',
+							},
+							...HEADING_LEVELS.map((level) => ({
+								label: sprintf(
+									/* translators: %d: heading level, 2 to 6. */
+									__(
+										'Heading %d',
+										'borges-bibliography-builder'
+									),
+									level
+								),
+								value: String(level),
+							})),
+						]}
+						onChange={(value) =>
+							setAttributes({ headingLevel: Number(value) })
+						}
+						help={__(
+							'Choose a heading level to put the visible heading in the page outline, where screen reader users navigate by headings. The size does not change with the level.',
+							'borges-bibliography-builder'
+						)}
+					/>
 					<ToggleControl
 						label={__(
 							'Output JSON-LD',
@@ -819,9 +860,9 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 			{/* Heading */}
 			{headingText ? (
-				<p className="bibliography-builder-heading bibliography-builder-heading-preview">
+				<HeadingTag className="bibliography-builder-heading bibliography-builder-heading-preview">
 					{headingText}
-				</p>
+				</HeadingTag>
 			) : null}
 
 			{/* Add form */}

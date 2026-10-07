@@ -61,6 +61,62 @@ describe('save', () => {
 		);
 	});
 
+	it('keeps the heading a paragraph when no heading level is set', () => {
+		for (const headingLevel of [undefined, 0, 1, 7, 2.5, '2', null]) {
+			const markup = renderToStaticMarkup(
+				save({
+					attributes: {
+						citationStyle: 'chicago-notes-bibliography',
+						headingText: 'Bibliography',
+						headingLevel,
+						citations: [createCitation()],
+					},
+				})
+			);
+
+			expect(markup).toContain(
+				'<p class="bibliography-builder-heading">Bibliography</p>'
+			);
+		}
+	});
+
+	it('renders the heading as a real heading element at levels 2 to 6', () => {
+		for (const headingLevel of [2, 3, 4, 5, 6]) {
+			const markup = renderToStaticMarkup(
+				save({
+					attributes: {
+						citationStyle: 'chicago-notes-bibliography',
+						headingText: 'Sources',
+						headingLevel,
+						citations: [createCitation()],
+					},
+				})
+			);
+
+			expect(markup).toContain(
+				`<section class="wp-block-bibliography-builder-bibliography" role="doc-bibliography" aria-label="Sources"><h${headingLevel} class="bibliography-builder-heading">Sources</h${headingLevel}>`
+			);
+			expect(markup).not.toContain(
+				'<p class="bibliography-builder-heading">'
+			);
+		}
+	});
+
+	it('prints no heading element without heading text, whatever the level', () => {
+		const markup = renderToStaticMarkup(
+			save({
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					headingLevel: 2,
+					citations: [createCitation()],
+				},
+			})
+		);
+
+		expect(markup).not.toContain('bibliography-builder-heading');
+		expect(markup).toContain('aria-label="Bibliography"');
+	});
+
 	it('renders author-date styles as an unordered list', () => {
 		for (const style of ['chicago-author-date', 'apa-7']) {
 			const markup = renderToStaticMarkup(

@@ -1591,6 +1591,146 @@
 			}
 		},
 		{
+			"name": "heading-level-2",
+			"note": "headingLevel 2: the block heading is an <h2>, in the page's heading outline.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "Sources",
+				"headingLevel": 2,
+				"citations": [
+					{
+						"id": "c1",
+						"csl": {
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"issued": {
+								"date-parts": [[1962]]
+							}
+						},
+						"formattedText": "Borges, J. L. (1962). Labyrinths."
+					}
+				]
+			}
+		},
+		{
+			"name": "heading-level-6",
+			"note": "headingLevel 6: the deepest heading level.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "Sources",
+				"headingLevel": 6,
+				"citations": [
+					{
+						"id": "c1",
+						"csl": {
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"issued": {
+								"date-parts": [[1962]]
+							}
+						},
+						"formattedText": "Borges, J. L. (1962). Labyrinths."
+					}
+				]
+			}
+		},
+		{
+			"name": "heading-level-float",
+			"note": "headingLevel 3.0: a whole-number float is level 3 in JavaScript, so it is in PHP.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "Sources",
+				"headingLevel": 3.0,
+				"citations": [
+					{
+						"id": "c1",
+						"csl": {
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"issued": {
+								"date-parts": [[1962]]
+							}
+						},
+						"formattedText": "Borges, J. L. (1962). Labyrinths."
+					}
+				]
+			}
+		},
+		{
+			"name": "heading-level-not-a-level",
+			"note": "A headingLevel that is a string is not a level: the default paragraph.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "Sources",
+				"headingLevel": "2",
+				"citations": [
+					{
+						"id": "c1",
+						"csl": {
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"issued": {
+								"date-parts": [[1962]]
+							}
+						},
+						"formattedText": "Borges, J. L. (1962). Labyrinths."
+					}
+				]
+			}
+		},
+		{
+			"name": "heading-level-out-of-range",
+			"note": "A headingLevel outside 2-6 falls back to the default paragraph.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "Sources",
+				"headingLevel": 7,
+				"citations": [
+					{
+						"id": "c1",
+						"csl": {
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"issued": {
+								"date-parts": [[1962]]
+							}
+						},
+						"formattedText": "Borges, J. L. (1962). Labyrinths."
+					}
+				]
+			}
+		},
+		{
 			"name": "empty",
 			"note": "No citations: save() returns null.",
 			"attributes": {

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Heading Level setting for the block's visible heading.** The heading can now be a real heading element, `<h2>` to `<h6>`, so it appears in the page's heading outline and screen reader users can reach the bibliography by heading navigation. Until now it was always a paragraph, which led sites to add a separate Heading block above the bibliography and left the bibliography section labelled "Bibliography" rather than with its visible heading. The default is still a paragraph, so existing bibliographies are unchanged and stay valid. The level changes the element, not the look: the heading keeps the block's own size, weight, spacing, and centering at every level, though a theme's heading font family, color, or line height may apply to it. The new `headingLevel` attribute (`0` for a paragraph, or `2`–`6`) is reported by the read routes and can be set through the write routes' settings `PATCH`.
+
 ## [1.8.2] - 2026-10-06
 
 ### Fixed

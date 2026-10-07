@@ -404,6 +404,27 @@ final class WriteRoutesTest extends TestCase {
 		$this->assert_blocks_are_valid();
 	}
 
+	public function test_settings_patch_sets_the_heading_level() {
+		$request = self::block_request( 'PATCH', 'notes-block', array( 'headingLevel' => 2 ) );
+		$data    = bibliography_builder_rest_update_bibliography_settings( self::commit( $request ) )->get_data();
+		$attrs   = bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] );
+
+		$this->assertSame( array( 'headingLevel' ), $data['changes']['updated'] );
+		$this->assertSame( 2, $attrs['headingLevel'] );
+		$this->assertStringContainsString( '<h2 class="bibliography-builder-heading">Works Cited</h2>', get_post( self::POST_ID )->post_content );
+		$this->assert_blocks_are_valid();
+
+		// Back to the paragraph: left out of the block comment, as the editor does.
+		bibliography_builder_rest_update_bibliography_settings(
+			self::commit( self::block_request( 'PATCH', 'notes-block', array( 'headingLevel' => 0 ) ) )
+		);
+		$attrs = bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] );
+
+		$this->assertArrayNotHasKey( 'headingLevel', $attrs );
+		$this->assertStringContainsString( '<p class="bibliography-builder-heading">Works Cited</p>', get_post( self::POST_ID )->post_content );
+		$this->assert_blocks_are_valid();
+	}
+
 	public function test_settings_patch_refuses_bad_settings() {
 		$cases = array(
 			'bibliography_builder_style_needs_reformat' => array( 'citationStyle' => 'apa-7' ),
@@ -414,7 +435,7 @@ final class WriteRoutesTest extends TestCase {
 			$this->assertSame( $code, bibliography_builder_rest_update_bibliography_settings( self::block_request( 'PATCH', 0, $body ) )->get_error_code() );
 		}
 
-		foreach ( array( array( 'outputCoins' => 'yes' ), array( 'headingText' => 5 ), array( 'headingText' => "Two\nlines" ) ) as $body ) {
+		foreach ( array( array( 'outputCoins' => 'yes' ), array( 'headingText' => 5 ), array( 'headingText' => "Two\nlines" ), array( 'headingLevel' => 1 ), array( 'headingLevel' => 7 ), array( 'headingLevel' => '2' ), array( 'headingLevel' => 2.5 ), array( 'headingLevel' => true ) ) as $body ) {
 			$this->assertSame( 400, bibliography_builder_rest_update_bibliography_settings( self::block_request( 'PATCH', 0, $body ) )->get_error_data()['status'] );
 		}
 
