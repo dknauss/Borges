@@ -223,16 +223,22 @@ describe('reference-manager export corpus (real citation-js)', () => {
 	});
 
 	describe('Zotero CSL-JSON', () => {
-		it('rejects a JSON document instead of parsing it as free text', async () => {
+		it('imports each item of the export as a citation', async () => {
 			const result = await parsePastedInput(
 				readFixture('zotero-csl.json')
 			);
 
-			expect(result.entries).toEqual([]);
-			expect(result.errors).toHaveLength(1);
-			expect(result.remainingInput).toBe(
-				readFixture('zotero-csl.json').trim()
-			);
+			expect(result.errors).toEqual([]);
+			expect(result.remainingInput).toBe('');
+			expect(result.entries.map((entry) => entry.csl.type)).toEqual([
+				'article-journal',
+				'book',
+			]);
+			expect(
+				result.entries.every(
+					(entry) => entry.inputFormat === 'csl-json'
+				)
+			).toBe(true);
 		});
 	});
 });

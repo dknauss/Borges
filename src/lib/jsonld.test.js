@@ -42,7 +42,7 @@ describe('cslToJsonLd', () => {
 				propertyID: 'DOI',
 				value: '10.1234/example-doi',
 			},
-			url: 'https://doi.org/10.1234%2Fexample-doi',
+			url: 'https://doi.org/10.1234/example-doi',
 		});
 	});
 
@@ -106,7 +106,7 @@ describe('cslToJsonLd', () => {
 			})
 		).toMatchObject({
 			isbn: '9780226819909',
-			url: 'https://doi.org/10.1234%2Fexample%20doi%2Fwith%20spaces',
+			url: 'https://doi.org/10.1234/example%20doi/with%20spaces',
 		});
 	});
 
@@ -320,7 +320,7 @@ describe('cslToJsonLd', () => {
 				ISBN: ['', 42, null],
 			})
 		).toMatchObject({
-			url: 'https://doi.org/10.5555%2Furl-priority',
+			url: 'https://doi.org/10.5555/url-priority',
 		});
 		expect(
 			cslToJsonLd({
@@ -449,5 +449,25 @@ describe('buildCslJsonString', () => {
 		expect(json).toContain('\\' + 'u2028');
 		expect(json).toContain('\\' + 'u2029');
 		expect(JSON.parse(json)[0].title).toBe(`a${LS}b${PS}c`);
+	});
+});
+
+describe('DOI url', () => {
+	const csl = { type: 'paper-conference', DOI: '10.14722/ndss.2019.23386' };
+
+	it('keeps the slash, matching the visible doi.org link', () => {
+		expect(cslToJsonLd(csl).url).toBe(
+			'https://doi.org/10.14722/ndss.2019.23386'
+		);
+		// Other reserved characters in each part are still encoded.
+		expect(cslToJsonLd({ ...csl, DOI: '10.1/a?b#c' }).url).toBe(
+			'https://doi.org/10.1/a%3Fb%23c'
+		);
+	});
+
+	it('encodes the slash only for the pre-1.9.1 save shape', () => {
+		expect(cslToJsonLd(csl, { canonicalDoiUrl: false }).url).toBe(
+			'https://doi.org/10.14722%2Fndss.2019.23386'
+		);
 	});
 });

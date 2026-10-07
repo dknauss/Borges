@@ -1,5 +1,6 @@
 import metadata from '../block.json';
 import { sortCitations } from './lib/sorter';
+import { getHeadingTag } from './lib/heading-level';
 import {
 	LOCALE_INDEPENDENT_SAVE_LABELS,
 	getLocalizedSaveLabels,
@@ -121,6 +122,22 @@ function migrateSortedAttributes(attributes) {
 }
 
 export const deprecated = [
+	{
+		// Freezes the save() shape from before 1.9.1: a quoted title with
+		// punctuation inside the closing quote (Chicago's `"Title."`) was also
+		// italicized, and the JSON-LD url encoded the DOI's slash.
+		attributes: deprecatedAttributes,
+		save: ({ attributes }) =>
+			renderBibliographySave(attributes, {
+				sortEntries: true,
+				headingTag: getHeadingTag(attributes.headingLevel),
+				entryTag: 'cite',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				inlineMarkup: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			}),
+	},
 	{
 		// Freezes the save() shape from before inline HTML was read: a tag in
 		// formatted text, a title, or a manual override was escaped and shown

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CSL-JSON paste.** Pasting a CSL-JSON array, or a single CSL-JSON item, now imports each item as a citation, as the readme and plugin description already said it would. That covers a reference manager's "CSL JSON" export and Borges's own CSL-JSON download. Each item is checked and cleaned like every other import; an item that is not a valid citation is skipped, named by its position, and left in the paste box to correct, and items already in the bibliography by DOI are skipped. JSON that is not CSL-JSON at all now gets its own message instead of the generic help text.
+
+### Fixed
+
+- **A quoted title is no longer also italicized.** Chicago puts a web page's title in quotation marks with the period inside them (`“Usage Statistics for Drupal Core.”`), and the saved bibliography italicized it as well. A title the formatted text quotes is now left upright even when punctuation sits inside the closing quote; an unquoted title is italicized as before.
+- **The JSON-LD `url` for a DOI keeps its slash** (`https://doi.org/10.14722/ndss.2019.23386`), matching the visible link, instead of encoding it as `%2F`.
+
+Bibliographies saved with the old output stay valid and pick up both fixes the next time they are saved.
+
 ## [1.9.0] - 2026-10-06
 
 ### Added

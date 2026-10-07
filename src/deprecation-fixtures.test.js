@@ -205,6 +205,41 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 			},
 		],
 	},
+	// v10 froze save() from before 1.9.1, when a title quoted with
+	// punctuation inside the closing quote (Chicago's web page) was also
+	// italicized and the JSON-LD url encoded the DOI's slash. FIXTURE_ATTRIBUTES
+	// have neither, so under them it would match v00 exactly.
+	10: {
+		...FIXTURE_ATTRIBUTES,
+		citations: [
+			{
+				id: 'drupal',
+				csl: {
+					id: 'drupal',
+					type: 'webpage',
+					title: 'Usage Statistics for Drupal Core',
+					'container-title': 'Drupal.org',
+					URL: 'https://www.drupal.org/project/usage/drupal',
+				},
+				formattedText:
+					'Drupal.org. “Usage Statistics for Drupal Core.” Accessed October 6, 2026. https://www.drupal.org/project/usage/drupal.',
+				displayOverride: null,
+			},
+			{
+				id: 'ndss',
+				csl: {
+					id: 'ndss',
+					type: 'paper-conference',
+					title: 'A Conference Paper',
+					DOI: '10.14722/ndss.2019.23386',
+					author: [{ family: 'Moss', given: 'Ann' }],
+				},
+				formattedText:
+					'Moss, Ann. “A Conference Paper.” NDSS Symposium, 2019.',
+				displayOverride: null,
+			},
+		],
+	},
 };
 
 function fixtureAttributes(version) {
