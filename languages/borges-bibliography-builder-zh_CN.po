@@ -999,11 +999,11 @@ msgid "ISBN-10 or ISBN-13, without hyphens, to resolve to CSL-JSON."
 msgstr ""
 
 #: src/edit.js:550
-msgid "Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, CSL-JSON, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
+msgid "Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, OCLC/LCCN/Open Library numbers, Internet Archive links, BibTeX entries, CSL-JSON, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
 msgstr ""
 
 #: src/lib/input-support.js:3
-msgid "Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line."
+msgid "Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line."
 msgstr ""
 
 #: src/lib/parser.js:854
@@ -1029,4 +1029,56 @@ msgstr ""
 
 #: bibliography-builder.php:2317
 msgid "The book metadata service returned an invalid response."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "The library catalog number could not be resolved."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "Invalid library catalog number."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "Invalid Internet Archive identifier."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "The Internet Archive could not be reached."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "The Internet Archive item could not be found."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "The Internet Archive returned an error."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "The Internet Archive returned an invalid response."
+msgstr ""
+
+#: bibliography-builder.php
+msgid "Sorry, you are not allowed to resolve Internet Archive citations."
+msgstr ""
+
+#: bibliography-builder.php
+msgid "OCLC:, LCCN:, or OLID: (Open Library edition) key to resolve to CSL-JSON."
+msgstr ""
+
+#: bibliography-builder.php
+msgid "Internet Archive item identifier or ARK (ark:/13960/...) to resolve to CSL-JSON."
+msgstr ""
+
+#: src/lib/parser.js
+msgid "That is an Open Library work ID, which covers every edition. Paste the edition ID (OL…M) or the book’s ISBN instead."
+msgstr ""
+
+#: src/lib/parser.js
+msgid "Couldn't resolve the library catalog number. Check it and try again."
+msgstr ""
+
+#: src/lib/parser.js
+msgid "Couldn't resolve the Internet Archive item. Check the link and try again."
 msgstr ""

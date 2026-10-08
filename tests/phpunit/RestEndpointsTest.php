@@ -52,7 +52,7 @@ final class RestEndpointsTest extends TestCase {
 		bibliography_builder_register_rest_routes();
 		$routes = $GLOBALS['bibliography_builder_test_rest_routes'];
 
-		$this->assertCount( 11, $routes );
+		$this->assertCount( 13, $routes );
 		$this->assertSame( 'bibliography/v1', $routes[0]['namespace'] );
 		$this->assertSame( '/format', $routes[0]['route'] );
 		$this->assertSame( '/pmid/(?P<pmid>\d{1,8})', $routes[1]['route'] );
@@ -97,6 +97,27 @@ final class RestEndpointsTest extends TestCase {
 		$this->assertTrue( $isbn_arg['validate_callback']( '080442957X' ) );
 		$this->assertFalse( $isbn_arg['validate_callback']( '9780140328722' ) );
 		$this->assertFalse( $isbn_arg['validate_callback']( array( '9780140328721' ) ) );
+
+		$this->assertSame( '/catalog', $routes[11]['route'] );
+		$this->assertSame( 'bibliography_builder_rest_resolve_catalog', $routes[11]['args']['callback'] );
+		$this->assertSame( 'bibliography_builder_rest_isbn_permissions_check', $routes[11]['args']['permission_callback'] );
+
+		$catalog_arg = $routes[11]['args']['args']['id'];
+		$this->assertTrue( $catalog_arg['validate_callback']( 'OCLC:2121853' ) );
+		$this->assertTrue( $catalog_arg['validate_callback']( 'LCCN:78315129' ) );
+		$this->assertTrue( $catalog_arg['validate_callback']( 'OLID:OL4288142M' ) );
+		$this->assertFalse( $catalog_arg['validate_callback']( 'OL2848897W' ) );
+		$this->assertFalse( $catalog_arg['validate_callback']( array( 'OCLC:2121853' ) ) );
+
+		$this->assertSame( '/archive', $routes[12]['route'] );
+		$this->assertSame( 'bibliography_builder_rest_resolve_archive', $routes[12]['args']['callback'] );
+		$this->assertSame( 'bibliography_builder_rest_archive_permissions_check', $routes[12]['args']['permission_callback'] );
+
+		$archive_arg = $routes[12]['args']['args']['id'];
+		$this->assertTrue( $archive_arg['validate_callback']( 'limitstomedicine00illi' ) );
+		$this->assertTrue( $archive_arg['validate_callback']( 'ark:/13960/t6k09s648' ) );
+		$this->assertFalse( $archive_arg['validate_callback']( '../metadata' ) );
+		$this->assertFalse( $archive_arg['validate_callback']( array( 'limitstomedicine00illi' ) ) );
 	}
 
 	public function test_published_posts_are_publicly_readable(): void {

@@ -36,12 +36,20 @@ const BIBLIOGRAPHY_BUILDER_PMC_CSL_API = 'https://pmc.ncbi.nlm.nih.gov/api/ctxp/
 const BIBLIOGRAPHY_BUILDER_ARXIV_API = 'https://export.arxiv.org/api/query';
 
 /**
- * Open Library host: the first provider tried for ISBNs. Uses the edition
- * endpoint (`/isbn/<isbn>.json`) for edition data and the search endpoint
- * (`/search.json`) for author names; the older `/api/books` endpoint now
- * answers HTTP 404.
+ * Open Library host: the first provider tried for ISBNs, and the only one for
+ * OCLC numbers, LCCNs, and Open Library edition IDs. ISBNs use the edition
+ * endpoint (`/isbn/<isbn>.json`) and the search endpoint (`/search.json`) for
+ * author names; the other identifiers use the Books API (`/api/books` with
+ * `jscmd=data`), which takes `OCLC:`, `LCCN:`, and `OLID:` keys and includes
+ * author names. A key Open Library does not know answers `{}`.
  */
 const BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_HOST = 'https://openlibrary.org';
+
+/**
+ * Internet Archive host: item metadata (`/metadata/<identifier>`, `{}` for an
+ * unknown item) and, for ARK lookups, the advanced search endpoint.
+ */
+const BIBLIOGRAPHY_BUILDER_INTERNET_ARCHIVE_HOST = 'https://archive.org';
 
 /**
  * Google Books volumes endpoint: the ISBN fallback when Open Library fails.
@@ -837,6 +845,19 @@ function bibliography_builder_rest_resolve_isbn( WP_REST_Request $request ) {
 		);
 	}
 
+	return bibliography_builder_resolve_isbn_csl( $isbn13 );
+}
+
+/**
+ * Resolve a checksum-valid ISBN-13 to a CSL-JSON book record.
+ *
+ * Open Library first, Google Books as the fallback. Shared by the ISBN route
+ * and the Internet Archive resolver, which prefers an item's ISBN.
+ *
+ * @param string $isbn13 Checksum-valid ISBN-13.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_resolve_isbn_csl( $isbn13 ) {
 	$messages = array(
 		'unreachable'      => __(
 			'The book metadata service could not be reached.',
@@ -947,4 +968,609 @@ function bibliography_builder_rest_resolve_pmcid( WP_REST_Request $request ) {
 			),
 		)
 	);
+}
+
+/**
+ * Normalize an LCCN to Library of Congress's normalized form.
+ *
+ * Blanks are removed, anything from a slash on is dropped, and a hyphenated
+ * serial is left-padded to six digits (`76-28766` becomes `76028766`).
+ *
+ * @param string $value Raw LCCN.
+ * @return string Normalized LCCN, or an empty string when it is not one.
+ */
+function bibliography_builder_normalize_lccn( $value ) {
+	$lccn = strtolower( (string) preg_replace( '/\s+/u', '', (string) $value ) );
+	$lccn = (string) preg_replace( '#/.*$#', '', $lccn );
+
+	if ( preg_match( '/^([a-z]{0,3}\d{2,4})-(\d{1,6})$/', $lccn, $parts ) ) {
+		$lccn = $parts[1] . str_pad( $parts[2], 6, '0', STR_PAD_LEFT );
+	}
+
+	return preg_match( '/^[a-z]{0,3}\d{8,10}$/', $lccn ) ? $lccn : '';
+}
+
+/**
+ * Reduce library catalog identifier input to an Open Library Books API key.
+ *
+ * Accepts an OCLC number (`OCLC 2121853`, `(OCoLC)ocm02121853`,
+ * `urn:oclc:record:2121853`), an LCCN (`LCCN 76-28766`), or an Open Library
+ * edition ID (`OL4288142M`, optionally `OLID:`-labelled). Mirrors
+ * getCatalogKey() in src/lib/parser.js.
+ *
+ * @param mixed $value Raw identifier input.
+ * @return string `OCLC:<digits>`, `LCCN:<lccn>`, or `OLID:OL<digits>M`; empty when invalid.
+ */
+function bibliography_builder_normalize_catalog_key( $value ) {
+	if ( ! is_scalar( $value ) ) {
+		return '';
+	}
+
+	$value = trim( (string) $value );
+
+	$oclc_pattern = '/^(?:urn:oclc:record:|\(OCoLC\)\s*|OC(?:o)?LC\s*(?:#|no\.?|number)?\s*:?\s*)'
+		. '(?:ocm|ocn|on)?0*([1-9]\d{0,11})$/i';
+
+	if ( preg_match( $oclc_pattern, $value, $match ) ) {
+		return 'OCLC:' . $match[1];
+	}
+
+	if ( preg_match( '/^LCCN\s*:?\s*(.+)$/i', $value, $match ) ) {
+		$lccn = bibliography_builder_normalize_lccn( $match[1] );
+
+		return '' === $lccn ? '' : 'LCCN:' . $lccn;
+	}
+
+	if ( preg_match( '/^(?:OLID\s*:?\s*)?(OL[1-9]\d{0,9}M)$/i', $value, $match ) ) {
+		return 'OLID:' . strtoupper( $match[1] );
+	}
+
+	return '';
+}
+
+/**
+ * Tidy a library-catalog title: ISBD's " : " before a subtitle becomes ": ",
+ * and a trailing statement of responsibility (" / by ...") or period is dropped.
+ *
+ * @param string $title Raw title.
+ * @return string
+ */
+function bibliography_builder_clean_catalog_title( $title ) {
+	$title = (string) preg_replace( '#\s+/\s+.*$#u', '', trim( (string) $title ) );
+	$title = (string) preg_replace( '/\s+:\s*/u', ': ', $title );
+
+	return rtrim( $title, " .;,/:\t" );
+}
+
+/**
+ * Convert an Open Library Books API (`jscmd=data`) response to a CSL book.
+ *
+ * @param string $body JSON response body.
+ * @param string $key  The requested bibkey (`OCLC:...`, `LCCN:...`, `OLID:...`).
+ * @return array|string|null CSL item, `not_found`, or null when unusable.
+ */
+function bibliography_builder_open_library_books_to_csl( $body, $key ) {
+	$decoded = json_decode( (string) $body, true );
+
+	if ( ! is_array( $decoded ) ) {
+		return null;
+	}
+
+	if ( empty( $decoded ) ) {
+		return 'not_found';
+	}
+
+	$record = isset( $decoded[ $key ] ) ? $decoded[ $key ] : null;
+
+	if ( ! is_array( $record ) || empty( $record['title'] ) || ! is_string( $record['title'] ) ) {
+		return null;
+	}
+
+	$title = trim( $record['title'] );
+	if ( ! empty( $record['subtitle'] ) && is_string( $record['subtitle'] ) ) {
+		$title .= ': ' . trim( $record['subtitle'] );
+	}
+
+	$csl = array(
+		'type'  => 'book',
+		'title' => bibliography_builder_clean_catalog_title( $title ),
+	);
+
+	$authors        = array();
+	$record_authors = isset( $record['authors'] ) && is_array( $record['authors'] ) ? $record['authors'] : array();
+	foreach ( $record_authors as $author ) {
+		$name     = isset( $author['name'] ) && is_string( $author['name'] ) ? $author['name'] : '';
+		$csl_name = bibliography_builder_split_display_name( $name );
+
+		if ( ! empty( $csl_name ) ) {
+			$authors[] = $csl_name;
+		}
+	}
+	if ( ! empty( $authors ) ) {
+		$csl['author'] = $authors;
+	}
+
+	foreach ( array(
+		'publishers'     => 'publisher',
+		'publish_places' => 'publisher-place',
+	) as $source => $field ) {
+		if ( isset( $record[ $source ][0]['name'] ) && is_string( $record[ $source ][0]['name'] ) ) {
+			$csl[ $field ] = trim( $record[ $source ][0]['name'] );
+		}
+	}
+
+	$publish_date = isset( $record['publish_date'] ) ? (string) $record['publish_date'] : '';
+	if ( preg_match( '/\b(1\d{3}|20\d{2})\b/', $publish_date, $year ) ) {
+		$csl['issued'] = array( 'date-parts' => array( array( (int) $year[1] ) ) );
+	}
+
+	$pages = isset( $record['number_of_pages'] ) ? $record['number_of_pages'] : null;
+	if ( is_int( $pages ) && $pages > 0 ) {
+		$csl['number-of-pages'] = (string) $pages;
+	}
+
+	foreach ( array( 'isbn_13', 'isbn_10' ) as $isbn_field ) {
+		$isbn = isset( $record['identifiers'][ $isbn_field ][0] )
+			? bibliography_builder_normalize_isbn( $record['identifiers'][ $isbn_field ][0] )
+			: '';
+
+		if ( '' !== $isbn ) {
+			$csl['ISBN'] = $isbn;
+			break;
+		}
+	}
+
+	return $csl;
+}
+
+/**
+ * Resolve an Open Library Books API key to a CSL-JSON book record.
+ *
+ * @param string $key Normalized key from bibliography_builder_normalize_catalog_key().
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_resolve_catalog_csl( $key ) {
+	return bibliography_builder_resolve_remote_csl(
+		add_query_arg(
+			array(
+				'bibkeys' => rawurlencode( $key ),
+				'format'  => 'json',
+				'jscmd'   => 'data',
+			),
+			BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_HOST . '/api/books'
+		),
+		'catalog_' . strtolower( str_replace( ':', '_', $key ) ),
+		'bibliography_builder_catalog',
+		array(
+			'unreachable'      => __(
+				'The book metadata service could not be reached.',
+				'borges-bibliography-builder'
+			),
+			'not_found'        => __(
+				'The library catalog number could not be resolved.',
+				'borges-bibliography-builder'
+			),
+			'upstream'         => __(
+				'The book metadata service returned an error.',
+				'borges-bibliography-builder'
+			),
+			'invalid_response' => __(
+				'The book metadata service returned an invalid response.',
+				'borges-bibliography-builder'
+			),
+		),
+		static function ( $body ) use ( $key ) {
+			return bibliography_builder_open_library_books_to_csl( $body, $key );
+		}
+	);
+}
+
+/**
+ * REST callback that resolves an OCLC number, LCCN, or Open Library edition
+ * ID to a CSL-JSON book record.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_resolve_catalog( WP_REST_Request $request ) {
+	$key = bibliography_builder_normalize_catalog_key( isset( $request['id'] ) ? $request['id'] : '' );
+
+	if ( '' === $key ) {
+		return new WP_Error(
+			'bibliography_builder_catalog_invalid',
+			__( 'Invalid library catalog number.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	return bibliography_builder_resolve_catalog_csl( $key );
+}
+
+/**
+ * Validate an Internet Archive item identifier or Internet Archive ARK.
+ *
+ * Item identifiers are letters, digits, `.`, `_`, and `-`, at most 100
+ * characters, starting with a letter or digit. ARKs use the Internet
+ * Archive's name assigning authority number, 13960.
+ *
+ * @param mixed $value Raw input.
+ * @return string The identifier or lower-cased ARK; empty when invalid.
+ */
+function bibliography_builder_normalize_archive_id( $value ) {
+	if ( ! is_scalar( $value ) ) {
+		return '';
+	}
+
+	$value = trim( (string) $value );
+
+	if ( preg_match( '#^ark:/?13960/([a-z0-9]{1,40})$#i', $value, $match ) ) {
+		return 'ark:/13960/' . strtolower( $match[1] );
+	}
+
+	return preg_match( '/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/', $value ) ? $value : '';
+}
+
+/**
+ * First non-empty string of an Internet Archive metadata field, whose value
+ * may be a string or a list of strings.
+ *
+ * @param array  $metadata Item metadata.
+ * @param string $field    Field name.
+ * @return string
+ */
+function bibliography_builder_archive_first( $metadata, $field ) {
+	$value = isset( $metadata[ $field ] ) ? $metadata[ $field ] : '';
+
+	foreach ( is_array( $value ) ? $value : array( $value ) as $item ) {
+		if ( is_string( $item ) && '' !== trim( $item ) ) {
+			return trim( $item );
+		}
+	}
+
+	return '';
+}
+
+/**
+ * Every non-empty string of an Internet Archive metadata field.
+ *
+ * @param array  $metadata Item metadata.
+ * @param string $field    Field name.
+ * @return string[]
+ */
+function bibliography_builder_archive_all( $metadata, $field ) {
+	$value = isset( $metadata[ $field ] ) ? $metadata[ $field ] : array();
+
+	return array_values(
+		array_filter(
+			array_map( 'trim', array_filter( is_array( $value ) ? $value : array( $value ), 'is_string' ) ),
+			'strlen'
+		)
+	);
+}
+
+/**
+ * Convert an Internet Archive creator heading to a CSL name.
+ *
+ * Library headings carry life dates and sometimes a title
+ * (`Illich, Ivan, 1926-2002. Medical nemesis`); both are dropped. An
+ * inverted `Family, Given` heading is split there; anything else is kept
+ * whole as a literal, since an uninverted creator is usually an organization.
+ *
+ * @param string $creator Creator heading.
+ * @return array CSL name, or an empty array.
+ */
+function bibliography_builder_archive_creator_to_name( $creator ) {
+	$name = (string) preg_replace( '/,\s*(?:(?:b|d|ca|fl)\.\s*)?\d{3,4}.*$/iu', '', trim( (string) $creator ) );
+	$name = (string) preg_replace( '/,\s*(?:author|editor|translator|illustrator|compiler)\.?$/iu', '', $name );
+	$name = trim( $name, " .,;\t" );
+
+	if ( '' === $name ) {
+		return array();
+	}
+
+	$parts = array_map( 'trim', explode( ',', $name, 2 ) );
+
+	if ( 2 === count( $parts ) && '' !== $parts[0] && '' !== $parts[1] ) {
+		return array(
+			'family' => $parts[0],
+			'given'  => $parts[1],
+		);
+	}
+
+	return array( 'literal' => $name );
+}
+
+/**
+ * Split an ISBD publication statement (`Harmondsworth ; New York : Penguin`)
+ * into its first place and first publisher.
+ *
+ * @param string $statement Publication statement.
+ * @return array `publisher` and/or `publisher-place`.
+ */
+function bibliography_builder_split_publication_statement( $statement ) {
+	$statement = trim( str_replace( array( '[', ']' ), '', (string) $statement ) );
+	$fields    = array();
+
+	if ( '' === $statement ) {
+		return $fields;
+	}
+
+	$colon = strpos( $statement, ':' );
+
+	if ( false === $colon ) {
+		$fields['publisher'] = rtrim( $statement, " .,;\t" );
+
+		return $fields;
+	}
+
+	$places     = explode( ';', substr( $statement, 0, $colon ) );
+	$publishers = explode( ';', substr( $statement, $colon + 1 ) );
+	$place      = trim( $places[0], " .,;\t" );
+	$publisher  = trim( $publishers[0], " .,;\t" );
+
+	if ( '' !== $place ) {
+		$fields['publisher-place'] = $place;
+	}
+	if ( '' !== $publisher ) {
+		$fields['publisher'] = $publisher;
+	}
+
+	return $fields;
+}
+
+/**
+ * Convert an Internet Archive item metadata response to a CSL record plus
+ * the catalog identifiers the item lists.
+ *
+ * The identifiers are the edition's own (`openlibrary_edition`, `isbn`,
+ * `lccn`), never `related-external-id` or the several `oclc-id` values, which
+ * name other editions and records of the same work.
+ *
+ * @param string $body       JSON response body from `/metadata/<identifier>`.
+ * @param string $identifier The item identifier.
+ * @return array|string|null `array( 'csl' => ..., 'ids' => ... )`, `not_found`,
+ *                           or null when unusable.
+ */
+function bibliography_builder_archive_metadata_to_record( $body, $identifier ) {
+	$decoded = json_decode( (string) $body, true );
+
+	if ( ! is_array( $decoded ) ) {
+		return null;
+	}
+
+	$metadata = isset( $decoded['metadata'] ) && is_array( $decoded['metadata'] ) ? $decoded['metadata'] : array();
+
+	if ( empty( $metadata ) ) {
+		return 'not_found';
+	}
+
+	$title = bibliography_builder_clean_catalog_title(
+		bibliography_builder_archive_first( $metadata, 'title' )
+	);
+
+	if ( '' === $title ) {
+		return null;
+	}
+
+	$types     = array(
+		'texts'    => 'book',
+		'movies'   => 'motion_picture',
+		'audio'    => 'song',
+		'etree'    => 'song',
+		'image'    => 'graphic',
+		'software' => 'software',
+	);
+	$mediatype = bibliography_builder_archive_first( $metadata, 'mediatype' );
+
+	$csl = array(
+		'type'  => isset( $types[ $mediatype ] ) ? $types[ $mediatype ] : 'document',
+		'title' => $title,
+		'URL'   => BIBLIOGRAPHY_BUILDER_INTERNET_ARCHIVE_HOST . '/details/' . rawurlencode( $identifier ),
+	);
+
+	$authors = array();
+	$seen    = array();
+	foreach ( bibliography_builder_archive_all( $metadata, 'creator' ) as $creator ) {
+		$csl_name = bibliography_builder_archive_creator_to_name( $creator );
+		$name_key = strtolower( implode( '|', $csl_name ) );
+
+		if ( ! empty( $csl_name ) && ! isset( $seen[ $name_key ] ) ) {
+			$seen[ $name_key ] = true;
+			$authors[]         = $csl_name;
+		}
+	}
+	if ( ! empty( $authors ) ) {
+		$csl['author'] = $authors;
+	}
+
+	$csl += bibliography_builder_split_publication_statement(
+		bibliography_builder_archive_first( $metadata, 'publisher' )
+	);
+
+	$city = bibliography_builder_archive_first( $metadata, 'city' );
+	if ( '' !== $city ) {
+		$csl['publisher-place'] = trim( str_replace( array( '[', ']' ), '', $city ), " .,;\t" );
+	}
+
+	$date = bibliography_builder_archive_first( $metadata, 'date' );
+	if ( preg_match( '/^(\d{4})-(\d{2})(?:-(\d{2}))?/', $date, $parts ) ) {
+		$csl['issued'] = array( 'date-parts' => array( array_map( 'intval', array_slice( $parts, 1 ) ) ) );
+	} elseif ( preg_match( '/\b(1\d{3}|20\d{2})\b/', $date, $year ) ) {
+		$csl['issued'] = array( 'date-parts' => array( array( (int) $year[1] ) ) );
+	}
+
+	$edition = bibliography_builder_archive_first( $metadata, 'edition' );
+	$edition = (string) preg_replace( '/\.+$/', '.', trim( str_replace( array( '[', ']' ), '', $edition ) ) );
+	if ( '' !== $edition && '.' !== $edition ) {
+		$csl['edition'] = $edition;
+	}
+
+	$ids = array();
+
+	$olid = bibliography_builder_archive_first( $metadata, 'openlibrary_edition' );
+	if ( '' !== bibliography_builder_normalize_catalog_key( $olid ) ) {
+		$ids['olid'] = bibliography_builder_normalize_catalog_key( $olid );
+	}
+
+	foreach ( bibliography_builder_archive_all( $metadata, 'isbn' ) as $isbn ) {
+		$isbn13 = bibliography_builder_normalize_isbn( $isbn );
+
+		if ( '' !== $isbn13 ) {
+			$csl['ISBN'] = $isbn13;
+			$ids['isbn'] = $isbn13;
+			break;
+		}
+	}
+
+	$lccn = bibliography_builder_normalize_lccn( bibliography_builder_archive_first( $metadata, 'lccn' ) );
+	if ( '' !== $lccn ) {
+		$ids['lccn'] = 'LCCN:' . $lccn;
+	}
+
+	return array(
+		'csl' => $csl,
+		'ids' => $ids,
+	);
+}
+
+/**
+ * Error messages for Internet Archive lookups.
+ *
+ * @return array
+ */
+function bibliography_builder_archive_messages() {
+	return array(
+		'unreachable'      => __(
+			'The Internet Archive could not be reached.',
+			'borges-bibliography-builder'
+		),
+		'not_found'        => __(
+			'The Internet Archive item could not be found.',
+			'borges-bibliography-builder'
+		),
+		'upstream'         => __(
+			'The Internet Archive returned an error.',
+			'borges-bibliography-builder'
+		),
+		'invalid_response' => __(
+			'The Internet Archive returned an invalid response.',
+			'borges-bibliography-builder'
+		),
+	);
+}
+
+/**
+ * Find the item identifier for an Internet Archive ARK.
+ *
+ * @param string $ark Normalized ARK (`ark:/13960/...`).
+ * @return string|WP_Error
+ */
+function bibliography_builder_archive_identifier_for_ark( $ark ) {
+	$result = bibliography_builder_resolve_remote_csl(
+		add_query_arg(
+			array(
+				'q'      => rawurlencode( 'identifier-ark:"' . $ark . '"' ),
+				'fl[]'   => 'identifier',
+				'rows'   => '1',
+				'output' => 'json',
+			),
+			BIBLIOGRAPHY_BUILDER_INTERNET_ARCHIVE_HOST . '/advancedsearch.php'
+		),
+		'ia_ark_' . md5( $ark ),
+		'bibliography_builder_archive',
+		bibliography_builder_archive_messages(),
+		static function ( $body ) {
+			$decoded = json_decode( (string) $body, true );
+
+			$docs = isset( $decoded['response']['docs'] ) ? $decoded['response']['docs'] : null;
+
+			if ( ! is_array( $docs ) ) {
+				return null;
+			}
+
+			$found = isset( $docs[0]['identifier'] ) ? $docs[0]['identifier'] : '';
+			$found = bibliography_builder_normalize_archive_id( $found );
+
+			return '' === $found || 0 === strpos( $found, 'ark:' ) ? 'not_found' : array( 'identifier' => $found );
+		}
+	);
+
+	if ( is_wp_error( $result ) ) {
+		return $result;
+	}
+
+	$data = $result->get_data();
+
+	return (string) $data['identifier'];
+}
+
+/**
+ * REST callback that resolves an Internet Archive item (identifier or ARK)
+ * to a CSL-JSON record.
+ *
+ * The item's own catalog identifiers are tried first, because Open Library's
+ * edition records are cleaner than scan metadata: the Open Library edition,
+ * then the ISBN, then the LCCN. The first that resolves supplies the record,
+ * the scan's metadata fills any field it lacks (the edition statement, say),
+ * and the URL is always the item's archive.org page. With none of them, the
+ * scan's own metadata is the record.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_resolve_archive( WP_REST_Request $request ) {
+	$identifier = bibliography_builder_normalize_archive_id( isset( $request['id'] ) ? $request['id'] : '' );
+
+	if ( '' === $identifier ) {
+		return new WP_Error(
+			'bibliography_builder_archive_invalid',
+			__( 'Invalid Internet Archive identifier.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
+
+	if ( 0 === strpos( $identifier, 'ark:' ) ) {
+		$identifier = bibliography_builder_archive_identifier_for_ark( $identifier );
+
+		if ( is_wp_error( $identifier ) ) {
+			return $identifier;
+		}
+	}
+
+	$item = bibliography_builder_resolve_remote_csl(
+		BIBLIOGRAPHY_BUILDER_INTERNET_ARCHIVE_HOST . '/metadata/' . rawurlencode( $identifier ),
+		'ia_' . md5( $identifier ),
+		'bibliography_builder_archive',
+		bibliography_builder_archive_messages(),
+		static function ( $body ) use ( $identifier ) {
+			return bibliography_builder_archive_metadata_to_record( $body, $identifier );
+		}
+	);
+
+	if ( is_wp_error( $item ) ) {
+		return $item;
+	}
+
+	$record = $item->get_data();
+	$csl    = isset( $record['csl'] ) && is_array( $record['csl'] ) ? $record['csl'] : array();
+	$ids    = isset( $record['ids'] ) && is_array( $record['ids'] ) ? $record['ids'] : array();
+
+	foreach ( array( 'olid', 'isbn', 'lccn' ) as $source ) {
+		if ( empty( $ids[ $source ] ) ) {
+			continue;
+		}
+
+		$resolved = 'isbn' === $source
+			? bibliography_builder_resolve_isbn_csl( $ids[ $source ] )
+			: bibliography_builder_resolve_catalog_csl( $ids[ $source ] );
+
+		if ( ! is_wp_error( $resolved ) && is_array( $resolved->get_data() ) ) {
+			$merged        = array_merge( $csl, $resolved->get_data() );
+			$merged['URL'] = $csl['URL'];
+
+			return rest_ensure_response( $merged );
+		}
+	}
+
+	return rest_ensure_response( $csl );
 }
