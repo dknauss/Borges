@@ -1057,7 +1057,7 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
+			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 		]);
 		expect(result.remainingInput).toBe(
 			'This input is not a parseable citation.'
@@ -1075,7 +1075,7 @@ Hallo world\\cite{einstein}
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.',
+			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation instead.',
 		]);
 		expect(result.remainingInput).toContain('\\documentclass{article}');
 	});
@@ -1085,7 +1085,7 @@ Hallo world\\cite{einstein}
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.',
+			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation instead.',
 		]);
 		expect(result.remainingInput).toBe('\\autocite{einstein}');
 	});

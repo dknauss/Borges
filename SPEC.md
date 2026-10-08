@@ -157,7 +157,7 @@ Modeled on the core **Quote** and **List** blocks.
 
 When the block is first inserted, the add-citation form is open by default and the textarea uses the placeholder text:
 
-> Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.
+> Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, CSL-JSON, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.
 
 ### Paste & Parse Flow
 
@@ -655,7 +655,7 @@ The bibliography's hanging indent and typography must remain readable in Windows
 #### Paste Zone
 
 -   The paste zone is a standard `<textarea>` with an associated label (screen-reader-only is acceptable as long as it remains present).
--   Placeholder text ("Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.") must be supplemented by a label — placeholder text alone is not accessible, as it disappears on focus and is not announced by all screen readers.
+-   Placeholder text ("Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, CSL-JSON, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.") must be supplemented by a label — placeholder text alone is not accessible, as it disappears on focus and is not announced by all screen readers.
 
 #### Async State Communication (DOI Resolution)
 
@@ -665,7 +665,7 @@ DOI resolution requires a network fetch to CrossRef, which may take several seco
 2. **Completion announcement.** Use an `aria-live="polite"` region to announce the result when parsing completes. Current notice wording is short and action-oriented, for example:
     - `Added 3 citations.`
     - `No new citations added. Skipped 1 duplicate.`
-    - `This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.`
+    - `This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation instead.`
 3. **Dismiss/clear behavior.** Inline notices need an explicit dismiss button, pure-success snackbars should auto-dismiss, and typing or mode-switching in the add UI should clear the current notice.
 4. **Notice locality.** The implementation intentionally keeps feedback block-local instead of sending all messages through the global editor snackbar region. Pure success states may use a local Gutenberg snackbar, while richer parse/import validation stays inline next to the add form. This preserves nearby context for mixed-result feedback and still aligns success handling more closely with Gutenberg norms.
 

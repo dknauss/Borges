@@ -1128,7 +1128,7 @@ function formatUnsupportedInputError() {
 
 function formatLatexDocumentError() {
 	return __(
-		'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead.',
+		'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation instead.',
 		'borges-bibliography-builder'
 	);
 }

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The paste box names CSL-JSON.** Its placeholder, the instructions under the citation form, and the "couldn't read this" and LaTeX warnings now list CSL-JSON among the formats you can paste, alongside DOI, PMID, PMCID, arXiv ID, ISBN, and BibTeX.
+
 ## [1.9.1] - 2026-10-07
 
 ### Added
