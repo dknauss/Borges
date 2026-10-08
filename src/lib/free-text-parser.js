@@ -109,6 +109,34 @@ function normalizeEdition(editionText) {
 	);
 }
 
+/**
+ * Split Chicago-style "Place: Publisher" publication data.
+ *
+ * Bibliographies give the place and publisher together, colon-separated
+ * ("London: Boyars"); without this the whole string lands in one CSL field.
+ * The part before the colon counts as a place only when it is short, starts
+ * with a capital, and has no digits, so a publisher name that happens to
+ * contain a colon stays whole.
+ *
+ * @param {string} text Publication text before the year.
+ * @return {Object} `publisher`, plus `publisher-place` when a place was split off.
+ */
+function getPublisherFields(text) {
+	const value = text.trim();
+	const match = value.match(
+		/^(?<place>[\p{Lu}][^:\d]{0,60}?)\s*:\s*(?<publisher>\S.*)$/u
+	);
+
+	if (!match?.groups) {
+		return { publisher: value };
+	}
+
+	return {
+		'publisher-place': match.groups.place.trim(),
+		publisher: match.groups.publisher.trim(),
+	};
+}
+
 function parseChapterCitation(input) {
 	const match = input.match(
 		/^(?<authors>.+?),\s+[“"](?<title>.+?)(?:,)?[”"](?:,)?\s+in\s+(?<container>.+?),\s+ed\.\s+(?<editor>.+?)\s+\((?<publisher>[^,]+),\s*(?<year>\d{4})\)\s*(?:,\s*(?<page>[^.]+))?\.?$/iu
@@ -131,7 +159,7 @@ function parseChapterCitation(input) {
 			title: normalizeTitle(match.groups.title),
 			'container-title': match.groups.container.trim(),
 			editor: editors,
-			publisher: match.groups.publisher.trim(),
+			...getPublisherFields(match.groups.publisher),
 			issued: getIssuedYear(match.groups.year),
 			...(match.groups.page
 				? {
@@ -192,7 +220,7 @@ function parseSentenceChapterCitation(input) {
 			title: normalizeTitle(title),
 			'container-title': container.trim(),
 			editor: editors,
-			publisher: publicationMatch.groups.publisher.trim(),
+			...getPublisherFields(publicationMatch.groups.publisher),
 			issued: getIssuedYear(publicationMatch.groups.year),
 			...(publicationMatch.groups.page
 				? {
@@ -224,7 +252,7 @@ function parseBookCitation(input) {
 		csl: {
 			type: 'book',
 			title: match.groups.title.trim(),
-			publisher: match.groups.publisher.trim(),
+			...getPublisherFields(match.groups.publisher),
 			issued: getIssuedYear(match.groups.year),
 			...(match.groups.page
 				? {
@@ -256,7 +284,7 @@ function parseSentenceBookCitation(input) {
 		csl: {
 			type: 'book',
 			title: match.groups.title.trim(),
-			publisher: match.groups.publisher.trim(),
+			...getPublisherFields(match.groups.publisher),
 			issued: getIssuedYear(match.groups.year),
 			...(normalizeEdition(match.groups.edition)
 				? {
@@ -295,7 +323,7 @@ function parseSentenceEditedBookCitation(input) {
 			type: 'collection',
 			title: match.groups.title.trim(),
 			editor: editors,
-			publisher: match.groups.publisher.trim(),
+			...getPublisherFields(match.groups.publisher),
 			issued: getIssuedYear(match.groups.year),
 			...(normalizeEdition(match.groups.edition)
 				? {
@@ -331,7 +359,9 @@ function parseSentencePlaceYearBookCitation(input) {
 		csl: {
 			type: 'book',
 			title: match.groups.title.trim(),
-			'publisher-place': match.groups.place.trim(),
+			...(match.groups.place.includes(':')
+				? getPublisherFields(match.groups.place)
+				: { 'publisher-place': match.groups.place.trim() }),
 			issued: getIssuedYear(match.groups.year),
 			...getTrailingCslFields(match.groups.trailing),
 			author: authors,
