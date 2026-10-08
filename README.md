@@ -94,6 +94,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.9.1** — Pasted CSL-JSON (a reference manager's CSL JSON export) imports as citations; a quoted title, such as a Chicago web page, is no longer also italicized; the JSON-LD DOI link keeps its slash.
 - **1.9.0** — A Heading Level setting prints the block's visible heading as a real heading (`<h2>`–`<h6>`), so the bibliography appears in the page's heading outline; the default stays a paragraph.
 - **1.8.2** — The structured edit form stores every text field as plain text, dropping markup typed or pasted into it.
 - **1.8.1** — Renders `<i>`/`<em>` in stored citation text as italics and drops other tags instead of printing them; GitHub Releases now open with the version's CHANGELOG section.

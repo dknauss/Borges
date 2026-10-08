@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-10-07
+
 ### Added
 
 - **CSL-JSON paste.** Pasting a CSL-JSON array, or a single CSL-JSON item, now imports each item as a citation, as the readme and plugin description already said it would. That covers a reference manager's "CSL JSON" export and Borges's own CSL-JSON download. Each item is checked and cleaned like every other import; an item that is not a valid citation is skipped, named by its position, and left in the paste box to correct, and items already in the bibliography by DOI are skipped. JSON that is not CSL-JSON at all now gets its own message instead of the generic help text.
