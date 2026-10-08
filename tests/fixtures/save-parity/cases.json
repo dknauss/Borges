@@ -1803,6 +1803,72 @@
 			}
 		},
 		{
+			"name": "quoted-titles-more-types",
+			"note": "Chicago quotes the titles of theses and encyclopedia entries as well as web pages; none is italicized, including a title ending in a question mark inside the quotes and one after accented text (PHP byte offsets vs JS UTF-16 offsets). A SICI DOI's parentheses, angle brackets and semicolon are encoded the same way by both ports in the JSON-LD url, with each slash kept.",
+			"attributes": {
+				"citationStyle": "chicago-notes-bibliography",
+				"headingText": "Sources",
+				"citations": [
+					{
+						"id": "thesis",
+						"csl": {
+							"id": "thesis",
+							"type": "thesis",
+							"title": "The Garden of Forking Paths",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "Jane"
+								}
+							],
+							"publisher": "Université de Genève"
+						},
+						"formattedText": "Smith, Jane. “The Garden of Forking Paths.” PhD diss., Université de Genève, 2020.",
+						"displayOverride": null
+					},
+					{
+						"id": "entry",
+						"csl": {
+							"id": "entry",
+							"type": "entry-encyclopedia",
+							"title": "Borges, Jorge Luis",
+							"container-title": "Encyclopædia Britannica"
+						},
+						"formattedText": "“Borges, Jorge Luis.” In Encyclopædia Britannica, 2020.",
+						"displayOverride": null
+					},
+					{
+						"id": "question",
+						"csl": {
+							"id": "question",
+							"type": "webpage",
+							"title": "What Is a Library?",
+							"container-title": "Société Française"
+						},
+						"formattedText": "Société Française. “What Is a Library?” Accessed May 1, 2024.",
+						"displayOverride": null
+					},
+					{
+						"id": "sici",
+						"csl": {
+							"id": "sici",
+							"type": "article-journal",
+							"title": "SICI Article",
+							"DOI": "10.1002/(SICI)1097-4571(199806)49:8<693::AID-ASI4>3.0.CO;2-O",
+							"author": [
+								{
+									"family": "Roe",
+									"given": "Bo"
+								}
+							]
+						},
+						"formattedText": "Roe, Bo. “SICI Article.” JASIS 49, no. 8 (1998). https://doi.org/10.1002/(SICI)1097-4571(199806)49:8<693::AID-ASI4>3.0.CO;2-O.",
+						"displayOverride": null
+					}
+				]
+			}
+		},
+		{
 			"name": "empty",
 			"note": "No citations: save() returns null.",
 			"attributes": {
