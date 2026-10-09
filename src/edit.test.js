@@ -2774,6 +2774,79 @@ describe('Edit focus management', () => {
 		});
 	});
 
+	it('removes the authors and date when they are cleared, and leaves an undated record undated', async () => {
+		const saved = [];
+		const dated = createCitation({
+			id: 'entry-a',
+			family: 'King',
+			year: 2019,
+			title: 'Dated',
+			inputFormat: 'doi',
+		});
+		dated.csl.issued = { 'date-parts': [[2019, 5, 3]] };
+		const undated = createCitation({
+			id: 'entry-b',
+			family: 'Zeta',
+			title: 'Undated',
+			inputFormat: 'doi',
+		});
+		delete undated.csl.issued;
+
+		function RecordingHarness() {
+			const [attributes, setAttributes] = React.useState({
+				citationStyle: 'chicago-notes-bibliography',
+				headingText: '',
+				citations: [dated, undated],
+			});
+
+			return (
+				<Edit
+					attributes={attributes}
+					setAttributes={(next) => {
+						saved.push(next);
+						setAttributes((previous) => ({ ...previous, ...next }));
+					}}
+				/>
+			);
+		}
+
+		const latest = (id) =>
+			saved
+				.filter((next) => next.citations)
+				.pop()
+				?.citations.find((entry) => entry.id === id)?.csl;
+
+		render(<RecordingHarness />);
+
+		await userEvent.click(screen.getByText('Dated'));
+		fireEvent.change(screen.getByLabelText('Year'), {
+			target: { value: '' },
+		});
+		fireEvent.change(screen.getByLabelText('Author(s)'), {
+			target: { value: '' },
+		});
+		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+		await waitFor(() => {
+			expect(latest('entry-a')?.issued).toBeUndefined();
+		});
+		expect(latest('entry-a').author).toBeUndefined();
+
+		await userEvent.click(screen.getByText('Undated'));
+		fireEvent.change(screen.getByLabelText('Title'), {
+			target: { value: 'Undated, revised' },
+		});
+		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+		await waitFor(() => {
+			expect(latest('entry-b')?.title).toBe('Undated, revised');
+		});
+		expect(latest('entry-b').issued).toBeUndefined();
+		expect(latest('entry-b').author).toEqual([
+			expect.objectContaining({ family: 'Zeta' }),
+		]);
+	});
+
 	it('replaces the date and authors when they are edited', async () => {
 		const saved = [];
 		const citation = createCitation({
