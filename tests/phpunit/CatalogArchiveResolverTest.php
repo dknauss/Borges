@@ -27,7 +27,7 @@ final class CatalogArchiveResolverTest extends TestCase {
 
 	private static function archive_metadata( array $overrides = array() ): array {
 		return array(
-			'metadata' => array_merge(
+			'result' => array_merge(
 				array(
 					'identifier'          => 'limitstomedicine00illi',
 					'mediatype'           => 'texts',
@@ -106,6 +106,8 @@ final class CatalogArchiveResolverTest extends TestCase {
 			'bare number'            => array( '2121853', '' ),
 			'zero OCLC'              => array( 'OCLC 0', '' ),
 			'short LCCN'             => array( 'LCCN 12', '' ),
+			'nine-digit LCCN'        => array( 'LCCN 123456789', '' ),
+			'two-digit-year LCCN'    => array( 'LCCN 76-123456789', '' ),
 			'array'                  => array( array( 'OCLC 1' ), '' ),
 			'injected path'          => array( 'OCLC:1/../../x', '' ),
 		);
@@ -283,39 +285,38 @@ final class CatalogArchiveResolverTest extends TestCase {
 
 		$requests = bibliography_builder_test_get_http_requests();
 		$this->assertCount( 2, $requests );
-		$this->assertSame( BIBLIOGRAPHY_BUILDER_INTERNET_ARCHIVE_HOST . '/metadata/limitstomedicine00illi', $requests[0]['url'] );
+		$this->assertSame( BIBLIOGRAPHY_BUILDER_INTERNET_ARCHIVE_HOST . '/metadata/limitstomedicine00illi/metadata', $requests[0]['url'] );
 		$this->assertStringContainsString( 'bibkeys=OLID%3AOL4288142M', $requests[1]['url'] );
 	}
 
-	public function test_archive_item_falls_back_to_its_isbn_when_open_library_lacks_the_edition(): void {
-		bibliography_builder_test_set_http_response_for( 'archive.org/metadata/', self::json_ok( self::archive_metadata() ) );
-		bibliography_builder_test_set_http_response_for( 'openlibrary.org/api/books', self::json_ok( '{}' ) );
+	public function test_archive_item_without_an_edition_looks_up_its_isbn_through_the_books_api(): void {
 		bibliography_builder_test_set_http_response_for(
-			'openlibrary.org/isbn/',
-			self::json_ok(
-				array(
-					'title'          => 'Limits to medicine',
-					'publishers'     => array( 'Penguin' ),
-					'publish_places' => array( 'Harmondsworth' ),
-					'publish_date'   => '1977',
-				)
-			)
+			'archive.org/metadata/',
+			self::json_ok( self::archive_metadata( array( 'openlibrary_edition' => '' ) ) )
 		);
-		bibliography_builder_test_set_http_response_for(
-			'openlibrary.org/search.json',
-			self::json_ok( array( 'docs' => array( array( 'author_name' => array( 'Ivan Illich' ) ) ) ) )
-		);
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/api/books', self::json_ok( self::books_api_record( 'ISBN:9780140220094' ) ) );
 
 		$data = bibliography_builder_rest_resolve_archive( self::request( 'archive', 'limitstomedicine00illi' ) )->get_data();
 
-		$this->assertSame( 'Limits to medicine', $data['title'] );
-		$this->assertSame( '9780140220094', $data['ISBN'] );
 		$this->assertSame( 'https://archive.org/details/limitstomedicine00illi', $data['URL'] );
 
 		$urls = array_column( bibliography_builder_test_get_http_requests(), 'url' );
+		$this->assertCount( 2, $urls );
+		$this->assertStringContainsString( 'bibkeys=ISBN%3A9780140220094', $urls[1] );
+	}
+
+	public function test_archive_item_tries_only_its_first_catalog_id(): void {
+		bibliography_builder_test_set_http_response_for( 'archive.org/metadata/', self::json_ok( self::archive_metadata() ) );
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/api/books', self::json_ok( '{}' ) );
+
+		$data = bibliography_builder_rest_resolve_archive( self::request( 'archive', 'limitstomedicine00illi' ) )->get_data();
+
+		$this->assertSame( 'Limits to medicine: medical nemesis: the expropriation of health', $data['title'] );
+		$this->assertSame( 'https://archive.org/details/limitstomedicine00illi', $data['URL'] );
+
+		$urls = array_column( bibliography_builder_test_get_http_requests(), 'url' );
+		$this->assertCount( 2, $urls, 'The ISBN and LCCN are not tried once the edition lookup misses.' );
 		$this->assertStringContainsString( 'bibkeys=OLID%3AOL4288142M', $urls[1] );
-		$this->assertSame( BIBLIOGRAPHY_BUILDER_OPEN_LIBRARY_HOST . '/isbn/9780140220094.json', $urls[2] );
-		$this->assertCount( 4, $urls, 'The LCCN is not tried once the ISBN resolves.' );
 	}
 
 	public function test_archive_item_without_catalog_ids_maps_its_own_metadata(): void {
@@ -442,7 +443,7 @@ final class CatalogArchiveResolverTest extends TestCase {
 
 		$urls = array_column( bibliography_builder_test_get_http_requests(), 'url' );
 		$this->assertStringContainsString( 'q=identifier-ark%3A%22ark%3A%2F13960%2Ft6k09s648%22', $urls[0] );
-		$this->assertSame( BIBLIOGRAPHY_BUILDER_INTERNET_ARCHIVE_HOST . '/metadata/limitstomedicine00illi', $urls[1] );
+		$this->assertSame( BIBLIOGRAPHY_BUILDER_INTERNET_ARCHIVE_HOST . '/metadata/limitstomedicine00illi/metadata', $urls[1] );
 	}
 
 	public function test_unknown_archive_item_and_ark_are_not_found(): void {
@@ -479,5 +480,71 @@ final class CatalogArchiveResolverTest extends TestCase {
 		bibliography_builder_test_set_current_user( 7 );
 
 		$this->assertTrue( bibliography_builder_rest_archive_permissions_check() );
+	}
+
+	#[DataProvider( 'imprint_cases' )]
+	public function test_publication_statement_drops_placeholders_and_trailing_years( string $statement, array $expected ): void {
+		$this->assertSame( $expected, bibliography_builder_split_publication_statement( $statement ) );
+	}
+
+	public static function imprint_cases(): array {
+		return array(
+			'unknown place and publisher' => array( '[S.l.] : [s.n.]', array() ),
+			'no place'                    => array( 'n.p. : Penguin', array( 'publisher' => 'Penguin' ) ),
+			'trailing year'               => array( 'London : Calder & Boyars, 1976', array( 'publisher-place' => 'London', 'publisher' => 'Calder & Boyars' ) ),
+			'copyright year'              => array( 'London : Calder & Boyars, c1976', array( 'publisher-place' => 'London', 'publisher' => 'Calder & Boyars' ) ),
+			'two places'                  => array( 'Harmondsworth ; New York : Penguin', array( 'publisher-place' => 'Harmondsworth', 'publisher' => 'Penguin' ) ),
+		);
+	}
+
+	#[DataProvider( 'catalog_title_cases' )]
+	public function test_catalog_title_is_cleaned( string $title, bool $strip_responsibility, string $expected ): void {
+		$this->assertSame( $expected, bibliography_builder_clean_catalog_title( $title, $strip_responsibility ) );
+	}
+
+	public static function catalog_title_cases(): array {
+		return array(
+			'abbreviation keeps its period' => array( 'Made in U.S.A.', false, 'Made in U.S.A.' ),
+			'closing period goes'           => array( 'Limits to medicine.', false, 'Limits to medicine' ),
+			'Open Library slash is kept'    => array( 'Either/or', false, 'Either/or' ),
+			'archive responsibility goes'   => array( 'Limits to medicine / Ivan Illich.', true, 'Limits to medicine' ),
+		);
+	}
+
+	#[DataProvider( 'archive_creator_cases' )]
+	public function test_archive_creator_heading_is_mapped_to_a_name( string $creator, array $expected ): void {
+		$this->assertSame( $expected, bibliography_builder_archive_creator_to_name( $creator ) );
+	}
+
+	public static function archive_creator_cases(): array {
+		return array(
+			'dates and fuller form'  => array( 'Lewis, C. S. (Clive Staples), 1898-1963', array( 'family' => 'Lewis', 'given' => 'C. S.' ) ),
+			'uninverted person'      => array( 'Ivan Illich', array( 'family' => 'Illich', 'given' => 'Ivan' ) ),
+			'organization'           => array( 'Oxford University Press', array( 'literal' => 'Oxford University Press' ) ),
+			'heading closing period' => array( 'Illich, Ivan, 1926-2002. Medical nemesis', array( 'family' => 'Illich', 'given' => 'Ivan' ) ),
+		);
+	}
+
+	public function test_archive_collection_is_not_found(): void {
+		bibliography_builder_test_set_http_response_for(
+			'archive.org/metadata/',
+			self::json_ok( self::archive_metadata( array( 'mediatype' => 'collection' ) ) )
+		);
+
+		$response = bibliography_builder_rest_resolve_archive( self::request( 'archive', 'limitstomedicine00illi' ) );
+
+		$this->assertInstanceOf( WP_Error::class, $response );
+		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
+	}
+
+	public function test_resolver_requests_cap_the_response_size(): void {
+		bibliography_builder_test_set_http_response_for( 'archive.org/metadata/', self::json_ok( self::archive_metadata() ) );
+		bibliography_builder_test_set_http_response_for( 'openlibrary.org/api/books', self::json_ok( '{}' ) );
+
+		bibliography_builder_rest_resolve_archive( self::request( 'archive', 'limitstomedicine00illi' ) );
+
+		foreach ( bibliography_builder_test_get_http_requests() as $request ) {
+			$this->assertSame( BIBLIOGRAPHY_BUILDER_RESOLVER_MAX_RESPONSE_BYTES, $request['args']['limit_response_size'] );
+		}
 	}
 }
