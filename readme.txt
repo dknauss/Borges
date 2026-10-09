@@ -66,6 +66,14 @@ Your bibliographies remain fully readable. The block uses static HTML output, so
 
 Your bibliographies stay in your posts — they are saved as static HTML, not in a database table the plugin owns. When you delete the plugin, Borges removes only its own cached lookup data (transient and object-cache entries) and leaves your content untouched.
 
+= ISBN lookups sometimes fail with a Google Books error. What can I do? =
+
+Borges looks ISBNs up in Open Library first and falls back to Google Books. Without an API key, Google Books lookups share Google's anonymous daily quota with every other keyless caller, and that quota can run out. Create a key restricted to the Books API in the Google Cloud console and add it to `wp-config.php`:
+
+`define( 'BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY', 'your-key' );`
+
+Developers can supply or override it with the `bibliography_builder_google_books_api_key` filter instead. Borges stores no settings, so there is no settings screen for it.
+
 = Does the Borges Bibliography Builder work with Zotero, Mendeley, EndNote, and other citation managers? =
 
 Yes. Borges is built around portable bibliography formats rather than lock-in. Zotero can use DOI links, BibTeX, RIS, CSL-JSON, and optional COinS metadata. Mendeley and EndNote are best supported through BibTeX/RIS exports, with DOI-backed entries also friendly to browser importers. JabRef, BibDesk, and LaTeX/Biber workflows can use UTF-8 BibTeX or BibLaTeX. CSL-JSON is available for citeproc and scholarly data workflows.
@@ -166,7 +174,7 @@ arXiv IDs, arxiv.org links, and arXiv DOIs connect through the plugin's authenti
 
 **ISBN metadata**
 
-ISBN input connects through the plugin's authenticated WordPress REST proxy to **Open Library** (https://openlibrary.org), run by the Internet Archive: its ISBN edition endpoint (https://openlibrary.org/isbn/) for the book record and its search API (https://openlibrary.org/search.json) for author names. If Open Library has no record or cannot be reached, the proxy falls back to the **Google Books API** (https://www.googleapis.com/books/v1/volumes). All upstream hosts are fixed, and the ISBN checksum is verified before any outbound request. Only the ISBN is sent.
+ISBN input connects through the plugin's authenticated WordPress REST proxy to **Open Library** (https://openlibrary.org), run by the Internet Archive: its ISBN edition endpoint (https://openlibrary.org/isbn/) for the book record and its search API (https://openlibrary.org/search.json) for author names. If Open Library has no record or cannot be reached, the proxy falls back to the **Google Books API** (https://www.googleapis.com/books/v1/volumes). All upstream hosts are fixed, and the ISBN checksum is verified before any outbound request. Only the ISBN is sent, plus the site's own Google Books API key if one is defined in `wp-config.php` (the `BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY` constant). The key goes only to Google Books and is never sent to the browser.
 
 * Open Library Books API (ISBN endpoint): https://openlibrary.org/dev/docs/api/books
 * Open Library Search API: https://openlibrary.org/dev/docs/api/search
