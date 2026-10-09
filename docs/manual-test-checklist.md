@@ -85,7 +85,8 @@ Source page: `post=15`
 -   [ ] Press `Escape` during plain-text editing
 -   [ ] Confirm edit mode exits and focus returns to the entry
 
--   [ ] Open **Edit fields** on a heuristic/warning-marked citation
+-   [ ] Open **Edit fields** on a free-text citation, a DOI citation, and a manual entry
+-   [ ] Save a DOI citation after editing only its title, and confirm its full date, volume, and issue survive (Cite/Export > CSL-JSON)
 -   [ ] Confirm labels stay inside the container and inputs stretch full width
 -   [ ] Update a parsed field and save
 -   [ ] Confirm the citation reformats from structured data

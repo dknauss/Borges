@@ -114,7 +114,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 - **Multiple input paths** — Add bare DOIs, DOI URLs, PubMed/PMID and PubMed Central/PMCID records, arXiv IDs and links, ISBNs, BibTeX and BibLaTeX entries, and supported formatted citations.
 - **Nine citation styles** — Chicago Notes-Bibliography by default, with Chicago Author-Date, APA 7, Harvard, Vancouver, IEEE, MLA 9, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) selectable, each following its manual's current edition (see [docs/csl-styles.md](./docs/csl-styles.md)).
-- **Structured editing** — Plain-text editing plus per-field editing for heuristic or warning-marked citations.
+- **Structured editing** — Per-field editing for every citation, whatever its source, plus a plain-text override for the displayed line.
 - **Semantic output** — `role="doc-bibliography"`, `<cite>` wrappers, `lang` attributes, and hanging-indent styling without deprecated bibliography-entry ARIA roles.
 - **JSON-LD** — Schema.org structured data for search engines, AI systems, and semantic consumers (on by default).
 - **COinS** — Optional OpenURL spans for browser-based citation manager detection, especially Zotero and legacy OpenURL workflows.

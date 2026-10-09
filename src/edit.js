@@ -441,24 +441,12 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		[clearNotice]
 	);
 
-	const isHeuristicCitation = useCallback(
-		(citation) => citation.inputFormat === 'freetext',
-		[]
-	);
-
 	const getCitationWarnings = useCallback(
 		(citation) =>
 			(citation.parseWarnings || [])
 				.map((warningCode) => WARNING_MESSAGES[warningCode])
 				.filter(Boolean),
 		[]
-	);
-
-	const isStructuredEditable = useCallback(
-		(citation) =>
-			isHeuristicCitation(citation) ||
-			getCitationWarnings(citation).length > 0,
-		[getCitationWarnings, isHeuristicCitation]
 	);
 
 	const handleEntryActivate = useCallback(
@@ -470,20 +458,12 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				return;
 			}
 
-			if (isStructuredEditable(citation)) {
-				handleStructuredEditStart(citation.id);
-				return;
-			}
-
-			handleEditStart(citation.id);
+			// Every entry is structured CSL-JSON, so a click opens the field
+			// form; the formatted line can still be overridden with Edit
+			// citation.
+			handleStructuredEditStart(citation.id);
 		},
-		[
-			editingId,
-			handleEditStart,
-			handleStructuredEditStart,
-			isStructuredEditable,
-			structuredEditingId,
-		]
+		[editingId, handleStructuredEditStart, structuredEditingId]
 	);
 
 	const handleEntryReorderKeyDown = useCallback(
@@ -962,9 +942,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 										getEntryLabel(citation)
 									)
 								}
-								isStructuredEditable={isStructuredEditable(
-									citation
-								)}
 								onEditTextChange={setEditText}
 								structuredEditingId={structuredEditingId}
 								structuredFields={structuredFields}
