@@ -389,7 +389,8 @@ function bibliography_builder_normalize_arxiv_id( $value ) {
  *
  * Both arXiv and Open Library give each author as one display string. Lowercase
  * particles (van, de, von, ...) stay with the family name, a trailing
- * generational suffix is kept separately, and single-word or collaboration
+ * generational suffix is kept separately, a leading honorific (Dr., Prof.)
+ * is dropped, and single-word, collaboration, CJK-script, and parenthetical
  * names become literals.
  *
  * @param string $name Author display name.
@@ -398,8 +399,19 @@ function bibliography_builder_normalize_arxiv_id( $value ) {
 function bibliography_builder_split_display_name( $name ) {
 	$name = trim( (string) preg_replace( '/\s+/u', ' ', (string) $name ) );
 
+	// A leading honorific is not part of the name ("Dr. David G. Payne").
+	// "Sir" stays: Chicago keeps it with the given name ("Scott, Sir Walter").
+	$name = trim( (string) preg_replace( '/^(?:dr|prof|mr|mrs|ms|mx|rev)\.?\s+(?=\S+\s)/iu', '', $name ) );
+
 	if ( '' === $name ) {
 		return array();
+	}
+
+	// Chinese, Japanese, and Korean names do not split into given and family
+	// at the last space, and a name with a parenthetical gloss
+	// ("孙武 (Sun Tzu)") would be cut through it; both stay whole.
+	if ( preg_match( '/[\p{Han}\p{Hiragana}\p{Katakana}\p{Hangul}()]/u', $name ) ) {
+		return array( 'literal' => $name );
 	}
 
 	$tokens = explode( ' ', $name );
