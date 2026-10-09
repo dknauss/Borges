@@ -364,6 +364,12 @@ test('Borges read-only abilities are discoverable and runnable', async ({
 
 // Live check of the ISBN proxy against Open Library's Books API. The ISBN is
 // the example Open Library's API documentation uses.
+//
+// Open Library and Google Books (the fallback) rate-limit shared addresses,
+// and the Playground CORS proxy is one. When every upstream answers 429, the
+// proxy's structured upstream error still proves the route and the PHP
+// resolver ran, so the test records a warning and stops there instead of
+// failing on someone else's quota. Any other error still fails it.
 test('bibliography block imports a book by ISBN', async ({ page }) => {
 	test.setTimeout(120_000);
 
@@ -376,29 +382,24 @@ test('bibliography block imports a book by ISBN', async ({ page }) => {
 			});
 			return { ok: true, type: data?.type, title: data?.title };
 		} catch (error) {
-			// Diagnostic only: ask Open Library directly, per ISBN form, so a
-			// failure shows what the upstream API itself returns.
-			// Probe candidate upstream endpoints so one failed run shows which
-			// ones answer from CI: the Books API with and without jscmd, the
-			// edition and search endpoints, Google Books, and the site root.
+			// Diagnostic only: probe the upstream endpoints directly so one
+			// failed run shows which ones answer from CI. Each probe gets a
+			// short timeout so a hanging host cannot eat the test's budget.
 			const probes = {
 				booksApiData:
 					'https://openlibrary.org/api/books?bibkeys=ISBN:9780140328721&format=json&jscmd=data',
-				booksApiPlain:
-					'https://openlibrary.org/api/books?bibkeys=ISBN:9780140328721&format=json',
 				edition: 'https://openlibrary.org/isbn/9780140328721.json',
-				search: 'https://openlibrary.org/search.json?isbn=9780140328721&fields=key,title,author_name,publisher,publish_date',
 				googleBooks:
 					'https://www.googleapis.com/books/v1/volumes?q=isbn:9780140328721',
-				openLibraryRoot: 'https://openlibrary.org/',
 			};
 			const direct = {};
 			for (const [name, url] of Object.entries(probes)) {
 				try {
-					const response = await window.fetch(url);
+					const response = await window.fetch(url, {
+						signal: AbortSignal.timeout(5000),
+					});
 					direct[name] = {
 						status: response.status,
-						url: response.url,
 						body: (await response.text()).slice(0, 200),
 					};
 				} catch (fetchError) {
@@ -414,6 +415,20 @@ test('bibliography block imports a book by ISBN', async ({ page }) => {
 			};
 		}
 	});
+
+	if (
+		!proxyResult.ok &&
+		/_upstream_error$/.test(proxyResult.code || '') &&
+		429 === proxyResult.data?.upstream_status
+	) {
+		test.info().annotations.push({
+			type: 'warning',
+			description: `ISBN upstream rate-limited (429); route and resolver reached: ${JSON.stringify(
+				proxyResult
+			)}`,
+		});
+		return;
+	}
 
 	expect(
 		proxyResult.ok,
