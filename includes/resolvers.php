@@ -1042,8 +1042,8 @@ function bibliography_builder_normalize_lccn( $value ) {
 /**
  * Reduce library catalog identifier input to an Open Library Books API key.
  *
- * Accepts an OCLC number (`OCLC 2121853`, `(OCoLC)ocm02121853`,
- * `urn:oclc:record:2121853`), an LCCN (`LCCN 76-28766`), or an Open Library
+ * Accepts an OCLC number (`OCLC 4134656`, `(OCoLC)ocm04134656`,
+ * `urn:oclc:record:4134656`), an LCCN (`LCCN 76-28766`), or an Open Library
  * edition ID (`OL4288142M`, optionally `OLID:`-labelled). Mirrors
  * getCatalogKey() in src/lib/parser.js.
  *

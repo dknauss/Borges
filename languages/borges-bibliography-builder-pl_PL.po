@@ -1088,7 +1088,7 @@ msgid "That is an Open Library work ID, which covers every edition. Paste the ed
 msgstr ""
 
 #: src/lib/parser.js
-msgid "Couldn't resolve the library catalog number. Check it and try again."
+msgid "Open Library has no record for that catalog number. Check it, or paste the book’s ISBN instead."
 msgstr ""
 
 #: src/lib/parser.js
