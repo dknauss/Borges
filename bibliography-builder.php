@@ -2036,6 +2036,7 @@ add_action( 'init', 'bibliography_builder_block_init' );
 add_action( 'rest_api_init', 'bibliography_builder_register_rest_routes' );
 
 // Read-only Abilities API integration (WordPress 6.9+; inert on older versions).
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/google-books-key.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/resolvers.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/abilities.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/review.php';

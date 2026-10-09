@@ -960,7 +960,12 @@ function bibliography_builder_resolve_isbn_csl( $isbn13 ) {
 	// every lookup of the same ISBN.
 	return bibliography_builder_resolve_remote_csl(
 		add_query_arg(
-			array( 'q' => rawurlencode( 'isbn:' . $isbn13 ) ),
+			array_filter(
+				array(
+					'q'   => rawurlencode( 'isbn:' . $isbn13 ),
+					'key' => rawurlencode( bibliography_builder_google_books_api_key() ),
+				)
+			),
 			BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API
 		),
 		'isbn_gb_' . $isbn13,
