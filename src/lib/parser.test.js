@@ -2536,7 +2536,7 @@ describe('library catalog numbers', () => {
 		const result = await parsePastedInput('OCLC 2121853', 'apa');
 
 		expect(result.errors).toEqual([
-			"Couldn't resolve the library catalog number. Check it and try again.",
+			'Open Library has no record for that catalog number. Check it, or paste the book’s ISBN instead.',
 		]);
 	});
 });

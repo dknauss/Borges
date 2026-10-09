@@ -1344,7 +1344,7 @@ function formatBackendParseError(format, err) {
 
 	if (format === 'catalog') {
 		return __(
-			"Couldn't resolve the library catalog number. Check it and try again.",
+			'Open Library has no record for that catalog number. Check it, or paste the book’s ISBN instead.',
 			'borges-bibliography-builder'
 		);
 	}
