@@ -325,7 +325,7 @@ msgstr ""
 #. translators: %s: citation label.
 #: src/components/citation-entry-body.js:90
 #, js-format
-msgid "Edit %s"
+msgid "Edit fields: %s"
 msgstr ""
 
 #. translators: %s: citation label.
@@ -1087,4 +1087,12 @@ msgstr ""
 
 #: src/lib/parser.js
 msgid "Couldn't resolve the Internet Archive item. Check the link and try again."
+msgstr ""
+
+#: src/hooks/use-citation-editor-state.js
+msgid "Enter the year as a number, such as 1977, or leave it empty."
+msgstr ""
+
+#: src/hooks/use-citation-editor-state.js
+msgid "Fields updated. The edited display text was replaced with the reformatted citation."
 msgstr ""

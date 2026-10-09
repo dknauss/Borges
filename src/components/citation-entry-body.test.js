@@ -87,7 +87,9 @@ describe('CitationEntryBody', () => {
 			citationWarnings: ['Review before publishing.'],
 		});
 
-		const trigger = screen.getByRole('button', { name: 'Edit Alpha 2024' });
+		const trigger = screen.getByRole('button', {
+			name: 'Edit fields: Alpha 2024',
+		});
 
 		expect(trigger.querySelector('div')).not.toBeInTheDocument();
 		expect(

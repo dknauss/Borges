@@ -86,7 +86,7 @@ export function CitationEntryBody({
 				onClick={handleEntryActivate}
 				aria-label={sprintf(
 					/* translators: %s: citation label. */
-					__('Edit %s', 'borges-bibliography-builder'),
+					__('Edit fields: %s', 'borges-bibliography-builder'),
 					getEntryLabel(citation)
 				)}
 			>

@@ -185,10 +185,10 @@ When the block is first inserted, the add-citation form is open by default and t
 Below the add form, the sorted bibliography is rendered as a live preview. Each entry:
 
 -   Displays the formatted citation text (from the selected CSL-backed bibliography style, or `displayOverride` if set).
--   Clicking the row opens structured field editing, for every entry: each is stored as CSL-JSON whatever its source. Plain-text editing of the displayed line stays available as **Edit**.
+-   Clicking the row opens structured field editing, for every entry: each is stored as CSL-JSON whatever its source. Plain-text editing of the displayed line stays available as **Edit citation**.
 -   On hover or focus, shows compact inline action controls:
     -   **Edit fields** — edits the CSL-backed fields (authors, title, container, publisher, year, pages, article number, DOI, URL) and re-renders from structured data. Fields the form does not show (volume, issue, edition, place, ISBN, editors, and so on) are kept, and the authors and date are rewritten only when edited, so an untouched full date or a literal or suffixed name survives a save.
-    -   **Edit** — edits only the visible display text and stores `displayOverride`.
+    -   **Edit citation** — edits only the visible display text and stores `displayOverride`. Saving the field form without changing a field keeps that text; saving an edited field reformats the entry and replaces it, and says so.
     -   **Reset edits** — shown when the line has been overridden; clears `displayOverride` and restores the current auto-formatted output.
     -   **Delete** — removes the entry immediately and shifts focus to the next logical target.
 -   Entries are not manually reorderable. Sort order is automatic and deterministic.
