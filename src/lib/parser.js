@@ -479,13 +479,14 @@ export function normalizeLccn(value) {
 		.replace(/\s+/gu, '')
 		.toLowerCase()
 		.replace(/\/.*$/u, '');
-	const hyphenated = lccn.match(/^([a-z]{0,3}\d{2,4})-(\d{1,6})$/u);
+	const hyphenated = lccn.match(/^([a-z]{0,3}(?:\d{2}|\d{4}))-(\d{1,6})$/u);
 
 	if (hyphenated) {
 		lccn = hyphenated[1] + hyphenated[2].padStart(6, '0');
 	}
 
-	return /^[a-z]{0,3}\d{8,10}$/u.test(lccn) ? lccn : null;
+	// A normalized LCCN is a two- or four-digit year plus a six-digit serial.
+	return /^[a-z]{0,3}(?:\d{8}|\d{10})$/u.test(lccn) ? lccn : null;
 }
 
 /**

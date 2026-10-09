@@ -9,12 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Library catalog numbers.** Paste an OCLC number (`OCLC 2121853`, `(OCoLC)ocm02121853`, `urn:oclc:record:…`, or a WorldCat link), an LCCN (`LCCN 76-28766` or an lccn.loc.gov link), or an Open Library edition ID or link (`OL4288142M`) and the book is looked up through Open Library. Numbers need their label or link: a bare number could be a PMID. An Open Library work ID (`OL…W`) covers every edition, so Borges asks for the edition ID or ISBN instead.
-- **Internet Archive items.** Paste an archive.org item link, `ia:<identifier>`, or an Internet Archive ARK (`ark:/13960/…`). Borges reads the item's record and, when it names its Open Library edition, ISBN, or LCCN, cites that edition, keeping the archive.org page as the link. Otherwise it cites the scan's own record, tidied: library punctuation in the title, life dates in author names (`Illich, Ivan, 1926-2002` becomes Ivan Illich), and `Harmondsworth ; New York : Penguin` split into place and publisher. The many OCLC numbers an item lists for other editions are ignored.
+- **Library catalog numbers.** Paste an OCLC number (`OCLC 2121853`, `(OCoLC)ocm02121853`, `urn:oclc:record:…`, or a WorldCat link), an LCCN (`LCCN 76-28766` or an lccn.loc.gov link; malformed LCCNs are refused rather than guessed), or an Open Library edition ID or link (`OL4288142M`) and the book is looked up through Open Library. Numbers need their label or link: a bare number could be a PMID. An Open Library work ID (`OL…W`) covers every edition, so Borges asks for the edition ID or ISBN instead.
+- **Internet Archive items.** Paste an archive.org item link, `ia:<identifier>`, or an Internet Archive ARK (`ark:/13960/…`). Borges reads the item's record and, when it names its Open Library edition, ISBN, or LCCN, cites that edition, keeping the archive.org page as the link. Otherwise it cites the scan's own record, tidied: library punctuation in the title, life dates in author names (`Illich, Ivan, 1926-2002` becomes Ivan Illich), and `Harmondsworth ; New York : Penguin` split into place and publisher, with placeholders such as `[S.l.] : [s.n.]` and trailing years dropped. Only the first of those catalog IDs is tried, and the many OCLC numbers an item lists for other editions are ignored. Item records and catalog responses are capped at 1 MB.
 
 ### Fixed
 
-- **"Place: Publisher" in pasted citations.** `London: Boyars, 1976` is now split into the place (London) and the publisher (Boyars). It used to be stored whole, as the place when a link followed and as the publisher otherwise.
+- **"Place: Publisher" in pasted citations.** `London: Boyars, 1976` is now split into the place (London) and the publisher (Boyars). It used to be stored whole, as the place when a link followed and as the publisher otherwise. Text whose colon doesn't split that way (`[s.l.]: 2 vols`) still stays the place.
 
 ### Changed
 
