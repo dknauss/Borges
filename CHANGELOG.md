@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Edit fields for every citation.** The per-field form (authors, title, container, publisher, year, pages, DOI, URL) used to open only for free-text pastes and entries with a parse warning; DOI, PubMed, ISBN, catalog, Internet Archive, BibTeX, and CSL-JSON imports, and even manual entries, could only have their displayed line overwritten, which left exports, JSON-LD, and COinS with the old data. Now every entry has **Edit fields**, and clicking an entry opens it. **Edit citation** still overrides the displayed line, and **Reset edits** now appears whenever a line has been overridden. Saving the form keeps the fields it does not show (volume, issue, edition, place, ISBN, editors) and rewrites the authors and date only when you change them, so a full publication date or an organization or "Jr." author survives an edit to the title.
 - **The paste box names every format it reads.** Its placeholder and the instructions under the citation form (also the "couldn't read this" warning) now list CSL-JSON, library catalog numbers, and Internet Archive links alongside DOI, PMID, PMCID, arXiv ID, ISBN, and BibTeX; the LaTeX warning lists CSL-JSON too.
 
 ## [1.9.1] - 2026-10-07

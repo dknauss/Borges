@@ -2696,6 +2696,140 @@ describe('Edit focus management', () => {
 		});
 	});
 
+	it('keeps an imported record intact when only some fields are edited', async () => {
+		const saved = [];
+		const citation = createCitation({
+			id: 'entry-a',
+			family: 'King',
+			year: 2019,
+			title: 'Letter from Birmingham Jail',
+			type: 'article-journal',
+			containerTitle: 'Liberation',
+			inputFormat: 'doi',
+		});
+		citation.csl.author = [
+			{ family: 'King', given: 'Martin Luther', suffix: 'Jr.' },
+			{ literal: 'Southern Christian Leadership Conference' },
+		];
+		citation.csl.issued = { 'date-parts': [[2019, 5, 3]] };
+		citation.csl.volume = '12';
+		citation.csl.issue = '3';
+		citation.csl.ISSN = '0024-2004';
+
+		function RecordingHarness() {
+			const [attributes, setAttributes] = React.useState({
+				citationStyle: 'chicago-notes-bibliography',
+				headingText: '',
+				citations: [citation],
+			});
+
+			return (
+				<Edit
+					attributes={attributes}
+					setAttributes={(next) => {
+						saved.push(next);
+						setAttributes((previous) => ({ ...previous, ...next }));
+					}}
+				/>
+			);
+		}
+
+		render(<RecordingHarness />);
+
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Edit fields for King 2019' })
+		);
+		fireEvent.change(screen.getByLabelText('Title'), {
+			target: { value: 'Letter from a Birmingham Jail' },
+		});
+		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+		await waitFor(() => {
+			expect(
+				saved.some((next) =>
+					next.citations?.some(
+						(entry) =>
+							entry.csl.title === 'Letter from a Birmingham Jail'
+					)
+				)
+			).toBe(true);
+		});
+
+		const csl = saved
+			.filter((next) => next.citations)
+			.pop()
+			.citations.find((entry) => entry.id === 'entry-a').csl;
+
+		expect(csl.title).toBe('Letter from a Birmingham Jail');
+		expect(csl.author).toEqual([
+			{ family: 'King', given: 'Martin Luther', suffix: 'Jr.' },
+			{ literal: 'Southern Christian Leadership Conference' },
+		]);
+		expect(csl.issued).toEqual({ 'date-parts': [[2019, 5, 3]] });
+		expect(csl).toMatchObject({
+			volume: '12',
+			issue: '3',
+			ISSN: '0024-2004',
+			'container-title': 'Liberation',
+		});
+	});
+
+	it('replaces the date and authors when they are edited', async () => {
+		const saved = [];
+		const citation = createCitation({
+			id: 'entry-a',
+			family: 'King',
+			year: 2019,
+			title: 'Letter',
+			inputFormat: 'doi',
+		});
+		citation.csl.issued = { 'date-parts': [[2019, 5, 3]] };
+
+		function RecordingHarness() {
+			const [attributes, setAttributes] = React.useState({
+				citationStyle: 'chicago-notes-bibliography',
+				headingText: '',
+				citations: [citation],
+			});
+
+			return (
+				<Edit
+					attributes={attributes}
+					setAttributes={(next) => {
+						saved.push(next);
+						setAttributes((previous) => ({ ...previous, ...next }));
+					}}
+				/>
+			);
+		}
+
+		render(<RecordingHarness />);
+
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Edit fields for King 2019' })
+		);
+		fireEvent.change(screen.getByLabelText('Year'), {
+			target: { value: '1963' },
+		});
+		fireEvent.change(screen.getByLabelText('Author(s)'), {
+			target: { value: 'King, Martin Luther' },
+		});
+		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+		await waitFor(() => {
+			const last = saved.filter((next) => next.citations).pop();
+			expect(last?.citations[0].csl.issued).toEqual({
+				'date-parts': [[1963]],
+			});
+		});
+
+		const csl = saved.filter((next) => next.citations).pop()
+			.citations[0].csl;
+		expect(csl.author).toEqual([
+			{ family: 'King', given: 'Martin Luther' },
+		]);
+	});
+
 	it('cancels structured field editing with Escape', async () => {
 		render(
 			<EditHarness
@@ -2902,7 +3036,7 @@ describe('Edit focus management', () => {
 		expect(screen.getByLabelText('Title')).toBeInTheDocument();
 	});
 
-	it('opens plain edit mode when a non-structured citation row is clicked', async () => {
+	it('opens the field form when a resolved citation row is clicked, and keeps the line edit', async () => {
 		render(
 			<EditHarness
 				initialCitations={[
@@ -2919,10 +3053,42 @@ describe('Edit focus management', () => {
 
 		await userEvent.click(screen.getByText('Alpha citation'));
 
+		expect(screen.getByLabelText('Title')).toHaveValue('Alpha citation');
+
+		await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Edit citation: Alpha 2024' })
+		);
+
 		expect(
 			screen.getByLabelText('Editing: Alpha 2024')
 		).toBeInTheDocument();
 	});
+
+	it.each(['doi', 'manual', 'isbn', 'bibtex', 'csl-json', 'archive'])(
+		'offers Edit fields for a %s entry',
+		(inputFormat) => {
+			render(
+				<EditHarness
+					initialCitations={[
+						createCitation({
+							id: 'entry-a',
+							family: 'Alpha',
+							year: 2024,
+							title: 'Alpha citation',
+							inputFormat,
+						}),
+					]}
+				/>
+			);
+
+			expect(
+				screen.getByRole('button', {
+					name: 'Edit fields for Alpha 2024',
+				})
+			).toBeInTheDocument();
+		}
+	);
 
 	it('restores focus to the entry after confirming or cancelling an edit', async () => {
 		render(

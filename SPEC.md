@@ -185,11 +185,11 @@ When the block is first inserted, the add-citation form is open by default and t
 Below the add form, the sorted bibliography is rendered as a live preview. Each entry:
 
 -   Displays the formatted citation text (from the selected CSL-backed bibliography style, or `displayOverride` if set).
--   Clicking the row opens editing: heuristic/warning-marked entries prefer structured field editing; other entries open plain-text editing.
+-   Clicking the row opens structured field editing, for every entry: each is stored as CSL-JSON whatever its source. Plain-text editing of the displayed line stays available as **Edit**.
 -   On hover or focus, shows compact inline action controls:
-    -   **Edit fields** — edits parsed CSL-backed fields and re-renders from structured data.
+    -   **Edit fields** — edits the CSL-backed fields (authors, title, container, publisher, year, pages, article number, DOI, URL) and re-renders from structured data. Fields the form does not show (volume, issue, edition, place, ISBN, editors, and so on) are kept, and the authors and date are rewritten only when edited, so an untouched full date or a literal or suffixed name survives a save.
     -   **Edit** — edits only the visible display text and stores `displayOverride`.
-    -   **Reset edits** — clears `displayOverride` and restores the current auto-formatted output.
+    -   **Reset edits** — shown when the line has been overridden; clears `displayOverride` and restores the current auto-formatted output.
     -   **Delete** — removes the entry immediately and shifts focus to the next logical target.
 -   Entries are not manually reorderable. Sort order is automatic and deterministic.
 
@@ -506,7 +506,7 @@ Formatted bibliography strings are generated locally through `citeproc-php` usin
 ### Edit Safeguards
 
 -   **Plain-text editing** — the user can edit display text arbitrarily via `displayOverride`. Malformed edits affect only the visible text; the CSL-JSON and all machine-readable output remain intact.
--   **Structured field editing** — heuristic (free-text) and warning-marked entries open a per-field editor. Saves write back to CSL-JSON and re-render the formatted text.
+-   **Structured field editing** — every entry opens a per-field editor, whatever its source (DOI, PubMed, ISBN, catalog, Internet Archive, BibTeX, CSL-JSON, free text, or manual entry). Saves write back to CSL-JSON, keep fields the form does not show, rewrite authors and the date only when edited, and re-render the formatted text.
 -   **Reset to auto-format** — clears `displayOverride` and restores the current auto-formatted output from CSL-JSON.
 -   **Duplicate detection** — new citations are checked against existing entries by DOI, title, or author+year. Duplicates are skipped with a notice.
 

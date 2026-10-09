@@ -30,7 +30,6 @@ export function CitationEntryBody({
 	handleStructuredEditStart,
 	handleStructuredFieldChange,
 	isNumericFamily = false,
-	isStructuredEditable,
 	onEditTextChange,
 	onMoveDown,
 	onMoveUp,
@@ -126,26 +125,21 @@ export function CitationEntryBody({
 						onMoveDown={onMoveDown}
 					/>
 				)}
-				{isStructuredEditable && (
-					<Button
-						label={sprintf(
-							/* translators: %s: citation label. */
-							__(
-								'Edit fields for %s',
-								'borges-bibliography-builder'
-							),
-							getEntryLabel(citation)
-						)}
-						showTooltip
-						className="bibliography-builder-action-button"
-						onClick={(event) => {
-							event.stopPropagation();
-							handleStructuredEditStart(citation.id);
-						}}
-					>
-						<StructuredEditIcon className="bibliography-builder-action-icon" />
-					</Button>
-				)}
+				<Button
+					label={sprintf(
+						/* translators: %s: citation label. */
+						__('Edit fields for %s', 'borges-bibliography-builder'),
+						getEntryLabel(citation)
+					)}
+					showTooltip
+					className="bibliography-builder-action-button"
+					onClick={(event) => {
+						event.stopPropagation();
+						handleStructuredEditStart(citation.id);
+					}}
+				>
+					<StructuredEditIcon className="bibliography-builder-action-icon" />
+				</Button>
 				<Button
 					label={sprintf(
 						/* translators: %s: citation label. */
@@ -176,7 +170,7 @@ export function CitationEntryBody({
 				>
 					<EditIcon className="bibliography-builder-action-icon" />
 				</Button>
-				{isStructuredEditable && citation.displayOverride && (
+				{citation.displayOverride && (
 					<Button
 						label={__('Reset edits', 'borges-bibliography-builder')}
 						showTooltip

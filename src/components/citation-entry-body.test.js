@@ -74,7 +74,6 @@ function renderEntry(overrides = {}) {
 			handleStructuredEditSave={jest.fn()}
 			handleStructuredEditStart={jest.fn()}
 			handleStructuredFieldChange={jest.fn()}
-			isStructuredEditable={false}
 			onEditTextChange={jest.fn()}
 			structuredEditingId={null}
 			structuredFields={{}}

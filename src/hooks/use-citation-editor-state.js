@@ -320,9 +320,17 @@ export function useCitationEditorState({
 			title: title || citation.csl.title,
 		};
 
-		if (authors) {
+		// Authors and the date are written only when edited. The form shows
+		// them as text and a year, so rewriting them unchanged would flatten
+		// an imported record: literal and suffixed names re-parsed, and a full
+		// date (or a season, or "n.d.") cut to a bare year or dropped.
+		const authorsChanged =
+			authors !==
+			stripHtmlTags(formatAuthorListForField(citation.csl.author)).trim();
+
+		if (authorsChanged && authors) {
 			updatedCsl.author = parseAuthorFieldList(authors);
-		} else {
+		} else if (authorsChanged) {
 			delete updatedCsl.author;
 		}
 
@@ -377,12 +385,19 @@ export function useCitationEditorState({
 			delete updatedCsl.URL;
 		}
 
-		if (structuredFields.year && /^\d{4}$/u.test(structuredFields.year)) {
-			updatedCsl.issued = {
-				'date-parts': [[Number(structuredFields.year)]],
-			};
-		} else {
-			delete updatedCsl.issued;
+		const year = String(structuredFields.year ?? '').trim();
+		const originalYear = String(
+			citation.csl.issued?.['date-parts']?.[0]?.[0] || ''
+		);
+
+		if (year !== originalYear) {
+			if (/^\d{4}$/u.test(year)) {
+				updatedCsl.issued = {
+					'date-parts': [[Number(year)]],
+				};
+			} else {
+				delete updatedCsl.issued;
+			}
 		}
 
 		const { formatBibliographyEntries } = await import(
