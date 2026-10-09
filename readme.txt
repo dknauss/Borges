@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.9.1
+Stable tag: 1.10.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -193,6 +193,14 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 
 == Changelog ==
 
+= 1.10.0 =
+* **Added:** library catalog numbers. Paste an OCLC number, an LCCN, or an Open Library edition ID (or their WorldCat, lccn.loc.gov, or Open Library links) and the book is looked up through Open Library. When Open Library has no record, Borges says so and suggests the ISBN.
+* **Added:** Internet Archive items. Paste an archive.org item link, `ia:<identifier>`, or an Internet Archive ARK. Borges cites the edition the item names (its Open Library edition, ISBN, or LCCN) and keeps the archive.org page as the link, or tidies the scan's own record when it names none.
+* **Added:** an optional Google Books API key for the ISBN fallback, set with the `BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY` constant or a filter, so lookups no longer depend on Google's shared anonymous quota. Borges still stores no settings.
+* **Changed:** "Edit fields" now works on every citation, not only ones typed as free text. Only the fields you change are saved; untouched DOIs, URLs, authors, and dates stay exactly as imported.
+* **Fixed:** "Place: Publisher" in pasted citations (`London: Boyars, 1976`) is split into place and publisher.
+* **Fixed:** Chinese, Japanese, and Korean author names, and names with a gloss in parentheses, are kept whole in book lookups; a leading Dr., Prof., Mr., Mrs., Ms., Mx., or Rev. is dropped.
+
 = 1.9.1 =
 * **Added:** pasting CSL-JSON, such as a reference manager's "CSL JSON" export, now imports each item as a citation. Items that are not valid citations are skipped and named, and JSON that is not CSL-JSON gets its own message.
 * **Fixed:** a title the citation style puts in quotation marks, such as a web page in Chicago, is no longer also italicized.
@@ -356,6 +364,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.10.0 =
+Adds OCLC, LCCN, Open Library, and Internet Archive lookups and "Edit fields" for every citation. These lookups contact Open Library and the Internet Archive only when you paste those identifiers. No configuration changes required.
 
 = 1.9.1 =
 Imports pasted CSL-JSON and stops italicizing quoted titles such as Chicago web pages. No configuration changes; no new external services.
