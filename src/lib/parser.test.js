@@ -2491,6 +2491,9 @@ describe('library catalog numbers', () => {
 		expect(normalizeLccn('n 78-890351')).toBe('n78890351');
 		expect(normalizeLccn('76028766/r85')).toBe('76028766');
 		expect(normalizeLccn('12-')).toBeNull();
+		expect(normalizeLccn('123456789')).toBeNull();
+		expect(normalizeLccn('76-123456789')).toBeNull();
+		expect(normalizeLccn('2001-012345')).toBe('2001012345');
 	});
 
 	it('routes a catalog number to the catalog proxy', async () => {
