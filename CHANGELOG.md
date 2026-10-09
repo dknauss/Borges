@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Author names from book lookups.** A Chinese, Japanese, or Korean name, or one with a gloss in parentheses, is kept whole instead of being cut at the last space ("孙武 (Sun Tzu)" no longer becomes family name "Tzu)"), and a leading Dr., Prof., Mr., Mrs., Ms., Mx., or Rev. is dropped. This applies to ISBN, library catalog, and arXiv lookups. "Sir" stays, as Chicago keeps it ("Scott, Sir Walter").
 - **"Place: Publisher" in pasted citations.** `London: Boyars, 1976` is now split into the place (London) and the publisher (Boyars). It used to be stored whole, as the place when a link followed and as the publisher otherwise. Text whose colon doesn't split that way (`[s.l.]: 2 vols`) still stays the place.
 
 ### Changed

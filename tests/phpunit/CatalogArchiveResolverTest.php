@@ -113,6 +113,74 @@ final class CatalogArchiveResolverTest extends TestCase {
 		);
 	}
 
+	#[DataProvider( 'display_name_cases' )]
+	public function test_display_names_split_into_csl_names( $input, $expected ): void {
+		$this->assertSame( $expected, bibliography_builder_split_display_name( $input ) );
+	}
+
+	public static function display_name_cases(): array {
+		return array(
+			'given family'          => array(
+				'Eric Hobsbawm',
+				array(
+					'family' => 'Hobsbawm',
+					'given'  => 'Eric',
+				),
+			),
+			'particle'              => array(
+				'Ludwig van Beethoven',
+				array(
+					'family' => 'van Beethoven',
+					'given'  => 'Ludwig',
+				),
+			),
+			'suffix'                => array(
+				'Martin Luther King Jr.',
+				array(
+					'family' => 'King',
+					'given'  => 'Martin Luther',
+					'suffix' => 'Jr.',
+				),
+			),
+			'Sir stays'             => array(
+				'Sir Walter Scott',
+				array(
+					'family' => 'Scott',
+					'given'  => 'Sir Walter',
+				),
+			),
+			'Dr. dropped'           => array(
+				'Dr. David G. Payne',
+				array(
+					'family' => 'Payne',
+					'given'  => 'David G.',
+				),
+			),
+			'Prof without period'   => array(
+				'Prof Mary Beard',
+				array(
+					'family' => 'Beard',
+					'given'  => 'Mary',
+				),
+			),
+			'honorific is the name' => array(
+				'Dr. Seuss',
+				array(
+					'family' => 'Seuss',
+					'given'  => 'Dr.',
+				),
+			),
+			'CJK with gloss'        => array( '孙武 (Sun Tzu)', array( 'literal' => '孙武 (Sun Tzu)' ) ),
+			'CJK only'              => array( '老虎工作室', array( 'literal' => '老虎工作室' ) ),
+			'Japanese'              => array( '村上 春樹', array( 'literal' => '村上 春樹' ) ),
+			'Korean'                => array( '한 강', array( 'literal' => '한 강' ) ),
+			'parenthetical'         => array( 'Sun Tzu (Sunzi)', array( 'literal' => 'Sun Tzu (Sunzi)' ) ),
+			'collaboration'         => array( 'ATLAS Collaboration', array( 'literal' => 'ATLAS Collaboration' ) ),
+			'single word'           => array( 'Homer', array( 'literal' => 'Homer' ) ),
+			'blank'                 => array( '  ', array() ),
+		);
+	}
+
 	public function test_catalog_route_maps_the_books_api_record_to_a_csl_book(): void {
 		bibliography_builder_test_set_http_response_for(
 			'openlibrary.org/api/books',
