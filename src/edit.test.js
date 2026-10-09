@@ -567,7 +567,7 @@ describe('Edit focus management', () => {
 
 		expect(
 			screen.getByPlaceholderText(
-				'Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, CSL-JSON, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.'
+				'Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, OCLC/LCCN/Open Library numbers, Internet Archive links, BibTeX entries, CSL-JSON, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.'
 			)
 		).toBeInTheDocument();
 
@@ -578,7 +578,7 @@ describe('Edit focus management', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
 
 		expect(await screen.findByRole('status')).toHaveTextContent(
-			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.'
+			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.'
 		);
 	});
 
@@ -586,7 +586,7 @@ describe('Edit focus management', () => {
 		parsePastedInput.mockResolvedValue({
 			entries: [],
 			errors: [
-				'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
+				'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 			],
 			truncated: false,
 			remainingInput: 'Private Draft Citation',
@@ -603,7 +603,7 @@ describe('Edit focus management', () => {
 		const status = await screen.findByRole('status');
 
 		expect(status).toHaveTextContent(
-			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.'
+			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.'
 		);
 		expect(status).not.toHaveTextContent('Private Draft Citation');
 		expect(screen.getByLabelText('Add citations')).toHaveValue(
@@ -622,7 +622,7 @@ describe('Edit focus management', () => {
 				}),
 			],
 			errors: [
-				'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
+				'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 			],
 			truncated: false,
 			remainingInput: 'Unparsed citation chunk',

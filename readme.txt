@@ -52,7 +52,7 @@ The package includes seed PO/MO files for translator review and import in French
 
 = What citation input formats does the Borges Bibliography Builder support? =
 
-Bare DOIs, DOI URLs, PubMed/PMID identifiers, PubMed Central PMCIDs, arXiv IDs and links, ISBNs, BibTeX and BibLaTeX, CSL-JSON, manual citation entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. Free-text citations that include an inline DOI or labeled PMID are routed through the DOI/PubMed resolvers before falling back to the heuristic parser. RIS is supported as an export format, not as an import format. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
+Bare DOIs, DOI URLs, PubMed/PMID identifiers, PubMed Central PMCIDs, arXiv IDs and links, ISBNs, OCLC numbers, LCCNs, Open Library edition IDs, Internet Archive item links and ARKs, BibTeX and BibLaTeX, CSL-JSON, manual citation entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. Free-text citations that include an inline DOI or labeled PMID are routed through the DOI/PubMed resolvers before falling back to the heuristic parser. RIS is supported as an export format, not as an import format. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
 
 = Does the ABNT style implement NBR 6023:2025? =
 
@@ -137,7 +137,7 @@ Bug reports, feature requests, and pull requests are welcome. See CONTRIBUTING.m
 
 == External Services ==
 
-This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for any of the supported DOI, PMID, PMCID, arXiv, or ISBN lookups.
+This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for any of the supported DOI, PMID, PMCID, arXiv, ISBN, library catalog, or Internet Archive lookups.
 
 **DOI metadata**
 
@@ -174,6 +174,14 @@ ISBN input connects through the plugin's authenticated WordPress REST proxy to *
 * Google Books APIs: https://developers.google.com/books
 * Google APIs Terms of Service: https://developers.google.com/terms
 * Google Privacy Policy: https://policies.google.com/privacy
+
+**Library catalog numbers and Internet Archive items**
+
+OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's authenticated WordPress REST proxy to **Open Library's Books API** (https://openlibrary.org/api/books). Internet Archive item links, `ia:` identifiers, and Internet Archive ARKs connect to the **Internet Archive** item metadata API (https://archive.org/metadata/); an ARK is first matched to its item through the Internet Archive's advanced search (https://archive.org/advancedsearch.php). When the item lists its Open Library edition, ISBN, or LCCN, that identifier is then looked up through Open Library (with the Google Books fallback for an ISBN). All upstream hosts are fixed, and each identifier is validated before any outbound request. Only the identifier is sent.
+
+* Open Library Books API: https://openlibrary.org/dev/docs/api/books
+* Internet Archive developer documentation: https://archive.org/developers/
+* Internet Archive terms of use: https://archive.org/about/terms.php
 
 == Changelog ==
 

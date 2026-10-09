@@ -242,6 +242,10 @@ The editor-only arXiv resolver accepts `GET /wp-json/bibliography/v1/arxiv?id=<a
 
 The editor-only ISBN resolver accepts `GET /wp-json/bibliography/v1/isbn/<isbn>` (ISBN-10 or ISBN-13, no hyphens), requires `edit_posts`, verifies the checksum before any outbound request, queries Open Library's fixed ISBN edition and search endpoints with a fixed Google Books fallback, and returns a CSL-JSON book record. It is used for pasted `ISBN` labels and bare 978/979 ISBN-13s.
 
+The editor-only library catalog resolver accepts `GET /wp-json/bibliography/v1/catalog?id=<key>`, where the key is `OCLC:<number>`, `LCCN:<normalized lccn>`, or `OLID:OL<digits>M`, requires `edit_posts`, validates the key before any outbound request, queries Open Library's fixed Books API, and returns a CSL-JSON book record. It is used for labelled OCLC numbers (`OCLC 2121853`, `(OCoLC)ocm02121853`, `urn:oclc:record:…`, WorldCat links), labelled LCCNs and lccn.loc.gov links, and Open Library edition IDs and links. An Open Library work ID (`OL…W`) is refused with a message asking for the edition.
+
+The editor-only Internet Archive resolver accepts `GET /wp-json/bibliography/v1/archive?id=<identifier or ark:/13960/…>`, requires `edit_posts`, validates the identifier before any outbound request, and reads the item's metadata from the fixed Internet Archive host. If the item lists its Open Library edition, ISBN, or LCCN, that edition record is used (tried in that order); otherwise the scan's own metadata is mapped, with library headings tidied (life dates dropped from creators, ISBD `Place : Publisher` split). The citation URL is always the item's archive.org page. It is used for archive.org item links, `ia:` identifiers, and Internet Archive ARKs.
+
 ## WordPress Abilities
 
 On WordPress 6.9 and later, Borges registers six read-only abilities with the core Abilities API, in a `bibliography` category. Automation tools and AI agents can discover them and run them through `/wp-json/wp-abilities/v1`. On earlier WordPress versions nothing is registered and nothing else changes.
@@ -259,7 +263,7 @@ On WordPress 6.9 and later, Borges registers six read-only abilities with the co
 
 ## External Services
 
-This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for any of the supported DOI, PMID, PMCID, arXiv, or ISBN lookups.
+This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for any of the supported DOI, PMID, PMCID, arXiv, ISBN, library catalog, or Internet Archive lookups.
 
 ### DOI metadata
 
@@ -296,6 +300,14 @@ ISBN input connects through the plugin's authenticated WordPress REST proxy to [
 - [Google Books APIs](https://developers.google.com/books)
 - [Google APIs Terms of Service](https://developers.google.com/terms)
 - [Google Privacy Policy](https://policies.google.com/privacy)
+
+### Library catalog numbers and Internet Archive items
+
+OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's authenticated WordPress REST proxy to [Open Library's Books API](https://openlibrary.org/dev/docs/api/books) (`openlibrary.org/api/books`). Internet Archive item links, `ia:` identifiers, and Internet Archive ARKs connect to the Internet Archive's item metadata API (`archive.org/metadata/<identifier>`); an ARK is first matched to its item through the Internet Archive's advanced search (`archive.org/advancedsearch.php`). When the item lists its Open Library edition, ISBN, or LCCN, that identifier is then looked up through Open Library (with the Google Books fallback for an ISBN). All upstream hosts are fixed, and each identifier is validated before any outbound request. Only the identifier is sent.
+
+- [Open Library Books API](https://openlibrary.org/dev/docs/api/books)
+- [Internet Archive developer documentation](https://archive.org/developers/)
+- [Internet Archive terms of use](https://archive.org/about/terms.php)
 
 ## Development
 

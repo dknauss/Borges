@@ -81,6 +81,31 @@ const LABELED_ISBN_REGEX =
 const BARE_ISBN13_REGEX = /^(97[89][0-9\s-]{10,14})$/u;
 const EMBEDDED_ISBN_REGEX =
 	/\bISBN(?:-1[03])?:?\s*([0-9][0-9\s-]{8,15}[0-9X])\b/iu;
+const CATALOG_REST_ENDPOINT = '/bibliography/v1/catalog';
+const ARCHIVE_REST_ENDPOINT = '/bibliography/v1/archive';
+// Library catalog numbers must carry a label or come as a catalog URL: a bare
+// OCLC number or LCCN is indistinguishable from a PMID or any other number.
+// These patterns mirror bibliography_builder_normalize_catalog_key().
+const OCLC_INPUT_REGEX =
+	/^(?:urn:oclc:record:|\(OCoLC\)\s*|OC(?:o)?LC\s*(?:#|no\.?|number)?\s*:?\s*)(?:ocm|ocn|on)?0*([1-9]\d{0,11})$/iu;
+const WORLDCAT_URL_REGEX =
+	/^(?:https?:\/\/)?(?:www\.|search\.)?worldcat\.org\/(?:title\/(?:[^/?#\s]+\/oclc\/)?|oclc\/)0*([1-9]\d{0,11})(?:[/?#]\S*)?$/iu;
+const LCCN_INPUT_REGEX = /^LCCN\s*:?\s*(.+)$/iu;
+const LCCN_URL_REGEX =
+	/^(?:https?:\/\/)?lccn\.loc\.gov\/([a-z0-9-]+)(?:[/?#]\S*)?$/iu;
+const OPEN_LIBRARY_EDITION_REGEX =
+	/^(?:(?:https?:\/\/)?(?:www\.)?openlibrary\.org\/books\/|OLID\s*:?\s*)?(OL[1-9]\d{0,9}M)(?:[/?#]\S*)?$/iu;
+const OPEN_LIBRARY_WORK_REGEX =
+	/^(?:(?:https?:\/\/)?(?:www\.)?openlibrary\.org\/works\/|OLID\s*:?\s*)?OL[1-9]\d{0,9}W(?:[/?#]\S*)?$/iu;
+const OPEN_LIBRARY_WORK_ERROR = 'Open Library work ID';
+// Internet Archive items: an archive.org item URL, an `ia:` label, or an
+// Internet Archive ARK (name assigning authority 13960). A bare identifier is
+// never accepted: it is just a word.
+const ARCHIVE_URL_REGEX =
+	/^(?:https?:\/\/)?(?:www\.)?archive\.org\/(?:details|embed|download|stream)\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})(?:[/?#]\S*)?$/u;
+const ARCHIVE_LABEL_REGEX = /^ia:\s*([A-Za-z0-9][A-Za-z0-9._-]{0,99})$/iu;
+const ARCHIVE_ARK_REGEX =
+	/^(?:(?:https?:\/\/)?(?:n2t\.net|(?:www\.)?archive\.org(?:\/details)?)\/)?ark:\/?13960\/([a-z0-9]{1,40})\/?$/iu;
 const MAX_INPUT_SIZE = 1024 * 1024; // 1 MB
 const PARSE_CONCURRENCY = 4;
 const MAX_DOI_METADATA_CACHE_ENTRIES = 100;
@@ -441,6 +466,83 @@ function getStandaloneIsbn(value) {
 	return match ? normalizeIsbn(match[1]) : null;
 }
 
+/**
+ * Normalize an LCCN to Library of Congress's normalized form.
+ *
+ * Mirrors bibliography_builder_normalize_lccn() in includes/resolvers.php.
+ *
+ * @param {string} value Raw LCCN.
+ * @return {string|null} The normalized LCCN, or null when it is not one.
+ */
+export function normalizeLccn(value) {
+	let lccn = String(value)
+		.replace(/\s+/gu, '')
+		.toLowerCase()
+		.replace(/\/.*$/u, '');
+	const hyphenated = lccn.match(/^([a-z]{0,3}\d{2,4})-(\d{1,6})$/u);
+
+	if (hyphenated) {
+		lccn = hyphenated[1] + hyphenated[2].padStart(6, '0');
+	}
+
+	return /^[a-z]{0,3}\d{8,10}$/u.test(lccn) ? lccn : null;
+}
+
+/**
+ * Reduce a library catalog number to an Open Library Books API key.
+ *
+ * Accepts a labelled OCLC number, a WorldCat URL, a labelled LCCN, an
+ * lccn.loc.gov URL, or an Open Library edition ID or URL. Mirrors
+ * bibliography_builder_normalize_catalog_key() in includes/resolvers.php.
+ *
+ * @param {string} value Standalone identifier text.
+ * @return {string|null} `OCLC:…`, `LCCN:…`, or `OLID:…`; null when not one.
+ */
+export function getCatalogKey(value) {
+	const trimmed = String(value).trim();
+	const oclc =
+		trimmed.match(OCLC_INPUT_REGEX) || trimmed.match(WORLDCAT_URL_REGEX);
+
+	if (oclc) {
+		return `OCLC:${oclc[1]}`;
+	}
+
+	const lccnInput =
+		trimmed.match(LCCN_INPUT_REGEX) || trimmed.match(LCCN_URL_REGEX);
+
+	if (lccnInput) {
+		const lccn = normalizeLccn(lccnInput[1]);
+
+		return lccn ? `LCCN:${lccn}` : null;
+	}
+
+	const olid = trimmed.match(OPEN_LIBRARY_EDITION_REGEX);
+
+	return olid ? `OLID:${olid[1].toUpperCase()}` : null;
+}
+
+/**
+ * Extract an Internet Archive item identifier or ARK.
+ *
+ * Mirrors bibliography_builder_normalize_archive_id() in includes/resolvers.php.
+ *
+ * @param {string} value Standalone identifier text.
+ * @return {string|null} The item identifier or `ark:/13960/…`; null when not one.
+ */
+export function getArchiveId(value) {
+	const trimmed = String(value).trim();
+	const ark = trimmed.match(ARCHIVE_ARK_REGEX);
+
+	if (ark) {
+		return `ark:/13960/${ark[1].toLowerCase()}`;
+	}
+
+	const item =
+		trimmed.match(ARCHIVE_URL_REGEX) || trimmed.match(ARCHIVE_LABEL_REGEX);
+
+	return item ? item[1] : null;
+}
+
 function resolveArxivCsl(arxivId) {
 	if (typeof apiFetch !== 'function') {
 		return Promise.reject(
@@ -656,6 +758,14 @@ function detectFormat(chunk) {
 		return { format: 'isbn', value: chunk };
 	}
 
+	if (getCatalogKey(chunk) || OPEN_LIBRARY_WORK_REGEX.test(chunk)) {
+		return { format: 'catalog', value: chunk };
+	}
+
+	if (getArchiveId(chunk)) {
+		return { format: 'archive', value: chunk };
+	}
+
 	if (DOI_ONLY_REGEX.test(chunk)) {
 		return { format: 'doi', value: chunk };
 	}
@@ -686,7 +796,15 @@ function createDetectedItem(
 	};
 }
 
-const IDENTIFIER_FORMATS = ['doi', 'pmid', 'pmcid', 'arxiv', 'isbn'];
+const IDENTIFIER_FORMATS = [
+	'doi',
+	'pmid',
+	'pmcid',
+	'arxiv',
+	'isbn',
+	'catalog',
+	'archive',
+];
 
 function looksLikeStandaloneCitationLine(line) {
 	const normalizedLine = line.trim();
@@ -1044,6 +1162,60 @@ const PARSER_BACKENDS = {
 
 		return { cslItems: [await resolveArxivCsl(arxivId)] };
 	},
+	catalog: async (value) => {
+		const key = getCatalogKey(value);
+
+		if (!key) {
+			throw new Error(
+				OPEN_LIBRARY_WORK_REGEX.test(value.trim())
+					? OPEN_LIBRARY_WORK_ERROR
+					: 'Invalid library catalog number'
+			);
+		}
+
+		if (typeof apiFetch !== 'function') {
+			throw new Error(
+				'WordPress REST transport unavailable for catalog numbers'
+			);
+		}
+
+		return {
+			cslItems: [
+				await runSerially('catalog', () =>
+					apiFetch({
+						path: `${CATALOG_REST_ENDPOINT}?id=${encodeURIComponent(
+							key
+						)}`,
+					})
+				),
+			],
+		};
+	},
+	archive: async (value) => {
+		const archiveId = getArchiveId(value);
+
+		if (!archiveId) {
+			throw new Error('Invalid Internet Archive identifier');
+		}
+
+		if (typeof apiFetch !== 'function') {
+			throw new Error(
+				'WordPress REST transport unavailable for the Internet Archive'
+			);
+		}
+
+		return {
+			cslItems: [
+				await runSerially('archive', () =>
+					apiFetch({
+						path: `${ARCHIVE_REST_ENDPOINT}?id=${encodeURIComponent(
+							archiveId
+						)}`,
+					})
+				),
+			],
+		};
+	},
 	pmcid: async (value, { fetchFn } = {}) => {
 		const pmcid = normalizePmcidInput(value);
 		const csl = await resolveNcbiCsl('pmcid', pmcid, fetchFn);
@@ -1158,6 +1330,27 @@ function formatBackendParseError(format, err) {
 	if (format === 'arxiv') {
 		return __(
 			"Couldn't resolve the arXiv ID. Check it and try again.",
+			'borges-bibliography-builder'
+		);
+	}
+
+	if (format === 'catalog' && err?.message === OPEN_LIBRARY_WORK_ERROR) {
+		return __(
+			'That is an Open Library work ID, which covers every edition. Paste the edition ID (OL…M) or the book’s ISBN instead.',
+			'borges-bibliography-builder'
+		);
+	}
+
+	if (format === 'catalog') {
+		return __(
+			"Couldn't resolve the library catalog number. Check it and try again.",
+			'borges-bibliography-builder'
+		);
+	}
+
+	if (format === 'archive') {
+		return __(
+			"Couldn't resolve the Internet Archive item. Check the link and try again.",
 			'borges-bibliography-builder'
 		);
 	}

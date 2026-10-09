@@ -960,4 +960,65 @@ describe('parseFreeTextCitation', () => {
 			confidence: 'low',
 		});
 	});
+
+	describe('Chicago "Place: Publisher" publication data', () => {
+		it('splits the place from the publisher before a URL tail', () => {
+			expect(
+				parseFreeTextCitation(
+					'Illich, Ivan. Limits to Medicine. London: Boyars, 1976. https://archive.org/details/limitstomedicine00illi'
+				)?.csl
+			).toEqual({
+				type: 'book',
+				title: 'Limits to Medicine',
+				'publisher-place': 'London',
+				publisher: 'Boyars',
+				issued: { 'date-parts': [[1976]] },
+				URL: 'https://archive.org/details/limitstomedicine00illi',
+				author: [{ given: 'Ivan', family: 'Illich' }],
+			});
+		});
+
+		it('splits the place from the publisher without a URL', () => {
+			expect(
+				parseFreeTextCitation(
+					'Ostrom, Elinor. Governing the Commons. Cambridge: Cambridge University Press, 1990.'
+				)?.csl
+			).toMatchObject({
+				type: 'book',
+				'publisher-place': 'Cambridge',
+				publisher: 'Cambridge University Press',
+			});
+		});
+
+		it('splits the place from the publisher in a parenthesized note', () => {
+			expect(
+				parseFreeTextCitation(
+					'Elinor Ostrom, Governing the Commons (Cambridge: Cambridge University Press, 1990), 12.'
+				)?.csl
+			).toMatchObject({
+				'publisher-place': 'Cambridge',
+				publisher: 'Cambridge University Press',
+			});
+		});
+
+		it('keeps a publisher without a place whole', () => {
+			const csl = parseFreeTextCitation(
+				'Ostrom, Elinor. Governing the Commons. Cambridge University Press, 1990.'
+			)?.csl;
+
+			expect(csl).toMatchObject({
+				publisher: 'Cambridge University Press',
+			});
+			expect(csl).not.toHaveProperty('publisher-place');
+		});
+
+		it('keeps a place without a publisher as the place', () => {
+			const csl = parseFreeTextCitation(
+				'Melville, Herman. Moby-Dick. New York, 1851. https://example.org/moby-dick'
+			)?.csl;
+
+			expect(csl).toMatchObject({ 'publisher-place': 'New York' });
+			expect(csl).not.toHaveProperty('publisher');
+		});
+	});
 });

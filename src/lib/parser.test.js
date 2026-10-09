@@ -18,8 +18,11 @@ import apiFetch from '@wordpress/api-fetch';
 import {
 	clearDoiMetadataCache,
 	extractEmbeddedIdentifier,
+	getArchiveId,
+	getCatalogKey,
 	normalizeCrossRefCsl,
 	normalizeIsbn,
+	normalizeLccn,
 	parsePastedInput,
 	validateAndSanitizeCsl,
 } from './parser';
@@ -1057,7 +1060,7 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
+			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 		]);
 		expect(result.remainingInput).toBe(
 			'This input is not a parseable citation.'
@@ -2434,5 +2437,205 @@ describe('CSL-JSON paste', () => {
 		expect(
 			JSON.parse(result.remainingInput).map((item) => item.title)
 		).toEqual(['Page 51', 'Page 52']);
+	});
+});
+
+describe('library catalog numbers', () => {
+	const BOOK_CSL = {
+		type: 'book',
+		title: 'Limits to medicine: medical nemesis: the expropriation of health',
+		author: [{ family: 'Illich', given: 'Ivan' }],
+		publisher: 'Penguin',
+		'publisher-place': 'Harmondsworth',
+		issued: { 'date-parts': [[1977]] },
+	};
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+		apiFetch.mockResolvedValue(BOOK_CSL);
+	});
+
+	it.each([
+		['OCLC 2121853', 'OCLC:2121853'],
+		['oclc: 2121853', 'OCLC:2121853'],
+		['OCLC no. 2121853', 'OCLC:2121853'],
+		['(OCoLC)ocm02121853', 'OCLC:2121853'],
+		['urn:oclc:record:1035892241', 'OCLC:1035892241'],
+		['https://www.worldcat.org/oclc/2121853', 'OCLC:2121853'],
+		['https://search.worldcat.org/title/2121853', 'OCLC:2121853'],
+		[
+			'https://www.worldcat.org/title/limits-to-medicine/oclc/2121853',
+			'OCLC:2121853',
+		],
+		['LCCN 78-315129', 'LCCN:78315129'],
+		['LCCN: 78315129', 'LCCN:78315129'],
+		['https://lccn.loc.gov/78315129', 'LCCN:78315129'],
+		['OL4288142M', 'OLID:OL4288142M'],
+		['olid:ol4288142m', 'OLID:OL4288142M'],
+		[
+			'https://openlibrary.org/books/OL4288142M/Limits_to_medicine',
+			'OLID:OL4288142M',
+		],
+	])('reads %p as %p', (input, key) => {
+		expect(getCatalogKey(input)).toBe(key);
+	});
+
+	it.each(['2121853', 'OCLC 0', 'LCCN 12', 'OL2848897W', 'OCLC 12 and more'])(
+		'does not read %p as a catalog number',
+		(input) => {
+			expect(getCatalogKey(input)).toBeNull();
+		}
+	);
+
+	it('normalizes LCCNs the way Library of Congress does', () => {
+		expect(normalizeLccn('n 78-890351')).toBe('n78890351');
+		expect(normalizeLccn('76028766/r85')).toBe('76028766');
+		expect(normalizeLccn('12-')).toBeNull();
+	});
+
+	it('routes a catalog number to the catalog proxy', async () => {
+		const result = await parsePastedInput('LCCN 78-315129', 'apa');
+
+		expect(apiFetch).toHaveBeenCalledWith({
+			path: '/bibliography/v1/catalog?id=LCCN%3A78315129',
+		});
+		expect(result.errors).toEqual([]);
+		expect(result.entries).toHaveLength(1);
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'catalog',
+			csl: { type: 'book', publisher: 'Penguin' },
+		});
+	});
+
+	it('resolves one catalog number per line', async () => {
+		const result = await parsePastedInput(
+			'OCLC 2121853\nOL4288142M',
+			'apa'
+		);
+
+		expect(apiFetch).toHaveBeenCalledTimes(2);
+		expect(result.entries).toHaveLength(2);
+	});
+
+	it('explains that an Open Library work ID is not an edition', async () => {
+		const result = await parsePastedInput('OL2848897W', 'apa');
+
+		expect(apiFetch).not.toHaveBeenCalled();
+		expect(result.entries).toHaveLength(0);
+		expect(result.errors).toEqual([
+			'That is an Open Library work ID, which covers every edition. Paste the edition ID (OL…M) or the book’s ISBN instead.',
+		]);
+	});
+
+	it('returns a catalog error when resolution fails', async () => {
+		apiFetch.mockRejectedValue(new Error('Not found'));
+
+		const result = await parsePastedInput('OCLC 2121853', 'apa');
+
+		expect(result.errors).toEqual([
+			"Couldn't resolve the library catalog number. Check it and try again.",
+		]);
+	});
+});
+
+describe('Internet Archive items', () => {
+	const ITEM_CSL = {
+		type: 'book',
+		title: 'Limits to medicine: medical nemesis: the expropriation of health',
+		author: [{ family: 'Illich', given: 'Ivan' }],
+		URL: 'https://archive.org/details/limitstomedicine00illi',
+	};
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+		apiFetch.mockResolvedValue(ITEM_CSL);
+	});
+
+	it.each([
+		[
+			'https://archive.org/details/limitstomedicine00illi',
+			'limitstomedicine00illi',
+		],
+		[
+			'https://archive.org/details/limitstomedicine00illi/page/n5/mode/2up',
+			'limitstomedicine00illi',
+		],
+		[
+			'archive.org/details/limitstomedicine00illi',
+			'limitstomedicine00illi',
+		],
+		[
+			'https://archive.org/download/limitstomedicine00illi/limitstomedicine00illi_archive_marc.xml',
+			'limitstomedicine00illi',
+		],
+		['ia:limitstomedicine00illi', 'limitstomedicine00illi'],
+		['ark:/13960/t6k09s648', 'ark:/13960/t6k09s648'],
+		['https://n2t.net/ark:/13960/t6k09s648', 'ark:/13960/t6k09s648'],
+		[
+			'https://archive.org/details/ark:/13960/T6K09S648',
+			'ark:/13960/t6k09s648',
+		],
+	])('reads %p as %p', (input, id) => {
+		expect(getArchiveId(input)).toBe(id);
+	});
+
+	it.each([
+		'limitstomedicine00illi',
+		'https://web.archive.org/web/2020/https://example.com/',
+		'https://archive.org/details/@lotu_tii',
+		'https://notarchive.org/details/limitstomedicine00illi',
+		'ark:/12345/t6k09s648',
+	])('does not read %p as an Internet Archive item', (input) => {
+		expect(getArchiveId(input)).toBeNull();
+	});
+
+	it('routes an archive.org link to the Internet Archive proxy', async () => {
+		const result = await parsePastedInput(
+			'https://archive.org/details/limitstomedicine00illi',
+			'chicago-notes-bibliography'
+		);
+
+		expect(apiFetch).toHaveBeenCalledWith({
+			path: '/bibliography/v1/archive?id=limitstomedicine00illi',
+		});
+		expect(result.errors).toEqual([]);
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'archive',
+			csl: { URL: 'https://archive.org/details/limitstomedicine00illi' },
+		});
+	});
+
+	it('sends an ARK to the proxy encoded', async () => {
+		await parsePastedInput('ark:/13960/t6k09s648', 'apa');
+
+		expect(apiFetch).toHaveBeenCalledWith({
+			path: '/bibliography/v1/archive?id=ark%3A%2F13960%2Ft6k09s648',
+		});
+	});
+
+	it('leaves a full citation with an archive.org link to the free-text parser', async () => {
+		const result = await parsePastedInput(
+			'Illich, Ivan. Limits to Medicine. London: Boyars, 1976. https://archive.org/details/limitstomedicine00illi',
+			'chicago-notes-bibliography'
+		);
+
+		expect(apiFetch).not.toHaveBeenCalled();
+		expect(result.entries[0]).toMatchObject({
+			inputFormat: 'freetext',
+			csl: { 'publisher-place': 'London', publisher: 'Boyars' },
+		});
+	});
+
+	it('returns an Internet Archive error when resolution fails', async () => {
+		apiFetch.mockRejectedValue(new Error('Not found'));
+
+		const result = await parsePastedInput(
+			'https://archive.org/details/no-such-item-here',
+			'apa'
+		);
+
+		expect(result.errors).toEqual([
+			"Couldn't resolve the Internet Archive item. Check the link and try again.",
+		]);
 	});
 });

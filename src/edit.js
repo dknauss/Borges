@@ -546,7 +546,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							onFocus={handleInputFocus}
 							onKeyDown={handlePasteInputKeyDown}
 							placeholder={__(
-								'Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, CSL-JSON, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.',
+								'Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, OCLC/LCCN/Open Library numbers, Internet Archive links, BibTeX entries, CSL-JSON, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.',
 								'borges-bibliography-builder'
 							)}
 							rows={4}
