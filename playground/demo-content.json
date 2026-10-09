@@ -39,6 +39,15 @@
 			]
 		},
 		{
+			"title": "Library catalogs and the Internet Archive",
+			"description": "An OCLC number or LCCN needs its label (or its WorldCat or lccn.loc.gov link); an Open Library edition ID (<code>OL…M</code>) works on its own. An archive.org item link, <code>ia:</code> identifier, or ARK cites the edition the item names and keeps the archive.org page as the link. Records come from Open Library and the Internet Archive.",
+			"samples": [
+				{ "format": "catalog", "input": "OCLC 297222669" },
+				{ "format": "catalog", "input": "LCCN 76-28766" },
+				{ "format": "archive", "input": "https://archive.org/details/limitstomedicine00illi" }
+			]
+		},
+		{
 			"title": "BibTeX and BibLaTeX",
 			"description": "Whole entries, one or many. BibLaTeX fields such as <code>date</code> and <code>location</code> are understood.",
 			"samples": [
@@ -62,6 +71,10 @@
 				},
 				{
 					"format": "freetext",
+					"input": "Ostrom, Elinor. Governing the Commons. Cambridge: Cambridge University Press, 1990."
+				},
+				{
+					"format": "freetext",
 					"input": "Dittmar, Emily L., and Douglas W. Schemske. “Temporal Variation in Selection Influences Microgeographic Local Adaptation.” American Naturalist 202, no. 4 (2023): 471–85."
 				},
 				{
@@ -82,7 +95,7 @@
 	],
 	"features": [
 		"<strong>Citation Style</strong> (block sidebar): switch among Chicago, APA, MLA, Harvard, IEEE, Vancouver, OSCOLA, ABNT, and more. Generated text reformats; your manual edits are kept.",
-		"<strong>Edit an entry</strong>: select a citation and use its edit button to correct fields. <em>Reset edits</em> restores the generated text.",
+		"<strong>Edit fields</strong>: click any citation to correct its authors, title, year, DOI, and other fields; only the fields you change are saved. The pencil edits the displayed text instead, and <em>Reset edits</em> restores the generated text.",
 		"<strong>Manual Entry</strong>: next to <em>Paste / Import</em>, add a citation field by field when there is nothing to paste.",
 		"<strong>Duplicates</strong>: paste a DOI that is already in the list; it is skipped, not added twice.",
 		"<strong>Order</strong>: notes and author-date styles sort alphabetically. Numeric styles (IEEE, Vancouver) keep your order; use <em>Move citation up/down</em>.",
