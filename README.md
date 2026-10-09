@@ -94,6 +94,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.10.0** — Imports library catalog numbers (OCLC, LCCN, Open Library edition IDs) and Internet Archive items and ARKs through Open Library and the Internet Archive; "Edit fields" works on every citation and saves only the fields you change; an optional Google Books API key (constant or filter) for the ISBN fallback; "Place: Publisher" and CJK author names parse correctly.
 - **1.9.1** — Pasted CSL-JSON (a reference manager's CSL JSON export) imports as citations; a quoted title, such as a Chicago web page, is no longer also italicized; the JSON-LD DOI link keeps its slash.
 - **1.9.0** — A Heading Level setting prints the block's visible heading as a real heading (`<h2>`–`<h6>`), so the bibliography appears in the page's heading outline; the default stays a paragraph.
 - **1.8.2** — The structured edit form stores every text field as plain text, dropping markup typed or pasted into it.

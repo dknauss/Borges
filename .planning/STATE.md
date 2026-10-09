@@ -1,14 +1,16 @@
 # Project State
 
-_Last reviewed: 2026-10-07._
+_Last reviewed: 2026-10-09._
 
 ## Current Focus
 
-0. **`v1.9.1` (2026-10-07) is the current release baseline.** Version strings
+0. **`v1.10.0` (2026-10-09) is the current release baseline.** Version strings
    agree across the plugin header, `package.json`, `block.json`, and
-   `readme.txt` (`Stable tag: 1.9.1`, `Tested up to: 7.1`). Treat the live
+   `readme.txt` (`Stable tag: 1.10.0`, `Tested up to: 7.1`). Treat the live
    WordPress.org plugin page as canonical for the publicly available version.
-1. **1.9.1** imports pasted CSL-JSON and fixes quoted titles and the JSON-LD
+1. **1.10.0** imports OCLC/LCCN/Open Library and Internet Archive identifiers,
+   opens Edit fields on every citation, and adds an optional Google Books API
+   key (#128–#134). **1.9.1** imports pasted CSL-JSON and fixes quoted titles and the JSON-LD
    DOI url (#123). **1.9.0** adds a Heading Level setting for the visible heading (#121).
    **1.8.2** stores every structured-edit text field as plain text (#118).
    **1.8.1 fixed** literal HTML tags in stored citation text (#116; `<i>`/`<em>`
@@ -42,6 +44,7 @@ _Last reviewed: 2026-10-07._
    - 1.8.2 (2026-10-06) — structured-edit text fields saved as plain text.
    - 1.9.0 (2026-10-06) — Heading Level setting for the visible heading.
    - 1.9.1 (2026-10-07) — CSL-JSON paste, quoted-title italics, JSON-LD DOI url.
+   - 1.10.0 (2026-10-09) — catalog and Internet Archive import, Edit fields everywhere, Google Books key.
 3. **Active phases** are still only `05-writable-bibliography-rest` (M0–M3
    shipped in 1.7.0; M4 bulk routes and M5 write abilities remain) and
    `06-ci-optimization` (unplanned strategy sketch). Neither gates a release.
@@ -63,6 +66,7 @@ ordering. In short:
 
 ## Last Activity
 
+- 2026-10-09: Released 1.10.0 (#128–#134).
 - 2026-10-07: Released 1.9.1 (#123).
 - 2026-10-06: Released 1.9.0 (#121).
 - 2026-10-06: Released 1.8.2 (#118).

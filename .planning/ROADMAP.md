@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-10-07):** `v1.9.1` (2026-10-07).
+**Current release baseline (reconciled 2026-10-09):** `v1.10.0` (2026-10-09).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -78,6 +78,8 @@ Releases since the milestone was retired, all outside any GSD phase:
     real heading (`h2`–`h6`); the default stays a paragraph.
 -   **1.9.1** (2026-10-07) — CSL-JSON paste; quoted titles no longer also
     italicized; JSON-LD DOI url keeps its slash.
+-   **1.10.0** (2026-10-09) — OCLC/LCCN/Open Library and Internet Archive
+    import; Edit fields for every citation; optional Google Books API key.
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -299,7 +301,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.9.1`.
+1.3.x release line. The current public release baseline is now `v1.10.0`.
 
 Completed Phase 2 outcomes:
 

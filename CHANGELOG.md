@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-09
+
 ### Added
 
 - **Library catalog numbers.** Paste an OCLC number (`OCLC 4134656`, `(OCoLC)ocm04134656`, `urn:oclc:record:…`, or a WorldCat link), an LCCN (`LCCN 76-28766` or an lccn.loc.gov link; malformed LCCNs are refused rather than guessed), or an Open Library edition ID or link (`OL4288142M`) and the book is looked up through Open Library. Numbers need their label or link: a bare number could be a PMID. Open Library does not hold every OCLC number, so when it has no record Borges says so and suggests the ISBN. An Open Library work ID (`OL…W`) covers every edition, so Borges asks for the edition ID or ISBN instead.
