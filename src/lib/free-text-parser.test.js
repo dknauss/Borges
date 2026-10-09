@@ -978,6 +978,15 @@ describe('parseFreeTextCitation', () => {
 			});
 		});
 
+		it('keeps a colon that does not split as the place', () => {
+			const csl = parseFreeTextCitation(
+				'Doe, Jane. A Title. [s.l.]: 2 vols, 1990. https://example.com/a-title'
+			)?.csl;
+
+			expect(csl).toMatchObject({ 'publisher-place': '[s.l.]: 2 vols' });
+			expect(csl).not.toHaveProperty('publisher');
+		});
+
 		it('splits the place from the publisher without a URL', () => {
 			expect(
 				parseFreeTextCitation(

@@ -68,6 +68,15 @@ const BIBLIOGRAPHY_BUILDER_ARXIV_ID_PATTERN = '#^(?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[
 const BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT = 10;
 
 /**
+ * Largest upstream response body the resolvers read, in bytes. Every record
+ * they fetch is a few kilobytes; the cap keeps an unexpectedly large response
+ * (an Internet Archive item lists its files, which can run to thousands) from
+ * being buffered whole. A cut-off body fails to decode and is reported as an
+ * invalid response.
+ */
+const BIBLIOGRAPHY_BUILDER_RESOLVER_MAX_RESPONSE_BYTES = 1048576;
+
+/**
  * Cache TTL for successful PMID resolution responses.
  */
 const BIBLIOGRAPHY_BUILDER_PUBMED_SUCCESS_CACHE_TTL = 86400;
@@ -240,8 +249,9 @@ function bibliography_builder_resolve_remote_csl( $url, $cache_key, $code_prefix
 	$response = wp_safe_remote_get(
 		$url,
 		array(
-			'timeout'     => BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT,
-			'redirection' => 3,
+			'timeout'             => BIBLIOGRAPHY_BUILDER_PUBMED_TIMEOUT,
+			'redirection'         => 3,
+			'limit_response_size' => BIBLIOGRAPHY_BUILDER_RESOLVER_MAX_RESPONSE_BYTES,
 		)
 	);
 
@@ -389,7 +399,8 @@ function bibliography_builder_normalize_arxiv_id( $value ) {
  *
  * Both arXiv and Open Library give each author as one display string. Lowercase
  * particles (van, de, von, ...) stay with the family name, a trailing
- * generational suffix is kept separately, and single-word or collaboration
+ * generational suffix is kept separately, a leading honorific (Dr., Prof.)
+ * is dropped, and single-word, collaboration, CJK-script, and parenthetical
  * names become literals.
  *
  * @param string $name Author display name.
@@ -398,8 +409,19 @@ function bibliography_builder_normalize_arxiv_id( $value ) {
 function bibliography_builder_split_display_name( $name ) {
 	$name = trim( (string) preg_replace( '/\s+/u', ' ', (string) $name ) );
 
+	// A leading honorific is not part of the name ("Dr. David G. Payne").
+	// "Sir" stays: Chicago keeps it with the given name ("Scott, Sir Walter").
+	$name = trim( (string) preg_replace( '/^(?:dr|prof|mr|mrs|ms|mx|rev)\.?\s+(?=\S+\s)/iu', '', $name ) );
+
 	if ( '' === $name ) {
 		return array();
+	}
+
+	// Chinese, Japanese, and Korean names do not split into given and family
+	// at the last space, and a name with a parenthetical gloss
+	// ("孙武 (Sun Tzu)") would be cut through it; both stay whole.
+	if ( preg_match( '/[\p{Han}\p{Hiragana}\p{Katakana}\p{Hangul}()]/u', $name ) ) {
+		return array( 'literal' => $name );
 	}
 
 	$tokens = explode( ' ', $name );
@@ -694,6 +716,41 @@ function bibliography_builder_open_library_author_names( $isbn13 ) {
 }
 
 /**
+ * The first plausible publication year in a catalog date string.
+ *
+ * Catalog dates come as "1977", "October 1, 1988", "c1976", or "[1977?]";
+ * the year is found without needing a word boundary, so "c1976" works.
+ *
+ * @param string $date Date text.
+ * @return int|null The year, or null when there is none.
+ */
+function bibliography_builder_catalog_year( $date ) {
+	return preg_match( '/(?<!\d)(1\d{3}|20\d{2})(?!\d)/', (string) $date, $year ) ? (int) $year[1] : null;
+}
+
+/**
+ * Add the year and page count shared by Open Library's edition and Books API
+ * records to a CSL item.
+ *
+ * @param array $csl    CSL item.
+ * @param array $record Open Library record.
+ * @return array The CSL item.
+ */
+function bibliography_builder_open_library_common_fields( array $csl, array $record ) {
+	$year = bibliography_builder_catalog_year( isset( $record['publish_date'] ) ? $record['publish_date'] : '' );
+	if ( null !== $year ) {
+		$csl['issued'] = array( 'date-parts' => array( array( $year ) ) );
+	}
+
+	$pages = isset( $record['number_of_pages'] ) ? $record['number_of_pages'] : null;
+	if ( is_int( $pages ) && $pages > 0 ) {
+		$csl['number-of-pages'] = (string) $pages;
+	}
+
+	return $csl;
+}
+
+/**
  * Convert an Open Library edition record into a CSL-JSON book record.
  *
  * Authors are not included: edition records reference them by key only.
@@ -730,15 +787,7 @@ function bibliography_builder_open_library_edition_to_csl( $body, $isbn13 ) {
 		}
 	}
 
-	$publish_date = isset( $record['publish_date'] ) ? (string) $record['publish_date'] : '';
-	if ( preg_match( '/\b(1\d{3}|20\d{2})\b/', $publish_date, $year ) ) {
-		$csl['issued'] = array( 'date-parts' => array( array( (int) $year[1] ) ) );
-	}
-
-	$pages = isset( $record['number_of_pages'] ) ? $record['number_of_pages'] : null;
-	if ( is_int( $pages ) && $pages > 0 ) {
-		$csl['number-of-pages'] = (string) $pages;
-	}
+	$csl = bibliography_builder_open_library_common_fields( $csl, $record );
 
 	return $csl;
 }
@@ -851,8 +900,7 @@ function bibliography_builder_rest_resolve_isbn( WP_REST_Request $request ) {
 /**
  * Resolve a checksum-valid ISBN-13 to a CSL-JSON book record.
  *
- * Open Library first, Google Books as the fallback. Shared by the ISBN route
- * and the Internet Archive resolver, which prefers an item's ISBN.
+ * Open Library first, Google Books as the fallback.
  *
  * @param string $isbn13 Checksum-valid ISBN-13.
  * @return WP_REST_Response|WP_Error
@@ -983,11 +1031,12 @@ function bibliography_builder_normalize_lccn( $value ) {
 	$lccn = strtolower( (string) preg_replace( '/\s+/u', '', (string) $value ) );
 	$lccn = (string) preg_replace( '#/.*$#', '', $lccn );
 
-	if ( preg_match( '/^([a-z]{0,3}\d{2,4})-(\d{1,6})$/', $lccn, $parts ) ) {
+	if ( preg_match( '/^([a-z]{0,3}(?:\d{2}|\d{4}))-(\d{1,6})$/', $lccn, $parts ) ) {
 		$lccn = $parts[1] . str_pad( $parts[2], 6, '0', STR_PAD_LEFT );
 	}
 
-	return preg_match( '/^[a-z]{0,3}\d{8,10}$/', $lccn ) ? $lccn : '';
+	// A normalized LCCN is a two- or four-digit year plus a six-digit serial.
+	return preg_match( '/^[a-z]{0,3}(?:\d{8}|\d{10})$/', $lccn ) ? $lccn : '';
 }
 
 /**
@@ -1030,16 +1079,26 @@ function bibliography_builder_normalize_catalog_key( $value ) {
 
 /**
  * Tidy a library-catalog title: ISBD's " : " before a subtitle becomes ": ",
- * and a trailing statement of responsibility (" / by ...") or period is dropped.
+ * and trailing separators go. A final period goes too unless it ends an
+ * abbreviation ("Made in U.S.A."). A scan's title can carry its statement of
+ * responsibility (" / by ..."), which is cut only when asked: Open Library
+ * titles have none, and a slash in them is part of the title.
  *
- * @param string $title Raw title.
+ * @param string $title                 Raw title.
+ * @param bool   $strip_responsibility  Cut a trailing " / ..." statement.
  * @return string
  */
-function bibliography_builder_clean_catalog_title( $title ) {
-	$title = (string) preg_replace( '#\s+/\s+.*$#u', '', trim( (string) $title ) );
-	$title = (string) preg_replace( '/\s+:\s*/u', ': ', $title );
+function bibliography_builder_clean_catalog_title( $title, $strip_responsibility = false ) {
+	$title = trim( (string) $title );
 
-	return rtrim( $title, " .;,/:\t" );
+	if ( $strip_responsibility ) {
+		$title = (string) preg_replace( '#\s+/\s+.*$#u', '', $title );
+	}
+
+	$title = (string) preg_replace( '/\s+:\s*/u', ': ', $title );
+	$title = rtrim( $title, " ;,/:\t" );
+
+	return (string) preg_replace( '/(?<![\p{Lu}.])\.$/u', '', $title );
 }
 
 /**
@@ -1099,15 +1158,7 @@ function bibliography_builder_open_library_books_to_csl( $body, $key ) {
 		}
 	}
 
-	$publish_date = isset( $record['publish_date'] ) ? (string) $record['publish_date'] : '';
-	if ( preg_match( '/\b(1\d{3}|20\d{2})\b/', $publish_date, $year ) ) {
-		$csl['issued'] = array( 'date-parts' => array( array( (int) $year[1] ) ) );
-	}
-
-	$pages = isset( $record['number_of_pages'] ) ? $record['number_of_pages'] : null;
-	if ( is_int( $pages ) && $pages > 0 ) {
-		$csl['number-of-pages'] = (string) $pages;
-	}
+	$csl = bibliography_builder_open_library_common_fields( $csl, $record );
 
 	foreach ( array( 'isbn_13', 'isbn_10' ) as $isbn_field ) {
 		$isbn = isset( $record['identifiers'][ $isbn_field ][0] )
@@ -1262,7 +1313,11 @@ function bibliography_builder_archive_all( $metadata, $field ) {
 function bibliography_builder_archive_creator_to_name( $creator ) {
 	$name = (string) preg_replace( '/,\s*(?:(?:b|d|ca|fl)\.\s*)?\d{3,4}.*$/iu', '', trim( (string) $creator ) );
 	$name = (string) preg_replace( '/,\s*(?:author|editor|translator|illustrator|compiler)\.?$/iu', '', $name );
-	$name = trim( $name, " .,;\t" );
+	// A fuller form of the given name, "Lewis, C. S. (Clive Staples)".
+	$name = (string) preg_replace( '/\s*\([^)]*\)/u', '', $name );
+	$name = trim( $name, " ,;\t" );
+	// A heading's closing period ("Medical nemesis.") goes; an initial's stays.
+	$name = (string) preg_replace( '/(?<=\p{Ll}{2})\.$/u', '', $name );
 
 	if ( '' === $name ) {
 		return array();
@@ -1277,7 +1332,15 @@ function bibliography_builder_archive_creator_to_name( $creator ) {
 		);
 	}
 
-	return array( 'literal' => $name );
+	// An uninverted heading is usually an organization, but "Ivan Illich"
+	// is a person: two to four capitalized words with no organizational
+	// word are split as a personal name, so they match "Illich, Ivan".
+	$organization_words = 'Academy|Association|Board|Bureau|College|Committee|Company|Corporation|Council|Department|'
+		. 'Foundation|Inc|Institute|Library|Ltd|Ministry|Museum|Office|Press|Society|Studio|University';
+	$is_person          = preg_match( '/^\p{Lu}[\p{L}.\'-]*(?:\s+\p{Lu}[\p{L}.\'-]*){1,3}$/u', $name )
+		&& ! preg_match( '/\b(?:' . $organization_words . ')\b/iu', $name );
+
+	return $is_person ? bibliography_builder_split_display_name( $name ) : array( 'literal' => $name );
 }
 
 /**
@@ -1295,18 +1358,11 @@ function bibliography_builder_split_publication_statement( $statement ) {
 		return $fields;
 	}
 
-	$colon = strpos( $statement, ':' );
-
-	if ( false === $colon ) {
-		$fields['publisher'] = rtrim( $statement, " .,;\t" );
-
-		return $fields;
-	}
-
-	$places     = explode( ';', substr( $statement, 0, $colon ) );
-	$publishers = explode( ';', substr( $statement, $colon + 1 ) );
-	$place      = trim( $places[0], " .,;\t" );
-	$publisher  = trim( $publishers[0], " .,;\t" );
+	$colon      = strpos( $statement, ':' );
+	$places     = explode( ';', false === $colon ? '' : substr( $statement, 0, $colon ) );
+	$publishers = explode( ';', false === $colon ? $statement : substr( $statement, $colon + 1 ) );
+	$place      = bibliography_builder_catalog_imprint_value( $places[0] );
+	$publisher  = bibliography_builder_catalog_imprint_value( $publishers[0] );
 
 	if ( '' !== $place ) {
 		$fields['publisher-place'] = $place;
@@ -1319,6 +1375,23 @@ function bibliography_builder_split_publication_statement( $statement ) {
 }
 
 /**
+ * Clean one place or publisher from a catalog imprint.
+ *
+ * Library placeholders for an unknown place or publisher ("s.l.", "s.n.",
+ * "n.p.") are not values, and a date that trails the publisher
+ * ("Calder & Boyars, 1976") belongs to the date field.
+ *
+ * @param string $value Raw place or publisher.
+ * @return string The value, or an empty string.
+ */
+function bibliography_builder_catalog_imprint_value( $value ) {
+	$value = trim( str_replace( array( '[', ']' ), '', (string) $value ), " .,;\t" );
+	$value = trim( (string) preg_replace( '/,?\s*(?:c|©|p)?(?:1\d{3}|20\d{2})\??$/u', '', $value ), " .,;\t" );
+
+	return preg_match( '/^(?:s\.?\s*l|s\.?\s*n|n\.?\s*p|sine loco|sine nomine)\.?$/iu', $value ) ? '' : $value;
+}
+
+/**
  * Convert an Internet Archive item metadata response to a CSL record plus
  * the catalog identifiers the item lists.
  *
@@ -1326,7 +1399,7 @@ function bibliography_builder_split_publication_statement( $statement ) {
  * `lccn`), never `related-external-id` or the several `oclc-id` values, which
  * name other editions and records of the same work.
  *
- * @param string $body       JSON response body from `/metadata/<identifier>`.
+ * @param string $body       JSON response body from `/metadata/<identifier>/metadata`.
  * @param string $identifier The item identifier.
  * @return array|string|null `array( 'csl' => ..., 'ids' => ... )`, `not_found`,
  *                           or null when unusable.
@@ -1338,14 +1411,17 @@ function bibliography_builder_archive_metadata_to_record( $body, $identifier ) {
 		return null;
 	}
 
-	$metadata = isset( $decoded['metadata'] ) && is_array( $decoded['metadata'] ) ? $decoded['metadata'] : array();
+	// The metadata-only read answers {"result": {...}}; an unknown item
+	// answers {}. A collection is a list of items, not something to cite.
+	$metadata = isset( $decoded['result'] ) && is_array( $decoded['result'] ) ? $decoded['result'] : array();
 
-	if ( empty( $metadata ) ) {
+	if ( empty( $metadata ) || 'collection' === bibliography_builder_archive_first( $metadata, 'mediatype' ) ) {
 		return 'not_found';
 	}
 
 	$title = bibliography_builder_clean_catalog_title(
-		bibliography_builder_archive_first( $metadata, 'title' )
+		bibliography_builder_archive_first( $metadata, 'title' ),
+		true
 	);
 
 	if ( '' === $title ) {
@@ -1387,16 +1463,16 @@ function bibliography_builder_archive_metadata_to_record( $body, $identifier ) {
 		bibliography_builder_archive_first( $metadata, 'publisher' )
 	);
 
-	$city = bibliography_builder_archive_first( $metadata, 'city' );
+	$city = bibliography_builder_catalog_imprint_value( bibliography_builder_archive_first( $metadata, 'city' ) );
 	if ( '' !== $city ) {
-		$csl['publisher-place'] = trim( str_replace( array( '[', ']' ), '', $city ), " .,;\t" );
+		$csl['publisher-place'] = $city;
 	}
 
 	$date = bibliography_builder_archive_first( $metadata, 'date' );
 	if ( preg_match( '/^(\d{4})-(\d{2})(?:-(\d{2}))?/', $date, $parts ) ) {
 		$csl['issued'] = array( 'date-parts' => array( array_map( 'intval', array_slice( $parts, 1 ) ) ) );
-	} elseif ( preg_match( '/\b(1\d{3}|20\d{2})\b/', $date, $year ) ) {
-		$csl['issued'] = array( 'date-parts' => array( array( (int) $year[1] ) ) );
+	} elseif ( null !== bibliography_builder_catalog_year( $date ) ) {
+		$csl['issued'] = array( 'date-parts' => array( array( bibliography_builder_catalog_year( $date ) ) ) );
 	}
 
 	$edition = bibliography_builder_archive_first( $metadata, 'edition' );
@@ -1417,7 +1493,7 @@ function bibliography_builder_archive_metadata_to_record( $body, $identifier ) {
 
 		if ( '' !== $isbn13 ) {
 			$csl['ISBN'] = $isbn13;
-			$ids['isbn'] = $isbn13;
+			$ids['isbn'] = 'ISBN:' . $isbn13;
 			break;
 		}
 	}
@@ -1508,12 +1584,12 @@ function bibliography_builder_archive_identifier_for_ark( $ark ) {
  * REST callback that resolves an Internet Archive item (identifier or ARK)
  * to a CSL-JSON record.
  *
- * The item's own catalog identifiers are tried first, because Open Library's
- * edition records are cleaner than scan metadata: the Open Library edition,
- * then the ISBN, then the LCCN. The first that resolves supplies the record,
- * the scan's metadata fills any field it lacks (the edition statement, say),
- * and the URL is always the item's archive.org page. With none of them, the
- * scan's own metadata is the record.
+ * The item's most specific catalog identifier is looked up first, because
+ * Open Library's edition records are cleaner than scan metadata: its Open
+ * Library edition, else its ISBN, else its LCCN, through one Books API call.
+ * When it resolves, it supplies the record, the scan's metadata fills any
+ * field it lacks (the edition statement, say), and the URL is always the
+ * item's archive.org page. Otherwise the scan's own metadata is the record.
  *
  * @param WP_REST_Request $request REST request.
  * @return WP_REST_Response|WP_Error
@@ -1538,7 +1614,9 @@ function bibliography_builder_rest_resolve_archive( WP_REST_Request $request ) {
 	}
 
 	$item = bibliography_builder_resolve_remote_csl(
-		BIBLIOGRAPHY_BUILDER_INTERNET_ARCHIVE_HOST . '/metadata/' . rawurlencode( $identifier ),
+		// The metadata part only: the full record also lists every file in
+		// the item, which can run to thousands of entries.
+		BIBLIOGRAPHY_BUILDER_INTERNET_ARCHIVE_HOST . '/metadata/' . rawurlencode( $identifier ) . '/metadata',
 		'ia_' . md5( $identifier ),
 		'bibliography_builder_archive',
 		bibliography_builder_archive_messages(),
@@ -1555,14 +1633,16 @@ function bibliography_builder_rest_resolve_archive( WP_REST_Request $request ) {
 	$csl    = isset( $record['csl'] ) && is_array( $record['csl'] ) ? $record['csl'] : array();
 	$ids    = isset( $record['ids'] ) && is_array( $record['ids'] ) ? $record['ids'] : array();
 
+	// One catalog lookup at most, for the item's most specific identifier:
+	// an item lookup already costs up to two requests (an ARK search and the
+	// metadata), and trying identifiers in turn could chain enough slow
+	// upstream calls to outrun PHP's execution time limit.
 	foreach ( array( 'olid', 'isbn', 'lccn' ) as $source ) {
 		if ( empty( $ids[ $source ] ) ) {
 			continue;
 		}
 
-		$resolved = 'isbn' === $source
-			? bibliography_builder_resolve_isbn_csl( $ids[ $source ] )
-			: bibliography_builder_resolve_catalog_csl( $ids[ $source ] );
+		$resolved = bibliography_builder_resolve_catalog_csl( $ids[ $source ] );
 
 		if ( ! is_wp_error( $resolved ) && is_array( $resolved->get_data() ) ) {
 			$merged        = array_merge( $csl, $resolved->get_data() );
@@ -1570,6 +1650,8 @@ function bibliography_builder_rest_resolve_archive( WP_REST_Request $request ) {
 
 			return rest_ensure_response( $merged );
 		}
+
+		break;
 	}
 
 	return rest_ensure_response( $csl );

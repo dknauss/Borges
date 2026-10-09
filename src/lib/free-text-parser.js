@@ -336,6 +336,22 @@ function parseSentenceEditedBookCitation(input) {
 	};
 }
 
+/**
+ * Publication data before the year when no publisher is expected: a place,
+ * or a "Place: Publisher" pair when the colon splits as one. Text with a
+ * colon that does not split (a lowercase "[s.l.]: 2 vols") stays the place.
+ *
+ * @param {string} text Publication text.
+ * @return {Object} `publisher-place`, and `publisher` when split.
+ */
+function getPlaceFields(text) {
+	const fields = getPublisherFields(text);
+
+	return fields['publisher-place']
+		? fields
+		: { 'publisher-place': text.trim() };
+}
+
 function parseSentencePlaceYearBookCitation(input) {
 	const match = input.match(
 		/^(?<authors>.+?\b[\p{Lu}][\p{L}'’.-]+)\.\s+(?<title>.+?)\.\s+(?<place>[^,]+),\s*(?<year>\d{4})(?:\.\s+(?<trailing>.+?))?\.?$/u
@@ -359,9 +375,7 @@ function parseSentencePlaceYearBookCitation(input) {
 		csl: {
 			type: 'book',
 			title: match.groups.title.trim(),
-			...(match.groups.place.includes(':')
-				? getPublisherFields(match.groups.place)
-				: { 'publisher-place': match.groups.place.trim() }),
+			...getPlaceFields(match.groups.place),
 			issued: getIssuedYear(match.groups.year),
 			...getTrailingCslFields(match.groups.trailing),
 			author: authors,
