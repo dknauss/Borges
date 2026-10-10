@@ -198,6 +198,7 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 * **Added:** Internet Archive items. Paste an archive.org item link, `ia:<identifier>`, or an Internet Archive ARK. Borges cites the edition the item names (its Open Library edition, ISBN, or LCCN) and keeps the archive.org page as the link, or tidies the scan's own record when it names none.
 * **Added:** an optional Google Books API key for the ISBN fallback, set with the `BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY` constant or a filter, so lookups no longer depend on Google's shared anonymous quota. Borges still stores no settings.
 * **Changed:** "Edit fields" now works on every citation, not only ones typed as free text. Only the fields you change are saved; untouched DOIs, URLs, authors, and dates stay exactly as imported.
+* **Fixed:** a journal name that is part of its own DOI, such as eLife, is no longer italicized inside the DOI link, which split the link. Bibliographies saved with the broken link stay valid and are fixed the next time they are saved.
 * **Fixed:** "Place: Publisher" in pasted citations (`London: Boyars, 1976`) is split into place and publisher.
 * **Fixed:** Chinese, Japanese, and Korean author names, and names with a gloss in parentheses, are kept whole in book lookups; a leading Dr., Prof., Mr., Mrs., Ms., Mx., or Rev. is dropped.
 

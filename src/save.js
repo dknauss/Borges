@@ -23,6 +23,7 @@ export default function save({ attributes }) {
 		repeatedAuthors: true,
 		inlineMarkup: true,
 		quoteAwareItalics: true,
+		urlAwareItalics: true,
 		canonicalDoiUrl: true,
 		labels: LOCALE_INDEPENDENT_SAVE_LABELS,
 	});

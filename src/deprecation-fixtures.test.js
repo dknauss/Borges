@@ -240,6 +240,46 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 			},
 		],
 	},
+	// v11 froze save() from before 1.10.0, when the last occurrence of a
+	// journal name could be inside a URL: eLife is part of its own DOIs, so
+	// the italic landed in the DOI link and split it. FIXTURE_ATTRIBUTES have
+	// no title inside a URL, so under them it would match v00 exactly.
+	11: {
+		...FIXTURE_ATTRIBUTES,
+		citations: [
+			{
+				id: 'elife2023',
+				csl: {
+					id: 'elife2023',
+					type: 'article-journal',
+					title: 'A Study of Cell Signalling',
+					'container-title': 'eLife',
+					volume: '12',
+					page: 'e83254',
+					DOI: '10.7554/eLife.83254',
+					author: [{ family: 'Kim', given: 'Lee' }],
+					issued: { 'date-parts': [[2023]] },
+				},
+				formattedText:
+					'Kim, Lee. “A Study of Cell Signalling.” eLife 12 (2023): e83254. https://doi.org/10.7554/eLife.83254.',
+				displayOverride: null,
+			},
+			{
+				id: 'alpha2018',
+				csl: {
+					id: 'alpha2018',
+					type: 'book',
+					title: 'Alpha: an earlier work that sorts first',
+					publisher: 'Test University Press',
+					author: [{ family: 'Alpha', given: 'Ada' }],
+					issued: { 'date-parts': [[2018]] },
+				},
+				formattedText:
+					'Alpha, Ada. Alpha: an earlier work that sorts first. Test University Press, 2018.',
+				displayOverride: null,
+			},
+		],
+	},
 };
 
 function fixtureAttributes(version) {

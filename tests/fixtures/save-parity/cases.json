@@ -1869,6 +1869,43 @@
 			}
 		},
 		{
+			"name": "title-inside-url",
+			"note": "A journal name that is part of its own DOI (eLife) is italicized where it stands, never inside the DOI link, which stays whole. Also a title found only inside a URL is left alone.",
+			"attributes": {
+				"citationStyle": "chicago-notes-bibliography",
+				"headingText": "Bibliography",
+				"citations": [
+					{
+						"id": "elife",
+						"csl": {
+							"id": "elife",
+							"type": "article-journal",
+							"title": "A Study of Cell Signalling",
+							"container-title": "eLife",
+							"volume": "12",
+							"page": "e83254",
+							"DOI": "10.7554/eLife.83254",
+							"author": [{ "family": "Kim", "given": "Lee" }],
+							"issued": { "date-parts": [[2023]] }
+						},
+						"formattedText": "Kim, Lee. \u201cA Study of Cell Signalling.\u201d eLife 12 (2023): e83254. https://doi.org/10.7554/eLife.83254.",
+						"displayOverride": null
+					},
+					{
+						"id": "url-only",
+						"csl": {
+							"id": "url-only",
+							"type": "article-journal",
+							"title": "Report",
+							"container-title": "eLife"
+						},
+						"formattedText": "Moss, Ann. 2024. https://example.org/eLife/Report.",
+						"displayOverride": null
+					}
+				]
+			}
+		},
+		{
 			"name": "empty",
 			"note": "No citations: save() returns null.",
 			"attributes": {
