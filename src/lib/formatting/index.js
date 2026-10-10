@@ -281,7 +281,32 @@ function isQuotedAt(text, start, end, punctuationInsideQuotes = false) {
 	return isOpeningQuote(before) && isClosingQuote(text[closeAt]);
 }
 
-function findLastRange(text, value, ranges, punctuationInsideQuotes) {
+/**
+ * Where the text's URLs are, so a title match never lands inside a link. A
+ * journal name can be part of its own DOI (eLife's `10.7554/eLife.83254`),
+ * and italicizing it there splits the URL and breaks the link.
+ *
+ * @param {string} text Display text.
+ * @return {Array<{start: number, end: number}>} URL ranges.
+ */
+function getUrlRanges(text) {
+	return [...text.matchAll(URL_PATTERN)].map((match) => ({
+		start: match.index,
+		end: match.index + match[0].length,
+	}));
+}
+
+function overlapsAny(ranges, start, end) {
+	return ranges.some((range) => start < range.end && end > range.start);
+}
+
+function findLastRange(
+	text,
+	value,
+	ranges,
+	punctuationInsideQuotes,
+	urlRanges = []
+) {
 	let start = text.lastIndexOf(value);
 
 	while (start !== -1) {
@@ -289,7 +314,8 @@ function findLastRange(text, value, ranges, punctuationInsideQuotes) {
 
 		if (
 			!isQuotedAt(text, start, end, punctuationInsideQuotes) &&
-			!ranges.some((range) => start < range.end && end > range.start)
+			!overlapsAny(ranges, start, end) &&
+			!overlapsAny(urlRanges, start, end)
 		) {
 			return { start, end };
 		}
@@ -300,12 +326,24 @@ function findLastRange(text, value, ranges, punctuationInsideQuotes) {
 	return null;
 }
 
-function addRange(ranges, text, value, punctuationInsideQuotes = false) {
+function addRange(
+	ranges,
+	text,
+	value,
+	punctuationInsideQuotes = false,
+	urlRanges = []
+) {
 	if (!value) {
 		return;
 	}
 
-	const range = findLastRange(text, value, ranges, punctuationInsideQuotes);
+	const range = findLastRange(
+		text,
+		value,
+		ranges,
+		punctuationInsideQuotes,
+		urlRanges
+	);
 
 	if (!range) {
 		return;
@@ -390,18 +428,27 @@ function getItalicizedFields(citation) {
  * (`"Title."`); without it, only a title directly followed by the quote
  * counts as quoted, the shape save() had before 1.9.1.
  *
+ * With `urlAwareItalics`, a title is never matched inside a URL, so a journal
+ * name that is part of its own DOI (eLife) keeps its link whole; without it,
+ * the shape save() had before 1.10.0.
+ *
  * @param {Object}  citation                    Citation object.
  * @param {Object}  [options]                   Options.
  * @param {boolean} [options.inlineMarkup]      Read inline HTML in the text.
  * @param {boolean} [options.quoteAwareItalics] Skip quoted titles that end in
  *                                              punctuation.
+ * @param {boolean} [options.urlAwareItalics]   Skip title matches inside URLs.
  * @return {DisplaySegment[]} Array of text segments with italic flags.
  *
  * @since 0.1.0
  */
 export function getDisplaySegments(
 	citation,
-	{ inlineMarkup = false, quoteAwareItalics = false } = {}
+	{
+		inlineMarkup = false,
+		quoteAwareItalics = false,
+		urlAwareItalics = false,
+	} = {}
 ) {
 	const rawText = getDisplayText(citation);
 	const { text: displayText, ranges: markupRanges } = inlineMarkup
@@ -415,13 +462,15 @@ export function getDisplaySegments(
 	}
 
 	const titleRanges = [];
+	const urlRanges = urlAwareItalics ? getUrlRanges(displayText) : [];
 
 	for (const value of getItalicizedFields(citation)) {
 		addRange(
 			titleRanges,
 			displayText,
 			inlineMarkup && value ? stripInlineMarkup(value) : value,
-			quoteAwareItalics
+			quoteAwareItalics,
+			urlRanges
 		);
 	}
 

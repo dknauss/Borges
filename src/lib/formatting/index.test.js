@@ -521,3 +521,54 @@ describe('quoted titles', () => {
 		});
 	});
 });
+
+describe('titles inside URLs', () => {
+	const elife = {
+		csl: {
+			type: 'article-journal',
+			title: 'A Study of Cell Signalling',
+			'container-title': 'eLife',
+			DOI: '10.7554/eLife.83254',
+		},
+		formattedText:
+			'Kim, Lee. “A Study of Cell Signalling.” eLife 12 (2023): e83254. https://doi.org/10.7554/eLife.83254.',
+		displayOverride: null,
+	};
+	const options = { quoteAwareItalics: true, urlAwareItalics: true };
+
+	it('italicizes the journal name, not its last occurrence inside the DOI link', () => {
+		expect(getDisplaySegments(elife, options)).toEqual([
+			{ text: 'Kim, Lee. “A Study of Cell Signalling.” ', italic: false },
+			{ text: 'eLife', italic: true },
+			{
+				text: ' 12 (2023): e83254. https://doi.org/10.7554/eLife.83254.',
+				italic: false,
+			},
+		]);
+	});
+
+	it('leaves a title that only occurs inside a URL unitalicized', () => {
+		expect(
+			getDisplaySegments(
+				{
+					...elife,
+					formattedText:
+						'Kim, Lee. 2023. https://doi.org/10.7554/eLife.83254.',
+				},
+				options
+			)
+		).toEqual([
+			{
+				text: 'Kim, Lee. 2023. https://doi.org/10.7554/eLife.83254.',
+				italic: false,
+			},
+		]);
+	});
+
+	it('italicizes inside the URL as before without the option (the pre-1.10.0 shape)', () => {
+		const segments = getDisplaySegments(elife, { quoteAwareItalics: true });
+
+		expect(segments.at(-2)).toEqual({ text: 'eLife', italic: true });
+		expect(segments.at(-1)).toEqual({ text: '.83254.', italic: false });
+	});
+});

@@ -95,6 +95,7 @@ export function CitationEntryBody({
 						{getDisplaySegments(citation, {
 							inlineMarkup: true,
 							quoteAwareItalics: true,
+							urlAwareItalics: true,
 						}).map((segment, index) =>
 							segment.italic ? (
 								<i key={`${citation.id}-${index}`}>
