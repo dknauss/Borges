@@ -54,15 +54,15 @@ _Last reviewed: 2026-10-09._
 
 ## Current Priority Order
 
-See "Immediate next-task priorities (2026-09-25)" in `ROADMAP.md` for the full
+See "Immediate next-task priorities (2026-10-13)" in `ROADMAP.md` for the full
 ordering. In short:
 
 1. **CI, runtime, and Playground hygiene** (standing)
-2. **Reference-manager export corpus**: addresses the paste/import coverage gap
-3. ~~**Extract the resolvers**~~: done, unreleased (`includes/resolvers.php`)
-4. ~~**Phase 05 M0–M3**~~: shipped in 1.7.0; next are M5 write abilities
-   and M4 bulk routes (needs a rate-limiting design)
-5. **First-wave official language packs**
+2. **Phase 05 M5 write abilities**: unblocked since M0–M3 shipped in 1.7.0
+3. **Reference-manager export corpus**: needs real exports from the owner
+4. **Sort-conformance backlog**: locale and suffix items deferred in the plan
+5. **Phase 05 M4 bulk routes**: needs a rate-limiting design first
+6. **First-wave official language packs**
 
 ## Last Activity
 
