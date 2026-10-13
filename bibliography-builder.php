@@ -3,7 +3,7 @@
  * Plugin Name:       Borges Bibliography Builder
  * Plugin URI:        https://github.com/dknauss/Borges/
  * Description:       Create accessible bibliographies from DOI, PubMed, BibTeX, CSL-JSON, and free text; export RIS.
- * Version:           1.9.0
+ * Version:           1.10.0
  * Requires at least: 6.4
  * Tested up to:      7.1
  * Requires PHP:      7.4
@@ -1559,6 +1559,23 @@ function bibliography_builder_rest_isbn_permissions_check() {
 }
 
 /**
+ * Permission callback for editor-only Internet Archive resolver requests.
+ *
+ * @return true|WP_Error
+ */
+function bibliography_builder_rest_archive_permissions_check() {
+	if ( current_user_can( 'edit_posts' ) ) {
+		return true;
+	}
+
+	return new WP_Error(
+		'bibliography_builder_archive_forbidden',
+		__( 'Sorry, you are not allowed to resolve Internet Archive citations.', 'borges-bibliography-builder' ),
+		array( 'status' => 403 )
+	);
+}
+
+/**
  * Read JSON/body params from a REST request.
  *
  * @param WP_REST_Request $request REST request.
@@ -1908,6 +1925,55 @@ function bibliography_builder_register_rest_routes() {
 			),
 		)
 	);
+
+	// Catalog and Internet Archive resolvers, registered last so the earlier
+	// route indices stay stable. Their identifiers travel as query arguments:
+	// LCCNs and ARKs can contain characters a path segment would not carry cleanly.
+	register_rest_route(
+		'bibliography/v1',
+		'/catalog',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'bibliography_builder_rest_resolve_catalog',
+			'permission_callback' => 'bibliography_builder_rest_isbn_permissions_check',
+			'args'                => array(
+				'id' => array(
+					'description'       => __(
+						'OCLC:, LCCN:, or OLID: (Open Library edition) key to resolve to CSL-JSON.',
+						'borges-bibliography-builder'
+					),
+					'type'              => 'string',
+					'required'          => true,
+					'validate_callback' => static function ( $value ) {
+						return '' !== bibliography_builder_normalize_catalog_key( $value );
+					},
+				),
+			),
+		)
+	);
+
+	register_rest_route(
+		'bibliography/v1',
+		'/archive',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'bibliography_builder_rest_resolve_archive',
+			'permission_callback' => 'bibliography_builder_rest_archive_permissions_check',
+			'args'                => array(
+				'id' => array(
+					'description'       => __(
+						'Internet Archive item identifier or ARK (ark:/13960/...) to resolve to CSL-JSON.',
+						'borges-bibliography-builder'
+					),
+					'type'              => 'string',
+					'required'          => true,
+					'validate_callback' => static function ( $value ) {
+						return '' !== bibliography_builder_normalize_archive_id( $value );
+					},
+				),
+			),
+		)
+	);
 }
 
 
@@ -1970,6 +2036,7 @@ add_action( 'init', 'bibliography_builder_block_init' );
 add_action( 'rest_api_init', 'bibliography_builder_register_rest_routes' );
 
 // Read-only Abilities API integration (WordPress 6.9+; inert on older versions).
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/google-books-key.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/resolvers.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/abilities.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/review.php';

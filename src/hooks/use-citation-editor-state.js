@@ -25,6 +25,15 @@ const FORMATTER_FALLBACK_MESSAGE = __(
 	'borges-bibliography-builder'
 );
 
+function getFieldsSavedMessage(replacedOverride) {
+	return replacedOverride
+		? __(
+				'Fields updated. The edited display text was replaced with the reformatted citation.',
+				'borges-bibliography-builder'
+		  )
+		: __('Fields updated.', 'borges-bibliography-builder');
+}
+
 function formatNameForField(name) {
 	if (!name) {
 		return '';
@@ -81,10 +90,33 @@ function parseAuthorFieldEntry(value) {
 	};
 }
 
-function parseAuthorFieldList(value) {
+/**
+ * Parse the Author(s) field back into CSL names.
+ *
+ * A name whose text is unchanged keeps its original CSL object, so editing
+ * one author does not re-parse the others: an organization stays a literal,
+ * and a suffix or particle the field does not show survives.
+ *
+ * @param {string} value     Field text, names separated by semicolons.
+ * @param {Array}  originals The citation's CSL names before the edit.
+ * @return {Array} CSL names.
+ */
+function parseAuthorFieldList(value, originals = []) {
+	const unused = [...originals];
+	const comparable = (text) => text.trim().replace(/[.;]\s*$/u, '');
+
 	return value
 		.split(/\s*;\s*/u)
-		.map(parseAuthorFieldEntry)
+		.map((entry) => {
+			const index = unused.findIndex(
+				(name) =>
+					comparable(formatNameForField(name)) === comparable(entry)
+			);
+
+			return index === -1
+				? parseAuthorFieldEntry(entry)
+				: unused.splice(index, 1)[0];
+		})
 		.filter(Boolean);
 }
 
@@ -106,6 +138,8 @@ export function useCitationEditorState({
 	const [structuredFields, setStructuredFields] = useState({});
 	const isEscapingEditRef = useRef(false);
 	const structuredEditingIdRef = useRef(null);
+	// The fields as the form opened, so a save writes only what was edited.
+	const structuredInitialFieldsRef = useRef({});
 
 	const getEntryLabel = useCallback((citation) => {
 		const author = citation.csl.author?.[0];
@@ -227,9 +261,7 @@ export function useCitationEditorState({
 				return;
 			}
 
-			structuredEditingIdRef.current = id;
-			setStructuredEditingId(id);
-			setStructuredFields({
+			const fields = {
 				authors: formatAuthorListForField(entry.csl.author),
 				title: entry.csl.title || '',
 				containerTitle: entry.csl['container-title'] || '',
@@ -246,7 +278,12 @@ export function useCitationEditorState({
 						: '',
 				doi: entry.csl.DOI || '',
 				url: entry.csl.URL || '',
-			});
+			};
+
+			structuredEditingIdRef.current = id;
+			structuredInitialFieldsRef.current = fields;
+			setStructuredEditingId(id);
+			setStructuredFields(fields);
 			announce(
 				'info',
 				__(
@@ -292,11 +329,41 @@ export function useCitationEditorState({
 			return;
 		}
 
-		const identifierValidationMessage =
-			validateIdentifierFields(structuredFields);
+		// Only fields that differ from the form as it opened are written: an
+		// imported record keeps every value the user did not touch, exactly as
+		// imported (identifiers are not re-normalized, dates and names not
+		// rebuilt). A text field that loaded with markup still counts as
+		// edited, so it is cleaned on save (see fieldText below).
+		const initialFields = structuredInitialFieldsRef.current || {};
+		const isEdited = (field) =>
+			String(structuredFields[field] ?? '') !==
+			String(initialFields[field] ?? '');
+
+		const identifierValidationMessage = validateIdentifierFields({
+			doi: isEdited('doi') ? structuredFields.doi : '',
+			url: isEdited('url') ? structuredFields.url : '',
+		});
 
 		if (identifierValidationMessage) {
 			announce('warning', identifierValidationMessage);
+			queueFocus({ type: 'notice' });
+			return;
+		}
+
+		// "n.d." (or "no date") clears the date, as an empty field does.
+		const yearText = String(structuredFields.year ?? '').trim();
+		const year = /^(?:n\.?\s*d\.?|no date)$/iu.test(yearText)
+			? ''
+			: yearText;
+
+		if (isEdited('year') && year && !/^\d{1,4}$/u.test(year)) {
+			announce(
+				'warning',
+				__(
+					'Enter the year as a number, such as 1977, or leave it empty.',
+					'borges-bibliography-builder'
+				)
+			);
 			queueFocus({ type: 'notice' });
 			return;
 		}
@@ -309,80 +376,97 @@ export function useCitationEditorState({
 		// cleaned on save as well.
 		const fieldText = (field) =>
 			stripHtmlTags(String(structuredFields[field] ?? '')).trim();
-		const title = fieldText('title');
-		const authors = fieldText('authors');
-		const containerTitle = fieldText('containerTitle');
-		const publisher = fieldText('publisher');
-		const page = fieldText('page');
+		const needsWrite = (field) =>
+			isEdited(field) ||
+			fieldText(field) !== String(initialFields[field] ?? '').trim();
 
-		const updatedCsl = {
-			...citation.csl,
-			title: title || citation.csl.title,
-		};
+		const updatedCsl = { ...citation.csl };
+		const textFields = [
+			['title', 'title'],
+			['containerTitle', 'container-title'],
+			['publisher', 'publisher'],
+			['page', 'page'],
+		];
 
-		if (authors) {
-			updatedCsl.author = parseAuthorFieldList(authors);
-		} else {
-			delete updatedCsl.author;
+		for (const [field, cslKey] of textFields) {
+			if (!needsWrite(field)) {
+				continue;
+			}
+
+			const text = fieldText(field);
+
+			if (text) {
+				updatedCsl[cslKey] = text;
+			} else if (cslKey !== 'title') {
+				delete updatedCsl[cslKey];
+			}
 		}
 
-		if (containerTitle) {
-			updatedCsl['container-title'] = containerTitle;
-		} else {
-			delete updatedCsl['container-title'];
-		}
+		if (needsWrite('authors')) {
+			const authors = fieldText('authors');
 
-		if (publisher) {
-			updatedCsl.publisher = publisher;
-		} else {
-			delete updatedCsl.publisher;
-		}
-
-		if (page) {
-			updatedCsl.page = page;
-		} else {
-			delete updatedCsl.page;
+			if (authors) {
+				updatedCsl.author = parseAuthorFieldList(
+					authors,
+					citation.csl.author
+				);
+			} else {
+				delete updatedCsl.author;
+			}
 		}
 
 		// A journal's article number (CSL `number`) has its own field; other
 		// types keep whatever `number` they carry.
-		if (citation.csl.type === 'article-journal') {
+		if (
+			citation.csl.type === 'article-journal' &&
+			isEdited('articleNumber')
+		) {
 			const articleNumber = fieldText('articleNumber');
-			const original = citation.csl.number;
 
-			if (String(original ?? '').trim() !== articleNumber) {
-				if (articleNumber) {
-					updatedCsl.number = articleNumber;
-				} else {
-					delete updatedCsl.number;
-				}
-				// CrossRef's own copy, kept from a DOI import, would now
-				// contradict `number` in the CSL-JSON output.
-				delete updatedCsl['article-number'];
+			if (articleNumber) {
+				updatedCsl.number = articleNumber;
+			} else {
+				delete updatedCsl.number;
 			}
-			// Otherwise unchanged: the original value, numeric or not, stays.
+			// CrossRef's own copy, kept from a DOI import, would now
+			// contradict `number` in the CSL-JSON output.
+			delete updatedCsl['article-number'];
 		}
 
-		const normalizedDoi = normalizeDoiValue(structuredFields.doi);
-		if (normalizedDoi) {
-			updatedCsl.DOI = normalizedDoi;
-		} else {
-			delete updatedCsl.DOI;
+		if (isEdited('doi')) {
+			const normalizedDoi = normalizeDoiValue(structuredFields.doi);
+
+			if (normalizedDoi) {
+				updatedCsl.DOI = normalizedDoi;
+			} else {
+				delete updatedCsl.DOI;
+			}
 		}
 
-		const normalizedUrl = normalizeUrlValue(structuredFields.url);
-		if (normalizedUrl) {
-			updatedCsl.URL = normalizedUrl;
-		} else {
-			delete updatedCsl.URL;
+		if (isEdited('url')) {
+			const normalizedUrl = normalizeUrlValue(structuredFields.url);
+
+			if (normalizedUrl) {
+				updatedCsl.URL = normalizedUrl;
+			} else {
+				delete updatedCsl.URL;
+			}
 		}
 
-		if (structuredFields.year && /^\d{4}$/u.test(structuredFields.year)) {
-			updatedCsl.issued = {
-				'date-parts': [[Number(structuredFields.year)]],
-			};
-		} else {
-			delete updatedCsl.issued;
+		// A corrected year keeps the rest of the date (month, day): only the
+		// year part changes. A cleared year removes the date.
+		if (isEdited('year')) {
+			const originalParts = citation.csl.issued?.['date-parts']?.[0];
+
+			if (!year) {
+				delete updatedCsl.issued;
+			} else if (Array.isArray(originalParts) && originalParts.length) {
+				updatedCsl.issued = {
+					'date-parts': [[Number(year), ...originalParts.slice(1)]],
+				};
+			} else {
+				updatedCsl.issued = { 'date-parts': [[Number(year)]] };
+			}
 		}
 
 		const { formatBibliographyEntries } = await import(
@@ -407,13 +491,20 @@ export function useCitationEditorState({
 			return;
 		}
 
+		// Saving unchanged fields keeps a hand-edited display line; saving an
+		// edit reformats the entry from its fields, replacing that line.
+		const fieldsChanged = Object.keys(structuredFields).some(needsWrite);
+		const replacedOverride =
+			fieldsChanged && Boolean(citation.displayOverride);
 		const nextEntries = citationsRef.current.map((entry) =>
 			entry.id === activeStructuredEditingId
 				? {
 						...entry,
 						csl: updatedCsl,
-						displayOverride: null,
-						parseWarnings: [],
+						displayOverride: fieldsChanged
+							? null
+							: entry.displayOverride,
+						parseWarnings: fieldsChanged ? [] : entry.parseWarnings,
 				  }
 				: entry
 		);
@@ -493,7 +584,7 @@ export function useCitationEditorState({
 						__('Fields updated. %s', 'borges-bibliography-builder'),
 						FORMATTER_FALLBACK_MESSAGE
 				  )
-				: __('Fields updated.', 'borges-bibliography-builder'),
+				: getFieldsSavedMessage(replacedOverride),
 			formatterFallback ? {} : { type: 'snackbar' }
 		);
 		queueFocus(

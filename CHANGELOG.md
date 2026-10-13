@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-09
+
+### Added
+
+- **Library catalog numbers.** Paste an OCLC number (`OCLC 4134656`, `(OCoLC)ocm04134656`, `urn:oclc:record:…`, or a WorldCat link), an LCCN (`LCCN 76-28766` or an lccn.loc.gov link; malformed LCCNs are refused rather than guessed), or an Open Library edition ID or link (`OL4288142M`) and the book is looked up through Open Library. Numbers need their label or link: a bare number could be a PMID. Open Library does not hold every OCLC number, so when it has no record Borges says so and suggests the ISBN. An Open Library work ID (`OL…W`) covers every edition, so Borges asks for the edition ID or ISBN instead.
+- **Internet Archive items.** Paste an archive.org item link, `ia:<identifier>`, or an Internet Archive ARK (`ark:/13960/…`). Borges reads the item's record and, when it names its Open Library edition, ISBN, or LCCN, cites that edition, keeping the archive.org page as the link. Otherwise it cites the scan's own record, tidied: library punctuation in the title, life dates in author names (`Illich, Ivan, 1926-2002` becomes Ivan Illich), and `Harmondsworth ; New York : Penguin` split into place and publisher, with placeholders such as `[S.l.] : [s.n.]` and trailing years dropped. Only the first of those catalog IDs is tried, and the many OCLC numbers an item lists for other editions are ignored. Item records and catalog responses are capped at 1 MB.
+- **Optional Google Books API key.** ISBN lookups fall back to Google Books when Open Library has no record, and without a key they share Google's anonymous daily quota, which runs out. Define your own key as `BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY` in `wp-config.php`, or supply it with the `bibliography_builder_google_books_api_key` filter. The key is sent only to Google Books and never to the browser. Borges still stores no settings.
+
+### Fixed
+
+- **Journal names inside DOI links.** A citation's journal name was italicized at its last occurrence in the text, and for a journal whose name is part of its own DOIs, such as eLife (`10.7554/eLife.83254`), that occurrence was inside the DOI link: the italics split the URL and the link pointed to `https://doi.org/10.7554/`. Titles are now never matched inside a URL. Bibliographies saved with the broken link stay valid and are fixed the next time they are saved.
+- **Author names from book lookups.** A Chinese, Japanese, or Korean name, or one with a gloss in parentheses, is kept whole instead of being cut at the last space ("孙武 (Sun Tzu)" no longer becomes family name "Tzu)"), and a leading Dr., Prof., Mr., Mrs., Ms., Mx., or Rev. is dropped. This applies to ISBN, library catalog, and arXiv lookups. "Sir" stays, as Chicago keeps it ("Scott, Sir Walter").
+- **"Place: Publisher" in pasted citations.** `London: Boyars, 1976` is now split into the place (London) and the publisher (Boyars). It used to be stored whole, as the place when a link followed and as the publisher otherwise. Text whose colon doesn't split that way (`[s.l.]: 2 vols`) still stays the place.
+
+### Changed
+
+- **Edit fields for every citation.** The per-field form (authors, title, container, publisher, year, pages, DOI, URL) used to open only for free-text pastes and entries with a parse warning; DOI, PubMed, ISBN, catalog, Internet Archive, BibTeX, and CSL-JSON imports, and even manual entries, could only have their displayed line overwritten, which left exports, JSON-LD, and COinS with the old data. Now every entry has **Edit fields**, and clicking an entry opens it. **Edit citation** still overrides the displayed line, and **Reset edits** now appears whenever a line has been overridden. Saving the form writes only the fields you changed: everything else, including fields the form does not show (volume, issue, edition, place, ISBN, editors), stays exactly as imported, so an untouched DOI or a URL ending in a parenthesis is not rewritten, and a full publication date survives an edit to the title. Editing one author keeps the others as they were (an organization stays an organization, "Jr." stays). Correcting the year keeps the month and day; "n.d." clears the date, and a year that is not a number is refused with a message instead of silently dropping the date. Saving the form without changes keeps a hand-edited display line; saving an edit replaces it and says so.
+- **The paste box names every format it reads.** Its placeholder and the instructions under the citation form (also the "couldn't read this" warning) now list CSL-JSON, library catalog numbers, and Internet Archive links alongside DOI, PMID, PMCID, arXiv ID, ISBN, and BibTeX; the LaTeX warning lists CSL-JSON too.
+
+## [1.9.1] - 2026-10-07
+
 ### Added
 
 - **CSL-JSON paste.** Pasting a CSL-JSON array, or a single CSL-JSON item, now imports each item as a citation, as the readme and plugin description already said it would. That covers a reference manager's "CSL JSON" export and Borges's own CSL-JSON download. Each item is checked and cleaned like every other import; an item that is not a valid citation is skipped, named by its position, and left in the paste box to correct, and items already in the bibliography by DOI are skipped. JSON that is not CSL-JSON at all now gets its own message instead of the generic help text.

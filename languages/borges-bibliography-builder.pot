@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Borges Bibliography Builder 1.9.0\n"
+"Project-Id-Version: Borges Bibliography Builder 1.10.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/borges-bibliography-builder\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -362,7 +362,7 @@ msgstr ""
 #. translators: %s: citation label.
 #: src/components/citation-entry-body.js:90
 #, js-format
-msgid "Edit %s"
+msgid "Edit fields: %s"
 msgstr ""
 
 #. translators: %s: citation label.
@@ -512,7 +512,7 @@ msgid "Citation removed. %s"
 msgstr ""
 
 #: src/edit.js:550
-msgid "Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, BibTeX entries, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
+msgid "Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, OCLC/LCCN/Open Library numbers, Internet Archive links, BibTeX entries, CSL-JSON, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line."
 msgstr ""
 
 #: src/edit.js:566
@@ -865,7 +865,7 @@ msgid "This bibliography has %1$d citations — above the %2$d-entry threshold. 
 msgstr ""
 
 #: src/lib/input-support.js:3
-msgid "Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line."
+msgid "Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line."
 msgstr ""
 
 #: src/lib/manual-entry.js:7
@@ -913,7 +913,7 @@ msgid "Fetch API unavailable for PMID resolution"
 msgstr ""
 
 #: src/lib/parser.js:854
-msgid "This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, or supported citation instead."
+msgid "This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation instead."
 msgstr ""
 
 #: src/lib/parser.js:869
@@ -1028,4 +1028,64 @@ msgstr ""
 #: block.json
 msgctxt "block keyword"
 msgid "scholarly"
+msgstr ""
+
+#: includes/resolvers.php
+msgid "The library catalog number could not be resolved."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "Invalid library catalog number."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "Invalid Internet Archive identifier."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "The Internet Archive could not be reached."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "The Internet Archive item could not be found."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "The Internet Archive returned an error."
+msgstr ""
+
+#: includes/resolvers.php
+msgid "The Internet Archive returned an invalid response."
+msgstr ""
+
+#: bibliography-builder.php
+msgid "Sorry, you are not allowed to resolve Internet Archive citations."
+msgstr ""
+
+#: bibliography-builder.php
+msgid "OCLC:, LCCN:, or OLID: (Open Library edition) key to resolve to CSL-JSON."
+msgstr ""
+
+#: bibliography-builder.php
+msgid "Internet Archive item identifier or ARK (ark:/13960/...) to resolve to CSL-JSON."
+msgstr ""
+
+#: src/lib/parser.js
+msgid "That is an Open Library work ID, which covers every edition. Paste the edition ID (OL…M) or the book’s ISBN instead."
+msgstr ""
+
+#: src/lib/parser.js
+msgid "Open Library has no record for that catalog number. Check it, or paste the book’s ISBN instead."
+msgstr ""
+
+#: src/lib/parser.js
+msgid "Couldn't resolve the Internet Archive item. Check the link and try again."
+msgstr ""
+
+#: src/hooks/use-citation-editor-state.js
+msgid "Enter the year as a number, such as 1977, or leave it empty."
+msgstr ""
+
+#: src/hooks/use-citation-editor-state.js
+msgid "Fields updated. The edited display text was replaced with the reformatted citation."
 msgstr ""

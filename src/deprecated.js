@@ -123,6 +123,24 @@ function migrateSortedAttributes(attributes) {
 
 export const deprecated = [
 	{
+		// Freezes the save() shape from before 1.10.0: a title could be
+		// italicized inside a URL when the journal name is part of its own DOI
+		// (eLife's 10.7554/eLife.83254), which split the link.
+		attributes: deprecatedAttributes,
+		save: ({ attributes }) =>
+			renderBibliographySave(attributes, {
+				sortEntries: true,
+				headingTag: getHeadingTag(attributes.headingLevel),
+				entryTag: 'cite',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				inlineMarkup: true,
+				quoteAwareItalics: true,
+				canonicalDoiUrl: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			}),
+	},
+	{
 		// Freezes the save() shape from before 1.9.1: a quoted title with
 		// punctuation inside the closing quote (Chicago's `"Title."`) was also
 		// italicized, and the JSON-LD url encoded the DOI's slash.

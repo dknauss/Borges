@@ -60,6 +60,7 @@ export function renderBibliographySave(
 		repeatedAuthors = false,
 		inlineMarkup = false,
 		quoteAwareItalics = false,
+		urlAwareItalics = false,
 		canonicalDoiUrl = false,
 		labels: labelOverrides = null,
 	} = {}
@@ -114,6 +115,7 @@ export function renderBibliographySave(
 					const displaySegments = getDisplaySegments(citation, {
 						inlineMarkup,
 						quoteAwareItalics,
+						urlAwareItalics,
 					});
 					const repeatedPrefix =
 						repeatedAuthorPrefixes[citationIndex] || null;

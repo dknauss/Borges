@@ -94,6 +94,8 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.10.0** — Imports library catalog numbers (OCLC, LCCN, Open Library edition IDs) and Internet Archive items and ARKs through Open Library and the Internet Archive; "Edit fields" works on every citation and saves only the fields you change; an optional Google Books API key (constant or filter) for the ISBN fallback; "Place: Publisher" and CJK author names parse correctly.
+- **1.9.1** — Pasted CSL-JSON (a reference manager's CSL JSON export) imports as citations; a quoted title, such as a Chicago web page, is no longer also italicized; the JSON-LD DOI link keeps its slash.
 - **1.9.0** — A Heading Level setting prints the block's visible heading as a real heading (`<h2>`–`<h6>`), so the bibliography appears in the page's heading outline; the default stays a paragraph.
 - **1.8.2** — The structured edit form stores every text field as plain text, dropping markup typed or pasted into it.
 - **1.8.1** — Renders `<i>`/`<em>` in stored citation text as italics and drops other tags instead of printing them; GitHub Releases now open with the version's CHANGELOG section.
@@ -113,7 +115,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 - **Multiple input paths** — Add bare DOIs, DOI URLs, PubMed/PMID and PubMed Central/PMCID records, arXiv IDs and links, ISBNs, BibTeX and BibLaTeX entries, and supported formatted citations.
 - **Nine citation styles** — Chicago Notes-Bibliography by default, with Chicago Author-Date, APA 7, Harvard, Vancouver, IEEE, MLA 9, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) selectable, each following its manual's current edition (see [docs/csl-styles.md](./docs/csl-styles.md)).
-- **Structured editing** — Plain-text editing plus per-field editing for heuristic or warning-marked citations.
+- **Structured editing** — Per-field editing for every citation, whatever its source, plus a plain-text override for the displayed line.
 - **Semantic output** — `role="doc-bibliography"`, `<cite>` wrappers, `lang` attributes, and hanging-indent styling without deprecated bibliography-entry ARIA roles.
 - **JSON-LD** — Schema.org structured data for search engines, AI systems, and semantic consumers (on by default).
 - **COinS** — Optional OpenURL spans for browser-based citation manager detection, especially Zotero and legacy OpenURL workflows.
@@ -239,7 +241,11 @@ The editor-only PubMed Central resolver accepts `GET /wp-json/bibliography/v1/pm
 
 The editor-only arXiv resolver accepts `GET /wp-json/bibliography/v1/arxiv?id=<arxiv-id>` (modern or legacy IDs, optional version), requires `edit_posts`, validates the ID pattern before any outbound request, queries the fixed arXiv API, and returns a CSL-JSON preprint record. It is used for pasted `arXiv:` IDs, arxiv.org links, and arXiv DOIs.
 
-The editor-only ISBN resolver accepts `GET /wp-json/bibliography/v1/isbn/<isbn>` (ISBN-10 or ISBN-13, no hyphens), requires `edit_posts`, verifies the checksum before any outbound request, queries Open Library's fixed ISBN edition and search endpoints with a fixed Google Books fallback, and returns a CSL-JSON book record. It is used for pasted `ISBN` labels and bare 978/979 ISBN-13s.
+The editor-only ISBN resolver accepts `GET /wp-json/bibliography/v1/isbn/<isbn>` (ISBN-10 or ISBN-13, no hyphens), requires `edit_posts`, verifies the checksum before any outbound request, queries Open Library's fixed ISBN edition and search endpoints with a fixed Google Books fallback, and returns a CSL-JSON book record. The Google Books request carries the site's API key when one is set (the `BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY` constant in `wp-config.php`, or the `bibliography_builder_google_books_api_key` filter); without one it uses Google's shared anonymous quota. It is used for pasted `ISBN` labels and bare 978/979 ISBN-13s.
+
+The editor-only library catalog resolver accepts `GET /wp-json/bibliography/v1/catalog?id=<key>`, where the key is `OCLC:<number>`, `LCCN:<normalized lccn>`, or `OLID:OL<digits>M`, requires `edit_posts`, validates the key before any outbound request, queries Open Library's fixed Books API, and returns a CSL-JSON book record. It is used for labelled OCLC numbers (`OCLC 4134656`, `(OCoLC)ocm04134656`, `urn:oclc:record:…`, WorldCat links), labelled LCCNs and lccn.loc.gov links, and Open Library edition IDs and links. An Open Library work ID (`OL…W`) is refused with a message asking for the edition.
+
+The editor-only Internet Archive resolver accepts `GET /wp-json/bibliography/v1/archive?id=<identifier or ark:/13960/…>`, requires `edit_posts`, validates the identifier before any outbound request, and reads the item's metadata from the fixed Internet Archive host. If the item lists its Open Library edition, ISBN, or LCCN, that edition record is used (tried in that order); otherwise the scan's own metadata is mapped, with library headings tidied (life dates dropped from creators, ISBD `Place : Publisher` split). The citation URL is always the item's archive.org page. It is used for archive.org item links, `ia:` identifiers, and Internet Archive ARKs.
 
 ## WordPress Abilities
 
@@ -258,7 +264,7 @@ On WordPress 6.9 and later, Borges registers six read-only abilities with the co
 
 ## External Services
 
-This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for any of the supported DOI, PMID, PMCID, arXiv, or ISBN lookups.
+This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for any of the supported DOI, PMID, PMCID, arXiv, ISBN, library catalog, or Internet Archive lookups.
 
 ### DOI metadata
 
@@ -295,6 +301,14 @@ ISBN input connects through the plugin's authenticated WordPress REST proxy to [
 - [Google Books APIs](https://developers.google.com/books)
 - [Google APIs Terms of Service](https://developers.google.com/terms)
 - [Google Privacy Policy](https://policies.google.com/privacy)
+
+### Library catalog numbers and Internet Archive items
+
+OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's authenticated WordPress REST proxy to [Open Library's Books API](https://openlibrary.org/dev/docs/api/books) (`openlibrary.org/api/books`). Internet Archive item links, `ia:` identifiers, and Internet Archive ARKs connect to the Internet Archive's item metadata API (`archive.org/metadata/<identifier>`); an ARK is first matched to its item through the Internet Archive's advanced search (`archive.org/advancedsearch.php`). When the item lists its Open Library edition, ISBN, or LCCN, that identifier is then looked up through Open Library (with the Google Books fallback for an ISBN). All upstream hosts are fixed, and each identifier is validated before any outbound request. Only the identifier is sent.
+
+- [Open Library Books API](https://openlibrary.org/dev/docs/api/books)
+- [Internet Archive developer documentation](https://archive.org/developers/)
+- [Internet Archive terms of use](https://archive.org/about/terms.php)
 
 ## Development
 

@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.9.0
+Stable tag: 1.10.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -52,7 +52,7 @@ The package includes seed PO/MO files for translator review and import in French
 
 = What citation input formats does the Borges Bibliography Builder support? =
 
-Bare DOIs, DOI URLs, PubMed/PMID identifiers, PubMed Central PMCIDs, arXiv IDs and links, ISBNs, BibTeX and BibLaTeX, CSL-JSON, manual citation entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. Free-text citations that include an inline DOI or labeled PMID are routed through the DOI/PubMed resolvers before falling back to the heuristic parser. RIS is supported as an export format, not as an import format. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
+Bare DOIs, DOI URLs, PubMed/PMID identifiers, PubMed Central PMCIDs, arXiv IDs and links, ISBNs, OCLC numbers, LCCNs, Open Library edition IDs, Internet Archive item links and ARKs, BibTeX and BibLaTeX, CSL-JSON, manual citation entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. Free-text citations that include an inline DOI or labeled PMID are routed through the DOI/PubMed resolvers before falling back to the heuristic parser. RIS is supported as an export format, not as an import format. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
 
 = Does the ABNT style implement NBR 6023:2025? =
 
@@ -65,6 +65,14 @@ Your bibliographies remain fully readable. The block uses static HTML output, so
 = What happens if I delete the Borges Bibliography Builder? =
 
 Your bibliographies stay in your posts — they are saved as static HTML, not in a database table the plugin owns. When you delete the plugin, Borges removes only its own cached lookup data (transient and object-cache entries) and leaves your content untouched.
+
+= ISBN lookups sometimes fail with a Google Books error. What can I do? =
+
+Borges looks ISBNs up in Open Library first and falls back to Google Books. Without an API key, Google Books lookups share Google's anonymous daily quota with every other keyless caller, and that quota can run out. Create a key restricted to the Books API in the Google Cloud console and add it to `wp-config.php`:
+
+`define( 'BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY', 'your-key' );`
+
+Developers can supply or override it with the `bibliography_builder_google_books_api_key` filter instead. Borges stores no settings, so there is no settings screen for it.
 
 = Does the Borges Bibliography Builder work with Zotero, Mendeley, EndNote, and other citation managers? =
 
@@ -137,7 +145,7 @@ Bug reports, feature requests, and pull requests are welcome. See CONTRIBUTING.m
 
 == External Services ==
 
-This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for any of the supported DOI, PMID, PMCID, arXiv, or ISBN lookups.
+This plugin connects to fixed scholarly metadata services only when you explicitly add an identifier in the block editor — no citation data is sent automatically or in the background. No account or API key is required for any of the supported DOI, PMID, PMCID, arXiv, ISBN, library catalog, or Internet Archive lookups.
 
 **DOI metadata**
 
@@ -166,7 +174,7 @@ arXiv IDs, arxiv.org links, and arXiv DOIs connect through the plugin's authenti
 
 **ISBN metadata**
 
-ISBN input connects through the plugin's authenticated WordPress REST proxy to **Open Library** (https://openlibrary.org), run by the Internet Archive: its ISBN edition endpoint (https://openlibrary.org/isbn/) for the book record and its search API (https://openlibrary.org/search.json) for author names. If Open Library has no record or cannot be reached, the proxy falls back to the **Google Books API** (https://www.googleapis.com/books/v1/volumes). All upstream hosts are fixed, and the ISBN checksum is verified before any outbound request. Only the ISBN is sent.
+ISBN input connects through the plugin's authenticated WordPress REST proxy to **Open Library** (https://openlibrary.org), run by the Internet Archive: its ISBN edition endpoint (https://openlibrary.org/isbn/) for the book record and its search API (https://openlibrary.org/search.json) for author names. If Open Library has no record or cannot be reached, the proxy falls back to the **Google Books API** (https://www.googleapis.com/books/v1/volumes). All upstream hosts are fixed, and the ISBN checksum is verified before any outbound request. Only the ISBN is sent, plus the site's own Google Books API key if one is defined in `wp-config.php` (the `BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY` constant). The key goes only to Google Books and is never sent to the browser.
 
 * Open Library Books API (ISBN endpoint): https://openlibrary.org/dev/docs/api/books
 * Open Library Search API: https://openlibrary.org/dev/docs/api/search
@@ -175,7 +183,30 @@ ISBN input connects through the plugin's authenticated WordPress REST proxy to *
 * Google APIs Terms of Service: https://developers.google.com/terms
 * Google Privacy Policy: https://policies.google.com/privacy
 
+**Library catalog numbers and Internet Archive items**
+
+OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's authenticated WordPress REST proxy to **Open Library's Books API** (https://openlibrary.org/api/books). Internet Archive item links, `ia:` identifiers, and Internet Archive ARKs connect to the **Internet Archive** item metadata API (https://archive.org/metadata/); an ARK is first matched to its item through the Internet Archive's advanced search (https://archive.org/advancedsearch.php). When the item lists its Open Library edition, ISBN, or LCCN, that identifier is then looked up through Open Library (with the Google Books fallback for an ISBN). All upstream hosts are fixed, and each identifier is validated before any outbound request. Only the identifier is sent.
+
+* Open Library Books API: https://openlibrary.org/dev/docs/api/books
+* Internet Archive developer documentation: https://archive.org/developers/
+* Internet Archive terms of use: https://archive.org/about/terms.php
+
 == Changelog ==
+
+= 1.10.0 =
+* **Added:** library catalog numbers. Paste an OCLC number, an LCCN, or an Open Library edition ID (or their WorldCat, lccn.loc.gov, or Open Library links) and the book is looked up through Open Library. When Open Library has no record, Borges says so and suggests the ISBN.
+* **Added:** Internet Archive items. Paste an archive.org item link, `ia:<identifier>`, or an Internet Archive ARK. Borges cites the edition the item names (its Open Library edition, ISBN, or LCCN) and keeps the archive.org page as the link, or tidies the scan's own record when it names none.
+* **Added:** an optional Google Books API key for the ISBN fallback, set with the `BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY` constant or a filter, so lookups no longer depend on Google's shared anonymous quota. Borges still stores no settings.
+* **Changed:** "Edit fields" now works on every citation, not only ones typed as free text. Only the fields you change are saved; untouched DOIs, URLs, authors, and dates stay exactly as imported.
+* **Fixed:** a journal name that is part of its own DOI, such as eLife, is no longer italicized inside the DOI link, which split the link. Bibliographies saved with the broken link stay valid and are fixed the next time they are saved.
+* **Fixed:** "Place: Publisher" in pasted citations (`London: Boyars, 1976`) is split into place and publisher.
+* **Fixed:** Chinese, Japanese, and Korean author names, and names with a gloss in parentheses, are kept whole in book lookups; a leading Dr., Prof., Mr., Mrs., Ms., Mx., or Rev. is dropped.
+
+= 1.9.1 =
+* **Added:** pasting CSL-JSON, such as a reference manager's "CSL JSON" export, now imports each item as a citation. Items that are not valid citations are skipped and named, and JSON that is not CSL-JSON gets its own message.
+* **Fixed:** a title the citation style puts in quotation marks, such as a web page in Chicago, is no longer also italicized.
+* **Fixed:** the structured data (JSON-LD) link for a DOI keeps its slash, matching the visible link.
+* Bibliographies saved with the old output stay valid and pick up the fixes the next time they are saved.
 
 = 1.9.0 =
 * **Added:** a Heading Level setting for the block's visible heading. Choose a level from 2 to 6 to print it as a real heading, so the bibliography appears in the page's heading outline and screen reader users can reach it by heading navigation. The default is still a paragraph, so existing bibliographies are unchanged. The heading keeps the same size at every level.
@@ -334,6 +365,12 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.10.0 =
+Adds OCLC, LCCN, Open Library, and Internet Archive lookups and "Edit fields" for every citation. These lookups contact Open Library and the Internet Archive only when you paste those identifiers. No configuration changes required.
+
+= 1.9.1 =
+Imports pasted CSL-JSON and stops italicizing quoted titles such as Chicago web pages. No configuration changes; no new external services.
 
 = 1.9.0 =
 Adds a Heading Level setting so the bibliography's heading can be a real heading (h2–h6). Existing bibliographies are unchanged. No configuration changes; no new external services.

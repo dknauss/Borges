@@ -26,6 +26,8 @@ const BACKEND_ERRORS = {
 	pmcid: /PMCID/,
 	arxiv: /arXiv/,
 	isbn: /ISBN/,
+	catalog: /catalog number/,
+	archive: /Internet Archive/,
 };
 
 const samples = demo.sampleGroups.flatMap((group) =>
@@ -38,8 +40,10 @@ describe('Playground demo samples', () => {
 
 		expect([...formats].sort()).toEqual(
 			[
+				'archive',
 				'arxiv',
 				'bibtex',
+				'catalog',
 				'doi',
 				'freetext',
 				'isbn',

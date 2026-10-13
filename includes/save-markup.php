@@ -927,23 +927,52 @@ function bibliography_builder_save_is_quoted( $text, $start, $end ) {
 }
 
 /**
- * `findLastRange()`: the last occurrence of a value that is neither quoted nor
- * overlapping a range already found. Offsets are bytes; UTF-8 substring search
- * finds the same occurrences as JavaScript's UTF-16 search.
+ * `getUrlRanges()`: where the text's URLs are, matched as
+ * `splitTextIntoLinkParts()` matches them, so a title is never italicized
+ * inside a link (eLife is part of its own DOIs). Offsets are bytes.
  *
- * @param string $text   Display text.
- * @param string $value  Field value.
- * @param array  $ranges Ranges found so far.
+ * @param string $text Display text.
+ * @return array<int, array{start: int, end: int}>
+ */
+function bibliography_builder_save_url_ranges( $text ) {
+	preg_match_all(
+		'#https?://[^' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ']+#u',
+		$text,
+		$matches,
+		PREG_OFFSET_CAPTURE
+	);
+
+	$ranges = array();
+	foreach ( $matches[0] as $match ) {
+		$ranges[] = array(
+			'start' => $match[1],
+			'end'   => $match[1] + strlen( $match[0] ),
+		);
+	}
+
+	return $ranges;
+}
+
+/**
+ * `findLastRange()`: the last occurrence of a value that is neither quoted,
+ * inside a URL, nor overlapping a range already found. Offsets are bytes;
+ * UTF-8 substring search finds the same occurrences as JavaScript's UTF-16
+ * search.
+ *
+ * @param string $text       Display text.
+ * @param string $value      Field value.
+ * @param array  $ranges     Ranges found so far.
+ * @param array  $url_ranges URL ranges in the text.
  * @return array|null
  */
-function bibliography_builder_save_find_last_range( $text, $value, $ranges ) {
+function bibliography_builder_save_find_last_range( $text, $value, $ranges, $url_ranges = array() ) {
 	$start = strrpos( $text, $value );
 
 	while ( false !== $start ) {
 		$end      = $start + strlen( $value );
 		$overlaps = false;
 
-		foreach ( $ranges as $range ) {
+		foreach ( array_merge( $ranges, $url_ranges ) as $range ) {
 			$overlaps = $overlaps || ( $start < $range['end'] && $end > $range['start'] );
 		}
 
@@ -991,6 +1020,7 @@ function bibliography_builder_save_display_segments( $citation ) {
 	}
 
 	$title_ranges = array();
+	$url_ranges   = bibliography_builder_save_url_ranges( $text );
 
 	foreach ( bibliography_builder_save_italic_fields( bibliography_builder_citation_csl( $citation ) ) as $value ) {
 		if ( ! bibliography_builder_js_truthy( $value ) ) {
@@ -1003,7 +1033,7 @@ function bibliography_builder_save_display_segments( $citation ) {
 			continue;
 		}
 
-		$range = bibliography_builder_save_find_last_range( $text, $needle, $title_ranges );
+		$range = bibliography_builder_save_find_last_range( $text, $needle, $title_ranges, $url_ranges );
 
 		if ( null !== $range ) {
 			$title_ranges[] = $range;
