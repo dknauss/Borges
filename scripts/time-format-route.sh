@@ -19,7 +19,8 @@
 #   STYLES     space-separated style keys
 #              (default: chicago-notes-bibliography chicago-author-date ieee)
 #   FIXTURE    CSL-JSON array (default: src/benchmarks/fixtures/csl-200.json)
-#   MAX_MS     fail if any request takes longer (default: 0, never fail)
+#   MAX_MS     fail if any request takes longer, and give up on it at that
+#              point (default: 0, no limit)
 #   OUTPUT     also append the result lines to this file
 #
 # Prints one line per style:
@@ -43,6 +44,12 @@ FIXTURE="${FIXTURE:-$ROOT_DIR/src/benchmarks/fixtures/csl-200.json}"
 MAX_MS="${MAX_MS:-0}"
 OUTPUT="${OUTPUT:-}"
 ITEM_COUNT=$(jq 'length' "$FIXTURE")
+MAX_TIME_ARGS=""
+
+if [ "$MAX_MS" -gt 0 ]; then
+	MAX_TIME_ARGS="--max-time $(awk -v ms="$MAX_MS" 'BEGIN { printf "%.3f", ms / 1000 }')"
+fi
+
 WORK_DIR=$(mktemp -d)
 trap 'rm -rf "$WORK_DIR"' EXIT
 
@@ -57,12 +64,17 @@ for style in $STYLES; do
 			'{style: $style, cslItems: (.[0].title += " " + $run)}' \
 			"$FIXTURE" > "$WORK_DIR/body.json"
 
-		result=$(curl -sS -X POST -u "$AUTH_USER:$AUTH_PASSWORD" \
+		# shellcheck disable=SC2086 # MAX_TIME_ARGS is empty or two words.
+		if ! result=$(curl -sS -X POST -u "$AUTH_USER:$AUTH_PASSWORD" \
+			$MAX_TIME_ARGS \
 			-H 'Content-Type: application/json' \
 			--data-binary "@$WORK_DIR/body.json" \
 			-o "$WORK_DIR/response.json" \
 			-w '%{http_code} %{time_total}' \
-			"$REST_URL/bibliography/v1/format")
+			"$REST_URL/bibliography/v1/format"); then
+			echo "format-timing style=$style run=$run failed: no response within the limit or connection error" >&2
+			exit 1
+		fi
 		code=${result% *}
 		ms=$(awk -v s="${result#* }" 'BEGIN { printf "%d", s * 1000 }')
 
