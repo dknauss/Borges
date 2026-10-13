@@ -141,7 +141,7 @@ The stored CSL-JSON is not changed. If any entry has CSL-JSON the formatter cann
 
 ## Limits and caveats
 
-- **Size:** a request adds at most 50 items, and a bibliography holds at most 200 citations, the editor's limit. A reformat formats up to 200 entries, 50 at a time.
+- **Size:** a request adds at most 50 items, and a bibliography holds at most 200 citations, the editor's limit. A reformat formats up to 200 entries in one formatter call.
 - **Reordering:** only numeric styles (IEEE, Vancouver) can be reordered. Other styles sort their entries themselves, so they return `409`.
 - **Export strings:** BibTeX and BibLaTeX export strings for new or changed entries are computed only in the editor, because they need citation-js. With per-entry Cite / Export on, those entries show RIS and CSL-JSON links until someone next saves the post in the editor. The editor then adds the missing strings. The same applies to every entry that has no strings yet when `outputCiteExport` is turned on over REST.
 - **HTML filtering:** WordPress filters saved HTML for users without `unfiltered_html`, in exactly the same way as it does for the editor.

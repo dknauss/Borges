@@ -75,6 +75,38 @@ final class RestEdgeCasesTest extends TestCase {
 		$this->assertSame( 400, $result->get_error_data()['status'] );
 	}
 
+	public function test_format_citations_formats_a_full_size_bibliography_in_one_request(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+
+		// The editor sends every entry at once, up to its 200-citation cap.
+		$csl_items = array();
+
+		for ( $i = 1; $i <= BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS; $i++ ) {
+			$csl_items[] = array(
+				'id'     => 'item-' . $i,
+				'type'   => 'book',
+				'title'  => 'Filler ' . $i,
+				'author' => array( array( 'family' => 'Author' . $i, 'given' => 'Ada' ) ),
+			);
+		}
+
+		$request = new WP_REST_Request( 'POST', '/bibliography/v1/format' );
+		$request->set_body_params(
+			array(
+				'style'    => 'ieee',
+				'cslItems' => $csl_items,
+			)
+		);
+
+		$result = bibliography_builder_rest_format_citations( $request );
+
+		$this->assertNotInstanceOf( WP_Error::class, $result );
+		$entries = $result->get_data()['entries'];
+		$this->assertCount( 200, $entries );
+		$this->assertStringContainsString( 'Filler 200', $entries[199]['text'] );
+	}
+
 	public function test_format_citations_returns_413_when_body_too_large(): void {
 		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
 		bibliography_builder_test_set_current_user( 7 );
