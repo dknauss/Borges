@@ -243,7 +243,7 @@ CSL-JSON script blocks.
 | **arXiv ID**          | Done (1.6.0)                 | `GET /bibliography/v1/arxiv?id=<id>` queries the fixed arXiv API and maps Atom to a CSL preprint in PHP; `arXiv:` labels, arxiv.org URLs, and arXiv DOIs are detected, standalone and in free text.                                                           |
 | **ISSN**              | Evaluate                     | Identifies a serial, not a specific cited work. Useful for journal/periodical enrichment and validation, but should not create a standalone bibliography entry unless paired with article-level metadata.                                                          |
 | **URL**               | Evaluate                     | Useful but risky and unreliable. Consider after fixed-host identifiers; require strict timeout, content-type, size, redirect, and allowlist/denylist controls; prefer standards-based metadata (`citation_*`, Open Graph, JSON-LD, COinS) over arbitrary scraping. |
-| **OCLC / WorldCat**   | Evaluate                     | Useful for library/book workflows and edition disambiguation. Needs API/access/licensing review and careful mapping from edition/work records to CSL `book`.                                                                                                       |
+| **OCLC / WorldCat**   | Done (1.10.0)                | `GET /bibliography/v1/catalog?id=` resolves labeled OCLC numbers (and WorldCat links), LCCNs, and Open Library edition IDs through Open Library's fixed Books API, with no WorldCat API or licence needed. Open Library lacks some OCLC numbers, so a miss suggests the ISBN. Internet Archive items (`/archive`) shipped alongside. |
 | **ORCID**             | Evaluate as enrichment only  | Identifies people, not publications. Useful for author enrichment and disambiguation in manual/resolved records, but not a standalone citation import path.                                                                                                        |
 | **ISRC**              | Evaluate niche media support | Identifies sound recordings. Could map to CSL `song`/audio records if a reliable resolver is available; lower priority than scholarly text identifiers.                                                                                                            |
 | **ISWC**              | Evaluate niche media support | Identifies musical works/compositions. Potentially useful for music scholarship; resolver availability and CSL mapping need investigation.                                                                                                                         |
@@ -393,54 +393,61 @@ Current operational note (2026-05-04):
 -   Post-launch cleanup should keep GitHub README, WordPress.org `readme.txt`,
     SPEC, release assets, and SVN output aligned.
 
-## Immediate next-task priorities (2026-09-25)
+## Immediate next-task priorities (2026-10-13)
 
-Replaces the 2026-09-24 list, whose feature items (BibLaTeX import, PMCID,
-arXiv, and ISBN resolvers, read-only Abilities) all shipped in 1.6.0. Rough
-payoff-per-effort order for the 1.7 line:
+Replaces the 2026-09-25 list. Since then 1.7.0 through 1.10.0 shipped (#90
+through #137), including everything that list marked done: the resolver
+extraction, Phase 05 M0–M3, and, in 1.10.0, OCLC, LCCN, Open Library, and
+Internet Archive import, which the old list still showed as parked. No issues
+or pull requests are open. Rough payoff-per-effort order for the 1.11 line:
 
 1. **Keep CI, runtime, and Playground hygiene green** (standing)
     - release-package output, WordPress.org artifact alignment, citeproc-php
-      PHP deprecations, runtime smoke lanes, and the live Playground resolver
-      checks (DOI, PMID, PMCID, arXiv, ISBN, Abilities)
-2. **Reference-manager export corpus** — pending todo
-   `2026-06-23-test-reference-manager-exports.md`
-    - the main quality gap named in STATE.md, widened by 1.6.0: BibLaTeX field
-      and entry-type mapping now comes straight from citation-js, and real
-      Zotero, Mendeley, EndNote, and JabRef exports each carry their own quirks
-    - needs a few genuine exports from the owner's libraries; hand-authored
-      approximations can seed the corpus but should be labeled as such
-3. ~~**Extract the resolvers from the root plugin file**~~ — **done**
-   (unreleased): 31 definitions moved verbatim to `includes/resolvers.php`,
-   taking `bibliography-builder.php` from 2,859 to 1,931 lines
-    - the remaining question in todo
-      `2026-06-17-research-benefits-of-a-leaner-root-plugin-file.md` is
-      whether further extraction (formatter, read routes, block data) pays off
-4. ~~**Phase 05 M0: stable entry IDs**~~ — **done** (unreleased; design memo, Tier 0)
-    - no routes and no dependencies; unblocks the M1–M3 writable milestones.
-      Writable Abilities stay behind M3
-    - ~~**M1: Tier 1 review routes**~~ — **done** (unreleased):
-      `validate`, `duplicates`, and `preview?style=` under
-      `…/bibliographies/<ref>/`, `edit_post`-gated, addressable by index or
-      `bibliographyId`, in `includes/review.php`. M2 (Tier 2 entry writes,
-      companion plugin) waits on the static-save coherence spike
-    - ~~**M2: Tier 2 citation writes**~~ — **done** (unreleased): add,
-      patch, delete, and reorder under `…/<ref>/citations`, off unless the
-      `bibliography_builder_enable_write_routes` filter is on, in
-      `includes/write-routes.php` (`docs/rest-write-routes.md`)
-    - ~~**M3: Tier 3 block writes**~~ — **done** (unreleased): `PATCH
-      …/<ref>` block settings and `POST …/<ref>/reformat`, behind the same
-      filter. Next: M4 bulk routes (needs a rate-limiting design) and M5
-      write abilities, whose M0–M3 blocker is now gone
-5. **First-wave official language packs** — pending todo
+      PHP deprecations, runtime smoke lanes (including the nginx cell that now
+      runs on pull requests), the `main-preview` Playground build, and the
+      live resolver checks (DOI, PMID, PMCID, arXiv, ISBN, catalog, Internet
+      Archive, Abilities)
+2. **Phase 05 M5: write abilities** — unblocked
+    - M0–M3 shipped in 1.7.0 and the Abilities API is in core (WordPress
+      6.9), so nothing in the design memo's sequencing table holds M5 back.
+      Only the six read-only abilities in `includes/abilities.php` exist
+      today. Write abilities should wrap the M2/M3 write-route helpers and
+      inherit their opt-in filter, `edit_post`, dry-run, and `If-Match` rules
+3. **Reference-manager export corpus** — pending todo
+   `2026-06-23-test-reference-manager-exports.md`; **needs the owner**
+    - a hand-authored corpus landed in #91
+      (`src/lib/__fixtures__/reference-manager-exports/`) and found four
+      quirks. CSL-JSON paste (1.9.1) widens what real exports can exercise
+    - still open: real, anonymized Zotero and Mendeley exports from the
+      owner's libraries, then Papers, RefWorks, and BibDesk once samples exist
+4. **Sort-conformance backlog** — `docs/planning/sort-conformance-plan.md`
+    - Appendix C deferrals: per-locale article stripping (the sorter still
+      strips only English `a`/`an`/`the`), Unicode normalization (no NFC/NFD
+      step before comparison), and particle-surname and leading-article
+      fixtures still excluded in `src/lib/sorter.conformance.test.js`
+    - open REQ-F1 criteria: a test that deleting from a same-author/same-year
+      group re-suffixes the rest, and the 50-entry cache-miss benchmark
+      (≤500 ms)
+    - Chicago notes-bibliography and MLA 9 are still skipped in the
+      citeproc-js conformance run because the npm package throws on them
+5. **Phase 05 M4: bulk routes** — needs a rate-limiting design first
+    - Tier 4 in the design memo: cross-post reformat behind
+      `edit_others_posts`, returning a job ID for polling. Write the
+      rate-limiting and job design before any code
+6. **First-wave official language packs** — pending todo
    `2026-06-14-coordinate-first-wave-language-packs.md`
-    - 1.6.0 changed several source strings, so first-wave locales (fr_FR,
-      de_DE, es_ES, pt_BR, ja) should be pushed on translate.wordpress.org
-      against the current Stable strings. Human-translator work, not code
+    - push fr_FR, de_DE, es_ES, pt_BR, and ja on translate.wordpress.org
+      against the current Stable strings, which 1.8–1.10 changed again
+      (Heading Level, Edit fields, catalog and Internet Archive notices).
+      Human-translator work, not code
 
-Still parked: Phase 06 CI optimization (CI job timeouts landed separately in
-#80), Option B child blocks, the remaining "Evaluate" identifiers (ISSN, URL,
-OCLC/WorldCat, ORCID enrichment), and niche media identifiers.
+Lower priority: the remaining question in todo
+`2026-06-17-research-benefits-of-a-leaner-root-plugin-file.md` (the root file
+has grown back from 1,931 to 2,177 lines since the resolver extraction).
+
+Still parked: Phase 06 CI optimization, Epic-OSCOLA grouped bibliographies,
+Option B child blocks, the remaining "Evaluate" identifiers (ISSN, URL, ORCID
+enrichment), and niche media identifiers.
 
 ## Code quality backlog
 
