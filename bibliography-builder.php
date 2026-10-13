@@ -27,8 +27,15 @@ if ( ! defined( 'BIBLIOGRAPHY_BUILDER_PLUGIN_DIR' ) ) {
 
 /**
  * Maximum number of citations that may be formatted in one request.
+ *
+ * Matches the editor's per-bibliography hard cap (MAX_CITATIONS_PER_BIBLIOGRAPHY
+ * in src/lib/citation-limits.js). The editor formats the whole bibliography in
+ * one request, since disambiguation depends on every entry, so a lower cap here
+ * sends larger bibliographies to the raw-text fallback. citeproc-php formats
+ * 200 entries in about 35 ms p95 on one core with a 128 MB memory limit; see
+ * docs/planning/large-bibliography-benchmark-results.md.
  */
-const BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS = 50;
+const BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS = 200;
 
 /**
  * Maximum formatter request payload size.

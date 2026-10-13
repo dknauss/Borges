@@ -76,7 +76,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
 - The PMID, PMCID, arXiv, ISBN, catalog, and Internet Archive route callbacks, their provider constants (fixed upstream URLs, timeout, cache TTLs), and the NCBI cache helpers live in `includes/resolvers.php`, loaded by `require_once` from the main file. Route registration and the `edit_posts` permission callbacks stay in `bibliography-builder.php`.
 - `includes/google-books-key.php` reads an optional Google Books API key from the `BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY` constant, then the `bibliography_builder_google_books_api_key` filter. It is added only to the ISBN resolver's Google Books fallback request. There is deliberately no option or settings screen: `verify-metrics.sh` enforces that the plugin persists no settings.
 - Read-only Abilities API integration (WordPress 6.9+) lives in `includes/abilities.php`: `borges/get-bibliographies`, `borges/export-bibliography`, `borges/validate-citations` in a `bibliography` category. They reuse the REST read/permission helpers; on older WordPress the `wp_abilities_api_*` hooks never fire.
-- Payload limits: 1 MB max body, 50 items max per `/format` request
+- Payload limits: 1 MB max body, 200 items max per `/format` request (the editor's per-bibliography cap, `MAX_CITATIONS_PER_BIBLIOGRAPHY`; the editor formats a whole bibliography in one request, and `src/lib/citation-limits.test.js` keeps the two equal)
 - `bibliography_builder_sanitize_formatted_text()` — all HTML from citeproc is run through this before storage or output
 
 ### JS entry points (`src/`)
@@ -113,7 +113,7 @@ The Playground blueprint at `playground/blueprint.json` configures the GitHub/re
 ## CI overview
 
 - **ci.yml** — lint, Jest, PHPUnit, Psalm, Playwright Playground E2E, coverage upload, package artifact
-- **runtime-matrix.yml** — smoke tests across PHP 7.4–8.4, WP 6.4+, Apache/Nginx, MySQL via Docker. They run against the packaged release ZIP contents (`WP_BIBLIO_PLUGIN_DIR`), not the checkout. Beyond activation and the read routes, `scripts/runtime-matrix/smoke.sh` checks formatter parity with `tests/fixtures/csl-styles/` goldens on each PHP version, and exercises the write routes over HTTP with an application password.
+- **runtime-matrix.yml** — smoke tests across PHP 7.4–8.4, WP 6.4+, Apache/Nginx, MySQL via Docker. They run against the packaged release ZIP contents (`WP_BIBLIO_PLUGIN_DIR`), not the checkout. Beyond activation and the read routes, `scripts/runtime-matrix/smoke.sh` checks formatter parity with `tests/fixtures/csl-styles/` goldens on each PHP version, times a 200-entry `/format` request over HTTP with `scripts/time-format-route.sh` (also usable by hand against any site), and exercises the write routes over HTTP with an application password.
 - **release.yml** — tag-triggered GitHub Release and ZIP publication
 - **wp-deploy.yml** — deploys to WordPress.org SVN on published GitHub release, release dispatch, or manual run
 - **codeql.yml** — security analysis

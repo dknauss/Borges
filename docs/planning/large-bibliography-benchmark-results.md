@@ -115,6 +115,33 @@ Rationale:
 3. Measure REST round-trip on a representative shared-hosting environment before advertising the 200 cap publicly.
 4. Update SPEC REQ-C1 to document the new cap values and the soft-cap threshold.
 
+### Status (2026-10-13)
+
+- Step 2 and the JS half of step 1 shipped in 1.4.0 (`src/lib/citation-limits.js`: 100 soft, 200 hard).
+- The PHP half of step 1 did not ship with them, and the editor sends the whole bibliography to `/format` in one request, so every add, edit, or style switch in a 51–200 entry bibliography fell back to raw titles. `BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS` is now 200, and `src/lib/citation-limits.test.js` fails if the two drift apart.
+- Step 3 is planned below.
+
+## Shared-hosting timing check
+
+The open question is the HTTP round trip, not citeproc. Three layers, cheapest first:
+
+1. **Constrained PHP, formatter only (done).** `taskset -c 0 php -d memory_limit=128M scripts/benchmark-formatter.php --sizes=50,100,200` on a Linux container: 200 entries format in 28–35 ms p95 across notes, author-date, and numeric, with no memory errors at 128 MB. One core and a low memory limit roughly double the M-series numbers above and stay far under budget.
+2. **Real WordPress over HTTP, every supported stack (in CI).** `scripts/runtime-matrix/smoke.sh` now runs `scripts/time-format-route.sh`, which POSTs the 200-entry fixture to `/format` three times per style family, changing one title per request so the formatter cache never answers, and checks that 200 entries come back. Timings are saved as `format-timing.txt` in each matrix job's artifacts (PHP 7.4–8.4, Apache and nginx, MySQL; the matrix has no SQLite lane). Each request is cut off at 10 s, which only catches a broken stack; GitHub runners are not shared hosting. First run (2026-10-13): p50 55–68 ms, max 87 ms, on apache-php74-wp64 and nginx-php83-wplatest.
+3. **A real shared host (manual).** On a low-tier shared plan (the kind Borges users actually run; one cold PHP worker, 128–256 MB), install the release ZIP, create an application password for an editor, and run:
+
+   ```sh
+   RUNS=10 sh scripts/time-format-route.sh https://example.com/wp-json editor 'xxxx xxxx xxxx xxxx xxxx xxxx'
+   ```
+
+   Run it once after the site has been idle for a few minutes (cold PHP-FPM pool) and once warm. Record the p50 and max per style here.
+
+**Decision rule.** If the cold max on the shared host is under 1 s, keep 200 and the 100-entry notice as they are. Between 1 and 3 s, keep 200 but reword the notice to say how long a reformat can take. Over 3 s, or any memory error, lower the cap (both constants together) to the largest size that stays under 1 s, and re-run.
+
+| Host | PHP | Pool | Style | p50 (ms) | max (ms) |
+| --- | --- | --- | --- | ---: | ---: |
+| _pending_ | | cold | | | |
+| _pending_ | | warm | | | |
+
 ## Caveats and next steps
 
 - These numbers are from a local M-series Mac with warm OS caches. Re-run on a constrained VM (1–2 vCPU, 512 MB PHP memory limit) to get shared-hosting representative numbers before committing to any new cap value.

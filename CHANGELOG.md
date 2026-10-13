@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Bibliographies over 50 citations.** The editor allows 200 citations per bibliography and formats them all in one request, but the server formatter still refused more than 50, so adding, editing, or restyling in a larger bibliography fell back to plain titles with a "Formatter unavailable" notice. The formatter now takes up to 200 entries per request, matching the editor. The 100-citation slowness notice and the 50-entry paste limit are unchanged.
+
 ## [1.10.0] - 2026-10-09
 
 ### Added

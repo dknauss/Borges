@@ -46,6 +46,25 @@ describe('REST-backed citation formatting', () => {
 		});
 	});
 
+	it('leaves abstracts out of the formatter request', async () => {
+		const withAbstract = {
+			type: 'article-journal',
+			title: 'Alpha',
+			abstract: 'A'.repeat(5000),
+		};
+
+		await formatBibliographyEntries(
+			[withAbstract, { type: 'book', title: 'Beta' }],
+			'chicago-author-date'
+		);
+
+		expect(apiFetch.mock.calls[0][0].data.cslItems).toEqual([
+			{ type: 'article-journal', title: 'Alpha' },
+			{ type: 'book', title: 'Beta' },
+		]);
+		expect(withAbstract.abstract).toHaveLength(5000);
+	});
+
 	it('returns an empty batch without calling the formatter endpoint', async () => {
 		await expect(
 			formatBibliographyEntries([], 'chicago-author-date')
