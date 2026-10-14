@@ -1,9 +1,27 @@
 name: Release
 
+# Publishes a GitHub Release for the version in bibliography-builder.php when
+# no release for it exists yet, then dispatches the WordPress.org deploy. It
+# runs when:
+#   - a tag like v1.11.0 is pushed (the tag must match the version);
+#   - main changes bibliography-builder.php or this workflow, so merging a
+#     version bump releases it;
+#   - it is run by hand (workflow_dispatch).
+# The plugin header, readme.txt Stable tag, package.json and block.json must
+# all name the same version. The release body is that version's CHANGELOG.md
+# section, followed by GitHub's generated pull-request list. An existing
+# release is never changed.
+
 on:
     push:
         tags:
             - 'v*'
+        branches:
+            - main
+        paths:
+            - 'bibliography-builder.php'
+            - '.github/workflows/release.yml'
+    workflow_dispatch:
 
 permissions:
     contents: write
@@ -18,38 +36,80 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v5
 
+            - name: Read the plugin version
+              id: version
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  version="$(sed -n 's/^ \* Version: *\([^ ]*\)$/\1/p' bibliography-builder.php)"
+                  if [ -z "$version" ]; then
+                    echo "Could not read Version from bibliography-builder.php" >&2
+                    exit 1
+                  fi
+                  stable="$(sed -n 's/^Stable tag: *\([^ ]*\)$/\1/p' readme.txt)"
+                  package="$(node -p "require('./package.json').version")"
+                  block="$(node -p "require('./block.json').version")"
+                  for other in "$stable" "$package" "$block"; do
+                    if [ "$other" != "$version" ]; then
+                      echo "Versions disagree: plugin ${version}, readme.txt ${stable}, package.json ${package}, block.json ${block}" >&2
+                      exit 1
+                    fi
+                  done
+                  if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "v${version}" != "$GITHUB_REF_NAME" ]; then
+                    echo "Tag ${GITHUB_REF_NAME} does not match plugin version ${version}" >&2
+                    exit 1
+                  fi
+                  echo "tag=v${version}" >> "$GITHUB_OUTPUT"
+                  if gh release view "v${version}" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+                    echo "Release v${version} already exists; nothing to do."
+                    echo "exists=true" >> "$GITHUB_OUTPUT"
+                  fi
+
             - name: Set up Node.js
+              if: steps.version.outputs.exists != 'true'
               uses: actions/setup-node@v5
               with:
                   node-version: 22
                   cache: npm
 
             - name: Install dependencies
+              if: steps.version.outputs.exists != 'true'
               run: npm ci --legacy-peer-deps
 
             - name: Build
+              if: steps.version.outputs.exists != 'true'
               run: npm run build
 
             - name: Package release zip
+              if: steps.version.outputs.exists != 'true'
               run: npm run package:release
 
-            # The release body is this version's CHANGELOG section, followed by
-            # GitHub's generated pull-request list (the action prepends the body
-            # to the generated notes). Fails if CHANGELOG.md has no entry for
-            # the tag, before anything is published.
+            # Fails if CHANGELOG.md has no entry for the version, before
+            # anything is published.
             - name: Extract release notes from CHANGELOG
-              run: node scripts/extract-changelog-section.js "$GITHUB_REF_NAME" > output/release/release-notes.md
+              if: steps.version.outputs.exists != 'true'
+              env:
+                  RELEASE_TAG: ${{ steps.version.outputs.tag }}
+              run: node scripts/extract-changelog-section.js "$RELEASE_TAG" > output/release/release-notes.md
 
+            # Creates the tag at this commit when it does not exist yet.
             - name: Create GitHub Release
+              if: steps.version.outputs.exists != 'true'
               uses: softprops/action-gh-release@v3
               with:
+                  tag_name: ${{ steps.version.outputs.tag }}
+                  target_commitish: ${{ github.sha }}
                   files: output/release/borges-bibliography-builder.zip
                   body_path: output/release/release-notes.md
                   generate_release_notes: true
                   fail_on_unmatched_files: true
                   overwrite_files: true
 
+            # A release published with the workflow token does not trigger
+            # wp-deploy.yml's release event, so dispatch it on the tag.
             - name: Dispatch WordPress.org deploy
+              if: steps.version.outputs.exists != 'true'
               env:
                   GH_TOKEN: ${{ github.token }}
-              run: gh workflow run wp-deploy.yml --ref "$GITHUB_REF_NAME"
+                  RELEASE_TAG: ${{ steps.version.outputs.tag }}
+              run: gh workflow run wp-deploy.yml --ref "$RELEASE_TAG"
