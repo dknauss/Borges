@@ -280,6 +280,42 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 			},
 		],
 	},
+	// v13 froze save() from before 1.12.0, when entries sorted by the family
+	// name as stored, so "van Duijnhoven" filed under V even in Chicago, which
+	// files it under D. FIXTURE_ATTRIBUTES have no particle names.
+	13: {
+		...FIXTURE_ATTRIBUTES,
+		citations: [
+			{
+				id: 'edwards2019',
+				csl: {
+					id: 'edwards2019',
+					type: 'book',
+					title: 'Edwards: a work that sorts after the particle name',
+					publisher: 'Test University Press',
+					author: [{ family: 'Edwards', given: 'Ann' }],
+					issued: { 'date-parts': [[2019]] },
+				},
+				formattedText:
+					'Edwards, Ann. Edwards: a work that sorts after the particle name. Test University Press, 2019.',
+				displayOverride: null,
+			},
+			{
+				id: 'duijnhoven2025',
+				csl: {
+					id: 'duijnhoven2025',
+					type: 'book',
+					title: 'Specialized Orthotic Care',
+					publisher: 'Test University Press',
+					author: [{ family: 'van Duijnhoven', given: 'Elza' }],
+					issued: { 'date-parts': [[2025]] },
+				},
+				formattedText:
+					'Duijnhoven, Elza van. Specialized Orthotic Care. Test University Press, 2025.',
+				displayOverride: null,
+			},
+		],
+	},
 };
 
 function fixtureAttributes(version) {

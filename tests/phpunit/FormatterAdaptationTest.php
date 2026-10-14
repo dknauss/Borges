@@ -36,6 +36,77 @@ final class FormatterAdaptationTest extends TestCase {
 		$this->assertSame( array( 'family' => 'Board' ), $item['editor'][0] );
 	}
 
+	public function test_particles_split_only_for_a_display_demoting_style() {
+		$item = array(
+			'author' => array(
+				array(
+					'family' => 'van Duijnhoven',
+					'given'  => 'Elza',
+				),
+				array(
+					'family' => 'Van Buren',
+					'given'  => 'Martin',
+				),
+				array(
+					'family'                => 'Neumann',
+					'non-dropping-particle' => 'von',
+				),
+			),
+		);
+
+		$this->assertSame( $item, bibliography_builder_prepare_csl_for_formatter( $item ) );
+
+		$prepared = bibliography_builder_prepare_csl_for_formatter( $item, true );
+
+		$this->assertSame(
+			array(
+				'family'                => 'Duijnhoven',
+				'given'                 => 'Elza',
+				'non-dropping-particle' => 'van',
+			),
+			$prepared['author'][0]
+		);
+		$this->assertSame( $item['author'][1], $prepared['author'][1] );
+		$this->assertSame( $item['author'][2], $prepared['author'][2] );
+	}
+
+	public function test_split_name_particle_matches_the_js_rules() {
+		$this->assertSame(
+			array(
+				'particle' => 'van der',
+				'family'   => 'Waals',
+			),
+			bibliography_builder_split_name_particle( 'van der Waals' )
+		);
+		$this->assertSame(
+			array(
+				'particle' => 'd’',
+				'family'   => 'Alembert',
+			),
+			bibliography_builder_split_name_particle( 'd’Alembert' )
+		);
+
+		foreach ( array( 'Van Buren', 'van der', 'van gogh', "O'Brien", 'Duijnhoven', 42 ) as $family ) {
+			$this->assertNull( bibliography_builder_split_name_particle( $family ), (string) $family );
+		}
+	}
+
+	public function test_sort_family_follows_the_style_demote_setting() {
+		$this->assertSame( 'Duijnhoven', bibliography_builder_sort_family( array( 'family' => 'van Duijnhoven' ), true ) );
+		$this->assertSame( 'van Duijnhoven', bibliography_builder_sort_family( array( 'family' => 'van Duijnhoven' ), false ) );
+		$this->assertSame( "d'Alembert", bibliography_builder_sort_family( array( 'family' => "d'Alembert" ), false ) );
+		$this->assertSame(
+			'von Neumann',
+			bibliography_builder_sort_family(
+				array(
+					'family'                => 'Neumann',
+					'non-dropping-particle' => 'von',
+				),
+				false
+			)
+		);
+	}
+
 	public function test_blank_literal_names_are_left_alone() {
 		$item = bibliography_builder_prepare_csl_for_formatter(
 			array( 'author' => array( array( 'literal' => '  ' ) ) )
