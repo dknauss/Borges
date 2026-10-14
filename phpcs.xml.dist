@@ -23,6 +23,14 @@
 	<!-- Allow uppercase constants (WP conventions use globals) -->
 	<rule ref="WordPress.WP.GlobalVariablesOverride"/>
 
+	<!-- PHP version compatibility. The plugin header declares Requires PHP: 7.4, so
+	     code must not use PHP 8-only syntax or functions. PHPCompatibilityWP knows
+	     which newer functions WordPress itself polyfills (str_contains() and
+	     friends) and allows those. The 10.x line is still alpha but is the only
+	     one that knows PHP 8 syntax; 9.3.5 checks nothing past PHP 7.4. -->
+	<config name="testVersion" value="7.4-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
 	<!-- Line length -->
 	<rule ref="Generic.Files.LineLength">
 		<properties>
