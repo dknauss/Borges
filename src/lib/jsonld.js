@@ -185,6 +185,58 @@ export function buildJsonLdString(cslArray, options = {}) {
 }
 
 /**
+ * Wrap mapped citations in one schema.org `ItemList`, in display order.
+ *
+ * Cited works must not be top-level nodes. A consumer that reads "the first
+ * WebPage or Article on the page" as the page itself will otherwise take a
+ * cited work for the post: Mastodon's link-card extractor takes the first
+ * top-level `WebPage` or `NewsArticle` and shows its author as the post's
+ * byline, so a cited museum web page credited the museum with the post. As
+ * list items, the works describe what the bibliography lists, not the page.
+ *
+ * Each item drops its own `@context`; the list carries it once.
+ *
+ * @param {Array} items Objects from cslToJsonLd().
+ * @return {Object} Schema.org ItemList.
+ *
+ * @since 1.11.0
+ */
+export function wrapJsonLdItemList(items) {
+	return {
+		'@context': 'https://schema.org',
+		'@type': 'ItemList',
+		itemListElement: items.map((item, index) => {
+			// eslint-disable-next-line no-unused-vars -- dropped on purpose.
+			const { '@context': context, ...work } = item;
+			return {
+				'@type': 'ListItem',
+				position: index + 1,
+				item: work,
+			};
+		}),
+	};
+}
+
+/**
+ * Convert CSL-JSON objects to one JSON-LD `ItemList` and serialize it.
+ *
+ * What save() writes since 1.11.0. buildJsonLdString() keeps the earlier
+ * top-level array for the deprecations that reproduce older markup.
+ *
+ * @param {Array}  cslArray  Array of CSL-JSON objects, in display order.
+ * @param {Object} [options] Options for cslToJsonLd().
+ * @return {string} Safe JSON string for embedding in a <script> tag.
+ *
+ * @since 1.11.0
+ */
+export function buildJsonLdItemListString(cslArray, options = {}) {
+	const data = wrapJsonLdItemList(
+		cslArray.map((csl) => cslToJsonLd(csl, options))
+	);
+	return escapeForScriptContext(JSON.stringify(data));
+}
+
+/**
  * Serialize a CSL-JSON array for the CSL-JSON script block.
  * Escapes </ sequences to prevent script tag breakout.
  *

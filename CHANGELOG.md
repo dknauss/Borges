@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Link cards credited a cited source as the post's author.** The JSON-LD listed the cited works as top-level objects, so a reader that takes the first top-level `WebPage` on a page to be the page itself saw a cited web page as the post. Mastodon does this for link cards: a post citing a museum's collection page was shared "by Albertina". The cited works are now nested in one schema.org `ItemList` and none is a top-level object. Posts saved earlier keep validating in the editor, and their JSON-LD is nested as the page is rendered, so published posts are corrected without being edited; the stored content changes the next time the post is saved. Mastodon caches link cards by URL, so a card already posted keeps its old byline.
 - **Bibliographies over 50 citations.** The editor allows 200 citations per bibliography and formats them all in one request, but the server formatter still refused more than 50, so adding, editing, or restyling in a larger bibliography fell back to plain titles with a "Formatter unavailable" notice. The formatter now takes up to 200 entries per request, matching the editor. The 100-citation slowness notice and the 50-entry paste limit are unchanged.
 
 ## [1.10.0] - 2026-10-09

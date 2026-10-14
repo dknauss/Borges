@@ -1,4 +1,10 @@
-import { buildCslJsonString, buildJsonLdString, cslToJsonLd } from './jsonld';
+import {
+	buildCslJsonString,
+	buildJsonLdItemListString,
+	buildJsonLdString,
+	cslToJsonLd,
+	wrapJsonLdItemList,
+} from './jsonld';
 
 describe('cslToJsonLd', () => {
 	it('maps journal articles to ScholarlyArticle with Periodical context and DOI URL', () => {
@@ -468,6 +474,76 @@ describe('DOI url', () => {
 	it('encodes the slash only for the pre-1.9.1 save shape', () => {
 		expect(cslToJsonLd(csl, { canonicalDoiUrl: false }).url).toBe(
 			'https://doi.org/10.14722%2Fndss.2019.23386'
+		);
+	});
+});
+
+describe('buildJsonLdItemListString', () => {
+	const MUSEUM_PAGE = {
+		type: 'webpage',
+		title: 'Nemesis (Das große Glück)',
+		author: [{ literal: 'Albertina' }],
+		'container-title': 'Albertina Sammlungen Online',
+		URL: 'https://sammlungenonline.albertina.at/objects/100442/nemesis-das-groe-gluck',
+	};
+	const THESIS = {
+		type: 'thesis',
+		title: 'Nemesis: A Concept of Retribution',
+		author: [{ given: 'Wendy', family: 'Backe-Hansen' }],
+		issued: { 'date-parts': [[2016]] },
+	};
+
+	it('nests the cited works in one ItemList, in display order', () => {
+		const parsed = JSON.parse(
+			buildJsonLdItemListString([MUSEUM_PAGE, THESIS])
+		);
+
+		expect(parsed).toEqual(
+			wrapJsonLdItemList([cslToJsonLd(MUSEUM_PAGE), cslToJsonLd(THESIS)])
+		);
+		expect(parsed['@context']).toBe('https://schema.org');
+		expect(parsed['@type']).toBe('ItemList');
+		expect(
+			parsed.itemListElement.map(({ position, item }) => [
+				position,
+				item.name,
+			])
+		).toEqual([
+			[1, 'Nemesis (Das große Glück)'],
+			[2, 'Nemesis: A Concept of Retribution'],
+		]);
+		parsed.itemListElement.forEach((element) => {
+			expect(element['@type']).toBe('ListItem');
+			expect(element.item).not.toHaveProperty('@context');
+		});
+	});
+
+	it('leaves no cited work where a link-card reader looks for the page', () => {
+		// Mirrors Mastodon's LinkDetailsExtractor::StructuredData: the first
+		// top-level object (or array member) whose @type is WebPage or
+		// NewsArticle supplies the card's author. A cited web page must never
+		// be that object, or the card credits its author with the post.
+		const parsed = JSON.parse(buildJsonLdItemListString([MUSEUM_PAGE]));
+		const roots = Array.isArray(parsed) ? parsed : [parsed];
+		const pageLike = roots.find((node) =>
+			['WebPage', 'NewsArticle'].includes(node?.['@type'])
+		);
+
+		expect(pageLike).toBeUndefined();
+		expect(parsed.itemListElement[0].item).toMatchObject({
+			'@type': 'WebPage',
+			author: [{ '@type': 'Organization', name: 'Albertina' }],
+		});
+	});
+
+	it('escapes script breakouts inside nested items', () => {
+		const json = buildJsonLdItemListString([
+			{ type: 'webpage', title: '</script><script>alert(1)</script>' },
+		]);
+
+		expect(json).not.toContain('</script>');
+		expect(JSON.parse(json).itemListElement[0].item.name).toBe(
+			'</script><script>alert(1)</script>'
 		);
 	});
 });

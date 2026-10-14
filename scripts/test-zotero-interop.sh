@@ -58,7 +58,7 @@ cat > "$WORK_DIR/bibliography-test.html" <<'HTML'
 			</cite>
 		</div>
 	</div>
-	<script type="application/ld+json">[{"@context":"https://schema.org","@type":"ScholarlyArticle","name":"Literate Programming","author":[{"@type":"Person","name":"Donald E. Knuth","familyName":"Knuth","givenName":"Donald E."}],"datePublished":"1984","isPartOf":{"@type":"Periodical","name":"The Computer Journal"},"identifier":{"@type":"PropertyValue","propertyID":"DOI","value":"10.1093/comjnl/27.2.97"},"url":"https://doi.org/10.1093/comjnl/27.2.97"}]</script>
+	<script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"ScholarlyArticle","name":"Literate Programming","author":[{"@type":"Person","name":"Donald E. Knuth","familyName":"Knuth","givenName":"Donald E."}],"datePublished":"1984","isPartOf":{"@type":"Periodical","name":"The Computer Journal"},"identifier":{"@type":"PropertyValue","propertyID":"DOI","value":"10.1093/comjnl/27.2.97"},"url":"https://doi.org/10.1093/comjnl/27.2.97"}}]}</script>
 	<script type="application/vnd.citationstyles.csl+json">[{"id":"knuth1984","type":"article-journal","title":"Literate Programming","author":[{"family":"Knuth","given":"Donald E."}],"container-title":"The Computer Journal","issued":{"date-parts":[[1984]]},"DOI":"10.1093/comjnl/27.2.97"}]</script>
 </body>
 </html>

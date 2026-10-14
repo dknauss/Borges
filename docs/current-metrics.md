@@ -11,22 +11,25 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **2,184** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **9,422** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **11,118** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **2,185** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **9,537** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **11,198** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
-(REST registration + block registration) and the seven `includes/` files it loads:
+(REST registration + block registration) and the eight `includes/` files it loads:
 `includes/resolvers.php`, which only defines constants and functions (its remote requests run
 only inside editor-time REST callbacks); `includes/review.php`, which only defines constants,
 functions, and editor-only review routes registered with the others on `rest_api_init`;
 `includes/save-markup.php` and `includes/block-locator.php`, which only define constants and functions
-(called only by the opt-in write routes); `includes/write-routes.php`, which only defines functions and
+(called by the opt-in write routes, plus the JSON-LD helpers below); `includes/write-routes.php`, which only defines functions and
 registers its routes on `rest_api_init` when a site opts in (off by default);
 `includes/frontend-labels.php`, whose `render_block` filter translates the saved Cite / Export
 labels with a few string replacements per bibliography block, only on non-English sites, and
-does no I/O; and
+does no I/O;
+`includes/frontend-json-ld.php`, whose `render_block` filter nests JSON-LD saved before 1.11.0
+in an `ItemList` (one `strpos()` per bibliography block, and a JSON decode and encode only when
+the old top-level array is present), and does no I/O; and
 `includes/abilities.php`, which only defines functions and adds two Abilities API hooks, which
 run only when WordPress initializes its Abilities registry and do no I/O. The CSL formatting engine under `vendor/` runs
 **only** for editor-time REST calls. `scripts/*.php` are dev tooling and are not packaged.
