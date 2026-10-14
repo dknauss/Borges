@@ -410,12 +410,11 @@ or pull requests are open. Rough payoff-per-effort order for the 1.11 line:
       runs on pull requests), the `main-preview` Playground build, and the
       live resolver checks (DOI, PMID, PMCID, arXiv, ISBN, catalog, Internet
       Archive, Abilities)
-2. **Phase 05 M5: write abilities** — unblocked
-    - M0–M3 shipped in 1.7.0 and the Abilities API is in core (WordPress
-      6.9), so nothing in the design memo's sequencing table holds M5 back.
-      Only the six read-only abilities in `includes/abilities.php` exist
-      today. Write abilities should wrap the M2/M3 write-route helpers and
-      inherit their opt-in filter, `edit_post`, dry-run, and `If-Match` rules
+2. **Phase 05 M5: write abilities** — done (unreleased)
+    - six write abilities in `includes/write-abilities.php` wrap the M2/M3
+      route callbacks and inherit their opt-in filter, `edit_post`, dry-run,
+      and `If-Match` (`etag` input) rules. Tier 4 (bulk) is the only Phase 05
+      milestone left
 3. **Reference-manager export corpus** — pending todo
    `2026-06-23-test-reference-manager-exports.md`; **needs the owner**
     - a hand-authored corpus landed in #91

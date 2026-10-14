@@ -2074,6 +2074,7 @@ require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/frontend-labels.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/frontend-json-ld.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/block-locator.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/write-routes.php';
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/write-abilities.php';
 add_filter( 'rest_pre_serve_request', 'bibliography_builder_rest_pre_serve_request', 10, 4 );
 
 /**

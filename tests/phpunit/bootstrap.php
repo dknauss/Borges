@@ -493,6 +493,17 @@ class WP_REST_Request implements ArrayAccess {
 		$this->body        = json_encode( $params );
 	}
 
+	public function set_url_params( $params ) {
+		$this->params = array_merge( $this->params, $params );
+	}
+
+	public function set_body( $body ) {
+		$this->body        = $body;
+		$decoded           = json_decode( $body, true );
+		$this->json_params = is_array( $decoded ) ? $decoded : array();
+		$this->params      = array_merge( $this->params, $this->json_params );
+	}
+
 	public function get_json_params() {
 		return $this->json_params;
 	}
