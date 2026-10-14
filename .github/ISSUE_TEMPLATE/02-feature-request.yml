@@ -1,36 +1,36 @@
 name: Feature Request
 description: Propose an improvement or new feature.
-title: "[Feature]: "
+title: '[Feature]: '
 labels:
-  - enhancement
+    - enhancement
 body:
-  - type: textarea
-    id: problem
-    attributes:
-      label: Problem or opportunity
-      description: What need, gap, or friction are you trying to address?
-      placeholder: Describe the problem first.
-    validations:
-      required: true
-  - type: textarea
-    id: proposal
-    attributes:
-      label: Proposed change
-      description: What should the plugin do differently?
-      placeholder: Describe the requested capability or change.
-    validations:
-      required: true
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives considered
-      placeholder: Other approaches, workarounds, or reasons to defer.
-    validations:
-      required: false
-  - type: textarea
-    id: context
-    attributes:
-      label: Additional context
-      placeholder: Links, examples, mockups, or related issues.
-    validations:
-      required: false
+    - type: textarea
+      id: problem
+      attributes:
+          label: Problem or opportunity
+          description: What need, gap, or friction are you trying to address?
+          placeholder: Describe the problem first.
+      validations:
+          required: true
+    - type: textarea
+      id: proposal
+      attributes:
+          label: Proposed change
+          description: What should the plugin do differently?
+          placeholder: Describe the requested capability or change.
+      validations:
+          required: true
+    - type: textarea
+      id: alternatives
+      attributes:
+          label: Alternatives considered
+          placeholder: Other approaches, workarounds, or reasons to defer.
+      validations:
+          required: false
+    - type: textarea
+      id: context
+      attributes:
+          label: Additional context
+          placeholder: Links, examples, mockups, or related issues.
+      validations:
+          required: false

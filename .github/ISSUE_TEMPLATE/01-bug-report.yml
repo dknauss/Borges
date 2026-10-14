@@ -1,59 +1,59 @@
 name: Bug Report
 description: Report a bug with the Bibliography block.
-title: "[Bug]: "
+title: '[Bug]: '
 labels:
-  - bug
+    - bug
 body:
-  - type: textarea
-    id: summary
-    attributes:
-      label: Summary
-      description: What is broken?
-      placeholder: Describe the bug clearly and directly.
-    validations:
-      required: true
-  - type: textarea
-    id: steps
-    attributes:
-      label: Reproduction steps
-      description: How can someone reproduce it?
-      placeholder: |
-        1. Add the Bibliography block to a post.
-        2. Paste this input: ...
-        3. Observe ...
-    validations:
-      required: true
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected behavior
-      placeholder: What should have happened instead?
-    validations:
-      required: true
-  - type: input
-    id: input-format
-    attributes:
-      label: Input format
-      description: What type of input triggered the issue?
-      placeholder: "DOI, BibTeX, mixed, or N/A"
-    validations:
-      required: false
-  - type: textarea
-    id: environment
-    attributes:
-      label: Environment
-      description: WordPress version, PHP version, browser, OS.
-      placeholder: |
-        WordPress: 6.7
-        PHP: 8.2
-        Browser: Chrome 130
-        OS: macOS 15
-    validations:
-      required: false
-  - type: textarea
-    id: notes
-    attributes:
-      label: Additional context
-      placeholder: Logs, screenshots, sample DOIs or BibTeX that triggered the issue.
-    validations:
-      required: false
+    - type: textarea
+      id: summary
+      attributes:
+          label: Summary
+          description: What is broken?
+          placeholder: Describe the bug clearly and directly.
+      validations:
+          required: true
+    - type: textarea
+      id: steps
+      attributes:
+          label: Reproduction steps
+          description: How can someone reproduce it?
+          placeholder: |
+              1. Add the Bibliography block to a post.
+              2. Paste this input: ...
+              3. Observe ...
+      validations:
+          required: true
+    - type: textarea
+      id: expected
+      attributes:
+          label: Expected behavior
+          placeholder: What should have happened instead?
+      validations:
+          required: true
+    - type: input
+      id: input-format
+      attributes:
+          label: Input format
+          description: What type of input triggered the issue?
+          placeholder: 'DOI, BibTeX, mixed, or N/A'
+      validations:
+          required: false
+    - type: textarea
+      id: environment
+      attributes:
+          label: Environment
+          description: WordPress version, PHP version, browser, OS.
+          placeholder: |
+              WordPress: 6.7
+              PHP: 8.2
+              Browser: Chrome 130
+              OS: macOS 15
+      validations:
+          required: false
+    - type: textarea
+      id: notes
+      attributes:
+          label: Additional context
+          placeholder: Logs, screenshots, sample DOIs or BibTeX that triggered the issue.
+      validations:
+          required: false

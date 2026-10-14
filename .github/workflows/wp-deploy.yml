@@ -1,49 +1,49 @@
 name: Deploy to WordPress.org
 
 on:
-  workflow_dispatch:
-  release:
-    types: [published]
+    workflow_dispatch:
+    release:
+        types: [published]
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  deploy:
-    name: Deploy to WordPress.org SVN
-    runs-on: ubuntu-latest
+    deploy:
+        name: Deploy to WordPress.org SVN
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
+            - name: Set up Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: npm
 
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+            - name: Install dependencies
+              run: npm ci --legacy-peer-deps
 
-      - name: Build
-        run: npm run build
+            - name: Build
+              run: npm run build
 
-      - name: Package release build directory
-        run: npm run package:release
+            - name: Package release build directory
+              run: npm run package:release
 
-      - name: Stage WordPress.org assets
-        run: |
-          mkdir -p output/wporg-assets
-          rsync -a .wordpress-org/ output/wporg-assets/ \
-            --exclude '.DS_Store' \
-            --exclude 'source/'
+            - name: Stage WordPress.org assets
+              run: |
+                  mkdir -p output/wporg-assets
+                  rsync -a .wordpress-org/ output/wporg-assets/ \
+                    --exclude '.DS_Store' \
+                    --exclude 'source/'
 
-      - name: WordPress.org plugin deploy
-        uses: 10up/action-wordpress-plugin-deploy@stable
-        env:
-          SVN_USERNAME: ${{ secrets.WP_ORG_SVN_USERNAME }}
-          SVN_PASSWORD: ${{ secrets.WP_ORG_SVN_PASSWORD }}
-          SLUG: borges-bibliography-builder
-          BUILD_DIR: output/release/borges-bibliography-builder
-          ASSETS_DIR: output/wporg-assets
+            - name: WordPress.org plugin deploy
+              uses: 10up/action-wordpress-plugin-deploy@stable
+              env:
+                  SVN_USERNAME: ${{ secrets.WP_ORG_SVN_USERNAME }}
+                  SVN_PASSWORD: ${{ secrets.WP_ORG_SVN_PASSWORD }}
+                  SLUG: borges-bibliography-builder
+                  BUILD_DIR: output/release/borges-bibliography-builder
+                  ASSETS_DIR: output/wporg-assets

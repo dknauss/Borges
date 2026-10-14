@@ -9,11 +9,11 @@
 #
 # Project coverage stays a real signal at the documented 80%+ target.
 coverage:
-  status:
-    project:
-      default:
-        target: 80%
-        threshold: 1%
-    patch:
-      default:
-        informational: true
+    status:
+        project:
+            default:
+                target: 80%
+                threshold: 1%
+        patch:
+            default:
+                informational: true
