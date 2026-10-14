@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.10.0
+Stable tag: 1.11.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -193,6 +193,10 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 
 == Changelog ==
 
+= 1.11.0 =
+* **Fixed:** link cards no longer credit a cited source as the post's author. The JSON-LD listed cited works as top-level objects, and Mastodon takes the first top-level `WebPage` on a page to be the page itself, so a post citing a museum's collection page was shared "by Albertina". Cited works are now nested in one schema.org `ItemList`. Published posts are corrected as they are rendered, without being edited.
+* **Fixed:** bibliographies over 50 citations. The server formatter now takes up to 200 entries per request, matching the editor, instead of falling back to plain titles with a "Formatter unavailable" notice.
+
 = 1.10.0 =
 * **Added:** library catalog numbers. Paste an OCLC number, an LCCN, or an Open Library edition ID (or their WorldCat, lccn.loc.gov, or Open Library links) and the book is looked up through Open Library. When Open Library has no record, Borges says so and suggests the ISBN.
 * **Added:** Internet Archive items. Paste an archive.org item link, `ia:<identifier>`, or an Internet Archive ARK. Borges cites the edition the item names (its Open Library edition, ISBN, or LCCN) and keeps the archive.org page as the link, or tidies the scan's own record when it names none.
@@ -365,6 +369,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.11.0 =
+Stops link previews (Mastodon's, for one) from crediting a cited source as the post's author, and lets bibliographies over 50 citations format again. No configuration changes required.
 
 = 1.10.0 =
 Adds OCLC, LCCN, Open Library, and Internet Archive lookups and "Edit fields" for every citation. These lookups contact Open Library and the Internet Archive only when you paste those identifiers. No configuration changes required.

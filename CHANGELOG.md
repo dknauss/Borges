@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-14
+
 ### Fixed
 
 - **Link cards credited a cited source as the post's author.** The JSON-LD listed the cited works as top-level objects, so a reader that takes the first top-level `WebPage` on a page to be the page itself saw a cited web page as the post. Mastodon does this for link cards: a post citing a museum's collection page was shared "by Albertina". The cited works are now nested in one schema.org `ItemList` and none is a top-level object. Posts saved earlier keep validating in the editor, and their JSON-LD is nested as the page is rendered, so published posts are corrected without being edited; the stored content changes the next time the post is saved. Mastodon caches link cards by URL, so a card already posted keeps its old byline.
