@@ -9,7 +9,8 @@ It is structured as a sequence of self-contained requirement tickets (REQ-*) gro
 - **Drafted:** 2026-05-07
 - **Revised:** 2026-05-07 — incorporated Codex review feedback (see revision history at bottom)
 - **Updated:** 2026-05-09
-- **State:** Sprints 1–2 implemented in code; JS lint, CSS lint, Jest, and production build verified locally on 2026-05-09 via a bootstrapped npm. PHP/Composer verification remains pending because the current desktop shell lacks PHP and Composer.
+- **Reviewed:** 2026-10-13
+- **State:** Sprints 1–4 shipped in 1.2.0 (three-family dispatch, numeric reorder controls, APA single-author-first, style-aware headings, link aria-labels, the bibliography-context formatter cache, and the snapshot, cross-runner, and PHP↔JS coordination suites). Still open: the Appendix C deferrals (per-locale article stripping, Unicode normalization, and the particle-surname and leading-article fixtures excluded in `src/lib/sorter.conformance.test.js`), two REQ-F1 acceptance items (a delete-re-suffixes test and the 50-entry ≤500 ms cache-miss benchmark), and Chicago notes-bibliography and MLA 9, which the citeproc-js conformance run still skips. Sprint 5 and Epic-OSCOLA are unscheduled. `.planning/ROADMAP.md` tracks this backlog.
 - **Owner:** TBD
 - **Stakeholders:** Plugin maintainers, accessibility reviewer
 - **Canonical path:** `docs/planning/sort-conformance-plan.md`
@@ -1286,3 +1287,4 @@ The four questions originally deferred during planning have been resolved per Co
 | 2026-05-07 | Addressed second-pass review findings: clarified A1 label-in-name handling, corrected ABNT default heading text, added `readme.txt` to DOC1, reworded numeric-order criterion, removed `crypto.subtle` cache-key dependency, and expanded F1 to include full-bibliography reformat orchestration across mutation paths | Plan revision |
 | 2026-05-07 | Tightened F1 and T1c per second-order review: added `formatSingleEntry` audit deliverable, documented `deferFormatting: true` interaction with `parsePastedInput` in `handleParse`, added cache-miss benchmark target (≤500 ms for 50-entry add in context-sensitive style), and extended T1c to cover mutation parity with shared mutation fixtures (T1c effort bumped from M to M-L) | Plan revision |
 | 2026-05-07 | Consistency cleanup: updated Epic-OSCOLA and conformance-summary wording to match DOC1's two-readme scope and T1c's static-plus-mutation parity scope | Plan revision |
+| 2026-10-13 | Status refreshed: Sprints 1–4 shipped in 1.2.0; listed the remaining open items | Status review |

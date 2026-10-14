@@ -4,6 +4,10 @@ const BIBLIOGRAPHY_CACHE = new Map();
 const MAX_FORMAT_CACHE_ENTRIES = 500;
 const MAX_FORMAT_CACHE_BYTES = 256 * 1024;
 const FORMAT_ENDPOINT = 'bibliography/v1/format';
+// Fields no bundled style renders. CrossRef records can carry multi-kilobyte
+// abstracts, and 200 of them would push a full bibliography past the
+// formatter's 1 MB request limit.
+const FORMAT_OMITTED_FIELDS = ['abstract'];
 let bibliographyCacheBytes = 0;
 
 function emitFormattingWarning(...args) {
@@ -76,6 +80,24 @@ function getFallbackText(csl) {
 	return csl?.title || csl?.['container-title'] || '';
 }
 
+function getFormatterCslItem(csl) {
+	if (
+		!csl ||
+		typeof csl !== 'object' ||
+		!FORMAT_OMITTED_FIELDS.some((field) => field in csl)
+	) {
+		return csl;
+	}
+
+	const formatterCsl = { ...csl };
+
+	FORMAT_OMITTED_FIELDS.forEach((field) => {
+		delete formatterCsl[field];
+	});
+
+	return formatterCsl;
+}
+
 async function requestFormattedEntries(cslItems, styleKey) {
 	if (typeof apiFetch !== 'function') {
 		throw new Error('WordPress API fetch is unavailable.');
@@ -86,7 +108,7 @@ async function requestFormattedEntries(cslItems, styleKey) {
 		method: 'POST',
 		data: {
 			style: styleKey,
-			cslItems,
+			cslItems: cslItems.map(getFormatterCslItem),
 		},
 	});
 

@@ -25,9 +25,9 @@ specifications that supplement the authoritative `SPEC.md` at the repo root.
 
 ## Current plans
 
-| Document                                               | Status                                                                                                      | Owner |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ----- |
-| [sort-conformance-plan.md](./sort-conformance-plan.md) | Drafted 2026-05-07; partially implemented through the 1.3.x line; remaining suffix/locale backlog stays open | TBD   |
+| Document                                               | Status                                                                                                                                                                                       | Owner |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| [sort-conformance-plan.md](./sort-conformance-plan.md) | Sprints 1–4 shipped in 1.2.0. Open: Appendix C deferrals (per-locale article stripping, Unicode normalization, excluded conformance fixtures) and two REQ-F1 criteria. Sprint 5 and Epic-OSCOLA unscheduled | TBD   |
 
 ## Archived plans
 

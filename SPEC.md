@@ -932,17 +932,17 @@ The following features originally planned for later phases shipped in 1.0:
 
 ### Future: Enhanced Input
 
-PMID support shipped in 1.2. Future identifier support should use a resolver layer, not format-specific parser hacks. Each resolver must validate identifiers before outbound requests, use fixed upstream hosts or vetted provider adapters, avoid SSRF-prone arbitrary URL fetches, normalize results to CSL-JSON, and keep CSL-JSON as the source of truth for save output, exports, JSON-LD, COinS, and CSL-JSON script blocks.
+PMID support shipped in 1.2; PMCID, arXiv, and ISBN in 1.6.0; library catalog numbers and Internet Archive items in 1.10.0. Further identifier support should use a resolver layer, not format-specific parser hacks. Each resolver must validate identifiers before outbound requests, use fixed upstream hosts or vetted provider adapters, avoid SSRF-prone arbitrary URL fetches, normalize results to CSL-JSON, and keep CSL-JSON as the source of truth for save output, exports, JSON-LD, COinS, and CSL-JSON script blocks.
 
 | Identifier | Status | Evaluation |
 | --- | --- | --- |
-| **ISBN-10 / ISBN-13** | Supported (unreleased) | Resolved through `GET /bibliography/v1/isbn/<isbn>` against Open Library's ISBN edition and search endpoints, with a Google Books fallback, after checksum validation. Bare ISBN-10s are not accepted. |
-| **PMCID** | Supported (unreleased) | Resolved through `GET /bibliography/v1/pmcid/<pmcid>`, the same authenticated proxy pattern as PMID, against NCBI's fixed PMC citation exporter. |
-| **arXiv ID** | Supported (unreleased) | Resolved through `GET /bibliography/v1/arxiv?id=<id>` against the fixed arXiv API; Atom mapped to a CSL preprint server-side. arXiv DOIs (`10.48550/arXiv.…`) route here instead of CrossRef. |
+| **ISBN-10 / ISBN-13** | Supported (1.6.0) | Resolved through `GET /bibliography/v1/isbn/<isbn>` against Open Library's ISBN edition and search endpoints, with a Google Books fallback, after checksum validation. Bare ISBN-10s are not accepted. |
+| **PMCID** | Supported (1.6.0) | Resolved through `GET /bibliography/v1/pmcid/<pmcid>`, the same authenticated proxy pattern as PMID, against NCBI's fixed PMC citation exporter. |
+| **arXiv ID** | Supported (1.6.0) | Resolved through `GET /bibliography/v1/arxiv?id=<id>` against the fixed arXiv API; Atom mapped to a CSL preprint server-side. arXiv DOIs (`10.48550/arXiv.…`) route here instead of CrossRef. |
 | **ISSN** | Evaluate | Identifies a serial, not a specific cited work. Useful for journal/periodical enrichment and validation, but should not create a standalone bibliography entry unless paired with article-level metadata. |
 | **URL** | Evaluate | Useful but risky and unreliable. Consider after fixed-host identifiers; require strict timeout, content-type, size, redirect, and allowlist/denylist controls; prefer standards-based metadata (`citation_*`, Open Graph, JSON-LD, COinS) over arbitrary scraping. |
-| **OCLC / WorldCat, LCCN, Open Library edition** | Supported (unreleased) | Resolved through `GET /bibliography/v1/catalog?id=<key>` against Open Library's Books API, which needs no key (WorldCat's own API does). Labelled input only; Open Library work IDs are refused with a request for the edition. |
-| **Internet Archive item / ARK** | Supported (unreleased) | Resolved through `GET /bibliography/v1/archive?id=<identifier or ARK>` against the Internet Archive's item metadata API, preferring the item's Open Library edition, ISBN, or LCCN; the citation URL is the archive.org item page. |
+| **OCLC / WorldCat, LCCN, Open Library edition** | Supported (1.10.0) | Resolved through `GET /bibliography/v1/catalog?id=<key>` against Open Library's Books API, which needs no key (WorldCat's own API does). Labelled input only; Open Library work IDs are refused with a request for the edition. |
+| **Internet Archive item / ARK** | Supported (1.10.0) | Resolved through `GET /bibliography/v1/archive?id=<identifier or ARK>` against the Internet Archive's item metadata API, preferring the item's Open Library edition, ISBN, or LCCN; the citation URL is the archive.org item page. |
 | **ORCID** | Evaluate as enrichment only | Identifies people, not publications. Useful for author enrichment and disambiguation in manual/resolved records, but not a standalone citation import path. |
 | **ISRC** | Evaluate niche media support | Identifies sound recordings. Could map to CSL `song`/audio records if a reliable resolver is available; lower priority than scholarly text identifiers. |
 | **ISWC** | Evaluate niche media support | Identifies musical works/compositions. Potentially useful for music scholarship; resolver availability and CSL mapping need investigation. |

@@ -394,6 +394,15 @@ until [ "$(curl -sS -o /dev/null -w '%{http_code}' -u "admin:$APP_PASSWORD" "${R
 	sleep 1
 done
 
+# --- Formatter: a full 200-entry bibliography, timed over HTTP --------------
+#
+# The editor sends the whole bibliography to /format at once, so this proves
+# the route takes the editor's 200-citation cap on this stack and records the
+# round trip. Timings land in format-timing.txt; the ceiling only catches a
+# pathological stack, not a slow runner.
+RUNS=3 MAX_MS=10000 OUTPUT="$ARTIFACT_DIR/format-timing.txt" \
+	sh "$ROOT_DIR/scripts/time-format-route.sh" "$REST_URL" admin "$APP_PASSWORD"
+
 CITATIONS_URL="${REST_URL}/bibliography/v1/posts/$POST_ID/bibliographies/0/citations"
 NEW_ITEM='{"items":[{"type":"article-journal","title":"Beta Findings","author":[{"family":"Beta","given":"Bea"}],"container-title":"Journal of Smoke Tests","volume":"3","issue":"1","page":"10-20","issued":{"date-parts":[[2021]]}}]}'
 
