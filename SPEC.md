@@ -280,33 +280,40 @@ The `save()` function produces the following HTML structure. All content is bake
 	</ul>
 
 	<script type="application/ld+json">
-		[
-			{
-				"@context": "https://schema.org",
-				"@type": "ScholarlyArticle",
-				"name": "...",
-				"author": [
-					{
-						"@type": "Person",
-						"familyName": "...",
-						"givenName": "...",
-						"name": "..."
+		{
+			"@context": "https://schema.org",
+			"@type": "ItemList",
+			"itemListElement": [
+				{
+					"@type": "ListItem",
+					"position": 1,
+					"item": {
+						"@type": "ScholarlyArticle",
+						"name": "...",
+						"author": [
+							{
+								"@type": "Person",
+								"familyName": "...",
+								"givenName": "...",
+								"name": "..."
+							}
+						],
+						"datePublished": "...",
+						"isPartOf": {
+							"@type": "Periodical",
+							"name": "...",
+							"issn": "..."
+						},
+						"identifier": {
+							"@type": "PropertyValue",
+							"propertyID": "DOI",
+							"value": "..."
+						},
+						"url": "https://doi.org/..."
 					}
-				],
-				"datePublished": "...",
-				"isPartOf": {
-					"@type": "Periodical",
-					"name": "...",
-					"issn": "..."
-				},
-				"identifier": {
-					"@type": "PropertyValue",
-					"propertyID": "DOI",
-					"value": "..."
-				},
-				"url": "https://doi.org/..."
-			}
-		]
+				}
+			]
+		}
 	</script>
 
 	<!-- optional COinS spans and CSL-JSON script block, depending on block settings -->
@@ -325,7 +332,11 @@ The `save()` function produces the following HTML structure. All content is bake
 
 ### 3. JSON-LD (Schema.org)
 
-A single `<script type="application/ld+json">` block containing an array of typed objects. CSL-JSON types map to schema.org as follows:
+A single `<script type="application/ld+json">` block containing one schema.org `ItemList`. Each cited work is the `item` of a `ListItem` whose `position` follows the displayed order; the list carries `@context` once and the items carry none.
+
+Cited works are never top-level nodes. A consumer that reads the first top-level `WebPage` or `NewsArticle` on a page as the page itself would otherwise take a cited work for the post: Mastodon's link cards did exactly that, crediting a cited museum web page's author with the post. Blocks saved before 1.11.0 wrote a top-level array; their saved markup still validates through a deprecation, and a `render_block` filter (`includes/frontend-json-ld.php`) nests that older array as the block is rendered, so published posts are corrected without being edited. Describing the post itself (its author, publisher, and a `citation` link to these works) is left to the theme or an authorship/SEO plugin.
+
+CSL-JSON types map to schema.org as follows:
 
 | CSL-JSON `type`    | Schema.org `@type`                             |
 | ------------------ | ---------------------------------------------- |
