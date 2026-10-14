@@ -13,6 +13,7 @@ npm test               # Jest unit tests
 npm run test:js:coverage
 npm run lint:js
 npm run lint:css
+npm run format:check   # Prettier on JSON/YAML/JS; Markdown, SCSS, fixtures, and generated files are ignored (.prettierignore)
 ```
 
 Run a single Jest test file or by name:

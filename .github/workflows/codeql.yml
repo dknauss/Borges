@@ -1,55 +1,55 @@
 name: CodeQL
 
 on:
-  push:
-    branches:
-      - main
-      - master
-      - 'codex/**'
-  pull_request:
-  schedule:
-    - cron: '23 7 * * 1'
+    push:
+        branches:
+            - main
+            - master
+            - 'codex/**'
+    pull_request:
+    schedule:
+        - cron: '23 7 * * 1'
 
 jobs:
-  analyze:
-    name: Analyze (${{ matrix.language }})
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [javascript, actions]
+    analyze:
+        name: Analyze (${{ matrix.language }})
+        runs-on: ubuntu-latest
+        permissions:
+            actions: read
+            contents: read
+            security-events: write
+        strategy:
+            fail-fast: false
+            matrix:
+                language: [javascript, actions]
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: ${{ matrix.language }}
+            - name: Initialize CodeQL
+              uses: github/codeql-action/init@v4
+              with:
+                  languages: ${{ matrix.language }}
 
-      - name: Set up Node.js
-        if: matrix.language == 'javascript'
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
+            - name: Set up Node.js
+              if: matrix.language == 'javascript'
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: npm
 
-      - name: Install JS dependencies
-        if: matrix.language == 'javascript'
-        run: npm ci --legacy-peer-deps
+            - name: Install JS dependencies
+              if: matrix.language == 'javascript'
+              run: npm ci --legacy-peer-deps
 
-      - name: Build JavaScript
-        if: matrix.language == 'javascript'
-        run: npm run build
+            - name: Build JavaScript
+              if: matrix.language == 'javascript'
+              run: npm run build
 
-      - name: Autobuild non-JavaScript languages
-        if: matrix.language != 'javascript'
-        uses: github/codeql-action/autobuild@v4
+            - name: Autobuild non-JavaScript languages
+              if: matrix.language != 'javascript'
+              uses: github/codeql-action/autobuild@v4
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+            - name: Perform CodeQL Analysis
+              uses: github/codeql-action/analyze@v4

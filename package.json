@@ -12,6 +12,7 @@
 		"lint:css": "wp-scripts lint-style",
 		"lint:php": "composer lint:php",
 		"lint:i18n": "node scripts/check-i18n.js",
+		"format:check": "prettier --check .",
 		"test": "wp-scripts test-unit-js",
 		"test:js:coverage": "wp-scripts test-unit-js --runInBand --coverage --coverageReporters=clover --coverageReporters=text-summary --silent",
 		"test:coordination": "node scripts/verify-sort-coordination.js",

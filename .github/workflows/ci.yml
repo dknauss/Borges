@@ -42,6 +42,9 @@ jobs:
             - name: Lint i18n artifacts
               run: npm run lint:i18n
 
+            - name: Check formatting
+              run: npm run format:check
+
             - name: Audit production npm dependencies
               run: npm audit --omit=dev --omit=optional
 
