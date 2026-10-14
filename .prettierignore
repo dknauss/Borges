@@ -27,3 +27,6 @@ src/**/__snapshots__/
 
 # Benchmark input data.
 src/benchmarks/fixtures/
+
+# Local Claude Code state, including agent worktrees (whole checkouts).
+.claude/

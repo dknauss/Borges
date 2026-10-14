@@ -170,6 +170,8 @@ Each ticket below is one PR that can be lifted to the issue tracker on its own. 
 
 **Phase D: static analysis**
 
+*Why it comes before any PHP floor change:* Phase D gets most of the maintainability benefit of a PHP 8.x floor with nobody left behind. Psalm's stricter levels enforce the same types that PHP 8's native union types and enums would, but in CI, not on the user's server, so no site on PHP 7.4 is cut off. See `.planning/todos/pending/2026-10-14-research-php-8x-floor.md`.
+
 12. **Psalm level 5** with a baseline.
 13. **`checkJs` pilot** on `src/lib/`, non-blocking at first.
 14. **Psalm level 4** with a baseline, once level 5 is clean.
