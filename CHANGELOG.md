@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Write abilities** (Phase 05, M5), on WordPress 6.9+ and only when the write routes are enabled with the `bibliography_builder_enable_write_routes` filter: `borges/add-citations`, `borges/update-citation`, `borges/delete-citation`, `borges/reorder-citations`, `borges/update-bibliography-settings`, and `borges/reformat-bibliography`. Each calls the matching write route's own code, with the same rules: `edit_post` on the post, a preview unless `dry_run` is false, and an `etag` from a read or dry run to save. See `docs/rest-write-routes.md`.
+
 ## [1.11.0] - 2026-10-14
 
 ### Fixed

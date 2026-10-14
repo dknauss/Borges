@@ -147,6 +147,21 @@ The stored CSL-JSON is not changed. If any entry has CSL-JSON the formatter cann
 - **HTML filtering:** WordPress filters saved HTML for users without `unfiltered_html`, in exactly the same way as it does for the editor.
 - **intl:** the PHP `intl` extension is required. Without it, writes return `501`.
 
+## Abilities
+
+On WordPress 6.9 and later, the same writes are also available as abilities through the Abilities API (`includes/write-abilities.php`). They are registered only when the write routes are enabled, in the `bibliography` category next to the read-only abilities:
+
+| Ability | Route it wraps | Input beyond the common fields |
+|---|---|---|
+| `borges/add-citations` | `POST …/citations` | `items` |
+| `borges/update-citation` | `PATCH …/citations/<citation_id>` | `citation_id`, `fields` |
+| `borges/delete-citation` | `DELETE …/citations/<citation_id>` | `citation_id` |
+| `borges/reorder-citations` | `PUT …/citations/order` | `ids` |
+| `borges/update-bibliography-settings` | `PATCH …/bibliographies/<ref>` | `settings` |
+| `borges/reformat-bibliography` | `POST …/reformat` | `style` |
+
+Every ability takes `post_id` and either `index` or `bibliography_id` to name the block, plus `dry_run` (default `true`) and `etag`. Each one builds the request its route would get and calls the route's own callback, so the rules are the same: `edit_post` on the post, a preview unless `dry_run` is `false`, and to save, `etag` set to the ETag from a read or dry run. Without `etag` a save is refused with status `428`, and with a stale one `412`. The output is the route's response body, `etag` included. Only `borges/delete-citation` is annotated as destructive.
+
 ## Still to come
 
-Later milestones are bulk routes across posts (Tier 4) and write abilities (Tier 5). See the design memo's sequencing table.
+The remaining milestone is bulk routes across posts (Tier 4). See the design memo's sequencing table.

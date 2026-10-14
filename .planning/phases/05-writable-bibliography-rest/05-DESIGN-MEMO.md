@@ -270,6 +270,8 @@ This decision should be revisited once Tier 2 is prototyped and the static-save 
 | M2 | Tier 2 add/update/delete/reorder behind an opt-in filter — **done (unreleased)**; see `docs/rest-write-routes.md` | M1 + static-save spike |
 | M3 | Reformat, reorder, ETag (Tier 2 complete) — **done (unreleased)**: reorder and ETag shipped with M2, block settings and reformat (Tier 3) with M3 | M2 validated |
 | M4 | Bulk routes (Tier 4) | M3 + rate-limiting design |
-| M5 | Abilities registration (Tier 5) | WP Abilities API stable |
+| M5 | Abilities registration (Tier 5) — **done (unreleased)**: six write abilities wrapping the M2/M3 routes | WP Abilities API stable |
 
 **2026-09-24 update:** the Abilities API is in core as of WordPress 6.9, so M5's blocker is gone for the read side. The read-only cut shipped ahead of the other milestones, in 1.6.0: `borges/get-bibliographies`, `borges/export-bibliography`, and `borges/validate-citations` in `includes/abilities.php`, using core's `wp_register_ability()` on `wp_abilities_api_init` with `readonly` annotations. The memo's `bibliography/read` naming was replaced by core's required `namespace/action` form under the `borges/` namespace. Writable abilities stay behind M0–M3.
+
+**2026-10-14 update:** the write abilities shipped behind the write-routes filter in `includes/write-abilities.php`: `borges/add-citations`, `borges/update-citation`, `borges/delete-citation`, `borges/reorder-citations`, `borges/update-bibliography-settings`, and `borges/reformat-bibliography`. Rather than re-implement the routes, each ability builds the request its route would receive and calls the route's callback, so permissions, dry runs, and the ETag check cannot drift between the two surfaces. `etag` in the input is sent as `If-Match`. Tier 4 (bulk) is the only milestone left.
