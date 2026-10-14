@@ -17,7 +17,8 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 | Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
-(REST registration + block registration) and the eight `includes/` files it loads:
+(REST registration + block registration) and the ten `includes/` files it loads:
+`includes/google-books-key.php`, which only defines functions;
 `includes/resolvers.php`, which only defines constants and functions (its remote requests run
 only inside editor-time REST callbacks); `includes/review.php`, which only defines constants,
 functions, and editor-only review routes registered with the others on `rest_api_init`;
@@ -29,9 +30,11 @@ labels with a few string replacements per bibliography block, only on non-Englis
 does no I/O;
 `includes/frontend-json-ld.php`, whose `render_block` filter nests JSON-LD saved before 1.11.0
 in an `ItemList` (one `strpos()` per bibliography block, and a JSON decode and encode only when
-the old top-level array is present), and does no I/O; and
+the old top-level array is present), and does no I/O;
 `includes/abilities.php`, which only defines functions and adds two Abilities API hooks, which
-run only when WordPress initializes its Abilities registry and do no I/O. The CSL formatting engine under `vendor/` runs
+run only when WordPress initializes its Abilities registry and do no I/O; and
+`includes/write-abilities.php`, which only defines functions and adds one Abilities API hook that
+registers nothing unless the write routes are enabled. The CSL formatting engine under `vendor/` runs
 **only** for editor-time REST calls. `scripts/*.php` are dev tooling and are not packaged.
 
 ## Storage footprint (installed)
