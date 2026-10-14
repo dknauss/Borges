@@ -44,7 +44,9 @@ grounded read on whether it's actually worth it.
 
 ## Solution
 
-TBD — produce a short research memo covering:
+**2026-10-14:** the memo is drafted at `docs/planning/refactor-and-standards-memo.md`. It recommends doing the split, for maintainability (OPcache makes the performance gain under 1 ms), in four byte-for-byte extraction PRs. Move this todo to `completed/` once the owner decides.
+
+Original brief: produce a short research memo covering:
 
 1. **Performance** — does a leaner, conditionally-loaded structure reduce
    per-request parse/compile cost vs the always-parsed monolith? Consider opcode
