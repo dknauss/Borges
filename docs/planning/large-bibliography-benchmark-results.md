@@ -1,43 +1,49 @@
 # Large bibliography benchmark results
 
-Generated: 2026-05-10  
-Branch: `experiment/large-bibliography-benchmark`  
-Machine: macOS (M-series), local dev environment  
+Generated: 2026-10-14 (re-run of the 2026-05-10 benchmark)  
+Branch: `claude/keen-tesla-49orwb-google-key` (from `main`, plugin 1.11.0)  
+Machine: Linux cloud container (Intel Xeon @ 2.10 GHz, 4 vCPUs, PHP 8.4.19, Node 22.22.2), not the M-series Mac of the May run. The numbers are not directly comparable to May's; absolute times are expected to be higher on this hardware.  
 Fixture: `src/benchmarks/fixtures/csl-200.json` — 200 CSL-JSON entries, realistic type mix (article-journal 40%, book 20%, chapter 15%, thesis 10%, webpage 10%, report 5%)
 
 ## Summary
 
 **No latency cliff was found up to 200 entries.** Both the PHP formatter (real citeproc-php) and the JS orchestration layer (sort, state management, cache lookup) remain well within the SPEC budget thresholds at every tested size — 50, 75, 100, 150, and 200 entries.
 
-The 250 ms style-switch and 150 ms mutation p95 budgets from SPEC §Rate Limiting & Resource Caps were never approached. The highest p95 observed was 31 ms (PHP warm, notes, 200 entries).
+The 250 ms style-switch and 150 ms mutation p95 budgets from SPEC §Rate Limiting & Resource Caps were never approached. The highest p95 observed was 45 ms (PHP cold, author-date, 200 entries). The highest JS p95 was 27 ms (mutation, 200 entries).
 
 ## PHP formatter — real citeproc-php (not mocked)
 
-5 runs per cell. Cold = new CiteProc instance each run. Warm = instance reused.
+5 runs per cell (`php scripts/benchmark-formatter.php`). Cold = new CiteProc instance each run. Warm = instance reused.
 
 | Size | Family | Style | Cold p50 (ms) | Cold p95 (ms) | Warm p50 (ms) | Warm p95 (ms) |
 | ---: | --- | --- | ---: | ---: | ---: | ---: |
-| 50  | notes       | chicago-notes-bibliography | 8.1  | 34.4 | 4.8  | 6.9  |
-| 50  | author-date | chicago-author-date        | 6.1  | 11.2 | 7.0  | 10.1 |
-| 50  | numeric     | ieee                       | 5.2  | 10.9 | 5.1  | 16.4 |
-| 75  | notes       | chicago-notes-bibliography | 4.4  | 5.8  | 4.3  | 5.2  |
-| 75  | author-date | chicago-author-date        | 5.2  | 6.7  | 4.1  | 5.8  |
-| 75  | numeric     | ieee                       | 4.4  | 6.5  | 5.1  | 5.6  |
-| 100 | notes       | chicago-notes-bibliography | 5.7  | 9.2  | 6.6  | 7.4  |
-| 100 | author-date | chicago-author-date        | 8.7  | 11.6 | 9.8  | 16.1 |
-| 100 | numeric     | ieee                       | 5.9  | 7.3  | 6.7  | 7.9  |
-| 150 | notes       | chicago-notes-bibliography | 7.0  | 8.0  | 8.4  | 13.1 |
-| 150 | author-date | chicago-author-date        | 11.1 | 17.9 | 11.5 | 26.6 |
-| 150 | numeric     | ieee                       | 7.3  | 8.6  | 7.6  | 8.4  |
-| 200 | notes       | chicago-notes-bibliography | 11.9 | 19.0 | 16.4 | 31.0 |
-| 200 | author-date | chicago-author-date        | 11.4 | 14.0 | 11.0 | 14.7 |
-| 200 | numeric     | ieee                       | 9.7  | 12.9 | 10.1 | 10.5 |
+| 50 | notes | chicago-notes-bibliography | 11.2 | 30.7 | 11.3 | 11.6 |
+| 50 | author-date | chicago-author-date | 11.0 | 11.2 | 10.8 | 11.6 |
+| 50 | numeric | ieee | 6.3 | 9.2 | 6.3 | 7.8 |
+| 75 | notes | chicago-notes-bibliography | 11.5 | 12.0 | 11.4 | 11.6 |
+| 75 | author-date | chicago-author-date | 11.3 | 13.2 | 11.8 | 14.3 |
+| 75 | numeric | ieee | 8.7 | 9.9 | 8.8 | 11.1 |
+| 100 | notes | chicago-notes-bibliography | 17.3 | 23.6 | 18.1 | 20.6 |
+| 100 | author-date | chicago-author-date | 15.2 | 17.4 | 15.0 | 16.0 |
+| 100 | numeric | ieee | 11.8 | 16.7 | 12.8 | 13.4 |
+| 150 | notes | chicago-notes-bibliography | 21.5 | 23.4 | 21.6 | 24.9 |
+| 150 | author-date | chicago-author-date | 23.0 | 25.0 | 22.1 | 25.6 |
+| 150 | numeric | ieee | 22.0 | 24.6 | 21.6 | 23.9 |
+| 200 | notes | chicago-notes-bibliography | 33.8 | 35.6 | 34.2 | 37.0 |
+| 200 | author-date | chicago-author-date | 43.3 | 45.3 | 41.7 | 44.9 |
+| 200 | numeric | ieee | 24.0 | 25.2 | 23.1 | 24.3 |
 
 Budget: p95 < 250 ms. All cells: **ok**.
 
-The 50-entry cold p95 spike (34.4 ms for notes) reflects first-run JIT / class-loading overhead for citeproc-php, not list-size scaling. At 75+ entries the cold p95 drops and scales linearly, reaching ~19 ms at 200 entries.
+The 50-entry cold p95 spike for notes (30.7 ms against a 11.2 ms p50) is a single slow first run (class loading and style parsing), not list-size scaling. Everywhere else p95 sits close to p50, and time grows roughly linearly with size. At 200 entries, author-date is the slowest style (cold p95 45.3 ms, warm p95 44.9 ms), about 5.5x under the 250 ms budget; ieee is the cheapest (about 25 ms).
 
-Author-date warm p95 grows from 10 ms at 50 entries to 27 ms at 150 entries (notes warms from 7 ms to 31 ms at 200). This variance is real but the ceiling at 200 entries (31 ms) remains 8× under the 250 ms budget.
+### Comparison with the 2026-05-10 run
+
+Since May the nine CSL styles were rewritten and the JS sorter became particle-aware. The runs are on different hardware (macOS M-series then, a 2.1 GHz Xeon container now), so read the comparison as direction and order of magnitude, not a measured regression.
+
+- PHP formatter at 200 entries: cold p95 was 19.0 / 14.0 / 12.9 ms (notes / author-date / ieee) and is now 35.6 / 45.3 / 25.2 ms. Warm p95 was 31.0 / 14.7 / 10.5 ms and is now 37.0 / 44.9 / 24.3 ms. That is roughly 2-3x slower, which is about what a slower CPU would explain. The one style that stands out is author-date, which was the same speed as notes in May and is now the slowest; it may reflect the rewritten style or just noise, and a same-machine comparison against the pre-rewrite styles would be needed to say. The May warm rows were noisier (warm often above cold), and the new warm and cold rows now agree, as expected for a formatter that has no meaningful instance reuse gain.
+- JS orchestration at 200 entries: style-switch p95 was 9.4-9.5 ms and is now 12.2-14.8 ms; add/delete mutation p95 was 14.7-15.1 ms and is now 22.4-26.8 ms. About 1.3-1.8x, again within what the hardware difference accounts for. Nothing scales worse than linear, and the sorter change shows no visible cliff. The numeric no-reformat delete is still effectively zero (0.0-0.2 ms).
+- Budgets: every cell is still under both the 250 ms style-switch and 150 ms mutation p95 budgets, by at least 5x.
 
 **What this benchmark does not measure:** the HTTP round-trip from the WordPress editor REST call (serialization, WordPress middleware, plugin boot, network). Those costs would add to the numbers above on a live site. Shared hosting with a cold PHP-FPM pool could add 50–200 ms to the cold rows.
 
@@ -49,18 +55,18 @@ Author-date warm p95 grows from 10 ms at 50 entries to 27 ms at 150 entries (not
 
 | Size | Family | p50 (ms) | p95 (ms) |
 | ---: | --- | ---: | ---: |
-| 75  | notes       | 3.6 | 4.5 |
-| 75  | author-date | 3.5 | 3.9 |
-| 75  | numeric     | 3.4 | 3.6 |
-| 100 | notes       | 4.6 | 4.8 |
-| 100 | author-date | 4.5 | 4.7 |
-| 100 | numeric     | 4.5 | 4.6 |
-| 150 | notes       | 7.0 | 7.1 |
-| 150 | author-date | 7.0 | 7.1 |
-| 150 | numeric     | 6.9 | 7.1 |
-| 200 | notes       | 9.3 | 9.4 |
-| 200 | author-date | 9.3 | 9.5 |
-| 200 | numeric     | 9.3 | 9.5 |
+| 75 | notes | 5.3 | 6.6 |
+| 75 | author-date | 7.0 | 7.9 |
+| 75 | numeric | 7.4 | 8.7 |
+| 100 | notes | 5.8 | 5.9 |
+| 100 | author-date | 6.0 | 6.8 |
+| 100 | numeric | 5.9 | 6.0 |
+| 150 | notes | 9.4 | 9.6 |
+| 150 | author-date | 8.8 | 9.7 |
+| 150 | numeric | 8.8 | 9.2 |
+| 200 | notes | 11.9 | 13.2 |
+| 200 | author-date | 11.9 | 14.8 |
+| 200 | numeric | 11.7 | 12.2 |
 
 Budget: p95 < 250 ms. All cells: **ok**. JS orchestration overhead is ~0.05 ms per entry and scales linearly with no cliff.
 
@@ -68,18 +74,18 @@ Budget: p95 < 250 ms. All cells: **ok**. JS orchestration overhead is ~0.05 ms p
 
 | Size | Operation | p50 (ms) | p95 (ms) |
 | ---: | --- | ---: | ---: |
-| 75  | add — notes (full reformat)         | 5.4  | 7.7  |
-| 75  | delete — author-date (full reformat)| 5.2  | 5.4  |
-| 75  | delete — numeric (no reformat)      | 0.0  | 0.0  |
-| 100 | add — notes (full reformat)         | 6.8  | 7.1  |
-| 100 | delete — author-date (full reformat)| 6.9  | 7.0  |
-| 100 | delete — numeric (no reformat)      | 0.0  | 0.0  |
-| 150 | add — notes (full reformat)         | 10.8 | 11.1 |
-| 150 | delete — author-date (full reformat)| 10.4 | 10.5 |
-| 150 | delete — numeric (no reformat)      | 0.0  | 0.0  |
-| 200 | add — notes (full reformat)         | 14.8 | 15.1 |
-| 200 | delete — author-date (full reformat)| 14.4 | 14.7 |
-| 200 | delete — numeric (no reformat)      | 0.0  | 0.0  |
+| 75 | add — notes (full reformat) | 7.3 | 8.6 |
+| 75 | delete — author-date (full reformat) | 7.4 | 7.7 |
+| 75 | delete — numeric (no reformat) | 0.0 | 0.1 |
+| 100 | add — notes (full reformat) | 9.7 | 10.3 |
+| 100 | delete — author-date (full reformat) | 9.5 | 12.4 |
+| 100 | delete — numeric (no reformat) | 0.0 | 0.2 |
+| 150 | add — notes (full reformat) | 15.5 | 18.0 |
+| 150 | delete — author-date (full reformat) | 15.1 | 16.1 |
+| 150 | delete — numeric (no reformat) | 0.0 | 0.0 |
+| 200 | add — notes (full reformat) | 20.9 | 22.4 |
+| 200 | delete — author-date (full reformat) | 20.3 | 26.8 |
+| 200 | delete — numeric (no reformat) | 0.0 | 0.0 |
 
 Budget: p95 < 150 ms. All cells: **ok**. The numeric delete (no-reformat path) is effectively zero at all sizes — this confirms the optimization is worth keeping at any cap level.
 
@@ -87,7 +93,7 @@ Budget: p95 < 150 ms. All cells: **ok**. The numeric delete (no-reformat path) i
 
 ### What the data shows
 
-Neither citeproc-php nor the JS orchestration layer is a bottleneck at 200 entries on local hardware. The format work itself is cheap — under 20 ms p95 cold for any style family at 200 entries.
+Neither citeproc-php nor the JS orchestration layer is a bottleneck at 200 entries on local hardware. The format work itself is cheap — under 50 ms p95 cold for any style family at 200 entries (this container, 2026-10-14).
 
 ### What the data does not show
 
@@ -144,6 +150,6 @@ The open question is the HTTP round trip, not citeproc. Three layers, cheapest f
 
 ## Caveats and next steps
 
-- These numbers are from a local M-series Mac with warm OS caches. Re-run on a constrained VM (1–2 vCPU, 512 MB PHP memory limit) to get shared-hosting representative numbers before committing to any new cap value.
+- The May tables came from a local M-series Mac with warm OS caches; the October tables are from a Linux cloud container. Re-run on a constrained VM (1–2 vCPU, 512 MB PHP memory limit) to get shared-hosting representative numbers before committing to any new cap value.
 - The citeproc-php PHP 8.x deprecation warnings (nullable parameter declarations) do not affect correctness or timing but will become errors under PHP 9. Track the upstream fix schedule.
 - The fixture is synthetic. Real scholarly content with long author lists, many co-authors, and complex title casing may format slower; re-run with a real bibliography export before finalising the cap.
