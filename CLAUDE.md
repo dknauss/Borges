@@ -115,7 +115,7 @@ The Playground blueprint at `playground/blueprint.json` configures the GitHub/re
 ## CI overview
 
 - **ci.yml** — lint, Jest, PHPUnit, Psalm, Playwright Playground E2E, coverage upload, package artifact
-- **runtime-matrix.yml** — smoke tests across PHP 7.4–8.4, WP 6.4+, Apache/Nginx, MySQL via Docker. They run against the packaged release ZIP contents (`WP_BIBLIO_PLUGIN_DIR`), not the checkout. Beyond activation and the read routes, `scripts/runtime-matrix/smoke.sh` checks formatter parity with `tests/fixtures/csl-styles/` goldens on each PHP version, times a 200-entry `/format` request over HTTP with `scripts/time-format-route.sh` (also usable by hand against any site), and exercises the write routes over HTTP with an application password.
+- **runtime-matrix.yml** — smoke tests across PHP 7.4–8.4, WP 6.4+, Apache/Nginx, MySQL via Docker. They run against the packaged release ZIP contents (`WP_BIBLIO_PLUGIN_DIR`), not the checkout. Beyond activation and the read routes, `scripts/runtime-matrix/smoke.sh` checks formatter parity with `tests/fixtures/csl-styles/` goldens on each PHP version, times a 200-entry `/format` request over HTTP with `scripts/time-format-route.sh` (also usable by hand against any site), exercises the write routes over HTTP with an application password, and runs the Abilities API on WordPress 6.9+.
 - **release.yml** — GitHub Release and ZIP publication on a version bump merged to `main`, a `v*` tag, or by hand
 - **wp-deploy.yml** — deploys to WordPress.org SVN on published GitHub release, release dispatch, or manual run
 - **codeql.yml** — security analysis

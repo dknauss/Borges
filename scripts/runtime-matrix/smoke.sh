@@ -443,4 +443,19 @@ grep -q 'Z3988' "$ARTIFACT_RESPONSE_DIR/write-reformat-frontend.body"
 wp_exec "wp eval-file /smoke/check-blocks.php $POST_ID --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/check-blocks.txt" 2>&1 || true
 grep -q '^blocks-ok 1$' "$ARTIFACT_DIR/check-blocks.txt"
 
+# --- Abilities API (WordPress 6.9+) -----------------------------------------
+#
+# Runs the abilities through the Abilities API itself, in PHP as the admin user:
+# a read, then a write-ability dry run that must leave the post untouched. The
+# write abilities register because the mu-plugin above enables the write routes.
+# Older WordPress has no Abilities API, so the check skips.
+wp_exec "wp eval-file /smoke/check-abilities.php $POST_ID --user=admin --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/check-abilities.txt" 2>&1 || true
+if grep -q '^abilities-skip$' "$ARTIFACT_DIR/check-abilities.txt"; then
+	echo "Skipping Abilities API checks: this WordPress has no Abilities API (needs 6.9+)"
+elif ! grep -q '^abilities-ok [1-9]' "$ARTIFACT_DIR/check-abilities.txt"; then
+	echo "Abilities API check failed:" >&2
+	head -c 4000 "$ARTIFACT_DIR/check-abilities.txt" >&2
+	exit 1
+fi
+
 echo "Runtime smoke passed: server=${SERVER} php=${PHP_VERSION} wp=${WP_VERSION} db=${DB_ENGINE} multisite=${MULTISITE}"
