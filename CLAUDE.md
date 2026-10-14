@@ -108,13 +108,13 @@ The Playground blueprint at `playground/blueprint.json` configures the GitHub/re
 
 ### Release
 
-`npm run package:release` builds the production zip (strips dev dependencies). Pushing a `v*` tag triggers `release.yml`, which builds the ZIP, publishes the GitHub Release (its body is the tag's `CHANGELOG.md` section, extracted by `scripts/extract-changelog-section.js`, followed by GitHub's generated PR list; the job fails if that section is missing), and dispatches `wp-deploy.yml`. `wp-deploy.yml` also runs on published GitHub releases and can be run manually.
+`npm run package:release` builds the production zip (strips dev dependencies). `release.yml` runs when a push to `main` changes `bibliography-builder.php` (so merging a version bump releases it), when a `v*` tag is pushed, or by hand. It reads the version from the plugin header, fails unless `readme.txt`, `package.json` and `block.json` agree, and does nothing if that version's release exists. Otherwise it builds the ZIP, creates the tag, publishes the GitHub Release (its body is the tag's `CHANGELOG.md` section, extracted by `scripts/extract-changelog-section.js`, followed by GitHub's generated PR list; the job fails if that section is missing), and dispatches `wp-deploy.yml`. `wp-deploy.yml` also runs on published GitHub releases and can be run manually.
 
 ## CI overview
 
 - **ci.yml** — lint, Jest, PHPUnit, Psalm, Playwright Playground E2E, coverage upload, package artifact
 - **runtime-matrix.yml** — smoke tests across PHP 7.4–8.4, WP 6.4+, Apache/Nginx, MySQL via Docker. They run against the packaged release ZIP contents (`WP_BIBLIO_PLUGIN_DIR`), not the checkout. Beyond activation and the read routes, `scripts/runtime-matrix/smoke.sh` checks formatter parity with `tests/fixtures/csl-styles/` goldens on each PHP version, times a 200-entry `/format` request over HTTP with `scripts/time-format-route.sh` (also usable by hand against any site), and exercises the write routes over HTTP with an application password.
-- **release.yml** — tag-triggered GitHub Release and ZIP publication
+- **release.yml** — GitHub Release and ZIP publication on a version bump merged to `main`, a `v*` tag, or by hand
 - **wp-deploy.yml** — deploys to WordPress.org SVN on published GitHub release, release dispatch, or manual run
 - **codeql.yml** — security analysis
 - **demo-links.yml** — scheduled/manual check that Playground demo blueprint install URLs stay reachable and never regress to the browser-broken `git:directory` resource

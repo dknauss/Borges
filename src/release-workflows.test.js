@@ -8,7 +8,7 @@ const {
 const rootDir = path.resolve(__dirname, '..');
 
 describe('release workflows', () => {
-	test('tag release workflow dispatches the WordPress.org deploy workflow', () => {
+	test('release workflow dispatches the WordPress.org deploy workflow on the release tag', () => {
 		const releaseWorkflow = fs.readFileSync(
 			path.join(rootDir, '.github/workflows/release.yml'),
 			'utf8'
@@ -16,7 +16,26 @@ describe('release workflows', () => {
 
 		expect(releaseWorkflow).toMatch(/actions:\s+write/u);
 		expect(releaseWorkflow).toContain(
-			'gh workflow run wp-deploy.yml --ref "$GITHUB_REF_NAME"'
+			'gh workflow run wp-deploy.yml --ref "$RELEASE_TAG"'
+		);
+	});
+
+	test('release workflow runs on a tag, a version bump on main, or by hand', () => {
+		const releaseWorkflow = fs.readFileSync(
+			path.join(rootDir, '.github/workflows/release.yml'),
+			'utf8'
+		);
+
+		expect(releaseWorkflow).toMatch(/tags:\s+- 'v\*'/u);
+		expect(releaseWorkflow).toMatch(
+			/branches:\s+- main\s+paths:\s+- 'bibliography-builder\.php'/u
+		);
+		expect(releaseWorkflow).toContain('workflow_dispatch:');
+		// An existing release is left alone, so re-runs and unrelated edits
+		// to the main file are no-ops.
+		expect(releaseWorkflow).toContain('gh release view "v${version}"');
+		expect(releaseWorkflow).toContain(
+			'tag_name: ${{ steps.version.outputs.tag }}'
 		);
 	});
 
@@ -27,7 +46,7 @@ describe('release workflows', () => {
 		);
 
 		expect(releaseWorkflow).toContain(
-			'node scripts/extract-changelog-section.js "$GITHUB_REF_NAME" > output/release/release-notes.md'
+			'node scripts/extract-changelog-section.js "$RELEASE_TAG" > output/release/release-notes.md'
 		);
 		expect(releaseWorkflow).toContain(
 			'body_path: output/release/release-notes.md'

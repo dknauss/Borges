@@ -114,10 +114,14 @@ miss — nothing in CI checks any of them.
 
 ## Publish and verify
 
-Merging the release PR does not release anything. `wp-deploy.yml` runs on
-`release: published` (or manual dispatch), so wordpress.org keeps serving the
-previous tag — and keeps showing its `Tested up to` — until a release exists.
+Merging the release PR releases it. When a push to `main` changes
+`bibliography-builder.php`, `release.yml` reads the version, checks that the
+plugin header, `readme.txt`, `package.json` and `block.json` agree, and, if no
+GitHub release exists for it yet, creates the tag and the release and
+dispatches `wp-deploy.yml`. So run this checklist before merging the version
+bump, not after. Pushing a matching `v*` tag, or running `release.yml` by
+hand, does the same; an existing release is never changed.
 
--   [ ] Tag created and GitHub release published
+-   [ ] `release.yml` run completed: tag created and GitHub release published
 -   [ ] `wp-deploy` run completed
 -   [ ] wordpress.org listing shows the new version and `Tested up to`
