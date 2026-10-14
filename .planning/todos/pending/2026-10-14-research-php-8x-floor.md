@@ -67,6 +67,10 @@ fixes.
 
 ## Recommendation so far
 
+**Phase D gets most of the maintainability benefit of a PHP 8.x floor with nobody left behind.** Psalm tightening (memo Phase D) gives most of the type safety
+an 8.x floor would, without excluding any site, so do Phase D first and judge
+the floor on what is left.
+
 Keep 7.4 for now. Revisit when WordPress core moves its minimum to 8.x or 7.4
 drops below about 5% of installs. When raising, go straight to **8.1**: it is
 the first version whose features (`array_is_list`, enums, `readonly`) buy

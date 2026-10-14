@@ -378,7 +378,8 @@ In short, the 2026-10-14 check found almost no gain: no PHP 8 syntax would
 simplify the current code, and only one helper exists because of 7.4.
 WordPress core still supports 7.4. Revisit when core raises its own minimum
 or 7.4 falls below about 5% of WordPress.org installs; if the floor is
-raised, go straight to 8.1.
+raised, go straight to 8.1. Meanwhile, the refactor memo's Phase D (Psalm
+tightening) gets most of the maintainability benefit with nobody left behind.
 
 ## WordPress.org launch status
 
