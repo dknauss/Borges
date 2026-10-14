@@ -82,9 +82,15 @@ final class SortCoordinationTest extends TestCase {
 		$style_path      = BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'vendor/citation-style-language/styles/' . $style_file_name;
 		$style_xml       = file_get_contents( $style_path );
 		$prepared_items  = array();
+		// Prepare items as the formatter does, so a style that demotes name
+		// particles sees them split out of `family` (see #142).
+		$demote_particle = 1 === preg_match( '/demote-non-dropping-particle="display-and-sort"/', $style_xml );
 
 		foreach ( array_values( $citations ) as $index => $citation ) {
-			$csl       = is_array( $citation['csl'] ?? null ) ? $citation['csl'] : array();
+			$csl       = bibliography_builder_prepare_csl_for_formatter(
+				is_array( $citation['csl'] ?? null ) ? $citation['csl'] : array(),
+				$demote_particle
+			);
 			$source_id = isset( $citation['id'] ) ? (string) $citation['id'] : 'citation-' . $index;
 			$csl['id'] = 'coord-' . $source_id;
 			$prepared_items[] = $csl;

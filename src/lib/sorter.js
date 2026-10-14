@@ -1,4 +1,5 @@
 import { getStyleDefinition } from './formatting';
+import { demotesParticleForSort, getSortFamily } from './name-particles';
 
 const LEADING_ARTICLES = /^(a|an|the)\s+/i;
 
@@ -21,12 +22,29 @@ function stripArticles(title) {
 }
 
 /**
+ * The family name a contributor sorts by. With `particles` (current save) a
+ * name particle follows the style's demote-non-dropping-particle option; with
+ * `particles: null`, `family` is used as stored, the order save() produced
+ * before particle-aware sorting.
+ *
+ * @param {Object}      contributor CSL name.
+ * @param {Object|null} particles   `{ demote }`, or null for the legacy key.
+ * @return {string} Family sort string, or '' when the name has none.
+ */
+function getContributorFamily(contributor = {}, particles = null) {
+	return particles
+		? getSortFamily(contributor, particles.demote)
+		: contributor.family || '';
+}
+
+/**
  * Get the sortable author string from a CSL-JSON object.
  *
- * @param {Object} csl CSL-JSON object.
+ * @param {Object}      csl       CSL-JSON object.
+ * @param {Object|null} particles Particle sort rule (see getContributorFamily).
  * @return {string} Lowercase author string for sorting.
  */
-function getAuthorSort(csl = {}) {
+function getAuthorSort(csl = {}, particles = null) {
 	const primaryContributors = getPrimaryContributors(csl);
 
 	if (!primaryContributors) {
@@ -34,7 +52,11 @@ function getAuthorSort(csl = {}) {
 	}
 
 	const first = primaryContributors[0];
-	return (first.family || first.literal || '').toLowerCase();
+	return (
+		getContributorFamily(first, particles) ||
+		first.literal ||
+		''
+	).toLowerCase();
 }
 
 /**
@@ -67,9 +89,9 @@ function getTitleSort(csl = {}) {
 	return stripArticles(csl.title || '').toLowerCase();
 }
 
-function compareAuthors(a, b, locale) {
-	const authorA = getAuthorSort(a.csl);
-	const authorB = getAuthorSort(b.csl);
+function compareAuthors(a, b, locale, particles) {
+	const authorA = getAuthorSort(a.csl, particles);
+	const authorB = getAuthorSort(b.csl, particles);
 
 	return authorA.localeCompare(authorB, locale, {
 		sensitivity: 'base',
@@ -89,17 +111,21 @@ function compareYears(a, b) {
 	return getSortableYear(a.csl) - getSortableYear(b.csl);
 }
 
-function normalizeContributorKey(contributor = {}) {
-	const family = (contributor.family || '').trim().toLowerCase();
+function normalizeContributorKey(contributor = {}, particles = null) {
+	const family = getContributorFamily(contributor, particles)
+		.trim()
+		.toLowerCase();
 	const given = (contributor.given || '').trim().toLowerCase();
 	const literal = (contributor.literal || '').trim().toLowerCase();
 
 	return family ? `${family}|${given}` : literal;
 }
 
-function getAuthorChain(csl = {}) {
+function getAuthorChain(csl = {}, particles = null) {
 	const primaryContributors = getPrimaryContributors(csl) || [];
-	return primaryContributors.map(normalizeContributorKey);
+	return primaryContributors.map((contributor) =>
+		normalizeContributorKey(contributor, particles)
+	);
 }
 
 function compareAuthorChains(chainA, chainB, locale) {
@@ -139,8 +165,8 @@ function compareAuthorChains(chainA, chainB, locale) {
 	return chainA.length - chainB.length;
 }
 
-function compareNotes(a, b, locale) {
-	const authorCmp = compareAuthors(a, b, locale);
+function compareNotes(a, b, locale, particles) {
+	const authorCmp = compareAuthors(a, b, locale, particles);
 	if (authorCmp !== 0) {
 		return authorCmp;
 	}
@@ -153,9 +179,9 @@ function compareNotes(a, b, locale) {
 	return compareYears(a, b);
 }
 
-function compareAuthorDate(a, b, locale) {
-	const chainA = getAuthorChain(a.csl);
-	const chainB = getAuthorChain(b.csl);
+function compareAuthorDate(a, b, locale, particles) {
+	const chainA = getAuthorChain(a.csl, particles);
+	const chainB = getAuthorChain(b.csl, particles);
 
 	if (chainA.length && chainB.length) {
 		const chainCmp = compareAuthorChains(chainA, chainB, locale);
@@ -163,13 +189,13 @@ function compareAuthorDate(a, b, locale) {
 			return chainCmp;
 		}
 	} else {
-		const authorCmp = compareAuthors(a, b, locale);
+		const authorCmp = compareAuthors(a, b, locale, particles);
 		if (authorCmp !== 0) {
 			return authorCmp;
 		}
 	}
 
-	const authorCmp = compareAuthors(a, b, locale);
+	const authorCmp = compareAuthors(a, b, locale, particles);
 	if (authorCmp !== 0) {
 		return authorCmp;
 	}
@@ -182,33 +208,51 @@ function compareAuthorDate(a, b, locale) {
 	return compareTitles(a, b, locale);
 }
 
-function getComparatorForFamily(family, locale) {
+function getComparatorForFamily(family, locale, particles) {
 	switch (family) {
 		case 'notes':
-			return (a, b) => compareNotes(a, b, locale);
+			return (a, b) => compareNotes(a, b, locale, particles);
 		case 'author-date':
-			return (a, b) => compareAuthorDate(a, b, locale);
+			return (a, b) => compareAuthorDate(a, b, locale, particles);
 		case 'numeric':
 			return null;
 		default:
-			return (a, b) => compareAuthorDate(a, b, locale);
+			return (a, b) => compareAuthorDate(a, b, locale, particles);
 	}
 }
 
 /**
  * Sort an array of citation objects by style family rules.
  *
- * @param {Array}  citations Array of citation objects.
- * @param {string} styleKey  Citation style key.
+ * Name particles ("van Duijnhoven", "de la Cruz") sort as the style's
+ * demote-non-dropping-particle option says: under the surname for Chicago,
+ * under the particle for APA and MLA. `particleAwareSort: false` sorts by the
+ * stored family as written, the order save() produced before 1.12.0.
+ *
+ * @param {Array}   citations                   Array of citation objects.
+ * @param {string}  styleKey                    Citation style key.
+ * @param {Object}  [options]                   Options.
+ * @param {boolean} [options.particleAwareSort] Follow the style's particle
+ *                                              rule (default true).
  * @return {Array} Sorted citation array.
  *
  * @since 0.1.0
  */
-export function sortCitations(citations, styleKey) {
+export function sortCitations(
+	citations,
+	styleKey,
+	{ particleAwareSort = true } = {}
+) {
 	const style = getStyleDefinition(styleKey);
+	const particles = particleAwareSort
+		? {
+				demote: demotesParticleForSort(style.demoteNonDroppingParticle),
+		  }
+		: null;
 	const comparator = getComparatorForFamily(
 		style.family,
-		style.locale || 'en-US'
+		style.locale || 'en-US',
+		particles
 	);
 
 	if (comparator === null) {
