@@ -1690,6 +1690,37 @@ function bibliography_builder_save_csl_to_json_ld( $csl ) {
 }
 
 /**
+ * `wrapJsonLdItemList()` from jsonld.js.
+ *
+ * Nests the cited works in one schema.org ItemList so none is a top-level
+ * node that a consumer could take for the page itself (Mastodon's link cards
+ * read the first top-level WebPage or NewsArticle as the shared page).
+ *
+ * @since 1.11.0
+ *
+ * @param array $items Objects from bibliography_builder_save_csl_to_json_ld().
+ * @return array
+ */
+function bibliography_builder_json_ld_item_list( $items ) {
+	$elements = array();
+
+	foreach ( array_values( $items ) as $index => $item ) {
+		unset( $item['@context'] );
+		$elements[] = array(
+			'@type'    => 'ListItem',
+			'position' => $index + 1,
+			'item'     => $item,
+		);
+	}
+
+	return array(
+		'@context'        => 'https://schema.org',
+		'@type'           => 'ItemList',
+		'itemListElement' => $elements,
+	);
+}
+
+/**
  * `escapeForScriptContext()`.
  *
  * @param string $json Serialized JSON.
@@ -2355,7 +2386,9 @@ function bibliography_builder_render_save_markup( $attrs ) {
 		$html .= '<script type="application/ld+json">'
 			. bibliography_builder_escape_for_script(
 				bibliography_builder_json_stringify(
-					array_map( 'bibliography_builder_save_csl_to_json_ld', $csl_array )
+					bibliography_builder_json_ld_item_list(
+						array_map( 'bibliography_builder_save_csl_to_json_ld', $csl_array )
+					)
 				)
 			)
 			. '</script>';

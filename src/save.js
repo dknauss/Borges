@@ -25,6 +25,7 @@ export default function save({ attributes }) {
 		quoteAwareItalics: true,
 		urlAwareItalics: true,
 		canonicalDoiUrl: true,
+		jsonLdItemList: true,
 		labels: LOCALE_INDEPENDENT_SAVE_LABELS,
 	});
 }

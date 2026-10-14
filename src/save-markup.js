@@ -9,7 +9,11 @@ import {
 	splitTextIntoLinkParts,
 	getStyleDefinition,
 } from './lib/formatting';
-import { buildJsonLdString, buildCslJsonString } from './lib/jsonld';
+import {
+	buildJsonLdString,
+	buildJsonLdItemListString,
+	buildCslJsonString,
+} from './lib/jsonld';
 import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
 import {
@@ -62,6 +66,7 @@ export function renderBibliographySave(
 		quoteAwareItalics = false,
 		urlAwareItalics = false,
 		canonicalDoiUrl = false,
+		jsonLdItemList = false,
 		labels: labelOverrides = null,
 	} = {}
 ) {
@@ -312,7 +317,9 @@ export function renderBibliographySave(
 				<script
 					type="application/ld+json"
 					dangerouslySetInnerHTML={{
-						__html: buildJsonLdString(cslArray, {
+						__html: (jsonLdItemList
+							? buildJsonLdItemListString
+							: buildJsonLdString)(cslArray, {
 							canonicalDoiUrl,
 						}),
 					}}
