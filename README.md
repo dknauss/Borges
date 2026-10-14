@@ -442,3 +442,9 @@ See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 ## License
 
 GPL-2.0-or-later. See [LICENSE](LICENSE) for the full text.
+
+## Component ownership
+
+See [component editing contracts](docs/COMPONENTS.md) and the
+[design/content workflow](docs/COMPONENT-WORKFLOW.md). Validate with
+`python3 tools/check-components.py`.

@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "repository": "borges-bibliography-builder",
+  "scopes": [
+    "."
+  ],
+  "components": [
+    {
+      "id": "bibliography-builder/bibliography",
+      "kind": "block",
+      "source": "block.json",
+      "design_owner": "Repository source files",
+      "data_owner": "WordPress editorial content",
+      "editable": "Declared attributes: citationStyle, headingText, headingLevel, outputJsonLd, outputCoins, outputCslJson, outputCiteExport, bibliographyId, citations; existing style controls are listed in supports. Attribute declarations are not proof of visible UI controls.",
+      "updates": "Saved output remains in post content; existing instances require compatibility/deprecations before markup changes",
+      "verification": "Source validation plus editor and frontend checks on a local site",
+      "attributes": {
+        "citationStyle": {
+          "type": "string",
+          "default": "chicago-notes-bibliography"
+        },
+        "headingText": {
+          "type": "string",
+          "default": ""
+        },
+        "headingLevel": {
+          "type": "integer",
+          "enum": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "default": 0
+        },
+        "outputJsonLd": {
+          "type": "boolean",
+          "default": true
+        },
+        "outputCoins": {
+          "type": "boolean",
+          "default": false
+        },
+        "outputCslJson": {
+          "type": "boolean",
+          "default": false
+        },
+        "outputCiteExport": {
+          "type": "boolean",
+          "default": false
+        },
+        "bibliographyId": {
+          "type": "string",
+          "default": ""
+        },
+        "citations": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "supports": {
+        "html": false,
+        "anchor": true,
+        "className": true,
+        "spacing": {
+          "margin": [
+            "top",
+            "bottom"
+          ],
+          "padding": [
+            "top",
+            "bottom"
+          ]
+        },
+        "typography": {
+          "fontSize": true
+        }
+      },
+      "references": []
+    }
+  ]
+}
