@@ -334,31 +334,32 @@ function bibliography_builder_save_attributes( $attributes ) {
 /**
  * Front-end style definitions the save markup depends on.
  *
- * Mirrors the `listType`, `family`, and `locale` fields of `STYLE_DEFINITIONS`
- * in `src/lib/formatting/style-registry.js`.
+ * Mirrors the `listType`, `family`, `locale`, and `demoteNonDroppingParticle`
+ * fields of `STYLE_DEFINITIONS` in `src/lib/formatting/style-registry.js`.
  *
  * @param string $style_key Style key.
- * @return array{key: string, listType: string, family: string, locale: string}
+ * @return array{key: string, listType: string, family: string, locale: string, demoteNonDroppingParticle: string}
  */
 function bibliography_builder_get_save_style_definition( $style_key ) {
 	$styles = array(
-		'chicago-notes-bibliography' => array( 'ul', 'notes', 'en-US' ),
-		'chicago-author-date'        => array( 'ul', 'author-date', 'en-US' ),
-		'apa-7'                      => array( 'ul', 'author-date', 'en-US' ),
-		'mla-9'                      => array( 'ul', 'author-date', 'en-US' ),
-		'harvard'                    => array( 'ul', 'author-date', 'en-US' ),
-		'ieee'                       => array( 'ol', 'numeric', 'en-US' ),
-		'vancouver'                  => array( 'ol', 'numeric', 'en-US' ),
-		'oscola'                     => array( 'ul', 'notes', 'en-GB' ),
-		'abnt'                       => array( 'ul', 'author-date', 'pt-BR' ),
+		'chicago-notes-bibliography' => array( 'ul', 'notes', 'en-US', 'display-and-sort' ),
+		'chicago-author-date'        => array( 'ul', 'author-date', 'en-US', 'display-and-sort' ),
+		'apa-7'                      => array( 'ul', 'author-date', 'en-US', 'never' ),
+		'mla-9'                      => array( 'ul', 'author-date', 'en-US', 'never' ),
+		'harvard'                    => array( 'ul', 'author-date', 'en-US', 'never' ),
+		'ieee'                       => array( 'ol', 'numeric', 'en-US', 'never' ),
+		'vancouver'                  => array( 'ol', 'numeric', 'en-US', 'sort-only' ),
+		'oscola'                     => array( 'ul', 'notes', 'en-GB', 'never' ),
+		'abnt'                       => array( 'ul', 'author-date', 'pt-BR', 'never' ),
 	);
 	$key    = is_string( $style_key ) && isset( $styles[ $style_key ] ) ? $style_key : 'chicago-notes-bibliography';
 
 	return array(
-		'key'      => $key,
-		'listType' => $styles[ $key ][0],
-		'family'   => $styles[ $key ][1],
-		'locale'   => $styles[ $key ][2],
+		'key'                       => $key,
+		'listType'                  => $styles[ $key ][0],
+		'family'                    => $styles[ $key ][1],
+		'locale'                    => $styles[ $key ][2],
+		'demoteNonDroppingParticle' => $styles[ $key ][3],
 	);
 }
 
@@ -479,12 +480,143 @@ function bibliography_builder_name_part( $name, $part ) {
 }
 
 /**
- * `getAuthorSort()`.
+ * JavaScript `trim()` over the whitespace the port recognizes.
  *
- * @param array $csl CSL-JSON item.
+ * @param string $value Value.
  * @return string
  */
-function bibliography_builder_sort_author_key( $csl ) {
+function bibliography_builder_js_trim( $value ) {
+	return (string) preg_replace(
+		'/^[' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ']+|[' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ']+$/u',
+		'',
+		$value
+	);
+}
+
+/**
+ * `NAME_PARTICLES` from `src/lib/name-particles.js`.
+ *
+ * @return string[]
+ */
+function bibliography_builder_name_particles() {
+	return array(
+		'van',
+		'von',
+		'vom',
+		'zu',
+		'zur',
+		'der',
+		'den',
+		'de',
+		'del',
+		'della',
+		'di',
+		'da',
+		'das',
+		'dos',
+		'du',
+		'la',
+		'le',
+		'el',
+		'al',
+		'bin',
+		'ibn',
+		'ter',
+		'ten',
+		'op',
+	);
+}
+
+/**
+ * `splitNameParticle()`: the lowercase particles that open a family name
+ * ("van der Waals", "de la Cruz", "d'Alembert"), or null. A capitalized form
+ * is part of the surname ("Van Buren").
+ *
+ * @param mixed $family Family name.
+ * @return array{particle: string, family: string}|null
+ */
+function bibliography_builder_split_name_particle( $family ) {
+	if ( ! is_string( $family ) ) {
+		return null;
+	}
+
+	if ( 1 === preg_match( "/^([dl]['\x{2019}])(?=\p{Lu})/u", $family, $elided ) ) {
+		return array(
+			'particle' => $elided[1],
+			'family'   => substr( $family, strlen( $elided[1] ) ),
+		);
+	}
+
+	$words     = array();
+	$rest      = bibliography_builder_js_trim( $family );
+	$particles = bibliography_builder_name_particles();
+
+	while ( 1 === preg_match( '/^(\S+)\s+(?=\S)/u', $rest, $match ) && in_array( $match[1], $particles, true ) ) {
+		$words[] = $match[1];
+		$rest    = substr( $rest, strlen( $match[0] ) );
+	}
+
+	if ( array() === $words || 1 !== preg_match( '/^\p{Lu}/u', $rest ) ) {
+		return null;
+	}
+
+	return array(
+		'particle' => implode( ' ', $words ),
+		'family'   => $rest,
+	);
+}
+
+/**
+ * `getSortFamily()`: the surname proper when the style demotes particles,
+ * else the particle and surname together.
+ *
+ * @param mixed $name   CSL name.
+ * @param bool  $demote Whether the style demotes the particle for sorting.
+ * @return string
+ */
+function bibliography_builder_sort_family( $name, $demote ) {
+	$family   = is_array( $name ) && isset( $name['family'] ) && is_string( $name['family'] ) ? $name['family'] : '';
+	$particle = is_array( $name ) && isset( $name['non-dropping-particle'] ) ? $name['non-dropping-particle'] : '';
+	$particle = is_string( $particle ) ? bibliography_builder_js_trim( $particle ) : '';
+
+	if ( '' === $family ) {
+		return '';
+	}
+
+	if ( '' === $particle ) {
+		$split = bibliography_builder_split_name_particle( $family );
+
+		if ( null !== $split ) {
+			$particle = $split['particle'];
+			$family   = $split['family'];
+		}
+	}
+
+	if ( '' === $particle || $demote ) {
+		return $family;
+	}
+
+	return 1 === preg_match( "/['\x{2019}]$/u", $particle ) ? $particle . $family : $particle . ' ' . $family;
+}
+
+/**
+ * `demotesParticleForSort()`.
+ *
+ * @param string $demote Style's demote-non-dropping-particle option.
+ * @return bool
+ */
+function bibliography_builder_demotes_particle_for_sort( $demote ) {
+	return 'sort-only' === $demote || 'display-and-sort' === $demote;
+}
+
+/**
+ * `getAuthorSort()` with particle-aware sorting.
+ *
+ * @param array $csl    CSL-JSON item.
+ * @param bool  $demote Whether the style demotes particles for sorting.
+ * @return string
+ */
+function bibliography_builder_sort_author_key( $csl, $demote = false ) {
 	$contributors = bibliography_builder_sort_primary_contributors( $csl );
 
 	if ( null === $contributors ) {
@@ -496,7 +628,7 @@ function bibliography_builder_sort_author_key( $csl ) {
 	}
 
 	$first = $contributors[0];
-	$name  = bibliography_builder_name_part( $first, 'family' );
+	$name  = bibliography_builder_sort_family( $first, $demote );
 
 	return bibliography_builder_js_lower( '' !== $name ? $name : bibliography_builder_name_part( $first, 'literal' ) );
 }
@@ -560,13 +692,14 @@ function bibliography_builder_sort_compare_years( $a, $b ) {
 }
 
 /**
- * `normalizeContributorKey()`.
+ * `normalizeContributorKey()` with particle-aware sorting.
  *
  * @param mixed $contributor Name object.
+ * @param bool  $demote      Whether the style demotes particles for sorting.
  * @return string
  */
-function bibliography_builder_sort_contributor_key( $contributor ) {
-	$family  = bibliography_builder_js_lower( trim( bibliography_builder_name_part( $contributor, 'family' ) ) );
+function bibliography_builder_sort_contributor_key( $contributor, $demote = false ) {
+	$family  = bibliography_builder_js_lower( trim( bibliography_builder_sort_family( $contributor, $demote ) ) );
 	$given   = bibliography_builder_js_lower( trim( bibliography_builder_name_part( $contributor, 'given' ) ) );
 	$literal = bibliography_builder_js_lower( trim( bibliography_builder_name_part( $contributor, 'literal' ) ) );
 
@@ -625,13 +758,14 @@ function bibliography_builder_sort_compare_chains( $collator, $chain_a, $chain_b
  * @param Collator $collator Collator.
  * @param array    $a        CSL-JSON item.
  * @param array    $b        CSL-JSON item.
+ * @param bool     $demote   Whether the style demotes particles for sorting.
  * @return int
  */
-function bibliography_builder_sort_compare( $family, $collator, $a, $b ) {
+function bibliography_builder_sort_compare( $family, $collator, $a, $b, $demote = false ) {
 	$authors = bibliography_builder_locale_compare(
 		$collator,
-		bibliography_builder_sort_author_key( $a ),
-		bibliography_builder_sort_author_key( $b )
+		bibliography_builder_sort_author_key( $a, $demote ),
+		bibliography_builder_sort_author_key( $b, $demote )
 	);
 	$titles  = static function () use ( $collator, $a, $b ) {
 		return bibliography_builder_locale_compare(
@@ -651,7 +785,9 @@ function bibliography_builder_sort_compare( $family, $collator, $a, $b ) {
 		return 0 !== $title_comparison ? $title_comparison : bibliography_builder_sort_compare_years( $a, $b );
 	}
 
-	$key     = 'bibliography_builder_sort_contributor_key';
+	$key     = static function ( $contributor ) use ( $demote ) {
+		return bibliography_builder_sort_contributor_key( $contributor, $demote );
+	};
 	$chain_a = array_map( $key, (array) bibliography_builder_sort_primary_contributors( $a ) );
 	$chain_b = array_map( $key, (array) bibliography_builder_sort_primary_contributors( $b ) );
 
@@ -689,6 +825,7 @@ function bibliography_builder_sort_citations_for_save( $citations, $style_key ) 
 
 	$collator = new Collator( str_replace( '-', '_', $style['locale'] ) );
 	$collator->setStrength( Collator::PRIMARY );
+	$demote = bibliography_builder_demotes_particle_for_sort( $style['demoteNonDroppingParticle'] );
 
 	$indexed = array();
 
@@ -698,12 +835,13 @@ function bibliography_builder_sort_citations_for_save( $citations, $style_key ) 
 
 	usort(
 		$indexed,
-		static function ( $left, $right ) use ( $style, $collator ) {
+		static function ( $left, $right ) use ( $style, $collator, $demote ) {
 			$comparison = bibliography_builder_sort_compare(
 				$style['family'],
 				$collator,
 				bibliography_builder_citation_csl( $left[1] ),
-				bibliography_builder_citation_csl( $right[1] )
+				bibliography_builder_citation_csl( $right[1] ),
+				$demote
 			);
 
 			return 0 !== $comparison ? $comparison : $left[0] - $right[0];

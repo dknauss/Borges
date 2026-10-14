@@ -12,35 +12,9 @@
  * to manual entry — see `normalizeResolvedCsl` in parser.js.
  */
 
-const NAME_LIST_FIELDS = ['author', 'editor', 'reviewed-author'];
+import { NAME_PARTICLES } from './name-particles';
 
-// Lowercase nobiliary particles kept lowercase when they appear inside a name.
-const NAME_PARTICLES = new Set([
-	'van',
-	'von',
-	'vom',
-	'zu',
-	'zur',
-	'der',
-	'den',
-	'de',
-	'del',
-	'della',
-	'di',
-	'da',
-	'das',
-	'dos',
-	'du',
-	'la',
-	'le',
-	'el',
-	'al',
-	'bin',
-	'ibn',
-	'ter',
-	'ten',
-	'op',
-]);
+const NAME_LIST_FIELDS = ['author', 'editor', 'reviewed-author'];
 
 function titleCaseWord(word) {
 	const lower = word.toLowerCase();

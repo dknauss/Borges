@@ -1099,7 +1099,7 @@ function bibliography_builder_get_formatter_style_hash( $template ) {
 function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style ) {
 	$template = isset( $style['template'] ) ? (string) $style['template'] : '';
 	$payload  = array(
-		'version'    => 2,
+		'version'    => 3,
 		'style'      => sanitize_key( $style_key ),
 		'template'   => $template,
 		// The bundled styles change between releases (new manual editions), so
@@ -1239,11 +1239,18 @@ function bibliography_builder_extract_citeproc_entries( $html, $style ) {
  *   inverted or initialized.
  * - `page-first`: citeproc-php does not derive it from `page`, and OSCOLA
  *   cites a journal article by its first page.
+ * - Name particles: for a style that demotes them in display (Chicago:
+ *   `demote-non-dropping-particle="display-and-sort"`), a lowercase particle
+ *   still inside `family` ("van Duijnhoven") moves to `non-dropping-particle`,
+ *   so citeproc-php prints "Duijnhoven, Elza van". Other styles print the name
+ *   as stored, so their output is unchanged; splitting there would also make
+ *   citeproc-php print an elided particle with a space ("d’ Alembert").
  *
- * @param array $item CSL-JSON item.
+ * @param array $item                    CSL-JSON item.
+ * @param bool  $demote_particle_display Whether the style demotes particles in display.
  * @return array
  */
-function bibliography_builder_prepare_csl_for_formatter( $item ) {
+function bibliography_builder_prepare_csl_for_formatter( $item, $demote_particle_display = false ) {
 	$name_variables = array(
 		'author',
 		'collection-editor',
@@ -1272,6 +1279,17 @@ function bibliography_builder_prepare_csl_for_formatter( $item ) {
 
 			if ( '' !== $literal ) {
 				$item[ $variable ][ $position ] = array( 'family' => $literal );
+				continue;
+			}
+
+			if ( $demote_particle_display && is_array( $name ) && empty( $name['non-dropping-particle'] ) ) {
+				$split = bibliography_builder_split_name_particle( isset( $name['family'] ) ? $name['family'] : null );
+
+				if ( null !== $split ) {
+					$name['family']                 = $split['family'];
+					$name['non-dropping-particle']  = $split['particle'];
+					$item[ $variable ][ $position ] = $name;
+				}
 			}
 		}
 	}
@@ -1331,10 +1349,14 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		);
 	}
 
-	$prepared_items = array();
+	$prepared_items  = array();
+	$demote_particle = 1 === preg_match( '/demote-non-dropping-particle="display-and-sort"/', $style_xml );
 
 	foreach ( array_values( $csl_items ) as $index => $item ) {
-		$item_array       = bibliography_builder_prepare_csl_for_formatter( is_array( $item ) ? $item : array() );
+		$item_array       = bibliography_builder_prepare_csl_for_formatter(
+			is_array( $item ) ? $item : array(),
+			$demote_particle
+		);
 		$item_array['id'] = 'bibliography-builder-format-' . $index;
 		$prepared_items[] = $item_array;
 	}

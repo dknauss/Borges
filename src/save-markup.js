@@ -65,6 +65,7 @@ export function renderBibliographySave(
 		inlineMarkup = false,
 		quoteAwareItalics = false,
 		urlAwareItalics = false,
+		particleAwareSort = false,
 		canonicalDoiUrl = false,
 		jsonLdItemList = false,
 		labels: labelOverrides = null,
@@ -86,7 +87,7 @@ export function renderBibliographySave(
 	const labels = labelOverrides || getLocalizedSaveLabels();
 	const blockProps = useBlockProps.save();
 	const renderedCitations = sortEntries
-		? sortCitations(citations, citationStyle)
+		? sortCitations(citations, citationStyle, { particleAwareSort })
 		: citations;
 	const cslArray = renderedCitations.map((c) => c.csl);
 	const repeatedAuthorPrefixes = repeatedAuthors

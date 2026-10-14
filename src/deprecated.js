@@ -123,6 +123,25 @@ function migrateSortedAttributes(attributes) {
 
 export const deprecated = [
 	{
+		// Freezes the save() shape from before 1.12.0: entries sorted by the
+		// family name as stored, so a name particle filed "van Duijnhoven"
+		// under V even in Chicago, which sorts it under D.
+		attributes: deprecatedAttributes,
+		save: ({ attributes }) =>
+			renderBibliographySave(attributes, {
+				sortEntries: true,
+				headingTag: getHeadingTag(attributes.headingLevel),
+				entryTag: 'cite',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				inlineMarkup: true,
+				quoteAwareItalics: true,
+				urlAwareItalics: true,
+				canonicalDoiUrl: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			}),
+	},
+	{
 		// Freezes the save() shape from before 1.11.0: JSON-LD was a top-level
 		// array of the cited works, so a consumer that reads the first WebPage
 		// on a page as the page itself (Mastodon's link cards) credited a cited

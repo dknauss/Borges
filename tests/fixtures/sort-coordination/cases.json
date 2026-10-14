@@ -130,5 +130,61 @@
       { "id": "king-a", "csl": { "type": "book", "title": "A Beta Collection", "author": [{ "family": "King", "given": "Kim" }], "issued": { "date-parts": [[2019]] } } }
     ],
     "expectedOrder": ["king-an", "king-a", "king-the"]
+  },
+  {
+    "id": "case-14-particles-chicago-notes",
+    "style": "chicago-notes-bibliography",
+    "citations": [
+      { "id": "vangogh", "csl": { "type": "book", "title": "Letters", "author": [{ "family": "van Gogh", "given": "Vincent" }], "issued": { "date-parts": [[1914]] }}},
+      { "id": "duijnhoven", "csl": { "type": "article-journal", "title": "Specialized Orthotic Care", "author": [{ "family": "van Duijnhoven", "given": "Elza" }], "issued": { "date-parts": [[2025]] }}},
+      { "id": "delacruz", "csl": { "type": "book", "title": "Poems", "author": [{ "family": "de la Cruz", "given": "Juana Inés" }], "issued": { "date-parts": [[1689]] }}},
+      { "id": "vonneumann", "csl": { "type": "book", "title": "Theory of Games", "author": [{ "family": "Neumann", "non-dropping-particle": "von", "given": "John" }], "issued": { "date-parts": [[1944]] }}},
+      { "id": "vanburen", "csl": { "type": "book", "title": "Autobiography", "author": [{ "family": "Van Buren", "given": "Martin" }], "issued": { "date-parts": [[1920]] }}},
+      { "id": "dalembert", "csl": { "type": "book", "title": "Discours préliminaire", "author": [{ "family": "d'Alembert", "given": "Jean" }], "issued": { "date-parts": [[1751]] }}},
+      { "id": "edwards", "csl": { "type": "book", "title": "Sermons", "author": [{ "family": "Edwards", "given": "Jonathan" }], "issued": { "date-parts": [[1741]] }}}
+    ],
+    "expectedOrder": ["dalembert", "delacruz", "duijnhoven", "edwards", "vangogh", "vonneumann", "vanburen"]
+  },
+  {
+    "id": "case-15-particles-chicago-author-date",
+    "style": "chicago-author-date",
+    "citations": [
+      { "id": "vangogh", "csl": { "type": "book", "title": "Letters", "author": [{ "family": "van Gogh", "given": "Vincent" }], "issued": { "date-parts": [[1914]] }}},
+      { "id": "duijnhoven", "csl": { "type": "article-journal", "title": "Specialized Orthotic Care", "author": [{ "family": "van Duijnhoven", "given": "Elza" }], "issued": { "date-parts": [[2025]] }}},
+      { "id": "delacruz", "csl": { "type": "book", "title": "Poems", "author": [{ "family": "de la Cruz", "given": "Juana Inés" }], "issued": { "date-parts": [[1689]] }}},
+      { "id": "vonneumann", "csl": { "type": "book", "title": "Theory of Games", "author": [{ "family": "Neumann", "non-dropping-particle": "von", "given": "John" }], "issued": { "date-parts": [[1944]] }}},
+      { "id": "vanburen", "csl": { "type": "book", "title": "Autobiography", "author": [{ "family": "Van Buren", "given": "Martin" }], "issued": { "date-parts": [[1920]] }}},
+      { "id": "dalembert", "csl": { "type": "book", "title": "Discours préliminaire", "author": [{ "family": "d'Alembert", "given": "Jean" }], "issued": { "date-parts": [[1751]] }}},
+      { "id": "edwards", "csl": { "type": "book", "title": "Sermons", "author": [{ "family": "Edwards", "given": "Jonathan" }], "issued": { "date-parts": [[1741]] }}}
+    ],
+    "expectedOrder": ["dalembert", "delacruz", "duijnhoven", "edwards", "vangogh", "vonneumann", "vanburen"]
+  },
+  {
+    "id": "case-16-particles-apa",
+    "style": "apa-7",
+    "citations": [
+      { "id": "vangogh", "csl": { "type": "book", "title": "Letters", "author": [{ "family": "van Gogh", "given": "Vincent" }], "issued": { "date-parts": [[1914]] }}},
+      { "id": "duijnhoven", "csl": { "type": "article-journal", "title": "Specialized Orthotic Care", "author": [{ "family": "van Duijnhoven", "given": "Elza" }], "issued": { "date-parts": [[2025]] }}},
+      { "id": "delacruz", "csl": { "type": "book", "title": "Poems", "author": [{ "family": "de la Cruz", "given": "Juana Inés" }], "issued": { "date-parts": [[1689]] }}},
+      { "id": "vonneumann", "csl": { "type": "book", "title": "Theory of Games", "author": [{ "family": "Neumann", "non-dropping-particle": "von", "given": "John" }], "issued": { "date-parts": [[1944]] }}},
+      { "id": "vanburen", "csl": { "type": "book", "title": "Autobiography", "author": [{ "family": "Van Buren", "given": "Martin" }], "issued": { "date-parts": [[1920]] }}},
+      { "id": "dalembert", "csl": { "type": "book", "title": "Discours préliminaire", "author": [{ "family": "d'Alembert", "given": "Jean" }], "issued": { "date-parts": [[1751]] }}},
+      { "id": "edwards", "csl": { "type": "book", "title": "Sermons", "author": [{ "family": "Edwards", "given": "Jonathan" }], "issued": { "date-parts": [[1741]] }}}
+    ],
+    "expectedOrder": ["dalembert", "delacruz", "edwards", "vanburen", "duijnhoven", "vangogh", "vonneumann"]
+  },
+  {
+    "id": "case-17-particles-mla",
+    "style": "mla-9",
+    "citations": [
+      { "id": "vangogh", "csl": { "type": "book", "title": "Letters", "author": [{ "family": "van Gogh", "given": "Vincent" }], "issued": { "date-parts": [[1914]] }}},
+      { "id": "duijnhoven", "csl": { "type": "article-journal", "title": "Specialized Orthotic Care", "author": [{ "family": "van Duijnhoven", "given": "Elza" }], "issued": { "date-parts": [[2025]] }}},
+      { "id": "delacruz", "csl": { "type": "book", "title": "Poems", "author": [{ "family": "de la Cruz", "given": "Juana Inés" }], "issued": { "date-parts": [[1689]] }}},
+      { "id": "vonneumann", "csl": { "type": "book", "title": "Theory of Games", "author": [{ "family": "Neumann", "non-dropping-particle": "von", "given": "John" }], "issued": { "date-parts": [[1944]] }}},
+      { "id": "vanburen", "csl": { "type": "book", "title": "Autobiography", "author": [{ "family": "Van Buren", "given": "Martin" }], "issued": { "date-parts": [[1920]] }}},
+      { "id": "dalembert", "csl": { "type": "book", "title": "Discours préliminaire", "author": [{ "family": "d'Alembert", "given": "Jean" }], "issued": { "date-parts": [[1751]] }}},
+      { "id": "edwards", "csl": { "type": "book", "title": "Sermons", "author": [{ "family": "Edwards", "given": "Jonathan" }], "issued": { "date-parts": [[1741]] }}}
+    ],
+    "expectedOrder": ["dalembert", "delacruz", "edwards", "vanburen", "duijnhoven", "vangogh", "vonneumann"]
   }
 ]

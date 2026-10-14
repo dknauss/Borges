@@ -20,10 +20,6 @@ const CONFORMANCE_STYLE_KEYS = Object.values(STYLE_DEFINITIONS)
 	.filter((styleKey) => !(styleKey in EXCLUDED_STYLE_KEYS));
 
 const EXCLUDED_FIXTURE_IDS = {
-	'de-beauvoir-beta-2024':
-		'Particle surname handling (de/van) remains outside current sorter parity scope.',
-	'van-der-berg-alpha-2023':
-		'Particle surname handling (de/van) remains outside current sorter parity scope.',
 	'jones-aardvark-2020':
 		'Leading-article title sort semantics differ from citeproc in current sorter implementation.',
 };
@@ -56,9 +52,7 @@ describe('sort conformance against citeproc-js', () => {
 
 	it('documents fixture exclusions that currently diverge from citeproc sort semantics', () => {
 		expect(Object.keys(EXCLUDED_FIXTURE_IDS).sort()).toEqual([
-			'de-beauvoir-beta-2024',
 			'jones-aardvark-2020',
-			'van-der-berg-alpha-2023',
 		]);
 	});
 
