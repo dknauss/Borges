@@ -1163,6 +1163,11 @@ function bibliography_builder_normalize_formatted_text( $text, $style ) {
 		$text = str_replace( array( '”,', '”.' ), array( ',”', '.”' ), $text );
 	}
 
+	// A title ending in "?" or "!" takes no period after it, but citeproc-php
+	// adds the title's "." suffix anyway ("What Is It?.”"). Commas stay: CMOS
+	// keeps one after a question-mark title (“Are You a Doctor?,” in notes).
+	$text = preg_replace( '/([?!])([”’]?)\./u', '$1$2', $text );
+
 	// citeproc-php initializes only capitalized parts of a hyphenated given
 	// name, so "Ji-woo" comes out "J.- woo". Initialize the second part too.
 	$text = preg_replace_callback(
