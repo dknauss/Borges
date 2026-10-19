@@ -153,6 +153,67 @@ final class CslStyleGoldenTest extends TestCase {
 	}
 
 	/**
+	 * A title ending in "?" or "!" already closes its element, so no period
+	 * follows it (CMOS 18 6.133; MLA 9 1.3). citeproc-php moves the title's
+	 * "." suffix inside the closing quote without checking, giving "?.”".
+	 */
+	public function test_title_ending_in_question_or_exclamation_mark_takes_no_period() {
+		$webpage = array(
+			'type'            => 'webpage',
+			'title'           => 'What Are Reduced Penetrance and Variable Expressivity?',
+			'container-title' => 'MedlinePlus',
+			'URL'             => 'https://example.org/q',
+			'issued'          => array( 'date-parts' => array( array( 2021, 7, 28 ) ) ),
+		);
+		$article = array(
+			'type'            => 'article-journal',
+			'title'           => 'Diabetes Technology: What’s New in 2025?',
+			'author'          => array(
+				array(
+					'family' => 'Moss',
+					'given'  => 'Ann',
+				),
+			),
+			'container-title' => 'Diabetes Care',
+			'volume'          => '48',
+			'page'            => '1-10',
+			'issued'          => array( 'date-parts' => array( array( 2025 ) ) ),
+		);
+		$exclaim = array(
+			'type'            => 'webpage',
+			'title'           => 'Stop the Presses!',
+			'container-title' => 'Site',
+			'URL'             => 'https://example.org/b',
+			'issued'          => array( 'date-parts' => array( array( 2024 ) ) ),
+		);
+		$items = array( $webpage, $article, $exclaim );
+
+		$this->assertSame(
+			array(
+				'“What Are Reduced Penetrance and Variable Expressivity?” MedlinePlus. July 28, 2021. https://example.org/q.',
+				'Moss, Ann. “Diabetes Technology: What’s New in 2025?” Diabetes Care 48 (2025): 1–10.',
+				'“Stop the Presses!” Site. 2024. https://example.org/b.',
+			),
+			bibliography_builder_format_csl_items( $items, 'chicago-notes-bibliography' )
+		);
+
+		$this->assertSame(
+			array(
+				'“What Are Reduced Penetrance and Variable Expressivity?” MedlinePlus, 28 July 2021, https://example.org/q.',
+				'Moss, Ann. “Diabetes Technology: What’s New in 2025?” Diabetes Care, vol. 48, 2025, pp. 1–10.',
+				'“Stop the Presses!” Site, 2024, https://example.org/b.',
+			),
+			bibliography_builder_format_csl_items( $items, 'mla-9' )
+		);
+
+		foreach ( array_keys( bibliography_builder_get_formatter_style_definitions() ) as $style_key ) {
+			foreach ( bibliography_builder_format_csl_items( $items, $style_key ) as $text ) {
+				$this->assertDoesNotMatchRegularExpression( '/[?!][”’]?\./u', $text, $style_key );
+			}
+		}
+	}
+
+	/**
 	 * The formatter reads vendor/citation-style-language/, a Composer copy of
 	 * packages/. A stale copy once hid a style regression; fail on any drift.
 	 */

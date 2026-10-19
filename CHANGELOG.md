@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Names with particles sort where each style puts them.** A surname that opens with a lowercase particle, such as "van Duijnhoven", "de la Cruz", "von Neumann", or "d'Alembert", was sorted under the particle in every style. Chicago (both styles) and Vancouver sort by the surname proper, so Chicago lists "Duijnhoven, Elza van" under D, and the formatter now renders it that way. APA, MLA, Harvard, and the other styles keep the particle in front and still sort under V. A capitalized form ("Van Buren") is part of the surname and always sorts under V. Names are stored as entered, so exports and Edit fields are unchanged. Bibliographies saved earlier stay valid in the editor and take the new order the next time they are saved. ([#142](https://github.com/dknauss/Borges/issues/142))
+- **No period after a title that ends in "?" or "!".** Chicago (both styles) and MLA rendered a quoted title such as "What Are Reduced Penetrance and Variable Expressivity?" as `“…Expressivity?.”`, with a period inside the closing quote. The title now closes with its own mark: `“…Expressivity?”`. A comma after such a title is kept, as Chicago allows. Bibliographies saved earlier keep the old text until they are reformatted or saved again.
 
 ## [1.11.0] - 2026-10-14
 
