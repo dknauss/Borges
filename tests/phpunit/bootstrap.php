@@ -33,6 +33,8 @@ function bibliography_builder_test_reset_state() {
 	$GLOBALS['bibliography_builder_test_rest_routes']     = array();
 	$GLOBALS['bibliography_builder_test_password_posts']  = array();
 	$GLOBALS['bibliography_builder_test_registered_block_types'] = array();
+	$GLOBALS['bibliography_builder_test_registered_block_args']  = array();
+	$GLOBALS['bibliography_builder_test_is_feed']                = false;
 	$GLOBALS['bibliography_builder_test_registered_scripts'] = array();
 	$GLOBALS['bibliography_builder_test_enqueued_scripts']   = array();
 	$GLOBALS['bibliography_builder_test_http_response']      = null;
@@ -235,8 +237,13 @@ function ba11yc_register_block_check( $block_type, $args ) {
 	);
 }
 
-function register_block_type( $block_type ) {
+function register_block_type( $block_type, $args = array() ) {
 	$GLOBALS['bibliography_builder_test_registered_block_types'][] = $block_type;
+	$GLOBALS['bibliography_builder_test_registered_block_args'][]  = $args;
+}
+
+function is_feed() {
+	return ! empty( $GLOBALS['bibliography_builder_test_is_feed'] );
 }
 
 function wp_script_is( $handle, $status = 'enqueued' ) {

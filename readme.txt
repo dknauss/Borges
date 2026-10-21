@@ -27,7 +27,7 @@ The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibT
 
 **Reference-manager friendly.** Export and reuse your bibliography in common research workflows. Borges supports CSL-JSON, BibTeX, BibLaTeX, RIS, DOI links, JSON-LD, and optional COinS metadata for compatibility with tools such as Zotero, Mendeley, EndNote, JabRef, BibDesk, and other citation managers.
 
-**Reader-facing cite & export.** Optionally add a per-entry Cite / Export panel to the published bibliography: a static, JavaScript-free disclosure under each entry with the citation text and one-click downloads in RIS, CSL-JSON, BibTeX, and BibLaTeX. Off by default; enable it per block.
+**Reader-facing cite & export.** Optionally add a per-entry Cite / Export panel to the published bibliography: a disclosure under each entry with a copy button and one-click downloads in RIS, CSL-JSON, BibTeX, and BibLaTeX. The panel is built on the page, so newsletters and feeds carry a clean bibliography without it. Off by default; enable it per block.
 
 **Try it first.** Launch a disposable demo in [WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json) before installing it on your site.
 
@@ -84,7 +84,7 @@ Enable CSL-JSON if you want your bibliography data to be reusable by scholarly t
 
 = Can I export the bibliography data? =
 
-Yes. In the editor you can download the whole bibliography as CSL-JSON, BibTeX, BibLaTeX, or RIS, copy any single citation, or copy the full bibliography as plain text. You can also enable a per-entry Cite / Export panel that places the same RIS, CSL-JSON, BibTeX, and BibLaTeX downloads — plus the citation text — directly on the published page for your readers. The reader-facing panel is static and JavaScript-free and is off by default.
+Yes. In the editor you can download the whole bibliography as CSL-JSON, BibTeX, BibLaTeX, or RIS, copy any single citation, or copy the full bibliography as plain text. You can also enable a per-entry Cite / Export panel that places the same RIS, CSL-JSON, BibTeX, and BibLaTeX downloads — plus the citation text — directly on the published page for your readers. The reader-facing panel is built on the page by a small script (no other script dependencies), stays out of newsletters and feeds, and is off by default.
 
 = Can I access bibliography data via API? =
 

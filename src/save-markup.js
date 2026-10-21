@@ -51,6 +51,43 @@ export function getLocalizedSaveLabels() {
 	};
 }
 
+/**
+ * The text "Copy citation" copies: the manual display text, else the
+ * formatted text, with inline markup stripped when the block stores it.
+ *
+ * @param {Object}  citation     Citation record.
+ * @param {boolean} inlineMarkup Whether display text may carry `<i>`/`<em>`.
+ * @return {string} Plain citation text.
+ */
+function getCopyText(citation, inlineMarkup) {
+	const text = citation.displayOverride || citation.formattedText || '';
+
+	return inlineMarkup ? stripInlineMarkup(text) : text;
+}
+
+/**
+ * Cite / Export data for one entry, as `data-` attributes on its `<li>`.
+ *
+ * The panel itself is not saved: view.js builds it from these on the page.
+ * Email clients, feed readers, and other places that show post content
+ * without the block's script and styles see only the bibliography, and
+ * `data-` attributes survive the post-content HTML filter for every role.
+ *
+ * @param {Object}  citation     Citation record.
+ * @param {boolean} inlineMarkup Whether display text may carry `<i>`/`<em>`.
+ * @return {Object} Attributes, in serialized order.
+ */
+function getCiteExportData(citation, inlineMarkup) {
+	return {
+		'data-cite-text': getCopyText(citation, inlineMarkup),
+		'data-cite-filename': getCitationExportBasename(citation.csl),
+		'data-cite-ris': cslToRisEntry(citation.csl),
+		'data-cite-csl-json': `${JSON.stringify(citation.csl, null, 2)}\n`,
+		'data-cite-bibtex': citation.exportBibtex || undefined,
+		'data-cite-biblatex': citation.exportBiblatex || undefined,
+	};
+}
+
 export function renderBibliographySave(
 	attributes,
 	{
@@ -66,6 +103,7 @@ export function renderBibliographySave(
 		quoteAwareItalics = false,
 		urlAwareItalics = false,
 		particleAwareSort = false,
+		citeExportData = false,
 		canonicalDoiUrl = false,
 		jsonLdItemList = false,
 		labels: labelOverrides = null,
@@ -156,6 +194,9 @@ export function renderBibliographySave(
 							}
 							id={`ref-${citation.id}`}
 							lang={citation.csl.language || undefined}
+							{...(includeCiteExport && citeExportData
+								? getCiteExportData(citation, inlineMarkup)
+								: {})}
 						>
 							<EntryTag className="bibliography-builder-entry-text">
 								{replacesAuthors ? (
@@ -219,7 +260,7 @@ export function renderBibliographySave(
 									title={coinsTitle}
 								/>
 							) : null}
-							{includeCiteExport ? (
+							{includeCiteExport && !citeExportData ? (
 								<details className="bibliography-builder-cite-export">
 									<summary className="bibliography-builder-cite-export-toggle">
 										{labels.toggle}
@@ -229,17 +270,10 @@ export function renderBibliographySave(
 											type="button"
 											className="bibliography-builder-cite-copy"
 											aria-live="polite"
-											data-cite-text={
+											data-cite-text={getCopyText(
+												citation,
 												inlineMarkup
-													? stripInlineMarkup(
-															citation.displayOverride ||
-																citation.formattedText ||
-																''
-													  )
-													: citation.displayOverride ||
-													  citation.formattedText ||
-													  ''
-											}
+											)}
 											data-copied-label={
 												labels.copied || undefined
 											}

@@ -123,9 +123,32 @@ function migrateSortedAttributes(attributes) {
 
 export const deprecated = [
 	{
-		// Freezes the save() shape from before 1.12.0: entries sorted by the
-		// family name as stored, so a name particle filed "van Duijnhoven"
-		// under V even in Chicago, which sorts it under D.
+		// Freezes the save() shape that `main` wrote after the particle-aware
+		// sort and before the email-safe markup, never released: each entry in
+		// a `<cite>` (italic wherever the block's stylesheet is missing, as in
+		// email) and the Cite / Export panel saved in the post, where email
+		// clients and feed readers showed it expanded and unusable.
+		attributes: deprecatedAttributes,
+		save: ({ attributes }) =>
+			renderBibliographySave(attributes, {
+				sortEntries: true,
+				headingTag: getHeadingTag(attributes.headingLevel),
+				entryTag: 'cite',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				inlineMarkup: true,
+				quoteAwareItalics: true,
+				urlAwareItalics: true,
+				particleAwareSort: true,
+				canonicalDoiUrl: true,
+				jsonLdItemList: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			}),
+	},
+	{
+		// Freezes the save() shape of 1.11.0: entries sorted by the family
+		// name as stored, so a name particle filed "van Duijnhoven" under V
+		// even in Chicago, which sorts it under D.
 		attributes: deprecatedAttributes,
 		save: ({ attributes }) =>
 			renderBibliographySave(attributes, {
@@ -138,6 +161,7 @@ export const deprecated = [
 				quoteAwareItalics: true,
 				urlAwareItalics: true,
 				canonicalDoiUrl: true,
+				jsonLdItemList: true,
 				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
 			}),
 	},
