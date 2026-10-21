@@ -1126,6 +1126,12 @@ async function formatParsedEntries(entries, styleKey) {
 	}
 }
 
+/**
+ * Resolvers per input kind. Each takes the raw value, plus an optional
+ * `fetchFn` for the backends that call the network directly.
+ *
+ * @type {Record<string, (value: string, options?: {fetchFn?: Function}) => Promise<Object>>}
+ */
 const PARSER_BACKENDS = {
 	pmid: async (value, { fetchFn } = {}) => {
 		const pmid = normalizePmidInput(value);

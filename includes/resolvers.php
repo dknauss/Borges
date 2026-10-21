@@ -708,11 +708,9 @@ function bibliography_builder_open_library_author_names( $isbn13 ) {
 	}
 
 	$decoded = json_decode( (string) wp_remote_retrieve_body( $response ), true );
-	$names   = isset( $decoded['docs'][0]['author_name'] ) && is_array( $decoded['docs'][0]['author_name'] )
-		? $decoded['docs'][0]['author_name']
-		: array();
+	$names   = isset( $decoded['docs'][0]['author_name'] ) ? $decoded['docs'][0]['author_name'] : null;
 
-	return array_values( array_filter( $names, 'is_string' ) );
+	return is_array( $names ) ? array_values( array_filter( $names, 'is_string' ) ) : array();
 }
 
 /**
