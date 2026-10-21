@@ -456,7 +456,7 @@ With static save and no Highwire meta tags in MVP, the PHP side is minimal:
 
 ### Prerequisites
 
--   Node.js 18+
+-   Node.js 22+
 -   npm 9+
 -   Composer (for PHP tooling)
 -   `@wordpress/scripts` (dev dependency)

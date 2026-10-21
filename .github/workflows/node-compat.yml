@@ -9,8 +9,8 @@ permissions:
     contents: read
 
 jobs:
-    node20:
-        name: Node 20 compatibility
+    node24:
+        name: Node 24 compatibility
         runs-on: ubuntu-latest
 
         steps:
@@ -20,7 +20,7 @@ jobs:
             - name: Set up Node.js
               uses: actions/setup-node@v5
               with:
-                  node-version: 20
+                  node-version: 24
                   cache: npm
 
             - name: Install dependencies
