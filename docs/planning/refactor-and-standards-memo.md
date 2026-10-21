@@ -190,8 +190,8 @@ Each ticket below is one PR that can be lifted to the issue tracker on its own. 
 | 6. `includes/formatter.php` | Done in #161: style definitions through `format_csl_items()`, 16 functions; root file 1,607 → 1,002 lines |
 | 7. `includes/block-data.php` | Done in #162: 7 functions, from `get_stable_block_id()` through `build_csl_json()`; root file 1,002 → 847 lines |
 | 8. `includes/read-routes.php` | Done in #164: the `/format` callback, its request-parameter helper, and the two post bibliography read callbacks, 4 functions; root file 847 → 703 lines. Phase B is complete |
-| 10. `styles.json` | Done: `includes/styles.json` (beside the PHP that reads it, so the release ZIP ships it with no packaging change) replaces the JS registry's table and the three PHP tables, and PHP's default-style literals call `bibliography_builder_default_style_key()`. One drift found and fixed: Harvard sorted with `en-US` but formatted with `en-GB`; it now uses `en-GB` for both, which sorts identically (ICU resolves both to the root collation) |
-| 11. Particle list and canonical labels | Next |
+| 10. `styles.json` | Done in #165: `includes/styles.json` (beside the PHP that reads it, so the release ZIP ships it with no packaging change) replaces the JS registry's table and the three PHP tables, and PHP's default-style literals call `bibliography_builder_default_style_key()`. One drift found and fixed: Harvard sorted with `en-US` but formatted with `en-GB`; it now uses `en-GB` for both, which sorts identically (ICU resolves both to the root collation) |
+| 11. Particle list and canonical labels | Done: the particle list moved to `nameParticles` in `styles.json`, replacing the JS `Set` literal and the PHP array. The Cite / Export labels stay where they are: each translated label must be a literal `__()` string in its own language for string extraction, the English text is fixed by saved markup and deprecation fixtures, and `view.js` keeps its own copy so the front end loads no `wp-i18n`. Instead, a Jest test now checks that `view.js`'s fallback labels and the editor's untranslated labels equal `CITE_EXPORT_LABELS`. Phase C is complete |
 
 ## Revision history
 
