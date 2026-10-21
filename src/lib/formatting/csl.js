@@ -141,7 +141,7 @@ export function clearFormattingCache() {
  * @param {Array}  cslItems Array of CSL-JSON objects.
  * @param {string} styleKey Citation style key.
  * @param {Object} options  Formatting options.
- * @return {string[]} Array of formatted bibliography strings.
+ * @return {Promise<string[]>} Array of formatted bibliography strings.
  *
  * @since 0.1.0
  */
@@ -197,7 +197,7 @@ export async function formatBibliographyEntries(
  * @param {Object} csl      CSL-JSON object.
  * @param {string} styleKey Citation style key.
  * @param {Object} options  Formatting options.
- * @return {string} Formatted bibliography string.
+ * @return {Promise<string>} Formatted bibliography string.
  *
  * @since 0.1.0
  */
