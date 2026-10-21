@@ -94,6 +94,10 @@ final class EmailOutputTest extends TestCase {
 	}
 
 	public function test_email_callback_returns_portable_markup_without_the_renderer(): void {
+		if ( class_exists( '\\Automattic\\WooCommerce\\EmailEditor\\Integrations\\Utils\\Table_Wrapper_Helper' ) ) {
+			$this->markTestSkipped( 'The email renderer helper is loaded in this process.' );
+		}
+
 		$this->assertSame(
 			bibliography_builder_portable_markup( self::current_markup() ),
 			bibliography_builder_render_email( self::current_markup(), array(), null )
@@ -108,5 +112,23 @@ final class EmailOutputTest extends TestCase {
 
 		$GLOBALS['bibliography_builder_test_is_feed'] = true;
 		$this->assertSame( bibliography_builder_portable_markup( $markup ), bibliography_builder_render_feed( $markup ) );
+	}
+
+	public function test_email_callback_uses_the_email_renderers_table_helper(): void {
+		require_once __DIR__ . '/stubs/email-editor-table-wrapper.php';
+		$helper         = '\\Automattic\\WooCommerce\\EmailEditor\\Integrations\\Utils\\Table_Wrapper_Helper';
+		$helper::$calls = array();
+
+		$html = bibliography_builder_render_email( self::current_markup(), array( 'blockName' => 'bibliography-builder/bibliography' ), null );
+
+		$this->assertCount( 1, $helper::$calls );
+		$this->assertSame( bibliography_builder_portable_markup( self::current_markup() ), $helper::$calls[0][0] );
+		$this->assertSame( '100%', $helper::$calls[0][1]['width'] );
+		$this->assertSame( 'left', $helper::$calls[0][2]['align'] );
+		$this->assertStringStartsWith( '<table width="100%"><tr><td align="left"><section', $html );
+
+		// Nothing to wrap: empty content stays empty.
+		$this->assertSame( '', bibliography_builder_render_email( '', array(), null ) );
+		$this->assertCount( 1, $helper::$calls );
 	}
 }

@@ -223,6 +223,25 @@ describe('buildCiteExportPanels (panel built from saved data)', () => {
 		expect(document.querySelector('a').textContent).toBe('RIS');
 	});
 
+	it('falls back to English labels and a generic filename on bad data', () => {
+		bibliography(
+			' data-cite-ris="TY  - BOOK" data-cite-csl-json="{}"',
+			` data-cite-labels="not json"`
+		);
+		buildCiteExportPanels(document);
+
+		expect(document.querySelector('summary').textContent).toBe(
+			'Cite / Export'
+		);
+		const copy = document.querySelector('.bibliography-builder-cite-copy');
+		expect(copy.getAttribute('data-cite-text')).toBe('');
+		expect(
+			[...document.querySelectorAll('a')].map((a) =>
+				a.getAttribute('download')
+			)
+		).toEqual(['citation.ris', 'citation.csl.json']);
+	});
+
 	it('builds each panel once, and leaves entries without data alone', () => {
 		bibliography(fullData);
 		document
