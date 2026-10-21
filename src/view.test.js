@@ -1,6 +1,10 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import {
+	CITE_EXPORT_LABELS,
+	getTranslatedCiteExportLabels,
+} from './lib/cite-export-labels';
+import {
 	applyExportFilenames,
 	attachCiteCopy,
 	buildCiteExportPanels,
@@ -240,6 +244,35 @@ describe('buildCiteExportPanels (panel built from saved data)', () => {
 				a.getAttribute('download')
 			)
 		).toEqual(['citation.ris', 'citation.csl.json']);
+	});
+
+	it('falls back to the canonical labels save() and the PHP filter use', () => {
+		bibliography(fullData);
+		buildCiteExportPanels(document);
+
+		const copy = document.querySelector('.bibliography-builder-cite-copy');
+
+		// view.js keeps its own copy so the front end needs no wp-i18n.
+		expect({
+			toggle: document.querySelector('summary').textContent,
+			copy: copy.textContent,
+			copied: copy.getAttribute('data-copied-label'),
+			links: [...document.querySelectorAll('a')].map(
+				(a) => a.textContent
+			),
+		}).toEqual({
+			toggle: CITE_EXPORT_LABELS.toggle,
+			copy: CITE_EXPORT_LABELS.copy,
+			copied: CITE_EXPORT_LABELS.copied,
+			links: [
+				CITE_EXPORT_LABELS.ris,
+				CITE_EXPORT_LABELS.cslJson,
+				CITE_EXPORT_LABELS.bibtex,
+				CITE_EXPORT_LABELS.biblatex,
+			],
+		});
+		// Untranslated, the editor's labels are the canonical ones too.
+		expect(getTranslatedCiteExportLabels()).toEqual(CITE_EXPORT_LABELS);
 	});
 
 	it('builds each panel once, and leaves entries without data alone', () => {

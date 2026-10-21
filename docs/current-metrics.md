@@ -12,15 +12,15 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 | Metric | Value | Re-derivation command |
 |---|---|---|
 | Main plugin file (`bibliography-builder.php`) | **704** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **10,237** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **11,463** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **10,218** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **11,441** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **3,156 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
 (REST registration + block registration) and the sixteen `includes/` files it loads:
 `includes/block-data.php`, `includes/csl-sanitize.php`, `includes/formatter.php`,
 `includes/read-routes.php`, and `includes/styles.php` (which reads the shared
-`includes/styles.json`), which only define functions (the formatter runs only for editor-time
+`includes/styles.json`: the style table and name particles), which only define functions (the formatter runs only for editor-time
 REST calls and writes);
 `includes/google-books-key.php`, which only defines functions;
 `includes/resolvers.php`, which only defines constants and functions (its remote requests run
