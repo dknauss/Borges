@@ -682,25 +682,16 @@ function bibliography_builder_rest_reorder_citations( WP_REST_Request $request )
 /**
  * The default visible heading for a citation style.
  *
- * `getDefaultHeadingText()` from `src/lib/formatting/style-registry.js`.
+ * `getDefaultHeadingText()` from `src/lib/formatting/style-registry.js`; both
+ * read `headingPlaceholder` from `includes/styles.json`.
  *
  * @param string $style_key Citation style key.
  * @return string
  */
 function bibliography_builder_write_default_heading( $style_key ) {
-	$headings = array(
-		'chicago-notes-bibliography' => 'Bibliography',
-		'chicago-author-date'        => 'References',
-		'apa-7'                      => 'References',
-		'mla-9'                      => 'Works Cited',
-		'harvard'                    => 'References',
-		'ieee'                       => 'References',
-		'vancouver'                  => 'References',
-		'oscola'                     => 'Bibliography',
-		'abnt'                       => 'Referências',
-	);
+	$styles = bibliography_builder_get_style_data()['styles'];
 
-	return isset( $headings[ $style_key ] ) ? $headings[ $style_key ] : 'Bibliography';
+	return isset( $styles[ $style_key ]['headingPlaceholder'] ) ? $styles[ $style_key ]['headingPlaceholder'] : 'Bibliography';
 }
 
 /**

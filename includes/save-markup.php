@@ -334,32 +334,24 @@ function bibliography_builder_save_attributes( $attributes ) {
 /**
  * Front-end style definitions the save markup depends on.
  *
- * Mirrors the `listType`, `family`, `locale`, and `demoteNonDroppingParticle`
- * fields of `STYLE_DEFINITIONS` in `src/lib/formatting/style-registry.js`.
+ * Reads the `listType`, `family`, `locale`, and `demoteNonDroppingParticle`
+ * fields of `includes/styles.json`, the table `STYLE_DEFINITIONS` in
+ * `src/lib/formatting/style-registry.js` imports.
  *
  * @param string $style_key Style key.
  * @return array{key: string, listType: string, family: string, locale: string, demoteNonDroppingParticle: string}
  */
 function bibliography_builder_get_save_style_definition( $style_key ) {
-	$styles = array(
-		'chicago-notes-bibliography' => array( 'ul', 'notes', 'en-US', 'display-and-sort' ),
-		'chicago-author-date'        => array( 'ul', 'author-date', 'en-US', 'display-and-sort' ),
-		'apa-7'                      => array( 'ul', 'author-date', 'en-US', 'never' ),
-		'mla-9'                      => array( 'ul', 'author-date', 'en-US', 'never' ),
-		'harvard'                    => array( 'ul', 'author-date', 'en-US', 'never' ),
-		'ieee'                       => array( 'ol', 'numeric', 'en-US', 'never' ),
-		'vancouver'                  => array( 'ol', 'numeric', 'en-US', 'sort-only' ),
-		'oscola'                     => array( 'ul', 'notes', 'en-GB', 'never' ),
-		'abnt'                       => array( 'ul', 'author-date', 'pt-BR', 'never' ),
-	);
-	$key    = is_string( $style_key ) && isset( $styles[ $style_key ] ) ? $style_key : 'chicago-notes-bibliography';
+	$data   = bibliography_builder_get_style_data();
+	$styles = $data['styles'];
+	$key    = is_string( $style_key ) && isset( $styles[ $style_key ] ) ? $style_key : $data['defaultStyle'];
 
 	return array(
 		'key'                       => $key,
-		'listType'                  => $styles[ $key ][0],
-		'family'                    => $styles[ $key ][1],
-		'locale'                    => $styles[ $key ][2],
-		'demoteNonDroppingParticle' => $styles[ $key ][3],
+		'listType'                  => $styles[ $key ]['listType'],
+		'family'                    => $styles[ $key ]['family'],
+		'locale'                    => $styles[ $key ]['locale'],
+		'demoteNonDroppingParticle' => $styles[ $key ]['demoteNonDroppingParticle'],
 	);
 }
 

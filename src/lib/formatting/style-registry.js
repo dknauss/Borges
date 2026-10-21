@@ -1,127 +1,29 @@
-export const DEFAULT_CITATION_STYLE = 'chicago-notes-bibliography';
+/**
+ * Citation style definitions, shared with PHP.
+ *
+ * The table lives in `includes/styles.json` so the editor and the PHP
+ * formatter, save port, and write routes read one copy (refactor memo,
+ * Phase C). It sits in `includes/` because that folder ships in the release
+ * ZIP and `src/` does not. Each entry carries:
+ *
+ * - `cslTemplate` and `cslLocale`: the CSL style and locale citeproc-php
+ *   formats with. Harvard formats in en-GB (Cite Them Right is a UK style).
+ * - `locale`: the collation locale for sorting, in JS and the PHP save port.
+ * - `family`, `listType`, `inlineCitationMode`: display and sort semantics.
+ * - `demoteNonDroppingParticle`: mirrors the style's CSL attribute;
+ *   `name-particles.test.js` checks it against the XML.
+ * - `headingPlaceholder`: the default heading, also used by the write routes.
+ *
+ * TODO(Epic-OSCOLA): OSCOLA convention requires bibliographies grouped by
+ * source type (cases, legislation, books, articles, online). Currently
+ * rendered as a single alphabetized list. See
+ * docs/planning/sort-conformance-plan.md Epic-OSCOLA section.
+ */
+import styleData from '../../../includes/styles.json';
 
-export const STYLE_DEFINITIONS = {
-	'chicago-notes-bibliography': {
-		key: 'chicago-notes-bibliography',
-		label: 'Chicago Notes-Bibliography',
-		enabled: true,
-		backend: 'csl',
-		cslTemplate: 'chicago-notes-bibliography',
-		demoteNonDroppingParticle: 'display-and-sort',
-		listType: 'ul',
-		family: 'notes',
-		locale: 'en-US',
-		inlineCitationMode: 'note',
-		headingPlaceholder: 'Bibliography',
-	},
-	'chicago-author-date': {
-		key: 'chicago-author-date',
-		label: 'Chicago Author-Date',
-		enabled: true,
-		backend: 'csl',
-		cslTemplate: 'chicago-author-date',
-		demoteNonDroppingParticle: 'display-and-sort',
-		listType: 'ul',
-		family: 'author-date',
-		locale: 'en-US',
-		inlineCitationMode: 'parenthetical',
-		headingPlaceholder: 'References',
-	},
-	'apa-7': {
-		key: 'apa-7',
-		label: 'APA 7',
-		enabled: true,
-		backend: 'csl',
-		cslTemplate: 'apa',
-		demoteNonDroppingParticle: 'never',
-		listType: 'ul',
-		family: 'author-date',
-		locale: 'en-US',
-		inlineCitationMode: 'parenthetical',
-		headingPlaceholder: 'References',
-	},
-	'mla-9': {
-		key: 'mla-9',
-		label: 'MLA 9',
-		enabled: true,
-		backend: 'csl',
-		cslTemplate: 'modern-language-association',
-		demoteNonDroppingParticle: 'never',
-		listType: 'ul',
-		family: 'author-date',
-		locale: 'en-US',
-		inlineCitationMode: 'parenthetical',
-		headingPlaceholder: 'Works Cited',
-	},
-	harvard: {
-		key: 'harvard',
-		label: 'Harvard',
-		enabled: true,
-		backend: 'csl',
-		cslTemplate: 'harvard1',
-		demoteNonDroppingParticle: 'never',
-		listType: 'ul',
-		family: 'author-date',
-		locale: 'en-US',
-		inlineCitationMode: 'parenthetical',
-		headingPlaceholder: 'References',
-	},
-	ieee: {
-		key: 'ieee',
-		label: 'IEEE',
-		enabled: true,
-		backend: 'csl',
-		cslTemplate: 'ieee',
-		demoteNonDroppingParticle: 'never',
-		listType: 'ol',
-		family: 'numeric',
-		locale: 'en-US',
-		inlineCitationMode: 'numeric',
-		headingPlaceholder: 'References',
-	},
-	vancouver: {
-		key: 'vancouver',
-		label: 'Vancouver',
-		enabled: true,
-		backend: 'csl',
-		cslTemplate: 'vancouver',
-		demoteNonDroppingParticle: 'sort-only',
-		listType: 'ol',
-		family: 'numeric',
-		locale: 'en-US',
-		inlineCitationMode: 'numeric',
-		headingPlaceholder: 'References',
-	},
-	// TODO(Epic-OSCOLA): OSCOLA convention requires bibliographies grouped by source type
-	// (cases, legislation, books, articles, online). Currently rendered as a single
-	// alphabetized list. See docs/planning/sort-conformance-plan.md Epic-OSCOLA section.
-	oscola: {
-		key: 'oscola',
-		label: 'OSCOLA',
-		enabled: true,
-		backend: 'csl',
-		cslTemplate: 'oscola',
-		demoteNonDroppingParticle: 'never',
-		listType: 'ul',
-		family: 'notes',
-		locale: 'en-GB',
-		inlineCitationMode: 'note',
-		headingPlaceholder: 'Bibliography',
-	},
-	abnt: {
-		key: 'abnt',
-		label: 'ABNT',
-		enabled: true,
-		backend: 'csl',
-		cslTemplate: 'abnt',
-		demoteNonDroppingParticle: 'never',
-		listType: 'ul',
-		family: 'author-date',
-		locale: 'pt-BR',
-		inlineCitationMode: 'parenthetical',
-		headingPlaceholder: 'Referências',
-	},
-};
+export const DEFAULT_CITATION_STYLE = styleData.defaultStyle;
+
+export const STYLE_DEFINITIONS = styleData.styles;
 
 function emitStyleRegistryWarning(message) {
 	// eslint-disable-next-line no-console

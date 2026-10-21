@@ -13,58 +13,52 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * The shared citation style table from `includes/styles.json`.
+ *
+ * The editor imports the same file (`src/lib/formatting/style-registry.js`),
+ * so a style is defined once for both languages. It is decoded once per
+ * request. See the registry's docblock for what each field means.
+ *
+ * @return array{defaultStyle: string, styles: array<string, array<string, mixed>>}
+ */
+function bibliography_builder_get_style_data() {
+	static $data = null;
+
+	if ( null === $data ) {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local file shipped with the plugin.
+		$json    = file_get_contents( BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/styles.json' );
+		$decoded = false === $json ? null : json_decode( $json, true );
+		$data    = is_array( $decoded ) && isset( $decoded['defaultStyle'], $decoded['styles'] ) && is_array( $decoded['styles'] )
+			? $decoded
+			: array(
+				'defaultStyle' => 'chicago-notes-bibliography',
+				'styles'       => array(),
+			);
+	}
+
+	return $data;
+}
+
+/**
  * Citation style definitions shared by PHP formatting endpoints.
  *
- * @return array
+ * Built from `includes/styles.json`: each style's CSL template, the locale
+ * citeproc-php formats with (`cslLocale`), and its family.
+ *
+ * @return array<string, array{template: string, locale: string, family: string}>
  */
 function bibliography_builder_get_formatter_style_definitions() {
-	return array(
-		'chicago-notes-bibliography' => array(
-			'template' => 'chicago-notes-bibliography',
-			'locale'   => 'en-US',
-			'family'   => 'notes',
-		),
-		'chicago-author-date'        => array(
-			'template' => 'chicago-author-date',
-			'locale'   => 'en-US',
-			'family'   => 'author-date',
-		),
-		'apa-7'                      => array(
-			'template' => 'apa',
-			'locale'   => 'en-US',
-			'family'   => 'author-date',
-		),
-		'mla-9'                      => array(
-			'template' => 'modern-language-association',
-			'locale'   => 'en-US',
-			'family'   => 'author-date',
-		),
-		'harvard'                    => array(
-			'template' => 'harvard1',
-			'locale'   => 'en-GB',
-			'family'   => 'author-date',
-		),
-		'ieee'                       => array(
-			'template' => 'ieee',
-			'locale'   => 'en-US',
-			'family'   => 'numeric',
-		),
-		'vancouver'                  => array(
-			'template' => 'vancouver',
-			'locale'   => 'en-US',
-			'family'   => 'numeric',
-		),
-		'oscola'                     => array(
-			'template' => 'oscola',
-			'locale'   => 'en-GB',
-			'family'   => 'notes',
-		),
-		'abnt'                       => array(
-			'template' => 'abnt',
-			'locale'   => 'pt-BR',
-			'family'   => 'author-date',
-		),
-	);
+	$styles = array();
+
+	foreach ( bibliography_builder_get_style_data()['styles'] as $key => $style ) {
+		$styles[ $key ] = array(
+			'template' => $style['cslTemplate'],
+			'locale'   => $style['cslLocale'],
+			'family'   => $style['family'],
+		);
+	}
+
+	return $styles;
 }
 
 /**

@@ -190,6 +190,8 @@ Each ticket below is one PR that can be lifted to the issue tracker on its own. 
 | 6. `includes/formatter.php` | Done in #161: style definitions through `format_csl_items()`, 16 functions; root file 1,607 → 1,002 lines |
 | 7. `includes/block-data.php` | Done: 7 functions, from `get_stable_block_id()` through `build_csl_json()`; root file 1,002 → 847 lines |
 | 8. `includes/read-routes.php` | Next |
+| 10. `includes/styles.json` | Done: one table read by the editor, the formatter, the save port and the write routes. It keeps two locales because they already differed: Harvard formats in en-GB but sorts with en-US collation. It lives in `includes/`, not `src/lib/formatting/`, because `src/` does not ship |
+| 11. Particle list and canonical labels | Next |
 
 ## Revision history
 
