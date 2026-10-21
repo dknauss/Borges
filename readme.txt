@@ -120,6 +120,8 @@ Version 4.0 replaced the plugin's registration API, so the integration requires 
 
 Borges is a static-output block. Formatted bibliography HTML, JSON-LD, and COinS are baked into your post content when you save, so the citeproc formatting engine and the DOI/PubMed lookups run **only in the editor** — never on the front end.
 
+As a page renders, a light filter adds what the saved JSON-LD cannot know, such as the page's own URL for each entry's identifier, and extra identifiers and fields from the stored citations. It makes no database queries or remote requests.
+
 What this means for a published page:
 
 * **Zero added database queries** — no matter how many bibliographies or citations the page contains. Query load does not grow with your content.

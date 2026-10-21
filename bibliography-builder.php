@@ -566,6 +566,8 @@ require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/review.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/save-markup.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/frontend-labels.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/frontend-json-ld.php';
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/json-ld-enrichment.php';
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/output-defaults.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/email-output.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/block-locator.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/write-routes.php';

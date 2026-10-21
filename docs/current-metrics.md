@@ -11,13 +11,13 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **703** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **10,248** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **11,570** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **705** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **11,102** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **11,688** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **3,156 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
-(REST registration + block registration) and the fifteen `includes/` files it loads:
+(REST registration + block registration) and the seventeen `includes/` files it loads:
 `includes/block-data.php`, `includes/csl-sanitize.php`, `includes/formatter.php`, and
 `includes/read-routes.php`, which only define functions (the formatter runs only for editor-time
 REST calls and writes);
@@ -37,6 +37,13 @@ unless the request is a feed;
 `includes/frontend-json-ld.php`, whose `render_block` filter nests JSON-LD saved before 1.11.0
 in an `ItemList` (one `strpos()` per bibliography block, and a JSON decode and encode only when
 the old top-level array is present), and does no I/O;
+`includes/json-ld-enrichment.php`, whose `render_block` filter rewrites the JSON-LD with
+page-relative identifiers and fields from the stored citations (one `strpos()` per bibliography
+block, then one JSON decode and encode and one `get_permalink()` of the already-loaded post), and
+whose Yoast SEO and Rank Math schema filters parse the queried post's blocks once each when those
+plugins build their graph (cached for the request); none of it does I/O;
+`includes/output-defaults.php`, which only defines functions and adds a `block_editor_settings_all`
+filter that runs only in the editor;
 `includes/abilities.php`, which only defines functions and adds two Abilities API hooks, which
 run only when WordPress initializes its Abilities registry and do no I/O; and
 `includes/write-abilities.php`, which only defines functions and adds one Abilities API hook that

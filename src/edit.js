@@ -37,6 +37,7 @@ import { useBibliographyExportActions } from './hooks/use-bibliography-export-ac
 import { useCitationImportActions } from './hooks/use-citation-import-actions';
 import { useManualCitationActions } from './hooks/use-manual-citation-actions';
 import { useStableIds } from './hooks/use-stable-ids';
+import { useOutputDefaults } from './hooks/use-output-defaults';
 import {
 	getHeadingPlaceholder,
 	getListSemantics,
@@ -187,6 +188,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	}, [citations]);
 
 	useStableIds({ clientId, attributes, setAttributes });
+	useOutputDefaults({ attributes, setAttributes });
 
 	// When Cite/Export is enabled, ensure existing citations have their async
 	// BibTeX/BibLaTeX export strings (RIS/CSL-JSON are computed in save()).
