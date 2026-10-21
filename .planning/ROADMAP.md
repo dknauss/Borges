@@ -482,6 +482,26 @@ Remaining non-blocking maintainability items:
 
 ## Backlog / architecture investigations
 
+### Secrets API lookup for the Google Books key (deferred, added 2026-10-21)
+
+WordPress 7.2 adds a core Secrets API (`wp_get_secret()` returns a masked
+`WP_Secret`, `null` when unset, or `WP_Error` when unreadable; `@since 7.2.0`
+in trunk). Borges's optional Google Books API key is read today from the
+`BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY` constant, then the
+`bibliography_builder_google_books_api_key` filter
+(`includes/google-books-key.php`).
+
+Possible change: add a **read-only** `wp_get_secret( 'borges/google-books-api-key' )`
+lookup between the constant and the filter, guarded by
+`function_exists( 'wp_get_secret' )`, and use the value only when it returns a
+`WP_Secret` (ignore `null`; treat `WP_Error` as "no key" rather than an error).
+Borges never writes the secret. Site owners set it with core's tooling. That
+keeps the "plugin persists no settings" rule enforced by `verify-metrics.sh`.
+
+Deferred on purpose: let the Two Factor team (WordPress/two-factor PR #1010,
+TOTP secrets) lead on Secrets API conventions and failure handling first.
+Revisit after WordPress 7.2 ships and those conventions settle.
+
 ### Translation and language-pack backlog
 
 Current status as of 2026-06-14:
