@@ -115,7 +115,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 ## Features
 
 - **Multiple input paths** — Add bare DOIs, DOI URLs, PubMed/PMID and PubMed Central/PMCID records, arXiv IDs and links, ISBNs, BibTeX and BibLaTeX entries, and supported formatted citations.
-- **Nine citation styles** — Chicago Notes-Bibliography by default, with Chicago Author-Date, APA 7, Harvard, Vancouver, IEEE, MLA 9, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) selectable, each following its manual's current edition (see [docs/csl-styles.md](./docs/csl-styles.md)).
+- **Nine citation styles** — Chicago Notes-Bibliography by default, with Chicago Author-Date, APA 7, Harvard, Vancouver, IEEE, MLA 9, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) selectable, each following its manual's current edition (see [docs/csl-styles.md](./docs/csl-styles.md)). Each style is a [Citation Style Language](https://citationstyles.org/) (CSL) file written for Borges and rendered by [citeproc-php](https://github.com/pkp/citeproc-php), which the [Public Knowledge Project](https://pkp.sfu.ca/) maintains.
 - **Structured editing** — Per-field editing for every citation, whatever its source, plus a plain-text override for the displayed line.
 - **Semantic output** — `role="doc-bibliography"`, `lang` attributes, and hanging-indent styling without deprecated bibliography-entry ARIA roles.
 - **JSON-LD** — Schema.org structured data for search engines, AI systems, and semantic consumers (on by default). The cited works are nested in one `ItemList`, so none is mistaken for the page itself.
