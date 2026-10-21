@@ -13,58 +13,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Citation style definitions shared by PHP formatting endpoints.
+ * Formatter style definitions, keyed by style key, from `styles.json`.
  *
- * @return array
+ * @return array<string, array{template: string, locale: string, family: string}>
  */
 function bibliography_builder_get_formatter_style_definitions() {
-	return array(
-		'chicago-notes-bibliography' => array(
-			'template' => 'chicago-notes-bibliography',
-			'locale'   => 'en-US',
-			'family'   => 'notes',
-		),
-		'chicago-author-date'        => array(
-			'template' => 'chicago-author-date',
-			'locale'   => 'en-US',
-			'family'   => 'author-date',
-		),
-		'apa-7'                      => array(
-			'template' => 'apa',
-			'locale'   => 'en-US',
-			'family'   => 'author-date',
-		),
-		'mla-9'                      => array(
-			'template' => 'modern-language-association',
-			'locale'   => 'en-US',
-			'family'   => 'author-date',
-		),
-		'harvard'                    => array(
-			'template' => 'harvard1',
-			'locale'   => 'en-GB',
-			'family'   => 'author-date',
-		),
-		'ieee'                       => array(
-			'template' => 'ieee',
-			'locale'   => 'en-US',
-			'family'   => 'numeric',
-		),
-		'vancouver'                  => array(
-			'template' => 'vancouver',
-			'locale'   => 'en-US',
-			'family'   => 'numeric',
-		),
-		'oscola'                     => array(
-			'template' => 'oscola',
-			'locale'   => 'en-GB',
-			'family'   => 'notes',
-		),
-		'abnt'                       => array(
-			'template' => 'abnt',
-			'locale'   => 'pt-BR',
-			'family'   => 'author-date',
-		),
-	);
+	$definitions = array();
+
+	foreach ( bibliography_builder_get_style_data()['styles'] as $key => $style ) {
+		$definitions[ $key ] = array(
+			'template' => (string) $style['cslTemplate'],
+			'locale'   => (string) $style['locale'],
+			'family'   => (string) $style['family'],
+		);
+	}
+
+	return $definitions;
 }
 
 /**
@@ -76,7 +40,7 @@ function bibliography_builder_get_formatter_style_definitions() {
 function bibliography_builder_get_formatter_style_definition( $style_key ) {
 	$styles = bibliography_builder_get_formatter_style_definitions();
 
-	return isset( $styles[ $style_key ] ) ? $styles[ $style_key ] : $styles['chicago-notes-bibliography'];
+	return isset( $styles[ $style_key ] ) ? $styles[ $style_key ] : $styles[ bibliography_builder_default_style_key() ];
 }
 
 /**

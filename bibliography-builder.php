@@ -555,6 +555,7 @@ add_action( 'init', 'bibliography_builder_block_init' );
 add_action( 'rest_api_init', 'bibliography_builder_register_rest_routes' );
 
 // Read-only Abilities API integration (WordPress 6.9+; inert on older versions).
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/styles.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/block-data.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/csl-sanitize.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/formatter.php';
