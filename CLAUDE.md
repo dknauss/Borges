@@ -91,6 +91,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
 - `edit.js` — editor component; state managed in `src/hooks/use-citation-editor-state.js`
 - `save.js` — static save; no server round-trip on frontend
 - `src/lib/` — pure utility modules (parser, formatter registry, dedup, export, sorter, CSL sanitizer, JSON-LD, COinS)
+- `src/lib/parser.js` — `parsePastedInput()`, the per-format backends, and the parse error messages; it imports `parser-identifiers.js` (identifier patterns and normalizers), `parser-resolvers.js` (NCBI, CrossRef, arXiv lookups, the DOI cache and serial queues), `parser-normalize.js` (cleanup of resolved records), `parser-segment.js` (format detection and splitting pasted input), and `parser-csl-json.js` (pasted CSL-JSON documents), and re-exports their public names, so import from `parser.js` (tests mock it by that path)
 - `src/components/` — React UI components
 - `src/hooks/` — custom React hooks
 - `src/deprecated.js` — block version migration handlers
