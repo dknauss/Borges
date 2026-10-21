@@ -188,8 +188,8 @@ Each ticket below is one PR that can be lifted to the issue tracker on its own. 
 | Phase A (1–4) | Done: #150, #151, #152, #153 |
 | 5. `includes/csl-sanitize.php` | Done in #160, with ticket 9 (the function-inventory test) so it guards every later move |
 | 6. `includes/formatter.php` | Done in #161: style definitions through `format_csl_items()`, 16 functions; root file 1,607 → 1,002 lines |
-| 7. `includes/block-data.php` | Done: 7 functions, from `get_stable_block_id()` through `build_csl_json()`; root file 1,002 → 847 lines |
-| 8. `includes/read-routes.php` | Next |
+| 7. `includes/block-data.php` | Done in #162: 7 functions, from `get_stable_block_id()` through `build_csl_json()`; root file 1,002 → 847 lines |
+| 8. `includes/read-routes.php` | Done: the `/format` callback, its request-parameter helper, and the two post bibliography read callbacks, 4 functions; root file 847 → 703 lines. Phase B is complete |
 
 ## Revision history
 
