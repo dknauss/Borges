@@ -13,6 +13,7 @@
 		"lint:php": "composer lint:php",
 		"lint:i18n": "node scripts/check-i18n.js",
 		"format:check": "prettier --check .",
+		"typecheck:js": "tsc -p tsconfig.checkjs.json",
 		"test": "wp-scripts test-unit-js",
 		"test:js:coverage": "wp-scripts test-unit-js --runInBand --coverage --coverageReporters=clover --coverageReporters=text-summary --silent",
 		"test:coordination": "node scripts/verify-sort-coordination.js",
@@ -96,7 +97,8 @@
 		"citeproc": "^2.4.63",
 		"prettier": "^2.8.8",
 		"react": "^18.3.1",
-		"react-dom": "^18.3.1"
+		"react-dom": "^18.3.1",
+		"typescript": "~5.3.3"
 	},
 	"overrides": {
 		"typescript": "~5.3.3",
