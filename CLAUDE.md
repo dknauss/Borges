@@ -83,6 +83,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
 - Payload limits: 1 MB max body, 200 items max per `/format` request (the editor's per-bibliography cap, `MAX_CITATIONS_PER_BIBLIOGRAPHY`; the editor formats a whole bibliography in one request, and `src/lib/citation-limits.test.js` keeps the two equal)
 - Block discovery and the read model (`bibliography_builder_collect_blocks()`, `…_get_bibliographies_for_post()`, plain-text and CSL-JSON builders, `…_get_stable_block_id()`) live in `includes/block-data.php`. The read route callbacks (`/format`, the post bibliography list and single reads) and `bibliography_builder_get_request_params()` live in `includes/read-routes.php`; their registration and permission callbacks stay in the root file.
 - The formatter (`bibliography_builder_format_csl_items()`, style definitions, citeproc-php adaptation, cache key and transient cache helpers) lives in `includes/formatter.php`, and CSL-JSON validation and sanitization (`bibliography_builder_validate_and_sanitize_csl_item()` and its helpers) in `includes/csl-sanitize.php`, both moved unchanged from the root file in Phase B of `docs/planning/refactor-and-standards-memo.md`. `tests/phpunit/FunctionInventoryTest.php` fails if any function listed in `tests/fixtures/function-inventory.txt` goes missing or is defined twice; keep function names when moving code.
+- The PHP port of `save()` is `includes/save-markup.php` (the wrapper, entry rendering, and JS-compatible string/JSON/escaping helpers) plus four files split from it along the JS modules they port: `save-sort.php` (`sorter.js`, `name-particles.js`, CSL field helpers), `save-display.php` (display segments, names, repeated authors, links), `save-json-ld-coins.php` (`jsonld.js`, `coins.js`), and `save-cite-export.php` (`export.js`). The save-parity fixtures pin all of it to the JS output.
 - `bibliography_builder_sanitize_formatted_text()` — all HTML from citeproc is run through this before storage or output
 
 ### JS entry points (`src/`)
@@ -118,7 +119,7 @@ The Playground blueprint at `playground/blueprint.json` configures the GitHub/re
 
 ## CI overview
 
-- **ci.yml** — lint, `checkJs` type check of `src/lib/`, Jest, PHPUnit, Psalm (level 4), Playwright Playground E2E, coverage upload, package artifact
+- **ci.yml** — lint, `checkJs` type check of `src/lib/`, Jest, PHPUnit, Psalm (level 3), Playwright Playground E2E, coverage upload, package artifact
 - **runtime-matrix.yml** — smoke tests across PHP 7.4–8.4, WP 6.4+, Apache/Nginx, MySQL via Docker. They run against the packaged release ZIP contents (`WP_BIBLIO_PLUGIN_DIR`), not the checkout. Beyond activation and the read routes, `scripts/runtime-matrix/smoke.sh` checks formatter parity with `tests/fixtures/csl-styles/` goldens on each PHP version, times a 200-entry `/format` request over HTTP with `scripts/time-format-route.sh` (also usable by hand against any site), exercises the write routes over HTTP with an application password, and runs the Abilities API on WordPress 6.9+.
 - **release.yml** — GitHub Release and ZIP publication on a version bump merged to `main`, a `v*` tag, or by hand
 - **wp-deploy.yml** — deploys to WordPress.org SVN on published GitHub release, release dispatch, or manual run

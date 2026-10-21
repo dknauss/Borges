@@ -100,7 +100,17 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 		$context->setRenderingState(
 			new \Seboettg\CiteProc\RenderingState( \Seboettg\CiteProc\RenderingState::RENDERING )
 		);
+		/**
+		 * Both properties are set on the first call, with parsed_context.
+		 *
+		 * @psalm-suppress PossiblyNullReference
+		 */
 		$this->results_property->setValue( $context, new \Seboettg\Collection\ArrayList() );
+		/**
+		 * Set on the first call too.
+		 *
+		 * @psalm-suppress PossiblyNullReference
+		 */
 		$this->cited_count_property->setValue( null, 0 );
 
 		self::setContext( $context );

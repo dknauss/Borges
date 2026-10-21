@@ -127,7 +127,7 @@ function bibliography_builder_rest_write_permissions_check( WP_REST_Request $req
  * @return mixed
  */
 function bibliography_builder_write_to_arrays( $value ) {
-	return json_decode( wp_json_encode( $value ), true );
+	return json_decode( (string) wp_json_encode( $value ), true );
 }
 
 /**
@@ -158,8 +158,8 @@ function bibliography_builder_write_record( $attrs, $index ) {
 /**
  * Find a block's index from a `{ref}`: an index, or a stable bibliographyId.
  *
- * @param array  $ranges Located blocks.
- * @param string $ref    Reference.
+ * @param array $ranges Located blocks.
+ * @param mixed $ref    Reference; cast to string.
  * @return int|WP_Error
  */
 function bibliography_builder_write_resolve_index( $ranges, $ref ) {
@@ -300,11 +300,12 @@ function bibliography_builder_write_bibliography( WP_REST_Request $request, $mut
 		);
 	}
 
-	$post    = get_post( absint( $request['post_id'] ) );
-	$content = (string) $post->post_content;
-	$etag    = bibliography_builder_post_etag( $post );
-	$dry_run = false !== rest_sanitize_boolean( $request['dry_run'] ?? true );
-	$ranges  = bibliography_builder_locate_bibliography_blocks( $content );
+	$post        = get_post( absint( $request['post_id'] ) );
+	$content     = (string) $post->post_content;
+	$etag        = bibliography_builder_post_etag( $post );
+	$dry_run_arg = $request['dry_run'];
+	$dry_run     = null === $dry_run_arg || false !== rest_sanitize_boolean( $dry_run_arg );
+	$ranges      = bibliography_builder_locate_bibliography_blocks( $content );
 
 	if ( is_wp_error( $ranges ) ) {
 		return $ranges;
@@ -324,7 +325,7 @@ function bibliography_builder_write_bibliography( WP_REST_Request $request, $mut
 	}
 
 	// Render from the attributes exactly as the editor will parse them back.
-	$attrs = bibliography_builder_decode_save_attributes( wp_json_encode( $result['attrs'] ) );
+	$attrs = bibliography_builder_decode_save_attributes( (string) wp_json_encode( $result['attrs'] ) );
 	$html  = bibliography_builder_render_save_markup( $attrs );
 	$block = bibliography_builder_serialize_bibliography_block( $result['attrs'], $html );
 
