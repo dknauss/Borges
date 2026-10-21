@@ -89,9 +89,9 @@ function bibliography_builder_ensure_formatter_available() {
 /**
  * JSON-encode data using WordPress when available.
  *
- * @param mixed $data  Data to encode.
- * @param int   $flags Optional encoding flags.
- * @param int   $depth Optional maximum depth.
+ * @param mixed              $data  Data to encode.
+ * @param int                $flags Optional encoding flags.
+ * @param int<1, 2147483647> $depth Optional maximum depth.
  * @return string|false
  */
 function bibliography_builder_json_encode( $data, $flags = 0, $depth = 512 ) {
@@ -268,7 +268,7 @@ function bibliography_builder_sanitize_formatted_text( $text ) {
 	$decoded  = html_entity_decode( (string) $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 	$stripped = bibliography_builder_strip_bounded( $decoded );
 
-	return trim( preg_replace( '/\s+/u', ' ', $stripped ) );
+	return trim( (string) preg_replace( '/\s+/u', ' ', $stripped ) );
 }
 
 /**
@@ -280,13 +280,13 @@ function bibliography_builder_sanitize_formatted_text( $text ) {
  */
 function bibliography_builder_normalize_formatted_text( $text, $style ) {
 	if ( isset( $style['family'] ) && 'numeric' === $style['family'] ) {
-		$text = preg_replace( '/^(?:\[\d+\]|\d+\.)\s+/u', '', $text );
+		$text = (string) preg_replace( '/^(?:\[\d+\]|\d+\.)\s+/u', '', $text );
 	}
 
 	if ( isset( $style['template'] ) && 'abnt' === $style['template'] ) {
-		$text = preg_replace( '/\bv\.\s+vol\.\s+/u', 'v. ', $text );
-		$text = preg_replace( '/\bn\.\s+no\.\s+/u', 'n. ', $text );
-		$text = preg_replace( '/\bp\.\s+p{1,2}\.\s+/u', 'p. ', $text );
+		$text = (string) preg_replace( '/\bv\.\s+vol\.\s+/u', 'v. ', $text );
+		$text = (string) preg_replace( '/\bn\.\s+no\.\s+/u', 'n. ', $text );
+		$text = (string) preg_replace( '/\bp\.\s+p{1,2}\.\s+/u', 'p. ', $text );
 	}
 
 	// citeproc-php puts a space between a name and a label whose prefix is
@@ -303,11 +303,11 @@ function bibliography_builder_normalize_formatted_text( $text, $style ) {
 	// A title ending in "?" or "!" takes no period after it, but citeproc-php
 	// adds the title's "." suffix anyway ("What Is It?.”"). Commas stay: CMOS
 	// keeps one after a question-mark title (“Are You a Doctor?,” in notes).
-	$text = preg_replace( '/([?!])([”’]?)\./u', '$1$2', $text );
+	$text = (string) preg_replace( '/([?!])([”’]?)\./u', '$1$2', $text );
 
 	// citeproc-php initializes only capitalized parts of a hyphenated given
 	// name, so "Ji-woo" comes out "J.- woo". Initialize the second part too.
-	$text = preg_replace_callback(
+	$text = (string) preg_replace_callback(
 		'/(\p{Lu})(\.?)- (\p{Ll})\p{Ll}*/u',
 		static function ( $parts ) {
 			return $parts[1] . $parts[2] . '-' . mb_strtoupper( $parts[3], 'UTF-8' ) . $parts[2];
@@ -437,7 +437,8 @@ function bibliography_builder_prepare_csl_for_formatter( $item, $demote_particle
 	}
 
 	if ( empty( $item['page-first'] ) && isset( $item['page'] ) && is_scalar( $item['page'] ) ) {
-		$first = trim( preg_split( '/[-\x{2013}\x{2014},&]/u', (string) $item['page'] )[0] );
+		$pages = preg_split( '/[-\x{2013}\x{2014},&]/u', (string) $item['page'] );
+		$first = false === $pages ? '' : trim( $pages[0] );
 
 		if ( '' !== $first ) {
 			$item['page-first'] = $first;
@@ -518,7 +519,7 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		'bibliography' => array(
 			'csl-entry' => static function ( $csl_item, $rendered_text ) {
 				$id = isset( $csl_item->id )
-					? preg_replace( '/[^A-Za-z0-9_.:-]/', '', (string) $csl_item->id )
+					? (string) preg_replace( '/[^A-Za-z0-9_.:-]/', '', (string) $csl_item->id )
 					: '';
 
 					return '<span data-borges-csl-id="'
