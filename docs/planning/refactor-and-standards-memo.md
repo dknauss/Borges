@@ -189,7 +189,9 @@ Each ticket below is one PR that can be lifted to the issue tracker on its own. 
 | 5. `includes/csl-sanitize.php` | Done in #160, with ticket 9 (the function-inventory test) so it guards every later move |
 | 6. `includes/formatter.php` | Done in #161: style definitions through `format_csl_items()`, 16 functions; root file 1,607 → 1,002 lines |
 | 7. `includes/block-data.php` | Done in #162: 7 functions, from `get_stable_block_id()` through `build_csl_json()`; root file 1,002 → 847 lines |
-| 8. `includes/read-routes.php` | Done: the `/format` callback, its request-parameter helper, and the two post bibliography read callbacks, 4 functions; root file 847 → 703 lines. Phase B is complete |
+| 8. `includes/read-routes.php` | Done in #164: the `/format` callback, its request-parameter helper, and the two post bibliography read callbacks, 4 functions; root file 847 → 703 lines. Phase B is complete |
+| 10. `styles.json` | Done: `includes/styles.json` (beside the PHP that reads it, so the release ZIP ships it with no packaging change) replaces the JS registry's table and the three PHP tables, and PHP's default-style literals call `bibliography_builder_default_style_key()`. One drift found and fixed: Harvard sorted with `en-US` but formatted with `en-GB`; it now uses `en-GB` for both, which sorts identically (ICU resolves both to the root collation) |
+| 11. Particle list and canonical labels | Next |
 
 ## Revision history
 

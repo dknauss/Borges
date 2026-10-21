@@ -51,7 +51,9 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 	}
 
 	$params    = bibliography_builder_get_request_params( $request );
-	$style_key = isset( $params['style'] ) ? sanitize_key( $params['style'] ) : 'chicago-notes-bibliography';
+	$style_key = isset( $params['style'] )
+		? sanitize_key( $params['style'] )
+		: bibliography_builder_default_style_key();
 	$csl_items = isset( $params['cslItems'] ) && is_array( $params['cslItems'] ) ? $params['cslItems'] : array();
 
 	if ( empty( $csl_items ) ) {
