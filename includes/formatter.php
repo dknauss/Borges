@@ -19,7 +19,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * so a style is defined once for both languages. It is decoded once per
  * request. See the registry's docblock for what each field means.
  *
- * @return array{defaultStyle: string, styles: array<string, array<string, mixed>>, nameParticles: string[]}
+ * Keys: `defaultStyle` (string), `styles` (style key => definition), and
+ * `nameParticles` (lowercase strings). `StyleDataTest` checks the shape.
+ *
+ * @return array<string, mixed>
  */
 function bibliography_builder_get_style_data() {
 	static $data = null;
