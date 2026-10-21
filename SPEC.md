@@ -269,7 +269,7 @@ The `save()` function produces the following HTML structure. All content is bake
 			id="ref-{id}"
 			lang="{csl.language, if present}"
 		>
-			<cite>{formatted citation text or displayOverride}</cite>
+			<span class="bibliography-builder-entry-text">{formatted citation text or displayOverride}</span>
 			<span
 				class="Z3988"
 				aria-hidden="true"
@@ -327,7 +327,8 @@ The `save()` function produces the following HTML structure. All content is bake
 -   **`<ul>`** — unordered list for notes-based and author-date bibliography styles such as Chicago Notes-Bibliography, Chicago Author-Date, and APA.
 -   **`<ol>`** — ordered list for numbered styles such as Vancouver and IEEE.
 -   **`<li id="ref-{uuid}" lang="...">`** — each entry has a stable ID for potential future deep-linking. The `lang` attribute is set from CSL-JSON `language` when present, enabling correct screen reader pronunciation of foreign-language titles and author names. Newly saved output intentionally omits the older `doc-biblioentry` role; deprecated block versions retain it only so existing saved posts continue to validate.
--   **`<cite>`** — wraps the formatted citation text. Semantically correct: `<cite>` represents a reference to a creative work.
+-   **`<span class="bibliography-builder-entry-text">`** — wraps the formatted citation text. Before 1.12.0 this was a `<cite>`, but HTML defines `<cite>` as the title of a work, not a full reference, and browsers italicize it by default: wherever the block's stylesheet is missing (email, feed readers) the whole reference turned italic and the title's own italics vanished. Titles keep their `<i>`.
+-   **Per-entry Cite / Export data** — with `outputCiteExport` on, each `<li>` carries `data-cite-text`, `data-cite-filename`, `data-cite-ris`, `data-cite-csl-json`, and, when the editor computed them, `data-cite-bibtex` and `data-cite-biblatex`. The panel (a `<details>` with a copy button and download links) is not saved: the view script builds it from these attributes. Email clients and feed readers show post content without the script or stylesheet, so a saved panel showed there expanded and unusable. `data-` attributes also survive the post-content HTML filter for every role. Visitors without JavaScript get the bibliography without the panel.
 -   **`<span class="Z3988" aria-hidden="true">`** — optional COinS span, hidden from both visual display (CSS) and assistive technology (ARIA) since it contains only machine-readable metadata.
 
 ### 3. JSON-LD (Schema.org)
@@ -544,9 +545,9 @@ This plugin accepts untrusted input from two sources — user-pasted text and Cr
 
 **Principle: sanitize at the point of output, not only at the point of input.** Data may be re-processed, re-sorted, or transformed between parse and render. Sanitizing at render time in `save.js` is the last line of defense and must never be skipped.
 
-#### HTML Output (cite elements)
+#### HTML Output (entry text)
 
-All text rendered inside `<cite>` elements must be escaped for HTML context. This applies to both auto-formatted output from `citation-js` and `displayOverride` strings.
+All text rendered inside entry-text elements must be escaped for HTML context. This applies to both auto-formatted output from `citation-js` and `displayOverride` strings.
 
 Escape at minimum:
 
@@ -630,7 +631,6 @@ Scholarly content serves users across a wide range of abilities and assistive te
 
 -   **`<section role="doc-bibliography">`** — DPUB-ARIA landmark. Screen readers with landmark navigation (NVDA: `d`, VoiceOver: rotor) can jump directly to the bibliography. Include an `aria-label="Bibliography"` on the section for clarity, since the block may not always have a visible heading.
 -   **`<li id="ref-{uuid}">`** — gives each entry a durable target for future in-page linking from inline citations. Current saved output relies on native list semantics instead of the older `doc-biblioentry` role; deprecated block versions preserve that role only for existing saved markup.
--   **`<cite>`** — semantically marks the reference to a creative work. Screen readers that support semantic HTML will convey this appropriately.
 
 #### Language Attributes
 

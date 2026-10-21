@@ -377,7 +377,7 @@ describe('save', () => {
 		);
 
 		expect(markup).toContain(
-			'<cite class="bibliography-builder-entry-text">Manual citation override</cite>'
+			'<span class="bibliography-builder-entry-text">Manual citation override</span>'
 		);
 		expect(markup).not.toContain('Auto formatted citation');
 	});
@@ -390,7 +390,7 @@ describe('save', () => {
 					citations: [
 						createCitation({
 							formattedText:
-								'</cite><script>alert("citation")</script>',
+								'</span><script>alert("citation")</script>',
 							csl: {
 								title: '</script><script>alert("jsonld")</script>',
 								DOI: '10.1234/example-doi',
@@ -403,7 +403,7 @@ describe('save', () => {
 
 		// Tags in stored text are dropped, never emitted or shown as text.
 		expect(markup).toContain(
-			'<cite class="bibliography-builder-entry-text">alert(&quot;citation&quot;)</cite>'
+			'<span class="bibliography-builder-entry-text">alert(&quot;citation&quot;)</span>'
 		);
 		expect(markup).not.toContain('&lt;script');
 		expect(markup).toContain(
@@ -428,7 +428,7 @@ describe('save', () => {
 		);
 
 		expect(markup).toContain(
-			'<cite class="bibliography-builder-entry-text">hover</cite>'
+			'<span class="bibliography-builder-entry-text">hover</span>'
 		);
 		expect(markup).not.toContain('onerror');
 		expect(markup).not.toContain('&lt;');
@@ -453,7 +453,7 @@ describe('save', () => {
 		);
 
 		expect(markup).toContain(
-			'<cite class="bibliography-builder-entry-text">alert(&quot;override&quot;)</cite>'
+			'<span class="bibliography-builder-entry-text">alert(&quot;override&quot;)</span>'
 		);
 		expect(markup).not.toContain('&lt;script');
 		expect(markup).not.toContain('<script>alert("override")</script>');
@@ -762,7 +762,7 @@ describe('save', () => {
 	});
 });
 
-describe('save cite/export disclosure panels', () => {
+describe('save cite/export data', () => {
 	function renderWith(attrs) {
 		return renderToStaticMarkup(
 			save({
@@ -775,44 +775,29 @@ describe('save cite/export disclosure panels', () => {
 		);
 	}
 
-	it('renders no cite/export panel by default (opt-in)', () => {
-		expect(renderWith({})).not.toContain(
-			'bibliography-builder-cite-export'
-		);
+	it('saves no cite/export data by default (opt-in)', () => {
+		const markup = renderWith({});
+		expect(markup).not.toContain('data-cite-');
+		expect(markup).not.toContain('bibliography-builder-cite-export');
 	});
 
-	it('renders a <details> cite/export panel when outputCiteExport is true', () => {
+	// The panel is built by view.js. A saved panel showed expanded and
+	// unusable in email and feed readers, which run no script and load no
+	// stylesheet.
+	it('saves the data for the panel, not the panel', () => {
 		const markup = renderWith({ outputCiteExport: true });
-		expect(markup).toContain(
-			'<details class="bibliography-builder-cite-export">'
-		);
-		expect(markup).toContain('Cite / Export');
-	});
-
-	it('renders a Copy citation button carrying the citation text, not a duplicated paragraph', () => {
-		const markup = renderWith({ outputCiteExport: true });
-		expect(markup).toContain('bibliography-builder-cite-copy');
-		expect(markup).toContain('Copy citation');
+		expect(markup).not.toContain('<details');
+		expect(markup).not.toContain('<button');
+		expect(markup).not.toContain('Cite / Export');
+		expect(markup).not.toContain('Copy citation');
+		expect(markup).not.toContain('href="data:');
 		expect(markup).toContain('data-cite-text="Example formatted citation"');
-		// The old duplicated plain-text block is gone.
-		expect(markup).not.toContain('bibliography-builder-cite-text');
+		expect(markup).toContain('data-cite-filename="Smith-2024"');
+		expect(markup).toContain('data-cite-ris="TY  - ');
+		expect(markup).toContain('data-cite-csl-json="{');
 	});
 
-	it('emits synchronous RIS and CSL-JSON data-URI download links', () => {
-		const markup = renderWith({ outputCiteExport: true });
-		expect(markup).toContain(
-			'href="data:application/x-research-info-systems'
-		);
-		expect(markup).toContain(
-			'href="data:application/vnd.citationstyles.csl+json'
-		);
-		expect(markup).toContain('data-cite-export-filename="Smith-2024.ris"');
-		expect(markup).toContain(
-			'data-cite-export-filename="Smith-2024.csl.json"'
-		);
-	});
-
-	it('renders BibTeX/BibLaTeX links only when pre-computed strings are present', () => {
+	it('saves BibTeX/BibLaTeX only when pre-computed strings are present', () => {
 		const withStrings = renderWith({
 			outputCiteExport: true,
 			citations: [
@@ -822,51 +807,27 @@ describe('save cite/export disclosure panels', () => {
 				}),
 			],
 		});
-		expect(withStrings).toContain('href="data:text/x-bibtex');
-		expect(withStrings).toContain(
-			'data-cite-export-filename="Smith-2024.bib"'
-		);
-		expect(withStrings).toContain(
-			'data-cite-export-filename="Smith-2024.biblatex.bib"'
-		);
+		expect(withStrings).toContain('data-cite-bibtex="@article{x}"');
+		expect(withStrings).toContain('data-cite-biblatex="@article{y}"');
 
 		const withoutStrings = renderWith({ outputCiteExport: true });
-		expect(withoutStrings).not.toContain(
-			'data-cite-export-filename="Smith-2024.bib"'
-		);
-		expect(withoutStrings).not.toContain(
-			'data-cite-export-filename="Smith-2024.biblatex.bib"'
-		);
+		expect(withoutStrings).not.toContain('data-cite-bibtex');
+		expect(withoutStrings).not.toContain('data-cite-biblatex');
 	});
 
-	// Filenames are carried in data-cite-export-filename, not the download
-	// attribute: Gutenberg's @wordpress/element serializer treats `download`
-	// as boolean and drops its value, so view.js restores the name at runtime.
-	it('names every export link via data-cite-export-filename', () => {
-		const markup = renderWith({
-			outputCiteExport: true,
-			citations: [
-				createCitation({
-					exportBibtex: '@article{x}',
-					exportBiblatex: '@article{y}',
-				}),
-			],
-		});
-		// RIS + CSL-JSON + BibTeX + BibLaTeX = 4
-		expect(markup.match(/data-cite-export-filename="/g)).toHaveLength(4);
-	});
-
-	it('shows the visible cite text without requiring JS', () => {
+	it('keeps the visible citation text in the entry, without requiring JS', () => {
 		const markup = renderWith({
 			outputCiteExport: true,
 			citations: [
 				createCitation({ formattedText: 'Smith, Ada. A Study. 2024.' }),
 			],
 		});
-		expect(markup).toContain('Smith, Ada. A Study. 2024.');
+		expect(markup).toContain(
+			'<span class="bibliography-builder-entry-text">Smith, Ada. A Study. 2024.</span>'
+		);
 	});
 
-	it('encodes special characters in data URIs (no raw markup injection)', () => {
+	it('escapes markup in the saved data (no raw markup injection)', () => {
 		const markup = renderWith({
 			outputCiteExport: true,
 			citations: [
@@ -879,7 +840,7 @@ describe('save cite/export disclosure panels', () => {
 				}),
 			],
 		});
-		expect(markup).toContain('%3Cscript%3E');
+		expect(markup).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
 		expect(markup).not.toContain('<script>alert(1)</script>');
 	});
 });
@@ -908,12 +869,16 @@ describe('save inline markup', () => {
 		);
 
 		expect(markup).toContain(
-			'<cite class="bibliography-builder-entry-text">Ostrom, Elinor. <i>Governing the Commons</i>. Cambridge University Press, 1990. '
+			'<span class="bibliography-builder-entry-text">Ostrom, Elinor. <i>Governing the Commons</i>. Cambridge University Press, 1990. '
 		);
-		// No escaped tag anywhere: not in the text, the link's aria-label, or
-		// the copy text.
-		expect(markup).not.toContain('&lt;i&gt;');
-		expect(markup).not.toContain('&lt;i>');
+		// No escaped tag in the text, the link's aria-label, or the copy text.
+		// The RIS and CSL-JSON exports carry the CSL title as stored.
+		const visible = markup.replace(
+			/ data-cite-(?:ris|csl-json)="[^"]*"/g,
+			''
+		);
+		expect(visible).not.toContain('&lt;i&gt;');
+		expect(visible).not.toContain('&lt;i>');
 		expect(markup).toContain(
 			'aria-label="Governing the Commons — https://example.com/ostrom"'
 		);

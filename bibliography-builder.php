@@ -2064,7 +2064,21 @@ function bibliography_builder_rest_pre_serve_request( $served, $result, $request
  * Register the block.
  */
 function bibliography_builder_block_init() {
-	register_block_type( __DIR__ );
+	/**
+	 * WP_Block_Type keeps any registration key as a property, and the email
+	 * renderer reads this one off the block type; core's stubs list only the
+	 * keys core itself reads.
+	 *
+	 * @psalm-suppress InvalidArgument
+	 */
+	register_block_type(
+		__DIR__,
+		array(
+			// Read by the email renderer that WooCommerce, MailPoet, Jetpack's
+			// newsletters, and Newspack share (see includes/email-output.php).
+			'render_email_callback' => 'bibliography_builder_render_email',
+		)
+	);
 }
 add_action( 'init', 'bibliography_builder_block_init' );
 add_action( 'rest_api_init', 'bibliography_builder_register_rest_routes' );
@@ -2077,6 +2091,7 @@ require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/review.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/save-markup.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/frontend-labels.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/frontend-json-ld.php';
+require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/email-output.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/block-locator.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/write-routes.php';
 require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/write-abilities.php';

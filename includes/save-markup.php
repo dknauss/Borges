@@ -10,7 +10,7 @@
  *
  * This file reproduces `renderBibliographySave()` in `src/save-markup.js` and
  * the helpers it calls (sorting, display segments, link splitting, JSON-LD,
- * COinS, RIS/CSL-JSON cite-export links, and the block-supports wrapper).
+ * COinS, the Cite / Export data attributes, and the block-supports wrapper).
  * Every function names the JS function it mirrors. Parity is enforced by
  * committed fixtures: PHPUnit renders each case in
  * `tests/fixtures/save-parity/cases.json` and compares it with the committed
@@ -2134,39 +2134,18 @@ function bibliography_builder_save_ris_entry( $csl ) {
 }
 
 /**
- * One cite-export download link.
+ * The per-entry Cite / Export data, as `data-` attributes for the entry's `<li>`.
  *
- * @param string $mime     Data URI media type.
- * @param string $content  File content.
- * @param string $filename Download filename.
- * @param string $label    Link text.
- * @return string
- */
-function bibliography_builder_save_export_link( $mime, $content, $filename, $label ) {
-	return '<li><a' . bibliography_builder_save_attributes(
-		array(
-			'href'                      => 'data:' . $mime . ';charset=utf-8,'
-				. bibliography_builder_encode_uri_component( $content ),
-			'download'                  => $filename,
-			'data-cite-export-filename' => $filename,
-			'rel'                       => 'noopener',
-		)
-	) . '>' . bibliography_builder_escape_save_text( $label ) . '</a></li>';
-}
-
-/**
- * The per-entry Cite / Export panel.
- *
- * Labels are fixed English, never translated: saved markup must be identical
- * in every editor locale (the editor re-validates it in its own), and the
- * frontend view script localizes them at runtime.
+ * `getCiteExportData()` in src/save-markup.js. The panel itself is not saved:
+ * the view script builds it from these attributes, so email clients and feed
+ * readers, which show post content without the script and stylesheet, see
+ * only the bibliography.
  *
  * @param array $citation Citation record.
- * @return string
+ * @return array Attribute name => value, in serialized order.
  */
-function bibliography_builder_save_cite_export( $citation ) {
+function bibliography_builder_save_cite_export_data( $citation ) {
 	$csl       = bibliography_builder_citation_csl( $citation );
-	$base      = bibliography_builder_save_export_basename( $csl );
 	$cite_text = '';
 
 	foreach ( array( 'displayOverride', 'formattedText' ) as $field ) {
@@ -2177,54 +2156,28 @@ function bibliography_builder_save_cite_export( $citation ) {
 		}
 	}
 
-	// Strip after choosing, as save() does: an override of nothing but tags
-	// copies as empty rather than falling through to the formatted text.
-	$cite_text = bibliography_builder_save_strip_inline_markup( $cite_text );
-
-	$links  = bibliography_builder_save_export_link(
-		'application/x-research-info-systems',
-		bibliography_builder_save_ris_entry( $csl ),
-		$base . '.ris',
-		'RIS'
-	);
-	$links .= bibliography_builder_save_export_link(
-		'application/vnd.citationstyles.csl+json',
-		bibliography_builder_json_stringify( bibliography_builder_citation_raw_csl( $citation ), 2 ) . "\n",
-		$base . '.csl.json',
-		'CSL-JSON'
+	$csl_json = bibliography_builder_json_stringify( bibliography_builder_citation_raw_csl( $citation ), 2 );
+	$data     = array(
+		// Strip after choosing, as save() does: an override of nothing but
+		// tags copies as empty rather than falling through to the formatted text.
+		'data-cite-text'     => bibliography_builder_save_strip_inline_markup( $cite_text ),
+		'data-cite-filename' => bibliography_builder_save_export_basename( $csl ),
+		'data-cite-ris'      => bibliography_builder_save_ris_entry( $csl ),
+		'data-cite-csl-json' => $csl_json . "\n",
+		'data-cite-bibtex'   => null,
+		'data-cite-biblatex' => null,
 	);
 
 	foreach ( array(
-		'exportBibtex'   => array( '.bib', 'BibTeX' ),
-		'exportBiblatex' => array( '.biblatex.bib', 'BibLaTeX' ),
-	) as $field => $meta ) {
+		'exportBibtex'   => 'data-cite-bibtex',
+		'exportBiblatex' => 'data-cite-biblatex',
+	) as $field => $attribute ) {
 		if ( isset( $citation[ $field ] ) && bibliography_builder_js_truthy( $citation[ $field ] ) ) {
-			$links .= bibliography_builder_save_export_link(
-				'text/x-bibtex',
-				bibliography_builder_js_string( $citation[ $field ] ),
-				$base . $meta[0],
-				$meta[1]
-			);
+			$data[ $attribute ] = bibliography_builder_js_string( $citation[ $field ] );
 		}
 	}
 
-	return '<details class="bibliography-builder-cite-export">'
-		. '<summary class="bibliography-builder-cite-export-toggle">'
-		. 'Cite / Export'
-		. '</summary>'
-		. '<div class="bibliography-builder-cite-export-panel">'
-		. '<button' . bibliography_builder_save_attributes(
-			array(
-				'type'           => 'button',
-				'class'          => 'bibliography-builder-cite-copy',
-				'aria-live'      => 'polite',
-				'data-cite-text' => $cite_text,
-			)
-		) . '>'
-		. 'Copy citation'
-		. '</button>'
-		. '<ul class="bibliography-builder-export-links">' . $links . '</ul>'
-		. '</div></details>';
+	return $data;
 }
 
 // ── Block wrapper: useBlockProps.save() with the block's supports ───────────
@@ -2354,7 +2307,7 @@ function bibliography_builder_save_block_props( $attrs ) {
  *
  * @param array $citation     Citation record.
  * @param bool  $output_coins Whether to emit COinS.
- * @param bool  $cite_export  Whether to emit the Cite / Export panel.
+ * @param bool  $cite_export  Whether to emit the Cite / Export data.
  * @param mixed $repeated_prefix MLA author names to show as three hyphens, or null.
  * @return string
  */
@@ -2407,12 +2360,16 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 
 	$id       = array_key_exists( 'id', $citation ) ? bibliography_builder_js_string( $citation['id'] ) : 'undefined';
 	$language = bibliography_builder_csl_field( $csl, 'language' );
+	$language = bibliography_builder_js_truthy( $language ) ? bibliography_builder_js_string( $language ) : null;
 	$html     = '<li' . bibliography_builder_save_attributes(
-		array(
-			'id'   => 'ref-' . $id,
-			'lang' => bibliography_builder_js_truthy( $language ) ? bibliography_builder_js_string( $language ) : null,
+		array_merge(
+			array(
+				'id'   => 'ref-' . $id,
+				'lang' => $language,
+			),
+			$cite_export ? bibliography_builder_save_cite_export_data( $citation ) : array()
 		)
-	) . '><cite class="bibliography-builder-entry-text">' . $text . '</cite>';
+	) . '><span class="bibliography-builder-entry-text">' . $text . '</span>';
 
 	if ( $output_coins ) {
 		$html .= '<span' . bibliography_builder_save_attributes(
@@ -2422,10 +2379,6 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 				'title'       => bibliography_builder_save_build_coins( $csl ),
 			)
 		) . '></span>';
-	}
-
-	if ( $cite_export ) {
-		$html .= bibliography_builder_save_cite_export( $citation );
 	}
 
 	return $html . '</li>';

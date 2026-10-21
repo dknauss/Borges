@@ -1,6 +1,10 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { applyExportFilenames, attachCiteCopy } from './view';
+import {
+	applyExportFilenames,
+	attachCiteCopy,
+	buildCiteExportPanels,
+} from './view';
 
 describe('applyExportFilenames (cite/export download filename PE)', () => {
 	afterEach(() => {
@@ -133,5 +137,125 @@ describe('view.js translation', () => {
 		const source = readFileSync(join(__dirname, 'view.js'), 'utf8');
 
 		expect(source).not.toMatch(/@wordpress\/i18n|cite-export-labels/);
+	});
+});
+
+describe('buildCiteExportPanels (panel built from saved data)', () => {
+	afterEach(() => {
+		document.body.innerHTML = '';
+	});
+
+	function bibliography(entryAttributes, sectionAttributes = '') {
+		document.body.innerHTML = `<section class="wp-block-bibliography-builder-bibliography"${sectionAttributes}><ul><li id="ref-a"${entryAttributes}><span class="bibliography-builder-entry-text">Alpha, Ada. <i>A Book</i>.</span></li></ul></section>`;
+	}
+
+	const fullData =
+		' data-cite-text="Alpha, Ada. A Book." data-cite-filename="Alpha-2018"' +
+		' data-cite-ris="TY  - BOOK&#10;ER  - " data-cite-csl-json="{&quot;type&quot;: &quot;book&quot;}&#10;"' +
+		' data-cite-bibtex="@book{a}" data-cite-biblatex="@book{a, date = {2018}}"';
+
+	it('builds the same panel that save() used to write, after the entry text', () => {
+		bibliography(fullData);
+		buildCiteExportPanels(document);
+
+		const entry = document.querySelector('#ref-a');
+		const details = entry.lastElementChild;
+
+		expect(
+			details.matches('details.bibliography-builder-cite-export')
+		).toBe(true);
+		expect(details.querySelector('summary').textContent).toBe(
+			'Cite / Export'
+		);
+
+		const copy = details.querySelector('.bibliography-builder-cite-copy');
+		expect(copy.getAttribute('type')).toBe('button');
+		expect(copy.getAttribute('data-cite-text')).toBe('Alpha, Ada. A Book.');
+		expect(copy.getAttribute('data-copied-label')).toBe('Copied');
+
+		const links = [...details.querySelectorAll('a')];
+		expect(links.map((a) => a.textContent)).toEqual([
+			'RIS',
+			'CSL-JSON',
+			'BibTeX',
+			'BibLaTeX',
+		]);
+		expect(links.map((a) => a.getAttribute('download'))).toEqual([
+			'Alpha-2018.ris',
+			'Alpha-2018.csl.json',
+			'Alpha-2018.bib',
+			'Alpha-2018.biblatex.bib',
+		]);
+		expect(decodeURIComponent(links[0].getAttribute('href'))).toBe(
+			'data:application/x-research-info-systems;charset=utf-8,TY  - BOOK\nER  - '
+		);
+		expect(decodeURIComponent(links[1].getAttribute('href'))).toBe(
+			'data:application/vnd.citationstyles.csl+json;charset=utf-8,{"type": "book"}\n'
+		);
+	});
+
+	it('offers only the downloads the entry has data for', () => {
+		bibliography(
+			' data-cite-text="x" data-cite-filename="x" data-cite-ris="TY  - BOOK" data-cite-csl-json="{}"'
+		);
+		buildCiteExportPanels(document);
+
+		expect(
+			[...document.querySelectorAll('a')].map((a) => a.textContent)
+		).toEqual(['RIS', 'CSL-JSON']);
+	});
+
+	it('uses translated labels from the section when the server supplies them', () => {
+		bibliography(
+			fullData,
+			` data-cite-labels='{"toggle":"Citer / Exporter","copied":"Copié"}'`
+		);
+		buildCiteExportPanels(document);
+
+		expect(document.querySelector('summary').textContent).toBe(
+			'Citer / Exporter'
+		);
+		expect(
+			document
+				.querySelector('.bibliography-builder-cite-copy')
+				.getAttribute('data-copied-label')
+		).toBe('Copié');
+		expect(document.querySelector('a').textContent).toBe('RIS');
+	});
+
+	it('builds each panel once, and leaves entries without data alone', () => {
+		bibliography(fullData);
+		document
+			.querySelector('ul')
+			.insertAdjacentHTML(
+				'beforeend',
+				'<li id="ref-b"><span class="bibliography-builder-entry-text">Beta.</span></li>'
+			);
+		buildCiteExportPanels(document);
+		buildCiteExportPanels(document);
+
+		expect(
+			document.querySelectorAll(
+				'#ref-a .bibliography-builder-cite-export'
+			)
+		).toHaveLength(1);
+		expect(
+			document.querySelector('#ref-b .bibliography-builder-cite-export')
+		).toBeNull();
+	});
+
+	it('wires the built copy button to the clipboard', () => {
+		const writeText = jest.fn(() => Promise.resolve());
+		Object.defineProperty(window.navigator, 'clipboard', {
+			value: { writeText },
+			configurable: true,
+		});
+		bibliography(fullData);
+		buildCiteExportPanels(document);
+		attachCiteCopy(document);
+
+		document.querySelector('.bibliography-builder-cite-copy').click();
+
+		expect(writeText).toHaveBeenCalledWith('Alpha, Ada. A Book.');
 	});
 });
