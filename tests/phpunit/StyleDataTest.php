@@ -1,10 +1,11 @@
 <?php
 /**
- * The shared style table, `includes/styles.json`.
+ * The shared style table and name particles, `includes/styles.json`.
  *
- * `src/lib/formatting/style-registry.js` imports the same file, so these
- * checks cover both languages: the JSON is complete and well formed, matches
- * `block.json` and the bundled CSL files, and the PHP readers return it.
+ * `src/lib/formatting/style-registry.js` and `src/lib/name-particles.js`
+ * import the same file, so these checks cover both languages: the JSON is
+ * complete and well formed, matches `block.json` and the bundled CSL files,
+ * and the PHP readers return it.
  *
  * @package BibliographyBuilder
  */
@@ -51,6 +52,18 @@ final class StyleDataTest extends TestCase {
 					$this->assertContains( $style[ $field ], $allowed, "$key.$field" );
 				}
 			}
+		}
+	}
+
+	public function test_name_particles_are_unique_lowercase_words() {
+		$particles = bibliography_builder_name_particles();
+
+		$this->assertNotEmpty( $particles );
+		$this->assertSame( bibliography_builder_get_style_data()['nameParticles'], $particles );
+		$this->assertSame( array_values( array_unique( $particles ) ), $particles );
+
+		foreach ( $particles as $particle ) {
+			$this->assertMatchesRegularExpression( '/^\p{Ll}+$/u', $particle );
 		}
 	}
 

@@ -1,5 +1,31 @@
 {
 	"defaultStyle": "chicago-notes-bibliography",
+	"nameParticles": [
+		"van",
+		"von",
+		"vom",
+		"zu",
+		"zur",
+		"der",
+		"den",
+		"de",
+		"del",
+		"della",
+		"di",
+		"da",
+		"das",
+		"dos",
+		"du",
+		"la",
+		"le",
+		"el",
+		"al",
+		"bin",
+		"ibn",
+		"ter",
+		"ten",
+		"op"
+	],
 	"styles": {
 		"chicago-notes-bibliography": {
 			"label": "Chicago Notes-Bibliography",
