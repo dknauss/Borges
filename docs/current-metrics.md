@@ -11,13 +11,14 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **2,213** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **10,089** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **1,592** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **10,103** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
 | JS source (`src/`, excl. `*.test.js`) | **11,381** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **1,449 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
-(REST registration + block registration) and the ten `includes/` files it loads:
+(REST registration + block registration) and the eleven `includes/` files it loads:
+`includes/csl-sanitize.php`, which only defines functions;
 `includes/google-books-key.php`, which only defines functions;
 `includes/resolvers.php`, which only defines constants and functions (its remote requests run
 only inside editor-time REST callbacks); `includes/review.php`, which only defines constants,
