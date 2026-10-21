@@ -186,9 +186,9 @@ Each ticket below is one PR that can be lifted to the issue tracker on its own. 
 | Ticket | Status |
 |---|---|
 | Phase A (1–4) | Done: #150, #151, #152, #153 |
-| 5. `includes/csl-sanitize.php` | Done, with ticket 9 (the function-inventory test) so it guards every later move |
-| 6. `includes/formatter.php` | Next |
-| 7. `includes/block-data.php` | — |
+| 5. `includes/csl-sanitize.php` | Done in #160, with ticket 9 (the function-inventory test) so it guards every later move |
+| 6. `includes/formatter.php` | Done: style definitions through `format_csl_items()`, 16 functions; root file 1,607 → 1,002 lines |
+| 7. `includes/block-data.php` | Next |
 | 8. `includes/read-routes.php` | — |
 
 ## Revision history

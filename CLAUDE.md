@@ -80,7 +80,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
 - `includes/google-books-key.php` reads an optional Google Books API key from the `BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY` constant, then the `bibliography_builder_google_books_api_key` filter. It is added only to the ISBN resolver's Google Books fallback request. There is deliberately no option or settings screen: `verify-metrics.sh` enforces that the plugin persists no settings.
 - Read-only Abilities API integration (WordPress 6.9+) lives in `includes/abilities.php`: `borges/get-bibliographies`, `borges/export-bibliography`, `borges/validate-citations` in a `bibliography` category. They reuse the REST read/permission helpers; on older WordPress the `wp_abilities_api_*` hooks never fire.
 - Payload limits: 1 MB max body, 200 items max per `/format` request (the editor's per-bibliography cap, `MAX_CITATIONS_PER_BIBLIOGRAPHY`; the editor formats a whole bibliography in one request, and `src/lib/citation-limits.test.js` keeps the two equal)
-- CSL-JSON validation and sanitization (`bibliography_builder_validate_and_sanitize_csl_item()` and its helpers) live in `includes/csl-sanitize.php`, moved unchanged from the root file in Phase B of `docs/planning/refactor-and-standards-memo.md`. `tests/phpunit/FunctionInventoryTest.php` fails if any function listed in `tests/fixtures/function-inventory.txt` goes missing or is defined twice; keep function names when moving code.
+- The formatter (`bibliography_builder_format_csl_items()`, style definitions, citeproc-php adaptation, cache key and transient cache helpers) lives in `includes/formatter.php`, and CSL-JSON validation and sanitization (`bibliography_builder_validate_and_sanitize_csl_item()` and its helpers) in `includes/csl-sanitize.php`, both moved unchanged from the root file in Phase B of `docs/planning/refactor-and-standards-memo.md`. `tests/phpunit/FunctionInventoryTest.php` fails if any function listed in `tests/fixtures/function-inventory.txt` goes missing or is defined twice; keep function names when moving code.
 - `bibliography_builder_sanitize_formatted_text()` — all HTML from citeproc is run through this before storage or output
 
 ### JS entry points (`src/`)
@@ -97,7 +97,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
 
 - CSL style templates live in `packages/citation-style-language-styles/` (local Composer package)
 - Locales in `packages/citation-style-language-locales/`
-- `bibliography_builder_get_formatter_style_definition()` maps style keys (e.g. `chicago-notes-bibliography`) to CSL XML + locale
+- `bibliography_builder_get_formatter_style_definition()` (`includes/formatter.php`) maps style keys (e.g. `chicago-notes-bibliography`) to CSL XML + locale
 - Style families (`notes`, `author-date`, `numeric`) affect how sorting and display semantics work in JS
 
 ### Testing conventions
