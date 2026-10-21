@@ -205,37 +205,52 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 	 * Group a snapshot by object and declaring class, each group with a writer
 	 * that can assign that class's private and protected properties.
 	 *
-	 * @param array $snapshot List of [ object, ReflectionProperty, value ].
+	 * @param array<int, array{0: object, 1: ReflectionProperty, 2: mixed}> $snapshot Snapshot entries.
 	 * @return array<int, array{0: Closure, 1: object, 2: array<string, mixed>}>
+	 * @throws RuntimeException If a writer cannot be bound, which reflection rules out.
 	 */
 	private static function restore_plan( $snapshot ) {
 		$writers = array();
-		$groups  = array();
+		$targets = array();
+		$classes = array();
+		$values  = array();
 
 		foreach ( $snapshot as $entry ) {
 			$class = $entry[1]->getDeclaringClass()->getName();
 			$key   = spl_object_id( $entry[0] ) . '|' . $class;
 
 			if ( ! isset( $writers[ $class ] ) ) {
-				$writers[ $class ] = Closure::bind(
-					static function ( $target, $values ) {
-						foreach ( $values as $name => $value ) {
+				$writer = Closure::bind(
+					static function ( $target, $properties ) {
+						foreach ( $properties as $name => $value ) {
 							$target->$name = $value;
 						}
 					},
 					null,
 					$class
 				);
+
+				// The class comes from reflection, so binding cannot fail; if it
+				// ever did, skipping its properties would render stale state.
+				if ( null === $writer ) {
+					throw new RuntimeException( 'Could not bind a citeproc snapshot writer.' );
+				}
+
+				$writers[ $class ] = $writer;
 			}
 
-			if ( ! isset( $groups[ $key ] ) ) {
-				$groups[ $key ] = array( $writers[ $class ], $entry[0], array() );
-			}
-
-			$groups[ $key ][2][ $entry[1]->getName() ] = $entry[2];
+			$targets[ $key ]                        = $entry[0];
+			$classes[ $key ]                        = $class;
+			$values[ $key ][ $entry[1]->getName() ] = $entry[2];
 		}
 
-		return array_values( $groups );
+		$plan = array();
+
+		foreach ( $targets as $key => $target ) {
+			$plan[] = array( $writers[ $classes[ $key ] ], $target, $values[ $key ] );
+		}
+
+		return $plan;
 	}
 
 	/**
