@@ -1518,7 +1518,7 @@ function bibliography_builder_save_split_trailing_punctuation( $url ) {
 	while ( '' !== $href ) {
 		$last = substr( $href, -1 );
 
-		if ( false !== strpos( '.,;:!?', $last ) ) {
+		if ( in_array( $last, array( '.', ',', ';', ':', '!', '?' ), true ) ) {
 			$trailing = $last . $trailing;
 			$href     = substr( $href, 0, -1 );
 			continue;
@@ -1855,12 +1855,8 @@ function bibliography_builder_save_page_bounds( $page ) {
 		return null;
 	}
 
-	$pieces = array_values(
-		array_filter(
-			(array) preg_split( BIBLIOGRAPHY_BUILDER_PAGE_RANGE_SEPARATOR, bibliography_builder_js_string( $page ) ),
-			'strlen'
-		)
-	);
+	$split  = preg_split( BIBLIOGRAPHY_BUILDER_PAGE_RANGE_SEPARATOR, bibliography_builder_js_string( $page ) );
+	$pieces = array_values( array_filter( false === $split ? array() : $split, 'strlen' ) );
 
 	return array(
 		isset( $pieces[0] ) ? $pieces[0] : null,
