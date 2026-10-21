@@ -11,13 +11,13 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **704** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **10,296** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **708** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **10,361** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
 | JS source (`src/`, excl. `*.test.js`) | **11,455** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **3,156 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
-(REST registration + block registration) and the sixteen `includes/` files it loads:
+(REST registration + block registration) and the twenty `includes/` files it loads:
 `includes/block-data.php`, `includes/csl-sanitize.php`, `includes/formatter.php`,
 `includes/read-routes.php`, and `includes/styles.php` (which reads the shared
 `includes/styles.json`: the style table and name particles), which only define functions (the formatter runs only for editor-time
@@ -26,7 +26,9 @@ REST calls and writes);
 `includes/resolvers.php`, which only defines constants and functions (its remote requests run
 only inside editor-time REST callbacks); `includes/review.php`, which only defines constants,
 functions, and editor-only review routes registered with the others on `rest_api_init`;
-`includes/save-markup.php` and `includes/block-locator.php`, which only define constants and functions
+`includes/save-markup.php` (with `save-sort.php`, `save-display.php`, `save-json-ld-coins.php`, and
+`save-cite-export.php`, split from it along the JS modules they port) and `includes/block-locator.php`,
+which only define constants and functions
 (called by the opt-in write routes, plus the JSON-LD helpers below); `includes/write-routes.php`, which only defines functions and
 registers its routes on `rest_api_init` when a site opts in (off by default);
 `includes/frontend-labels.php`, whose `render_block` filter translates the saved Cite / Export
