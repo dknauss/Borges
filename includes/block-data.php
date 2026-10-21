@@ -48,7 +48,7 @@ function bibliography_builder_collect_blocks( $blocks, $results = array() ) {
 				'bibliographyId' => bibliography_builder_get_stable_block_id( $attrs ),
 				'citationStyle'  => isset( $attrs['citationStyle'] )
 					? (string) $attrs['citationStyle']
-					: 'chicago-notes-bibliography',
+					: bibliography_builder_default_style_key(),
 				'headingText'    => isset( $attrs['headingText'] )
 					? (string) $attrs['headingText']
 					: '',
