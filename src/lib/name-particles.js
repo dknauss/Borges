@@ -13,34 +13,12 @@
  * splits the same particles before citeproc-php renders a demoting style.
  */
 
+import styleData from '../../includes/styles.json';
+
 // Lowercase particles kept lowercase inside a name and treated as
-// non-dropping particles when they open a family name.
-export const NAME_PARTICLES = new Set([
-	'van',
-	'von',
-	'vom',
-	'zu',
-	'zur',
-	'der',
-	'den',
-	'de',
-	'del',
-	'della',
-	'di',
-	'da',
-	'das',
-	'dos',
-	'du',
-	'la',
-	'le',
-	'el',
-	'al',
-	'bin',
-	'ibn',
-	'ter',
-	'ten',
-	'op',
-]);
+// non-dropping particles when they open a family name. The list lives in
+// includes/styles.json, which the PHP save port and formatter read too.
+export const NAME_PARTICLES = new Set(styleData.nameParticles);
 
 // An elided particle joined to the surname: d'Alembert, l'Hôpital.
 const ELIDED_PARTICLE = /^([dl]['’])(?=\p{Lu})/u;
