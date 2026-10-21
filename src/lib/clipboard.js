@@ -1,3 +1,11 @@
+/**
+ * Copy text to the clipboard, falling back to a hidden textarea and
+ * `execCommand('copy')` where the async Clipboard API is unavailable.
+ *
+ * @param {string}                                             text      Text to copy.
+ * @param {{navigatorRef?: Navigator, documentRef?: Document}} [options] Test doubles for the globals.
+ * @return {Promise<boolean>} Resolves true once copied; rejects when every route fails.
+ */
 export async function copyTextToClipboard(
 	text,
 	{ navigatorRef, documentRef } = {}

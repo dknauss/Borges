@@ -237,7 +237,7 @@ function bibliography_builder_register_write_abilities() {
 /**
  * The route request a write ability stands for.
  *
- * @param array       $input       Validated ability input.
+ * @param mixed       $input       Validated ability input; a non-array counts as empty.
  * @param string      $method      HTTP method of the matching route.
  * @param array|null  $body        JSON body, or null for none.
  * @param string|null $citation_id Citation ID for the per-citation routes.
@@ -266,7 +266,7 @@ function bibliography_builder_write_ability_request( $input, $method, $body = nu
 
 	if ( null !== $body ) {
 		$request->set_header( 'Content-Type', 'application/json' );
-		$request->set_body( wp_json_encode( $body ) );
+		$request->set_body( (string) wp_json_encode( $body ) );
 	}
 
 	return $request;

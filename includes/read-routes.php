@@ -20,15 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array
  */
 function bibliography_builder_get_request_params( WP_REST_Request $request ) {
-	if ( method_exists( $request, 'get_json_params' ) ) {
-		$params = $request->get_json_params();
+	$params = $request->get_json_params();
 
-		if ( is_array( $params ) ) {
-			return $params;
-		}
-	}
-
-	return array();
+	return is_array( $params ) ? $params : array();
 }
 
 /**
@@ -38,16 +32,12 @@ function bibliography_builder_get_request_params( WP_REST_Request $request ) {
  * @return WP_REST_Response|WP_Error
  */
 function bibliography_builder_rest_format_citations( WP_REST_Request $request ) {
-	if ( method_exists( $request, 'get_body' ) ) {
-		$body = (string) $request->get_body();
-
-		if ( strlen( $body ) > BIBLIOGRAPHY_BUILDER_MAX_FORMAT_BYTES ) {
-			return new WP_Error(
-				'bibliography_builder_formatter_payload_too_large',
-				__( 'The citation formatting request is too large.', 'borges-bibliography-builder' ),
-				array( 'status' => 413 )
-			);
-		}
+	if ( strlen( (string) $request->get_body() ) > BIBLIOGRAPHY_BUILDER_MAX_FORMAT_BYTES ) {
+		return new WP_Error(
+			'bibliography_builder_formatter_payload_too_large',
+			__( 'The citation formatting request is too large.', 'borges-bibliography-builder' ),
+			array( 'status' => 413 )
+		);
 	}
 
 	$params    = bibliography_builder_get_request_params( $request );

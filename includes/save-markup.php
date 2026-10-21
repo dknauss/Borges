@@ -49,7 +49,7 @@ const BIBLIOGRAPHY_BUILDER_PAGE_RANGE_SEPARATOR = '/[' . BIBLIOGRAPHY_BUILDER_JS
  * the editor's `JSON.stringify()`. This decodes objects into arrays except
  * where an array cannot represent them, which stay `stdClass`.
  *
- * @param string $json Block attribute JSON.
+ * @param mixed $json Block attribute JSON; cast to string.
  * @return array|null Attributes, or null when the JSON is not an object.
  */
 function bibliography_builder_decode_save_attributes( $json ) {
@@ -1518,7 +1518,7 @@ function bibliography_builder_save_split_trailing_punctuation( $url ) {
 	while ( '' !== $href ) {
 		$last = substr( $href, -1 );
 
-		if ( false !== strpos( '.,;:!?', $last ) ) {
+		if ( in_array( $last, array( '.', ',', ';', ':', '!', '?' ), true ) ) {
 			$trailing = $last . $trailing;
 			$href     = substr( $href, 0, -1 );
 			continue;
@@ -1585,7 +1585,7 @@ function bibliography_builder_save_is_linkable_url( $candidate ) {
  *
  * @param string $text       Segment text.
  * @param string $link_label Accessible label for links.
- * @return array<int, array{text: string, link: bool, href?: string, label?: string}>
+ * @return array<int, array{text: string, link: false}|array{text: string, link: true, href: string, label: string}>
  */
 function bibliography_builder_save_link_parts( $text, $link_label ) {
 	if ( '' === $text ) {
@@ -1855,12 +1855,8 @@ function bibliography_builder_save_page_bounds( $page ) {
 		return null;
 	}
 
-	$pieces = array_values(
-		array_filter(
-			(array) preg_split( BIBLIOGRAPHY_BUILDER_PAGE_RANGE_SEPARATOR, bibliography_builder_js_string( $page ) ),
-			'strlen'
-		)
-	);
+	$split  = preg_split( BIBLIOGRAPHY_BUILDER_PAGE_RANGE_SEPARATOR, bibliography_builder_js_string( $page ) );
+	$pieces = array_values( array_filter( false === $split ? array() : $split, 'strlen' ) );
 
 	return array(
 		isset( $pieces[0] ) ? $pieces[0] : null,
@@ -2313,6 +2309,12 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 		$content = '';
 
 		foreach ( bibliography_builder_save_link_parts( $segment['text'], $link_label ) as $part ) {
+			/**
+			 * Link parts always carry href and label; Psalm merges the two
+			 * part shapes and loses that.
+			 *
+			 * @psalm-suppress PossiblyUndefinedArrayOffset
+			 */
 			$content .= $part['link']
 				? '<a' . bibliography_builder_save_attributes(
 					array(
@@ -2377,7 +2379,7 @@ function bibliography_builder_save_heading_tag( $heading_level ) {
  *
  * Callers must check bibliography_builder_can_render_save_markup() first.
  *
- * @param array $attrs Block attributes as parse_blocks() returns them.
+ * @param mixed $attrs Block attributes as parse_blocks() returns them; anything else renders as no attributes.
  * @return string
  */
 function bibliography_builder_render_save_markup( $attrs ) {

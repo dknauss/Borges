@@ -45,6 +45,9 @@ jobs:
             - name: Check formatting
               run: npm run format:check
 
+            - name: Type-check src/lib (JSDoc, checkJs)
+              run: npm run typecheck:js
+
             - name: Audit production npm dependencies
               run: npm audit --omit=dev --omit=optional
 
