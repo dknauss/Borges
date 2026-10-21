@@ -255,8 +255,9 @@ function bibliography_builder_resolve_remote_csl( $url, $cache_key, $code_prefix
 		)
 	);
 
-	$error = null;
-	$ttl   = BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL;
+	$error   = null;
+	$decoded = null;
+	$ttl     = BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL;
 
 	if ( is_wp_error( $response ) ) {
 		$error = bibliography_builder_pmid_error(
