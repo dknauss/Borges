@@ -280,9 +280,12 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 			},
 		],
 	},
-	// v13 froze save() from before 1.12.0, when entries sorted by the family
-	// name as stored, so "van Duijnhoven" filed under V even in Chicago, which
+	// v13 froze the save() of 1.11.0, when entries sorted by the family name
+	// as stored, so "van Duijnhoven" filed under V even in Chicago, which
 	// files it under D. FIXTURE_ATTRIBUTES have no particle names.
+	//
+	// v14 (unreleased `main`: `<cite>` entries and a saved Cite / Export
+	// panel) needs no entry: FIXTURE_ATTRIBUTES have the panel on.
 	13: {
 		...FIXTURE_ATTRIBUTES,
 		citations: [

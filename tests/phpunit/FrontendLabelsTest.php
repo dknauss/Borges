@@ -32,6 +32,15 @@ final class FrontendLabelsTest extends TestCase {
 		return rtrim( (string) file_get_contents( self::PARITY . '/' . $name . '.html' ), "\n" );
 	}
 
+	/**
+	 * Markup with the Cite / Export panel saved in it, as `main` wrote before
+	 * the panel moved to view.js (deprecation fixture v14). Sites keep such
+	 * posts until they are next saved.
+	 */
+	private function saved_panel(): string {
+		return rtrim( (string) file_get_contents( self::DEPRECATIONS . '/v14-deprecated.html' ), "\n" );
+	}
+
 	public function test_english_sites_get_the_markup_untouched(): void {
 		$markup = $this->golden( 'notes-full-metadata' );
 
@@ -41,23 +50,23 @@ final class FrontendLabelsTest extends TestCase {
 	public function test_translates_every_saved_label(): void {
 		$this->translate_to_french();
 
-		$markup = bibliography_builder_localize_rendered_labels( $this->golden( 'notes-full-metadata' ) );
+		$markup = bibliography_builder_localize_rendered_labels( $this->saved_panel() );
 
 		$this->assertStringNotContainsString( '>Cite / Export<', $markup );
 		$this->assertStringNotContainsString( '>Copy citation<', $markup );
 		$this->assertSame(
-			substr_count( $this->golden( 'notes-full-metadata' ), 'class="bibliography-builder-cite-copy"' ),
+			substr_count( $this->saved_panel(), 'class="bibliography-builder-cite-copy"' ),
 			substr_count( $markup, 'data-copied-label="Copié"' )
 		);
 
-		foreach ( array( 'Citer / Exporter', 'Copier la citation', 'RIS (fr)', 'CSL-JSON (fr)', 'BibTeX (fr)', 'BibLaTeX (fr)' ) as $label ) {
+		foreach ( array( 'Citer / Exporter', 'Copier la citation', 'RIS (fr)', 'CSL-JSON (fr)' ) as $label ) {
 			$this->assertStringContainsString( '>' . $label . '<', $markup, $label );
 		}
 	}
 
 	public function test_only_the_labels_change(): void {
 		$this->translate_to_french();
-		$golden = $this->golden( 'notes-full-metadata' );
+		$golden = $this->saved_panel();
 		$markup = bibliography_builder_localize_rendered_labels( $golden );
 
 		// Undo exactly the label edits and the result is the saved markup.
@@ -115,7 +124,7 @@ final class FrontendLabelsTest extends TestCase {
 			'Copied'        => 'Done "<ok>"',
 		);
 
-		$markup = bibliography_builder_localize_rendered_labels( $this->golden( 'notes-full-metadata' ) );
+		$markup = bibliography_builder_localize_rendered_labels( $this->saved_panel() );
 
 		$this->assertStringContainsString( '>Cite &lt;&amp;> "Export"</summary>', $markup );
 		$this->assertStringContainsString( 'data-copied-label="Done &quot;&lt;ok&gt;&quot;"', $markup );
@@ -138,5 +147,37 @@ final class FrontendLabelsTest extends TestCase {
 		$legacy = (string) file_get_contents( __DIR__ . '/../fixtures/legacy-localized/fr-cite-export.html' );
 
 		$this->assertSame( $legacy, bibliography_builder_localize_rendered_labels( $legacy ) );
+	}
+
+	public function test_hands_view_js_the_labels_for_panels_it_builds(): void {
+		$this->translate_to_french();
+		$golden = $this->golden( 'notes-full-metadata' );
+		$markup = bibliography_builder_localize_rendered_labels( $golden );
+
+		$this->assertSame( 1, preg_match( '/<section data-cite-labels="([^"]*)"/', $markup, $match ) );
+		$this->assertSame(
+			array(
+				'toggle'   => 'Citer / Exporter',
+				'copy'     => 'Copier la citation',
+				'copied'   => 'Copié',
+				'ris'      => 'RIS (fr)',
+				'cslJson'  => 'CSL-JSON (fr)',
+				'bibtex'   => 'BibTeX (fr)',
+				'biblatex' => 'BibLaTeX (fr)',
+			),
+			json_decode( html_entity_decode( $match[1], ENT_QUOTES, 'UTF-8' ), true )
+		);
+
+		// The attribute is the only change, and it is added once.
+		$this->assertSame( $golden, str_replace( ' data-cite-labels="' . $match[1] . '"', '', $markup ) );
+		$this->assertSame( $markup, bibliography_builder_localize_rendered_labels( $markup ) );
+	}
+
+	public function test_adds_no_labels_without_panel_data(): void {
+		$this->translate_to_french();
+		$golden = $this->golden( 'author-date-chains' );
+
+		$this->assertStringNotContainsString( 'data-cite-ris', $golden );
+		$this->assertSame( $golden, bibliography_builder_localize_rendered_labels( $golden ) );
 	}
 }

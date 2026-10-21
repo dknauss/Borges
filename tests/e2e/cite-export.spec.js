@@ -5,10 +5,12 @@
  * 04-04 manual checkpoint:
  *
  *   1. the "Per-entry Cite / Export" toggle is present in the block inspector;
- *   2. enabling it renders <details class="bibliography-builder-cite-export">
- *      panels on the published frontend, each with a copy button and RIS /
- *      CSL-JSON / BibTeX / BibLaTeX export links carrying correct data URIs and
- *      download filenames (view.js restores the download value at runtime);
+ *   2. enabling it gives the published frontend
+ *      <details class="bibliography-builder-cite-export"> panels, each with a
+ *      copy button and RIS / CSL-JSON / BibTeX / BibLaTeX export links carrying
+ *      correct data URIs and download filenames. view.js builds the panels from
+ *      each entry's data-cite-* attributes; markup saved before 1.12.0 carries
+ *      the panels itself and view.js restores their download values;
  *   3. leaving it off (the default) emits no cite/export panels.
  *
  * The purely visual row (flush-left layout / readability) is intentionally NOT

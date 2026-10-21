@@ -4,6 +4,8 @@
  *
  * The block's save() writes the Cite / Export labels in fixed English so saved markup is
  * identical in every editor locale (the editor re-validates it in its own).
+ * Current markup saves no labels at all: view.js builds the panel and reads
+ * translated labels from a `data-cite-labels` attribute added here.
  * Visitors should still read them in their language. Translating them here,
  * as the block is rendered, keeps that off the client: the view script needs
  * no `wp-i18n` (or `wp-hooks`) on the page, and the labels are translated
@@ -86,6 +88,28 @@ function bibliography_builder_localize_rendered_labels( $block_content ) {
 	}
 
 	$block_content = strtr( $block_content, $pairs );
+
+	// Current markup saves no panel: view.js builds it from each entry's
+	// `data-cite-*` attributes. Hand it the labels on the block's section.
+	if ( false !== strpos( $block_content, ' data-cite-ris="' )
+		&& false === strpos( $block_content, ' data-cite-labels=' ) ) {
+		$built = array(
+			'toggle'   => $labels['Cite / Export'],
+			'copy'     => $labels['Copy citation'],
+			'copied'   => $labels['Copied'],
+			'ris'      => $labels['RIS'],
+			'cslJson'  => $labels['CSL-JSON'],
+			'bibtex'   => $labels['BibTeX'],
+			'biblatex' => $labels['BibLaTeX'],
+		);
+
+		$block_content = (string) preg_replace(
+			'/<section\b/',
+			'<section data-cite-labels="' . $attr( (string) wp_json_encode( $built ) ) . '"',
+			$block_content,
+			1
+		);
+	}
 
 	// The copied-state label: current markup has none, so view.js would fall
 	// back to English. Supply it on each copy button that lacks one.
