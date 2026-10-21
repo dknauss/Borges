@@ -80,14 +80,17 @@ function bibliography_builder_render_email( $block_content, $parsed_block = arra
 	unset( $parsed_block, $rendering_context );
 
 	$html   = bibliography_builder_portable_markup( $block_content );
-	$helper = '\Automattic\WooCommerce\EmailEditor\Integrations\Utils\Table_Wrapper_Helper';
+	$render = array(
+		'Automattic\WooCommerce\EmailEditor\Integrations\Utils\Table_Wrapper_Helper',
+		'render_table_wrapper',
+	);
 
-	if ( ! is_string( $html ) || '' === $html
-		|| ! class_exists( $helper ) || ! method_exists( $helper, 'render_table_wrapper' ) ) {
+	if ( ! is_string( $html ) || '' === $html || ! is_callable( $render ) ) {
 		return $html;
 	}
 
-	return $helper::render_table_wrapper(
+	return call_user_func(
+		$render,
 		$html,
 		array(
 			'style' => 'border-collapse: separate;',

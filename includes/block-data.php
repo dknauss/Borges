@@ -86,17 +86,16 @@ function bibliography_builder_collect_blocks( $blocks, $results = array() ) {
  * @return array
  */
 function bibliography_builder_prepare_bibliographies( $bibliographies ) {
-	return array_values(
-		array_map(
-			static function ( $bibliography, $index ) {
-				$bibliography['index']      = $index;
-				$bibliography['entryCount'] = count( $bibliography['citations'] );
+	// With two arrays, array_map() always returns a list.
+	return array_map(
+		static function ( $bibliography, $index ) {
+			$bibliography['index']      = $index;
+			$bibliography['entryCount'] = count( $bibliography['citations'] );
 
-				return $bibliography;
-			},
-			$bibliographies,
-			array_keys( $bibliographies )
-		)
+			return $bibliography;
+		},
+		$bibliographies,
+		array_keys( $bibliographies )
 	);
 }
 
