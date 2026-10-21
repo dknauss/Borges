@@ -313,7 +313,7 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 
 ## Development
 
-Requires Node.js 18+, npm 9+, and Composer.
+Requires Node.js 22+, npm 9+, and Composer.
 
 ```bash
 npm install                  # Install dependencies
