@@ -165,8 +165,10 @@ describe('locale-independent saved markup', () => {
 	it('bakes no translated label into the markup', () => {
 		const markup = serializeUnder('fr', save);
 
-		expect(markup).toContain('>Cite / Export</summary>');
-		expect(markup).toContain('>Copy citation</button>');
+		// The panel is built by view.js; the markup carries only its data.
+		expect(markup).toContain('data-cite-ris=');
+		expect(markup).not.toContain('Cite / Export');
+		expect(markup).not.toContain('Copy citation');
 		expect(markup).not.toContain('data-copied-label');
 		expect(markup).not.toContain('Link to publication');
 		expect(markup).not.toContain('(fr)');
@@ -225,7 +227,7 @@ describe('frozen legacy markup saved in French by an earlier release', () => {
 	);
 
 	it.each([['de'], [null], ['fr']])(
-		'validates when opened under %s and migrates to fixed labels',
+		'validates when opened under %s and migrates to label-free markup',
 		(openedLocale) => {
 			const [block] = parseUnder(openedLocale, legacyFrench);
 
@@ -240,7 +242,8 @@ describe('frozen legacy markup saved in French by an earlier release', () => {
 			const resaved = withBlock(save, deprecated, (name) =>
 				getSaveContent(name, block.attributes)
 			);
-			expect(resaved).toContain('>Cite / Export<');
+			expect(resaved).toContain('data-cite-ris=');
+			expect(resaved).not.toContain('Cite / Export');
 			expect(resaved).not.toMatch(/Citer|Copier|Copié|Lien vers/);
 		}
 	);
