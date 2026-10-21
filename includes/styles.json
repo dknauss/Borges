@@ -127,5 +127,31 @@
 			"demoteNonDroppingParticle": "never",
 			"headingPlaceholder": "Referências"
 		}
-	}
+	},
+	"nameParticles": [
+		"van",
+		"von",
+		"vom",
+		"zu",
+		"zur",
+		"der",
+		"den",
+		"de",
+		"del",
+		"della",
+		"di",
+		"da",
+		"das",
+		"dos",
+		"du",
+		"la",
+		"le",
+		"el",
+		"al",
+		"bin",
+		"ibn",
+		"ter",
+		"ten",
+		"op"
+	]
 }

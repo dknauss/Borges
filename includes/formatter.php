@@ -13,13 +13,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * The shared citation style table from `includes/styles.json`.
+ * The shared citation style table and name particles from `includes/styles.json`.
  *
  * The editor imports the same file (`src/lib/formatting/style-registry.js`),
  * so a style is defined once for both languages. It is decoded once per
  * request. See the registry's docblock for what each field means.
  *
- * @return array{defaultStyle: string, styles: array<string, array<string, mixed>>}
+ * @return array{defaultStyle: string, styles: array<string, array<string, mixed>>, nameParticles: string[]}
  */
 function bibliography_builder_get_style_data() {
 	static $data = null;
@@ -28,11 +28,13 @@ function bibliography_builder_get_style_data() {
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local file shipped with the plugin.
 		$json    = file_get_contents( BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/styles.json' );
 		$decoded = false === $json ? null : json_decode( $json, true );
-		$data    = is_array( $decoded ) && isset( $decoded['defaultStyle'], $decoded['styles'] ) && is_array( $decoded['styles'] )
+		$data    = is_array( $decoded ) && isset( $decoded['defaultStyle'], $decoded['styles'], $decoded['nameParticles'] )
+			&& is_array( $decoded['styles'] ) && is_array( $decoded['nameParticles'] )
 			? $decoded
 			: array(
-				'defaultStyle' => 'chicago-notes-bibliography',
-				'styles'       => array(),
+				'defaultStyle'  => 'chicago-notes-bibliography',
+				'styles'        => array(),
+				'nameParticles' => array(),
 			);
 	}
 

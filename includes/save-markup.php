@@ -486,37 +486,13 @@ function bibliography_builder_js_trim( $value ) {
 }
 
 /**
- * `NAME_PARTICLES` from `src/lib/name-particles.js`.
+ * `NAME_PARTICLES` from `src/lib/name-particles.js`: both read the
+ * `nameParticles` list in `includes/styles.json`.
  *
  * @return string[]
  */
 function bibliography_builder_name_particles() {
-	return array(
-		'van',
-		'von',
-		'vom',
-		'zu',
-		'zur',
-		'der',
-		'den',
-		'de',
-		'del',
-		'della',
-		'di',
-		'da',
-		'das',
-		'dos',
-		'du',
-		'la',
-		'le',
-		'el',
-		'al',
-		'bin',
-		'ibn',
-		'ter',
-		'ten',
-		'op',
-	);
+	return bibliography_builder_get_style_data()['nameParticles'];
 }
 
 /**

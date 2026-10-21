@@ -191,7 +191,7 @@ Each ticket below is one PR that can be lifted to the issue tracker on its own. 
 | 7. `includes/block-data.php` | Done: 7 functions, from `get_stable_block_id()` through `build_csl_json()`; root file 1,002 → 847 lines |
 | 8. `includes/read-routes.php` | Next |
 | 10. `includes/styles.json` | Done: one table read by the editor, the formatter, the save port and the write routes. It keeps two locales because they already differed: Harvard formats in en-GB but sorts with en-US collation. It lives in `includes/`, not `src/lib/formatting/`, because `src/` does not ship |
-| 11. Particle list and canonical labels | Next |
+| 11. Particle list and canonical labels | Particles done: `nameParticles` in `includes/styles.json` replaces the JS `Set` and the PHP array, which had no test keeping them equal. Labels left as they are: both languages must keep a literal `__()` call per label for string extraction, and current `save()` writes no labels at all (`view.js` builds the panel), so moving the English keys would remove no duplication |
 
 ## Revision history
 

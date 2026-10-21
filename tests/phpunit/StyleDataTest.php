@@ -86,4 +86,15 @@ final class StyleDataTest extends TestCase {
 
 		$this->assertSame( 'chicago-notes-bibliography', bibliography_builder_get_save_style_definition( 'unknown-style' )['key'] );
 	}
+
+	public function test_name_particles_are_unique_lowercase_words(): void {
+		$particles = bibliography_builder_name_particles();
+
+		$this->assertNotEmpty( $particles );
+		$this->assertSame( $particles, array_values( array_unique( $particles ) ) );
+
+		foreach ( $particles as $particle ) {
+			$this->assertMatchesRegularExpression( '/^\p{Ll}+$/u', $particle );
+		}
+	}
 }
