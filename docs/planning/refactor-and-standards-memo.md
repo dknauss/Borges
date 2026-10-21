@@ -181,6 +181,16 @@ Each ticket below is one PR that can be lifted to the issue tracker on its own. 
 15. Split `includes/save-markup.php` along the JS module lines (after Phase C).
 16. Split `src/lib/parser.js` into detection and per-format parsers.
 
+## Progress
+
+| Ticket | Status |
+|---|---|
+| Phase A (1–4) | Done: #150, #151, #152, #153 |
+| 5. `includes/csl-sanitize.php` | Done, with ticket 9 (the function-inventory test) so it guards every later move |
+| 6. `includes/formatter.php` | Next |
+| 7. `includes/block-data.php` | — |
+| 8. `includes/read-routes.php` | — |
+
 ## Revision history
 
 | Date | Change |
