@@ -502,6 +502,36 @@ Deferred on purpose: let the Two Factor team (WordPress/two-factor PR #1010,
 TOTP secrets) lead on Secrets API conventions and failure handling first.
 Revisit after WordPress 7.2 ships and those conventions settle.
 
+### WP-CLI commands (to consider, added 2026-10-21)
+
+Borges has no WP-CLI commands. Platform teams that run large networks
+(Multisite installs, WordPress VIP, academic commons) script maintenance with
+WP-CLI more than with authenticated REST calls, and a command set would let
+them audit and maintain bibliographies network-wide without application
+passwords or an MCP client.
+
+Possible shape: a `wp borges` command group that calls the same callbacks as
+the read, review, and write routes, the way the write abilities already do, so
+permissions, validation, and output stay identical across REST, Abilities,
+and CLI.
+
+-   Read and review: `list` (bibliographies in a post), `export`
+    (`--format=json|text|csl-json`), `validate`, `duplicates`, and
+    `preview --style=<key>`.
+-   Writes: the citation and settings writes and `reformat`, only when the
+    `bibliography_builder_enable_write_routes` filter is on, as dry runs unless
+    `--yes` is given, and through the same block-range splice and revisions.
+-   Network use: `--url=` per site, and a documented loop over
+    `wp site list --field=url` rather than a bespoke network command.
+-   Cross-post commands (validate or restyle every post with a bibliography)
+    belong with Phase 05 M4 and its rate-limiting and job design; resolver
+    lookups at volume would need the NCBI API key and Crossref contact settings
+    first.
+-   No new settings or options, so `verify-metrics.sh` stays green.
+
+Status: consider only. Revisit after the write abilities ship and M4's design
+is written; weigh whether the CLI should land before or after bulk routes.
+
 ### Translation and language-pack backlog
 
 Current status as of 2026-06-14:
