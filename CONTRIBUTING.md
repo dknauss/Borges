@@ -4,7 +4,7 @@ Thank you for your interest in contributing! This document explains how to get s
 
 ## Development Setup
 
-1. **Prerequisites:** Node.js 18+, npm 9+, and a local WordPress installation (6.4+).
+1. **Prerequisites:** Node.js 22+, npm 9+, and a local WordPress installation (6.4+).
 
 2. **Clone and install:**
    ```bash
