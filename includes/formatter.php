@@ -28,8 +28,11 @@ function bibliography_builder_get_style_data() {
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local file shipped with the plugin.
 		$json    = file_get_contents( BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/styles.json' );
 		$decoded = false === $json ? null : json_decode( $json, true );
-		$data    = is_array( $decoded ) && isset( $decoded['defaultStyle'], $decoded['styles'], $decoded['nameParticles'] )
-			&& is_array( $decoded['styles'] ) && is_array( $decoded['nameParticles'] )
+		$valid   = is_array( $decoded )
+			&& isset( $decoded['defaultStyle'], $decoded['styles'], $decoded['nameParticles'] )
+			&& is_array( $decoded['styles'] )
+			&& is_array( $decoded['nameParticles'] );
+		$data    = $valid
 			? $decoded
 			: array(
 				'defaultStyle'  => 'chicago-notes-bibliography',

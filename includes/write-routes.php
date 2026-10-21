@@ -691,7 +691,11 @@ function bibliography_builder_rest_reorder_citations( WP_REST_Request $request )
 function bibliography_builder_write_default_heading( $style_key ) {
 	$styles = bibliography_builder_get_style_data()['styles'];
 
-	return isset( $styles[ $style_key ]['headingPlaceholder'] ) ? $styles[ $style_key ]['headingPlaceholder'] : 'Bibliography';
+	if ( ! isset( $styles[ $style_key ]['headingPlaceholder'] ) ) {
+		return 'Bibliography';
+	}
+
+	return $styles[ $style_key ]['headingPlaceholder'];
 }
 
 /**
