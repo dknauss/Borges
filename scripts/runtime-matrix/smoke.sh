@@ -398,8 +398,10 @@ done
 #
 # The editor sends the whole bibliography to /format at once, so this proves
 # the route takes the editor's 200-citation cap on this stack and records the
-# round trip. Timings land in format-timing.txt; the ceiling only catches a
-# pathological stack, not a slow runner.
+# round trip: cold (every entry rendered) and edit (one entry changed, the
+# rest from the formatter's entry cache), beside a users/me baseline for
+# WordPress boot and REST dispatch alone. Timings land in format-timing.txt;
+# the ceiling only catches a pathological stack, not a slow runner.
 RUNS=3 MAX_MS=10000 OUTPUT="$ARTIFACT_DIR/format-timing.txt" \
 	sh "$ROOT_DIR/scripts/time-format-route.sh" "$REST_URL" admin "$APP_PASSWORD"
 
