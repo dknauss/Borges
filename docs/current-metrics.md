@@ -13,7 +13,7 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 |---|---|---|
 | Main plugin file (`bibliography-builder.php`) | **708** | `wc -l bibliography-builder.php` |
 | All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **10,361** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **11,455** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **11,564** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **3,156 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
@@ -112,7 +112,7 @@ happens **only during editor REST calls** (`/format`, `/pmid`) as short-lived ca
 upstream lookups — never on a visitor request, and never added to the autoload set. So there
 are no long-lived settings and nothing on the autoload path, but "zero rows ever touch
 `wp_options`" would be inaccurate on a site without an external object cache. (DOI imports are
-deduped separately in a browser-session JS `Map` in `src/lib/parser.js` and never reach this
+deduped separately in a browser-session JS `Map` in `src/lib/parser-resolvers.js` and never reach this
 PHP cache.)
 
 The "average queries per page" figure is a flat **0 additional queries**, independent of the
