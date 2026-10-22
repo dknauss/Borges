@@ -21,6 +21,9 @@
 # Before the styles, GET /wp/v2/users/me is timed with the same credentials:
 # WordPress boot, authentication, and REST dispatch with no formatting, so
 # subtracting it from a /format time leaves roughly the plugin's own work.
+# Each style also gets one untimed cold request first, so the server's own
+# warm-up (opcache compiling citeproc-php, fresh PHP workers) is not charged
+# to whichever style happens to be timed first.
 #
 # Environment:
 #   RUNS       runs per style and baseline requests (default 5)
@@ -39,7 +42,7 @@
 set -eu
 
 if [ "$#" -ne 3 ]; then
-	sed -n '2,38p' "$0" | sed 's/^# \{0,1\}//' >&2
+	sed -n '2,41p' "$0" | sed 's/^# \{0,1\}//' >&2
 	exit 2
 fi
 
@@ -137,6 +140,11 @@ done
 summary "route-timing route=users-me" baseline
 
 for style in $STYLES; do
+	jq -c --arg style "$style" --arg token "warmup-$$-$(date +%s)" \
+		'{style: $style, cslItems: map(.title += " " + $token)}' \
+		"$FIXTURE" > "$WORK_DIR/cold.json"
+	request "warmup style=$style" POST "$REST_URL/bibliography/v1/format" "$WORK_DIR/cold.json"
+	rm -f "$WORK_DIR/times-warmup"
 	run=1
 
 	while [ "$run" -le "$RUNS" ]; do
