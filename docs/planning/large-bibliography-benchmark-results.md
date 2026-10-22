@@ -216,7 +216,28 @@ The largest request on every cell was Chicago notes cold. The spread between cel
 - *Real, about 5–10%.* Its parsed style is the largest: 15 macros, and a tree of 432 objects (2,308 properties) restored between entries, against about 380 objects for Chicago author-date and APA. Timed warm in one process (median of 6 passes, 200 entries), it renders in 44.6 ms against 36.9–42.1 ms for the others, about 2 ms of that in the larger restore. In fresh processes with the styles interleaved, its median cold callback was 88 ms against 76–84 ms.
 - *Measured, the rest.* `time-format-route.sh` timed it first, right after the baseline, so it absorbed the server's warm-up (opcache compiling citeproc-php's classes, fresh PHP workers, file caches). That is why the single largest request on all ten cells was Chicago notes cold, and why its edit lead (8%, timed after its own cold requests had warmed the server) is half its cold lead (18%). The same effect showed locally: run first, its fresh-process callback took 99 ms; run again last, 84 ms.
 
-The script now sends one untimed cold request per style before timing it, so no style pays for the server warming up; from the next matrix run on, the per-style gap should shrink to the real 5–10%. That gap is not worth chasing: it is a few milliseconds per 200 entries, and it comes from the style's size, which follows the Chicago manual.
+The script now sends one untimed cold request per style before timing it, so no style pays for the server warming up. The per-style gap that remains is not worth chasing: it is a few milliseconds per 200 entries, and it comes from the style's size, which follows the Chicago manual.
+
+**Reference numbers, with the warm-up** (run 39845578855, merge of #180, all ten cells; p50 in ms). Use these, not the table above, as the baseline for future comparisons.
+
+| Cell | Baseline | Notes cold | Notes edit | Author-date cold | Author-date edit | IEEE cold | IEEE edit | Largest request |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| apache-php74-wp64 | 22 | 111 | 44 | 103 | 38 | 98 | 39 | 112 |
+| apache-php81-wp64 | 20 | 92 | 38 | 84 | 34 | 80 | 35 | 103 |
+| apache-php81-wp67 | 19 | 104 | 40 | 94 | 34 | 90 | 35 | 106 |
+| nginx-php81-wp67 | 18 | 95 | 34 | 93 | 35 | 86 | 37 | 99 |
+| apache-php82-wplatest | 15 | 81 | 31 | 62 | 28 | 58 | 29 | 84 |
+| nginx-php82-wplatest | 15 | 69 | 27 | 65 | 27 | 62 | 26 | 73 |
+| apache-php83-wplatest | 20 | 100 | 38 | 94 | 34 | 88 | 35 | 100 |
+| apache-php83-wplatest-multisite | 13 | 58 | 26 | 53 | 22 | 50 | 23 | 59 |
+| nginx-php83-wplatest | 18 | 80 | 35 | 79 | 76 | 74 | 37 | 182 |
+| apache-php84-wplatest | 13 | 55 | 24 | 52 | 21 | 50 | 23 | 58 |
+| **Median** | **18** | **86.5** | **34.5** | **81.5** | **34** | **77** | **35** | |
+
+- **The warm-up did what it was for.** Chicago notes' cold lead over the other two styles fell from about 18% to about 9% (86.5 ms against 79.5 ms pooled), within the 5–10% its larger style accounts for: about 6% over author-date and 12% over IEEE. The gap closed mostly because the other styles rose: before, they were timed after Chicago notes had warmed the server.
+- **The first-request outlier is gone.** On nine of ten cells the largest request is now within a few milliseconds of that cell's slowest median; before, it was always Chicago notes cold, up to 148 ms.
+- **One noisy runner.** nginx-php83-wplatest had requests up to 182 ms and an author-date edit median of 76 ms, against 21–44 ms for every other edit on every cell. That is the runner, not the plugin; without that cell, edits range 21–44 ms.
+- **The picture is unchanged.** WordPress itself is about 18 ms per authenticated REST request on CI's runners, a cold 200-entry format 77–87 ms, an edit about 35 ms, and every request but the noisy cell's under half the 250 ms budget.
 
 **In PHP** (`php scripts/benchmark-formatter.php --runs=5`, this container, PHP 8.4; p50 in ms, plugin boot and first autoload excluded):
 
