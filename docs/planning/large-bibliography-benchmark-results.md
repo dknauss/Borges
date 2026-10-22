@@ -193,6 +193,31 @@ The profile above left two follow-ups: time a baseline route in the runtime matr
 
 The largest single request was 121 ms (Chicago notes, cold, apache-php83-wplatest).
 
+**Full matrix on `main`** (run 39839437190, merge of #179, all ten cells, same method; p50 in ms):
+
+| Cell | Baseline | Notes cold | Notes edit | Author-date cold | Author-date edit | IEEE cold | IEEE edit | Largest request |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| apache-php74-wp64 | 13 | 66 | 26 | 58 | 23 | 56 | 24 | 77 |
+| apache-php81-wp64 | 22 | 107 | 41 | 98 | 37 | 92 | 39 | 132 |
+| apache-php81-wp67 | 18 | 104 | 38 | 94 | 34 | 89 | 35 | 117 |
+| nginx-php81-wp67 | 16 | 100 | 32 | 77 | 31 | 74 | 29 | 104 |
+| apache-php82-wplatest | 16 | 66 | 30 | 58 | 26 | 56 | 26 | 121 |
+| nginx-php82-wplatest | 10 | 52 | 20 | 46 | 19 | 44 | 20 | 65 |
+| apache-php83-wplatest | 13 | 66 | 25 | 54 | 23 | 52 | 24 | 78 |
+| apache-php83-wplatest-multisite | 21 | 100 | 39 | 85 | 34 | 82 | 35 | 112 |
+| nginx-php83-wplatest | 18 | 96 | 35 | 91 | 34 | 85 | 34 | 113 |
+| apache-php84-wplatest | 15 | 72 | 32 | 65 | 28 | 65 | 27 | 148 |
+| **Median** | **16** | **84** | **32** | **71** | **29.5** | **69.5** | **28** | |
+
+The largest request on every cell was Chicago notes cold. The spread between cells is mostly the runner, not PHP or the web server: on every cell, cold is about 5–6× that cell's baseline and an edit about 2×.
+
+**Why Chicago notes looks slowest.** About half of its lead is real and about half is how it was measured.
+
+- *Real, about 5–10%.* Its parsed style is the largest: 15 macros, and a tree of 432 objects (2,308 properties) restored between entries, against about 380 objects for Chicago author-date and APA. Timed warm in one process (median of 6 passes, 200 entries), it renders in 44.6 ms against 36.9–42.1 ms for the others, about 2 ms of that in the larger restore. In fresh processes with the styles interleaved, its median cold callback was 88 ms against 76–84 ms.
+- *Measured, the rest.* `time-format-route.sh` timed it first, right after the baseline, so it absorbed the server's warm-up (opcache compiling citeproc-php's classes, fresh PHP workers, file caches). That is why the single largest request on all ten cells was Chicago notes cold, and why its edit lead (8%, timed after its own cold requests had warmed the server) is half its cold lead (18%). The same effect showed locally: run first, its fresh-process callback took 99 ms; run again last, 84 ms.
+
+The script now sends one untimed cold request per style before timing it, so no style pays for the server warming up; from the next matrix run on, the per-style gap should shrink to the real 5–10%. That gap is not worth chasing: it is a few milliseconds per 200 entries, and it comes from the style's size, which follows the Chicago manual.
+
 **In PHP** (`php scripts/benchmark-formatter.php --runs=5`, this container, PHP 8.4; p50 in ms, plugin boot and first autoload excluded):
 
 | Entries | Notes cold | Notes edit | Author-date cold | Author-date edit | IEEE cold | IEEE edit | Batch reference (notes / a-d / IEEE) |
