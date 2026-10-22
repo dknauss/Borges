@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.11.0
+Stable tag: 1.12.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -193,6 +193,14 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 
 == Changelog ==
 
+= 1.12.0 =
+* **Added:** write abilities for AI agents and automation on WordPress 6.9+ (add, update, delete, and reorder citations; change a bibliography's settings or style). They exist only when a site turns on the write routes with the `bibliography_builder_enable_write_routes` filter, and follow the same rules: `edit_post` on the post and a preview unless asked to save.
+* **Fixed:** bibliographies in newsletters and feeds. Posts sent by email (Jetpack and WordPress.com newsletters, MailPoet, WooCommerce, Newspack) or read in a feed reader no longer show every reference in italics or a broken Cite / Export panel. Posts saved earlier are cleaned up as they are sent, and switch to the new markup the next time they are saved.
+* **Fixed:** names with particles ("van Duijnhoven", "de la Cruz") sort where each style puts them: under the surname proper in Chicago and Vancouver, under the particle in APA, MLA, Harvard, and the others.
+* **Fixed:** no period after a quoted title that ends in "?" or "!" in Chicago and MLA.
+* **Changed:** reformatting after an edit is much faster in long bibliographies: only the changed entries are formatted, about 5 ms instead of 65–105 ms for 200 entries.
+* **Changed:** internal restructuring and stricter static analysis, with no change to saved markup or output.
+
 = 1.11.0 =
 * **Fixed:** link cards no longer credit a cited source as the post's author. The JSON-LD listed cited works as top-level objects, and Mastodon takes the first top-level `WebPage` on a page to be the page itself, so a post citing a museum's collection page was shared "by Albertina". Cited works are now nested in one schema.org `ItemList`. Published posts are corrected as they are rendered, without being edited.
 * **Fixed:** bibliographies over 50 citations. The server formatter now takes up to 200 entries per request, matching the editor, instead of falling back to plain titles with a "Formatter unavailable" notice.
@@ -369,6 +377,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.12.0 =
+Bibliographies read correctly in newsletters and feeds, names with particles sort per style, and reformatting after an edit is much faster. Adds opt-in write abilities for WordPress 6.9+. No configuration changes required.
 
 = 1.11.0 =
 Stops link previews (Mastodon's, for one) from crediting a cited source as the post's author, and lets bibliographies over 50 citations format again. No configuration changes required.
