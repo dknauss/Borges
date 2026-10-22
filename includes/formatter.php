@@ -261,7 +261,7 @@ function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $
 /**
  * Sanitize formatted citation text down to inert plain text.
  *
- * @param string $text Text extracted from citeproc output.
+ * @param mixed $text Text extracted from citeproc output.
  * @return string
  */
 function bibliography_builder_sanitize_formatted_text( $text ) {
@@ -517,15 +517,23 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 	$items_for_formatter = json_decode( $encoded_items );
 	$markup_extension    = array(
 		'bibliography' => array(
-			'csl-entry' => static function ( $csl_item, $rendered_text ) {
-				$id = isset( $csl_item->id )
+			'csl-entry' =>
+				/**
+				 * Wrap a rendered entry in a span carrying its CSL id.
+				 *
+				 * @param object $csl_item      Decoded CSL item.
+				 * @param mixed  $rendered_text Entry text rendered by citeproc.
+				 * @return string
+				 */
+				static function ( $csl_item, $rendered_text ): string {
+					$id = isset( $csl_item->id )
 					? (string) preg_replace( '/[^A-Za-z0-9_.:-]/', '', (string) $csl_item->id )
 					: '';
 
 					return '<span data-borges-csl-id="'
 						. htmlspecialchars( $id, ENT_QUOTES, 'UTF-8' )
 						. '">' . $rendered_text . '</span>';
-			},
+				},
 		),
 	);
 
@@ -536,7 +544,7 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 	// formatter parses the style once and restores that state before each
 	// entry, instead of reparsing the style and locale for every entry.
 	try {
-		require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/class-bibliography-builder-reusable-citeproc.php';
+		require_once __DIR__ . '/class-bibliography-builder-reusable-citeproc.php';
 
 		$html      = '';
 		$formatter = new Bibliography_Builder_Reusable_CiteProc( $style_xml, $style['locale'], $markup_extension );

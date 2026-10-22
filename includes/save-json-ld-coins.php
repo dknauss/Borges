@@ -233,15 +233,30 @@ function bibliography_builder_save_build_coins( $csl ) {
 	$params = array( 'ctx_ver=Z39.88-2004' );
 	$type   = bibliography_builder_csl_field( $csl, 'type' );
 	$type   = bibliography_builder_js_truthy( $type ) ? $type : '';
-	$add    = static function ( $key, $value ) use ( &$params ) {
-		if ( null !== $value && '' !== $value ) {
-			$params[] = $key . '='
+	$add    =
+		/**
+		 * Append one COinS parameter when the value is present.
+		 *
+		 * @param string $key   COinS key.
+		 * @param mixed  $value CSL field value.
+		 * @return void
+		 */
+		static function ( $key, $value ) use ( &$params ): void {
+			if ( null !== $value && '' !== $value ) {
+				$params[] = $key . '='
 				. bibliography_builder_encode_uri_component( bibliography_builder_js_string( $value ) );
-		}
-	};
-	$field  = static function ( $name ) use ( $csl ) {
-		return bibliography_builder_csl_field( $csl, $name );
-	};
+			}
+		};
+	$field =
+		/**
+		 * Read a field from the CSL item.
+		 *
+		 * @param string $name CSL field name.
+		 * @return mixed
+		 */
+		static function ( $name ) use ( $csl ) {
+			return bibliography_builder_csl_field( $csl, $name );
+		};
 
 	if ( 'book' === $type || 'chapter' === $type ) {
 		$params[] = 'rft_val_fmt=' . bibliography_builder_encode_uri_component( 'info:ofi/fmt:kev:mtx:book' );

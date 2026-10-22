@@ -791,6 +791,8 @@ function bibliography_builder_rest_preview_bibliography( WP_REST_Request $reques
 /**
  * Register the review routes. Called from the main route registration, after
  * the existing routes, so their registration order is unchanged.
+ *
+ * @return void
  */
 function bibliography_builder_register_review_routes() {
 	$base = '/posts/(?P<post_id>\d+)/bibliographies/(?P<ref>' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . ')';
@@ -799,9 +801,16 @@ function bibliography_builder_register_review_routes() {
 			'description'       => __( 'Post ID to inspect for bibliography blocks.', 'borges-bibliography-builder' ),
 			'type'              => 'integer',
 			'sanitize_callback' => 'absint',
-			'validate_callback' => static function ( $value ) {
-				return is_numeric( $value ) && (int) $value > 0;
-			},
+			'validate_callback' =>
+				/**
+				 * Validates the post ID parameter.
+				 *
+				 * @param mixed $value Value to check.
+				 * @return bool
+				 */
+				static function ( $value ): bool {
+					return is_numeric( $value ) && (int) $value > 0;
+				},
 		),
 		'ref'     => array(
 			'description'       => __(
@@ -849,10 +858,17 @@ function bibliography_builder_register_review_routes() {
 						'description'       => __( 'Citation style key to preview.', 'borges-bibliography-builder' ),
 						'type'              => 'string',
 						'required'          => true,
-						'validate_callback' => static function ( $value ) {
-							return is_string( $value )
+						'validate_callback' =>
+							/**
+							 * Validates the style parameter.
+							 *
+							 * @param mixed $value Value to check.
+							 * @return bool
+							 */
+							static function ( $value ) {
+								return is_string( $value )
 								&& array_key_exists( $value, bibliography_builder_get_formatter_style_definitions() );
-						},
+							},
 					),
 				)
 			),

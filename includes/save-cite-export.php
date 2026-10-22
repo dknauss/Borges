@@ -120,14 +120,29 @@ function bibliography_builder_save_ris_entry( $csl ) {
 		'review-book'       => 'GEN',
 	);
 	$lines = array();
-	$add   = static function ( $tag, $value ) use ( &$lines ) {
-		if ( null !== $value && '' !== $value ) {
-			$lines[] = $tag . '  - ' . bibliography_builder_js_string( $value );
-		}
-	};
-	$field = static function ( $name ) use ( $csl ) {
-		return bibliography_builder_csl_field( $csl, $name );
-	};
+	$add   =
+		/**
+		 * Append one RIS line when the value is present.
+		 *
+		 * @param string $tag   RIS tag.
+		 * @param mixed  $value CSL field value.
+		 * @return void
+		 */
+		static function ( $tag, $value ) use ( &$lines ): void {
+			if ( null !== $value && '' !== $value ) {
+				$lines[] = $tag . '  - ' . bibliography_builder_js_string( $value );
+			}
+		};
+	$field =
+		/**
+		 * Read a field from the CSL item.
+		 *
+		 * @param string $name CSL field name.
+		 * @return mixed
+		 */
+		static function ( $name ) use ( $csl ) {
+			return bibliography_builder_csl_field( $csl, $name );
+		};
 
 	// splitPageRange( page = '' ): the default applies only to undefined.
 	$page  = array_key_exists( 'page', $csl ) ? bibliography_builder_js_string( $csl['page'] ) : '';

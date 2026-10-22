@@ -164,9 +164,7 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 		}
 
 		foreach ( $skip as $object ) {
-			if ( is_object( $object ) ) {
-				$seen->attach( $object );
-			}
+			$seen->attach( $object );
 		}
 
 		while ( array() !== $queue ) {
@@ -221,7 +219,7 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 
 			if ( ! isset( $writers[ $class ] ) ) {
 				$writer = Closure::bind(
-					static function ( $target, $properties ) {
+					static function ( object $target, array $properties ): void {
 						foreach ( $properties as $name => $value ) {
 							$target->$name = $value;
 						}

@@ -50,8 +50,8 @@ function bibliography_builder_get_frontend_labels() {
  * Hooked to `render_block_bibliography-builder/bibliography`, so it changes
  * what visitors receive, never the stored `post_content` the editor validates.
  *
- * @param string $block_content Rendered block HTML.
- * @return string
+ * @param mixed $block_content Rendered block HTML; filters can pass any value.
+ * @return mixed
  */
 function bibliography_builder_localize_rendered_labels( $block_content ) {
 	if ( ! is_string( $block_content ) || '' === $block_content ) {
