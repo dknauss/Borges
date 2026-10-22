@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-10-14):** `v1.11.0` (2026-10-14).
+**Current release baseline (reconciled 2026-10-22):** `v1.12.0` (2026-10-22).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -83,6 +83,9 @@ Releases since the milestone was retired, all outside any GSD phase:
 -   **1.11.0** (2026-10-14) — cited works nested in a JSON-LD `ItemList`, so link
     cards no longer credit a cited source as the post's author; 200-entry
     formatter requests.
+-   **1.12.0** (2026-10-22) — newsletters and feeds read correctly; particle names sort
+    per style; per-entry formatter cache; write abilities; Phases A–E of the
+    refactor memo (module split, shared style table, Psalm level 2, `checkJs`).
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -304,7 +307,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.11.0`.
+1.3.x release line. The current public release baseline is now `v1.12.0`.
 
 Completed Phase 2 outcomes:
 

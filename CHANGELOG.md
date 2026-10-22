@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-10-22
+
 ### Changed
 
 - **Faster formatting after an edit.** Adding, editing, or removing one citation in a long bibliography reformatted every entry on the server, since the formatter cached whole bibliographies. It now also remembers each formatted entry per style, so it formats only the entries that changed: about 5 ms instead of 65–105 ms for a 200-entry list.
+- **Internals, for contributors.** No change to saved markup or output. The main plugin file is split into `includes/` modules (1,607 → about 800 lines), as are `includes/save-markup.php` and `src/lib/parser.js`; JS and PHP read one style table, `includes/styles.json`; Psalm runs at level 2 and `src/lib/` is type-checked with `checkJs` in CI; PHPCS checks PHP 7.4 compatibility; the runtime matrix runs the Abilities API. See `docs/planning/refactor-and-standards-memo.md`.
 
 ### Added
 
