@@ -226,27 +226,14 @@ function bibliography_builder_get_formatter_style_hash( $template ) {
 }
 
 /**
- * Build a stable cache key for a full bibliography formatting request.
+ * MD5 of a JSON-encoded cache payload, substituting invalid UTF-8 rather than
+ * failing on it.
  *
- * @param array  $csl_items CSL-JSON items.
- * @param string $style_key Requested style key.
- * @param array  $style     Formatter style definition.
+ * @param array $payload Cache key payload.
  * @return string
  */
-function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style ) {
-	$template = isset( $style['template'] ) ? (string) $style['template'] : '';
-	$payload  = array(
-		'version'    => 3,
-		'style'      => sanitize_key( $style_key ),
-		'template'   => $template,
-		// The bundled styles change between releases (new manual editions), so
-		// key on their contents: a cached entry from an older style is never
-		// served after an upgrade.
-		'style_hash' => bibliography_builder_get_formatter_style_hash( $template ),
-		'locale'     => isset( $style['locale'] ) ? (string) $style['locale'] : '',
-		'csl_items'  => bibliography_builder_sort_for_cache_key( array_values( $csl_items ) ),
-	);
-	$encoded  = bibliography_builder_json_encode( $payload );
+function bibliography_builder_hash_cache_payload( $payload ) {
+	$encoded = bibliography_builder_json_encode( $payload );
 
 	if ( ! is_string( $encoded ) ) {
 		$encoded = bibliography_builder_json_encode(
@@ -255,7 +242,97 @@ function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $
 		);
 	}
 
-	return 'format_' . md5( is_string( $encoded ) ? $encoded : '' );
+	return md5( is_string( $encoded ) ? $encoded : '' );
+}
+
+/**
+ * The parts of a formatter cache key that identify the style.
+ *
+ * @param string $style_key Requested style key.
+ * @param array  $style     Formatter style definition.
+ * @return array
+ */
+function bibliography_builder_get_formatter_style_cache_payload( $style_key, $style ) {
+	$template = isset( $style['template'] ) ? (string) $style['template'] : '';
+
+	return array(
+		'style'      => sanitize_key( $style_key ),
+		'template'   => $template,
+		// The bundled styles change between releases (new manual editions), so
+		// key on their contents: a cached entry from an older style is never
+		// served after an upgrade.
+		'style_hash' => bibliography_builder_get_formatter_style_hash( $template ),
+		'locale'     => isset( $style['locale'] ) ? (string) $style['locale'] : '',
+	);
+}
+
+/**
+ * Build a stable cache key for a full bibliography formatting request.
+ *
+ * @param array  $csl_items CSL-JSON items.
+ * @param string $style_key Requested style key.
+ * @param array  $style     Formatter style definition.
+ * @return string
+ */
+function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style ) {
+	$payload = array( 'version' => 3 )
+		+ bibliography_builder_get_formatter_style_cache_payload( $style_key, $style )
+		+ array( 'csl_items' => bibliography_builder_sort_for_cache_key( array_values( $csl_items ) ) );
+
+	return 'format_' . bibliography_builder_hash_cache_payload( $payload );
+}
+
+/**
+ * Cache key for one style's map of formatted entries.
+ *
+ * Each entry renders on its own (see bibliography_builder_format_csl_items()),
+ * so its text depends only on its own CSL item and the style. The map lets a
+ * request whose list changed by one entry render only that entry.
+ *
+ * @param string $style_key Requested style key.
+ * @param array  $style     Formatter style definition.
+ * @return string
+ */
+function bibliography_builder_get_formatter_entry_map_key( $style_key, $style ) {
+	$payload = array( 'version' => 1 ) + bibliography_builder_get_formatter_style_cache_payload( $style_key, $style );
+
+	return 'entries_' . bibliography_builder_hash_cache_payload( $payload );
+}
+
+/**
+ * Key for one CSL item in a style's entry map.
+ *
+ * @param mixed $csl_item CSL-JSON item.
+ * @return string
+ */
+function bibliography_builder_get_formatter_entry_hash( $csl_item ) {
+	return bibliography_builder_hash_cache_payload(
+		array( 'item' => bibliography_builder_sort_for_cache_key( $csl_item ) )
+	);
+}
+
+/**
+ * Store newly formatted entries in a style's entry map.
+ *
+ * The entries this request used move to the end, and the map keeps only the
+ * last BIBLIOGRAPHY_BUILDER_FORMAT_ENTRY_CACHE_LIMIT, so the least recently
+ * used entries drop out first.
+ *
+ * @param array<string, string> $map     Entry map read from the cache.
+ * @param array<string, string> $entries Formatted text by entry hash, in list order.
+ * @return array<string, string>
+ */
+function bibliography_builder_update_formatter_entry_map( $map, $entries ) {
+	foreach ( $entries as $hash => $text ) {
+		unset( $map[ $hash ] );
+		$map[ $hash ] = $text;
+	}
+
+	if ( count( $map ) > BIBLIOGRAPHY_BUILDER_FORMAT_ENTRY_CACHE_LIMIT ) {
+		$map = array_slice( $map, -BIBLIOGRAPHY_BUILDER_FORMAT_ENTRY_CACHE_LIMIT, null, true );
+	}
+
+	return $map;
 }
 
 /**
@@ -464,6 +541,68 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		return $cached['value'];
 	}
 
+	// Entries already formatted in this style, from this or another list.
+	$map_key    = bibliography_builder_get_formatter_entry_map_key( $style_key, $style );
+	$map_cached = bibliography_builder_cache_get( $map_key, 'bibliography_builder_formatter' );
+	$entry_map  = $map_cached['hit'] && is_array( $map_cached['value'] ) ? $map_cached['value'] : array();
+	$hashes     = array();
+	$formatted  = array();
+	$missing    = array();
+
+	foreach ( array_values( $csl_items ) as $index => $item ) {
+		$hashes[ $index ] = bibliography_builder_get_formatter_entry_hash( $item );
+
+		if ( isset( $entry_map[ $hashes[ $index ] ] ) && is_string( $entry_map[ $hashes[ $index ] ] ) ) {
+			$formatted[ $index ] = $entry_map[ $hashes[ $index ] ];
+		} else {
+			$missing[ $index ] = $item;
+		}
+	}
+
+	if ( array() !== $missing ) {
+		$rendered = bibliography_builder_render_csl_items( $missing, $style );
+
+		if ( is_wp_error( $rendered ) ) {
+			return $rendered;
+		}
+
+		$formatted += $rendered;
+		$entries    = array();
+
+		ksort( $formatted );
+
+		foreach ( $hashes as $index => $hash ) {
+			$entries[ $hash ] = $formatted[ $index ];
+		}
+
+		bibliography_builder_cache_set(
+			$map_key,
+			bibliography_builder_update_formatter_entry_map( $entry_map, $entries ),
+			'bibliography_builder_formatter',
+			BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
+		);
+	}
+
+	$formatted = array_values( $formatted );
+
+	bibliography_builder_cache_set(
+		$cache_key,
+		$formatted,
+		'bibliography_builder_formatter',
+		BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
+	);
+
+	return $formatted;
+}
+
+/**
+ * Render CSL-JSON items with citeproc-php, one entry at a time.
+ *
+ * @param array<int, mixed> $csl_items CSL-JSON objects, keyed by their index in the request.
+ * @param array             $style     Formatter style definition.
+ * @return array<int, string>|WP_Error Formatted text keyed like $csl_items.
+ */
+function bibliography_builder_render_csl_items( $csl_items, $style ) {
 	$available = bibliography_builder_ensure_formatter_available();
 
 	if ( is_wp_error( $available ) ) {
@@ -495,16 +634,16 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 	$prepared_items  = array();
 	$demote_particle = 1 === preg_match( '/demote-non-dropping-particle="display-and-sort"/', $style_xml );
 
-	foreach ( array_values( $csl_items ) as $index => $item ) {
-		$item_array       = bibliography_builder_prepare_csl_for_formatter(
+	foreach ( $csl_items as $index => $item ) {
+		$item_array               = bibliography_builder_prepare_csl_for_formatter(
 			is_array( $item ) ? $item : array(),
 			$demote_particle
 		);
-		$item_array['id'] = 'bibliography-builder-format-' . $index;
-		$prepared_items[] = $item_array;
+		$item_array['id']         = 'bibliography-builder-format-' . $index;
+		$prepared_items[ $index ] = $item_array;
 	}
 
-	$encoded_items = bibliography_builder_json_encode( $prepared_items );
+	$encoded_items = bibliography_builder_json_encode( array_values( $prepared_items ) );
 
 	if ( ! is_string( $encoded_items ) ) {
 		return new WP_Error(
@@ -574,19 +713,12 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 	$formatted = array();
 
 	foreach ( $prepared_items as $index => $item ) {
-		$id            = $item['id'];
-		$fallback_text = isset( $item['title'] ) && is_string( $item['title'] ) ? $item['title'] : '';
-		$formatted[]   = isset( $entries_by_id[ $id ] )
+		$id                  = $item['id'];
+		$fallback_text       = isset( $item['title'] ) && is_string( $item['title'] ) ? $item['title'] : '';
+		$formatted[ $index ] = isset( $entries_by_id[ $id ] )
 			? $entries_by_id[ $id ]
 			: bibliography_builder_sanitize_formatted_text( $fallback_text );
 	}
-
-	bibliography_builder_cache_set(
-		$cache_key,
-		$formatted,
-		'bibliography_builder_formatter',
-		BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
-	);
 
 	return $formatted;
 }
