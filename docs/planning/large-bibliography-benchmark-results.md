@@ -13,7 +13,7 @@ The 250 ms style-switch and 150 ms mutation p95 budgets from SPEC §Rate Limitin
 
 ## PHP formatter — real citeproc-php (not mocked)
 
-5 runs per cell (`php scripts/benchmark-formatter.php`). Cold = new CiteProc instance each run. Warm = instance reused.
+5 runs per cell (`php scripts/benchmark-formatter.php` as it was then). Cold = new CiteProc instance each run. Warm = instance reused. **These tables time citeproc-php rendering the whole list in one call, which the plugin never does** (see the cold-start profile below); the script now times the plugin's own path, and current numbers are under "Profiling follow-ups (2026-10-22)".
 
 | Size | Family | Style | Cold p50 (ms) | Cold p95 (ms) | Warm p50 (ms) | Warm p95 (ms) |
 | ---: | --- | --- | ---: | ---: | ---: | ---: |
@@ -132,7 +132,7 @@ Rationale:
 The open question is the HTTP round trip, not citeproc. Three layers, cheapest first:
 
 1. **Constrained PHP, formatter only (done).** `taskset -c 0 php -d memory_limit=128M scripts/benchmark-formatter.php --sizes=50,100,200` on a Linux container: 200 entries format in 28–35 ms p95 across notes, author-date, and numeric, with no memory errors at 128 MB. One core and a low memory limit roughly double the M-series numbers above and stay far under budget.
-2. **Real WordPress over HTTP, every supported stack (in CI).** `scripts/runtime-matrix/smoke.sh` now runs `scripts/time-format-route.sh`, which POSTs the 200-entry fixture to `/format` three times per style family, changing one title per request so the formatter cache never answers, and checks that 200 entries come back. Timings are saved as `format-timing.txt` in each matrix job's artifacts (PHP 7.4–8.4, Apache and nginx, MySQL; the matrix has no SQLite lane). Each request is cut off at 10 s, which only catches a broken stack; GitHub runners are not shared hosting. First run (2026-10-13): p50 55–68 ms, max 87 ms, on apache-php74-wp64 and nginx-php83-wplatest.
+2. **Real WordPress over HTTP, every supported stack (in CI).** `scripts/runtime-matrix/smoke.sh` now runs `scripts/time-format-route.sh`, which POSTs the 200-entry fixture to `/format` three times per style family in two modes (cold, every title unique; edit, one title changed so the entry cache answers for the rest), times a `users/me` baseline, and checks that 200 entries come back. Until 2026-10-22 it changed one title per request, which stopped defeating the cache once the per-entry cache shipped; see "Profiling follow-ups". Timings are saved as `format-timing.txt` in each matrix job's artifacts (PHP 7.4–8.4, Apache and nginx, MySQL; the matrix has no SQLite lane). Each request is cut off at 10 s, which only catches a broken stack; GitHub runners are not shared hosting. First run (2026-10-13): p50 55–68 ms, max 87 ms, on apache-php74-wp64 and nginx-php83-wplatest.
 3. **A real shared host (manual).** On a low-tier shared plan (the kind Borges users actually run; one cold PHP worker, 128–256 MB), install the release ZIP, create an application password for an editor, and run:
 
    ```sh
@@ -173,10 +173,43 @@ The PHP benchmark above reported about 34 ms for 200 entries, while the HTTP rou
 
 **Per-entry cache (2026-10-22).** The formatter cache key covered the whole list, so editing one entry in a 200-entry bibliography missed the cache and rendered all 200 again. Each entry renders on its own, so the formatter now also keeps one cache entry per style holding an entry-hash → text map (the 500 most recently used entries, `BIBLIOGRAPHY_BUILDER_FORMAT_ENTRY_CACHE_LIMIT`), and a request renders only the entries missing from it. In one process with the in-memory test cache, a 200-entry list with one title changed formats in about 5 ms instead of 64 ms (APA), 66 ms (Chicago notes), or 106 ms (IEEE). The remaining 5 ms is mostly parsing the style for the one new entry. With no persistent object cache, the map is one transient, so a request reads one option row either way.
 
-**Not changed, worth deciding on:**
+## Profiling follow-ups (2026-10-22)
 
-1. **Time a baseline route in the matrix.** `time-format-route.sh` could also time a trivial REST route, so each cell reports WordPress and HTTP overhead apart from formatting.
-2. **Retire or relabel the batch benchmark.** `scripts/benchmark-formatter.php` should time the plugin's per-entry path, or say plainly that it times a batch render the plugin never does.
+The profile above left two follow-ups: time a baseline route in the runtime matrix, and stop the PHP benchmark from timing a batch render the plugin never does. Doing them turned up a third problem.
+
+**The matrix's `/format` timing had quietly changed meaning.** `time-format-route.sh` changed one title per request "so the formatter cache never answers". Once the per-entry cache shipped (#176), the other 199 entries came from the entry map, so of the three timed requests per style, one rendered everything and two were cached edits. Across the ten full-matrix cells on `main`, the overall p50 fell from 79.5 ms (03737b3, run 39697066599) to 33 ms (e1b0455, run 39700648148), and each style's max stayed near the old p50, because it was the one cold request. The drop was the cache working, but the cold path, which a style switch or a first format still pays, was no longer reported, so a regression there would have hidden behind the cache.
+
+**Changes.** `time-format-route.sh` now sends, per run and style, a **cold** request (every title made unique) and an **edit** (one title changed), reported as `format-timing … mode=cold|edit`, and first times `GET /wp/v2/users/me` with the same application password as `route-timing route=users-me`: WordPress boot, authentication, and REST dispatch with no formatting. `scripts/benchmark-formatter.php` now times `bibliography_builder_format_csl_items()` cold and after a one-entry edit, under the PHPUnit mocks, and keeps the batch render as a labeled citeproc-php reference.
+
+**Over HTTP** (runtime matrix PR cells, run 39820719424, 3 runs each, no persistent object cache, so the entry map is a MySQL transient; p50 in ms):
+
+| Cell | Baseline `users/me` | Notes cold | Notes edit | Author-date cold | Author-date edit | IEEE cold | IEEE edit |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| apache-php74-wp64 | 18 | 94 | 39 | 83 | 34 | 80 | 34 |
+| apache-php83-wplatest | 22 | 105 | 39 | 97 | 35 | 92 | 36 |
+| nginx-php83-wplatest | 19 | 88 | 35 | 82 | 33 | 79 | 33 |
+| apache-php83-wplatest-multisite | 17 | 76 | 30 | 67 | 29 | 65 | 29 |
+| **Median** | **18.5** | **91** | **37** | **82.5** | **33.5** | **79.5** | **33.5** |
+
+The largest single request was 121 ms (Chicago notes, cold, apache-php83-wplatest).
+
+**In PHP** (`php scripts/benchmark-formatter.php --runs=5`, this container, PHP 8.4; p50 in ms, plugin boot and first autoload excluded):
+
+| Entries | Notes cold | Notes edit | Author-date cold | Author-date edit | IEEE cold | IEEE edit | Batch reference (notes / a-d / IEEE) |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 50 | 35 | 9 | 20 | 5 | 20 | 6 | 16 / 10 / 8 |
+| 100 | 38 | 6 | 36 | 6 | 38 | 9 | 17 / 17 / 14 |
+| 200 | 76 | 8 | 74 | 8 | 88 | 9 | 34 / 36 / 28 |
+
+Cold p95 at 200 entries was 85–110 ms, under half the 250 ms style-switch budget.
+
+**What the numbers say.**
+
+- **WordPress itself costs about 18 ms** per authenticated REST request on CI's runners. Subtracting it, the plugin's share of a 200-entry request is about 60–75 ms cold and about 15 ms for an edit.
+- **Cold is unchanged by the cache**, as it should be: 79–91 ms medians now, against 55–121 ms p50 before the cache (when every timed request was cold). That is the cost of a style switch or a first format, and it is the number to watch for regressions.
+- **An edit costs about 2.5× the baseline, not 1×.** The 8 ms the PHP benchmark shows for the edit's render is less than half of the ~15 ms the plugin adds over HTTP. The rest is work every request does regardless: validating and sanitizing 200 items (about 2.5 ms), loading citeproc-php and parsing the style for the one new entry (up to about 6.5 and 5 ms cold, less with opcache), and reading and rewriting the entry map transient. Only a request whose entries are all cached skips citeproc-php entirely; an edit always needs it for its one entry. About 15 ms is small enough to leave alone.
+- **The old batch benchmark understated cold by more than half** (34 ms against 76 ms at 200 entries), because the plugin renders one entry at a time and restores citeproc-php's state between entries. It is now labeled as a reference only.
+- **Nothing here argues for changing the 200-entry cap or the 100-entry notice.** The slowest cold request on any cell was 121 ms; the shared-hosting check below is still the open question.
 
 ## Caveats and next steps
 

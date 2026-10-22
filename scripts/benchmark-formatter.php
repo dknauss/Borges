@@ -1,63 +1,42 @@
 <?php
 /**
- * Standalone PHP formatter latency benchmark.
+ * PHP formatter latency benchmark.
  *
- * Measures real citeproc-php formatting time at 50, 75, 100, 150, and 200
- * entries across all three style families (notes, author-date, numeric).
- * Runs from the main repo root (requires vendor/autoload.php).
+ * Times the plugin's own formatter, bibliography_builder_format_csl_items(),
+ * at 50, 75, 100, 150, and 200 entries in one style per family (notes,
+ * author-date, numeric), under the PHPUnit WordPress mocks:
+ *
+ * - cold:  every entry rendered, as when a bibliography is first formatted or
+ *          its style switched. The plugin renders one entry at a time and
+ *          restores citeproc-php's state between entries.
+ * - edit:  the same list with one title changed, as after an author edits a
+ *          citation. The formatter's per-style entry map answers for the
+ *          unchanged entries, so only one is rendered.
+ * - batch: citeproc-php rendering the whole list in one call. The plugin never
+ *          does this (state leaks from one entry into the next, see
+ *          includes/formatter.php); it is kept as a reference for citeproc-php
+ *          itself, and is what this script timed before 2026-10.
+ *
+ * Plugin boot, vendor autoload, and the first style parse are outside the
+ * timings (one untimed warm-up call per style); see
+ * scripts/profile-format-route.php for a cold-process profile and
+ * scripts/time-format-route.sh for the round trip over HTTP.
  *
  * Usage:
  *   php scripts/benchmark-formatter.php
- *   php scripts/benchmark-formatter.php --sizes=50,75,100 --runs=3
+ *   php scripts/benchmark-formatter.php --sizes=50,100,200 --runs=3
  *
  * Output: JSON + Markdown to output/benchmarks/php-formatter.{json,md}
+ *
+ * @package BibliographyBuilder
  */
 
-declare(strict_types=1);
+$plugin_root = dirname( __DIR__ );
 
-// ---------------------------------------------------------------------------
-// Bootstrap — locate repo root (works from main repo or worktree)
-// ---------------------------------------------------------------------------
+require $plugin_root . '/tests/phpunit/bootstrap.php';
 
-$script_dir  = __DIR__;
-$plugin_root = dirname( $script_dir );
-
-// In a worktree, vendor/ lives in the main repo, not in the worktree.
-// Walk up the directory tree from the worktree root looking for vendor/.
-$autoload  = null;
-$search    = $plugin_root;
-$max_depth = 6;
-for ( $depth = 0; $depth < $max_depth; $depth++ ) {
-	$candidate = $search . '/vendor/autoload.php';
-	if ( file_exists( $candidate ) ) {
-		$autoload = $candidate;
-		break;
-	}
-	$parent = dirname( $search );
-	if ( $parent === $search ) {
-		break; // reached filesystem root
-	}
-	$search = $parent;
-}
-
-// Also accept an explicit --vendor-dir=<path> argument.
-$vendor_opt = getopt( '', [ 'vendor-dir:' ] );
-if ( isset( $vendor_opt['vendor-dir'] ) ) {
-	$candidate = rtrim( $vendor_opt['vendor-dir'], '/' ) . '/autoload.php';
-	if ( file_exists( $candidate ) ) {
-		$autoload = $candidate;
-	}
-}
-
-if ( null === $autoload ) {
-	fwrite( STDERR, "Error: vendor/autoload.php not found. Run composer install in the repo root.\n" );
-	exit( 1 );
-}
-
-require_once $autoload;
-
-if ( ! class_exists( '\Seboettg\CiteProc\CiteProc' ) ) {
-	fwrite( STDERR, "Error: citeproc-php not available after autoload.\n" );
+if ( is_wp_error( bibliography_builder_ensure_formatter_available() ) ) {
+	fwrite( STDERR, "Error: citeproc-php not available. Run composer install in the repo root.\n" );
 	exit( 1 );
 }
 
@@ -65,54 +44,22 @@ if ( ! class_exists( '\Seboettg\CiteProc\CiteProc' ) ) {
 // CLI arguments
 // ---------------------------------------------------------------------------
 
-$opts  = getopt( '', [ 'sizes:', 'runs:', 'output-dir:' ] );
+$opts  = getopt( '', array( 'sizes:', 'runs:', 'output-dir:' ) );
 $sizes = isset( $opts['sizes'] )
 	? array_map( 'intval', explode( ',', $opts['sizes'] ) )
-	: [ 50, 75, 100, 150, 200 ];
+	: array( 50, 75, 100, 150, 200 );
 $runs  = isset( $opts['runs'] ) ? max( 1, (int) $opts['runs'] ) : 5;
 
-$output_dir = $opts['output-dir'] ?? ( $plugin_root . '/output/benchmarks' );
+$output_dir = isset( $opts['output-dir'] ) ? $opts['output-dir'] : ( $plugin_root . '/output/benchmarks' );
 if ( ! is_dir( $output_dir ) ) {
 	mkdir( $output_dir, 0755, true );
 }
 
-// ---------------------------------------------------------------------------
-// Style definitions (one per family, same as bibliography-builder.php)
-// ---------------------------------------------------------------------------
-
-// vendor/ is beside autoload.php
-$vendor_dir = dirname( $autoload );
-$styles_dir = $vendor_dir . '/citation-style-language/styles/';
-
-$style_families = [
-	[
-		'styleKey' => 'chicago-notes-bibliography',
-		'family'   => 'notes',
-		'template' => 'chicago-notes-bibliography',
-		'locale'   => 'en-US',
-	],
-	[
-		'styleKey' => 'chicago-author-date',
-		'family'   => 'author-date',
-		'template' => 'chicago-author-date',
-		'locale'   => 'en-US',
-	],
-	[
-		'styleKey' => 'ieee',
-		'family'   => 'numeric',
-		'template' => 'ieee',
-		'locale'   => 'en-US',
-	],
-];
-
-// Verify style files are readable.
-foreach ( $style_families as $style ) {
-	$style_path = $styles_dir . $style['template'] . '.csl';
-	if ( ! is_readable( $style_path ) ) {
-		fwrite( STDERR, "Error: style file not readable: {$style_path}\n" );
-		exit( 1 );
-	}
-}
+$style_keys = array(
+	'notes'       => 'chicago-notes-bibliography',
+	'author-date' => 'chicago-author-date',
+	'numeric'     => 'ieee',
+);
 
 // ---------------------------------------------------------------------------
 // Fixture loading
@@ -126,48 +73,72 @@ if ( ! file_exists( $fixture_path ) ) {
 	exit( 1 );
 }
 
-$all_csl_items = json_decode( file_get_contents( $fixture_path ), false );
+$all_csl_items = json_decode( (string) file_get_contents( $fixture_path ), true );
 
 if ( ! is_array( $all_csl_items ) || count( $all_csl_items ) < max( $sizes ) ) {
-	fwrite(
-		STDERR,
-		sprintf(
-			"Error: fixture has %d entries but largest requested size is %d.\n",
-			count( $all_csl_items ),
-			max( $sizes )
-		)
-	);
+	fwrite( STDERR, sprintf( "Error: the fixture has fewer than %d entries.\n", max( $sizes ) ) );
 	exit( 1 );
 }
 
 // ---------------------------------------------------------------------------
-// Benchmark helpers
+// Helpers
 // ---------------------------------------------------------------------------
 
-/** @return float seconds (float) */
-function micro_now(): float {
-	return microtime( true );
+/**
+ * Milliseconds since an hrtime() mark.
+ *
+ * @param int $start hrtime( true ) at the start.
+ * @return float
+ */
+function benchmark_ms_since( $start ) {
+	return ( hrtime( true ) - $start ) / 1e6;
 }
 
-function summarize( array $values_ms ): array {
+/**
+ * Summary statistics for a list of timings.
+ *
+ * @param float[] $values_ms Timings in milliseconds.
+ * @return array
+ */
+function benchmark_summarize( array $values_ms ) {
 	sort( $values_ms );
-	$n      = count( $values_ms );
-	$sum    = array_sum( $values_ms );
-	$p50_i  = (int) min( $n - 1, ceil( $n * 0.50 ) - 1 );
-	$p95_i  = (int) min( $n - 1, ceil( $n * 0.95 ) - 1 );
+	$n     = count( $values_ms );
+	$p50_i = (int) min( $n - 1, ceil( $n * 0.50 ) - 1 );
+	$p95_i = (int) min( $n - 1, ceil( $n * 0.95 ) - 1 );
 
-	return [
-		'runs'    => array_map( fn( $v ) => round( $v, 2 ), $values_ms ),
-		'minMs'   => round( $values_ms[0],        2 ),
-		'maxMs'   => round( $values_ms[ $n - 1 ], 2 ),
-		'avgMs'   => round( $sum / $n,            2 ),
-		'p50Ms'   => round( $values_ms[ $p50_i ], 2 ),
-		'p95Ms'   => round( $values_ms[ $p95_i ], 2 ),
-	];
+	return array(
+		'runs'  => array_map(
+			static function ( $v ) {
+				return round( $v, 2 );
+			},
+			$values_ms
+		),
+		'minMs' => round( $values_ms[0], 2 ),
+		'maxMs' => round( $values_ms[ $n - 1 ], 2 ),
+		'avgMs' => round( array_sum( $values_ms ) / $n, 2 ),
+		'p50Ms' => round( $values_ms[ $p50_i ], 2 ),
+		'p95Ms' => round( $values_ms[ $p95_i ], 2 ),
+	);
+}
+
+/**
+ * A copy of the items with every title made unique to this run, so no cache
+ * answers for any of them.
+ *
+ * @param array  $items CSL items.
+ * @param string $token Run token.
+ * @return array
+ */
+function benchmark_fresh_items( array $items, $token ) {
+	foreach ( $items as $index => $item ) {
+		$items[ $index ]['title'] = ( isset( $item['title'] ) ? $item['title'] : '' ) . ' ' . $token;
+	}
+
+	return $items;
 }
 
 // ---------------------------------------------------------------------------
-// Budget thresholds (mirror SPEC §Rate Limiting & Resource Caps)
+// Budget threshold (mirrors SPEC §Rate Limiting & Resource Caps)
 // ---------------------------------------------------------------------------
 
 const BUDGET_STYLE_SWITCH_P95_MS = 250;
@@ -176,65 +147,85 @@ const BUDGET_STYLE_SWITCH_P95_MS = 250;
 // Run benchmark
 // ---------------------------------------------------------------------------
 
-fprintf( STDOUT, "PHP formatter benchmark — citeproc-php\n" );
+fprintf( STDOUT, "PHP formatter benchmark: plugin per-entry path (cold, edit) and citeproc-php batch (reference)\n" );
 fprintf( STDOUT, "Sizes: %s  Runs per cell: %d\n\n", implode( ', ', $sizes ), $runs );
 
-$results = [];
+$results = array();
+
+foreach ( $style_keys as $family => $style_key ) {
+	// Untimed warm-up: loads the vendor classes and the plugin's citeproc
+	// adapter once, as opcache would on a warm server.
+	bibliography_builder_test_reset_state();
+	bibliography_builder_format_csl_items( benchmark_fresh_items( array_slice( $all_csl_items, 0, 2 ), 'warmup' ), $style_key );
+}
 
 foreach ( $sizes as $size ) {
-	$items = array_slice( $all_csl_items, 0, $size );
+	$items       = array_slice( $all_csl_items, 0, $size );
+	$size_result = array(
+		'size'     => $size,
+		'byFamily' => array(),
+	);
 
-	// Re-assign sequential IDs.
-	foreach ( $items as $index => $item ) {
-		$item->id = 'bm-' . ( $index + 1 );
-	}
-
-	$size_result = [ 'size' => $size, 'byFamily' => [] ];
-
-	foreach ( $style_families as $style_def ) {
-		$style_path = $styles_dir . $style_def['template'] . '.csl';
-		$style_xml  = file_get_contents( $style_path );
-
-		$cold_runs = [];
-		$warm_runs = [];
+	foreach ( $style_keys as $family => $style_key ) {
+		$definition = bibliography_builder_get_formatter_style_definition( $style_key );
+		$style_xml  = (string) file_get_contents( BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'vendor/citation-style-language/styles/' . $definition['template'] . '.csl' );
+		$cold_runs  = array();
+		$edit_runs  = array();
+		$batch_runs = array();
 
 		for ( $run = 0; $run < $runs; $run++ ) {
-			// Cold: construct a fresh CiteProc instance each time.
-			$t0        = micro_now();
-			$formatter = new \Seboettg\CiteProc\CiteProc( $style_xml, $style_def['locale'] );
-			$formatter->render( $items, 'bibliography' );
-			$cold_runs[] = ( micro_now() - $t0 ) * 1000;
+			bibliography_builder_test_reset_state();
 
-			// Warm: reuse the same instance (re-rendering the same items).
-			$t0 = micro_now();
-			$formatter->render( $items, 'bibliography' );
-			$warm_runs[] = ( micro_now() - $t0 ) * 1000;
+			$run_items = benchmark_fresh_items( $items, "s{$size}r{$run}" );
+			$start     = hrtime( true );
+			$formatted = bibliography_builder_format_csl_items( $run_items, $style_key );
+			$cold_runs[] = benchmark_ms_since( $start );
+
+			if ( is_wp_error( $formatted ) || count( $formatted ) !== $size ) {
+				fwrite( STDERR, "Error: the formatter failed for {$style_key} at {$size} entries.\n" );
+				exit( 1 );
+			}
+
+			// Edit one entry, a different one each run.
+			$run_items[ ( $run * 37 ) % $size ]['title'] .= ' (edited)';
+			$start       = hrtime( true );
+			bibliography_builder_format_csl_items( $run_items, $style_key );
+			$edit_runs[] = benchmark_ms_since( $start );
+
+			$batch_items = json_decode( (string) wp_json_encode( array_values( $run_items ) ) );
+			foreach ( $batch_items as $index => $item ) {
+				$item->id = 'bm-' . ( $index + 1 );
+			}
+			$start        = hrtime( true );
+			$citeproc     = new \Seboettg\CiteProc\CiteProc( $style_xml, $definition['locale'] );
+			$citeproc->render( $batch_items, 'bibliography' );
+			$batch_runs[] = benchmark_ms_since( $start );
 		}
 
-		$cold_stats = summarize( $cold_runs );
-		$warm_stats = summarize( $warm_runs );
+		$cold  = benchmark_summarize( $cold_runs );
+		$edit  = benchmark_summarize( $edit_runs );
+		$batch = benchmark_summarize( $batch_runs );
 
-		$size_result['byFamily'][] = [
-			'styleKey'           => $style_def['styleKey'],
-			'family'             => $style_def['family'],
-			'cold'               => array_merge( $cold_stats, [
-				'exceedsBudget' => $cold_stats['p95Ms'] > BUDGET_STYLE_SWITCH_P95_MS,
-			] ),
-			'warm'               => array_merge( $warm_stats, [
-				'exceedsBudget' => $warm_stats['p95Ms'] > BUDGET_STYLE_SWITCH_P95_MS,
-			] ),
-		];
+		$cold['exceedsBudget'] = $cold['p95Ms'] > BUDGET_STYLE_SWITCH_P95_MS;
+
+		$size_result['byFamily'][] = array(
+			'styleKey' => $style_key,
+			'family'   => $family,
+			'cold'     => $cold,
+			'edit'     => $edit,
+			'batch'    => $batch,
+		);
 
 		fprintf(
 			STDOUT,
-			"  size=%-3d  %-30s  cold p50=%6.1f ms  p95=%6.1f ms  warm p50=%6.1f ms  p95=%6.1f ms%s\n",
+			"  size=%-3d  %-28s  cold p50=%6.1f p95=%6.1f  edit p50=%5.1f  batch p50=%6.1f ms%s\n",
 			$size,
-			$style_def['styleKey'],
-			$cold_stats['p50Ms'],
-			$cold_stats['p95Ms'],
-			$warm_stats['p50Ms'],
-			$warm_stats['p95Ms'],
-			$cold_stats['p95Ms'] > BUDGET_STYLE_SWITCH_P95_MS ? '  ** OVER BUDGET **' : ''
+			$style_key,
+			$cold['p50Ms'],
+			$cold['p95Ms'],
+			$edit['p50Ms'],
+			$batch['p50Ms'],
+			$cold['exceedsBudget'] ? '  ** OVER BUDGET **' : ''
 		);
 	}
 
@@ -245,59 +236,40 @@ foreach ( $sizes as $size ) {
 // Write output
 // ---------------------------------------------------------------------------
 
-$report = [
-	'generatedAt'   => date( 'c' ),
-	'formatterMode' => 'real-citeproc-php',
-	'budgets'       => [ 'styleSwitchColdP95Ms' => BUDGET_STYLE_SWITCH_P95_MS ],
+$report = array(
+	'generatedAt'   => gmdate( 'c' ),
+	'formatterMode' => 'plugin-per-entry',
+	'phpVersion'    => PHP_VERSION,
+	'budgets'       => array( 'styleSwitchColdP95Ms' => BUDGET_STYLE_SWITCH_P95_MS ),
 	'sizes'         => $sizes,
 	'runs'          => $runs,
 	'results'       => $results,
-];
+);
 
 $json_path = $output_dir . '/php-formatter.json';
-file_put_contents( $json_path, json_encode( $report, JSON_PRETTY_PRINT ) . "\n" );
+file_put_contents( $json_path, wp_json_encode( $report, JSON_PRETTY_PRINT ) . "\n" );
 
-// Markdown summary.
-$md = [ '# PHP formatter latency benchmark', '' ];
-$md[] = sprintf( 'Generated: %s', $report['generatedAt'] );
-$md[] = sprintf( 'Formatter: real citeproc-php  Runs: %d', $runs );
+$md   = array( '# PHP formatter latency benchmark', '' );
+$md[] = sprintf( 'Generated: %s  PHP %s  Runs: %d', $report['generatedAt'], PHP_VERSION, $runs );
 $md[] = '';
-$md[] = '## Cold format (new CiteProc instance each run)';
+$md[] = 'Cold renders every entry (first format, style switch). Edit changes one title, so the entry map answers for the rest. Batch is citeproc-php rendering the whole list in one call, which the plugin never does; it is a reference only.';
 $md[] = '';
-$md[] = sprintf( 'Budget: p95 < %d ms', BUDGET_STYLE_SWITCH_P95_MS );
+$md[] = sprintf( 'Budget: cold p95 < %d ms', BUDGET_STYLE_SWITCH_P95_MS );
 $md[] = '';
-$md[] = '| Size | Family | Style | p50 (ms) | p95 (ms) | Budget |';
-$md[] = '| ---: | --- | --- | ---: | ---: | --- |';
+$md[] = '| Size | Family | Style | Cold p50 | Cold p95 | Edit p50 | Batch p50 | Budget |';
+$md[] = '| ---: | --- | --- | ---: | ---: | ---: | ---: | --- |';
 foreach ( $results as $row ) {
 	foreach ( $row['byFamily'] as $f ) {
 		$md[] = sprintf(
-			'| %d | %s | %s | %s | %s | %s |',
+			'| %d | %s | %s | %s | %s | %s | %s | %s |',
 			$row['size'],
 			$f['family'],
 			$f['styleKey'],
 			$f['cold']['p50Ms'],
 			$f['cold']['p95Ms'],
+			$f['edit']['p50Ms'],
+			$f['batch']['p50Ms'],
 			$f['cold']['exceedsBudget'] ? 'OVER' : 'ok'
-		);
-	}
-}
-$md[] = '';
-$md[] = '## Warm format (reuse CiteProc instance)';
-$md[] = '';
-$md[] = sprintf( 'Budget: p95 < %d ms', BUDGET_STYLE_SWITCH_P95_MS );
-$md[] = '';
-$md[] = '| Size | Family | Style | p50 (ms) | p95 (ms) | Budget |';
-$md[] = '| ---: | --- | --- | ---: | ---: | --- |';
-foreach ( $results as $row ) {
-	foreach ( $row['byFamily'] as $f ) {
-		$md[] = sprintf(
-			'| %d | %s | %s | %s | %s | %s |',
-			$row['size'],
-			$f['family'],
-			$f['styleKey'],
-			$f['warm']['p50Ms'],
-			$f['warm']['p95Ms'],
-			$f['warm']['exceedsBudget'] ? 'OVER' : 'ok'
 		);
 	}
 }
