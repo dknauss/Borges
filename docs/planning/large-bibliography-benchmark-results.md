@@ -171,11 +171,12 @@ The PHP benchmark above reported about 34 ms for 200 entries, while the HTTP rou
 
 **Change made:** the reusable formatter now restores the snapshot by object, through a closure bound to each declaring class, instead of one `ReflectionProperty::setValue()` per property. The values written are identical; the CSL style goldens pass unchanged. That halves the restore (about 30 → 15 ms per 200 entries) and takes the cold callback from about 90 ms to about 72 ms here (minimums across 15 runs: 85–95 → 64–70 ms).
 
+**Per-entry cache (2026-10-22).** The formatter cache key covered the whole list, so editing one entry in a 200-entry bibliography missed the cache and rendered all 200 again. Each entry renders on its own, so the formatter now also keeps one cache entry per style holding an entry-hash → text map (the 500 most recently used entries, `BIBLIOGRAPHY_BUILDER_FORMAT_ENTRY_CACHE_LIMIT`), and a request renders only the entries missing from it. In one process with the in-memory test cache, a 200-entry list with one title changed formats in about 5 ms instead of 64 ms (APA), 66 ms (Chicago notes), or 106 ms (IEEE). The remaining 5 ms is mostly parsing the style for the one new entry. With no persistent object cache, the map is one transient, so a request reads one option row either way.
+
 **Not changed, worth deciding on:**
 
-1. **Cache per entry, not per request.** The formatter cache key covers the whole list, so editing one entry in a 200-entry bibliography misses the cache and renders all 200 again. Each entry renders independently, so a per-entry cache (one transient per style holding an entry-hash → text map, bounded in size) would let an edit render only the changed entry. That is the largest remaining win for authors, at the cost of a design change to the cache.
-2. **Time a baseline route in the matrix.** `time-format-route.sh` could also time a trivial REST route, so each cell reports WordPress and HTTP overhead apart from formatting.
-3. **Retire or relabel the batch benchmark.** `scripts/benchmark-formatter.php` should time the plugin's per-entry path, or say plainly that it times a batch render the plugin never does.
+1. **Time a baseline route in the matrix.** `time-format-route.sh` could also time a trivial REST route, so each cell reports WordPress and HTTP overhead apart from formatting.
+2. **Retire or relabel the batch benchmark.** `scripts/benchmark-formatter.php` should time the plugin's per-entry path, or say plainly that it times a batch render the plugin never does.
 
 ## Caveats and next steps
 

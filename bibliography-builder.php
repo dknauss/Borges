@@ -62,6 +62,12 @@ const BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES = 65536;
 const BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL = 3600;
 
 /**
+ * Most formatted entries the formatter keeps per citation style, across all
+ * lists: two and a half bibliographies at the 200-item `/format` cap.
+ */
+const BIBLIOGRAPHY_BUILDER_FORMAT_ENTRY_CACHE_LIMIT = 500;
+
+/**
  * Whether the current request may read bibliography data for a post.
  *
  * @param WP_Post $post Post object.
