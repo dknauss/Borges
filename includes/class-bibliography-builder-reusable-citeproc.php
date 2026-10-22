@@ -19,6 +19,11 @@
  * same state a fresh parse would give it. The CSL style goldens pin that
  * output byte for byte.
  *
+ * The restore writes about 2,000 properties on some 400 objects per entry, so
+ * it groups them by object and writes each group through a closure bound to
+ * the declaring class: half the cost of a ReflectionProperty::setValue() call
+ * per property.
+ *
  * Loaded only after bibliography_builder_ensure_formatter_available(), because
  * it extends a Composer class.
  *
@@ -42,9 +47,10 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 	private $parsed_context = null;
 
 	/**
-	 * Post-parse property values: list of [ object, ReflectionProperty, value ].
+	 * Post-parse property values: list of [ writer, object, values by name ],
+	 * one per object and declaring class.
 	 *
-	 * @var array
+	 * @var array<int, array{0: Closure, 1: object, 2: array<string, mixed>}>
 	 */
 	private $snapshot = array();
 
@@ -75,7 +81,7 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 			parent::init( $citationAsArray );
 
 			$this->parsed_context = self::getContext();
-			$this->snapshot       = self::snapshot_style_tree( $this->parsed_context );
+			$this->snapshot       = self::restore_plan( self::snapshot_style_tree( $this->parsed_context ) );
 
 			$this->results_property = new ReflectionProperty( \Seboettg\CiteProc\Context::class, 'results' );
 			$this->results_property->setAccessible( true );
@@ -90,7 +96,7 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 		}
 
 		foreach ( $this->snapshot as $entry ) {
-			$entry[1]->setValue( $entry[0], $entry[2] );
+			$entry[0]( $entry[1], $entry[2] );
 		}
 
 		$context = $this->parsed_context;
@@ -100,7 +106,17 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 		$context->setRenderingState(
 			new \Seboettg\CiteProc\RenderingState( \Seboettg\CiteProc\RenderingState::RENDERING )
 		);
+		/**
+		 * Both properties are set on the first call, with parsed_context.
+		 *
+		 * @psalm-suppress PossiblyNullReference
+		 */
 		$this->results_property->setValue( $context, new \Seboettg\Collection\ArrayList() );
+		/**
+		 * Set on the first call too.
+		 *
+		 * @psalm-suppress PossiblyNullReference
+		 */
 		$this->cited_count_property->setValue( null, 0 );
 
 		self::setContext( $context );
@@ -148,9 +164,7 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 		}
 
 		foreach ( $skip as $object ) {
-			if ( is_object( $object ) ) {
-				$seen->attach( $object );
-			}
+			$seen->attach( $object );
 		}
 
 		while ( array() !== $queue ) {
@@ -183,6 +197,58 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 		}
 
 		return $snapshot;
+	}
+
+	/**
+	 * Group a snapshot by object and declaring class, each group with a writer
+	 * that can assign that class's private and protected properties.
+	 *
+	 * @param array<int, array{0: object, 1: ReflectionProperty, 2: mixed}> $snapshot Snapshot entries.
+	 * @return array<int, array{0: Closure, 1: object, 2: array<string, mixed>}>
+	 * @throws RuntimeException If a writer cannot be bound, which reflection rules out.
+	 */
+	private static function restore_plan( $snapshot ) {
+		$writers = array();
+		$targets = array();
+		$classes = array();
+		$values  = array();
+
+		foreach ( $snapshot as $entry ) {
+			$class = $entry[1]->getDeclaringClass()->getName();
+			$key   = spl_object_id( $entry[0] ) . '|' . $class;
+
+			if ( ! isset( $writers[ $class ] ) ) {
+				$writer = Closure::bind(
+					static function ( object $target, array $properties ): void {
+						foreach ( $properties as $name => $value ) {
+							$target->$name = $value;
+						}
+					},
+					null,
+					$class
+				);
+
+				// The class comes from reflection, so binding cannot fail; if it
+				// ever did, skipping its properties would render stale state.
+				if ( null === $writer ) {
+					throw new RuntimeException( 'Could not bind a citeproc snapshot writer.' );
+				}
+
+				$writers[ $class ] = $writer;
+			}
+
+			$targets[ $key ]                        = $entry[0];
+			$classes[ $key ]                        = $class;
+			$values[ $key ][ $entry[1]->getName() ] = $entry[2];
+		}
+
+		$plan = array();
+
+		foreach ( $targets as $key => $target ) {
+			$plan[] = array( $writers[ $classes[ $key ] ], $target, $values[ $key ] );
+		}
+
+		return $plan;
 	}
 
 	/**

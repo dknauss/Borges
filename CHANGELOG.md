@@ -9,10 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Write abilities** (Phase 05, M5), on WordPress 6.9+ and only when the write routes are enabled with the `bibliography_builder_enable_write_routes` filter: `borges/add-citations`, `borges/update-citation`, `borges/delete-citation`, `borges/reorder-citations`, `borges/update-bibliography-settings`, and `borges/reformat-bibliography`. Each calls the matching write route's own code, with the same rules: `edit_post` on the post, a preview unless `dry_run` is false, and an `etag` from a read or dry run to save. See `docs/rest-write-routes.md`.
 - **Richer JSON-LD for search engines and AI crawlers.** As a bibliography renders, its schema.org `ItemList` gains an `@id`, its heading as `name`, and `numberOfItems`, and each entry a `url` pointing at its visible `#ref-…` anchor. Each cited work gains an `@id` (its DOI URL, else its entry on the page); an `identifier` and `sameAs` links for every DOI, PMID, PMCID, arXiv ID, and ISBN it carries; the issue, volume, and periodical chain for journal articles; pages; editors and translators; edition and page count for books; language; publisher place; and a closer schema.org type for blog posts, newspaper and magazine articles, preprints, datasets, software, films, and other CSL types that used to read as plain `CreativeWork`. Published posts get all of this without being edited, and the stored content is unchanged. The `bibliography_builder_enrich_json_ld` filter turns it off.
 - **The post now says it cites the works.** With Yoast SEO or Rank Math, the page's Article (or, without one, its WebPage) lists each cited work under schema.org `citation`, by the same `@id` the bibliography uses. The `bibliography_builder_link_page_citations` filter turns it off.
 - **Site-wide output defaults.** The `bibliography_builder_output_defaults` filter sets which outputs (JSON-LD, COinS, CSL-JSON, Cite / Export) a newly inserted bibliography starts with. Existing blocks keep their settings, authors can still change each block, and Borges still stores no settings.
+
+## [1.12.0] - 2026-10-22
+
+### Changed
+
+- **Faster formatting after an edit.** Adding, editing, or removing one citation in a long bibliography reformatted every entry on the server, since the formatter cached whole bibliographies. It now also remembers each formatted entry per style, so it formats only the entries that changed: about 5 ms instead of 65–105 ms for a 200-entry list.
+- **Internals, for contributors.** No change to saved markup or output. The main plugin file is split into `includes/` modules (1,607 → about 800 lines), as are `includes/save-markup.php` and `src/lib/parser.js`; JS and PHP read one style table, `includes/styles.json`; Psalm runs at level 2 and `src/lib/` is type-checked with `checkJs` in CI; PHPCS checks PHP 7.4 compatibility; the runtime matrix runs the Abilities API. See `docs/planning/refactor-and-standards-memo.md`.
+
+### Added
+
+- **Write abilities** (Phase 05, M5), on WordPress 6.9+ and only when the write routes are enabled with the `bibliography_builder_enable_write_routes` filter: `borges/add-citations`, `borges/update-citation`, `borges/delete-citation`, `borges/reorder-citations`, `borges/update-bibliography-settings`, and `borges/reformat-bibliography`. Each calls the matching write route's own code, with the same rules: `edit_post` on the post, a preview unless `dry_run` is false, and an `etag` from a read or dry run to save. See `docs/rest-write-routes.md`.
 
 ### Fixed
 

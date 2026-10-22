@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * The output toggles and their `block.json` defaults.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
  * @return array<string, bool>
  */
@@ -39,7 +39,7 @@ function bibliography_builder_block_output_defaults() {
 /**
  * The output toggle defaults for new blocks on this site.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
  * @return array<string, bool>
  */
@@ -53,7 +53,7 @@ function bibliography_builder_get_output_defaults() {
 	 * `outputCiteExport`. Only boolean values for those keys are used; anything
 	 * else keeps the `block.json` default. Authors can still change each block.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
 	 * @param array<string, bool> $defaults The `block.json` defaults.
 	 */
@@ -75,10 +75,10 @@ function bibliography_builder_get_output_defaults() {
 /**
  * Pass the output defaults to the block editor.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
- * @param array $settings Block editor settings.
- * @return array
+ * @param mixed $settings Block editor settings; filters can pass any value.
+ * @return mixed
  */
 function bibliography_builder_editor_output_defaults( $settings ) {
 	if ( ! is_array( $settings ) ) {

@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-10-14):** `v1.11.0` (2026-10-14).
+**Current release baseline (reconciled 2026-10-22):** `v1.12.0` (2026-10-22).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -83,6 +83,9 @@ Releases since the milestone was retired, all outside any GSD phase:
 -   **1.11.0** (2026-10-14) — cited works nested in a JSON-LD `ItemList`, so link
     cards no longer credit a cited source as the post's author; 200-entry
     formatter requests.
+-   **1.12.0** (2026-10-22) — newsletters and feeds read correctly; particle names sort
+    per style; per-entry formatter cache; write abilities; Phases A–E of the
+    refactor memo (module split, shared style table, Psalm level 2, `checkJs`).
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -304,7 +307,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.11.0`.
+1.3.x release line. The current public release baseline is now `v1.12.0`.
 
 Completed Phase 2 outcomes:
 
@@ -501,6 +504,36 @@ keeps the "plugin persists no settings" rule enforced by `verify-metrics.sh`.
 Deferred on purpose: let the Two Factor team (WordPress/two-factor PR #1010,
 TOTP secrets) lead on Secrets API conventions and failure handling first.
 Revisit after WordPress 7.2 ships and those conventions settle.
+
+### WP-CLI commands (to consider, added 2026-10-21)
+
+Borges has no WP-CLI commands. Platform teams that run large networks
+(Multisite installs, WordPress VIP, academic commons) script maintenance with
+WP-CLI more than with authenticated REST calls, and a command set would let
+them audit and maintain bibliographies network-wide without application
+passwords or an MCP client.
+
+Possible shape: a `wp borges` command group that calls the same callbacks as
+the read, review, and write routes, the way the write abilities already do, so
+permissions, validation, and output stay identical across REST, Abilities,
+and CLI.
+
+-   Read and review: `list` (bibliographies in a post), `export`
+    (`--format=json|text|csl-json`), `validate`, `duplicates`, and
+    `preview --style=<key>`.
+-   Writes: the citation and settings writes and `reformat`, only when the
+    `bibliography_builder_enable_write_routes` filter is on, as dry runs unless
+    `--yes` is given, and through the same block-range splice and revisions.
+-   Network use: `--url=` per site, and a documented loop over
+    `wp site list --field=url` rather than a bespoke network command.
+-   Cross-post commands (validate or restyle every post with a bibliography)
+    belong with Phase 05 M4 and its rate-limiting and job design; resolver
+    lookups at volume would need the NCBI API key and Crossref contact settings
+    first.
+-   No new settings or options, so `verify-metrics.sh` stays green.
+
+Status: consider only. Revisit after the write abilities ship and M4's design
+is written; weigh whether the CLI should land before or after bulk routes.
 
 ### Translation and language-pack backlog
 

@@ -345,7 +345,7 @@ function bibliography_builder_ability_can_read_post( $input = null ) {
 	$post_id = is_array( $input ) && isset( $input['post_id'] ) ? absint( $input['post_id'] ) : 0;
 	$post    = 0 < $post_id ? get_post( $post_id ) : null;
 
-	if ( ! is_object( $post ) ) {
+	if ( null === $post || false === $post ) {
 		return new WP_Error(
 			'bibliography_builder_post_not_found',
 			__( 'Post not found.', 'borges-bibliography-builder' ),

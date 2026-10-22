@@ -590,19 +590,4 @@ final class WriteRoutesTest extends TestCase {
 		$this->assertSame( 'empty', $error->get_error_data()['entries'][0]['id'] );
 	}
 
-	/**
-	 * The PHP heading defaults must match the editor's style registry.
-	 */
-	public function test_default_headings_match_the_style_registry() {
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$registry = file_get_contents( dirname( __DIR__, 2 ) . '/src/lib/formatting/style-registry.js' );
-		preg_match_all( "/\\n\\t'?([a-z0-9-]+)'?: \\{.*?headingPlaceholder: '([^']*)'/s", $registry, $matches, PREG_SET_ORDER );
-
-		$this->assertCount( count( bibliography_builder_get_formatter_style_definitions() ), $matches );
-
-		foreach ( $matches as $match ) {
-			$this->assertSame( $match[2], bibliography_builder_write_default_heading( $match[1] ), $match[1] );
-		}
-	}
-
 }

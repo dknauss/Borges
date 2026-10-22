@@ -3,7 +3,7 @@
  * Plugin Name:       Borges Bibliography Builder
  * Plugin URI:        https://github.com/dknauss/Borges/
  * Description:       Create accessible bibliographies from DOI, PubMed, BibTeX, CSL-JSON, and free text; export RIS.
- * Version:           1.11.0
+ * Version:           1.12.0
  * Requires at least: 6.4
  * Tested up to:      7.1
  * Requires PHP:      7.4
@@ -62,6 +62,12 @@ const BIBLIOGRAPHY_BUILDER_MAX_CSL_FIELD_BYTES = 65536;
 const BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL = 3600;
 
 /**
+ * Most formatted entries the formatter keeps per citation style, across all
+ * lists: two and a half bibliographies at the 200-item `/format` cap.
+ */
+const BIBLIOGRAPHY_BUILDER_FORMAT_ENTRY_CACHE_LIMIT = 500;
+
+/**
  * Whether the current request may read bibliography data for a post.
  *
  * @param WP_Post $post Post object.
@@ -104,11 +110,11 @@ function bibliography_builder_is_post_type_viewable( $post ) {
 
 	$post_type = get_post_type( $post );
 
-	if ( ! $post_type ) {
+	if ( false === $post_type || '' === $post_type || '0' === $post_type ) {
 		return true;
 	}
 
-	return (bool) is_post_type_viewable( $post_type );
+	return is_post_type_viewable( $post_type );
 }
 
 /**
@@ -227,6 +233,8 @@ function bibliography_builder_rest_archive_permissions_check() {
 
 /**
  * Register REST routes.
+ *
+ * @return void
  */
 function bibliography_builder_register_rest_routes() {
 	register_rest_route(
@@ -251,12 +259,26 @@ function bibliography_builder_register_rest_routes() {
 					'description'       => __( 'PubMed ID to resolve to CSL-JSON.', 'borges-bibliography-builder' ),
 					'type'              => 'string',
 					'required'          => true,
-					'sanitize_callback' => static function ( $value ) {
-						return preg_replace( '/\D/u', '', (string) $value );
-					},
-					'validate_callback' => static function ( $value ) {
-						return is_scalar( $value ) && (bool) preg_match( '/^\d{1,8}$/', (string) $value );
-					},
+					'sanitize_callback' =>
+						/**
+						 * Strips non-digits from the PMID parameter.
+						 *
+						 * @param mixed $value Value to check.
+						 * @return string|null
+						 */
+						static function ( $value ) {
+							return preg_replace( '/\D/u', '', (string) $value );
+						},
+					'validate_callback' =>
+						/**
+						 * Validates the PMID parameter.
+						 *
+						 * @param mixed $value Value to check.
+						 * @return bool
+						 */
+						static function ( $value ) {
+							return is_scalar( $value ) && (bool) preg_match( '/^\d{1,8}$/', (string) $value );
+						},
 				),
 			),
 		)
@@ -267,9 +289,16 @@ function bibliography_builder_register_rest_routes() {
 			'description'       => __( 'Post ID to inspect for bibliography blocks.', 'borges-bibliography-builder' ),
 			'type'              => 'integer',
 			'sanitize_callback' => 'absint',
-			'validate_callback' => static function ( $value ) {
-				return is_numeric( $value ) && (int) $value > 0;
-			},
+			'validate_callback' =>
+				/**
+				 * Validates the post ID parameter.
+				 *
+				 * @param mixed $value Value to check.
+				 * @return bool
+				 */
+				static function ( $value ): bool {
+					return is_numeric( $value ) && (int) $value > 0;
+				},
 		),
 	);
 
@@ -291,16 +320,30 @@ function bibliography_builder_register_rest_routes() {
 		),
 		'type'              => 'string',
 		'default'           => 'json',
-		'sanitize_callback' => static function ( $value ) {
-			return sanitize_key( $value );
-		},
-		'validate_callback' => static function ( $value ) {
-			return in_array(
-				$value,
-				array( 'json', 'text', 'csl-json' ),
-				true
-			);
-		},
+		'sanitize_callback' =>
+			/**
+			 * Sanitizes the format parameter.
+			 *
+			 * @param mixed $value Value to check.
+			 * @return string
+			 */
+			static function ( $value ): string {
+				return sanitize_key( $value );
+			},
+		'validate_callback' =>
+			/**
+			 * Validates the format parameter.
+			 *
+			 * @param mixed $value Value to check.
+			 * @return bool
+			 */
+			static function ( $value ): bool {
+				return in_array(
+					$value,
+					array( 'json', 'text', 'csl-json' ),
+					true
+				);
+			},
 	);
 
 	register_rest_route(
@@ -320,9 +363,16 @@ function bibliography_builder_register_rest_routes() {
 						),
 						'type'              => 'integer',
 						'sanitize_callback' => 'absint',
-						'validate_callback' => static function ( $value ) {
-							return is_numeric( $value ) && (int) $value >= 0;
-						},
+						'validate_callback' =>
+							/**
+							 * Validates the bibliography index parameter.
+							 *
+							 * @param mixed $value Value to check.
+							 * @return bool
+							 */
+							static function ( $value ) {
+								return is_numeric( $value ) && (int) $value >= 0;
+							},
 					),
 					'format' => $format_arg,
 				)
@@ -345,12 +395,26 @@ function bibliography_builder_register_rest_routes() {
 					),
 					'type'              => 'string',
 					'required'          => true,
-					'sanitize_callback' => static function ( $value ) {
-						return preg_replace( '/\D/u', '', (string) $value );
-					},
-					'validate_callback' => static function ( $value ) {
-						return is_scalar( $value ) && (bool) preg_match( '/^(?:PMC)?\d{1,9}$/i', (string) $value );
-					},
+					'sanitize_callback' =>
+						/**
+						 * Strips non-digits from the PMCID parameter.
+						 *
+						 * @param mixed $value Value to check.
+						 * @return string|null
+						 */
+						static function ( $value ) {
+							return preg_replace( '/\D/u', '', (string) $value );
+						},
+					'validate_callback' =>
+						/**
+						 * Validates the PMCID parameter.
+						 *
+						 * @param mixed $value Value to check.
+						 * @return bool
+						 */
+						static function ( $value ) {
+							return is_scalar( $value ) && (bool) preg_match( '/^(?:PMC)?\d{1,9}$/i', (string) $value );
+						},
 				),
 			),
 		)
@@ -371,9 +435,16 @@ function bibliography_builder_register_rest_routes() {
 					),
 					'type'              => 'string',
 					'required'          => true,
-					'validate_callback' => static function ( $value ) {
-						return '' !== bibliography_builder_normalize_arxiv_id( $value );
-					},
+					'validate_callback' =>
+						/**
+						 * Validates the arXiv ID parameter.
+						 *
+						 * @param mixed $value Value to check.
+						 * @return bool
+						 */
+						static function ( $value ) {
+							return '' !== bibliography_builder_normalize_arxiv_id( $value );
+						},
 				),
 			),
 		)
@@ -394,9 +465,16 @@ function bibliography_builder_register_rest_routes() {
 					),
 					'type'              => 'string',
 					'required'          => true,
-					'validate_callback' => static function ( $value ) {
-						return '' !== bibliography_builder_normalize_isbn( $value );
-					},
+					'validate_callback' =>
+						/**
+						 * Validates the ISBN parameter.
+						 *
+						 * @param mixed $value Value to check.
+						 * @return bool
+						 */
+						static function ( $value ) {
+							return '' !== bibliography_builder_normalize_isbn( $value );
+						},
 				),
 			),
 		)
@@ -449,9 +527,16 @@ function bibliography_builder_register_rest_routes() {
 					),
 					'type'              => 'string',
 					'required'          => true,
-					'validate_callback' => static function ( $value ) {
-						return '' !== bibliography_builder_normalize_catalog_key( $value );
-					},
+					'validate_callback' =>
+						/**
+						 * Validates the catalog ID parameter.
+						 *
+						 * @param mixed $value Value to check.
+						 * @return bool
+						 */
+						static function ( $value ) {
+							return '' !== bibliography_builder_normalize_catalog_key( $value );
+						},
 				),
 			),
 		)
@@ -472,9 +557,16 @@ function bibliography_builder_register_rest_routes() {
 					),
 					'type'              => 'string',
 					'required'          => true,
-					'validate_callback' => static function ( $value ) {
-						return '' !== bibliography_builder_normalize_archive_id( $value );
-					},
+					'validate_callback' =>
+						/**
+						 * Validates the Internet Archive ID parameter.
+						 *
+						 * @param mixed $value Value to check.
+						 * @return bool
+						 */
+						static function ( $value ) {
+							return '' !== bibliography_builder_normalize_archive_id( $value );
+						},
 				),
 			),
 		)
@@ -533,6 +625,8 @@ function bibliography_builder_rest_pre_serve_request( $served, $result, $request
 
 /**
  * Register the block.
+ *
+ * @return void
  */
 function bibliography_builder_block_init() {
 	/**
@@ -555,23 +649,28 @@ add_action( 'init', 'bibliography_builder_block_init' );
 add_action( 'rest_api_init', 'bibliography_builder_register_rest_routes' );
 
 // Read-only Abilities API integration (WordPress 6.9+; inert on older versions).
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/block-data.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/csl-sanitize.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/formatter.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/read-routes.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/google-books-key.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/resolvers.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/abilities.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/review.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/save-markup.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/frontend-labels.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/frontend-json-ld.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/json-ld-enrichment.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/output-defaults.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/email-output.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/block-locator.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/write-routes.php';
-require_once BIBLIOGRAPHY_BUILDER_PLUGIN_DIR . 'includes/write-abilities.php';
+require_once __DIR__ . '/includes/styles.php';
+require_once __DIR__ . '/includes/block-data.php';
+require_once __DIR__ . '/includes/csl-sanitize.php';
+require_once __DIR__ . '/includes/formatter.php';
+require_once __DIR__ . '/includes/read-routes.php';
+require_once __DIR__ . '/includes/google-books-key.php';
+require_once __DIR__ . '/includes/resolvers.php';
+require_once __DIR__ . '/includes/abilities.php';
+require_once __DIR__ . '/includes/review.php';
+require_once __DIR__ . '/includes/save-markup.php';
+require_once __DIR__ . '/includes/save-sort.php';
+require_once __DIR__ . '/includes/save-display.php';
+require_once __DIR__ . '/includes/save-json-ld-coins.php';
+require_once __DIR__ . '/includes/save-cite-export.php';
+require_once __DIR__ . '/includes/frontend-labels.php';
+require_once __DIR__ . '/includes/frontend-json-ld.php';
+require_once __DIR__ . '/includes/json-ld-enrichment.php';
+require_once __DIR__ . '/includes/output-defaults.php';
+require_once __DIR__ . '/includes/email-output.php';
+require_once __DIR__ . '/includes/block-locator.php';
+require_once __DIR__ . '/includes/write-routes.php';
+require_once __DIR__ . '/includes/write-abilities.php';
 add_filter( 'rest_pre_serve_request', 'bibliography_builder_rest_pre_serve_request', 10, 4 );
 
 /**
@@ -587,6 +686,8 @@ add_filter( 'rest_pre_serve_request', 'bibliography_builder_rest_pre_serve_reque
  *   - all_metadata_disabled (warning) - metadata outputs are disabled.
  *
  * @since 1.1.0
+ *
+ * @return void
  */
 function bibliography_builder_register_a11y_checks() {
 	if ( ! function_exists( 'ba11yc_register_block_check' ) ) {
@@ -680,6 +781,8 @@ add_action( 'ba11yc_ready', 'bibliography_builder_register_a11y_checks', 10, 0 )
  * registered, so there is no hard dependency on Troy's plugin.
  *
  * @since 1.1.0
+ *
+ * @return void
  */
 function bibliography_builder_enqueue_a11y_validation() {
 	if ( ! wp_script_is( 'block-accessibility-script', 'registered' ) ) {

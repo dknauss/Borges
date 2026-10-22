@@ -148,6 +148,36 @@ The open question is the HTTP round trip, not citeproc. Three layers, cheapest f
 | _pending_ | | cold | | | |
 | _pending_ | | warm | | | |
 
+## `/format` cold-start profile (2026-10-21)
+
+The PHP benchmark above reported about 34 ms for 200 entries, while the HTTP route was seen at up to about 205 ms. `scripts/profile-format-route.php` explains the gap. It runs the plugin's own `/format` pipeline under the PHPUnit WordPress mocks, in a fresh PHP process per run (no opcache), so each run starts cold the way a request does.
+
+**The 34 ms measured a path the plugin does not take.** `scripts/benchmark-formatter.php` renders all 200 entries in one citeproc-php call (22–33 ms here). The plugin renders one entry at a time, because citeproc-php carries "et al." and similar state from one entry into the next, and restores the parsed style's state (about 2,000–2,400 properties on some 400 objects) before each entry. That restore alone cost about 30 ms per 200 entries.
+
+**Where a cold 200-entry request went** (Chicago notes, this container, medians; before → after the restore change below):
+
+| Stage | ms |
+| --- | ---: |
+| Load the plugin | 6 |
+| Validate and sanitize 200 items | 2.5 |
+| Autoload citeproc-php | 6.5 |
+| Prepare items (particles, page-first) | 1.5 |
+| Parse style and locale, render the first entry | 10 |
+| Render the other 199 entries (incl. restore) | 66–80 → 45 |
+| Extract entries from citeproc HTML | 2–3 |
+| **Whole REST callback** | **≈ 90–100 → ≈ 72** |
+
+**The HTTP route is not 205 ms.** The latest runtime matrix on `main` (run 39679641007) timed the route on all ten cells: p50 56–121 ms, with one 240 ms max on apache-php81-wp67 (a single slow first request). The ~205 ms was such an outlier. With the callback itself at 70–100 ms, WordPress boot, REST dispatch, and JSON on CI's runners add only tens of milliseconds.
+
+**Change made:** the reusable formatter now restores the snapshot by object, through a closure bound to each declaring class, instead of one `ReflectionProperty::setValue()` per property. The values written are identical; the CSL style goldens pass unchanged. That halves the restore (about 30 → 15 ms per 200 entries) and takes the cold callback from about 90 ms to about 72 ms here (minimums across 15 runs: 85–95 → 64–70 ms).
+
+**Per-entry cache (2026-10-22).** The formatter cache key covered the whole list, so editing one entry in a 200-entry bibliography missed the cache and rendered all 200 again. Each entry renders on its own, so the formatter now also keeps one cache entry per style holding an entry-hash → text map (the 500 most recently used entries, `BIBLIOGRAPHY_BUILDER_FORMAT_ENTRY_CACHE_LIMIT`), and a request renders only the entries missing from it. In one process with the in-memory test cache, a 200-entry list with one title changed formats in about 5 ms instead of 64 ms (APA), 66 ms (Chicago notes), or 106 ms (IEEE). The remaining 5 ms is mostly parsing the style for the one new entry. With no persistent object cache, the map is one transient, so a request reads one option row either way.
+
+**Not changed, worth deciding on:**
+
+1. **Time a baseline route in the matrix.** `time-format-route.sh` could also time a trivial REST route, so each cell reports WordPress and HTTP overhead apart from formatting.
+2. **Retire or relabel the batch benchmark.** `scripts/benchmark-formatter.php` should time the plugin's per-entry path, or say plainly that it times a batch render the plugin never does.
+
 ## Caveats and next steps
 
 - The May tables came from a local M-series Mac with warm OS caches; the October tables are from a Linux cloud container. Re-run on a constrained VM (1–2 vCPU, 512 MB PHP memory limit) to get shared-hosting representative numbers before committing to any new cap value.

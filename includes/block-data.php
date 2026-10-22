@@ -48,7 +48,7 @@ function bibliography_builder_collect_blocks( $blocks, $results = array() ) {
 				'bibliographyId' => bibliography_builder_get_stable_block_id( $attrs ),
 				'citationStyle'  => isset( $attrs['citationStyle'] )
 					? (string) $attrs['citationStyle']
-					: 'chicago-notes-bibliography',
+					: bibliography_builder_default_style_key(),
 				'headingText'    => isset( $attrs['headingText'] )
 					? (string) $attrs['headingText']
 					: '',
@@ -86,17 +86,16 @@ function bibliography_builder_collect_blocks( $blocks, $results = array() ) {
  * @return array
  */
 function bibliography_builder_prepare_bibliographies( $bibliographies ) {
-	return array_values(
-		array_map(
-			static function ( $bibliography, $index ) {
-				$bibliography['index']      = $index;
-				$bibliography['entryCount'] = count( $bibliography['citations'] );
+	// With two arrays, array_map() always returns a list.
+	return array_map(
+		static function ( $bibliography, $index ): array {
+			$bibliography['index']      = $index;
+			$bibliography['entryCount'] = count( $bibliography['citations'] );
 
-				return $bibliography;
-			},
-			$bibliographies,
-			array_keys( $bibliographies )
-		)
+			return $bibliography;
+		},
+		$bibliographies,
+		array_keys( $bibliographies )
 	);
 }
 
@@ -107,7 +106,13 @@ function bibliography_builder_prepare_bibliographies( $bibliographies ) {
  * @return array
  */
 function bibliography_builder_get_bibliographies_for_post( $post ) {
-	$parsed_blocks  = parse_blocks( (string) $post->post_content );
+	/**
+	 * WP_Post documents a string; a stored post can hold null content.
+	 *
+	 * @var mixed $content
+	 */
+	$content        = $post->post_content;
+	$parsed_blocks  = parse_blocks( (string) $content );
 	$bibliographies = bibliography_builder_collect_blocks( $parsed_blocks );
 
 	return bibliography_builder_prepare_bibliographies( $bibliographies );
@@ -160,7 +165,7 @@ function bibliography_builder_build_plain_text( $bibliography ) {
 function bibliography_builder_build_csl_json( $bibliography ) {
 	return array_values(
 		array_map(
-			static function ( $citation ) {
+			static function ( array $citation ): array {
 				return isset( $citation['csl'] ) && is_array( $citation['csl'] ) ? $citation['csl'] : array();
 			},
 			$bibliography['citations']

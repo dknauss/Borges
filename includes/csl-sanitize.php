@@ -147,7 +147,7 @@ function bibliography_builder_csl_has_oversized_string( $value, $depth = 0 ) {
  * every subsequent read of that bibliography pay ~12 seconds of CPU, on a route
  * that needs no authentication.
  *
- * @param string $text Possibly untrusted, possibly very long text.
+ * @param mixed $text Possibly untrusted, possibly very long text.
  * @return string Stripped text.
  */
 function bibliography_builder_strip_bounded( $text ) {
@@ -168,7 +168,7 @@ function bibliography_builder_strip_bounded( $text ) {
  * Callers must bound the input first; see
  * bibliography_builder_csl_has_oversized_string().
  *
- * @param string $text String value.
+ * @param mixed $text String value.
  * @return string
  */
 function bibliography_builder_strip_csl_html( $text ) {

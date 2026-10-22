@@ -94,7 +94,7 @@ const BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL = 600;
 /**
  * Build the cache key for one PMID resolution.
  *
- * @param string $pmid PubMed ID.
+ * @param mixed $pmid PubMed ID.
  * @return string
  */
 function bibliography_builder_get_pmid_cache_key( $pmid ) {
@@ -107,7 +107,7 @@ function bibliography_builder_get_pmid_cache_key( $pmid ) {
  * Shares the PMID cache group so uninstall's group flush covers it; the key
  * prefix keeps the two identifier spaces apart.
  *
- * @param string $pmcid PMCID digits, with or without the `PMC` prefix.
+ * @param mixed $pmcid PMCID digits, with or without the `PMC` prefix.
  * @return string
  */
 function bibliography_builder_get_pmcid_cache_key( $pmcid ) {
@@ -203,7 +203,7 @@ function bibliography_builder_resolve_ncbi_csl( $endpoint, $id, $cache_key, $cod
 		$cache_key,
 		$code_prefix,
 		$messages,
-		static function ( $body ) {
+		static function ( string $body ) {
 			$decoded = json_decode( $body, true );
 
 			return is_array( $decoded ) && ! empty( $decoded ) ? $decoded : null;
@@ -255,8 +255,9 @@ function bibliography_builder_resolve_remote_csl( $url, $cache_key, $code_prefix
 		)
 	);
 
-	$error = null;
-	$ttl   = BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL;
+	$error   = null;
+	$decoded = null;
+	$ttl     = BIBLIOGRAPHY_BUILDER_PUBMED_FAILURE_CACHE_TTL;
 
 	if ( is_wp_error( $response ) ) {
 		$error = bibliography_builder_pmid_error(
@@ -284,7 +285,13 @@ function bibliography_builder_resolve_remote_csl( $url, $cache_key, $code_prefix
 				)
 			);
 		} else {
-			$decoded = call_user_func( $decode, (string) wp_remote_retrieve_body( $response ) );
+			/**
+			 * WordPress documents a string; a filter on the HTTP response could return anything.
+			 *
+			 * @var mixed $raw_body
+			 */
+			$raw_body = wp_remote_retrieve_body( $response );
+			$decoded  = call_user_func( $decode, (string) $raw_body );
 
 			if ( 'not_found' === $decoded ) {
 				$error = bibliography_builder_pmid_error(
@@ -403,7 +410,7 @@ function bibliography_builder_normalize_arxiv_id( $value ) {
  * is dropped, and single-word, collaboration, CJK-script, and parenthetical
  * names become literals.
  *
- * @param string $name Author display name.
+ * @param mixed $name Author display name.
  * @return array CSL name object, or an empty array for a blank name.
  */
 function bibliography_builder_split_display_name( $name ) {
@@ -431,16 +438,16 @@ function bibliography_builder_split_display_name( $name ) {
 	}
 
 	$suffix = '';
-	if ( preg_match( '/^(?:jr\.?|sr\.?|ii|iii|iv)$/iu', (string) end( $tokens ) ) && count( $tokens ) > 2 ) {
-		$suffix = (string) array_pop( $tokens );
+	if ( preg_match( '/^(?:jr\.?|sr\.?|ii|iii|iv)$/iu', end( $tokens ) ) && count( $tokens ) > 2 ) {
+		$suffix = array_pop( $tokens );
 	}
 
-	$family    = array( (string) array_pop( $tokens ) );
+	$family    = array( array_pop( $tokens ) );
 	$particles = array( 'da', 'de', 'del', 'della', 'der', 'di', 'dos', 'du', 'la', 'le', 'ten', 'ter', 'van', 'von' );
 
 	// Keep at least one given-name token: `isset( $tokens[1] )` means two or more remain.
 	while ( isset( $tokens[1] ) && in_array( end( $tokens ), $particles, true ) ) {
-		array_unshift( $family, (string) array_pop( $tokens ) );
+		array_unshift( $family, array_pop( $tokens ) );
 	}
 
 	$csl_name = array(
@@ -462,7 +469,7 @@ function bibliography_builder_split_display_name( $name ) {
  * `arXiv`, number `arXiv:<id>`, the arXiv-assigned DataCite DOI, and the
  * abstract-page URL.
  *
- * @param string $body Atom XML response body.
+ * @param mixed  $body Atom XML response body.
  * @param string $id   The requested arXiv ID.
  * @return array|string|null CSL item, `not_found`, or null when unusable.
  */
@@ -545,7 +552,7 @@ function bibliography_builder_arxiv_atom_to_csl( $body, $id ) {
 /**
  * Build the cache key for one arXiv resolution.
  *
- * @param string $arxiv_id Normalized arXiv ID.
+ * @param mixed $arxiv_id Normalized arXiv ID.
  * @return string
  */
 function bibliography_builder_get_arxiv_cache_key( $arxiv_id ) {
@@ -594,7 +601,7 @@ function bibliography_builder_rest_resolve_arxiv( WP_REST_Request $request ) {
 				'borges-bibliography-builder'
 			),
 		),
-		static function ( $body ) use ( $arxiv_id ) {
+		static function ( string $body ) use ( $arxiv_id ) {
 			return bibliography_builder_arxiv_atom_to_csl( $body, $arxiv_id );
 		}
 	);
@@ -659,7 +666,7 @@ function bibliography_builder_isbn13_check_digit( $first_twelve ) {
 /**
  * Derive the ISBN-10 for a 978-prefixed ISBN-13.
  *
- * @param string $isbn13 Checksum-valid ISBN-13.
+ * @param mixed $isbn13 Checksum-valid ISBN-13.
  * @return string The ISBN-10, or an empty string for 979-prefixed ISBNs.
  */
 function bibliography_builder_isbn13_to_isbn10( $isbn13 ) {
@@ -707,12 +714,16 @@ function bibliography_builder_open_library_author_names( $isbn13 ) {
 		return array();
 	}
 
-	$decoded = json_decode( (string) wp_remote_retrieve_body( $response ), true );
-	$names   = isset( $decoded['docs'][0]['author_name'] ) && is_array( $decoded['docs'][0]['author_name'] )
-		? $decoded['docs'][0]['author_name']
-		: array();
+	/**
+	 * WordPress documents a string; a filter on the HTTP response could return anything.
+	 *
+	 * @var mixed $raw_body
+	 */
+	$raw_body = wp_remote_retrieve_body( $response );
+	$decoded  = json_decode( (string) $raw_body, true );
+	$names    = isset( $decoded['docs'][0]['author_name'] ) ? $decoded['docs'][0]['author_name'] : null;
 
-	return array_values( array_filter( $names, 'is_string' ) );
+	return is_array( $names ) ? array_values( array_filter( $names, 'is_string' ) ) : array();
 }
 
 /**
@@ -721,7 +732,7 @@ function bibliography_builder_open_library_author_names( $isbn13 ) {
  * Catalog dates come as "1977", "October 1, 1988", "c1976", or "[1977?]";
  * the year is found without needing a word boundary, so "c1976" works.
  *
- * @param string $date Date text.
+ * @param mixed $date Date text.
  * @return int|null The year, or null when there is none.
  */
 function bibliography_builder_catalog_year( $date ) {
@@ -756,7 +767,7 @@ function bibliography_builder_open_library_common_fields( array $csl, array $rec
  * Authors are not included: edition records reference them by key only.
  * See bibliography_builder_open_library_author_names().
  *
- * @param string $body   Edition JSON (`/isbn/<isbn>.json`, after redirect).
+ * @param mixed  $body   Edition JSON (`/isbn/<isbn>.json`, after redirect).
  * @param string $isbn13 The requested ISBN-13.
  * @return array|null CSL item, or null when unusable.
  */
@@ -799,7 +810,7 @@ function bibliography_builder_open_library_edition_to_csl( $body, $isbn13 ) {
  * industryIdentifiers contain the requested ISBN; anything else is treated
  * as not found rather than citing a different book.
  *
- * @param string $body   JSON response body.
+ * @param mixed  $body   JSON response body.
  * @param string $isbn13 The requested ISBN-13.
  * @return array|string|null CSL item, `not_found`, or null when unusable.
  */
@@ -934,7 +945,7 @@ function bibliography_builder_resolve_isbn_csl( $isbn13 ) {
 		'isbn_ol_' . $isbn13,
 		'bibliography_builder_isbn',
 		$messages,
-		static function ( $body ) use ( $isbn13 ) {
+		static function ( string $body ) use ( $isbn13 ) {
 			$csl = bibliography_builder_open_library_edition_to_csl( $body, $isbn13 );
 
 			// Only spend the author lookup on a usable edition record.
@@ -971,7 +982,7 @@ function bibliography_builder_resolve_isbn_csl( $isbn13 ) {
 		'isbn_gb_' . $isbn13,
 		'bibliography_builder_isbn',
 		$messages,
-		static function ( $body ) use ( $isbn13 ) {
+		static function ( string $body ) use ( $isbn13 ) {
 			return bibliography_builder_google_books_to_csl( $body, $isbn13 );
 		}
 	);
@@ -1029,7 +1040,7 @@ function bibliography_builder_rest_resolve_pmcid( WP_REST_Request $request ) {
  * Blanks are removed, anything from a slash on is dropped, and a hyphenated
  * serial is left-padded to six digits (`76-28766` becomes `76028766`).
  *
- * @param string $value Raw LCCN.
+ * @param mixed $value Raw LCCN.
  * @return string Normalized LCCN, or an empty string when it is not one.
  */
 function bibliography_builder_normalize_lccn( $value ) {
@@ -1089,8 +1100,8 @@ function bibliography_builder_normalize_catalog_key( $value ) {
  * responsibility (" / by ..."), which is cut only when asked: Open Library
  * titles have none, and a slash in them is part of the title.
  *
- * @param string $title                 Raw title.
- * @param bool   $strip_responsibility  Cut a trailing " / ..." statement.
+ * @param mixed $title                 Raw title.
+ * @param bool  $strip_responsibility  Cut a trailing " / ..." statement.
  * @return string
  */
 function bibliography_builder_clean_catalog_title( $title, $strip_responsibility = false ) {
@@ -1109,7 +1120,7 @@ function bibliography_builder_clean_catalog_title( $title, $strip_responsibility
 /**
  * Convert an Open Library Books API (`jscmd=data`) response to a CSL book.
  *
- * @param string $body JSON response body.
+ * @param mixed  $body JSON response body.
  * @param string $key  The requested bibkey (`OCLC:...`, `LCCN:...`, `OLID:...`).
  * @return array|string|null CSL item, `not_found`, or null when unusable.
  */
@@ -1215,7 +1226,7 @@ function bibliography_builder_resolve_catalog_csl( $key ) {
 				'borges-bibliography-builder'
 			),
 		),
-		static function ( $body ) use ( $key ) {
+		static function ( string $body ) use ( $key ) {
 			return bibliography_builder_open_library_books_to_csl( $body, $key );
 		}
 	);
@@ -1312,7 +1323,7 @@ function bibliography_builder_archive_all( $metadata, $field ) {
  * inverted `Family, Given` heading is split there; anything else is kept
  * whole as a literal, since an uninverted creator is usually an organization.
  *
- * @param string $creator Creator heading.
+ * @param mixed $creator Creator heading.
  * @return array CSL name, or an empty array.
  */
 function bibliography_builder_archive_creator_to_name( $creator ) {
@@ -1352,7 +1363,7 @@ function bibliography_builder_archive_creator_to_name( $creator ) {
  * Split an ISBD publication statement (`Harmondsworth ; New York : Penguin`)
  * into its first place and first publisher.
  *
- * @param string $statement Publication statement.
+ * @param mixed $statement Publication statement.
  * @return array `publisher` and/or `publisher-place`.
  */
 function bibliography_builder_split_publication_statement( $statement ) {
@@ -1386,7 +1397,7 @@ function bibliography_builder_split_publication_statement( $statement ) {
  * "n.p.") are not values, and a date that trails the publisher
  * ("Calder & Boyars, 1976") belongs to the date field.
  *
- * @param string $value Raw place or publisher.
+ * @param mixed $value Raw place or publisher.
  * @return string The value, or an empty string.
  */
 function bibliography_builder_catalog_imprint_value( $value ) {
@@ -1404,7 +1415,7 @@ function bibliography_builder_catalog_imprint_value( $value ) {
  * `lccn`), never `related-external-id` or the several `oclc-id` values, which
  * name other editions and records of the same work.
  *
- * @param string $body       JSON response body from `/metadata/<identifier>/metadata`.
+ * @param mixed  $body       JSON response body from `/metadata/<identifier>/metadata`.
  * @param string $identifier The item identifier.
  * @return array|string|null `array( 'csl' => ..., 'ids' => ... )`, `not_found`,
  *                           or null when unusable.
@@ -1560,8 +1571,8 @@ function bibliography_builder_archive_identifier_for_ark( $ark ) {
 		'ia_ark_' . md5( $ark ),
 		'bibliography_builder_archive',
 		bibliography_builder_archive_messages(),
-		static function ( $body ) {
-			$decoded = json_decode( (string) $body, true );
+		static function ( string $body ) {
+			$decoded = json_decode( $body, true );
 
 			$docs = isset( $decoded['response']['docs'] ) ? $decoded['response']['docs'] : null;
 
@@ -1625,7 +1636,7 @@ function bibliography_builder_rest_resolve_archive( WP_REST_Request $request ) {
 		'ia_' . md5( $identifier ),
 		'bibliography_builder_archive',
 		bibliography_builder_archive_messages(),
-		static function ( $body ) use ( $identifier ) {
+		static function ( string $body ) use ( $identifier ) {
 			return bibliography_builder_archive_metadata_to_record( $body, $identifier );
 		}
 	);

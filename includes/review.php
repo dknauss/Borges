@@ -102,7 +102,7 @@ function bibliography_builder_find_bibliography( $bibliographies, $ref, $kind = 
 /**
  * Load one bibliography in a post by index or `bibliographyId`, or a 404.
  *
- * @param int    $post_id Post ID. The caller has already checked it exists.
+ * @param mixed  $post_id Post ID, passed through absint(). The caller has already checked it exists.
  * @param mixed  $ref     Index or `bibliographyId`.
  * @param string $kind    See bibliography_builder_find_bibliography().
  * @return array|WP_Error
@@ -128,7 +128,7 @@ function bibliography_builder_resolve_bibliography( $post_id, $ref, $kind = 'aut
 /**
  * Fields shared by every review response.
  *
- * @param int   $post_id      Post ID.
+ * @param mixed $post_id      Post ID, passed through absint().
  * @param array $bibliography Bibliography record.
  * @return array
  */
@@ -307,6 +307,7 @@ function bibliography_builder_has_valid_isbn( $value ) {
 
 		foreach ( $matches[0] as $run ) {
 			$tokens = preg_split( '/ +/', $run );
+			$tokens = false === $tokens ? array() : $tokens;
 			$count  = count( $tokens );
 
 			for ( $start = 0; $start < $count; $start++ ) {
@@ -455,7 +456,7 @@ function bibliography_builder_validate_citation( $citation ) {
 /**
  * Validate every entry in one bibliography.
  *
- * @param int    $post_id Post ID.
+ * @param mixed  $post_id Post ID, passed through absint().
  * @param mixed  $ref     Index or `bibliographyId`.
  * @param string $kind    See bibliography_builder_find_bibliography().
  * @return array|WP_Error
@@ -524,7 +525,7 @@ function bibliography_builder_normalize_review_text( $value ) {
  * The keys the duplicate check compares for one citation.
  *
  * @param array $citation Citation record.
- * @return array{doi: string, title: string, author: string, year: string}
+ * @return array{doi: string, title: string, author: string, year: scalar|null}
  */
 function bibliography_builder_get_duplicate_keys( $citation ) {
 	$csl    = isset( $citation['csl'] ) && is_array( $citation['csl'] ) ? $citation['csl'] : array();
@@ -609,7 +610,7 @@ function bibliography_builder_get_duplicate_reason( $first, $second ) {
 /**
  * List likely duplicate pairs in one bibliography.
  *
- * @param int    $post_id Post ID.
+ * @param mixed  $post_id Post ID, passed through absint().
  * @param mixed  $ref     Index or `bibliographyId`.
  * @param string $kind    See bibliography_builder_find_bibliography().
  * @return array|WP_Error
@@ -660,9 +661,9 @@ function bibliography_builder_get_duplicate_report( $post_id, $ref, $kind = 'aut
  * Nothing is saved. Entries whose stored CSL-JSON the formatter rejects get a
  * null preview and the reason, and the rest are still formatted.
  *
- * @param int    $post_id   Post ID.
+ * @param mixed  $post_id   Post ID, passed through absint().
  * @param mixed  $ref       Index or `bibliographyId`.
- * @param string $style_key Supported citation style key.
+ * @param mixed  $style_key Supported citation style key; cast to string.
  * @param string $kind      See bibliography_builder_find_bibliography().
  * @return array|WP_Error
  */
@@ -790,6 +791,8 @@ function bibliography_builder_rest_preview_bibliography( WP_REST_Request $reques
 /**
  * Register the review routes. Called from the main route registration, after
  * the existing routes, so their registration order is unchanged.
+ *
+ * @return void
  */
 function bibliography_builder_register_review_routes() {
 	$base = '/posts/(?P<post_id>\d+)/bibliographies/(?P<ref>' . BIBLIOGRAPHY_BUILDER_BLOCK_REF_PATTERN . ')';
@@ -798,9 +801,16 @@ function bibliography_builder_register_review_routes() {
 			'description'       => __( 'Post ID to inspect for bibliography blocks.', 'borges-bibliography-builder' ),
 			'type'              => 'integer',
 			'sanitize_callback' => 'absint',
-			'validate_callback' => static function ( $value ) {
-				return is_numeric( $value ) && (int) $value > 0;
-			},
+			'validate_callback' =>
+				/**
+				 * Validates the post ID parameter.
+				 *
+				 * @param mixed $value Value to check.
+				 * @return bool
+				 */
+				static function ( $value ): bool {
+					return is_numeric( $value ) && (int) $value > 0;
+				},
 		),
 		'ref'     => array(
 			'description'       => __(
@@ -848,10 +858,17 @@ function bibliography_builder_register_review_routes() {
 						'description'       => __( 'Citation style key to preview.', 'borges-bibliography-builder' ),
 						'type'              => 'string',
 						'required'          => true,
-						'validate_callback' => static function ( $value ) {
-							return is_string( $value )
+						'validate_callback' =>
+							/**
+							 * Validates the style parameter.
+							 *
+							 * @param mixed $value Value to check.
+							 * @return bool
+							 */
+							static function ( $value ) {
+								return is_string( $value )
 								&& array_key_exists( $value, bibliography_builder_get_formatter_style_definitions() );
-						},
+							},
 					),
 				)
 			),

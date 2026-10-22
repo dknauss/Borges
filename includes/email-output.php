@@ -31,8 +31,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Works on the shapes save() writes, current and legacy; the patterns match
  * only elements save() itself produces.
  *
- * @param string $html Rendered block HTML.
- * @return string
+ * @param mixed $html Rendered block HTML; anything but a non-empty string is returned unchanged.
+ * @return mixed
  */
 function bibliography_builder_portable_markup( $html ) {
 	if ( ! is_string( $html ) || '' === $html ) {
@@ -71,7 +71,7 @@ function bibliography_builder_portable_markup( $html ) {
  * Wraps the result in the renderer's table helper when it is available, as
  * its fallback for blocks without a callback does.
  *
- * @param string $block_content     Rendered block HTML.
+ * @param mixed  $block_content     Rendered block HTML.
  * @param array  $parsed_block      Parsed block.
  * @param object $rendering_context Email rendering context.
  * @return string
@@ -80,14 +80,17 @@ function bibliography_builder_render_email( $block_content, $parsed_block = arra
 	unset( $parsed_block, $rendering_context );
 
 	$html   = bibliography_builder_portable_markup( $block_content );
-	$helper = '\Automattic\WooCommerce\EmailEditor\Integrations\Utils\Table_Wrapper_Helper';
+	$render = array(
+		'Automattic\WooCommerce\EmailEditor\Integrations\Utils\Table_Wrapper_Helper',
+		'render_table_wrapper',
+	);
 
-	if ( ! is_string( $html ) || '' === $html
-		|| ! class_exists( $helper ) || ! method_exists( $helper, 'render_table_wrapper' ) ) {
+	if ( ! is_string( $html ) || '' === $html || ! is_callable( $render ) ) {
 		return $html;
 	}
 
-	return $helper::render_table_wrapper(
+	return call_user_func(
+		$render,
 		$html,
 		array(
 			'style' => 'border-collapse: separate;',

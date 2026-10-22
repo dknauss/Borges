@@ -26,8 +26,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.11.0
  *
- * @param string $block_content Rendered block HTML.
- * @return string
+ * @param mixed $block_content Rendered block HTML; filters can pass any value.
+ * @return mixed
  */
 function bibliography_builder_nest_rendered_json_ld( $block_content ) {
 	if ( ! is_string( $block_content ) || false === strpos( $block_content, '<script type="application/ld+json">[' ) ) {

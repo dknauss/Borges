@@ -39,7 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Applied only where the saved type is still CreativeWork, so a type save()
  * already chose is never second-guessed.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
  * @return array<string, string>
  */
@@ -69,7 +69,7 @@ function bibliography_builder_json_ld_refined_types() {
 /**
  * The page URL that `@id`s and entry anchors hang from, or '' when unknown.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
  * @return string
  */
@@ -81,7 +81,7 @@ function bibliography_builder_json_ld_page_url() {
 	 *
 	 * Return '' to leave out every page-relative `@id` and `url`.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
 	 * @param string $url The current post's permalink.
 	 */
@@ -110,7 +110,7 @@ function bibliography_builder_json_ld_csl_string( $csl, $field ) {
 /**
  * Every persistent identifier a CSL item carries, as schema.org values.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
  * @param array $csl CSL-JSON item.
  * @return array<int, array{propertyID: string, value: string, url: string}>
@@ -260,7 +260,7 @@ function bibliography_builder_json_ld_pagination( $pages ) {
 /**
  * The `@id` a cited work goes by: its DOI URL, else its entry on this page.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
  * @param array  $csl         CSL-JSON item.
  * @param string $citation_id The citation's ID (its `ref-…` anchor).
@@ -274,7 +274,7 @@ function bibliography_builder_json_ld_work_id( $csl, $citation_id, $page_url ) {
 		}
 	}
 
-	if ( '' !== $page_url && is_string( $citation_id ) && '' !== $citation_id ) {
+	if ( '' !== $page_url && '' !== $citation_id ) {
 		return $page_url . '#ref-' . rawurlencode( $citation_id );
 	}
 
@@ -284,7 +284,7 @@ function bibliography_builder_json_ld_work_id( $csl, $citation_id, $page_url ) {
 /**
  * Add what save() leaves out to one cited work.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
  * @param array  $work        The work as save() wrote it.
  * @param array  $csl         The citation's CSL-JSON.
@@ -293,10 +293,6 @@ function bibliography_builder_json_ld_work_id( $csl, $citation_id, $page_url ) {
  * @return array
  */
 function bibliography_builder_enrich_json_ld_work( $work, $csl, $citation_id, $page_url ) {
-	if ( ! is_array( $work ) || ! is_array( $csl ) ) {
-		return $work;
-	}
-
 	$type    = bibliography_builder_json_ld_csl_string( $csl, 'type' );
 	$refined = bibliography_builder_json_ld_refined_types();
 
@@ -424,11 +420,11 @@ function bibliography_builder_enrich_json_ld_work( $work, $csl, $citation_id, $p
  * whose anchors and items do not line up keeps its works as saved and gains
  * only the list-level fields.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
- * @param string $block_content Rendered block HTML.
- * @param array  $parsed_block  Parsed block, with its attributes.
- * @return string
+ * @param mixed $block_content Rendered block HTML; filters can pass any value.
+ * @param array $parsed_block  Parsed block, with its attributes.
+ * @return mixed
  */
 function bibliography_builder_enrich_rendered_json_ld( $block_content, $parsed_block = array() ) {
 	if ( ! is_string( $block_content ) || false === strpos( $block_content, '<script type="application/ld+json">{' ) ) {
@@ -438,7 +434,7 @@ function bibliography_builder_enrich_rendered_json_ld( $block_content, $parsed_b
 	/**
 	 * Filters whether the bibliography's JSON-LD is enriched as it renders.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
 	 * @param bool  $enrich       Whether to enrich. Default true.
 	 * @param array $parsed_block The parsed block.
@@ -561,7 +557,7 @@ function bibliography_builder_enrich_rendered_json_ld( $block_content, $parsed_b
  * description is not on the page would point nowhere. Works are deduplicated
  * by `@id`.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
  * @param WP_Post|null $post     The post; defaults to the queried post.
  * @param string|null  $page_url Page URL; defaults to its permalink.
@@ -645,7 +641,7 @@ function bibliography_builder_should_link_page_citations() {
 	/**
 	 * Filters whether Borges adds the cited works to the page's SEO graph.
 	 *
-	 * @since 1.12.0
+	 * @since 1.13.0
 	 *
 	 * @param bool $link Whether to add `citation` to the Article. Default true.
 	 */
@@ -655,9 +651,9 @@ function bibliography_builder_should_link_page_citations() {
 /**
  * Merge cited-work references into a schema.org node's `citation`.
  *
- * @param array $node Graph node.
+ * @param mixed $node Graph node; SEO plugin filters can pass any value.
  * @param array $refs References from bibliography_builder_get_cited_work_refs().
- * @return array
+ * @return mixed
  */
 function bibliography_builder_add_citations_to_node( $node, $refs ) {
 	if ( ! is_array( $node ) || array() === $refs ) {
@@ -678,10 +674,10 @@ function bibliography_builder_add_citations_to_node( $node, $refs ) {
 /**
  * Yoast SEO: add the cited works to the Article piece.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
- * @param array $data Article piece.
- * @return array
+ * @param mixed $data Article piece.
+ * @return mixed
  */
 function bibliography_builder_yoast_schema_article( $data ) {
 	if ( ! bibliography_builder_should_link_page_citations() ) {
@@ -694,11 +690,11 @@ function bibliography_builder_yoast_schema_article( $data ) {
 /**
  * Yoast SEO: add the cited works to the WebPage piece on pages without an Article.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
- * @param array       $data    WebPage piece.
- * @param object|null $context Yoast's meta tags context.
- * @return array
+ * @param mixed $data    WebPage piece.
+ * @param mixed $context Yoast's meta tags context.
+ * @return mixed
  */
 function bibliography_builder_yoast_schema_webpage( $data, $context = null ) {
 	$has_article = is_object( $context ) && ! empty( $context->has_article );
@@ -713,10 +709,10 @@ function bibliography_builder_yoast_schema_webpage( $data, $context = null ) {
 /**
  * Rank Math: add the cited works to the page's article entity, else its WebPage.
  *
- * @since 1.12.0
+ * @since 1.13.0
  *
- * @param array $data Rank Math JSON-LD entities.
- * @return array
+ * @param mixed $data Rank Math JSON-LD entities.
+ * @return mixed
  */
 function bibliography_builder_rank_math_json_ld( $data ) {
 	if ( ! is_array( $data ) || ! bibliography_builder_should_link_page_citations() ) {

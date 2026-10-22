@@ -127,7 +127,7 @@ function bibliography_builder_rest_write_permissions_check( WP_REST_Request $req
  * @return mixed
  */
 function bibliography_builder_write_to_arrays( $value ) {
-	return json_decode( wp_json_encode( $value ), true );
+	return json_decode( (string) wp_json_encode( $value ), true );
 }
 
 /**
@@ -158,8 +158,8 @@ function bibliography_builder_write_record( $attrs, $index ) {
 /**
  * Find a block's index from a `{ref}`: an index, or a stable bibliographyId.
  *
- * @param array  $ranges Located blocks.
- * @param string $ref    Reference.
+ * @param array $ranges Located blocks.
+ * @param mixed $ref    Reference; cast to string.
  * @return int|WP_Error
  */
 function bibliography_builder_write_resolve_index( $ranges, $ref ) {
@@ -193,7 +193,9 @@ function bibliography_builder_write_resolve_index( $ranges, $ref ) {
  * @return string
  */
 function bibliography_builder_write_style( $attrs ) {
-	return isset( $attrs['citationStyle'] ) ? (string) $attrs['citationStyle'] : 'chicago-notes-bibliography';
+	return isset( $attrs['citationStyle'] )
+		? (string) $attrs['citationStyle']
+		: bibliography_builder_default_style_key();
 }
 
 /**
@@ -211,8 +213,8 @@ function bibliography_builder_write_citations( $attrs ) {
 /**
  * Find a citation's position by ID.
  *
- * @param array  $citations   Citations (arrays).
- * @param string $citation_id Citation ID.
+ * @param array $citations   Citations (arrays).
+ * @param mixed $citation_id Citation ID.
  * @return int|WP_Error
  */
 function bibliography_builder_write_find_citation( $citations, $citation_id ) {
@@ -298,11 +300,12 @@ function bibliography_builder_write_bibliography( WP_REST_Request $request, $mut
 		);
 	}
 
-	$post    = get_post( absint( $request['post_id'] ) );
-	$content = (string) $post->post_content;
-	$etag    = bibliography_builder_post_etag( $post );
-	$dry_run = false !== rest_sanitize_boolean( $request['dry_run'] ?? true );
-	$ranges  = bibliography_builder_locate_bibliography_blocks( $content );
+	$post        = get_post( absint( $request['post_id'] ) );
+	$content     = (string) $post->post_content;
+	$etag        = bibliography_builder_post_etag( $post );
+	$dry_run_arg = $request['dry_run'];
+	$dry_run     = null === $dry_run_arg || false !== rest_sanitize_boolean( $dry_run_arg );
+	$ranges      = bibliography_builder_locate_bibliography_blocks( $content );
 
 	if ( is_wp_error( $ranges ) ) {
 		return $ranges;
@@ -322,7 +325,7 @@ function bibliography_builder_write_bibliography( WP_REST_Request $request, $mut
 	}
 
 	// Render from the attributes exactly as the editor will parse them back.
-	$attrs = bibliography_builder_decode_save_attributes( wp_json_encode( $result['attrs'] ) );
+	$attrs = bibliography_builder_decode_save_attributes( (string) wp_json_encode( $result['attrs'] ) );
 	$html  = bibliography_builder_render_save_markup( $attrs );
 	$block = bibliography_builder_serialize_bibliography_block( $result['attrs'], $html );
 
@@ -422,6 +425,12 @@ function bibliography_builder_rest_add_citations( WP_REST_Request $request ) {
 
 	return bibliography_builder_write_bibliography(
 		$request,
+		/**
+		 * Apply the change to the block's attributes.
+		 *
+		 * @param array $attrs Block attributes as plain arrays.
+		 * @return array|WP_Error `{ attrs, changes }`, or an error.
+		 */
 		static function ( $attrs ) use ( $items ) {
 			$style     = bibliography_builder_write_style( $attrs );
 			$citations = bibliography_builder_write_citations( $attrs );
@@ -503,6 +512,11 @@ function bibliography_builder_rest_add_citations( WP_REST_Request $request ) {
  * @return WP_REST_Response|WP_Error
  */
 function bibliography_builder_rest_update_citation( WP_REST_Request $request ) {
+	/**
+	 * WordPress documents an array, but returns null for an absent or invalid body.
+	 *
+	 * @var mixed $patch
+	 */
 	$patch = $request->get_json_params();
 
 	if ( ! is_array( $patch ) || array() === $patch || isset( $patch[0] ) ) {
@@ -528,6 +542,12 @@ function bibliography_builder_rest_update_citation( WP_REST_Request $request ) {
 
 	return bibliography_builder_write_bibliography(
 		$request,
+		/**
+		 * Apply the change to the block's attributes.
+		 *
+		 * @param array $attrs Block attributes as plain arrays.
+		 * @return array|WP_Error `{ attrs, changes }`, or an error.
+		 */
 		static function ( $attrs ) use ( $patch, $citation_id ) {
 			$style     = bibliography_builder_write_style( $attrs );
 			$citations = bibliography_builder_write_citations( $attrs );
@@ -588,6 +608,12 @@ function bibliography_builder_rest_delete_citation( WP_REST_Request $request ) {
 
 	return bibliography_builder_write_bibliography(
 		$request,
+		/**
+		 * Apply the change to the block's attributes.
+		 *
+		 * @param array $attrs Block attributes as plain arrays.
+		 * @return array|WP_Error `{ attrs, changes }`, or an error.
+		 */
 		static function ( $attrs ) use ( $citation_id ) {
 			$citations = bibliography_builder_write_citations( $attrs );
 			$position  = bibliography_builder_write_find_citation( $citations, $citation_id );
@@ -631,6 +657,12 @@ function bibliography_builder_rest_reorder_citations( WP_REST_Request $request )
 
 	return bibliography_builder_write_bibliography(
 		$request,
+		/**
+		 * Apply the change to the block's attributes.
+		 *
+		 * @param array $attrs Block attributes as plain arrays.
+		 * @return array|WP_Error `{ attrs, changes }`, or an error.
+		 */
 		static function ( $attrs ) use ( $ids ) {
 			$style      = bibliography_builder_write_style( $attrs );
 			$definition = bibliography_builder_get_formatter_style_definition( $style );
@@ -665,7 +697,13 @@ function bibliography_builder_rest_reorder_citations( WP_REST_Request $request )
 			}
 
 			$attrs['citations'] = array_map(
-				static function ( $id ) use ( $by_id ) {
+				/**
+				 * Look up a citation by its ID.
+				 *
+				 * @param string $id Citation ID.
+				 * @return array
+				 */
+				static function ( string $id ) use ( $by_id ) {
 					return $by_id[ $id ];
 				},
 				$strings
@@ -682,25 +720,18 @@ function bibliography_builder_rest_reorder_citations( WP_REST_Request $request )
 /**
  * The default visible heading for a citation style.
  *
- * `getDefaultHeadingText()` from `src/lib/formatting/style-registry.js`.
+ * `getDefaultHeadingText()` from `src/lib/formatting/style-registry.js`: the
+ * style's `headingPlaceholder` in `styles.json`.
  *
  * @param string $style_key Citation style key.
  * @return string
  */
 function bibliography_builder_write_default_heading( $style_key ) {
-	$headings = array(
-		'chicago-notes-bibliography' => 'Bibliography',
-		'chicago-author-date'        => 'References',
-		'apa-7'                      => 'References',
-		'mla-9'                      => 'Works Cited',
-		'harvard'                    => 'References',
-		'ieee'                       => 'References',
-		'vancouver'                  => 'References',
-		'oscola'                     => 'Bibliography',
-		'abnt'                       => 'Referências',
-	);
+	$styles = bibliography_builder_get_style_data()['styles'];
 
-	return isset( $headings[ $style_key ] ) ? $headings[ $style_key ] : 'Bibliography';
+	return isset( $styles[ $style_key ]['headingPlaceholder'] )
+		? (string) $styles[ $style_key ]['headingPlaceholder']
+		: 'Bibliography';
 }
 
 /**
@@ -754,6 +785,11 @@ function bibliography_builder_write_set_attribute( $attrs, $name, $value, $defau
  * @return WP_REST_Response|WP_Error
  */
 function bibliography_builder_rest_update_bibliography_settings( WP_REST_Request $request ) {
+	/**
+	 * WordPress documents an array, but returns null for an absent or invalid body.
+	 *
+	 * @var mixed $settings
+	 */
 	$settings = $request->get_json_params();
 	$defaults = bibliography_builder_write_setting_defaults();
 
@@ -818,6 +854,12 @@ function bibliography_builder_rest_update_bibliography_settings( WP_REST_Request
 
 	return bibliography_builder_write_bibliography(
 		$request,
+		/**
+		 * Apply the change to the block's attributes.
+		 *
+		 * @param array $attrs Block attributes as plain arrays.
+		 * @return array|WP_Error `{ attrs, changes }`, or an error.
+		 */
 		static function ( $attrs ) use ( $settings, $defaults ) {
 			foreach ( $settings as $name => $value ) {
 				$attrs = bibliography_builder_write_set_attribute( $attrs, $name, $value, $defaults[ $name ] );
@@ -846,6 +888,11 @@ function bibliography_builder_rest_update_bibliography_settings( WP_REST_Request
  * @return WP_REST_Response|WP_Error
  */
 function bibliography_builder_rest_reformat_bibliography( WP_REST_Request $request ) {
+	/**
+	 * WordPress documents an array, but returns null for an absent or invalid body.
+	 *
+	 * @var mixed $params
+	 */
 	$params = $request->get_json_params();
 	$style  = is_array( $params ) && isset( $params['style'] ) && is_string( $params['style'] ) ? $params['style'] : '';
 
@@ -863,6 +910,12 @@ function bibliography_builder_rest_reformat_bibliography( WP_REST_Request $reque
 
 	return bibliography_builder_write_bibliography(
 		$request,
+		/**
+		 * Apply the change to the block's attributes.
+		 *
+		 * @param array $attrs Block attributes as plain arrays.
+		 * @return array|WP_Error `{ attrs, changes }`, or an error.
+		 */
 		static function ( $attrs ) use ( $style ) {
 			$from      = bibliography_builder_write_style( $attrs );
 			$citations = bibliography_builder_write_citations( $attrs );
@@ -969,7 +1022,7 @@ function bibliography_builder_rest_reformat_bibliography( WP_REST_Request $reque
 				$attrs,
 				'citationStyle',
 				$style,
-				'chicago-notes-bibliography'
+				bibliography_builder_default_style_key()
 			);
 			$attrs['citations'] = bibliography_builder_sort_citations_for_save( $citations, $style );
 
@@ -983,6 +1036,8 @@ function bibliography_builder_rest_reformat_bibliography( WP_REST_Request $reque
 
 /**
  * Register the write routes when the site has enabled them.
+ *
+ * @return void
  */
 function bibliography_builder_register_write_routes() {
 	if ( ! bibliography_builder_write_routes_enabled() ) {

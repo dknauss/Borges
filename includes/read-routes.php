@@ -20,15 +20,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array
  */
 function bibliography_builder_get_request_params( WP_REST_Request $request ) {
-	if ( method_exists( $request, 'get_json_params' ) ) {
-		$params = $request->get_json_params();
+	/**
+	 * WordPress documents an array, but returns null for an absent or invalid body.
+	 *
+	 * @var mixed $params
+	 */
+	$params = $request->get_json_params();
 
-		if ( is_array( $params ) ) {
-			return $params;
-		}
-	}
-
-	return array();
+	return is_array( $params ) ? $params : array();
 }
 
 /**
@@ -38,20 +37,25 @@ function bibliography_builder_get_request_params( WP_REST_Request $request ) {
  * @return WP_REST_Response|WP_Error
  */
 function bibliography_builder_rest_format_citations( WP_REST_Request $request ) {
-	if ( method_exists( $request, 'get_body' ) ) {
-		$body = (string) $request->get_body();
+	/**
+	 * WordPress documents a string, but the body is null until one is set.
+	 *
+	 * @var string|null $body
+	 */
+	$body = $request->get_body();
 
-		if ( strlen( $body ) > BIBLIOGRAPHY_BUILDER_MAX_FORMAT_BYTES ) {
-			return new WP_Error(
-				'bibliography_builder_formatter_payload_too_large',
-				__( 'The citation formatting request is too large.', 'borges-bibliography-builder' ),
-				array( 'status' => 413 )
-			);
-		}
+	if ( strlen( (string) $body ) > BIBLIOGRAPHY_BUILDER_MAX_FORMAT_BYTES ) {
+		return new WP_Error(
+			'bibliography_builder_formatter_payload_too_large',
+			__( 'The citation formatting request is too large.', 'borges-bibliography-builder' ),
+			array( 'status' => 413 )
+		);
 	}
 
 	$params    = bibliography_builder_get_request_params( $request );
-	$style_key = isset( $params['style'] ) ? sanitize_key( $params['style'] ) : 'chicago-notes-bibliography';
+	$style_key = isset( $params['style'] )
+		? sanitize_key( $params['style'] )
+		: bibliography_builder_default_style_key();
 	$csl_items = isset( $params['cslItems'] ) && is_array( $params['cslItems'] ) ? $params['cslItems'] : array();
 
 	if ( empty( $csl_items ) ) {

@@ -11,21 +11,24 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **705** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **11,102** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **11,688** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **808** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **11589** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **11,682** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **3,156 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
-(REST registration + block registration) and the seventeen `includes/` files it loads:
-`includes/block-data.php`, `includes/csl-sanitize.php`, `includes/formatter.php`, and
-`includes/read-routes.php`, which only define functions (the formatter runs only for editor-time
+(REST registration + block registration) and the twenty-two `includes/` files it loads:
+`includes/block-data.php`, `includes/csl-sanitize.php`, `includes/formatter.php`,
+`includes/read-routes.php`, and `includes/styles.php` (which reads the shared
+`includes/styles.json`: the style table and name particles), which only define functions (the formatter runs only for editor-time
 REST calls and writes);
 `includes/google-books-key.php`, which only defines functions;
 `includes/resolvers.php`, which only defines constants and functions (its remote requests run
 only inside editor-time REST callbacks); `includes/review.php`, which only defines constants,
 functions, and editor-only review routes registered with the others on `rest_api_init`;
-`includes/save-markup.php` and `includes/block-locator.php`, which only define constants and functions
+`includes/save-markup.php` (with `save-sort.php`, `save-display.php`, `save-json-ld-coins.php`, and
+`save-cite-export.php`, split from it along the JS modules they port) and `includes/block-locator.php`,
+which only define constants and functions
 (called by the opt-in write routes, plus the JSON-LD helpers below); `includes/write-routes.php`, which only defines functions and
 registers its routes on `rest_api_init` when a site opts in (off by default);
 `includes/frontend-labels.php`, whose `render_block` filter translates the saved Cite / Export
@@ -116,7 +119,7 @@ happens **only during editor REST calls** (`/format`, `/pmid`) as short-lived ca
 upstream lookups — never on a visitor request, and never added to the autoload set. So there
 are no long-lived settings and nothing on the autoload path, but "zero rows ever touch
 `wp_options`" would be inaccurate on a site without an external object cache. (DOI imports are
-deduped separately in a browser-session JS `Map` in `src/lib/parser.js` and never reach this
+deduped separately in a browser-session JS `Map` in `src/lib/parser-resolvers.js` and never reach this
 PHP cache.)
 
 The "average queries per page" figure is a flat **0 additional queries**, independent of the

@@ -94,6 +94,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.12.0** — Bibliographies read correctly in newsletters and feeds (no blanket italics or broken Cite / Export panel); names with particles sort per style; no period after a "?" or "!" title; reformatting after an edit renders only the changed entries; opt-in write abilities (WordPress 6.9+) wrap the write routes.
 - **1.11.0** — Cited works are nested in one JSON-LD `ItemList`, so link previews such as Mastodon's no longer credit a cited source as the post's author (published posts are corrected as they render); bibliographies over 50 citations format again.
 - **1.10.0** — Imports library catalog numbers (OCLC, LCCN, Open Library edition IDs) and Internet Archive items and ARKs through Open Library and the Internet Archive; "Edit fields" works on every citation and saves only the fields you change; an optional Google Books API key (constant or filter) for the ISBN fallback; "Place: Publisher" and CJK author names parse correctly.
 - **1.9.1** — Pasted CSL-JSON (a reference manager's CSL JSON export) imports as citations; a quoted title, such as a Chicago web page, is no longer also italicized; the JSON-LD DOI link keeps its slash.
@@ -115,7 +116,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 ## Features
 
 - **Multiple input paths** — Add bare DOIs, DOI URLs, PubMed/PMID and PubMed Central/PMCID records, arXiv IDs and links, ISBNs, BibTeX and BibLaTeX entries, and supported formatted citations.
-- **Nine citation styles** — Chicago Notes-Bibliography by default, with Chicago Author-Date, APA 7, Harvard, Vancouver, IEEE, MLA 9, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) selectable, each following its manual's current edition (see [docs/csl-styles.md](./docs/csl-styles.md)).
+- **Nine citation styles** — Chicago Notes-Bibliography by default, with Chicago Author-Date, APA 7, Harvard, Vancouver, IEEE, MLA 9, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) selectable, each following its manual's current edition (see [docs/csl-styles.md](./docs/csl-styles.md)). Each style is a [Citation Style Language](https://citationstyles.org/) (CSL) file written for Borges and rendered by [citeproc-php](https://github.com/pkp/citeproc-php), which the [Public Knowledge Project](https://pkp.sfu.ca/) maintains.
 - **Structured editing** — Per-field editing for every citation, whatever its source, plus a plain-text override for the displayed line.
 - **Semantic output** — `role="doc-bibliography"`, `lang` attributes, and hanging-indent styling without deprecated bibliography-entry ARIA roles.
 - **JSON-LD** — Schema.org structured data for search engines, AI systems, and semantic consumers (on by default). The cited works are nested in one `ItemList`, so none is mistaken for the page itself.

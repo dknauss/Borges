@@ -56,7 +56,7 @@ export function normalizeNameToken(value, { allowShortInitials = false } = {}) {
 		return value;
 	}
 
-	const letterRuns = value.match(/\p{L}+/gu) || [];
+	const letterRuns = /** @type {string[]} */ (value.match(/\p{L}+/gu) || []);
 
 	// Dotted/spaced initials ("A. M.", "J. D.") — every letter run is a single
 	// character. Leave these regardless of field.
