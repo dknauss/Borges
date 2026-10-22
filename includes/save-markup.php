@@ -256,7 +256,7 @@ function bibliography_builder_json_stringify( $value, $indent = null, $depth = 0
 /**
  * `encodeURIComponent()`.
  *
- * @param string $value Value.
+ * @param mixed $value Value.
  * @return string
  */
 function bibliography_builder_encode_uri_component( $value ) {
@@ -286,7 +286,7 @@ function bibliography_builder_escape_ampersand( $value ) {
 /**
  * `escapeHTML()` from `@wordpress/escape-html`, used for text nodes.
  *
- * @param string $value Value.
+ * @param mixed $value Value.
  * @return string
  */
 function bibliography_builder_escape_save_text( $value ) {
@@ -296,7 +296,7 @@ function bibliography_builder_escape_save_text( $value ) {
 /**
  * `escapeAttribute()` from `@wordpress/escape-html`.
  *
- * @param string $value Value.
+ * @param mixed $value Value.
  * @return string
  */
 function bibliography_builder_escape_save_attribute( $value ) {
@@ -343,7 +343,7 @@ function bibliography_builder_save_attributes( $attributes ) {
 /**
  * `kebabCase()` as used for preset font-size class names.
  *
- * @param string $value Slug.
+ * @param mixed $value Slug.
  * @return string
  */
 function bibliography_builder_save_kebab_case( $value ) {
@@ -488,7 +488,7 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 
 	if ( is_string( $repeated_prefix ) && array() !== $segments && ! $segments[0]['italic']
 		&& 0 === strncmp( $segments[0]['text'], $repeated_prefix, strlen( $repeated_prefix ) ) ) {
-		$segments[0]['text'] = (string) substr( $segments[0]['text'], strlen( $repeated_prefix ) );
+		$segments[0]['text'] = strval( substr( $segments[0]['text'], strlen( $repeated_prefix ) ) );
 		// U+2011 non-breaking hyphens, not "-": see REPEATED_AUTHOR_MARK.
 		$text .= '<span class="bibliography-builder-repeated-author">'
 			. '<span class="bibliography-builder-repeated-author-mark" aria-hidden="true">'
@@ -585,7 +585,7 @@ function bibliography_builder_render_save_markup( $attrs ) {
 		return '';
 	}
 
-	$flag = static function ( $name, $fallback ) use ( $attrs ) {
+	$flag = static function ( string $name, bool $fallback ) use ( $attrs ): bool {
 		return array_key_exists( $name, $attrs ) ? bibliography_builder_js_truthy( $attrs[ $name ] ) : $fallback;
 	};
 

@@ -36,7 +36,7 @@ const BIBLIOGRAPHY_BUILDER_BLOCK_DELIMITER_PATTERN = '/<!--\s+(?P<closer>\/)?wp:
  * with no opener, a closer for a different block, a block left open at the
  * end) is refused, because a write must never guess where a block ends.
  *
- * @param string $content Post content.
+ * @param mixed $content Post content.
  * @return array|WP_Error List of `{ start, end, attrs }` in index order; byte
  *                        offsets, `end` exclusive, `attrs` the decoded
  *                        attributes (see
@@ -145,7 +145,7 @@ function bibliography_builder_serialize_bibliography_block( $attrs, $inner_html 
  * but its bytes unchanged, and the target block holding exactly the
  * replacement with the attributes it was built from.
  *
- * @param string $content     Post content.
+ * @param mixed  $content     Post content.
  * @param int    $index       Block index (see the file comment).
  * @param string $replacement Serialized block
  *                            (bibliography_builder_serialize_bibliography_block()).

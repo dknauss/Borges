@@ -75,7 +75,7 @@ function bibliography_builder_save_parse_inline_markup( $text ) {
 	// Mirrors INLINE_TAG_PATTERN in src/lib/formatting/index.js.
 	$pattern = '/<\/?([A-Za-z][A-Za-z0-9]*)\b[^<>]*>/';
 
-	if ( preg_match_all( $pattern, $value, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE ) ) {
+	if ( 0 < (int) preg_match_all( $pattern, $value, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE ) ) {
 		foreach ( $matches as $match ) {
 			$tag    = $match[0][0];
 			$offset = $match[0][1];
@@ -107,7 +107,7 @@ function bibliography_builder_save_parse_inline_markup( $text ) {
 		}
 	}
 
-	$plain .= (string) substr( $value, $cursor );
+	$plain .= substr( $value, $cursor );
 
 	// An unclosed <i> runs to the end, as it would in a browser.
 	if ( $depth > 0 && strlen( $plain ) > $start ) {
@@ -218,8 +218,8 @@ function bibliography_builder_save_italic_fields( $csl ) {
  */
 function bibliography_builder_save_is_quoted( $text, $start, $end ) {
 	$before = substr( $text, 0, $start );
-	$after  = (string) substr( $text, $end );
-	$after  = (string) substr( $after, strspn( $after, '.,;:!?' ) );
+	$after  = substr( $text, $end );
+	$after  = substr( $after, strspn( $after, '.,;:!?' ) );
 
 	$opens  = '"' === substr( $before, -1 ) || "\u{201C}" === substr( $before, -3 );
 	$closes = '"' === substr( $after, 0, 1 ) || "\u{201D}" === substr( $after, 0, 3 );
@@ -365,7 +365,7 @@ function bibliography_builder_save_display_segments( $citation ) {
 function bibliography_builder_save_merge_ranges( $ranges ) {
 	usort(
 		$ranges,
-		static function ( $left, $right ) {
+		static function ( $left, $right ): int {
 			return $left['start'] - $right['start'];
 		}
 	);
@@ -376,7 +376,7 @@ function bibliography_builder_save_merge_ranges( $ranges ) {
 
 	foreach ( $ranges as $range ) {
 		if ( null !== $start && $range['start'] < $end ) {
-			$end = max( $end, (int) $range['end'] );
+			$end = max( $end, $range['end'] );
 			continue;
 		}
 
@@ -387,8 +387,8 @@ function bibliography_builder_save_merge_ranges( $ranges ) {
 			);
 		}
 
-		$start = (int) $range['start'];
-		$end   = (int) $range['end'];
+		$start = $range['start'];
+		$end   = $range['end'];
 	}
 
 	if ( null !== $start ) {

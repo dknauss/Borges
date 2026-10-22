@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * of `styles.json`, which `STYLE_DEFINITIONS` in
  * `src/lib/formatting/style-registry.js` is built from.
  *
- * @param string $style_key Style key.
+ * @param mixed $style_key Style key.
  * @return array{key: string, listType: string, family: string, locale: string, demoteNonDroppingParticle: string}
  */
 function bibliography_builder_get_save_style_definition( $style_key ) {
@@ -62,7 +62,7 @@ function bibliography_builder_get_primary_identifier( $value ) {
 /**
  * Read a CSL field, treating a missing key as null.
  *
- * @param array  $csl   CSL-JSON item.
+ * @param mixed  $csl   CSL-JSON item.
  * @param string $field Field name.
  * @return mixed
  */
@@ -145,7 +145,7 @@ function bibliography_builder_js_lower( $value ) {
 /**
  * A string-valued name part, or '' when it is falsy.
  *
- * @param array  $name Name object.
+ * @param mixed  $name Name object.
  * @param string $part Part key.
  * @return string
  */
@@ -419,7 +419,7 @@ function bibliography_builder_sort_compare( $family, $collator, $a, $b, $demote 
 		bibliography_builder_sort_author_key( $a, $demote ),
 		bibliography_builder_sort_author_key( $b, $demote )
 	);
-	$titles  = static function () use ( $collator, $a, $b ) {
+	$titles  = static function () use ( $collator, $a, $b ): int {
 		return bibliography_builder_locale_compare(
 			$collator,
 			bibliography_builder_sort_title_key( $a ),
@@ -437,9 +437,16 @@ function bibliography_builder_sort_compare( $family, $collator, $a, $b, $demote 
 		return 0 !== $title_comparison ? $title_comparison : bibliography_builder_sort_compare_years( $a, $b );
 	}
 
-	$key     = static function ( $contributor ) use ( $demote ) {
-		return bibliography_builder_sort_contributor_key( $contributor, $demote );
-	};
+	$key =
+		/**
+		 * Sort key for one contributor.
+		 *
+		 * @param mixed $contributor CSL contributor.
+		 * @return string
+		 */
+		static function ( $contributor ) use ( $demote ): string {
+			return bibliography_builder_sort_contributor_key( $contributor, $demote );
+		};
 	$chain_a = array_map( $key, (array) bibliography_builder_sort_primary_contributors( $a ) );
 	$chain_b = array_map( $key, (array) bibliography_builder_sort_primary_contributors( $b ) );
 
