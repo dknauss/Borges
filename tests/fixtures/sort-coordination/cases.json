@@ -186,5 +186,17 @@
       { "id": "edwards", "csl": { "type": "book", "title": "Sermons", "author": [{ "family": "Edwards", "given": "Jonathan" }], "issued": { "date-parts": [[1741]] }}}
     ],
     "expectedOrder": ["dalembert", "delacruz", "edwards", "vanburen", "duijnhoven", "vangogh", "vonneumann"]
+  },
+  {
+    "id": "case-18-unicode-normalization",
+    "style": "apa-7",
+    "description": "A name typed with combining accents (NFD) sorts exactly like its precomposed form (NFC). ICU collation in both runtimes compares canonically equivalent strings as equal, so the sorter needs no normalization step.",
+    "citations": [
+      { "id": "anzalone", "csl": { "type": "book", "title": "Borderlands", "author": [{ "family": "Anzalone", "given": "Gloria" }], "issued": { "date-parts": [[2020]] }}},
+      { "id": "angstrom-nfd", "csl": { "type": "book", "title": "Zeta Recherches", "author": [{ "family": "A\u030angstro\u0308m", "given": "Anders" }], "issued": { "date-parts": [[2020]] }}},
+      { "id": "angell", "csl": { "type": "book", "title": "Medicine", "author": [{ "family": "Angell", "given": "Marcia" }], "issued": { "date-parts": [[2020]] }}},
+      { "id": "angstrom-nfc", "csl": { "type": "book", "title": "Alpha Recherches", "author": [{ "family": "\u00c5ngstr\u00f6m", "given": "Anders" }], "issued": { "date-parts": [[2020]] }}}
+    ],
+    "expectedOrder": ["angell", "angstrom-nfc", "angstrom-nfd", "anzalone"]
   }
 ]

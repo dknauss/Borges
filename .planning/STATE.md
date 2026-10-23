@@ -67,7 +67,7 @@ See "Immediate next-task priorities (2026-10-23)" in `ROADMAP.md` for the full
 ordering. In short:
 
 1. **CI, runtime, and Playground hygiene** (standing)
-2. **Sort-conformance backlog**: locale and suffix items deferred in the plan
+2. **Sort-conformance backlog**: test items closed 2026-10-23; year suffixes and ABNT articles await a product decision
 3. **WP-CLI read commands**: `list`, `export`, `validate` over the read callbacks
 4. **Reference-manager export corpus**: needs real exports from the owner
 5. **Phase 05 M4 bulk routes**: needs a rate-limiting design first

@@ -426,17 +426,14 @@ The owner chose this order on 2026-10-23:
       PHP deprecations, runtime smoke lanes, the `main-preview` Playground
       build, and the live resolver checks (DOI, PMID, PMCID, arXiv, ISBN,
       catalog, Internet Archive, Abilities)
-2. **Sort-conformance backlog** — next;
-   `docs/planning/sort-conformance-plan.md`
-    - Appendix C deferrals: per-locale article stripping (the sorter still
-      strips only English `a`/`an`/`the`), Unicode normalization (no NFC/NFD
-      step before comparison), and particle-surname and leading-article
-      fixtures still excluded in `src/lib/sorter.conformance.test.js`
-    - open REQ-F1 criteria: a test that deleting from a same-author/same-year
-      group re-suffixes the rest, and the 50-entry cache-miss benchmark
-      (≤500 ms)
-    - Chicago notes-bibliography and MLA 9 are still skipped in the
-      citeproc-js conformance run because the npm package throws on them
+2. **Sort-conformance backlog** — test and documentation items closed
+   2026-10-23 (`docs/planning/sort-conformance-plan.md`, Appendix C,
+   "Follow-up audit"). Two product decisions remain:
+    - year-suffix disambiguation: no bundled style emits 2020a/2020b, which
+      APA, Chicago author-date, and Harvard expect for same-author,
+      same-year works. Changes saved markup, so it needs a deprecation
+    - Portuguese leading articles for ABNT: needs the NBR 6023 filing rule
+      cited before any change
 3. **WP-CLI read commands** — after sort-conformance; see "WP-CLI commands"
    below
     - `wp borges list`, `export`, and `validate`, calling the same read
