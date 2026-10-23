@@ -27,7 +27,7 @@ final class CliCommandTest extends TestCase {
 
 		$content = '<!-- wp:bibliography-builder/bibliography {"cli":true} /-->';
 
-		// A draft with no logged-in user: the commands check no capabilities.
+		// A draft, and no current user (no --user): the commands check no capabilities.
 		bibliography_builder_test_set_post( self::POST_ID, 'draft', $content );
 		bibliography_builder_test_set_parsed_blocks(
 			$content,
@@ -204,5 +204,41 @@ final class CliCommandTest extends TestCase {
 
 	public function test_validate_an_unknown_block_is_an_error() {
 		$this->assertSame( 'error', $this->run_command( 'validate', array( (string) self::POST_ID ), array( 'index' => '7' ) )['exit'] );
+	}
+
+	public function test_a_user_without_access_is_refused_a_draft() {
+		bibliography_builder_test_set_current_user( 9 );
+
+		foreach ( array( 'list_', 'export', 'validate' ) as $method ) {
+			WP_CLI::$log = array();
+			$result      = $this->run_command( $method, array( (string) self::POST_ID ) );
+
+			$this->assertSame( 'error', $result['exit'], $method );
+			$this->assertStringStartsWith( 'Sorry, you are not allowed to', $result['log'][0][1], $method );
+		}
+	}
+
+	public function test_a_user_who_can_edit_the_post_runs_every_command() {
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_grant_cap( 7, 'edit_post', self::POST_ID );
+
+		$this->assertNull( $this->run_command( 'list_', array( (string) self::POST_ID ) )['exit'] );
+		$this->assertNull( $this->run_command( 'export', array( (string) self::POST_ID ) )['exit'] );
+		$this->assertNull( $this->run_command( 'validate', array( (string) self::POST_ID ), array( 'index' => '0' ) )['exit'] );
+	}
+
+	public function test_a_user_without_edit_rights_reads_a_published_post_but_cannot_validate_it() {
+		$post              = get_post( self::POST_ID );
+		$post->post_status = 'publish';
+		bibliography_builder_test_set_current_user( 9 );
+
+		$this->assertNull( $this->run_command( 'list_', array( (string) self::POST_ID ) )['exit'] );
+		$this->assertNull( $this->run_command( 'export', array( (string) self::POST_ID ) )['exit'] );
+
+		WP_CLI::$log = array();
+		$result      = $this->run_command( 'validate', array( (string) self::POST_ID ) );
+
+		$this->assertSame( 'error', $result['exit'] );
+		$this->assertSame( array( 'error', 'Sorry, you are not allowed to review this bibliography.' ), $result['log'][0] );
 	}
 }

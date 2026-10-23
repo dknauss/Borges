@@ -26,6 +26,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  *     # Run a check on every site in a network.
  *     $ wp site list --field=url | xargs -I % wp borges validate 42 --url=%
+ *
+ * ## PERMISSIONS
+ *
+ * Without --user, the commands read any post, as core's commands do. With
+ * --user, they apply that user's capabilities as the REST routes do: list and
+ * export need a published public post or edit_post, and validate needs
+ * edit_post.
  */
 final class Bibliography_Builder_CLI_Command {
 
@@ -168,7 +175,7 @@ final class Bibliography_Builder_CLI_Command {
 	 * @return void
 	 */
 	public function validate( $args, $assoc_args ) {
-		$post = bibliography_builder_cli_get_post( $args[0] );
+		$post = bibliography_builder_cli_get_post( $args[0], 'review' );
 
 		if ( is_wp_error( $post ) ) {
 			WP_CLI::error( $post );

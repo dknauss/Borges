@@ -7,9 +7,13 @@
  * and `bibliography_builder_get_validation_report()`), so their output matches.
  * None of them writes anything.
  *
- * Like core's own commands, these check no capabilities: anyone who can run
- * WP-CLI on the server can already read every post. Pass `--url=` to choose a
- * site on Multisite.
+ * Permissions: run as no one (no `--user`), the commands check no
+ * capabilities, like core's own commands: anyone who can run WP-CLI on the
+ * server can already read every post. Run with `--user=<user>`, they enforce
+ * that user's capabilities exactly as the REST routes and abilities do:
+ * `list` and `export` need the read route's access (a published, publicly
+ * viewable post, or `edit_post`), and `validate` needs `edit_post`, as the
+ * validate route does. Pass `--url=` to choose a site on Multisite.
  *
  * Loaded from the main plugin file only when WP-CLI is running. The command
  * class itself is in `class-bibliography-builder-cli-command.php`.
@@ -46,12 +50,16 @@ const BIBLIOGRAPHY_BUILDER_CLI_ISSUE_FIELDS = array(
 );
 
 /**
- * Load a post for a command, or an error naming the ID.
+ * Load a post for a command, or an error naming the ID or refusing access.
  *
- * @param mixed $post_id Post ID from the command line.
+ * With no current user (no `--user`), every post is readable. With one, the
+ * same checks as the REST routes and abilities apply.
+ *
+ * @param mixed  $post_id Post ID from the command line.
+ * @param string $access  `read` (list, export) or `review` (validate).
  * @return WP_Post|WP_Error
  */
-function bibliography_builder_cli_get_post( $post_id ) {
+function bibliography_builder_cli_get_post( $post_id, $access = 'read' ) {
 	/**
 	 * Get_post() returns a WP_Post or null for an ID with the default output.
 	 *
@@ -67,7 +75,24 @@ function bibliography_builder_cli_get_post( $post_id ) {
 		);
 	}
 
-	return $post;
+	if ( 0 === get_current_user_id() ) {
+		return $post;
+	}
+
+	if ( 'review' === $access ) {
+		$allowed = bibliography_builder_can_review_post( $post->ID );
+
+		return is_wp_error( $allowed ) ? $allowed : $post;
+	}
+
+	if ( bibliography_builder_can_read_post( $post ) ) {
+		return $post;
+	}
+
+	return new WP_Error(
+		'bibliography_builder_forbidden',
+		__( 'Sorry, you are not allowed to read this bibliography.', 'borges-bibliography-builder' )
+	);
 }
 
 /**

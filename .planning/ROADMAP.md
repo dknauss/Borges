@@ -510,8 +510,8 @@ passwords or an MCP client.
 
 Possible shape: a `wp borges` command group that calls the same callbacks as
 the read, review, and write routes, the way the write abilities already do, so
-permissions, validation, and output stay identical across REST, Abilities,
-and CLI.
+validation and output stay identical across REST, Abilities, and CLI, and
+permissions do too whenever a command runs as a user (`--user`).
 
 -   Read and review: `list` (bibliographies in a post), `export`
     (`--format=json|text|csl-json`), `validate`, `duplicates`, and
@@ -528,10 +528,12 @@ and CLI.
 -   No new settings or options, so `verify-metrics.sh` stays green.
 
 Status: `list`, `export`, and `validate` shipped (Unreleased, 2026-10-23;
-`docs/wp-cli.md`). They check no capabilities, like core's commands, rather
-than the REST permission callbacks: shell access already reads every post.
-`duplicates` and `preview` are small follow-ups. The writes and cross-post
-commands still wait for M4's design.
+`docs/wp-cli.md`). Permissions (Dan, 2026-10-23): without `--user` they
+check no capabilities, like core's commands, since shell access already reads
+the database; with `--user` they apply the same checks as the REST routes and
+abilities. Write commands will check `edit_post` and the write-routes filter
+either way. `duplicates` and `preview` are small follow-ups. The writes and
+cross-post commands still wait for M4's design.
 
 ### Translation and language-pack backlog
 

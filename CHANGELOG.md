@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **WP-CLI commands.** `wp borges list <post-id>` lists a post's bibliographies, `wp borges export <post-id>` prints one as CSL-JSON, plain text, or JSON, and `wp borges validate <post-id>` reports errors and warnings for every entry and exits 1 when there are errors. They read the same data as the REST routes and abilities and change nothing. Use `--url=` to pick a site on Multisite. See `docs/wp-cli.md`.
+- **WP-CLI commands.** `wp borges list <post-id>` lists a post's bibliographies, `wp borges export <post-id>` prints one as CSL-JSON, plain text, or JSON, and `wp borges validate <post-id>` reports errors and warnings for every entry and exits 1 when there are errors. They read the same data as the REST routes and abilities and change nothing. Run with no `--user`, they read any post, as core's commands do; run with `--user=`, they apply that user's capabilities exactly as the REST routes do (`validate` needs `edit_post`). Use `--url=` to pick a site on Multisite. See `docs/wp-cli.md`.
 
 ### Fixed
 

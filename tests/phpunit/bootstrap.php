@@ -327,6 +327,10 @@ function is_post_type_viewable( $post_type ) {
 	return $GLOBALS['bibliography_builder_test_viewable_post_types'][ $post_type ];
 }
 
+function get_current_user_id() {
+	return (int) $GLOBALS['bibliography_builder_test_current_user_id'];
+}
+
 function current_user_can( $capability, $object_id = 0 ) {
 	$user_id = $GLOBALS['bibliography_builder_test_current_user_id'];
 	return ! empty( $GLOBALS['bibliography_builder_test_user_caps'][ $user_id ][ $capability ][ $object_id ] );

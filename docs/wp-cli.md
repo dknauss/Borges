@@ -2,7 +2,14 @@
 
 Borges adds a read-only `wp borges` command group. It calls the same read model as the REST routes and abilities, so `list`, `export`, and `validate` print the same data as `GET /posts/{id}/bibliographies`, `GET …/bibliographies/{ref}?format=…`, and `GET …/{ref}/validate`. Nothing is written.
 
-The commands check no capabilities, as core's own commands don't: anyone who can run WP-CLI on the server can already read every post, drafts included. On Multisite, pick a site with `--url=`.
+## Permissions
+
+- **Without `--user`**, the commands check no capabilities, as core's own commands don't: anyone who can run WP-CLI on the server can already read the database, drafts included, with `wp db` or `wp eval`. This is the usual way to run them from cron or a maintenance script.
+- **With `--user=<id|login|email>`**, they apply that user's capabilities exactly as the REST routes and abilities do. `list` and `export` need what the read route needs: a published post of a publicly viewable type, or `edit_post` on the post. `validate` needs `edit_post`, like the validate route. A refused command prints "Sorry, you are not allowed to …" and exits 1. Use this when a script should act only on what one person may see.
+
+All three commands are read-only. When write commands come, they will check `edit_post` and the write-routes filter whether or not `--user` is given.
+
+On Multisite, pick a site with `--url=`.
 
 The code is in `includes/cli.php` (helpers that return data) and `includes/class-bibliography-builder-cli-command.php` (the command class, which only prints). The main plugin file loads them only when WP-CLI is running.
 
@@ -51,4 +58,4 @@ Checking every post on a site, and the write commands, wait for the bulk-route d
 
 ## Tests
 
-`tests/phpunit/CliCommandTest.php` runs the command class against a recording WP-CLI stub (`tests/phpunit/stubs/wp-cli.php`, which Psalm also reads). The runtime matrix (`scripts/runtime-matrix/smoke.sh`) runs the real commands with WP-CLI on every PHP and WordPress version it covers.
+`tests/phpunit/CliCommandTest.php` runs the command class against a recording WP-CLI stub (`tests/phpunit/stubs/wp-cli.php`, which Psalm also reads), both with no user and with users who have and lack access. The runtime matrix (`scripts/runtime-matrix/smoke.sh`) runs the real commands with WP-CLI on every PHP and WordPress version it covers.
