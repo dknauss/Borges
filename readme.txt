@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.12.0
+Stable tag: 1.13.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -195,6 +195,11 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 
 == Changelog ==
 
+= 1.13.0 =
+* **Added:** richer structured data for search engines and AI crawlers. As a page renders, each cited work in the bibliography's JSON-LD gains an `@id`, its DOI, PMID, PMCID, arXiv, and ISBN identifiers with `sameAs` links, journal issue and volume, pages, editors and translators, and a closer schema.org type, and each entry links to its place on the page. Published posts get this without being edited. The `bibliography_builder_enrich_json_ld` filter turns it off.
+* **Added:** with Yoast SEO or Rank Math, the page's Article lists the cited works under schema.org `citation`. The `bibliography_builder_link_page_citations` filter turns it off.
+* **Added:** the `bibliography_builder_output_defaults` filter sets which outputs (JSON-LD, COinS, CSL-JSON, Cite / Export) a newly inserted bibliography starts with. Existing blocks keep their settings, and Borges still stores no settings.
+
 = 1.12.0 =
 * **Added:** write abilities for AI agents and automation on WordPress 6.9+ (add, update, delete, and reorder citations; change a bibliography's settings or style). They exist only when a site turns on the write routes with the `bibliography_builder_enable_write_routes` filter, and follow the same rules: `edit_post` on the post and a preview unless asked to save.
 * **Fixed:** bibliographies in newsletters and feeds. Posts sent by email (Jetpack and WordPress.com newsletters, MailPoet, WooCommerce, Newspack) or read in a feed reader no longer show every reference in italics or a broken Cite / Export panel. Posts saved earlier are cleaned up as they are sent, and switch to the new markup the next time they are saved.
@@ -379,6 +384,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.13.0 =
+Richer JSON-LD for each cited work, a schema.org `citation` link from the post with Yoast SEO or Rank Math, and a filter for site-wide output defaults. Published posts are enriched as they render. No configuration changes required.
 
 = 1.12.0 =
 Bibliographies read correctly in newsletters and feeds, names with particles sort per style, and reformatting after an edit is much faster. Adds opt-in write abilities for WordPress 6.9+. No configuration changes required.

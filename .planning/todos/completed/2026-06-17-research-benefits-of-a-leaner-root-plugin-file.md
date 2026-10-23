@@ -63,3 +63,11 @@ Original brief: produce a short research memo covering:
 Deliverable: a recommendation (do it / not worth it) and, if recommended, a
 phased plan. Prerequisite cleanup (remove the dead `includes/pmid.php`) is
 done (#39).
+
+## Resolution (2026-10-23)
+
+Answered by `docs/planning/refactor-and-standards-memo.md` (2026-10-14), which
+recommended the split. Its Phase B moved the sanitizer, formatter, block data,
+and read routes into `includes/` (#160, #161, #162, #164), guarded by the
+function-inventory test, and the root file went from 1,607 to about 800 lines.
+Shipped in 1.12.0.

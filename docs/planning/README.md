@@ -27,8 +27,8 @@ specifications that supplement the authoritative `SPEC.md` at the repo root.
 
 | Document                                               | Status                                                                                                                                                                                       | Owner |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| [sort-conformance-plan.md](./sort-conformance-plan.md) | Sprints 1–4 shipped in 1.2.0. Open: Appendix C deferrals (per-locale article stripping, Unicode normalization, excluded conformance fixtures) and two REQ-F1 criteria. Sprint 5 and Epic-OSCOLA unscheduled | TBD   |
-| [refactor-and-standards-memo.md](./refactor-and-standards-memo.md) | Drafted 2026-10-14: answers the leaner-root-file todo; recommends a root-file split, shared JS/PHP style data, stepwise Psalm tightening, and a `checkJs` pilot. Awaiting the owner's decision | TBD |
+| [sort-conformance-plan.md](./sort-conformance-plan.md) | Sprints 1–4 shipped in 1.2.0. Next in the roadmap's priorities (2026-10-23). Open: Appendix C deferrals (per-locale article stripping, Unicode normalization, excluded conformance fixtures) and two REQ-F1 criteria. Sprint 5 and Epic-OSCOLA unscheduled | TBD   |
+| [refactor-and-standards-memo.md](./refactor-and-standards-memo.md) | Done: Phases A–E merged and shipped in 1.12.0 (root-file split, shared JS/PHP style data, Psalm level 2, `checkJs`, large-file splits); answers the leaner-root-file todo | TBD |
 
 ## Archived plans
 
