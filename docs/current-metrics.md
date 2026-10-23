@@ -11,8 +11,8 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **808** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **11797** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **813** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **12231** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
 | JS source (`src/`, excl. `*.test.js`) | **11,682** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **3,156 bytes** | `npm run build` then `wc -c < build/view.js` |
 
@@ -50,7 +50,8 @@ filter that runs only in the editor;
 `includes/abilities.php`, which only defines functions and adds two Abilities API hooks, which
 run only when WordPress initializes its Abilities registry and do no I/O; and
 `includes/write-abilities.php`, which only defines functions and adds one Abilities API hook that
-registers nothing unless the write routes are enabled. The CSL formatting engine under `vendor/` runs
+registers nothing unless the write routes are enabled. `includes/cli.php` and
+`includes/class-bibliography-builder-cli-command.php` load only under WP-CLI, never on a web request. The CSL formatting engine under `vendor/` runs
 **only** for editor-time REST calls. `scripts/*.php` are dev tooling and are not packaged.
 
 ## Storage footprint (installed)

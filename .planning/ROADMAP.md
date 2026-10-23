@@ -433,11 +433,12 @@ The owner chose this order on 2026-10-23:
    (Unreleased). One product decision remains:
     - Portuguese leading articles for ABNT: needs the NBR 6023 filing rule
       cited before any change
-3. **WP-CLI read commands** — after sort-conformance; see "WP-CLI commands"
-   below
+3. **WP-CLI read commands** — built 2026-10-23 (`docs/wp-cli.md`); see
+   "WP-CLI commands" below
     - `wp borges list`, `export`, and `validate`, calling the same read
-      callbacks as the REST routes and abilities. Write and cross-post
-      commands wait for the Phase 05 M4 design
+      callbacks as the REST routes and abilities. `duplicates` and `preview`
+      can follow the same pattern; write and cross-post commands wait for
+      the Phase 05 M4 design
 4. **Reference-manager export corpus** — pending todo
    `2026-06-23-test-reference-manager-exports.md`; **needs the owner**
     - a hand-authored corpus landed in #91
@@ -526,8 +527,11 @@ and CLI.
     first.
 -   No new settings or options, so `verify-metrics.sh` stays green.
 
-Status: consider only. Revisit after the write abilities ship and M4's design
-is written; weigh whether the CLI should land before or after bulk routes.
+Status: `list`, `export`, and `validate` shipped (Unreleased, 2026-10-23;
+`docs/wp-cli.md`). They check no capabilities, like core's commands, rather
+than the REST permission callbacks: shell access already reads every post.
+`duplicates` and `preview` are small follow-ups. The writes and cross-post
+commands still wait for M4's design.
 
 ### Translation and language-pack backlog
 
