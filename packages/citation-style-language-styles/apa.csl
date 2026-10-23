@@ -59,16 +59,24 @@
       <if variable="issued">
         <choose>
           <if type="article-magazine article-newspaper webpage post post-weblog" match="any">
-            <date variable="issued">
-              <date-part name="year"/>
-              <date-part name="month" prefix=", "/>
-              <date-part name="day" prefix=" "/>
-            </date>
+            <group>
+              <date variable="issued">
+                <date-part name="year"/>
+              </date>
+              <text variable="year-suffix"/>
+              <date variable="issued">
+                <date-part name="month" prefix=", "/>
+                <date-part name="day" prefix=" "/>
+              </date>
+            </group>
           </if>
           <else>
-            <date variable="issued">
-              <date-part name="year"/>
-            </date>
+            <group>
+              <date variable="issued">
+                <date-part name="year"/>
+              </date>
+              <text variable="year-suffix"/>
+            </group>
           </else>
         </choose>
       </if>

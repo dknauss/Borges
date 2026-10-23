@@ -53,11 +53,13 @@ Follow these conventions. Each one works around citeproc-php 2.7 behavior (see `
 4. **Wrap the children of a nested `<choose>` in a delimited `<group>`.** A `<choose>` inside another branch joins its children with no delimiter ("15.Available").
 5. **Omit `page-range-format` for en-dash styles.** Any `page-range-format` makes citeproc-php join the range with a hyphen, while none gives a full en-dash range ("97–111"). Vancouver (`minimal`) and ABNT (`expanded`) set one because they want hyphens.
 6. **Use explicit `<date-part>` children.** Never use `form="text"` dates. See the "localized dates" entry.
-7. **Keep sort keys in separate `sort-*` macros.** The `<sort>` blocks exist for the PHP/JS sort-coordination tests (`tests/phpunit/SortCoordinationTest.php`). Rendering a display macro as a sort key corrupts its name state, so the "and" disappears.
+7. **Put `<text variable="year-suffix"/>` right after the year, in a `<group>` with its `<date>`,** in every date macro a style with `"yearSuffix": true` in `includes/styles.json` prints. Split a date that continues past the year (APA's "2020a, March 3") into a year-only `<date>`, the suffix, and a second `<date>` for the rest. `StyleDataTest` checks that only the flagged styles have the slot.
+8. **Keep sort keys in separate `sort-*` macros.** The `<sort>` blocks exist for the PHP/JS sort-coordination tests (`tests/phpunit/SortCoordinationTest.php`). Rendering a display macro as a sort key corrupts its name state, so the "and" disappears.
 
 The formatter (`bibliography_builder_format_csl_items()`) also adapts input and output:
 
 - **Per-entry rendering.** Each entry is rendered with its own formatter, because citeproc-php keeps name state across entries: once one entry is cut to "et al.", later entries lose their "and".
+- **Year suffixes.** citeproc-php never disambiguates, and per-entry rendering would hide the other entries from it anyway, so for the styles flagged `yearSuffix` (APA, Chicago author-date, Harvard, ABNT) `bibliography_builder_assign_year_suffixes()` sets CSL's `year-suffix` variable: works with the same primary contributors and the same year get a, b, c, … in the order save() lists them (the save port's comparator). Undated works get none. The write routes format only the entries they add or edit, so `bibliography_builder_write_refresh_year_suffixes()` also reformats the stored siblings in each group a write touched (including the group an edited work left).
 - **`bibliography_builder_prepare_csl_for_formatter()`**:
   - maps `{ "literal": … }` names to family-only names, because citeproc-php drops names without a family part;
   - derives `page-first`, for OSCOLA.

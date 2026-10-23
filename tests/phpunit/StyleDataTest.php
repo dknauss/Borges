@@ -22,6 +22,7 @@ final class StyleDataTest extends TestCase {
 		'demoteNonDroppingParticle' => array( 'display-and-sort', 'sort-only', 'never' ),
 		'listType'                  => array( 'ul', 'ol' ),
 		'family'                    => array( 'notes', 'author-date', 'numeric' ),
+		'yearSuffix'                => null,
 		'locale'                    => null,
 		'inlineCitationMode'        => array( 'note', 'parenthetical', 'numeric' ),
 		'headingPlaceholder'        => null,
@@ -39,9 +40,10 @@ final class StyleDataTest extends TestCase {
 		foreach ( $styles as $key => $style ) {
 			$this->assertSame( array_keys( self::FIELDS ), array_keys( $style ), $key );
 			$this->assertIsBool( $style['enabled'], $key );
+			$this->assertIsBool( $style['yearSuffix'], $key );
 
 			foreach ( self::FIELDS as $field => $allowed ) {
-				if ( 'enabled' === $field ) {
+				if ( 'enabled' === $field || 'yearSuffix' === $field ) {
 					continue;
 				}
 
@@ -82,6 +84,28 @@ final class StyleDataTest extends TestCase {
 		}
 	}
 
+	/**
+	 * A style prints year suffixes only where styles.json turns them on: its
+	 * CSL template has the `year-suffix` slot after the year, and the others
+	 * have none, so a stray letter can never reach a style that does not use it.
+	 */
+	public function test_year_suffix_flag_matches_the_templates() {
+		foreach ( bibliography_builder_get_style_data()['styles'] as $key => $style ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			$template = file_get_contents( self::root() . '/packages/citation-style-language-styles/' . $style['cslTemplate'] . '.csl' );
+
+			$this->assertSame(
+				$style['yearSuffix'],
+				false !== strpos( (string) $template, 'variable="year-suffix"' ),
+				$key
+			);
+
+			if ( $style['yearSuffix'] ) {
+				$this->assertSame( 'author-date', $style['family'], $key );
+			}
+		}
+	}
+
 	public function test_php_readers_return_the_json() {
 		$styles = bibliography_builder_get_style_data()['styles'];
 
@@ -90,9 +114,10 @@ final class StyleDataTest extends TestCase {
 		foreach ( $styles as $key => $style ) {
 			$this->assertSame(
 				array(
-					'template' => $style['cslTemplate'],
-					'locale'   => $style['locale'],
-					'family'   => $style['family'],
+					'template'   => $style['cslTemplate'],
+					'locale'     => $style['locale'],
+					'family'     => $style['family'],
+					'yearSuffix' => $style['yearSuffix'],
 				),
 				bibliography_builder_get_formatter_style_definition( $key ),
 				$key

@@ -15,16 +15,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Formatter style definitions, keyed by style key, from `styles.json`.
  *
- * @return array<string, array{template: string, locale: string, family: string}>
+ * @return array<string, array{template: string, locale: string, family: string, yearSuffix: bool}>
  */
 function bibliography_builder_get_formatter_style_definitions() {
 	$definitions = array();
 
 	foreach ( bibliography_builder_get_style_data()['styles'] as $key => $style ) {
 		$definitions[ $key ] = array(
-			'template' => (string) $style['cslTemplate'],
-			'locale'   => (string) $style['locale'],
-			'family'   => (string) $style['family'],
+			'template'   => (string) $style['cslTemplate'],
+			'locale'     => (string) $style['locale'],
+			'family'     => (string) $style['family'],
+			'yearSuffix' => (bool) $style['yearSuffix'],
 		);
 	}
 
@@ -526,6 +527,115 @@ function bibliography_builder_prepare_csl_for_formatter( $item, $demote_particle
 }
 
 /**
+ * The year-suffix letters for a position in a group: a–z, then aa, ab, ….
+ *
+ * @param int $position Zero-based position in the same-author, same-year group.
+ * @return string
+ */
+function bibliography_builder_year_suffix_letters( $position ) {
+	$letters = '';
+	$number  = $position + 1;
+
+	while ( $number > 0 ) {
+		--$number;
+		$letters = chr( 97 + ( $number % 26 ) ) . $letters;
+		$number  = intdiv( $number, 26 );
+	}
+
+	return $letters;
+}
+
+/**
+ * The key that groups works for year suffixes: every primary contributor
+ * (author, else editor, as the sorter compares them) and the year.
+ *
+ * @param mixed $csl    CSL-JSON item.
+ * @param bool  $demote Whether the style demotes name particles for sorting.
+ * @return string|null Null for an undated work or one with no contributor.
+ */
+function bibliography_builder_year_suffix_group_key( $csl, $demote ) {
+	$csl          = is_array( $csl ) ? $csl : array();
+	$contributors = bibliography_builder_sort_primary_contributors( $csl );
+	$year         = bibliography_builder_sort_year( $csl );
+
+	if ( null === $contributors || ! is_finite( $year ) ) {
+		return null;
+	}
+
+	$names = array_map(
+		static fn( $contributor ): string => bibliography_builder_sort_contributor_key( $contributor, $demote ),
+		$contributors
+	);
+
+	return implode( "\n", $names ) . "\n" . (string) $year;
+}
+
+/**
+ * Give works by the same authors in the same year their year suffixes.
+ *
+ * Author-date styles tell same-author, same-year works apart with a letter
+ * after the year: "Jones, T. (2020a)", "Jones, T. (2020b)". citeproc-php
+ * never assigns these, and each entry renders on its own anyway (see
+ * bibliography_builder_render_csl_items()), so the formatter sets CSL's
+ * `year-suffix` variable itself and the styles print it after the year.
+ *
+ * Letters follow the order save() lists the entries in: the items are sorted
+ * with the same comparator as bibliography_builder_sort_citations_for_save(),
+ * which the coordination fixtures hold equal to the JS sorter, so the request
+ * order does not matter and "a" always comes first on the page. Works match
+ * when every primary contributor matches (author, else editor, compared as
+ * the sorter compares them) and the year matches. Undated works and works
+ * with no contributor get no suffix. A `year-suffix` sent with an item is
+ * always replaced, so a stale letter cannot survive a reformat.
+ *
+ * @param array<int, mixed> $csl_items CSL-JSON items, in request order.
+ * @param string            $style_key Citation style key.
+ * @return array<int, mixed> The items in request order, with `year-suffix` set where it applies.
+ */
+function bibliography_builder_assign_year_suffixes( $csl_items, $style_key ) {
+	$items = array_values( $csl_items );
+
+	foreach ( $items as $index => $item ) {
+		if ( is_array( $item ) ) {
+			unset( $items[ $index ]['year-suffix'] );
+		}
+	}
+
+	$records = array();
+
+	foreach ( $items as $index => $item ) {
+		$records[] = array(
+			'csl'   => is_array( $item ) ? $item : array(),
+			'index' => $index,
+		);
+	}
+
+	$style  = bibliography_builder_get_save_style_definition( $style_key );
+	$demote = bibliography_builder_demotes_particle_for_sort( $style['demoteNonDroppingParticle'] );
+	$groups = array();
+
+	foreach ( bibliography_builder_sort_citations_for_save( $records, $style_key ) as $record ) {
+		$key = bibliography_builder_year_suffix_group_key( $record['csl'], $demote );
+
+		if ( null !== $key ) {
+			$groups[ $key ][] = $record['index'];
+		}
+	}
+
+	foreach ( $groups as $indexes ) {
+		if ( count( $indexes ) < 2 ) {
+			continue;
+		}
+
+		foreach ( $indexes as $position => $index ) {
+			$items[ $index ]['year-suffix'] = bibliography_builder_year_suffix_letters( $position );
+		}
+	}
+
+	return $items;
+}
+
+/**
  * Format CSL-JSON items as plain-text bibliography entries.
  *
  * @param array  $csl_items CSL-JSON objects.
@@ -533,7 +643,12 @@ function bibliography_builder_prepare_csl_for_formatter( $item, $demote_particle
  * @return array|WP_Error Array of formatted text strings in input order.
  */
 function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
-	$style     = bibliography_builder_get_formatter_style_definition( sanitize_key( $style_key ) );
+	$style = bibliography_builder_get_formatter_style_definition( sanitize_key( $style_key ) );
+
+	if ( $style['yearSuffix'] ) {
+		$csl_items = bibliography_builder_assign_year_suffixes( $csl_items, sanitize_key( $style_key ) );
+	}
+
 	$cache_key = bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style );
 	$cached    = bibliography_builder_cache_get( $cache_key, 'bibliography_builder_formatter' );
 

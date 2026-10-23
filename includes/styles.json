@@ -35,6 +35,7 @@
 			"demoteNonDroppingParticle": "display-and-sort",
 			"listType": "ul",
 			"family": "notes",
+			"yearSuffix": false,
 			"locale": "en-US",
 			"inlineCitationMode": "note",
 			"headingPlaceholder": "Bibliography"
@@ -47,6 +48,7 @@
 			"demoteNonDroppingParticle": "display-and-sort",
 			"listType": "ul",
 			"family": "author-date",
+			"yearSuffix": true,
 			"locale": "en-US",
 			"inlineCitationMode": "parenthetical",
 			"headingPlaceholder": "References"
@@ -59,6 +61,7 @@
 			"demoteNonDroppingParticle": "never",
 			"listType": "ul",
 			"family": "author-date",
+			"yearSuffix": true,
 			"locale": "en-US",
 			"inlineCitationMode": "parenthetical",
 			"headingPlaceholder": "References"
@@ -71,6 +74,7 @@
 			"demoteNonDroppingParticle": "never",
 			"listType": "ul",
 			"family": "author-date",
+			"yearSuffix": false,
 			"locale": "en-US",
 			"inlineCitationMode": "parenthetical",
 			"headingPlaceholder": "Works Cited"
@@ -83,6 +87,7 @@
 			"demoteNonDroppingParticle": "never",
 			"listType": "ul",
 			"family": "author-date",
+			"yearSuffix": true,
 			"locale": "en-GB",
 			"inlineCitationMode": "parenthetical",
 			"headingPlaceholder": "References"
@@ -95,6 +100,7 @@
 			"demoteNonDroppingParticle": "never",
 			"listType": "ol",
 			"family": "numeric",
+			"yearSuffix": false,
 			"locale": "en-US",
 			"inlineCitationMode": "numeric",
 			"headingPlaceholder": "References"
@@ -107,6 +113,7 @@
 			"demoteNonDroppingParticle": "sort-only",
 			"listType": "ol",
 			"family": "numeric",
+			"yearSuffix": false,
 			"locale": "en-US",
 			"inlineCitationMode": "numeric",
 			"headingPlaceholder": "References"
@@ -119,6 +126,7 @@
 			"demoteNonDroppingParticle": "never",
 			"listType": "ul",
 			"family": "notes",
+			"yearSuffix": false,
 			"locale": "en-GB",
 			"inlineCitationMode": "note",
 			"headingPlaceholder": "Bibliography"
@@ -131,6 +139,7 @@
 			"demoteNonDroppingParticle": "never",
 			"listType": "ul",
 			"family": "author-date",
+			"yearSuffix": true,
 			"locale": "pt-BR",
 			"inlineCitationMode": "parenthetical",
 			"headingPlaceholder": "Referências"
