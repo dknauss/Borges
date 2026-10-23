@@ -148,7 +148,9 @@ final class CslStyleGoldenTest extends TestCase {
 				'LEE, Kim. A Page. Site, 2 abr. 2024. DOI: https://doi.org/10.5555/web.1.',
 				'LEE, Kim. A Page. Site, 2 abr. 2024. Disponível em: https://example.org/a. Acesso em: 1 maio 2024.',
 			),
-			$text( array( $with_doi, $webpage ), 'abnt' )
+			// One call each: in one bibliography, the same author and year
+			// would get the year suffixes 2024a and 2024b.
+			array_merge( $text( array( $with_doi ), 'abnt' ), $text( array( $webpage ), 'abnt' ) )
 		);
 	}
 

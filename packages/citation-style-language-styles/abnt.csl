@@ -80,9 +80,12 @@
   <macro name="year">
     <choose>
       <if variable="issued">
-        <date variable="issued">
-          <date-part name="year"/>
-        </date>
+        <group>
+          <date variable="issued">
+            <date-part name="year"/>
+          </date>
+          <text variable="year-suffix"/>
+        </group>
       </if>
       <else>
         <text term="no date" form="short" prefix="[" suffix="]"/>
@@ -93,10 +96,13 @@
   <macro name="month-year">
     <choose>
       <if variable="issued">
-        <date variable="issued">
-          <date-part name="month" form="short" suffix=" "/>
-          <date-part name="year"/>
-        </date>
+        <group>
+          <date variable="issued">
+            <date-part name="month" form="short" suffix=" "/>
+            <date-part name="year"/>
+          </date>
+          <text variable="year-suffix"/>
+        </group>
       </if>
       <else>
         <text term="no date" form="short" prefix="[" suffix="]"/>
@@ -107,11 +113,14 @@
   <macro name="full-date">
     <choose>
       <if variable="issued">
-        <date variable="issued">
-          <date-part name="day" suffix=" "/>
-          <date-part name="month" form="short" suffix=" "/>
-          <date-part name="year"/>
-        </date>
+        <group>
+          <date variable="issued">
+            <date-part name="day" suffix=" "/>
+            <date-part name="month" form="short" suffix=" "/>
+            <date-part name="year"/>
+          </date>
+          <text variable="year-suffix"/>
+        </group>
       </if>
       <else>
         <text term="no date" form="short" prefix="[" suffix="]"/>
