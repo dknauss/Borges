@@ -546,6 +546,31 @@ function bibliography_builder_year_suffix_letters( $position ) {
 }
 
 /**
+ * The key that groups works for year suffixes: every primary contributor
+ * (author, else editor, as the sorter compares them) and the year.
+ *
+ * @param mixed $csl    CSL-JSON item.
+ * @param bool  $demote Whether the style demotes name particles for sorting.
+ * @return string|null Null for an undated work or one with no contributor.
+ */
+function bibliography_builder_year_suffix_group_key( $csl, $demote ) {
+	$csl          = is_array( $csl ) ? $csl : array();
+	$contributors = bibliography_builder_sort_primary_contributors( $csl );
+	$year         = bibliography_builder_sort_year( $csl );
+
+	if ( null === $contributors || ! is_finite( $year ) ) {
+		return null;
+	}
+
+	$names = array_map(
+		static fn( $contributor ): string => bibliography_builder_sort_contributor_key( $contributor, $demote ),
+		$contributors
+	);
+
+	return implode( "\n", $names ) . "\n" . (string) $year;
+}
+
+/**
  * Give works by the same authors in the same year their year suffixes.
  *
  * Author-date styles tell same-author, same-year works apart with a letter
@@ -590,19 +615,11 @@ function bibliography_builder_assign_year_suffixes( $csl_items, $style_key ) {
 	$groups = array();
 
 	foreach ( bibliography_builder_sort_citations_for_save( $records, $style_key ) as $record ) {
-		$contributors = bibliography_builder_sort_primary_contributors( $record['csl'] );
-		$year         = bibliography_builder_sort_year( $record['csl'] );
+		$key = bibliography_builder_year_suffix_group_key( $record['csl'], $demote );
 
-		if ( null === $contributors || ! is_finite( $year ) ) {
-			continue;
+		if ( null !== $key ) {
+			$groups[ $key ][] = $record['index'];
 		}
-
-		$names = array_map(
-			static fn( $contributor ): string => bibliography_builder_sort_contributor_key( $contributor, $demote ),
-			$contributors
-		);
-
-		$groups[ implode( "\n", $names ) . "\n" . (string) $year ][] = $record['index'];
 	}
 
 	foreach ( $groups as $indexes ) {

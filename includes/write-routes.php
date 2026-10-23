@@ -264,6 +264,71 @@ function bibliography_builder_write_prepare_entries( $items, $style_key ) {
 }
 
 /**
+ * Refresh the year suffixes a change shifts (2020a, 2020b).
+ *
+ * The routes format only the entries they add or edit, but in a style that
+ * letters same-author, same-year works, adding, editing, or removing one
+ * entry can change its siblings' letters. This reformats the whole list, as
+ * the editor does (the per-entry cache answers for unchanged entries), and
+ * takes the new text only for entries in a group a touched item belongs to,
+ * before or after the change; every other entry keeps its stored text.
+ *
+ * @param array  $citations Citations (arrays), after the change.
+ * @param string $style_key Citation style.
+ * @param array  $touched   CSL items the change added, removed, or edited (old and new).
+ * @return array|WP_Error Citations, with refreshed `formattedText` where a letter may have moved.
+ */
+function bibliography_builder_write_refresh_year_suffixes( $citations, $style_key, $touched ) {
+	$style = bibliography_builder_get_formatter_style_definition( $style_key );
+
+	if ( ! $style['yearSuffix'] || array() === $citations ) {
+		return $citations;
+	}
+
+	$demote = bibliography_builder_demotes_particle_for_sort(
+		bibliography_builder_get_save_style_definition( $style_key )['demoteNonDroppingParticle']
+	);
+	$keys   = array();
+
+	foreach ( $touched as $csl ) {
+		$key = bibliography_builder_year_suffix_group_key( $csl, $demote );
+
+		if ( null !== $key ) {
+			$keys[ $key ] = true;
+		}
+	}
+
+	$affected = array();
+
+	foreach ( $citations as $position => $citation ) {
+		$key = bibliography_builder_year_suffix_group_key( bibliography_builder_citation_csl( $citation ), $demote );
+
+		if ( null !== $key && isset( $keys[ $key ] ) ) {
+			$affected[] = $position;
+		}
+	}
+
+	if ( array() === $affected ) {
+		return $citations;
+	}
+
+	$formatted = bibliography_builder_format_csl_items(
+		array_map( 'bibliography_builder_citation_csl', $citations ),
+		$style_key
+	);
+
+	if ( is_wp_error( $formatted ) ) {
+		return $formatted;
+	}
+
+	foreach ( $affected as $position ) {
+		$citations[ $position ]['formattedText'] = $formatted[ $position ];
+	}
+
+	return $citations;
+}
+
+/**
  * A new citation ID, unique within the bibliography.
  *
  * @param array $citations Existing citations.
@@ -488,6 +553,16 @@ function bibliography_builder_rest_add_citations( WP_REST_Request $request ) {
 				);
 			}
 
+			$citations = bibliography_builder_write_refresh_year_suffixes(
+				$citations,
+				$style,
+				array_column( array_slice( $citations, count( $citations ) - count( $added ) ), 'csl' )
+			);
+
+			if ( is_wp_error( $citations ) ) {
+				return $citations;
+			}
+
 			$attrs['citations'] = bibliography_builder_sort_citations_for_save( $citations, $style );
 
 			return array(
@@ -583,6 +658,15 @@ function bibliography_builder_rest_update_citation( WP_REST_Request $request ) {
 				$citation['exportBiblatex']
 			);
 			$citations[ $position ] = array_merge( $citation, $entries[0] );
+			$citations              = bibliography_builder_write_refresh_year_suffixes(
+				$citations,
+				$style,
+				array( bibliography_builder_citation_csl( $citation ), $entries[0]['csl'] )
+			);
+
+			if ( is_wp_error( $citations ) ) {
+				return $citations;
+			}
 
 			$attrs['citations'] = bibliography_builder_sort_citations_for_save( $citations, $style );
 
@@ -622,7 +706,16 @@ function bibliography_builder_rest_delete_citation( WP_REST_Request $request ) {
 				return $position;
 			}
 
-			$removed = array_splice( $citations, $position, 1 );
+			$removed   = array_splice( $citations, $position, 1 );
+			$citations = bibliography_builder_write_refresh_year_suffixes(
+				$citations,
+				bibliography_builder_write_style( $attrs ),
+				array( bibliography_builder_citation_csl( $removed[0] ) )
+			);
+
+			if ( is_wp_error( $citations ) ) {
+				return $citations;
+			}
 
 			$attrs['citations'] = $citations;
 
