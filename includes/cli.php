@@ -52,6 +52,11 @@ const BIBLIOGRAPHY_BUILDER_CLI_ISSUE_FIELDS = array(
  * @return WP_Post|WP_Error
  */
 function bibliography_builder_cli_get_post( $post_id ) {
+	/**
+	 * Get_post() returns a WP_Post or null for an ID with the default output.
+	 *
+	 * @var WP_Post|null $post
+	 */
 	$post = ctype_digit( (string) $post_id ) && 0 < (int) $post_id ? get_post( (int) $post_id ) : null;
 
 	if ( ! is_object( $post ) ) {

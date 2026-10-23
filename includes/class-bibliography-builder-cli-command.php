@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *     # Run a check on every site in a network.
  *     $ wp site list --field=url | xargs -I % wp borges validate 42 --url=%
  */
-class Bibliography_Builder_CLI_Command {
+final class Bibliography_Builder_CLI_Command {
 
 	/**
 	 * Lists the bibliography blocks in a post.
