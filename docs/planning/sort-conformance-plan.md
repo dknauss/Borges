@@ -9,8 +9,8 @@ It is structured as a sequence of self-contained requirement tickets (REQ-*) gro
 - **Drafted:** 2026-05-07
 - **Revised:** 2026-05-07 — incorporated Codex review feedback (see revision history at bottom)
 - **Updated:** 2026-05-09
-- **Reviewed:** 2026-10-13
-- **State:** Sprints 1–4 shipped in 1.2.0 (three-family dispatch, numeric reorder controls, APA single-author-first, style-aware headings, link aria-labels, the bibliography-context formatter cache, and the snapshot, cross-runner, and PHP↔JS coordination suites). Still open: the Appendix C deferrals (per-locale article stripping, Unicode normalization, and the particle-surname and leading-article fixtures excluded in `src/lib/sorter.conformance.test.js`), two REQ-F1 acceptance items (a delete-re-suffixes test and the 50-entry ≤500 ms cache-miss benchmark), and Chicago notes-bibliography and MLA 9, which the citeproc-js conformance run still skips. Sprint 5 and Epic-OSCOLA are unscheduled. `.planning/ROADMAP.md` tracks this backlog.
+- **Reviewed:** 2026-10-13, 2026-10-23
+- **State:** Sprints 1–4 shipped in 1.2.0 (three-family dispatch, numeric reorder controls, APA single-author-first, style-aware headings, link aria-labels, the bibliography-context formatter cache, and the snapshot, cross-runner, and PHP↔JS coordination suites). The 2026-10-23 follow-up (Appendix C, "Follow-up audit") closed the remaining test and documentation items: Unicode normalization is pinned by a coordination case, the PHP `save()` port's sort is now checked against every coordination case, Chicago notes-bibliography and MLA 9 run in the citeproc-js conformance suite, and the two REQ-F1 items are resolved. Still open, as product decisions rather than gaps in testing: year-suffix disambiguation (no bundled style emits 2020a/2020b; see Appendix C) and Portuguese leading articles for ABNT. Sprint 5 and Epic-OSCOLA are unscheduled. `.planning/ROADMAP.md` tracks this backlog.
 - **Owner:** TBD
 - **Stakeholders:** Plugin maintainers, accessibility reviewer
 - **Canonical path:** `docs/planning/sort-conformance-plan.md`
@@ -769,9 +769,9 @@ Recommendation: implement Strategy A, since it handles all current and future co
 - [x] New test: reordering entries invalidates cache and produces fresh formatted output
 - [x] New test: changing style or locale invalidates cache
 - [x] New test: add/manual/edit/delete/style-change mutation paths pass the full current bibliography into formatting and update all affected `formattedText` values for suffix-sensitive styles
-- [ ] New test: deleting one item from a same-author/same-year group reformats the remaining entries so obsolete suffixes are removed or adjusted
-- [ ] No regression in editor performance for typical bibliography sizes (≤50 entries) — measured via `src/benchmarks/performance-benchmark.test.js` extension
-- [ ] **Cache-miss benchmark target:** adding one entry to a 50-entry bibliography in a context-sensitive style (e.g., Chicago Author-Date) completes the resulting full re-format and attribute write within 500 ms on the benchmark hardware baseline. Bibliography-batch caching invalidates the whole cache on every mutation, so cache-miss latency — not cache-hit latency — is the realistic editor-experience bound. If the budget is exceeded, escalate to Strategy B (numeric-only retains per-item cache) or document the regression for stakeholder review before merging.
+- [x] ~~New test: deleting one item from a same-author/same-year group reformats the remaining entries so obsolete suffixes are removed or adjusted~~ Not applicable (2026-10-23): no bundled style assigns year suffixes, so there are none to remove. See Appendix C, "Follow-up audit"
+- [x] No regression in editor performance for typical bibliography sizes (≤50 entries) — measured via `src/benchmarks/performance-benchmark.test.js` extension (see `large-bibliography-benchmark-results.md`)
+- [x] **Cache-miss benchmark target:** adding one entry to a 50-entry bibliography in a context-sensitive style (e.g., Chicago Author-Date) completes the resulting full re-format and attribute write within 500 ms on the benchmark hardware baseline. Bibliography-batch caching invalidates the whole cache on every mutation, so cache-miss latency — not cache-hit latency — is the realistic editor-experience bound. If the budget is exceeded, escalate to Strategy B (numeric-only retains per-item cache) or document the regression for stakeholder review before merging. *Met (2026-10-23):* `large-bibliography-benchmark-results.md` records the 50-entry JS add-with-full-reformat and the PHP formatter in the low tens of milliseconds, and a cold 200-entry `/format` request over real HTTP at a 69.5–84 ms median across the runtime matrix (largest single request 148 ms), well under 500 ms at four times the size.
 - [ ] `formatSingleEntry` audit findings recorded in the F1 PR description: every call site classified as safe (transient/isolated) or migrated to the batch path
 
 ### Files affected
@@ -1243,6 +1243,22 @@ Status: **completed for Sprint 4 Option D scope**, with explicit deferred items 
    - Cross-runner conformance currently excludes a small set of known divergent fixtures (particle surnames and one leading-article tie case) documented in `src/lib/sorter.conformance.test.js`.
    - These remain tracked for post-S4 conformance refinement.
 
+### Follow-up audit (2026-10-23)
+
+What the deferred items turned out to be, checked against `main` after 1.13.0:
+
+1. **Unicode normalization: no step needed, now pinned.** ICU collation compares canonically equivalent strings as equal, in V8's `localeCompare()` and in PHP's `Collator` alike, so "Ångström" typed with combining marks (NFD) and precomposed (NFC) sort together. `case-18-unicode-normalization` in `tests/fixtures/sort-coordination/cases.json` pins this for the JS sorter and the PHP `save()` port. Adding `normalize('NFC')` would change no order, so the sorter stays as it is.
+2. **The PHP `save()` port is now checked against every coordination case.** `SortCoordinationTest::test_static_cases_match_expected_order_in_save_port()` runs `bibliography_builder_sort_citations_for_save()`, which the write routes use to rebuild saved markup, over all 18 static cases, including case-13 (leading articles) and case-18. Before, the PHP side of the suite only checked citeproc-php's own bibliography order.
+3. **citeproc-php's own order is not a parity target.** It sorts on the raw title and compares strings byte by byte, so it files "An Alpha Survey" under "An" and puts "Ångström" after "Anzalone". Borges never uses that order: `bibliography_builder_format_csl_items()` renders each entry on its own and matches it back by ID. Cases 13 and 18 are therefore excluded from the citeproc-php order check only, with the reason in `SortCoordinationTest::citeproc_excluded_case_ids()`; the JS suite now runs every case.
+4. **Leading articles: Borges is right, the reference runner is not.** APA 7, Chicago, and MLA all alphabetize a title-led entry by the first word after A, An, or The. The bundled CSL styles sort on the raw title, so citeproc-js does not skip the article. The two fixtures that show this (`jones-aardvark-2020`, `miller-a-theory-2021`) stay excluded from the citeproc-js conformance run with that reason; `sorter.test.js` and case-13 pin the Borges behavior.
+5. **Chicago notes-bibliography and MLA 9 now run in the citeproc-js conformance suite.** They no longer throw with the current bundled styles; with the leading-article fixture excluded they match.
+6. **Particle surnames** were fixed per style in 1.12.0 (#142) and are covered by cases 14–17; no conformance exclusion remains for them.
+
+Two items are product decisions, not test gaps:
+
+- **Year-suffix disambiguation.** No bundled style declares `disambiguate-add-year-suffix`, and the formatter renders each entry on its own, so two Jones 2020 works print as "Jones, T. (2020)" twice where APA, Chicago author-date, and Harvard expect 2020a and 2020b. Adding suffixes would change saved markup for affected bibliographies (a deprecation, like #142), and needs either a whole-list render or suffixes assigned from the sorted order. REQ-S4's coordination concern only becomes real once that ships.
+- **Portuguese leading articles for ABNT.** The sorter strips only English A, An, and The. Whether ABNT NBR 6023 files a title-led entry under "O" or "A" or skips them needs a citation before any change, since a change alters saved order for ABNT bibliographies.
+
 ### Escalation path (if parity fails in production)
 
 If coordination drift appears in real-world data despite this audit and fixture coverage, escalate to **Option C**: have PHP emit canonical `sortKey` metadata that JS consumes directly instead of inferring canonicalization locally.
@@ -1288,3 +1304,4 @@ The four questions originally deferred during planning have been resolved per Co
 | 2026-05-07 | Tightened F1 and T1c per second-order review: added `formatSingleEntry` audit deliverable, documented `deferFormatting: true` interaction with `parsePastedInput` in `handleParse`, added cache-miss benchmark target (≤500 ms for 50-entry add in context-sensitive style), and extended T1c to cover mutation parity with shared mutation fixtures (T1c effort bumped from M to M-L) | Plan revision |
 | 2026-05-07 | Consistency cleanup: updated Epic-OSCOLA and conformance-summary wording to match DOC1's two-readme scope and T1c's static-plus-mutation parity scope | Plan revision |
 | 2026-10-13 | Status refreshed: Sprints 1–4 shipped in 1.2.0; listed the remaining open items | Status review |
+| 2026-10-23 | Follow-up audit in Appendix C: Unicode normalization pinned, the PHP `save()` port checked against every coordination case, Chicago notes-bibliography and MLA 9 added to the citeproc-js conformance run, REQ-F1 items resolved; year suffixes and ABNT articles raised as product decisions | Status review |

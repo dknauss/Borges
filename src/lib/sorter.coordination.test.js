@@ -64,12 +64,12 @@ function applyMutationStep(citations, step) {
 	}
 }
 
-const EXCLUDED_STATIC_CASE_IDS = new Set(['case-13-s4-leading-article-strip']);
-
 describe('PHP↔JS sorter coordination fixtures', () => {
-	const staticCases = loadJsonFixture(CASES_FIXTURE_PATH).filter(
-		({ id }) => !EXCLUDED_STATIC_CASE_IDS.has(id)
-	);
+	// Every static case runs here, including the two citeproc-php's own
+	// order cannot match (see SortCoordinationTest::citeproc_excluded_case_ids()):
+	// this suite checks the JS sorter, which save() uses, against the same
+	// expected order the PHP save() port is held to.
+	const staticCases = loadJsonFixture(CASES_FIXTURE_PATH);
 	const mutationCases = loadJsonFixture(MUTATIONS_FIXTURE_PATH);
 
 	it.each(staticCases)(

@@ -10,6 +10,24 @@ final class SortCoordinationTest extends TestCase {
 		$this->assertSame( $case['expectedOrder'], $order, $case['id'] );
 	}
 
+	/**
+	 * The save() port (`includes/save-sort.php`) is the PHP sort that matters:
+	 * the write routes rebuild saved markup with it, so it must order every
+	 * static case exactly as the JS sorter does, including the cases that
+	 * citeproc-php's own bibliography order cannot match (see
+	 * citeproc_excluded_case_ids()).
+	 */
+	#[DataProvider( 'allStaticCasesProvider' )]
+	public function test_static_cases_match_expected_order_in_save_port( array $case ): void {
+		$sorted = bibliography_builder_sort_citations_for_save( $case['citations'], $case['style'] );
+		$order  = array_map(
+			static fn( $citation ) => (string) ( $citation['id'] ?? '' ),
+			$sorted
+		);
+
+		$this->assertSame( $case['expectedOrder'], $order, $case['id'] );
+	}
+
 	#[DataProvider( 'mutationCasesProvider' )]
 	public function test_mutation_sequences_match_expected_order( array $sequence ): void {
 		$citations = $this->clone_value( $sequence['initialCitations'] );
@@ -47,16 +65,37 @@ final class SortCoordinationTest extends TestCase {
 		$this->assertNotSame( $fixture['expectedOrder'], $drifted_order );
 	}
 
-	public static function staticCasesProvider(): array {
-		$base_path         = dirname( __DIR__ ) . '/fixtures/sort-coordination/';
-		$cases             = json_decode( file_get_contents( $base_path . 'cases.json' ), true );
-		$excluded_case_ids = array(
+	/**
+	 * Cases citeproc-php's own bibliography order cannot match.
+	 *
+	 * citeproc-php sorts on the raw title and compares strings byte by byte,
+	 * not with locale collation, so it neither skips a leading article nor
+	 * places an accented name where a reader expects it. Borges never uses
+	 * that order: the formatter renders each entry on its own and matches it
+	 * back by ID, and the saved order comes from the JS sorter and its PHP
+	 * port, which test_static_cases_match_expected_order_in_save_port() checks.
+	 *
+	 * @return string[]
+	 */
+	private static function citeproc_excluded_case_ids(): array {
+		return array(
 			'case-13-s4-leading-article-strip',
+			'case-18-unicode-normalization',
 		);
+	}
+
+	private static function load_static_cases(): array {
+		$base_path = dirname( __DIR__ ) . '/fixtures/sort-coordination/';
+
+		return json_decode( file_get_contents( $base_path . 'cases.json' ), true );
+	}
+
+	public static function staticCasesProvider(): array {
+		$excluded_case_ids = self::citeproc_excluded_case_ids();
 
 		$cases = array_values(
 			array_filter(
-				$cases,
+				self::load_static_cases(),
 				static fn( $case ) => ! in_array( $case['id'] ?? '', $excluded_case_ids, true )
 			)
 		);
@@ -64,6 +103,13 @@ final class SortCoordinationTest extends TestCase {
 		return array_map(
 			static fn( $case ) => array( $case ),
 			$cases
+		);
+	}
+
+	public static function allStaticCasesProvider(): array {
+		return array_map(
+			static fn( $case ) => array( $case ),
+			self::load_static_cases()
 		);
 	}
 

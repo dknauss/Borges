@@ -8,10 +8,6 @@ const EXCLUDED_STYLE_KEYS = {
 	vancouver:
 		'Numeric family preserves user order; citeproc-js order is not the product behavior.',
 	oscola: 'OSCOLA grouped bibliography is deferred to Epic-OSCOLA and is out of current conformance scope.',
-	'chicago-notes-bibliography':
-		'citeproc-js npm package currently throws when rendering this bundled style template in test runtime.',
-	'mla-9':
-		'citeproc-js npm package currently throws when rendering this bundled style template in test runtime.',
 };
 
 const CONFORMANCE_STYLE_KEYS = Object.values(STYLE_DEFINITIONS)
@@ -19,9 +15,16 @@ const CONFORMANCE_STYLE_KEYS = Object.values(STYLE_DEFINITIONS)
 	.map((definition) => definition.key)
 	.filter((styleKey) => !(styleKey in EXCLUDED_STYLE_KEYS));
 
+// The bundled CSL styles sort on the raw title, so citeproc-js files "An
+// Aardvark Study" under "An" and "A Theory of Sorting" under "A". Borges skips
+// a leading A, An, or The, as APA, Chicago, and MLA tell writers to, so these
+// two fixtures diverge on purpose. sorter.test.js and case-13 in
+// tests/fixtures/sort-coordination/cases.json pin the Borges behavior.
 const EXCLUDED_FIXTURE_IDS = {
 	'jones-aardvark-2020':
-		'Leading-article title sort semantics differ from citeproc in current sorter implementation.',
+		'Borges skips the leading article; the bundled styles sort on the raw title.',
+	'miller-a-theory-2021':
+		'Borges skips the leading article; the bundled styles sort on the raw title.',
 };
 
 function hasConformanceSortableMetadata(citation) {
@@ -42,9 +45,7 @@ const CONFORMANCE_FIXTURES = SORT_BASELINE_FIXTURES.filter(
 describe('sort conformance against citeproc-js', () => {
 	it('documents and enforces explicit exclusions for non-conformance scope styles', () => {
 		expect(Object.keys(EXCLUDED_STYLE_KEYS).sort()).toEqual([
-			'chicago-notes-bibliography',
 			'ieee',
-			'mla-9',
 			'oscola',
 			'vancouver',
 		]);
@@ -53,6 +54,7 @@ describe('sort conformance against citeproc-js', () => {
 	it('documents fixture exclusions that currently diverge from citeproc sort semantics', () => {
 		expect(Object.keys(EXCLUDED_FIXTURE_IDS).sort()).toEqual([
 			'jones-aardvark-2020',
+			'miller-a-theory-2021',
 		]);
 	});
 
