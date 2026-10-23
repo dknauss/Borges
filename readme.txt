@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.13.0
+Stable tag: 1.14.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -195,6 +195,10 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 
 == Changelog ==
 
+= 1.14.0 =
+* **Added:** WP-CLI commands. `wp borges list <post-id>` lists a post's bibliographies, `wp borges export <post-id>` prints one as CSL-JSON, plain text, or JSON, and `wp borges validate <post-id>` reports errors and warnings for every entry and exits 1 when there are errors. They change nothing. Without `--user` they read any post, as WordPress's own commands do; with `--user` they apply that user's permissions, the same as the REST API.
+* **Fixed:** works by the same authors in the same year are told apart in APA, Chicago author-date, Harvard, and ABNT: "Jones, T. (2020a)." and "(2020b).", lettered in the order the bibliography lists them. Saved posts stay valid; a bibliography takes its letters the next time it is formatted (when a citation is added, edited, or removed, or the style changes). The REST write routes and abilities keep the letters current too.
+
 = 1.13.0 =
 * **Added:** richer structured data for search engines and AI crawlers. As a page renders, each cited work in the bibliography's JSON-LD gains an `@id`, its DOI, PMID, PMCID, arXiv, and ISBN identifiers with `sameAs` links, journal issue and volume, pages, editors and translators, and a closer schema.org type, and each entry links to its place on the page. Published posts get this without being edited. The `bibliography_builder_enrich_json_ld` filter turns it off.
 * **Added:** with Yoast SEO or Rank Math, the page's Article lists the cited works under schema.org `citation`. The `bibliography_builder_link_page_citations` filter turns it off.
@@ -384,6 +388,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.14.0 =
+Same-author, same-year works get 2020a and 2020b in APA, Chicago author-date, Harvard, and ABNT, and new read-only WP-CLI commands list, export, and validate bibliographies. No configuration changes required.
 
 = 1.13.0 =
 Richer JSON-LD for each cited work, a schema.org `citation` link from the post with Yoast SEO or Rank Math, and a filter for site-wide output defaults. Published posts are enriched as they render. No configuration changes required.

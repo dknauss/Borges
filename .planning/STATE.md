@@ -4,11 +4,13 @@ _Last reviewed: 2026-10-23._
 
 ## Current Focus
 
-0. **`v1.13.0` (2026-10-23) is the current release baseline.** Version strings
+0. **`v1.14.0` (2026-10-23) is the current release baseline.** Version strings
    agree across the plugin header, `package.json`, `block.json`, and
-   `readme.txt` (`Stable tag: 1.13.0`, `Tested up to: 7.1`). Treat the live
+   `readme.txt` (`Stable tag: 1.14.0`, `Tested up to: 7.1`). Treat the live
    WordPress.org plugin page as canonical for the publicly available version.
-1. **1.13.0** enriches the rendered JSON-LD, has the post's Article cite the
+1. **1.14.0** letters same-author, same-year works (2020a, 2020b) in the
+   author-date styles and adds read-only WP-CLI commands (#183–#185).
+   **1.13.0** enriches the rendered JSON-LD, has the post's Article cite the
    works with Yoast SEO or Rank Math, and adds the output-defaults filter
    (#170). **1.12.0** fixes newsletters and feeds, sorts particle names per
    style, adds the per-entry formatter cache and the write abilities, and
@@ -54,6 +56,7 @@ _Last reviewed: 2026-10-23._
    - 1.11.0 (2026-10-14) — cited works nested in one JSON-LD `ItemList`; 200-entry formatter requests.
    - 1.12.0 (2026-10-22) — newsletters and feeds, particle sorting per style, per-entry formatter cache, write abilities, refactor memo Phases A–E.
    - 1.13.0 (2026-10-23) — render-time JSON-LD enrichment, Article `citation` link, output-defaults filter.
+   - 1.14.0 (2026-10-23) — year suffixes in author-date styles; read-only WP-CLI commands.
 3. **Active phases** are still only `05-writable-bibliography-rest` (M0–M3
    shipped in 1.7.0, M5 write abilities in 1.12.0; M4 bulk routes remain) and
    `06-ci-optimization` (unplanned strategy sketch). Neither gates a release.
@@ -75,6 +78,7 @@ ordering. In short:
 
 ## Last Activity
 
+- 2026-10-23: Released 1.14.0 (#183–#185).
 - 2026-10-23: Released 1.13.0 (#170).
 - 2026-10-22: Released 1.12.0 (#156–#178); refactor memo Phases A–E complete.
 - 2026-10-14: Released 1.11.0.
