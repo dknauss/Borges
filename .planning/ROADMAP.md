@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-10-22):** `v1.12.0` (2026-10-22).
+**Current release baseline (reconciled 2026-10-23):** `v1.13.0` (2026-10-23).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -86,6 +86,10 @@ Releases since the milestone was retired, all outside any GSD phase:
 -   **1.12.0** (2026-10-22) — newsletters and feeds read correctly; particle names sort
     per style; per-entry formatter cache; write abilities; Phases A–E of the
     refactor memo (module split, shared style table, Psalm level 2, `checkJs`).
+-   **1.13.0** (2026-10-23) — render-time JSON-LD enrichment (`@id`s,
+    identifiers and `sameAs`, periodical chain, closer schema.org types); the
+    post's Article cites the works with Yoast SEO or Rank Math; the
+    `bibliography_builder_output_defaults` filter.
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -307,7 +311,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.12.0`.
+1.3.x release line. The current public release baseline is now `v1.13.0`.
 
 Completed Phase 2 outcomes:
 
@@ -409,33 +413,21 @@ Current operational note (2026-05-04):
 -   Post-launch cleanup should keep GitHub README, WordPress.org `readme.txt`,
     SPEC, release assets, and SVN output aligned.
 
-## Immediate next-task priorities (2026-10-13)
+## Immediate next-task priorities (2026-10-23)
 
-Replaces the 2026-09-25 list. Since then 1.7.0 through 1.10.0 shipped (#90
-through #137), including everything that list marked done: the resolver
-extraction, Phase 05 M0–M3, and, in 1.10.0, OCLC, LCCN, Open Library, and
-Internet Archive import, which the old list still showed as parked. No issues
-or pull requests are open. Rough payoff-per-effort order for the 1.11 line:
+Replaces the 2026-10-13 list. Since then 1.11.0 through 1.13.0 shipped, Phase
+05 M5 (write abilities) landed in 1.12.0, and every ticket in
+`docs/planning/refactor-and-standards-memo.md` (Phases A–E) is merged, which
+also answers the leaner-root-file todo. No issues or pull requests are open.
+The owner chose this order on 2026-10-23:
 
 1. **Keep CI, runtime, and Playground hygiene green** (standing)
     - release-package output, WordPress.org artifact alignment, citeproc-php
-      PHP deprecations, runtime smoke lanes (including the nginx cell that now
-      runs on pull requests), the `main-preview` Playground build, and the
-      live resolver checks (DOI, PMID, PMCID, arXiv, ISBN, catalog, Internet
-      Archive, Abilities)
-2. **Phase 05 M5: write abilities** — done (unreleased)
-    - six write abilities in `includes/write-abilities.php` wrap the M2/M3
-      route callbacks and inherit their opt-in filter, `edit_post`, dry-run,
-      and `If-Match` (`etag` input) rules. Tier 4 (bulk) is the only Phase 05
-      milestone left
-3. **Reference-manager export corpus** — pending todo
-   `2026-06-23-test-reference-manager-exports.md`; **needs the owner**
-    - a hand-authored corpus landed in #91
-      (`src/lib/__fixtures__/reference-manager-exports/`) and found four
-      quirks. CSL-JSON paste (1.9.1) widens what real exports can exercise
-    - still open: real, anonymized Zotero and Mendeley exports from the
-      owner's libraries, then Papers, RefWorks, and BibDesk once samples exist
-4. **Sort-conformance backlog** — `docs/planning/sort-conformance-plan.md`
+      PHP deprecations, runtime smoke lanes, the `main-preview` Playground
+      build, and the live resolver checks (DOI, PMID, PMCID, arXiv, ISBN,
+      catalog, Internet Archive, Abilities)
+2. **Sort-conformance backlog** — next;
+   `docs/planning/sort-conformance-plan.md`
     - Appendix C deferrals: per-locale article stripping (the sorter still
       strips only English `a`/`an`/`the`), Unicode normalization (no NFC/NFD
       step before comparison), and particle-surname and leading-article
@@ -445,6 +437,17 @@ or pull requests are open. Rough payoff-per-effort order for the 1.11 line:
       (≤500 ms)
     - Chicago notes-bibliography and MLA 9 are still skipped in the
       citeproc-js conformance run because the npm package throws on them
+3. **WP-CLI read commands** — after sort-conformance; see "WP-CLI commands"
+   below
+    - `wp borges list`, `export`, and `validate`, calling the same read
+      callbacks as the REST routes and abilities. Write and cross-post
+      commands wait for the Phase 05 M4 design
+4. **Reference-manager export corpus** — pending todo
+   `2026-06-23-test-reference-manager-exports.md`; **needs the owner**
+    - a hand-authored corpus landed in #91
+      (`src/lib/__fixtures__/reference-manager-exports/`). Still open: real,
+      anonymized Zotero and Mendeley exports from the owner's libraries, then
+      Papers, RefWorks, and BibDesk once samples exist
 5. **Phase 05 M4: bulk routes** — needs a rate-limiting design first
     - Tier 4 in the design memo: cross-post reformat behind
       `edit_others_posts`, returning a job ID for polling. Write the
@@ -452,17 +455,12 @@ or pull requests are open. Rough payoff-per-effort order for the 1.11 line:
 6. **First-wave official language packs** — pending todo
    `2026-06-14-coordinate-first-wave-language-packs.md`
     - push fr_FR, de_DE, es_ES, pt_BR, and ja on translate.wordpress.org
-      against the current Stable strings, which 1.8–1.10 changed again
-      (Heading Level, Edit fields, catalog and Internet Archive notices).
-      Human-translator work, not code
-
-Lower priority: the remaining question in todo
-`2026-06-17-research-benefits-of-a-leaner-root-plugin-file.md` (the root file
-has grown back from 1,931 to 2,177 lines since the resolver extraction).
+      against the current Stable strings. Human-translator work, not code
 
 Still parked: Phase 06 CI optimization, Epic-OSCOLA grouped bibliographies,
 Option B child blocks, the remaining "Evaluate" identifiers (ISSN, URL, ORCID
-enrichment), and niche media identifiers.
+enrichment), niche media identifiers, the PHP 8.x floor (todo
+`2026-10-14-research-php-8x-floor.md`), and the Secrets API key lookup.
 
 ## Code quality backlog
 

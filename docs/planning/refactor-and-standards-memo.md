@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | Drafted | 2026-10-14, against `main` at `ca8d3b3` (1.11.0 plus #147 and #148) |
-| Status | Recommendation, awaiting the owner's decision |
+| Status | Done: every ticket in Phases A–E is merged and shipped in 1.12.0 (see Progress) |
 | Owner | TBD |
-| Answers | `.planning/todos/pending/2026-06-17-research-benefits-of-a-leaner-root-plugin-file.md` |
+| Answers | `.planning/todos/completed/2026-06-17-research-benefits-of-a-leaner-root-plugin-file.md` |
 
 ## TL;DR
 
@@ -204,3 +204,4 @@ Each ticket below is one PR that can be lifted to the issue tracker on its own. 
 | Date | Change |
 |---|---|
 | 2026-10-14 | First draft, answering the leaner-root-file todo and the owner's questions on refactoring, architecture, standards, metrics and bloat. |
+| 2026-10-23 | Marked done: all phases merged and released in 1.12.0; the leaner-root-file todo moved to completed. |

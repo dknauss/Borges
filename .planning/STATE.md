@@ -1,14 +1,20 @@
 # Project State
 
-_Last reviewed: 2026-10-09._
+_Last reviewed: 2026-10-23._
 
 ## Current Focus
 
-0. **`v1.10.0` (2026-10-09) is the current release baseline.** Version strings
+0. **`v1.13.0` (2026-10-23) is the current release baseline.** Version strings
    agree across the plugin header, `package.json`, `block.json`, and
-   `readme.txt` (`Stable tag: 1.10.0`, `Tested up to: 7.1`). Treat the live
+   `readme.txt` (`Stable tag: 1.13.0`, `Tested up to: 7.1`). Treat the live
    WordPress.org plugin page as canonical for the publicly available version.
-1. **1.10.0** imports OCLC/LCCN/Open Library and Internet Archive identifiers,
+1. **1.13.0** enriches the rendered JSON-LD, has the post's Article cite the
+   works with Yoast SEO or Rank Math, and adds the output-defaults filter
+   (#170). **1.12.0** fixes newsletters and feeds, sorts particle names per
+   style, adds the per-entry formatter cache and the write abilities, and
+   completes the refactor memo (#156–#178). **1.11.0** nests cited works in
+   one JSON-LD `ItemList` and takes 200-entry formatter requests.
+   **1.10.0** imports OCLC/LCCN/Open Library and Internet Archive identifiers,
    opens Edit fields on every citation, and adds an optional Google Books API
    key (#128–#134). **1.9.1** imports pasted CSL-JSON and fixes quoted titles and the JSON-LD
    DOI url (#123). **1.9.0** adds a Heading Level setting for the visible heading (#121).
@@ -45,8 +51,11 @@ _Last reviewed: 2026-10-09._
    - 1.9.0 (2026-10-06) — Heading Level setting for the visible heading.
    - 1.9.1 (2026-10-07) — CSL-JSON paste, quoted-title italics, JSON-LD DOI url.
    - 1.10.0 (2026-10-09) — catalog and Internet Archive import, Edit fields everywhere, Google Books key.
+   - 1.11.0 (2026-10-14) — cited works nested in one JSON-LD `ItemList`; 200-entry formatter requests.
+   - 1.12.0 (2026-10-22) — newsletters and feeds, particle sorting per style, per-entry formatter cache, write abilities, refactor memo Phases A–E.
+   - 1.13.0 (2026-10-23) — render-time JSON-LD enrichment, Article `citation` link, output-defaults filter.
 3. **Active phases** are still only `05-writable-bibliography-rest` (M0–M3
-   shipped in 1.7.0; M4 bulk routes and M5 write abilities remain) and
+   shipped in 1.7.0, M5 write abilities in 1.12.0; M4 bulk routes remain) and
    `06-ci-optimization` (unplanned strategy sketch). Neither gates a release.
 4. Keep the release artifact, WordPress.org SVN output, Playground blueprints,
    and docs aligned whenever import behavior changes for any supported input
@@ -54,18 +63,21 @@ _Last reviewed: 2026-10-09._
 
 ## Current Priority Order
 
-See "Immediate next-task priorities (2026-10-13)" in `ROADMAP.md` for the full
+See "Immediate next-task priorities (2026-10-23)" in `ROADMAP.md` for the full
 ordering. In short:
 
 1. **CI, runtime, and Playground hygiene** (standing)
-2. **Phase 05 M5 write abilities**: unblocked since M0–M3 shipped in 1.7.0
-3. **Reference-manager export corpus**: needs real exports from the owner
-4. **Sort-conformance backlog**: locale and suffix items deferred in the plan
+2. **Sort-conformance backlog**: locale and suffix items deferred in the plan
+3. **WP-CLI read commands**: `list`, `export`, `validate` over the read callbacks
+4. **Reference-manager export corpus**: needs real exports from the owner
 5. **Phase 05 M4 bulk routes**: needs a rate-limiting design first
 6. **First-wave official language packs**
 
 ## Last Activity
 
+- 2026-10-23: Released 1.13.0 (#170).
+- 2026-10-22: Released 1.12.0 (#156–#178); refactor memo Phases A–E complete.
+- 2026-10-14: Released 1.11.0.
 - 2026-10-09: Released 1.10.0 (#128–#134).
 - 2026-10-07: Released 1.9.1 (#123).
 - 2026-10-06: Released 1.9.0 (#121).
@@ -108,9 +120,12 @@ ordering. In short:
 Three in `.planning/todos/pending/`:
 
 - Coordinate first-wave language packs (2026-06-14).
-- Research benefits of a leaner root plugin file (2026-06-17).
 - Test more reference-manager exports — Zotero, Mendeley, EndNote, etc.
   (2026-06-23).
+- Research raising the PHP floor from 7.4 to 8.x (2026-10-14).
+
+The leaner-root-file todo (2026-06-17) is completed: the refactor memo's
+Phase B split shipped in 1.12.0.
 
 ## Roadmap Alignment
 

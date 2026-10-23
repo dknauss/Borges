@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-10-23
+
 ### Added
 
 - **Richer JSON-LD for search engines and AI crawlers.** As a bibliography renders, its schema.org `ItemList` gains an `@id`, its heading as `name`, and `numberOfItems`, and each entry a `url` pointing at its visible `#ref-…` anchor. Each cited work gains an `@id` (its DOI URL, else its entry on the page); an `identifier` and `sameAs` links for every DOI, PMID, PMCID, arXiv ID, and ISBN it carries; the issue, volume, and periodical chain for journal articles; pages; editors and translators; edition and page count for books; language; publisher place; and a closer schema.org type for blog posts, newspaper and magazine articles, preprints, datasets, software, films, and other CSL types that used to read as plain `CreativeWork`. Published posts get all of this without being edited, and the stored content is unchanged. The `bibliography_builder_enrich_json_ld` filter turns it off.

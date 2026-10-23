@@ -94,6 +94,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.13.0** — Richer JSON-LD for each cited work (an `@id`, identifiers and `sameAs` links, the periodical chain, pages, and a closer schema.org type), added as published posts render; with Yoast SEO or Rank Math the post's Article lists the works under `citation`; a filter sets site-wide output defaults for new bibliographies.
 - **1.12.0** — Bibliographies read correctly in newsletters and feeds (no blanket italics or broken Cite / Export panel); names with particles sort per style; no period after a "?" or "!" title; reformatting after an edit renders only the changed entries; opt-in write abilities (WordPress 6.9+) wrap the write routes.
 - **1.11.0** — Cited works are nested in one JSON-LD `ItemList`, so link previews such as Mastodon's no longer credit a cited source as the post's author (published posts are corrected as they render); bibliographies over 50 citations format again.
 - **1.10.0** — Imports library catalog numbers (OCLC, LCCN, Open Library edition IDs) and Internet Archive items and ARKs through Open Library and the Internet Archive; "Edit fields" works on every citation and saves only the fields you change; an optional Google Books API key (constant or filter) for the ISBN fallback; "Place: Publisher" and CJK author names parse correctly.
