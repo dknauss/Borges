@@ -94,6 +94,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.14.0** — Same-author, same-year works are lettered (2020a, 2020b) in APA, Chicago author-date, Harvard, and ABNT; read-only WP-CLI commands `wp borges list`, `export`, and `validate`.
 - **1.13.0** — Richer JSON-LD for each cited work (an `@id`, identifiers and `sameAs` links, the periodical chain, pages, and a closer schema.org type), added as published posts render; with Yoast SEO or Rank Math the post's Article lists the works under `citation`; a filter sets site-wide output defaults for new bibliographies.
 - **1.12.0** — Bibliographies read correctly in newsletters and feeds (no blanket italics or broken Cite / Export panel); names with particles sort per style; no period after a "?" or "!" title; reformatting after an edit renders only the changed entries; opt-in write abilities (WordPress 6.9+) wrap the write routes.
 - **1.11.0** — Cited works are nested in one JSON-LD `ItemList`, so link previews such as Mastodon's no longer credit a cited source as the post's author (published posts are corrected as they render); bibliographies over 50 citations format again.
