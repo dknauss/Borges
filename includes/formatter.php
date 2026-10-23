@@ -534,7 +534,7 @@ function bibliography_builder_prepare_csl_for_formatter( $item, $demote_particle
  */
 function bibliography_builder_year_suffix_letters( $position ) {
 	$letters = '';
-	$number  = (int) $position + 1;
+	$number  = $position + 1;
 
 	while ( $number > 0 ) {
 		--$number;
