@@ -428,10 +428,9 @@ The owner chose this order on 2026-10-23:
       catalog, Internet Archive, Abilities)
 2. **Sort-conformance backlog** — test and documentation items closed
    2026-10-23 (`docs/planning/sort-conformance-plan.md`, Appendix C,
-   "Follow-up audit"). Two product decisions remain:
-    - year-suffix disambiguation: no bundled style emits 2020a/2020b, which
-      APA, Chicago author-date, and Harvard expect for same-author,
-      same-year works. Changes saved markup, so it needs a deprecation
+   "Follow-up audit"). Year suffixes (2020a, 2020b) for same-author,
+   same-year works now ship in APA, Chicago author-date, Harvard, and ABNT
+   (Unreleased). One product decision remains:
     - Portuguese leading articles for ABNT: needs the NBR 6023 filing rule
       cited before any change
 3. **WP-CLI read commands** — after sort-conformance; see "WP-CLI commands"
