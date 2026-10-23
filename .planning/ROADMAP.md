@@ -433,11 +433,12 @@ The owner chose this order on 2026-10-23:
    (Unreleased). One product decision remains:
     - Portuguese leading articles for ABNT: needs the NBR 6023 filing rule
       cited before any change
-3. **WP-CLI read commands** — after sort-conformance; see "WP-CLI commands"
-   below
+3. **WP-CLI read commands** — built 2026-10-23 (`docs/wp-cli.md`); see
+   "WP-CLI commands" below
     - `wp borges list`, `export`, and `validate`, calling the same read
-      callbacks as the REST routes and abilities. Write and cross-post
-      commands wait for the Phase 05 M4 design
+      callbacks as the REST routes and abilities. `duplicates` and `preview`
+      can follow the same pattern; write and cross-post commands wait for
+      the Phase 05 M4 design
 4. **Reference-manager export corpus** — pending todo
    `2026-06-23-test-reference-manager-exports.md`; **needs the owner**
     - a hand-authored corpus landed in #91
@@ -509,8 +510,8 @@ passwords or an MCP client.
 
 Possible shape: a `wp borges` command group that calls the same callbacks as
 the read, review, and write routes, the way the write abilities already do, so
-permissions, validation, and output stay identical across REST, Abilities,
-and CLI.
+validation and output stay identical across REST, Abilities, and CLI, and
+permissions do too whenever a command runs as a user (`--user`).
 
 -   Read and review: `list` (bibliographies in a post), `export`
     (`--format=json|text|csl-json`), `validate`, `duplicates`, and
@@ -526,8 +527,13 @@ and CLI.
     first.
 -   No new settings or options, so `verify-metrics.sh` stays green.
 
-Status: consider only. Revisit after the write abilities ship and M4's design
-is written; weigh whether the CLI should land before or after bulk routes.
+Status: `list`, `export`, and `validate` shipped (Unreleased, 2026-10-23;
+`docs/wp-cli.md`). Permissions (Dan, 2026-10-23): without `--user` they
+check no capabilities, like core's commands, since shell access already reads
+the database; with `--user` they apply the same checks as the REST routes and
+abilities. Write commands will check `edit_post` and the write-routes filter
+either way. `duplicates` and `preview` are small follow-ups. The writes and
+cross-post commands still wait for M4's design.
 
 ### Translation and language-pack backlog
 

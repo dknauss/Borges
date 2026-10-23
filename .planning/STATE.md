@@ -68,7 +68,7 @@ ordering. In short:
 
 1. **CI, runtime, and Playground hygiene** (standing)
 2. **Sort-conformance backlog**: test items closed and year suffixes added 2026-10-23; ABNT leading articles await a product decision
-3. **WP-CLI read commands**: `list`, `export`, `validate` over the read callbacks
+3. **WP-CLI read commands**: `list`, `export`, `validate` built 2026-10-23 (`docs/wp-cli.md`); `duplicates`, `preview`, and write commands still to consider
 4. **Reference-manager export corpus**: needs real exports from the owner
 5. **Phase 05 M4 bulk routes**: needs a rate-limiting design first
 6. **First-wave official language packs**

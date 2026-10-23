@@ -671,6 +671,11 @@ require_once __DIR__ . '/includes/email-output.php';
 require_once __DIR__ . '/includes/block-locator.php';
 require_once __DIR__ . '/includes/write-routes.php';
 require_once __DIR__ . '/includes/write-abilities.php';
+
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	require_once __DIR__ . '/includes/cli.php';
+}
+
 add_filter( 'rest_pre_serve_request', 'bibliography_builder_rest_pre_serve_request', 10, 4 );
 
 /**

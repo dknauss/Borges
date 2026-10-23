@@ -348,6 +348,22 @@ grep -q '"entryCount":1' "$ARTIFACT_RESPONSE_DIR/rest-collection.body"
 grep -q '^Alpha citation\.$' "$ARTIFACT_RESPONSE_DIR/rest-text.body"
 grep -q '"title":"Alpha Book"' "$ARTIFACT_RESPONSE_DIR/rest-csl-json.body"
 
+# --- WP-CLI read commands ---------------------------------------------------
+#
+# The same post through `wp borges`: list, export as text and CSL-JSON, and
+# validate, which must exit 0 because the entry has no errors (once as no one,
+# once as the admin, whose capabilities it then checks).
+wp_exec "wp borges list $POST_ID --format=json --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/cli-list.txt" 2>&1
+wp_exec "wp borges export $POST_ID --format=text --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/cli-export-text.txt" 2>&1
+wp_exec "wp borges export $POST_ID --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/cli-export-csl.txt" 2>&1
+wp_exec "wp borges validate $POST_ID --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/cli-validate.txt" 2>&1
+grep -q '"entryCount":1' "$ARTIFACT_DIR/cli-list.txt"
+grep -q '^Alpha citation\.$' "$ARTIFACT_DIR/cli-export-text.txt"
+grep -q '"title": "Alpha Book"' "$ARTIFACT_DIR/cli-export-csl.txt"
+grep -q 'Errors: 0\.' "$ARTIFACT_DIR/cli-validate.txt"
+wp_exec "wp borges validate $POST_ID --user=admin --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/cli-validate-admin.txt" 2>&1
+grep -q 'Errors: 0\.' "$ARTIFACT_DIR/cli-validate-admin.txt"
+
 if [ "$DB_ENGINE" = "sqlite" ]; then
 	wp_exec 'wp eval '\''echo defined( "DB_ENGINE" ) ? DB_ENGINE : "undefined";'\'' --allow-root --path=/var/www/html' | grep -q '^sqlite$'
 fi

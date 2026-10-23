@@ -21,5 +21,6 @@
 	</issueHandlers>
 	<stubs>
 		<file name="vendor/php-stubs/wordpress-stubs/wordpress-stubs.php" />
+		<file name="tests/phpunit/stubs/wp-cli.php" />
 	</stubs>
 </psalm>

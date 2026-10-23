@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **WP-CLI commands.** `wp borges list <post-id>` lists a post's bibliographies, `wp borges export <post-id>` prints one as CSL-JSON, plain text, or JSON, and `wp borges validate <post-id>` reports errors and warnings for every entry and exits 1 when there are errors. They read the same data as the REST routes and abilities and change nothing. Run with no `--user`, they read any post, as core's commands do; run with `--user=`, they apply that user's capabilities exactly as the REST routes do (`validate` needs `edit_post`). Use `--url=` to pick a site on Multisite. See `docs/wp-cli.md`.
+
 ### Fixed
 
 - **Year suffixes for works by the same authors in the same year.** APA, Chicago author-date, Harvard, and ABNT tell such works apart with a letter after the year, and Borges printed "Jones, T. (2020)." for each of them. They now read "Jones, T. (2020a)." and "Jones, T. (2020b).", lettered in the order the bibliography lists them (by title, skipping a leading A, An, or The). The letter is part of the formatted entry, so saved posts stay valid: a bibliography takes its letters the next time it is formatted, when a citation is added, edited, or removed or the style is changed. The REST write routes and abilities keep the letters current too: adding, editing, or removing a citation reformats the other works in its same-author, same-year group and leaves every other entry's saved text alone. Undated works ("n.d.-a") are not lettered yet.
