@@ -512,23 +512,12 @@ function bibliography_builder_rest_add_citations( WP_REST_Request $request ) {
 			$skipped = array();
 
 			foreach ( $entries as $position => $entry ) {
-				$duplicate_of = null;
+				$duplicate = bibliography_builder_find_duplicate_citation( $entry, $citations );
 
-				$keys = bibliography_builder_get_duplicate_keys( $entry );
-
-				foreach ( $citations as $existing ) {
-					$existing_keys = bibliography_builder_get_duplicate_keys( $existing );
-
-					if ( null !== bibliography_builder_get_duplicate_reason( $existing_keys, $keys ) ) {
-						$duplicate_of = bibliography_builder_get_citation_id( $existing );
-						break;
-					}
-				}
-
-				if ( null !== $duplicate_of ) {
+				if ( null !== $duplicate ) {
 					$skipped[] = array(
 						'item'        => $position,
-						'duplicateOf' => $duplicate_of,
+						'duplicateOf' => $duplicate['id'],
 					);
 					continue;
 				}
@@ -585,6 +574,8 @@ function bibliography_builder_rest_add_citations( WP_REST_Request $request ) {
  * Body: a partial CSL-JSON object. A field set to null is removed. `id` and
  * `type` cannot be changed. As in the editor's field editor, the entry is
  * reformatted and loses its manual display text and stale export strings.
+ * An edit that would make the citation a duplicate of another in the same
+ * bibliography is refused with `409`, naming that citation in `duplicateOf`.
  *
  * @param WP_REST_Request $request REST request.
  * @return WP_REST_Response|WP_Error
@@ -651,6 +642,30 @@ function bibliography_builder_rest_update_citation( WP_REST_Request $request ) {
 
 			if ( is_wp_error( $entries ) ) {
 				return $entries;
+			}
+
+			$duplicate = bibliography_builder_find_duplicate_citation(
+				$entries[0],
+				array_diff_key( $citations, array( $position => true ) )
+			);
+
+			if ( null !== $duplicate ) {
+				return new WP_Error(
+					'bibliography_builder_duplicate_citation',
+					sprintf(
+						/* translators: %s: ID of the citation the edit would duplicate. */
+						__(
+							'This edit would make the citation a duplicate of "%s" in the same bibliography.',
+							'borges-bibliography-builder'
+						),
+						(string) $duplicate['id']
+					),
+					array(
+						'status'      => 409,
+						'duplicateOf' => $duplicate['id'],
+						'reason'      => $duplicate['reason'],
+					)
+				);
 			}
 
 			$citation = $citations[ $position ];
