@@ -280,6 +280,31 @@ final class WriteRoutesTest extends TestCase {
 		$this->assert_blocks_are_valid();
 	}
 
+	public function test_patch_refuses_an_edit_that_would_duplicate_another_citation() {
+		$request                = self::request( 'PATCH', 'notes-block', array( 'DOI' => 'https://doi.org/10.1093/COMJNL/27.2.97' ) );
+		$request['citation_id'] = 'c-turing';
+		$error                  = bibliography_builder_rest_update_citation( $request );
+
+		$this->assertSame( 'bibliography_builder_duplicate_citation', $error->get_error_code() );
+		$this->assertSame(
+			array(
+				'status'      => 409,
+				'duplicateOf' => 'c-knuth',
+				'reason'      => 'doi',
+			),
+			$error->get_error_data()
+		);
+
+		// The citation itself, and other bibliographies in the post, don't count.
+		$self                = self::request( 'PATCH', 'notes-block', array( 'DOI' => '10.1093/comjnl/27.2.97' ) );
+		$self['citation_id'] = 'c-knuth';
+		$this->assertFalse( is_wp_error( bibliography_builder_rest_update_citation( $self ) ) );
+
+		$other                = self::request( 'PATCH', 'ieee-block', array( 'DOI' => '10.1093/comjnl/27.2.97' ) );
+		$other['citation_id'] = 'i-one';
+		$this->assertFalse( is_wp_error( bibliography_builder_rest_update_citation( $other ) ) );
+	}
+
 	public function test_patch_null_removes_a_field_and_locked_fields_are_refused() {
 		$request                = self::request( 'PATCH', 0, array( 'DOI' => null ) );
 		$request['citation_id'] = 'c-knuth';

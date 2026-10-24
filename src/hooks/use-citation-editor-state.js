@@ -11,6 +11,7 @@ import {
 	normalizeUrlValue,
 	validateIdentifierFields,
 } from '../lib/manual-entry';
+import { findDuplicateCitation } from '../lib/deduplicate';
 import { sortCitations } from '../lib/sorter';
 import {
 	MAX_CITATIONS_PER_BIBLIOGRAPHY,
@@ -368,8 +369,6 @@ export function useCitationEditorState({
 			return;
 		}
 
-		const operationId = beginAsyncOperation();
-
 		// Text fields are stored as plain text, as imports and manual entry
 		// store them (validateAndSanitizeCsl): markup typed or pasted into
 		// the form is dropped, not saved. A field that loaded with tags is
@@ -469,6 +468,33 @@ export function useCitationEditorState({
 			}
 		}
 
+		// Saving unchanged fields keeps a hand-edited display line; saving an
+		// edit reformats the entry from its fields, replacing that line.
+		const fieldsChanged = Object.keys(structuredFields).some(needsWrite);
+
+		// No bibliography holds two copies of a work: an edit that would make
+		// this entry match another is refused, and the form stays open.
+		if (
+			fieldsChanged &&
+			findDuplicateCitation(
+				{ csl: updatedCsl },
+				citationsRef.current.filter(
+					(entry) => entry.id !== activeStructuredEditingId
+				)
+			)
+		) {
+			announce(
+				'warning',
+				__(
+					'These fields match another citation in this bibliography. Change them, or remove one of the two.',
+					'borges-bibliography-builder'
+				)
+			);
+			queueFocus({ type: 'notice' });
+			return;
+		}
+
+		const operationId = beginAsyncOperation();
 		const { formatBibliographyEntries } = await import(
 			'../lib/formatting/csl'
 		);
@@ -491,9 +517,6 @@ export function useCitationEditorState({
 			return;
 		}
 
-		// Saving unchanged fields keeps a hand-edited display line; saving an
-		// edit reformats the entry from its fields, replacing that line.
-		const fieldsChanged = Object.keys(structuredFields).some(needsWrite);
 		const replacedOverride =
 			fieldsChanged && Boolean(citation.displayOverride);
 		const nextEntries = citationsRef.current.map((entry) =>

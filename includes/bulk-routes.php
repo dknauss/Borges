@@ -369,33 +369,21 @@ function bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $e
  */
 function bibliography_builder_bulk_split_duplicates( $citations ) {
 	$kept    = array();
-	$keys    = array();
 	$removed = array();
 
 	foreach ( array_values( $citations ) as $index => $citation ) {
-		$citation_keys = bibliography_builder_get_duplicate_keys( $citation );
-		$match         = null;
+		$duplicate = bibliography_builder_find_duplicate_citation( $citation, $kept );
 
-		foreach ( $keys as $position => $kept_keys ) {
-			$reason = bibliography_builder_get_duplicate_reason( $kept_keys, $citation_keys );
-
-			if ( null !== $reason ) {
-				$match = array( $position, $reason );
-				break;
-			}
-		}
-
-		if ( null === $match ) {
+		if ( null === $duplicate ) {
 			$kept[] = $citation;
-			$keys[] = $citation_keys;
 			continue;
 		}
 
 		$removed[] = array(
 			'index'       => $index,
 			'id'          => bibliography_builder_get_citation_id( $citation ),
-			'duplicateOf' => bibliography_builder_get_citation_id( $kept[ $match[0] ] ),
-			'reason'      => $match[1],
+			'duplicateOf' => $duplicate['id'],
+			'reason'      => $duplicate['reason'],
 			'citation'    => $citation,
 		);
 	}

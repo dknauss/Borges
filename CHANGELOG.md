@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bulk deduplicate across posts.** `POST /bibliography/v1/bulk/deduplicate` removes repeated citations from every bibliography in up to 25 posts, keeping the first copy of each work by the editor's duplicate rules (the same DOI, or the same title with the same year or first author) and refreshing year suffixes the removal touches. A work listed in two bibliographies of one post is reported in `crossBlockDuplicates` and left in place. It has the same checks, dry run, ETags, batches, and rate-limit budget as bulk reformat. The `borges/bulk-deduplicate` ability and `wp borges deduplicate <post-id>... --user=<user>` do the same.
 - **`wp borges reformat`.** `wp borges reformat <post-id>... --style=<key> --user=<user>` does the same from WP-CLI, in batches (`--batch-size`, `--sleep`), previewing unless `--commit` is passed. It always checks the user's capabilities and the write-routes filter, spends no rate-limit budget, and exits 1 when any post fails. See `docs/wp-cli.md`.
 
+### Fixed
+
+- **Editing a citation can no longer create a duplicate.** Pasting, importing, manual entry, and the REST add route already skipped a work the bibliography held, but editing an existing citation's fields could turn it into a copy of another. The block's field editor now refuses such an edit with a notice and keeps the form open, and `PATCH …/citations/<id>` (and the `borges/update-citation` ability) returns `409` naming the matching citation. Repeats across two bibliographies on the same page are still allowed.
+
 ## [1.14.0] - 2026-10-23
 
 ### Added
