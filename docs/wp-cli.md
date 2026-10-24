@@ -1,13 +1,13 @@
 # WP-CLI commands
 
-Borges adds a read-only `wp borges` command group. It calls the same read model as the REST routes and abilities, so `list`, `export`, and `validate` print the same data as `GET /posts/{id}/bibliographies`, `GET …/bibliographies/{ref}?format=…`, and `GET …/{ref}/validate`. Nothing is written.
+Borges adds a `wp borges` command group. The read commands call the same read model as the REST routes and abilities, so `list`, `export`, and `validate` print the same data as `GET /posts/{id}/bibliographies`, `GET …/bibliographies/{ref}?format=…`, and `GET …/{ref}/validate`, and write nothing. `reformat` writes: it switches whole posts to another citation style, as `POST /bulk/reformat` does.
 
 ## Permissions
 
 - **Without `--user`**, the commands check no capabilities, as core's own commands don't: anyone who can run WP-CLI on the server can already read the database, drafts included, with `wp db` or `wp eval`. This is the usual way to run them from cron or a maintenance script.
 - **With `--user=<id|login|email>`**, they apply that user's capabilities exactly as the REST routes and abilities do. `list` and `export` need what the read route needs: a published post of a publicly viewable type, or `edit_post` on the post. `validate` needs `edit_post`, like the validate route. A refused command prints "Sorry, you are not allowed to …" and exits 1. Use this when a script should act only on what one person may see.
 
-All three commands are read-only. When write commands come, they will check `edit_post` and the write-routes filter whether or not `--user` is given.
+The rule above is for the read commands. `reformat` writes, so it always checks: it needs `--user`, the `bibliography_builder_enable_write_routes` filter, `edit_others_posts`, and `edit_post` on each post, as the bulk route does.
 
 On Multisite, pick a site with `--url=`.
 
@@ -46,6 +46,27 @@ $ wp borges validate 42
 $ wp borges validate 42 --index=1 --format=json
 ```
 
+## `wp borges reformat <post-id>... --style=<key>`
+
+Switches every bibliography in the given posts to one citation style, through the same per-post code as `POST /bulk/reformat` (see `docs/rest-write-routes.md`, "Bulk reformat"). Each post is saved once, as one revision.
+
+- **Previews unless `--commit` is passed.** The summary says how many posts would change.
+- **`--batch-size=<n>`** (default 25): posts per batch. The object cache's in-memory data is freed between batches, so memory stays flat on large runs.
+- **`--sleep=<seconds>`** (default 0): a pause between batches, to go easy on a busy server.
+- **`--format=`** is `table` (default), `csv`, or `yaml` for one row per post (`postId`, `status`, `bibliographies`, `message`) and a summary line, or `json` for the full results.
+
+A commit reads each post's ETag just before reformatting it, so a post someone edits during the run is saved from their latest content. Posts already in the style are `unchanged`; posts that are missing, not editable by the user, or have no bibliography are `skipped`; a post that cannot be reformatted or saved is `failed`, and the run goes on. The command exits with status 1 when any post failed.
+
+It spends no rate-limit budget and takes no lock. Someone with a shell is the site's operator, and the budget exists to stop runaway HTTP loops; `--batch-size` and `--sleep` are the CLI's own brakes.
+
+To find the posts, search their content for the block name:
+
+```
+$ wp borges reformat 42 43 --style=mla-9 --user=editor
+$ wp borges reformat $(wp post list --post_type=post,page --s=wp:bibliography-builder --format=ids) \
+    --style=apa-7 --user=editor --commit --sleep=1
+```
+
 ## Across a network
 
 There is no network command. Loop over the sites:
@@ -54,8 +75,8 @@ There is no network command. Loop over the sites:
 $ wp site list --field=url | xargs -I % wp borges validate 42 --url=%
 ```
 
-Checking every post on a site, and the write commands, wait for the bulk-route design (Phase 05 M4); see `.planning/ROADMAP.md`, "WP-CLI commands".
+The per-citation write commands (add, update, delete) are not built yet; see `.planning/ROADMAP.md`, "WP-CLI commands".
 
 ## Tests
 
-`tests/phpunit/CliCommandTest.php` runs the command class against a recording WP-CLI stub (`tests/phpunit/stubs/wp-cli.php`, which Psalm also reads), both with no user and with users who have and lack access. The runtime matrix (`scripts/runtime-matrix/smoke.sh`) runs the real commands with WP-CLI on every PHP and WordPress version it covers.
+`tests/phpunit/CliCommandTest.php` runs the command class against a recording WP-CLI stub (`tests/phpunit/stubs/wp-cli.php`, which Psalm also reads), both with no user and with users who have and lack access. `tests/phpunit/CliReformatCommandTest.php` covers `reformat`. The runtime matrix (`scripts/runtime-matrix/smoke.sh`) runs the real commands with WP-CLI on every PHP and WordPress version it covers.

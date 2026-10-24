@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Bulk reformat across posts.** With the write routes turned on, `POST /bibliography/v1/bulk/reformat` switches every bibliography in up to 25 posts to one citation style, reformatting each as the block sidebar's style picker does and saving each post once. It needs `edit_others_posts` and `edit_post` on each post, previews unless `dry_run=false`, and checks each post's ETag before saving it. A request returns the posts it did not reach as `remaining`, so a client sends those next; there are no background jobs, and Borges still stores no settings or cron events. The `borges/bulk-reformat` ability wraps the route.
+- **Rate limit for bulk edits.** Each user may reformat 250 posts per 15 minutes in bulk, dry runs included, and only one saving bulk request runs at a time on a site. Responses carry `RateLimit-Limit`, `RateLimit-Remaining`, and `RateLimit-Reset` headers, and a request over the limit gets `429` with `Retry-After`. Hosts can change the numbers, share one budget across a site, or exempt a user with the `bibliography_builder_bulk_rate_limit`, `…_bulk_rate_limit_key`, `…_bulk_max_posts_per_request`, and `…_bulk_time_budget` filters. See `docs/rest-write-routes.md`.
+- **`wp borges reformat`.** `wp borges reformat <post-id>... --style=<key> --user=<user>` does the same from WP-CLI, in batches (`--batch-size`, `--sleep`), previewing unless `--commit` is passed. It always checks the user's capabilities and the write-routes filter, spends no rate-limit budget, and exits 1 when any post fails. See `docs/wp-cli.md`.
+
 ## [1.14.0] - 2026-10-23
 
 ### Added

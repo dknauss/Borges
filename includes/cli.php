@@ -1,11 +1,19 @@
 <?php
 /**
- * Read-only WP-CLI commands: `wp borges list`, `export`, and `validate`.
+ * WP-CLI commands: the read-only `wp borges list`, `export`, and `validate`,
+ * and the bulk write `wp borges reformat`.
  *
  * Each command calls the same read model as the REST routes and abilities
  * (`bibliography_builder_get_bibliographies_for_post()`, the export builders,
  * and `bibliography_builder_get_validation_report()`), so their output matches.
  * None of them writes anything.
+ *
+ * `wp borges reformat` writes, so it always checks, with or without the
+ * rule above: it needs `--user`, the write-routes filter, `edit_others_posts`,
+ * and `edit_post` on each post, as POST /bulk/reformat does. It reformats
+ * through the same per-post function as that route, in batches, but spends
+ * no rate-limit budget and takes no lock: someone with a shell is the site's
+ * operator, and the budget exists to stop runaway HTTP loops.
  *
  * Permissions: run as no one (no `--user`), the commands check no
  * capabilities, like core's own commands: anyone who can run WP-CLI on the
@@ -46,6 +54,16 @@ const BIBLIOGRAPHY_BUILDER_CLI_ISSUE_FIELDS = array(
 	'severity',
 	'code',
 	'field',
+	'message',
+);
+
+/**
+ * Columns `wp borges reformat` prints, one row per post.
+ */
+const BIBLIOGRAPHY_BUILDER_CLI_REFORMAT_FIELDS = array(
+	'postId',
+	'status',
+	'bibliographies',
 	'message',
 );
 
@@ -233,6 +251,135 @@ function bibliography_builder_cli_issue_rows( $reports ) {
 	}
 
 	return $rows;
+}
+
+/**
+ * Check that `wp borges reformat` may run, and read its style.
+ *
+ * @param array $assoc_args Command options: `style`.
+ * @return string|WP_Error The style key.
+ */
+function bibliography_builder_cli_reformat_style( $assoc_args ) {
+	if ( ! bibliography_builder_write_routes_enabled() ) {
+		return new WP_Error(
+			'bibliography_builder_writes_disabled',
+			__(
+				'Writes are off on this site. Turn on the bibliography_builder_enable_write_routes filter first.',
+				'borges-bibliography-builder'
+			)
+		);
+	}
+
+	if ( 0 === get_current_user_id() ) {
+		return new WP_Error(
+			'bibliography_builder_user_required',
+			__( 'Pass --user=<user>: writes check that user\'s capabilities.', 'borges-bibliography-builder' )
+		);
+	}
+
+	$allowed = bibliography_builder_rest_bulk_permissions_check();
+
+	if ( is_wp_error( $allowed ) ) {
+		return $allowed;
+	}
+
+	$style  = isset( $assoc_args['style'] ) ? (string) $assoc_args['style'] : '';
+	$styles = array_keys( bibliography_builder_get_formatter_style_definitions() );
+
+	if ( ! in_array( $style, $styles, true ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_style',
+			sprintf(
+				/* translators: %s: comma-separated style keys. */
+				__( 'Pass --style: one of %s.', 'borges-bibliography-builder' ),
+				implode( ', ', $styles )
+			)
+		);
+	}
+
+	return $style;
+}
+
+/**
+ * Reformat posts for `wp borges reformat`, a batch at a time.
+ *
+ * A commit reads each post's ETag just before reformatting it, so a post
+ * someone edits during the run is saved from their latest content, and the
+ * splice still proves nothing else in the post changed. Between batches the
+ * in-memory object cache is flushed, so memory stays flat on large runs.
+ *
+ * @param int[]  $post_ids   Post IDs.
+ * @param string $style      Style key.
+ * @param bool   $commit     Save, rather than preview.
+ * @param int    $batch_size Posts per batch.
+ * @param int    $sleep      Seconds to wait between batches.
+ * @return array[] Results of bibliography_builder_bulk_reformat_post().
+ */
+function bibliography_builder_cli_reformat_posts( $post_ids, $style, $commit, $batch_size, $sleep ) {
+	$results = array();
+	$batches = array_chunk( $post_ids, max( 1, $batch_size ) );
+
+	foreach ( $batches as $number => $batch ) {
+		if ( 0 < $number ) {
+			if ( function_exists( 'wp_cache_flush_runtime' ) ) {
+				wp_cache_flush_runtime();
+			}
+
+			if ( 0 < $sleep ) {
+				sleep( $sleep );
+			}
+		}
+
+		foreach ( $batch as $post_id ) {
+			$post      = get_post( $post_id );
+			$etag      = $commit && is_object( $post ) ? bibliography_builder_post_etag( $post ) : '';
+			$results[] = bibliography_builder_bulk_reformat_post( $post_id, $style, ! $commit, $etag );
+		}
+	}
+
+	return $results;
+}
+
+/**
+ * Table rows for `wp borges reformat`.
+ *
+ * @param array[] $results Results of bibliography_builder_bulk_reformat_post().
+ * @return array<int, array<string, mixed>>
+ */
+function bibliography_builder_cli_reformat_rows( $results ) {
+	return array_map(
+		static function ( $result ) {
+			if ( isset( $result['error'] ) ) {
+				$message = $result['error']['message'];
+			} else {
+				$styles = array_unique(
+					array_map(
+						/**
+						 * One bibliography's style change, as `from → to`.
+						 *
+						 * @param array $bibliography Result entry for one bibliography.
+						 * @return string
+						 */
+						static function ( $bibliography ) {
+							$change = $bibliography['changes']['citationStyle'];
+
+							return $change['from'] . ' → ' . $change['to'];
+						},
+						$result['bibliographies']
+					)
+				);
+				$message = implode( ', ', $styles );
+			}
+
+			return array(
+				'postId'         => $result['postId'],
+				'status'         => $result['status'],
+				'bibliographies' => isset( $result['bibliographies'] ) ? count( $result['bibliographies'] ) : 0,
+				'message'        => $message,
+			);
+		},
+		$results
+	);
 }
 
 require_once __DIR__ . '/class-bibliography-builder-cli-command.php';

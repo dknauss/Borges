@@ -151,6 +151,41 @@ function wp_cache_set( $key, $value, $group = '', $expiration = 0 ) {
 	return true;
 }
 
+function wp_cache_add( $key, $value, $group = '', $expiration = 0 ) {
+	if ( isset( $GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ] ) ) {
+		return false;
+	}
+
+	return wp_cache_set( $key, $value, $group, $expiration );
+}
+
+function wp_cache_incr( $key, $offset = 1, $group = '' ) {
+	if ( ! isset( $GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ] ) ) {
+		return false;
+	}
+
+	$value = max( 0, (int) $GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ]['value'] + $offset );
+	$GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ]['value'] = $value;
+
+	return $value;
+}
+
+function wp_cache_decr( $key, $offset = 1, $group = '' ) {
+	return wp_cache_incr( $key, -$offset, $group );
+}
+
+function wp_cache_delete( $key, $group = '' ) {
+	unset( $GLOBALS['bibliography_builder_test_object_cache'][ $group ][ $key ] );
+
+	return true;
+}
+
+function delete_transient( $key ) {
+	unset( $GLOBALS['bibliography_builder_test_transients'][ $key ] );
+
+	return true;
+}
+
 function add_action( $hook_name = '', $callback = null, $priority = 10, $accepted_args = 1 ) {
 	$GLOBALS['bibliography_builder_test_added_actions'][] = array(
 		'hook_name'     => $hook_name,
@@ -178,6 +213,10 @@ function apply_filters( $hook_name, $value, ...$args ) {
 	}
 
 	return $value;
+}
+
+function __return_false() {
+	return false;
 }
 
 function __return_true() {

@@ -1,6 +1,6 @@
 # Bibliography write routes
 
-Phase 05, M2 and M3 (Tiers 2 and 3 of the [design memo](../.planning/phases/05-writable-bibliography-rest/05-DESIGN-MEMO.md)). Scripts, integrations, and agents can use these routes to change a saved post's bibliographies without opening the block editor. They add, change, remove, and reorder citations, change a block's settings, and switch its citation style.
+Phase 05, M2 to M4 (Tiers 2 to 4 of the [design memo](../.planning/phases/05-writable-bibliography-rest/05-DESIGN-MEMO.md)). Scripts, integrations, and agents can use these routes to change a saved post's bibliographies without opening the block editor. They add, change, remove, and reorder citations, change a block's settings, and switch its citation style.
 
 ## Enabling
 
@@ -147,6 +147,97 @@ The stored CSL-JSON is not changed. If any entry has CSL-JSON the formatter cann
 - **HTML filtering:** WordPress filters saved HTML for users without `unfiltered_html`, in exactly the same way as it does for the editor.
 - **intl:** the PHP `intl` extension is required. Without it, writes return `501`.
 
+## Bulk reformat
+
+`POST /wp-json/bibliography/v1/bulk/reformat` switches every bibliography in a batch of posts to one citation style (Phase 05 M4, Tier 4). The write-routes filter turns it on with the others. It needs `edit_others_posts`, and `edit_post` on each post.
+
+```
+POST /wp-json/bibliography/v1/bulk/reformat?dry_run=false
+{ "style": "mla-9", "posts": [ { "id": 12, "etag": "\"…\"" }, { "id": 13, "etag": "\"…\"" } ] }
+```
+
+Each post is reformatted exactly as `…/reformat` would reformat each of its bibliographies, then saved once, so it gains one revision. A dry run (the default) returns each post's ETag; send those back to save.
+
+### Batches, not jobs
+
+A request names at most 25 posts and does as many as it can, then returns the rest as `remaining`. Send `remaining` as the next request's `posts`. There are no job IDs to poll: a job queue would need stored job records and a cron runner, and Borges stores neither.
+
+A request stops starting new posts when it reaches:
+
+- the end of the list;
+- the caller's remaining budget (see below);
+- its time budget, 15 seconds by default (always at least one post, and never more than half of PHP's `max_execution_time`).
+
+Each post commits on its own, with its own ETag check, so a failure on one post never undoes another. Retrying a whole batch is safe: posts already in the style come back `unchanged` and are not saved again, whatever ETag was sent.
+
+### Response
+
+The response is `200` whatever happened to each post:
+
+```json
+{
+  "dryRun": false,
+  "style": "mla-9",
+  "results": [
+    { "postId": 12, "status": "changed", "etag": "\"…\"", "bibliographies": [ { "index": 0, "bibliographyId": "…", "changes": { "citationStyle": { "from": "apa-7", "to": "mla-9" }, "reformatted": [ "…" ] } } ] },
+    { "postId": 13, "status": "failed", "etag": "\"…\"", "bibliographies": [ … ], "error": { "code": "bibliography_builder_precondition_failed", "message": "…", "status": 412 } }
+  ],
+  "remaining": [ { "id": 14, "etag": "\"…\"" } ],
+  "rateLimit": { "limit": 250, "remaining": 223, "reset": 611 }
+}
+```
+
+| `status` | Meaning |
+| --- | --- |
+| `preview` | Dry run: the post would change. |
+| `changed` | Saved. `etag` is the new one. |
+| `unchanged` | Already in that style; nothing to save. |
+| `skipped` | Not found, not editable by you, or no bibliography. Has `error`. |
+| `failed` | An entry could not be formatted (`409`, with `index` and `entries`), the ETag was missing (`428`) or stale (`412`, with the current `etag`), or the save failed. Has `error`. Nothing was saved for that post. |
+
+A malformed request (an unknown style, no posts or more than 25, a post ID that is not a positive integer, or a post listed twice) gets `400` before any work is done.
+
+### Rate limit
+
+Bulk requests spend a budget **counted in posts, not requests**: by default 250 posts per 15 minutes per user. A request for 25 posts costs 25, and dry runs cost the same as writes, because a dry run does all the formatting a write does. Every response carries the IETF draft headers:
+
+- `RateLimit-Limit`: the budget.
+- `RateLimit-Remaining`: posts left in this window.
+- `RateLimit-Reset`: seconds until the window resets.
+
+A request that asks for more posts than are left is **clipped**: the server does what fits and returns the rest in `remaining`. Only a caller with nothing left gets `429` (`bibliography_builder_rate_limited`), with `Retry-After` set to the reset time, which is also in `data.reset` for clients that don't read headers. Posts a request did not reach are given back to the budget.
+
+Only **one saving bulk request runs at a time** on a site. A second gets `429` (`bibliography_builder_bulk_busy`) with `Retry-After: 5`, and its budget is given back. Dry runs don't wait for this lock. A lock left by a request that died frees itself after the time budget plus 30 seconds.
+
+The counters and the lock live in the object cache when the site has a persistent one (Redis, Memcached), where `wp_cache_add()` and `wp_cache_incr()` make them atomic. Otherwise they are transients: one row per active user, expiring with the window. Without a persistent cache, two dry runs sent in parallel by one user can overshoot the budget by up to a batch; saves are serialized by the lock. Windows are aligned to their length (every 15 minutes on the quarter hour), so a burst that straddles a reset can spend up to two budgets in a short time. Nothing here adds an option, a cron event, or a table, and uninstall removes the counters with the plugin's other cached data.
+
+### Filters for hosts
+
+| Filter | Default | Arguments | Use |
+| --- | --- | --- | --- |
+| `bibliography_builder_bulk_rate_limit` | `array( 'posts' => 250, 'window' => 900 )` | user ID | Raise or lower the budget, or return `false` to turn it off for a user (the lock still applies). |
+| `bibliography_builder_bulk_rate_limit_key` | `user:<id>` | user ID, request | Whose budget a request spends. Return `site` for one budget shared by everyone. |
+| `bibliography_builder_bulk_max_posts_per_request` | `25` | none | Batch cap, clamped to 1–100. |
+| `bibliography_builder_bulk_time_budget` | `15` (seconds) | none | When a request stops starting new posts, clamped to 0–300. |
+
+```php
+// A trusted integration user gets no budget; everyone else gets 100 posts an hour.
+add_filter(
+	'bibliography_builder_bulk_rate_limit',
+	static function ( $limit, $user_id ) {
+		if ( 12 === $user_id ) {
+			return false;
+		}
+
+		return array( 'posts' => 100, 'window' => HOUR_IN_SECONDS );
+	},
+	10,
+	2
+);
+```
+
+The code is in `includes/bulk-routes.php` and `includes/rate-limit.php`.
+
 ## Abilities
 
 On WordPress 6.9 and later, the same writes are also available as abilities through the Abilities API (`includes/write-abilities.php`). They are registered only when the write routes are enabled, in the `bibliography` category next to the read-only abilities:
@@ -160,8 +251,10 @@ On WordPress 6.9 and later, the same writes are also available as abilities thro
 | `borges/update-bibliography-settings` | `PATCH …/bibliographies/<ref>` | `settings` |
 | `borges/reformat-bibliography` | `POST …/reformat` | `style` |
 
+`borges/bulk-reformat` wraps `POST /bulk/reformat`. Its input is `style`, `posts` (each `{ id, etag }`), and `dry_run`, and its permission is `edit_others_posts`. It calls the route's callback, so it spends the same budget and waits for the same lock; a refused call returns the route's `429` as an error, with `reset` in its data.
+
 Every ability takes `post_id` and either `index` or `bibliography_id` to name the block, plus `dry_run` (default `true`) and `etag`. Each one builds the request its route would get and calls the route's own callback, so the rules are the same: `edit_post` on the post, a preview unless `dry_run` is `false`, and to save, `etag` set to the ETag from a read or dry run. Without `etag` a save is refused with status `428`, and with a stale one `412`. The output is the route's response body, `etag` included. Only `borges/delete-citation` is annotated as destructive.
 
 ## Still to come
 
-The remaining milestone is bulk routes across posts (Tier 4). See the design memo's sequencing table.
+Cross-post deduplicate (the other Tier 4 route) will reuse the bulk scaffolding: batches, the budget, and the lock. See the design memo's sequencing table.

@@ -670,6 +670,8 @@ require_once __DIR__ . '/includes/output-defaults.php';
 require_once __DIR__ . '/includes/email-output.php';
 require_once __DIR__ . '/includes/block-locator.php';
 require_once __DIR__ . '/includes/write-routes.php';
+require_once __DIR__ . '/includes/rate-limit.php';
+require_once __DIR__ . '/includes/bulk-routes.php';
 require_once __DIR__ . '/includes/write-abilities.php';
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
