@@ -155,13 +155,14 @@ final class WriteRoutesTest extends TestCase {
 		bibliography_builder_register_write_routes();
 
 		$routes = array_column( $GLOBALS['bibliography_builder_test_rest_routes'], 'route' );
-		$this->assertCount( 6, $routes );
+		$this->assertCount( 7, $routes );
 		$this->assertStringEndsWith( ')', $routes[0] );
 		$this->assertStringEndsWith( '/reformat', $routes[1] );
 		$this->assertStringEndsWith( '/citations/order', $routes[2] );
 		$this->assertStringEndsWith( '/citations', $routes[3] );
 		$this->assertStringContainsString( '(?P<citation_id>', $routes[4] );
 		$this->assertSame( '/bulk/reformat', $routes[5] );
+		$this->assertSame( '/bulk/deduplicate', $routes[6] );
 	}
 
 	public function test_permission_needs_edit_post() {
@@ -277,6 +278,31 @@ final class WriteRoutesTest extends TestCase {
 		$this->assertStringContainsString( 'Revisited', $knuth['formattedText'] );
 		$this->assertSame( '10.1093/comjnl/27.2.97', $knuth['csl']['DOI'] );
 		$this->assert_blocks_are_valid();
+	}
+
+	public function test_patch_refuses_an_edit_that_would_duplicate_another_citation() {
+		$request                = self::request( 'PATCH', 'notes-block', array( 'DOI' => 'https://doi.org/10.1093/COMJNL/27.2.97' ) );
+		$request['citation_id'] = 'c-turing';
+		$error                  = bibliography_builder_rest_update_citation( $request );
+
+		$this->assertSame( 'bibliography_builder_duplicate_citation', $error->get_error_code() );
+		$this->assertSame(
+			array(
+				'status'      => 409,
+				'duplicateOf' => 'c-knuth',
+				'reason'      => 'doi',
+			),
+			$error->get_error_data()
+		);
+
+		// The citation itself, and other bibliographies in the post, don't count.
+		$self                = self::request( 'PATCH', 'notes-block', array( 'DOI' => '10.1093/comjnl/27.2.97' ) );
+		$self['citation_id'] = 'c-knuth';
+		$this->assertFalse( is_wp_error( bibliography_builder_rest_update_citation( $self ) ) );
+
+		$other                = self::request( 'PATCH', 'ieee-block', array( 'DOI' => '10.1093/comjnl/27.2.97' ) );
+		$other['citation_id'] = 'i-one';
+		$this->assertFalse( is_wp_error( bibliography_builder_rest_update_citation( $other ) ) );
 	}
 
 	public function test_patch_null_removes_a_field_and_locked_fields_are_refused() {

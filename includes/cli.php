@@ -1,17 +1,18 @@
 <?php
 /**
  * WP-CLI commands: the read-only `wp borges list`, `export`, and `validate`,
- * and the bulk write `wp borges reformat`.
+ * and the bulk writes `wp borges reformat` and `wp borges deduplicate`.
  *
  * Each command calls the same read model as the REST routes and abilities
  * (`bibliography_builder_get_bibliographies_for_post()`, the export builders,
  * and `bibliography_builder_get_validation_report()`), so their output matches.
  * None of them writes anything.
  *
- * `wp borges reformat` writes, so it always checks, with or without the
- * rule above: it needs `--user`, the write-routes filter, `edit_others_posts`,
- * and `edit_post` on each post, as POST /bulk/reformat does. It reformats
- * through the same per-post function as that route, in batches, but spends
+ * `wp borges reformat` and `wp borges deduplicate` write, so they always
+ * check, with or without the rule below: they need `--user`, the write-routes
+ * filter, `edit_others_posts`, and `edit_post` on each post, as the bulk
+ * routes do. Each works through the same per-post function as its route, in
+ * batches, but spends
  * no rate-limit budget and takes no lock: someone with a shell is the site's
  * operator, and the budget exists to stop runaway HTTP loops.
  *
@@ -64,6 +65,17 @@ const BIBLIOGRAPHY_BUILDER_CLI_REFORMAT_FIELDS = array(
 	'postId',
 	'status',
 	'bibliographies',
+	'message',
+);
+
+/**
+ * Columns `wp borges deduplicate` prints, one row per post.
+ */
+const BIBLIOGRAPHY_BUILDER_CLI_DEDUPLICATE_FIELDS = array(
+	'postId',
+	'status',
+	'removed',
+	'crossBlock',
 	'message',
 );
 
@@ -254,12 +266,12 @@ function bibliography_builder_cli_issue_rows( $reports ) {
 }
 
 /**
- * Check that `wp borges reformat` may run, and read its style.
+ * Check that a bulk write command may run: the write-routes filter, a
+ * `--user`, and that user's `edit_others_posts`.
  *
- * @param array $assoc_args Command options: `style`.
- * @return string|WP_Error The style key.
+ * @return true|WP_Error
  */
-function bibliography_builder_cli_reformat_style( $assoc_args ) {
+function bibliography_builder_cli_bulk_write_check() {
 	if ( ! bibliography_builder_write_routes_enabled() ) {
 		return new WP_Error(
 			'bibliography_builder_writes_disabled',
@@ -277,7 +289,17 @@ function bibliography_builder_cli_reformat_style( $assoc_args ) {
 		);
 	}
 
-	$allowed = bibliography_builder_rest_bulk_permissions_check();
+	return bibliography_builder_rest_bulk_permissions_check();
+}
+
+/**
+ * Check that `wp borges reformat` may run, and read its style.
+ *
+ * @param array $assoc_args Command options: `style`.
+ * @return string|WP_Error The style key.
+ */
+function bibliography_builder_cli_reformat_style( $assoc_args ) {
+	$allowed = bibliography_builder_cli_bulk_write_check();
 
 	if ( is_wp_error( $allowed ) ) {
 		return $allowed;
@@ -301,21 +323,21 @@ function bibliography_builder_cli_reformat_style( $assoc_args ) {
 }
 
 /**
- * Reformat posts for `wp borges reformat`, a batch at a time.
+ * Run posts through a bulk per-post function, a batch at a time.
  *
- * A commit reads each post's ETag just before reformatting it, so a post
+ * A commit reads each post's ETag just before changing it, so a post
  * someone edits during the run is saved from their latest content, and the
  * splice still proves nothing else in the post changed. Between batches the
  * in-memory object cache is flushed, so memory stays flat on large runs.
  *
- * @param int[]  $post_ids   Post IDs.
- * @param string $style      Style key.
- * @param bool   $commit     Save, rather than preview.
- * @param int    $batch_size Posts per batch.
- * @param int    $sleep      Seconds to wait between batches.
- * @return array[] Results of bibliography_builder_bulk_reformat_post().
+ * @param int[]    $post_ids   Post IDs.
+ * @param callable $per_post   Called with a post ID, the dry-run flag, and the ETag.
+ * @param bool     $commit     Save, rather than preview.
+ * @param int      $batch_size Posts per batch.
+ * @param int      $sleep      Seconds to wait between batches.
+ * @return array[] The per-post results.
  */
-function bibliography_builder_cli_reformat_posts( $post_ids, $style, $commit, $batch_size, $sleep ) {
+function bibliography_builder_cli_bulk_posts( $post_ids, $per_post, $commit, $batch_size, $sleep ) {
 	$results = array();
 	$batches = array_chunk( $post_ids, max( 1, $batch_size ) );
 
@@ -333,11 +355,41 @@ function bibliography_builder_cli_reformat_posts( $post_ids, $style, $commit, $b
 		foreach ( $batch as $post_id ) {
 			$post      = get_post( $post_id );
 			$etag      = $commit && is_object( $post ) ? bibliography_builder_post_etag( $post ) : '';
-			$results[] = bibliography_builder_bulk_reformat_post( $post_id, $style, ! $commit, $etag );
+			$results[] = call_user_func( $per_post, $post_id, ! $commit, $etag );
 		}
 	}
 
 	return $results;
+}
+
+/**
+ * Reformat posts for `wp borges reformat`, a batch at a time.
+ *
+ * @param int[]  $post_ids   Post IDs.
+ * @param string $style      Style key.
+ * @param bool   $commit     Save, rather than preview.
+ * @param int    $batch_size Posts per batch.
+ * @param int    $sleep      Seconds to wait between batches.
+ * @return array[] Results of bibliography_builder_bulk_reformat_post().
+ */
+function bibliography_builder_cli_reformat_posts( $post_ids, $style, $commit, $batch_size, $sleep ) {
+	return bibliography_builder_cli_bulk_posts(
+		$post_ids,
+		/**
+		 * Reformat one post.
+		 *
+		 * @param int    $post_id Post ID.
+		 * @param bool   $dry_run Preview without saving.
+		 * @param string $etag    The post's current ETag, or '' for a preview.
+		 * @return array
+		 */
+		static function ( $post_id, $dry_run, $etag ) use ( $style ) {
+			return bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $etag );
+		},
+		$commit,
+		$batch_size,
+		$sleep
+	);
 }
 
 /**
@@ -376,6 +428,46 @@ function bibliography_builder_cli_reformat_rows( $results ) {
 				'status'         => $result['status'],
 				'bibliographies' => isset( $result['bibliographies'] ) ? count( $result['bibliographies'] ) : 0,
 				'message'        => $message,
+			);
+		},
+		$results
+	);
+}
+
+/**
+ * Table rows for `wp borges deduplicate`.
+ *
+ * @param array[] $results Results of bibliography_builder_bulk_deduplicate_post().
+ * @return array<int, array<string, mixed>>
+ */
+function bibliography_builder_cli_deduplicate_rows( $results ) {
+	return array_map(
+		static function ( $result ) {
+			$removed = 0;
+
+			foreach ( $result['bibliographies'] ?? array() as $bibliography ) {
+				$removed += count( $bibliography['changes']['removed'] );
+			}
+
+			$cross = isset( $result['crossBlockDuplicates'] ) ? count( $result['crossBlockDuplicates'] ) : 0;
+
+			if ( isset( $result['error'] ) ) {
+				$message = $result['error']['message'];
+			} elseif ( 0 < $cross ) {
+				$message = __(
+					'Some works repeat across bibliographies; those are left in place.',
+					'borges-bibliography-builder'
+				);
+			} else {
+				$message = '';
+			}
+
+			return array(
+				'postId'     => $result['postId'],
+				'status'     => $result['status'],
+				'removed'    => $removed,
+				'crossBlock' => $cross,
+				'message'    => $message,
 			);
 		},
 		$results

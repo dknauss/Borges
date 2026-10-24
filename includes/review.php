@@ -608,6 +608,36 @@ function bibliography_builder_get_duplicate_reason( $first, $second ) {
 }
 
 /**
+ * The first citation in a list that duplicates a given one, by the editor's
+ * rules (bibliography_builder_get_duplicate_reason()).
+ *
+ * The one check behind every write that could put a second copy of a work in
+ * a bibliography: the add route skips such items, and the update route
+ * refuses an edit that would make one.
+ *
+ * @param array $citation  Citation record (or `{ csl }`) to look for.
+ * @param array $citations Citations to search; leave the citation itself out.
+ * @return array{id: string|null, reason: string}|null The match, or null.
+ */
+function bibliography_builder_find_duplicate_citation( $citation, $citations ) {
+	$keys = bibliography_builder_get_duplicate_keys( $citation );
+
+	foreach ( $citations as $existing ) {
+		$existing_keys = bibliography_builder_get_duplicate_keys( $existing );
+		$reason        = bibliography_builder_get_duplicate_reason( $existing_keys, $keys );
+
+		if ( null !== $reason ) {
+			return array(
+				'id'     => bibliography_builder_get_citation_id( $existing ),
+				'reason' => $reason,
+			);
+		}
+	}
+
+	return null;
+}
+
+/**
  * List likely duplicate pairs in one bibliography.
  *
  * @param mixed  $post_id Post ID, passed through absint().

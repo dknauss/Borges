@@ -1,13 +1,13 @@
 # WP-CLI commands
 
-Borges adds a `wp borges` command group. The read commands call the same read model as the REST routes and abilities, so `list`, `export`, and `validate` print the same data as `GET /posts/{id}/bibliographies`, `GET …/bibliographies/{ref}?format=…`, and `GET …/{ref}/validate`, and write nothing. `reformat` writes: it switches whole posts to another citation style, as `POST /bulk/reformat` does.
+Borges adds a `wp borges` command group. The read commands call the same read model as the REST routes and abilities, so `list`, `export`, and `validate` print the same data as `GET /posts/{id}/bibliographies`, `GET …/bibliographies/{ref}?format=…`, and `GET …/{ref}/validate`, and write nothing. `reformat` and `deduplicate` write: they switch whole posts to another citation style, or remove repeated citations from them, as `POST /bulk/reformat` and `POST /bulk/deduplicate` do.
 
 ## Permissions
 
 - **Without `--user`**, the commands check no capabilities, as core's own commands don't: anyone who can run WP-CLI on the server can already read the database, drafts included, with `wp db` or `wp eval`. This is the usual way to run them from cron or a maintenance script.
 - **With `--user=<id|login|email>`**, they apply that user's capabilities exactly as the REST routes and abilities do. `list` and `export` need what the read route needs: a published post of a publicly viewable type, or `edit_post` on the post. `validate` needs `edit_post`, like the validate route. A refused command prints "Sorry, you are not allowed to …" and exits 1. Use this when a script should act only on what one person may see.
 
-The rule above is for the read commands. `reformat` writes, so it always checks: it needs `--user`, the `bibliography_builder_enable_write_routes` filter, `edit_others_posts`, and `edit_post` on each post, as the bulk route does.
+The rule above is for the read commands. `reformat` and `deduplicate` write, so they always check: they need `--user`, the `bibliography_builder_enable_write_routes` filter, `edit_others_posts`, and `edit_post` on each post, as the bulk routes do.
 
 On Multisite, pick a site with `--url=`.
 
@@ -67,6 +67,19 @@ $ wp borges reformat $(wp post list --post_type=post,page --s=wp:bibliography-bu
     --style=apa-7 --user=editor --commit --sleep=1
 ```
 
+## `wp borges deduplicate <post-id>...`
+
+Removes repeated citations from every bibliography in the given posts, through the same per-post code as `POST /bulk/deduplicate` (see `docs/rest-write-routes.md`, "Bulk deduplicate"). Each bibliography keeps the first copy of a work, by the editor's duplicate rules, and drops later copies. A work repeated across two bibliographies in one post is counted in the `crossBlock` column and left in place.
+
+It takes the same `--commit`, `--batch-size`, `--sleep`, and `--format` options as `reformat`, with the same checks, statuses, exit code, and exemption from the rate-limit budget. The table has one row per post: `postId`, `status`, `removed` (citations removed, or that would be), `crossBlock` (pairs across bibliographies), and `message`. `--format=json` prints the full results, including every removed citation, which is a handy record to keep before a `--commit`.
+
+```
+$ wp borges deduplicate 42 43 --user=editor
+$ wp borges deduplicate $(wp post list --post_type=post,page --s=wp:bibliography-builder --format=ids) \
+    --user=editor --format=json > duplicates.json
+$ wp borges deduplicate 42 43 --user=editor --commit
+```
+
 ## Across a network
 
 There is no network command. Loop over the sites:
@@ -79,4 +92,4 @@ The per-citation write commands (add, update, delete) are not built yet; see `.p
 
 ## Tests
 
-`tests/phpunit/CliCommandTest.php` runs the command class against a recording WP-CLI stub (`tests/phpunit/stubs/wp-cli.php`, which Psalm also reads), both with no user and with users who have and lack access. `tests/phpunit/CliReformatCommandTest.php` covers `reformat`. The runtime matrix (`scripts/runtime-matrix/smoke.sh`) runs the real commands with WP-CLI on every PHP and WordPress version it covers.
+`tests/phpunit/CliCommandTest.php` runs the command class against a recording WP-CLI stub (`tests/phpunit/stubs/wp-cli.php`, which Psalm also reads), both with no user and with users who have and lack access. `tests/phpunit/CliReformatCommandTest.php` covers `reformat`, and `tests/phpunit/BulkDeduplicateTest.php` covers `deduplicate` with its route. The runtime matrix (`scripts/runtime-matrix/smoke.sh`) runs the real commands with WP-CLI on every PHP and WordPress version it covers.

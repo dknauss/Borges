@@ -91,7 +91,7 @@ The `changes` object depends on the route:
 | Route | `changes` |
 | --- | --- |
 | add | `added` (new citation IDs); `skipped` (`{ item, duplicateOf }` for items that duplicate an existing citation or an earlier item, by the editor's duplicate rules) |
-| patch | `updated` |
+| patch | `updated`. An edit that would make the citation a duplicate of another in the same bibliography is refused with `409` (`bibliography_builder_duplicate_citation`), with `duplicateOf` and `reason` in `data` |
 | delete | `removed`: the whole entry, so a client can put it back |
 | reorder | `order` |
 | settings | `updated` (the setting names sent) |
@@ -142,6 +142,7 @@ The stored CSL-JSON is not changed. If any entry has CSL-JSON the formatter cann
 ## Limits and caveats
 
 - **Size:** a request adds at most 50 items, and a bibliography holds at most 200 citations, the editor's limit. A reformat formats up to 200 entries in one formatter call.
+- **No duplicates within a bibliography:** every write keeps a bibliography free of two copies of one work, by the editor's duplicate rules (`bibliography_builder_find_duplicate_citation()`): add skips them, and patch refuses an edit that would make one. The same work in two bibliographies of one post is fine.
 - **Reordering:** only numeric styles (IEEE, Vancouver) can be reordered. Other styles sort their entries themselves, so they return `409`.
 - **Export strings:** BibTeX and BibLaTeX export strings for new or changed entries are computed only in the editor, because they need citation-js. With per-entry Cite / Export on, those entries show RIS and CSL-JSON links until someone next saves the post in the editor. The editor then adds the missing strings. The same applies to every entry that has no strings yet when `outputCiteExport` is turned on over REST.
 - **HTML filtering:** WordPress filters saved HTML for users without `unfiltered_html`, in exactly the same way as it does for the editor.
@@ -240,6 +241,63 @@ The code is in `includes/bulk-routes.php` and `includes/rate-limit.php`.
 
 The runtime matrix (`scripts/runtime-matrix/smoke.sh`) runs the route over real HTTP on every stack it covers, under a three-post budget its test-only mu-plugin (`scripts/runtime-matrix/bulk-rate-limit.php`) sets: a two-post dry run, a commit clipped to the one post left with the other in `remaining`, a `429` with `Retry-After`, and `wp borges reformat` saving the post the route could not, since WP-CLI spends no budget.
 
+## Bulk deduplicate
+
+`POST /wp-json/bibliography/v1/bulk/deduplicate` removes repeated citations from every bibliography in a batch of posts. It is the second Tier 4 route, on the same scaffolding as bulk reformat: the write-routes filter, `edit_others_posts` plus `edit_post` on each post, a dry run unless `dry_run=false`, a per-post ETag, batches of up to 25 posts with `remaining`, and the time budget. It spends **the same budget** as bulk reformat (a post costs 1 on either route) and waits for the same site-wide lock.
+
+```
+POST /wp-json/bibliography/v1/bulk/deduplicate?dry_run=false
+{ "posts": [ { "id": 12, "etag": "\"…\"" }, { "id": 13, "etag": "\"…\"" } ] }
+```
+
+### What counts as a duplicate, and which copy stays
+
+Two citations are duplicates by the editor's own rules (`citationsMatch()` in `src/lib/deduplicate.js`, the same check the `…/duplicates` review route and the add route use): the same DOI (ignoring case and a `doi.org` prefix), or the same title (ignoring case and punctuation) with the same year, the same first author, or neither.
+
+Each bibliography is read in its stored order, and **the first copy of a work stays**, with its formatted text, any manual display text, and its export strings. Later copies are removed, as if the editor had refused to add them. Nothing is merged into the copy that stays: if a later copy has a DOI the first lacks, the dry run shows it, and you can add it with `PATCH …/citations/<id>` before saving.
+
+Removing a copy refreshes the year suffixes of its same-author, same-year group, as `DELETE …/citations/<id>` does, so "2020a" goes back to "2020" when its twin is removed.
+
+### Only within each bibliography
+
+A work listed in two bibliographies of one post is **not** removed: a post with one bibliography per chapter or section means to list it in each. It is reported instead, in the post's `crossBlockDuplicates`, for a person to decide. The route never moves or removes citations between posts; "across posts" means it covers many posts in one request.
+
+### Response
+
+The same envelope as bulk reformat, without `style`. Each post's `bibliographies` list only the blocks that change, and each removed copy says what it duplicated:
+
+```json
+{
+  "dryRun": true,
+  "results": [
+    {
+      "postId": 12,
+      "status": "preview",
+      "etag": "\"…\"",
+      "bibliographies": [
+        {
+          "index": 0,
+          "bibliographyId": "…",
+          "changes": {
+            "removed": [
+              { "index": 2, "id": "knuth-doi", "duplicateOf": "knuth", "reason": "doi", "citation": { "id": "knuth-doi", "csl": { … }, "formattedText": "…" } }
+            ]
+          }
+        }
+      ],
+      "crossBlockDuplicates": [
+        { "reason": "title-year", "first": { "index": 0, "bibliographyId": "chapter-1", "citationId": "hoare" }, "second": { "index": 1, "bibliographyId": "chapter-2", "citationId": "hoare-2" } }
+      ]
+    },
+    { "postId": 13, "status": "unchanged", "etag": "\"…\"", "bibliographies": [], "crossBlockDuplicates": [] }
+  ],
+  "remaining": [],
+  "rateLimit": { "limit": 250, "remaining": 248, "reset": 611 }
+}
+```
+
+`reason` is `doi`, `title-year`, `title-author`, or `title`, as in the review route. `index` in a removed entry is its position before the change. A post with nothing to remove is `unchanged` and is not saved, so retrying a batch is safe. `crossBlockDuplicates` is left out of `skipped` and `failed` posts. The other statuses mean what they mean for bulk reformat. Each saved post gains one revision, which still holds the removed citations.
+
 ## Abilities
 
 On WordPress 6.9 and later, the same writes are also available as abilities through the Abilities API (`includes/write-abilities.php`). They are registered only when the write routes are enabled, in the `bibliography` category next to the read-only abilities:
@@ -253,10 +311,10 @@ On WordPress 6.9 and later, the same writes are also available as abilities thro
 | `borges/update-bibliography-settings` | `PATCH …/bibliographies/<ref>` | `settings` |
 | `borges/reformat-bibliography` | `POST …/reformat` | `style` |
 
-`borges/bulk-reformat` wraps `POST /bulk/reformat`. Its input is `style`, `posts` (each `{ id, etag }`), and `dry_run`, and its permission is `edit_others_posts`. It calls the route's callback, so it spends the same budget and waits for the same lock; a refused call returns the route's `429` as an error, with `reset` in its data.
+`borges/bulk-reformat` wraps `POST /bulk/reformat`. Its input is `style`, `posts` (each `{ id, etag }`), and `dry_run`, and its permission is `edit_others_posts`. It calls the route's callback, so it spends the same budget and waits for the same lock; a refused call returns the route's `429` as an error, with `reset` in its data. `borges/bulk-deduplicate` wraps `POST /bulk/deduplicate` the same way, with `posts` and `dry_run` as its input, and is annotated as destructive.
 
 Every ability takes `post_id` and either `index` or `bibliography_id` to name the block, plus `dry_run` (default `true`) and `etag`. Each one builds the request its route would get and calls the route's own callback, so the rules are the same: `edit_post` on the post, a preview unless `dry_run` is `false`, and to save, `etag` set to the ETag from a read or dry run. Without `etag` a save is refused with status `428`, and with a stale one `412`. The output is the route's response body, `etag` included. Only `borges/delete-citation` is annotated as destructive.
 
 ## Still to come
 
-Cross-post deduplicate (the other Tier 4 route) will reuse the bulk scaffolding: batches, the budget, and the lock. See the design memo's sequencing table.
+A site-wide duplicates report (the same work cited in many posts, for harmonizing its metadata) would need to read every post, so it belongs in WP-CLI rather than a REST batch. See the design memo's sequencing table.

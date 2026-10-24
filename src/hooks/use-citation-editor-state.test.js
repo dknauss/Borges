@@ -275,6 +275,56 @@ describe('handleEditStart / handleEditConfirm / handleEditCancel', () => {
 	});
 });
 
+// --- Structured edit save — duplicates ---
+
+describe('handleStructuredEditSave duplicates', () => {
+	const book = (id, title) =>
+		makeCitation({
+			id,
+			csl: {
+				type: 'book',
+				title,
+				author: [{ family: 'Smith', given: 'Ada' }],
+				issued: { 'date-parts': [[2024]] },
+			},
+		});
+
+	it('refuses an edit that would duplicate another citation and keeps the form open', async () => {
+		const args = makeHookArgs([
+			book('cit-1', 'First title'),
+			book('cit-2', 'Second title'),
+		]);
+		const { result } = renderHook(() => useCitationEditorState(args));
+
+		act(() => result.current.handleStructuredEditStart('cit-1'));
+		act(() =>
+			result.current.handleStructuredFieldChange('title', 'Second Title.')
+		);
+		await act(() => result.current.handleStructuredEditSave());
+
+		expect(args.setAttributes).not.toHaveBeenCalled();
+		expect(args.announce).toHaveBeenLastCalledWith(
+			'warning',
+			expect.stringContaining('match another citation')
+		);
+		expect(result.current.structuredEditingId).toBe('cit-1');
+	});
+
+	it('does not count the edited citation itself', async () => {
+		const args = makeHookArgs([book('cit-1', 'First title')]);
+		const { result } = renderHook(() => useCitationEditorState(args));
+
+		act(() => result.current.handleStructuredEditStart('cit-1'));
+		act(() =>
+			result.current.handleStructuredFieldChange('title', 'First Title')
+		);
+		await act(() => result.current.handleStructuredEditSave());
+
+		expect(args.setAttributes).toHaveBeenCalled();
+		expect(result.current.structuredEditingId).toBeNull();
+	});
+});
+
 // --- Structured edit save — async race condition ---
 
 describe('handleStructuredEditSave race condition', () => {
