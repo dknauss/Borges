@@ -20,6 +20,9 @@
  * - PATCH                 change block settings (heading, output toggles)
  * - POST   /reformat      switch the citation style and reformat every entry
  *
+ * The same filter turns on the cross-post bulk routes in
+ * includes/bulk-routes.php (POST /bibliography/v1/bulk/reformat).
+ *
  * Every route needs `edit_post` on the post. Every route is a dry run unless
  * `dry_run=false`, and a real write needs an `If-Match` header carrying the
  * ETag of the content it was based on (412 when the post has changed since,
@@ -1010,120 +1013,135 @@ function bibliography_builder_rest_reformat_bibliography( WP_REST_Request $reque
 		 * @return array|WP_Error `{ attrs, changes }`, or an error.
 		 */
 		static function ( $attrs ) use ( $style ) {
-			$from      = bibliography_builder_write_style( $attrs );
-			$citations = bibliography_builder_write_citations( $attrs );
+			return bibliography_builder_write_reformat_attrs( $attrs, $style );
+		}
+	);
+}
 
-			if ( count( $citations ) > BIBLIOGRAPHY_BUILDER_MAX_CITATIONS_PER_BIBLIOGRAPHY ) {
-				return new WP_Error(
-					'bibliography_builder_too_many_citations',
-					sprintf(
-						/* translators: %d: maximum citation count. */
-						__(
-							'Only bibliographies of %d citations or fewer can be reformatted.',
-							'borges-bibliography-builder'
-						),
-						BIBLIOGRAPHY_BUILDER_MAX_CITATIONS_PER_BIBLIOGRAPHY
-					),
-					array( 'status' => 400 )
-				);
-			}
+/**
+ * Switch one block's attributes to another citation style.
+ *
+ * The reformat route's change, shared with the bulk route
+ * (includes/bulk-routes.php) so both reformat exactly as the editor's
+ * `handleCitationStyleChange` does.
+ *
+ * @param array  $attrs Block attributes as plain arrays.
+ * @param string $style Supported style key.
+ * @return array|WP_Error `{ attrs, changes }`, or an error.
+ */
+function bibliography_builder_write_reformat_attrs( $attrs, $style ) {
+	$from      = bibliography_builder_write_style( $attrs );
+	$citations = bibliography_builder_write_citations( $attrs );
 
-			// Format sanitized copies; the stored CSL-JSON stays as it is.
-			$items   = array();
-			$invalid = array();
-
-			foreach ( $citations as $position => $citation ) {
-				$csl = isset( $citation['csl'] ) && is_array( $citation['csl'] ) && array() !== $citation['csl']
-					? bibliography_builder_validate_and_sanitize_csl_item( $citation['csl'] )
-					: new WP_Error(
-						'bibliography_builder_invalid_csl_item',
-						__( 'The entry has no CSL-JSON data.', 'borges-bibliography-builder' )
-					);
-
-				if ( is_wp_error( $csl ) ) {
-					$invalid[] = array(
-						'index'   => $position,
-						'id'      => bibliography_builder_get_citation_id( $citation ),
-						'message' => $csl->get_error_message(),
-					);
-				} else {
-					$items[] = $csl;
-				}
-			}
-
-			if ( array() !== $invalid ) {
-				return new WP_Error(
-					'bibliography_builder_unformattable_entries',
-					__(
-						'Some entries cannot be formatted. Fix or remove them, then reformat.',
-						'borges-bibliography-builder'
-					),
-					array(
-						'status'  => 409,
-						'entries' => $invalid,
-					)
-				);
-			}
-
-			$formatted = array();
-
-			foreach ( array_chunk( $items, BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS ) as $chunk ) {
-				$texts = bibliography_builder_format_csl_items( $chunk, $style );
-
-				if ( is_wp_error( $texts ) ) {
-					return $texts;
-				}
-
-				$formatted = array_merge( $formatted, array_values( $texts ) );
-			}
-
-			$ids = array();
-
-			foreach ( $citations as $position => $citation ) {
-				if ( '' === (string) bibliography_builder_get_citation_id( $citation ) ) {
-					$citation['id'] = bibliography_builder_write_new_citation_id( $citations );
-				}
-
-				$citation['formattedText'] = $formatted[ $position ];
-				$citations[ $position ]    = $citation;
-				$ids[]                     = $citation['id'];
-			}
-
-			$changes = array(
-				'citationStyle' => array(
-					'from' => $from,
-					'to'   => $style,
+	if ( count( $citations ) > BIBLIOGRAPHY_BUILDER_MAX_CITATIONS_PER_BIBLIOGRAPHY ) {
+		return new WP_Error(
+			'bibliography_builder_too_many_citations',
+			sprintf(
+				/* translators: %d: maximum citation count. */
+				__(
+					'Only bibliographies of %d citations or fewer can be reformatted.',
+					'borges-bibliography-builder'
 				),
-				'reformatted'   => $ids,
+				BIBLIOGRAPHY_BUILDER_MAX_CITATIONS_PER_BIBLIOGRAPHY
+			),
+			array( 'status' => 400 )
+		);
+	}
+
+	// Format sanitized copies; the stored CSL-JSON stays as it is.
+	$items   = array();
+	$invalid = array();
+
+	foreach ( $citations as $position => $citation ) {
+		$csl = isset( $citation['csl'] ) && is_array( $citation['csl'] ) && array() !== $citation['csl']
+			? bibliography_builder_validate_and_sanitize_csl_item( $citation['csl'] )
+			: new WP_Error(
+				'bibliography_builder_invalid_csl_item',
+				__( 'The entry has no CSL-JSON data.', 'borges-bibliography-builder' )
 			);
 
-			$heading = isset( $attrs['headingText'] ) ? (string) $attrs['headingText'] : '';
-
-			if ( bibliography_builder_write_default_heading( $from ) === $heading ) {
-				$next = bibliography_builder_write_default_heading( $style );
-
-				if ( $next !== $heading ) {
-					$attrs['headingText']   = $next;
-					$changes['headingText'] = array(
-						'from' => $heading,
-						'to'   => $next,
-					);
-				}
-			}
-
-			$attrs              = bibliography_builder_write_set_attribute(
-				$attrs,
-				'citationStyle',
-				$style,
-				bibliography_builder_default_style_key()
+		if ( is_wp_error( $csl ) ) {
+			$invalid[] = array(
+				'index'   => $position,
+				'id'      => bibliography_builder_get_citation_id( $citation ),
+				'message' => $csl->get_error_message(),
 			);
-			$attrs['citations'] = bibliography_builder_sort_citations_for_save( $citations, $style );
+		} else {
+			$items[] = $csl;
+		}
+	}
 
-			return array(
-				'attrs'   => $attrs,
-				'changes' => $changes,
+	if ( array() !== $invalid ) {
+		return new WP_Error(
+			'bibliography_builder_unformattable_entries',
+			__(
+				'Some entries cannot be formatted. Fix or remove them, then reformat.',
+				'borges-bibliography-builder'
+			),
+			array(
+				'status'  => 409,
+				'entries' => $invalid,
+			)
+		);
+	}
+
+	$formatted = array();
+
+	foreach ( array_chunk( $items, BIBLIOGRAPHY_BUILDER_MAX_FORMAT_ITEMS ) as $chunk ) {
+		$texts = bibliography_builder_format_csl_items( $chunk, $style );
+
+		if ( is_wp_error( $texts ) ) {
+			return $texts;
+		}
+
+		$formatted = array_merge( $formatted, array_values( $texts ) );
+	}
+
+	$ids = array();
+
+	foreach ( $citations as $position => $citation ) {
+		if ( '' === (string) bibliography_builder_get_citation_id( $citation ) ) {
+			$citation['id'] = bibliography_builder_write_new_citation_id( $citations );
+		}
+
+		$citation['formattedText'] = $formatted[ $position ];
+		$citations[ $position ]    = $citation;
+		$ids[]                     = $citation['id'];
+	}
+
+	$changes = array(
+		'citationStyle' => array(
+			'from' => $from,
+			'to'   => $style,
+		),
+		'reformatted'   => $ids,
+	);
+
+	$heading = isset( $attrs['headingText'] ) ? (string) $attrs['headingText'] : '';
+
+	if ( bibliography_builder_write_default_heading( $from ) === $heading ) {
+		$next = bibliography_builder_write_default_heading( $style );
+
+		if ( $next !== $heading ) {
+			$attrs['headingText']   = $next;
+			$changes['headingText'] = array(
+				'from' => $heading,
+				'to'   => $next,
 			);
 		}
+	}
+
+	$attrs              = bibliography_builder_write_set_attribute(
+		$attrs,
+		'citationStyle',
+		$style,
+		bibliography_builder_default_style_key()
+	);
+	$attrs['citations'] = bibliography_builder_sort_citations_for_save( $citations, $style );
+
+	return array(
+		'attrs'   => $attrs,
+		'changes' => $changes,
 	);
 }
 
@@ -1220,4 +1238,7 @@ function bibliography_builder_register_write_routes() {
 			),
 		)
 	);
+
+	// Cross-post bulk routes (includes/bulk-routes.php) share this opt-in.
+	bibliography_builder_register_bulk_routes();
 }

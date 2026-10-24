@@ -440,18 +440,24 @@ The owner chose this order on 2026-10-23:
    "WP-CLI commands" below
     - `wp borges list`, `export`, and `validate`, calling the same read
       callbacks as the REST routes and abilities. `duplicates` and `preview`
-      can follow the same pattern; write and cross-post commands wait for
-      the Phase 05 M4 design
+      can follow the same pattern. `wp borges reformat` (cross-post restyle)
+      came with M4; the per-citation write commands are still to do
 4. **Reference-manager export corpus** — pending todo
    `2026-06-23-test-reference-manager-exports.md`; **needs the owner**
     - a hand-authored corpus landed in #91
       (`src/lib/__fixtures__/reference-manager-exports/`). Still open: real,
       anonymized Zotero and Mendeley exports from the owner's libraries, then
       Papers, RefWorks, and BibDesk once samples exist
-5. **Phase 05 M4: bulk routes** — needs a rate-limiting design first
-    - Tier 4 in the design memo: cross-post reformat behind
-      `edit_others_posts`, returning a job ID for polling. Write the
-      rate-limiting and job design before any code
+5. **Phase 05 M4: bulk routes** — reformat built 2026-10-24, unreleased
+    - Design agreed with Dan 2026-10-24: synchronous batches (up to 25
+      posts, a `remaining` list) instead of a polled job ID, since jobs
+      would need stored records and cron; a per-user budget of 250 posts
+      per 15 minutes, dry runs included, clipped rather than refused; one
+      saving bulk request per site at a time; object cache when persistent,
+      else transients; hosts tune it with filters. WP-CLI `reformat` needs
+      `--user` and skips the budget. See `docs/rest-write-routes.md`,
+      "Bulk reformat"
+    - Still to do: cross-post deduplicate on the same scaffolding
 6. **First-wave official language packs** — pending todo
    `2026-06-14-coordinate-first-wave-language-packs.md`
     - push fr_FR, de_DE, es_ES, pt_BR, and ja on translate.wordpress.org
@@ -525,7 +531,7 @@ permissions do too whenever a command runs as a user (`--user`).
 -   Network use: `--url=` per site, and a documented loop over
     `wp site list --field=url` rather than a bespoke network command.
 -   Cross-post commands (validate or restyle every post with a bibliography)
-    belong with Phase 05 M4 and its rate-limiting and job design; resolver
+    belong with Phase 05 M4; `wp borges reformat` shipped with it. Resolver
     lookups at volume would need the NCBI API key and Crossref contact settings
     first.
 -   No new settings or options, so `verify-metrics.sh` stays green.
@@ -535,8 +541,10 @@ Status: `list`, `export`, and `validate` shipped (1.14.0, 2026-10-23;
 check no capabilities, like core's commands, since shell access already reads
 the database; with `--user` they apply the same checks as the REST routes and
 abilities. Write commands will check `edit_post` and the write-routes filter
-either way. `duplicates` and `preview` are small follow-ups. The writes and
-cross-post commands still wait for M4's design.
+either way. `duplicates` and `preview` are small follow-ups. `wp borges
+reformat` came with M4 (2026-10-24, unreleased): it needs `--user`,
+`edit_others_posts`, and the write-routes filter, and spends no rate-limit
+budget. The per-citation write commands are still to do.
 
 ### Translation and language-pack backlog
 

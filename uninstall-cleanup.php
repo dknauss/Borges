@@ -43,6 +43,7 @@ if ( ! function_exists( 'bibliography_builder_uninstall_cleanup' ) ) {
 		if ( function_exists( 'wp_cache_flush_group' ) ) {
 			wp_cache_flush_group( 'bibliography_builder_formatter' );
 			wp_cache_flush_group( 'bibliography_builder_pmid' );
+			wp_cache_flush_group( 'bibliography_builder_rate_limit' );
 		}
 	}
 }

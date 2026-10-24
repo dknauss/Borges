@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read and check Borges bibliographies.
+ * Read, check, and restyle Borges bibliographies.
  *
  * ## EXAMPLES
  *
@@ -24,6 +24,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *     # Check every bibliography in a post; exits 1 when any entry has an error.
  *     $ wp borges validate 42
  *
+ *     # Preview switching three posts to MLA, then save it.
+ *     $ wp borges reformat 42 43 44 --style=mla-9 --user=editor
+ *     $ wp borges reformat 42 43 44 --style=mla-9 --user=editor --commit
+ *
  *     # Run a check on every site in a network.
  *     $ wp site list --field=url | xargs -I % wp borges validate 42 --url=%
  *
@@ -33,6 +37,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * --user, they apply that user's capabilities as the REST routes do: list and
  * export need a published public post or edit_post, and validate needs
  * edit_post.
+ *
+ * reformat writes, so it always needs --user, the write-routes filter,
+ * edit_others_posts, and edit_post on each post.
  */
 final class Bibliography_Builder_CLI_Command {
 
@@ -220,6 +227,137 @@ final class Bibliography_Builder_CLI_Command {
 		}
 
 		if ( 0 < $errors ) {
+			WP_CLI::halt( 1 );
+		}
+	}
+
+	/**
+	 * Switches every bibliography in the given posts to one citation style.
+	 *
+	 * Previews unless --commit is passed. Posts are saved one at a time, each
+	 * as a single revision; a post that fails is reported and skipped, and the
+	 * run goes on. Exits with status 1 when any post failed.
+	 *
+	 * Needs --user, the bibliography_builder_enable_write_routes filter,
+	 * edit_others_posts, and edit_post on each post. Unlike POST
+	 * /bulk/reformat, it spends no rate-limit budget.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <post-id>...
+	 * : One or more post IDs. Posts without a bibliography are skipped.
+	 *
+	 * --style=<style>
+	 * : Citation style key, such as apa-7 or chicago-notes-bibliography.
+	 *
+	 * [--commit]
+	 * : Save the change. Without it, the command only previews.
+	 *
+	 * [--batch-size=<number>]
+	 * : Posts per batch. The object cache's memory is freed between batches.
+	 * ---
+	 * default: 25
+	 * ---
+	 *
+	 * [--sleep=<seconds>]
+	 * : Seconds to wait between batches, to go easy on a busy server.
+	 * ---
+	 * default: 0
+	 * ---
+	 *
+	 * [--format=<format>]
+	 * : table, csv, and yaml list one row per post; json prints the full results.
+	 * ---
+	 * default: table
+	 * options:
+	 *   - table
+	 *   - json
+	 *   - csv
+	 *   - yaml
+	 * ---
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     $ wp borges reformat 42 43 --style=mla-9 --user=editor
+	 *     $ wp borges reformat $(wp post list --post_type=post,page --s=wp:bibliography-builder --format=ids) \\
+	 *         --style=apa-7 --user=editor --commit --sleep=1
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Options.
+	 * @return void
+	 */
+	public function reformat( $args, $assoc_args ) {
+		$style = bibliography_builder_cli_reformat_style( $assoc_args );
+
+		if ( is_wp_error( $style ) ) {
+			WP_CLI::error( $style );
+			return;
+		}
+
+		$post_ids = array();
+
+		foreach ( $args as $arg ) {
+			if ( ! ctype_digit( (string) $arg ) || 0 === (int) $arg ) {
+				/* translators: %s: value given on the command line. */
+				WP_CLI::error( sprintf( __( 'Not a post ID: %s', 'borges-bibliography-builder' ), (string) $arg ) );
+				return;
+			}
+
+			$post_ids[] = (int) $arg;
+		}
+
+		$commit  = ! empty( $assoc_args['commit'] );
+		$results = bibliography_builder_cli_reformat_posts(
+			array_values( array_unique( $post_ids ) ),
+			$style,
+			$commit,
+			isset( $assoc_args['batch-size'] ) ? max( 1, (int) $assoc_args['batch-size'] ) : 25,
+			isset( $assoc_args['sleep'] ) ? max( 0, (int) $assoc_args['sleep'] ) : 0
+		);
+		$format  = isset( $assoc_args['format'] ) ? (string) $assoc_args['format'] : 'table';
+		$counts  = array_count_values( array_column( $results, 'status' ) );
+		$failed  = $counts['failed'] ?? 0;
+
+		if ( 'json' === $format ) {
+			WP_CLI::line(
+				(string) wp_json_encode( $results, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE )
+			);
+		} else {
+			WP_CLI\Utils\format_items(
+				$format,
+				bibliography_builder_cli_reformat_rows( $results ),
+				BIBLIOGRAPHY_BUILDER_CLI_REFORMAT_FIELDS
+			);
+
+			$summary = $commit
+				? sprintf(
+					/* translators: 1: posts saved, 2: posts already in the style, 3: posts skipped, 4: posts failed. */
+					__( 'Saved: %1$d. Unchanged: %2$d. Skipped: %3$d. Failed: %4$d.', 'borges-bibliography-builder' ),
+					$counts['changed'] ?? 0,
+					$counts['unchanged'] ?? 0,
+					$counts['skipped'] ?? 0,
+					$failed
+				)
+				: sprintf(
+					/* translators: 1: posts that would change, 2: posts already in the style, 3: skipped, 4: failed. */
+					__(
+						'Would change: %1$d. Unchanged: %2$d. Skipped: %3$d. Failed: %4$d. Dry run; use --commit.',
+						'borges-bibliography-builder'
+					),
+					$counts['preview'] ?? 0,
+					$counts['unchanged'] ?? 0,
+					$counts['skipped'] ?? 0,
+					$failed
+				);
+
+			if ( 0 < $failed ) {
+				WP_CLI::warning( $summary );
+			} else {
+				WP_CLI::success( $summary );
+			}
+		}
+
+		if ( 0 < $failed ) {
 			WP_CLI::halt( 1 );
 		}
 	}
