@@ -238,6 +238,8 @@ add_filter(
 
 The code is in `includes/bulk-routes.php` and `includes/rate-limit.php`.
 
+The runtime matrix (`scripts/runtime-matrix/smoke.sh`) runs the route over real HTTP on every stack it covers, under a three-post budget its test-only mu-plugin (`scripts/runtime-matrix/bulk-rate-limit.php`) sets: a two-post dry run, a commit clipped to the one post left with the other in `remaining`, a `429` with `Retry-After`, and `wp borges reformat` saving the post the route could not, since WP-CLI spends no budget.
+
 ## Abilities
 
 On WordPress 6.9 and later, the same writes are also available as abilities through the Abilities API (`includes/write-abilities.php`). They are registered only when the write routes are enabled, in the `bibliography` category next to the read-only abilities:
