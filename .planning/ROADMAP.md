@@ -448,7 +448,7 @@ The owner chose this order on 2026-10-23:
       (`src/lib/__fixtures__/reference-manager-exports/`). Still open: real,
       anonymized Zotero and Mendeley exports from the owner's libraries, then
       Papers, RefWorks, and BibDesk once samples exist
-5. **Phase 05 M4: bulk routes** — reformat built 2026-10-24, unreleased
+5. **Phase 05 M4: bulk routes** — reformat and deduplicate built 2026-10-24, unreleased
     - Design agreed with Dan 2026-10-24: synchronous batches (up to 25
       posts, a `remaining` list) instead of a polled job ID, since jobs
       would need stored records and cron; a per-user budget of 250 posts
@@ -457,7 +457,10 @@ The owner chose this order on 2026-10-23:
       else transients; hosts tune it with filters. WP-CLI `reformat` needs
       `--user` and skips the budget. See `docs/rest-write-routes.md`,
       "Bulk reformat"
-    - Still to do: cross-post deduplicate on the same scaffolding
+    - Deduplicate built 2026-10-24 on the same scaffolding (`POST
+      /bulk/deduplicate`, `borges/bulk-deduplicate`, `wp borges
+      deduplicate`): later copies within each bibliography are removed;
+      duplicates across blocks in a post are only reported
 6. **First-wave official language packs** — pending todo
    `2026-06-14-coordinate-first-wave-language-packs.md`
     - push fr_FR, de_DE, es_ES, pt_BR, and ja on translate.wordpress.org

@@ -3,18 +3,20 @@
  * Bulk write routes (Phase 05, M4 / Tier 4).
  *
  * POST /bibliography/v1/bulk/reformat switches every bibliography in up to
- * 25 posts to one citation style. Like the other write routes it is off
- * unless the `bibliography_builder_enable_write_routes` filter returns true,
- * a dry run unless `dry_run=false`, and refuses to save a post whose ETag
- * has changed. It needs `edit_others_posts`, and `edit_post` on each post.
+ * 25 posts to one citation style, and POST /bibliography/v1/bulk/deduplicate
+ * removes repeated citations from them. Like the other write routes they are
+ * off unless the `bibliography_builder_enable_write_routes` filter returns
+ * true, dry runs unless `dry_run=false`, and refuse to save a post whose ETag
+ * has changed. They need `edit_others_posts`, and `edit_post` on each post.
  *
- * It works in synchronous batches rather than background jobs, so the
+ * They work in synchronous batches rather than background jobs, so the
  * plugin stores no job records and schedules no cron events. A request does
  * the posts it can within its batch cap, its caller's budget, and a time
  * budget, and returns the rest as `remaining`; the client sends those next.
- * Each post commits on its own, through the same reformat, splice, and
- * verify path as POST …/reformat, so a failure on one post never undoes
- * another. The budget and the site-wide lock are in includes/rate-limit.php.
+ * Each post commits on its own, through the same mutate, splice, and verify
+ * path (bibliography_builder_bulk_write_post()), so a failure on one post
+ * never undoes another. Both routes share one budget and the site-wide lock,
+ * in includes/rate-limit.php.
  *
  * Request:
  *
@@ -29,8 +31,14 @@
  *       "remaining": [ { "id": 13, "etag": "\"…\"" } ],
  *       "rateLimit": { "limit": 250, "remaining": 224, "reset": 611 } }
  *
- * A post's status is `preview` (dry run), `changed`, `unchanged` (already in
- * that style, nothing to save), `skipped` (missing, not editable, or no
+ * Deduplicate takes the same body without `style`. Each bibliography keeps
+ * the first copy of a work and drops later ones, by the editor's duplicate
+ * rules; each changed block's `changes.removed` lists what went and which
+ * citation it duplicated. Duplicates across two blocks of one post are only
+ * reported, in the post's `crossBlockDuplicates`.
+ *
+ * A post's status is `preview` (dry run), `changed`, `unchanged` (nothing to
+ * change, nothing to save), `skipped` (missing, not editable, or no
  * bibliography), or `failed` (an entry could not be formatted, a missing or
  * stale ETag, or a failed save); the last two carry an `error`.
  *
@@ -143,21 +151,23 @@ function bibliography_builder_bulk_error_data( WP_Error $error ) {
 }
 
 /**
- * Reformat every bibliography in one post, and save it unless dry running.
+ * Apply one change to every bibliography in a post, and save it unless dry running.
  *
- * Every block is rebuilt and spliced into the content in turn, and the post
- * is saved once, so it gains a single revision. If any block fails, nothing
- * is saved for that post.
+ * Every block the change touches is rebuilt and spliced into the content in
+ * turn, and the post is saved once, so it gains a single revision. If any
+ * block fails, nothing is saved for that post.
  *
- * Shared by the bulk route and `wp borges reformat`.
+ * The shared per-post path of the bulk routes and their WP-CLI commands.
  *
- * @param int    $post_id Post ID.
- * @param string $style   Supported style key.
- * @param bool   $dry_run Preview without saving.
- * @param string $etag    The ETag the caller based the change on; needed to save.
+ * @param int      $post_id Post ID.
+ * @param callable $mutate  Called with each block's attributes (as plain
+ *                          arrays) and its index; returns `{ attrs, changes }`,
+ *                          null to leave that block as it is, or a WP_Error.
+ * @param bool     $dry_run Preview without saving.
+ * @param string   $etag    The ETag the caller based the change on; needed to save.
  * @return array Result: `postId`, `status`, and `etag`, `bibliographies`, or `error`.
  */
-function bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $etag = '' ) {
+function bibliography_builder_bulk_write_post( $post_id, $mutate, $dry_run, $etag = '' ) {
 	$result = array( 'postId' => $post_id );
 	$post   = get_post( $post_id );
 
@@ -217,10 +227,11 @@ function bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $e
 	foreach ( $ranges as $index => $range ) {
 		// Splicing earlier blocks moves later ones but never changes their
 		// attributes, so the first location's attributes stay current.
-		$change = bibliography_builder_write_reformat_attrs(
-			bibliography_builder_write_to_arrays( $range['attrs'] ),
-			$style
-		);
+		$change = call_user_func( $mutate, bibliography_builder_write_to_arrays( $range['attrs'] ), $index );
+
+		if ( null === $change ) {
+			continue;
+		}
 
 		if ( is_wp_error( $change ) ) {
 			return $result + array(
@@ -315,6 +326,217 @@ function bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $e
 }
 
 /**
+ * Reformat every bibliography in one post, and save it unless dry running.
+ *
+ * Shared by POST /bulk/reformat and `wp borges reformat`.
+ *
+ * @param int    $post_id Post ID.
+ * @param string $style   Supported style key.
+ * @param bool   $dry_run Preview without saving.
+ * @param string $etag    The ETag the caller based the change on; needed to save.
+ * @return array Result: `postId`, `status`, and `etag`, `bibliographies`, or `error`.
+ */
+function bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $etag = '' ) {
+	return bibliography_builder_bulk_write_post(
+		$post_id,
+		/**
+		 * Reformat one block.
+		 *
+		 * @param array $attrs Block attributes as plain arrays.
+		 * @return array|WP_Error `{ attrs, changes }`, or an error.
+		 */
+		static function ( $attrs ) use ( $style ) {
+			return bibliography_builder_write_reformat_attrs( $attrs, $style );
+		},
+		$dry_run,
+		$etag
+	);
+}
+
+/**
+ * Split citations into the ones to keep and later copies of them.
+ *
+ * Walks the list in order and keeps a citation unless it matches one already
+ * kept, by the editor's duplicate rules (`citationsMatch()` in
+ * `src/lib/deduplicate.js`, ported in bibliography_builder_get_duplicate_reason()).
+ * So the first copy of a work always stays, with its display text and export
+ * strings, and the editor's own paste check would have made the same calls.
+ *
+ * @param array $citations Citation records, in stored order.
+ * @return array{kept: array, removed: array} `removed` entries are
+ *         `{ index, id, duplicateOf, reason, citation }`, where `index` is the
+ *         position in `$citations` and `duplicateOf` the kept copy's ID.
+ */
+function bibliography_builder_bulk_split_duplicates( $citations ) {
+	$kept    = array();
+	$keys    = array();
+	$removed = array();
+
+	foreach ( array_values( $citations ) as $index => $citation ) {
+		$citation_keys = bibliography_builder_get_duplicate_keys( $citation );
+		$match         = null;
+
+		foreach ( $keys as $position => $kept_keys ) {
+			$reason = bibliography_builder_get_duplicate_reason( $kept_keys, $citation_keys );
+
+			if ( null !== $reason ) {
+				$match = array( $position, $reason );
+				break;
+			}
+		}
+
+		if ( null === $match ) {
+			$kept[] = $citation;
+			$keys[] = $citation_keys;
+			continue;
+		}
+
+		$removed[] = array(
+			'index'       => $index,
+			'id'          => bibliography_builder_get_citation_id( $citation ),
+			'duplicateOf' => bibliography_builder_get_citation_id( $kept[ $match[0] ] ),
+			'reason'      => $match[1],
+			'citation'    => $citation,
+		);
+	}
+
+	return array(
+		'kept'    => $kept,
+		'removed' => $removed,
+	);
+}
+
+/**
+ * Duplicates that span two bibliographies in one post, for the report.
+ *
+ * Bulk deduplicate never removes these: a post with one bibliography per
+ * chapter or section is meant to list a work in each. They are reported so a
+ * person can decide.
+ *
+ * @param array<int, array{bibliographyId: string|null, citations: array}> $blocks Each block's
+ *        kept citations, by block index.
+ * @return array[] Pairs as `{ reason, first, second }`, each side
+ *         `{ index, bibliographyId, citationId }`.
+ */
+function bibliography_builder_bulk_cross_block_duplicates( $blocks ) {
+	$entries = array();
+
+	foreach ( $blocks as $index => $block ) {
+		foreach ( $block['citations'] as $citation ) {
+			$entries[] = array(
+				'side' => array(
+					'index'          => $index,
+					'bibliographyId' => $block['bibliographyId'],
+					'citationId'     => bibliography_builder_get_citation_id( $citation ),
+				),
+				'keys' => bibliography_builder_get_duplicate_keys( $citation ),
+			);
+		}
+	}
+
+	$pairs = array();
+	$count = count( $entries );
+
+	for ( $i = 0; $i < $count; $i++ ) {
+		for ( $j = $i + 1; $j < $count; $j++ ) {
+			if ( $entries[ $i ]['side']['index'] === $entries[ $j ]['side']['index'] ) {
+				continue;
+			}
+
+			$reason = bibliography_builder_get_duplicate_reason( $entries[ $i ]['keys'], $entries[ $j ]['keys'] );
+
+			if ( null !== $reason ) {
+				$pairs[] = array(
+					'reason' => $reason,
+					'first'  => $entries[ $i ]['side'],
+					'second' => $entries[ $j ]['side'],
+				);
+			}
+		}
+	}
+
+	return $pairs;
+}
+
+/**
+ * Remove repeated citations from every bibliography in one post, and save it
+ * unless dry running.
+ *
+ * Each block keeps the first copy of a work and drops later copies, then
+ * refreshes the year suffixes the removal touched, as DELETE …/citations
+ * does. Duplicates across two blocks in the post are left in place and
+ * listed in `crossBlockDuplicates`. A post with nothing to remove comes back
+ * `unchanged`, and its `bibliographies` list only the blocks that changed.
+ *
+ * Shared by POST /bulk/deduplicate and `wp borges deduplicate`.
+ *
+ * @param int    $post_id Post ID.
+ * @param bool   $dry_run Preview without saving.
+ * @param string $etag    The ETag the caller based the change on; needed to save.
+ * @return array Result: `postId`, `status`, `crossBlockDuplicates`, and `etag`,
+ *               `bibliographies`, or `error`.
+ */
+function bibliography_builder_bulk_deduplicate_post( $post_id, $dry_run, $etag = '' ) {
+	$blocks = array();
+	$result = bibliography_builder_bulk_write_post(
+		$post_id,
+		/**
+		 * Drop later copies within one block.
+		 *
+		 * @param array $attrs Block attributes as plain arrays.
+		 * @param int   $index Block index in the post.
+		 * @return array|WP_Error|null `{ attrs, changes }`, null when the block
+		 *                             has no duplicates, or an error.
+		 */
+		static function ( $attrs, $index ) use ( &$blocks ) {
+			$split = bibliography_builder_bulk_split_duplicates( bibliography_builder_write_citations( $attrs ) );
+			$id    = $attrs['bibliographyId'] ?? null;
+
+			$blocks[ $index ] = array(
+				'bibliographyId' => null === $id ? null : (string) $id,
+				'citations'      => $split['kept'],
+			);
+
+			if ( array() === $split['removed'] ) {
+				return null;
+			}
+
+			$citations = bibliography_builder_write_refresh_year_suffixes(
+				$split['kept'],
+				bibliography_builder_write_style( $attrs ),
+				array_map(
+					static function ( $removed ) {
+						return bibliography_builder_citation_csl( $removed['citation'] );
+					},
+					$split['removed']
+				)
+			);
+
+			if ( is_wp_error( $citations ) ) {
+				return $citations;
+			}
+
+			$attrs['citations'] = $citations;
+
+			return array(
+				'attrs'   => $attrs,
+				'changes' => array( 'removed' => $split['removed'] ),
+			);
+		},
+		$dry_run,
+		$etag
+	);
+
+	// Report only when every block was read; a failed post has nothing to
+	// decide yet.
+	if ( in_array( $result['status'], array( 'preview', 'changed', 'unchanged' ), true ) ) {
+		$result['crossBlockDuplicates'] = bibliography_builder_bulk_cross_block_duplicates( $blocks );
+	}
+
+	return $result;
+}
+
+/**
  * An error response that can carry headers, which a WP_Error cannot.
  *
  * The body has the same shape WordPress gives a WP_Error.
@@ -343,49 +565,42 @@ function bibliography_builder_bulk_error_response( WP_Error $error, $rate_limit 
 }
 
 /**
- * POST /bulk/reformat: switch every bibliography in a batch of posts to one style.
+ * Refuse a bulk write when this server cannot rebuild markup.
  *
- * Checks run cheapest first, so a refused request does no work: the style
- * and post list, then the caller's budget, then (for a real write) the
- * site-wide lock, then each post's own `edit_post` and ETag.
+ * @return WP_Error|null
+ */
+function bibliography_builder_bulk_unavailable() {
+	if ( bibliography_builder_can_render_save_markup() ) {
+		return null;
+	}
+
+	return new WP_Error(
+		'bibliography_builder_write_unavailable',
+		__(
+			'This server cannot rebuild bibliography markup: the PHP intl extension is required.',
+			'borges-bibliography-builder'
+		),
+		array( 'status' => 501 )
+	);
+}
+
+/**
+ * Run a bulk request's posts through one per-post function, within the
+ * caller's budget, the site-wide lock, and the time budget.
  *
- * @param WP_REST_Request $request REST request.
+ * Checks run cheapest first, so a refused request does no work: the post
+ * list, then the caller's budget, then (for a real write) the site-wide
+ * lock; the per-post function checks each post's own `edit_post` and ETag.
+ * The route's own body fields are checked before this is called.
+ *
+ * @param WP_REST_Request $request  REST request.
+ * @param array           $params   Decoded JSON body.
+ * @param callable        $per_post Called with a post ID, the dry-run flag, and
+ *                                  the ETag; returns that post's result.
+ * @param array           $extra    Fields to add to the response after `dryRun`.
  * @return WP_REST_Response|WP_Error
  */
-function bibliography_builder_rest_bulk_reformat( WP_REST_Request $request ) {
-	if ( ! bibliography_builder_can_render_save_markup() ) {
-		return new WP_Error(
-			'bibliography_builder_write_unavailable',
-			__(
-				'This server cannot rebuild bibliography markup: the PHP intl extension is required.',
-				'borges-bibliography-builder'
-			),
-			array( 'status' => 501 )
-		);
-	}
-
-	/**
-	 * WordPress documents an array, but returns null for an absent or invalid body.
-	 *
-	 * @var mixed $params
-	 */
-	$params = $request->get_json_params();
-	$params = is_array( $params ) ? $params : array();
-	$style  = isset( $params['style'] ) && is_string( $params['style'] ) ? $params['style'] : '';
-	$styles = array_keys( bibliography_builder_get_formatter_style_definitions() );
-
-	if ( ! in_array( $style, $styles, true ) ) {
-		return new WP_Error(
-			'bibliography_builder_invalid_style',
-			sprintf(
-				/* translators: %s: comma-separated style keys. */
-				__( 'Send "style": one of %s.', 'borges-bibliography-builder' ),
-				implode( ', ', $styles )
-			),
-			array( 'status' => 400 )
-		);
-	}
-
+function bibliography_builder_rest_bulk_run( WP_REST_Request $request, $params, $per_post, $extra = array() ) {
 	$posts = bibliography_builder_bulk_posts_param(
 		$params['posts'] ?? null,
 		bibliography_builder_bulk_max_posts_per_request()
@@ -467,7 +682,7 @@ function bibliography_builder_rest_bulk_reformat( WP_REST_Request $request ) {
 				break;
 			}
 
-			$results[] = bibliography_builder_bulk_reformat_post( $entry['id'], $style, $dry_run, $entry['etag'] );
+			$results[] = call_user_func( $per_post, $entry['id'], $dry_run, $entry['etag'] );
 		}
 	} finally {
 		if ( is_string( $lock ) ) {
@@ -484,9 +699,9 @@ function bibliography_builder_rest_bulk_reformat( WP_REST_Request $request ) {
 	}
 
 	$response = rest_ensure_response(
-		array(
-			'dryRun'    => $dry_run,
-			'style'     => $style,
+		array( 'dryRun' => $dry_run )
+		+ $extra
+		+ array(
 			'results'   => $results,
 			'remaining' => array_slice( $posts, count( $results ) ),
 			'rateLimit' => $state,
@@ -494,6 +709,90 @@ function bibliography_builder_rest_bulk_reformat( WP_REST_Request $request ) {
 	);
 
 	return bibliography_builder_with_rate_limit_headers( $response, $state );
+}
+
+/**
+ * POST /bulk/reformat: switch every bibliography in a batch of posts to one style.
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_bulk_reformat( WP_REST_Request $request ) {
+	$unavailable = bibliography_builder_bulk_unavailable();
+
+	if ( null !== $unavailable ) {
+		return $unavailable;
+	}
+
+	/**
+	 * WordPress documents an array, but returns null for an absent or invalid body.
+	 *
+	 * @var mixed $params
+	 */
+	$params = $request->get_json_params();
+	$params = is_array( $params ) ? $params : array();
+	$style  = isset( $params['style'] ) && is_string( $params['style'] ) ? $params['style'] : '';
+	$styles = array_keys( bibliography_builder_get_formatter_style_definitions() );
+
+	if ( ! in_array( $style, $styles, true ) ) {
+		return new WP_Error(
+			'bibliography_builder_invalid_style',
+			sprintf(
+				/* translators: %s: comma-separated style keys. */
+				__( 'Send "style": one of %s.', 'borges-bibliography-builder' ),
+				implode( ', ', $styles )
+			),
+			array( 'status' => 400 )
+		);
+	}
+
+	return bibliography_builder_rest_bulk_run(
+		$request,
+		$params,
+		/**
+		 * Reformat one post.
+		 *
+		 * @param int    $post_id Post ID.
+		 * @param bool   $dry_run Preview without saving.
+		 * @param string $etag    ETag sent for the post.
+		 * @return array
+		 */
+		static function ( $post_id, $dry_run, $etag ) use ( $style ) {
+			return bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $etag );
+		},
+		array( 'style' => $style )
+	);
+}
+
+/**
+ * POST /bulk/deduplicate: remove repeated citations from every bibliography
+ * in a batch of posts.
+ *
+ * Body: `{ "posts": [ { "id": 12, "etag": "…" } ] }`. Each bibliography keeps
+ * the first copy of each work; see bibliography_builder_bulk_deduplicate_post().
+ *
+ * @param WP_REST_Request $request REST request.
+ * @return WP_REST_Response|WP_Error
+ */
+function bibliography_builder_rest_bulk_deduplicate( WP_REST_Request $request ) {
+	$unavailable = bibliography_builder_bulk_unavailable();
+
+	if ( null !== $unavailable ) {
+		return $unavailable;
+	}
+
+	/**
+	 * WordPress documents an array, but returns null for an absent or invalid body.
+	 *
+	 * @var mixed $params
+	 */
+	$params = $request->get_json_params();
+
+	return bibliography_builder_rest_bulk_run(
+		$request,
+		is_array( $params ) ? $params : array(),
+		'bibliography_builder_bulk_deduplicate_post'
+	);
 }
 
 /**
@@ -509,6 +808,26 @@ function bibliography_builder_register_bulk_routes() {
 		array(
 			'methods'             => 'POST',
 			'callback'            => 'bibliography_builder_rest_bulk_reformat',
+			'permission_callback' => 'bibliography_builder_rest_bulk_permissions_check',
+			'args'                => array(
+				'dry_run' => array(
+					'description' => __(
+						'Preview the change without saving. Defaults to true; pass false to write.',
+						'borges-bibliography-builder'
+					),
+					'type'        => 'boolean',
+					'default'     => true,
+				),
+			),
+		)
+	);
+
+	register_rest_route(
+		'bibliography/v1',
+		'/bulk/deduplicate',
+		array(
+			'methods'             => 'POST',
+			'callback'            => 'bibliography_builder_rest_bulk_deduplicate',
 			'permission_callback' => 'bibliography_builder_rest_bulk_permissions_check',
 			'args'                => array(
 				'dry_run' => array(

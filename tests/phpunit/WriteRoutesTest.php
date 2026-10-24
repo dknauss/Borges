@@ -155,13 +155,14 @@ final class WriteRoutesTest extends TestCase {
 		bibliography_builder_register_write_routes();
 
 		$routes = array_column( $GLOBALS['bibliography_builder_test_rest_routes'], 'route' );
-		$this->assertCount( 6, $routes );
+		$this->assertCount( 7, $routes );
 		$this->assertStringEndsWith( ')', $routes[0] );
 		$this->assertStringEndsWith( '/reformat', $routes[1] );
 		$this->assertStringEndsWith( '/citations/order', $routes[2] );
 		$this->assertStringEndsWith( '/citations', $routes[3] );
 		$this->assertStringContainsString( '(?P<citation_id>', $routes[4] );
 		$this->assertSame( '/bulk/reformat', $routes[5] );
+		$this->assertSame( '/bulk/deduplicate', $routes[6] );
 	}
 
 	public function test_permission_needs_edit_post() {

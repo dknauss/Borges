@@ -152,7 +152,7 @@ Body: `{ "post_ids": [...], "style": "chicago-notes-bibliography" }`. Batch refo
 - **Synchronous batches, not jobs.** A job queue needs stored job records and a cron runner, which the plugin's no-persistence pledge (`verify-metrics.sh`) forbids. A request names up to 25 posts as `posts: [ { id, etag } ]`, does what it can within its budget and a 15-second time budget, and returns the rest as `remaining`. Each post commits on its own with its own ETag check, and gets one revision for all its blocks.
 - **Rate limit.** A per-user budget counted in posts (250 per 15 minutes; dry runs count too), reserved atomically up front and refunded for posts not reached. A request over the budget is clipped; only an empty budget gets `429` with `Retry-After`. Responses carry `RateLimit-*` headers. One saving bulk request runs per site at a time. Counters use the object cache when it is persistent, else `bbb_` transients. Filters: `bibliography_builder_bulk_rate_limit`, `…_rate_limit_key`, `…_max_posts_per_request`, `…_time_budget`.
 - **WP-CLI and abilities.** `wp borges reformat` needs `--user`, `edit_others_posts`, and the filter, batches with `--batch-size` and `--sleep`, and skips the budget. `borges/bulk-reformat` calls the route callback, so it shares the budget.
-- **Deduplicate** is not built yet; it will reuse this scaffolding.
+- **Deduplicate (2026-10-24, unreleased)** is built on the same scaffolding, as `POST /bulk/deduplicate` with `posts: [ { id, etag } ]` like reformat (not `post_ids`). It removes later copies within each bibliography, keeping the first, by the editor's duplicate rules, and refreshes year suffixes. Duplicates across two blocks of one post are reported in `crossBlockDuplicates` and not removed, since a post with one bibliography per chapter means to repeat them. It shares reformat's budget and lock; `borges/bulk-deduplicate` and `wp borges deduplicate` wrap it.
 
 ---
 
@@ -275,7 +275,7 @@ This decision should be revisited once Tier 2 is prototyped and the static-save 
 | M1 | Validate + diff read extensions (Tier 1) — **done (unreleased)** | M0 complete |
 | M2 | Tier 2 add/update/delete/reorder behind an opt-in filter — **done (unreleased)**; see `docs/rest-write-routes.md` | M1 + static-save spike |
 | M3 | Reformat, reorder, ETag (Tier 2 complete) — **done (unreleased)**: reorder and ETag shipped with M2, block settings and reformat (Tier 3) with M3 | M2 validated |
-| M4 | Bulk routes (Tier 4) — **reformat done (unreleased)**; deduplicate to follow | M3 + rate-limiting design |
+| M4 | Bulk routes (Tier 4) — **reformat and deduplicate done (unreleased)** | M3 + rate-limiting design |
 | M5 | Abilities registration (Tier 5) — **done (unreleased)**: six write abilities wrapping the M2/M3 routes | WP Abilities API stable |
 
 **2026-09-24 update:** the Abilities API is in core as of WordPress 6.9, so M5's blocker is gone for the read side. The read-only cut shipped ahead of the other milestones, in 1.6.0: `borges/get-bibliographies`, `borges/export-bibliography`, and `borges/validate-citations` in `includes/abilities.php`, using core's `wp_register_ability()` on `wp_abilities_api_init` with `readonly` annotations. The memo's `bibliography/read` naming was replaced by core's required `namespace/action` form under the `borges/` namespace. Writable abilities stay behind M0–M3.
