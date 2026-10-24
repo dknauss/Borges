@@ -111,12 +111,17 @@ final class WriteAbilitiesTest extends TestCase {
 				'borges/update-bibliography-settings',
 				'borges/reformat-bibliography',
 				'borges/bulk-reformat',
+				'borges/bulk-deduplicate',
 			),
 			array_keys( $GLOBALS['bibliography_builder_test_abilities'] )
 		);
 
-		// The bulk ability takes a list of posts; BulkRoutesTest covers it.
-		unset( $GLOBALS['bibliography_builder_test_abilities']['borges/bulk-reformat'] );
+		// The bulk abilities take a list of posts; BulkRoutesTest and
+		// BulkDeduplicateTest cover them.
+		unset(
+			$GLOBALS['bibliography_builder_test_abilities']['borges/bulk-reformat'],
+			$GLOBALS['bibliography_builder_test_abilities']['borges/bulk-deduplicate']
+		);
 
 		foreach ( $GLOBALS['bibliography_builder_test_abilities'] as $name => $args ) {
 			$this->assertSame( 'bibliography', $args['category'], $name );

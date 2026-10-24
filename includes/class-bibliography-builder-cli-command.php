@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Read, check, and restyle Borges bibliographies.
+ * Read, check, restyle, and deduplicate Borges bibliographies.
  *
  * ## EXAMPLES
  *
@@ -28,6 +28,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *     $ wp borges reformat 42 43 44 --style=mla-9 --user=editor
  *     $ wp borges reformat 42 43 44 --style=mla-9 --user=editor --commit
  *
+ *     # Remove repeated citations from two posts.
+ *     $ wp borges deduplicate 42 43 --user=editor --commit
+ *
  *     # Run a check on every site in a network.
  *     $ wp site list --field=url | xargs -I % wp borges validate 42 --url=%
  *
@@ -38,8 +41,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * export need a published public post or edit_post, and validate needs
  * edit_post.
  *
- * reformat writes, so it always needs --user, the write-routes filter,
- * edit_others_posts, and edit_post on each post.
+ * reformat and deduplicate write, so they always need --user, the
+ * write-routes filter, edit_others_posts, and edit_post on each post.
  */
 final class Bibliography_Builder_CLI_Command {
 
@@ -294,44 +297,178 @@ final class Bibliography_Builder_CLI_Command {
 			return;
 		}
 
+		$post_ids = self::post_ids( $args );
+		$commit   = ! empty( $assoc_args['commit'] );
+		$results  = bibliography_builder_cli_reformat_posts(
+			$post_ids,
+			$style,
+			$commit,
+			self::batch_size( $assoc_args ),
+			self::sleep_seconds( $assoc_args )
+		);
+
+		self::print_bulk_results(
+			$results,
+			$assoc_args,
+			$commit,
+			bibliography_builder_cli_reformat_rows( $results ),
+			BIBLIOGRAPHY_BUILDER_CLI_REFORMAT_FIELDS
+		);
+	}
+
+	/**
+	 * Removes repeated citations from every bibliography in the given posts.
+	 *
+	 * Each bibliography keeps the first copy of a work and drops later
+	 * copies, by the editor's duplicate rules: the same DOI, or the same title
+	 * with the same year or first author. A work repeated across two
+	 * bibliographies in one post is reported in the crossBlock column and
+	 * left in place.
+	 *
+	 * Previews unless --commit is passed. Posts are saved one at a time, each
+	 * as a single revision that keeps the removed citations; a post that
+	 * fails is reported and skipped, and the run goes on. Exits with status 1
+	 * when any post failed.
+	 *
+	 * Needs --user, the bibliography_builder_enable_write_routes filter,
+	 * edit_others_posts, and edit_post on each post. Unlike POST
+	 * /bulk/deduplicate, it spends no rate-limit budget.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <post-id>...
+	 * : One or more post IDs. Posts without a bibliography are skipped.
+	 *
+	 * [--commit]
+	 * : Save the change. Without it, the command only previews.
+	 *
+	 * [--batch-size=<number>]
+	 * : Posts per batch. The object cache's memory is freed between batches.
+	 * ---
+	 * default: 25
+	 * ---
+	 *
+	 * [--sleep=<seconds>]
+	 * : Seconds to wait between batches, to go easy on a busy server.
+	 * ---
+	 * default: 0
+	 * ---
+	 *
+	 * [--format=<format>]
+	 * : table, csv, and yaml list one row per post; json prints the full results, removed citations included.
+	 * ---
+	 * default: table
+	 * options:
+	 *   - table
+	 *   - json
+	 *   - csv
+	 *   - yaml
+	 * ---
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     $ wp borges deduplicate 42 43 --user=editor
+	 *     $ wp borges deduplicate $(wp post list --post_type=post,page --s=wp:bibliography-builder --format=ids) \\
+	 *         --user=editor --commit --sleep=1
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Options.
+	 * @return void
+	 */
+	public function deduplicate( $args, $assoc_args ) {
+		$allowed = bibliography_builder_cli_bulk_write_check();
+
+		if ( is_wp_error( $allowed ) ) {
+			WP_CLI::error( $allowed );
+			return;
+		}
+
+		$post_ids = self::post_ids( $args );
+		$commit   = ! empty( $assoc_args['commit'] );
+		$results  = bibliography_builder_cli_bulk_posts(
+			$post_ids,
+			'bibliography_builder_bulk_deduplicate_post',
+			$commit,
+			self::batch_size( $assoc_args ),
+			self::sleep_seconds( $assoc_args )
+		);
+
+		self::print_bulk_results(
+			$results,
+			$assoc_args,
+			$commit,
+			bibliography_builder_cli_deduplicate_rows( $results ),
+			BIBLIOGRAPHY_BUILDER_CLI_DEDUPLICATE_FIELDS
+		);
+	}
+
+	/**
+	 * Read post IDs from a bulk command's arguments, or stop with an error.
+	 *
+	 * @param array $args Positional arguments.
+	 * @return int[] Unique post IDs, in the order given.
+	 */
+	private static function post_ids( $args ) {
 		$post_ids = array();
 
 		foreach ( $args as $arg ) {
 			if ( ! ctype_digit( (string) $arg ) || 0 === (int) $arg ) {
 				/* translators: %s: value given on the command line. */
 				WP_CLI::error( sprintf( __( 'Not a post ID: %s', 'borges-bibliography-builder' ), (string) $arg ) );
-				return;
+				return array();
 			}
 
 			$post_ids[] = (int) $arg;
 		}
 
-		$commit  = ! empty( $assoc_args['commit'] );
-		$results = bibliography_builder_cli_reformat_posts(
-			array_values( array_unique( $post_ids ) ),
-			$style,
-			$commit,
-			isset( $assoc_args['batch-size'] ) ? max( 1, (int) $assoc_args['batch-size'] ) : 25,
-			isset( $assoc_args['sleep'] ) ? max( 0, (int) $assoc_args['sleep'] ) : 0
-		);
-		$format  = isset( $assoc_args['format'] ) ? (string) $assoc_args['format'] : 'table';
-		$counts  = array_count_values( array_column( $results, 'status' ) );
-		$failed  = $counts['failed'] ?? 0;
+		return array_values( array_unique( $post_ids ) );
+	}
+
+	/**
+	 * A bulk command's --batch-size, at least 1.
+	 *
+	 * @param array $assoc_args Options.
+	 * @return int
+	 */
+	private static function batch_size( $assoc_args ) {
+		return isset( $assoc_args['batch-size'] ) ? max( 1, (int) $assoc_args['batch-size'] ) : 25;
+	}
+
+	/**
+	 * A bulk command's --sleep, at least 0.
+	 *
+	 * @param array $assoc_args Options.
+	 * @return int
+	 */
+	private static function sleep_seconds( $assoc_args ) {
+		return isset( $assoc_args['sleep'] ) ? max( 0, (int) $assoc_args['sleep'] ) : 0;
+	}
+
+	/**
+	 * Print a bulk command's results and summary, and exit 1 if any post failed.
+	 *
+	 * @param array[]  $results    Per-post results.
+	 * @param array    $assoc_args Options: `format`.
+	 * @param bool     $commit     Whether the run saved.
+	 * @param array[]  $rows       Table rows for the results.
+	 * @param string[] $fields     Table columns.
+	 * @return void
+	 */
+	private static function print_bulk_results( $results, $assoc_args, $commit, $rows, $fields ) {
+		$format = isset( $assoc_args['format'] ) ? (string) $assoc_args['format'] : 'table';
+		$counts = array_count_values( array_column( $results, 'status' ) );
+		$failed = $counts['failed'] ?? 0;
 
 		if ( 'json' === $format ) {
 			WP_CLI::line(
 				(string) wp_json_encode( $results, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE )
 			);
 		} else {
-			WP_CLI\Utils\format_items(
-				$format,
-				bibliography_builder_cli_reformat_rows( $results ),
-				BIBLIOGRAPHY_BUILDER_CLI_REFORMAT_FIELDS
-			);
+			WP_CLI\Utils\format_items( $format, $rows, $fields );
 
 			$summary = $commit
 				? sprintf(
-					/* translators: 1: posts saved, 2: posts already in the style, 3: posts skipped, 4: posts failed. */
+					/* translators: 1: posts saved, 2: posts unchanged, 3: posts skipped, 4: posts failed. */
 					__( 'Saved: %1$d. Unchanged: %2$d. Skipped: %3$d. Failed: %4$d.', 'borges-bibliography-builder' ),
 					$counts['changed'] ?? 0,
 					$counts['unchanged'] ?? 0,
@@ -339,7 +476,7 @@ final class Bibliography_Builder_CLI_Command {
 					$failed
 				)
 				: sprintf(
-					/* translators: 1: posts that would change, 2: posts already in the style, 3: skipped, 4: failed. */
+					/* translators: 1: posts that would change, 2: posts unchanged, 3: skipped, 4: failed. */
 					__(
 						'Would change: %1$d. Unchanged: %2$d. Skipped: %3$d. Failed: %4$d. Dry run; use --commit.',
 						'borges-bibliography-builder'

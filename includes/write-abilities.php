@@ -13,9 +13,9 @@
  * `dry_run` is false, and need `etag` (the ETag from a read or dry run) to
  * save.
  *
- * `borges/bulk-reformat` wraps the bulk route (includes/bulk-routes.php) the
- * same way. It needs `edit_others_posts` and spends the same rate-limit
- * budget as the route.
+ * `borges/bulk-reformat` and `borges/bulk-deduplicate` wrap the bulk routes
+ * (includes/bulk-routes.php) the same way. They need `edit_others_posts` and
+ * spend the same rate-limit budget as the routes.
  *
  * @package BibliographyBuilder
  */
@@ -238,6 +238,34 @@ function bibliography_builder_register_write_abilities() {
 	}
 
 	bibliography_builder_register_bulk_reformat_ability();
+	bibliography_builder_register_bulk_deduplicate_ability();
+}
+
+/**
+ * Input schema for a bulk ability's `posts` list.
+ *
+ * @param string $description What the posts are for.
+ * @return array
+ */
+function bibliography_builder_get_bulk_posts_schema( $description ) {
+	return array(
+		'type'        => 'array',
+		'minItems'    => 1,
+		'maxItems'    => bibliography_builder_bulk_max_posts_per_request(),
+		'items'       => array(
+			'type'                 => 'object',
+			'properties'           => array(
+				'id'   => array(
+					'type'    => 'integer',
+					'minimum' => 1,
+				),
+				'etag' => array( 'type' => 'string' ),
+			),
+			'required'             => array( 'id' ),
+			'additionalProperties' => false,
+		),
+		'description' => $description,
+	);
 }
 
 /**
@@ -269,26 +297,11 @@ function bibliography_builder_register_bulk_reformat_ability() {
 						'enum'        => array_keys( bibliography_builder_get_formatter_style_definitions() ),
 						'description' => __( 'Citation style to switch to.', 'borges-bibliography-builder' ),
 					),
-					'posts'   => array(
-						'type'        => 'array',
-						'minItems'    => 1,
-						'maxItems'    => bibliography_builder_bulk_max_posts_per_request(),
-						'items'       => array(
-							'type'                 => 'object',
-							'properties'           => array(
-								'id'   => array(
-									'type'    => 'integer',
-									'minimum' => 1,
-								),
-								'etag' => array( 'type' => 'string' ),
-							),
-							'required'             => array( 'id' ),
-							'additionalProperties' => false,
-						),
-						'description' => __(
+					'posts'   => bibliography_builder_get_bulk_posts_schema(
+						__(
 							'Posts to reformat, each with its ID and, to save, the ETag from a dry run or read.',
 							'borges-bibliography-builder'
-						),
+						)
 					),
 					'dry_run' => array(
 						'type'        => 'boolean',
@@ -315,6 +328,62 @@ function bibliography_builder_register_bulk_reformat_ability() {
 			'execute_callback'    => 'bibliography_builder_ability_bulk_reformat',
 			'permission_callback' => 'bibliography_builder_rest_bulk_permissions_check',
 			'meta'                => bibliography_builder_get_write_ability_meta( false, true ),
+		)
+	);
+}
+
+/**
+ * Register `borges/bulk-deduplicate`, which wraps POST /bulk/deduplicate.
+ *
+ * Like `borges/bulk-reformat`, it calls the route's callback, so the two
+ * share one budget and the site-wide lock. It is annotated as destructive
+ * because a save removes citations; each post's revision keeps them.
+ *
+ * @return void
+ */
+function bibliography_builder_register_bulk_deduplicate_ability() {
+	wp_register_ability(
+		'borges/bulk-deduplicate',
+		array(
+			'label'               => __( 'Remove duplicate citations across posts', 'borges-bibliography-builder' ),
+			'description'         => __(
+				'Removes repeated citations in each Borges bibliography in a batch of posts. Send "remaining" next.',
+				'borges-bibliography-builder'
+			),
+			'category'            => BIBLIOGRAPHY_BUILDER_ABILITY_CATEGORY,
+			'input_schema'        => array(
+				'type'                 => 'object',
+				'properties'           => array(
+					'posts'   => bibliography_builder_get_bulk_posts_schema(
+						__(
+							'Posts to deduplicate, each with its ID and, to save, the ETag from a dry run or read.',
+							'borges-bibliography-builder'
+						)
+					),
+					'dry_run' => array(
+						'type'        => 'boolean',
+						'default'     => true,
+						'description' => __(
+							'Preview the change without saving. Defaults to true; pass false to save.',
+							'borges-bibliography-builder'
+						),
+					),
+				),
+				'required'             => array( 'posts' ),
+				'additionalProperties' => false,
+			),
+			'output_schema'       => array(
+				'type'       => 'object',
+				'properties' => array(
+					'dryRun'    => array( 'type' => 'boolean' ),
+					'results'   => array( 'type' => 'array' ),
+					'remaining' => array( 'type' => 'array' ),
+					'rateLimit' => array( 'type' => array( 'object', 'null' ) ),
+				),
+			),
+			'execute_callback'    => 'bibliography_builder_ability_bulk_deduplicate',
+			'permission_callback' => 'bibliography_builder_rest_bulk_permissions_check',
+			'meta'                => bibliography_builder_get_write_ability_meta( true, true ),
 		)
 	);
 }
@@ -469,30 +538,26 @@ function bibliography_builder_ability_reformat_bibliography( $input ) {
 }
 
 /**
- * Execute callback for `borges/bulk-reformat`.
+ * Call a bulk route's callback for an ability.
  *
  * A refused request (rate limit, busy lock) comes back from the route as a
  * response carrying headers; it is turned back into a WP_Error here.
  *
- * @param array $input Validated ability input.
+ * @param callable $callback Route callback.
+ * @param string   $route    Route path, for the request.
+ * @param array    $body     JSON body.
+ * @param array    $input    Validated ability input, for `dry_run`.
  * @return array|WP_Error
  */
-function bibliography_builder_ability_bulk_reformat( $input ) {
-	$request = new WP_REST_Request( 'POST', '/bibliography/v1/bulk/reformat' );
+function bibliography_builder_ability_call_bulk_route( $callback, $route, $body, $input ) {
+	$request = new WP_REST_Request( 'POST', '/bibliography/v1' . $route );
 	$request->set_query_params(
 		array( 'dry_run' => ! isset( $input['dry_run'] ) || false !== $input['dry_run'] )
 	);
 	$request->set_header( 'Content-Type', 'application/json' );
-	$request->set_body(
-		(string) wp_json_encode(
-			array(
-				'style' => $input['style'] ?? null,
-				'posts' => $input['posts'] ?? null,
-			)
-		)
-	);
+	$request->set_body( (string) wp_json_encode( $body ) );
 
-	$response = bibliography_builder_rest_bulk_reformat( $request );
+	$response = call_user_func( $callback, $request );
 
 	if ( is_wp_error( $response ) ) {
 		return $response;
@@ -505,6 +570,39 @@ function bibliography_builder_ability_bulk_reformat( $input ) {
 	}
 
 	return $data;
+}
+
+/**
+ * Execute callback for `borges/bulk-reformat`.
+ *
+ * @param array $input Validated ability input.
+ * @return array|WP_Error
+ */
+function bibliography_builder_ability_bulk_reformat( $input ) {
+	return bibliography_builder_ability_call_bulk_route(
+		'bibliography_builder_rest_bulk_reformat',
+		'/bulk/reformat',
+		array(
+			'style' => $input['style'] ?? null,
+			'posts' => $input['posts'] ?? null,
+		),
+		$input
+	);
+}
+
+/**
+ * Execute callback for `borges/bulk-deduplicate`.
+ *
+ * @param array $input Validated ability input.
+ * @return array|WP_Error
+ */
+function bibliography_builder_ability_bulk_deduplicate( $input ) {
+	return bibliography_builder_ability_call_bulk_route(
+		'bibliography_builder_rest_bulk_deduplicate',
+		'/bulk/deduplicate',
+		array( 'posts' => $input['posts'] ?? null ),
+		$input
+	);
 }
 
 add_action( 'wp_abilities_api_init', 'bibliography_builder_register_write_abilities' );

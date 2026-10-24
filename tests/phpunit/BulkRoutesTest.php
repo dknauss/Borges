@@ -176,8 +176,8 @@ final class BulkRoutesTest extends TestCase {
 		add_filter( 'bibliography_builder_enable_write_routes', '__return_true' );
 		bibliography_builder_register_write_routes();
 
-		$route = end( $GLOBALS['bibliography_builder_test_rest_routes'] );
-		$this->assertSame( '/bulk/reformat', $route['route'] );
+		$routes = array_column( $GLOBALS['bibliography_builder_test_rest_routes'], null, 'route' );
+		$route  = $routes['/bulk/reformat'];
 		$this->assertSame( 'bibliography_builder_rest_bulk_permissions_check', $route['args']['permission_callback'] );
 	}
 
