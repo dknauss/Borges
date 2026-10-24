@@ -461,6 +461,83 @@ grep -q 'Z3988' "$ARTIFACT_RESPONSE_DIR/write-reformat-frontend.body"
 wp_exec "wp eval-file /smoke/check-blocks.php $POST_ID --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/check-blocks.txt" 2>&1 || true
 grep -q '^blocks-ok 1$' "$ARTIFACT_DIR/check-blocks.txt"
 
+# --- Bulk reformat and its rate limit, over real HTTP -----------------------
+#
+# Two fresh posts in Chicago, and a test-only mu-plugin that cuts the budget to
+# three posts, so four requests walk the whole limit: a two-post dry run
+# (budget 3 -> 1), a two-post commit clipped to the one post left (-> 0, the
+# other comes back in `remaining`), a 429 with Retry-After, and then WP-CLI,
+# which spends no budget, saving the post the route could not.
+wp_exec 'cp /smoke/bulk-rate-limit.php /var/www/html/wp-content/mu-plugins/borges-smoke-bulk-rate-limit.php'
+
+create_smoke_post() {
+	docker compose -f "$COMPOSE_FILE" exec -T -e BLOCK_CONTENT="$BLOCK_CONTENT" -e TITLE="$1" wordpress sh -lc 'wp post create --allow-root --path=/var/www/html --post_type=post --post_status=publish --post_title="$TITLE" --post_content="$BLOCK_CONTENT" --porcelain' | tr -d '\r'
+}
+
+# A response header's value, matched case-insensitively.
+# Usage: header_value name Header-Name
+header_value() {
+	tr -d '\r' < "$ARTIFACT_RESPONSE_DIR/$1.headers" | awk -v name="$2:" '
+		tolower(substr($0, 1, length(name))) == tolower(name) { value = substr($0, length(name) + 1); sub(/^ */, "", value) }
+		END { print value }
+	'
+}
+
+# How many times a fixed string occurs in a captured body.
+body_count() {
+	grep -o "$2" "$ARTIFACT_RESPONSE_DIR/$1.body" | wc -l | tr -d ' '
+}
+
+BULK_A=$(create_smoke_post 'Runtime Matrix Bulk A')
+BULK_B=$(create_smoke_post 'Runtime Matrix Bulk B')
+BULK_URL="${REST_URL}/bibliography/v1/bulk/reformat"
+
+# Read each post's ETag from the read route, which spends no budget, and
+# escape its quotes for the JSON body.
+rest_call bulk-read-a GET "${REST_URL}/bibliography/v1/posts/$BULK_A/bibliographies" 200
+rest_call bulk-read-b GET "${REST_URL}/bibliography/v1/posts/$BULK_B/bibliographies" 200
+ETAG_A=$(header_etag bulk-read-a | sed 's/"/\\"/g')
+ETAG_B=$(header_etag bulk-read-b | sed 's/"/\\"/g')
+[ -n "$ETAG_A" ]
+[ -n "$ETAG_B" ]
+BULK_POSTS="[{\"id\":$BULK_A,\"etag\":\"$ETAG_A\"},{\"id\":$BULK_B,\"etag\":\"$ETAG_B\"}]"
+
+rest_call bulk-dry-run POST "$BULK_URL" 200 "{\"style\":\"apa-7\",\"posts\":$BULK_POSTS}"
+grep -q '"dryRun":true' "$ARTIFACT_RESPONSE_DIR/bulk-dry-run.body"
+[ "$(body_count bulk-dry-run '"status":"preview"')" = "2" ]
+grep -q '"remaining":\[\]' "$ARTIFACT_RESPONSE_DIR/bulk-dry-run.body"
+[ "$(header_value bulk-dry-run RateLimit-Limit)" = "3" ]
+[ "$(header_value bulk-dry-run RateLimit-Remaining)" = "1" ]
+[ -n "$(header_value bulk-dry-run RateLimit-Reset)" ]
+
+# Only one post fits, so the commit saves the first and hands back the second.
+rest_call bulk-commit POST "$BULK_URL&dry_run=false" 200 "{\"style\":\"apa-7\",\"posts\":$BULK_POSTS}"
+grep -q '"dryRun":false' "$ARTIFACT_RESPONSE_DIR/bulk-commit.body"
+[ "$(body_count bulk-commit '"status":"changed"')" = "1" ]
+grep -q "\"results\":\[{\"postId\":$BULK_A," "$ARTIFACT_RESPONSE_DIR/bulk-commit.body"
+grep -q "\"remaining\":\[{\"id\":$BULK_B," "$ARTIFACT_RESPONSE_DIR/bulk-commit.body"
+[ "$(header_value bulk-commit RateLimit-Remaining)" = "0" ]
+
+rest_call bulk-limited POST "$BULK_URL&dry_run=false" 429 "{\"style\":\"apa-7\",\"posts\":[{\"id\":$BULK_B,\"etag\":\"$ETAG_B\"}]}"
+grep -q '"code":"bibliography_builder_rate_limited"' "$ARTIFACT_RESPONSE_DIR/bulk-limited.body"
+[ -n "$(header_value bulk-limited Retry-After)" ]
+[ "$(header_value bulk-limited RateLimit-Remaining)" = "0" ]
+
+capture_http bulk-text-a "${REST_URL}/bibliography/v1/posts/$BULK_A/bibliographies/0&format=text"
+grep -q 'Alpha, A. (2024)' "$ARTIFACT_RESPONSE_DIR/bulk-text-a.body"
+capture_http bulk-text-b-before "${REST_URL}/bibliography/v1/posts/$BULK_B/bibliographies/0&format=text"
+grep -q '^Alpha citation\.$' "$ARTIFACT_RESPONSE_DIR/bulk-text-b-before.body"
+
+# WP-CLI: a preview, then the commit the route refused. Post A is already in
+# APA, so it comes back unchanged and is not saved again.
+wp_exec "wp borges reformat $BULK_A $BULK_B --style=apa-7 --user=admin --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/cli-reformat-preview.txt" 2>&1
+grep -q 'Would change: 1\. Unchanged: 1\. Skipped: 0\. Failed: 0\.' "$ARTIFACT_DIR/cli-reformat-preview.txt"
+wp_exec "wp borges reformat $BULK_A $BULK_B --style=apa-7 --user=admin --commit --allow-root --path=/var/www/html" > "$ARTIFACT_DIR/cli-reformat-commit.txt" 2>&1
+grep -q 'Saved: 1\. Unchanged: 1\. Skipped: 0\. Failed: 0\.' "$ARTIFACT_DIR/cli-reformat-commit.txt"
+
+capture_http bulk-text-b "${REST_URL}/bibliography/v1/posts/$BULK_B/bibliographies/0&format=text"
+grep -q 'Alpha, A. (2024)' "$ARTIFACT_RESPONSE_DIR/bulk-text-b.body"
+
 # --- Abilities API (WordPress 6.9+) -----------------------------------------
 #
 # Runs the abilities through the Abilities API itself, in PHP as the admin user:

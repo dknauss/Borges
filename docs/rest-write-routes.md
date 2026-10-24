@@ -239,6 +239,8 @@ add_filter(
 
 The code is in `includes/bulk-routes.php` and `includes/rate-limit.php`.
 
+The runtime matrix (`scripts/runtime-matrix/smoke.sh`) runs the route over real HTTP on every stack it covers, under a three-post budget its test-only mu-plugin (`scripts/runtime-matrix/bulk-rate-limit.php`) sets: a two-post dry run, a commit clipped to the one post left with the other in `remaining`, a `429` with `Retry-After`, and `wp borges reformat` saving the post the route could not, since WP-CLI spends no budget.
+
 ## Bulk deduplicate
 
 `POST /wp-json/bibliography/v1/bulk/deduplicate` removes repeated citations from every bibliography in a batch of posts. It is the second Tier 4 route, on the same scaffolding as bulk reformat: the write-routes filter, `edit_others_posts` plus `edit_post` on each post, a dry run unless `dry_run=false`, a per-post ETag, batches of up to 25 posts with `remaining`, and the time budget. It spends **the same budget** as bulk reformat (a post costs 1 on either route) and waits for the same site-wide lock.
