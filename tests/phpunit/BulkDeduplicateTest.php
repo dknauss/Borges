@@ -82,6 +82,7 @@ final class BulkDeduplicateTest extends TestCase {
 	}
 
 	protected function tearDown(): void {
+		unset( $GLOBALS['wpdb'] );
 		remove_all_filters( 'bibliography_builder_enable_write_routes' );
 		remove_all_filters( 'bibliography_builder_bulk_rate_limit' );
 	}
@@ -453,6 +454,94 @@ final class BulkDeduplicateTest extends TestCase {
 		}
 
 		return null;
+	}
+
+	private static function run_duplicates( $args, $assoc_args = array() ) {
+		WP_CLI::$log = array();
+		( new Bibliography_Builder_CLI_Command() )->duplicates( $args, $assoc_args );
+
+		return array(
+			'rows'    => self::cli_log( 'items' )[0]['items'],
+			'success' => self::cli_log( 'success' ),
+			'warning' => self::cli_log( 'warning' ),
+		);
+	}
+
+	public function test_the_duplicates_command_reports_and_changes_nothing() {
+		bibliography_builder_test_set_current_user( 0 );
+		$before = get_post( 201 )->post_content;
+		$result = self::run_duplicates( array( '201', '202' ) );
+
+		$this->assertSame(
+			array(
+				array(
+					'postId' => 201,
+					'scope'  => 'bibliography',
+					'first'  => '0:knuth',
+					'second' => '0:knuth-doi',
+					'reason' => 'doi',
+				),
+				array(
+					'postId' => 201,
+					'scope'  => 'bibliography',
+					'first'  => '0:hoare',
+					'second' => '0:hoare-copy',
+					'reason' => 'title-year',
+				),
+				array(
+					'postId' => 201,
+					'scope'  => 'post',
+					'first'  => '0:hoare',
+					'second' => '1:hoare-2',
+					'reason' => 'title-year',
+				),
+			),
+			$result['rows']
+		);
+		$this->assertSame(
+			array( 'Within a bibliography: 2. Across bibliographies: 1. Posts checked: 2. Skipped: 0.' ),
+			$result['success']
+		);
+		$this->assertSame( $before, get_post( 201 )->post_content );
+		$this->assertSame( array(), $GLOBALS['bibliography_builder_test_post_updates'] );
+
+		// Machine formats print rows only.
+		$this->assertSame( array(), self::run_duplicates( array( '201' ), array( 'format' => 'csv' ) )['success'] );
+	}
+
+	public function test_the_duplicates_command_scans_the_site_and_skips_what_the_user_cannot_review() {
+		$GLOBALS['wpdb'] = new class() {
+			public $posts = 'wp_posts';
+			public $query = '';
+
+			public function esc_like( $text ) {
+				return addcslashes( $text, '_%\\' );
+			}
+
+			public function prepare( $query, $arg ) {
+				return str_replace( '%s', "'" . $arg . "'", $query );
+			}
+
+			public function get_col( $query ) {
+				$this->query = $query;
+
+				return array( '201', '202' );
+			}
+		};
+
+		// --user without edit_post on 202: skipped and counted, without a
+		// warning, since no post was named.
+		unset( $GLOBALS['bibliography_builder_test_user_caps'][ self::USER_ID ]['edit_post'][202] );
+		$result = self::run_duplicates( array() );
+
+		$this->assertStringContainsString( "post_content LIKE '%<!-- wp:bibliography-builder/bibliography%'", $GLOBALS['wpdb']->query );
+		$this->assertStringContainsString( "post_type <> 'revision'", $GLOBALS['wpdb']->query );
+		$this->assertSame( array( 201 ), array_unique( array_column( $result['rows'], 'postId' ) ) );
+		$this->assertStringEndsWith( 'Posts checked: 1. Skipped: 1.', $result['success'][0] );
+		$this->assertSame( array(), $result['warning'] );
+
+		// A named post the user cannot review is a warning.
+		$this->assertCount( 1, self::run_duplicates( array( '202' ) )['warning'] );
 	}
 
 	private static function cli_log( $kind ) {

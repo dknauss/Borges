@@ -1,7 +1,7 @@
 <?php
 /**
- * WP-CLI commands: the read-only `wp borges list`, `export`, and `validate`,
- * and the bulk writes `wp borges reformat` and `wp borges deduplicate`.
+ * WP-CLI commands: the read-only `wp borges list`, `export`, `validate`, and
+ * `duplicates`, and the bulk writes `wp borges reformat` and `wp borges deduplicate`.
  *
  * Each command calls the same read model as the REST routes and abilities
  * (`bibliography_builder_get_bibliographies_for_post()`, the export builders,
@@ -22,7 +22,8 @@
  * that user's capabilities exactly as the REST routes and abilities do:
  * `list` and `export` need the read route's access (a published, publicly
  * viewable post, or `edit_post`), and `validate` needs `edit_post`, as the
- * validate route does. Pass `--url=` to choose a site on Multisite.
+ * validate route does, and `duplicates` skips posts the user may not review.
+ * Pass `--url=` to choose a site on Multisite.
  *
  * Loaded from the main plugin file only when WP-CLI is running. The command
  * class itself is in `class-bibliography-builder-cli-command.php`.
@@ -78,6 +79,17 @@ const BIBLIOGRAPHY_BUILDER_CLI_DEDUPLICATE_FIELDS = array(
 	'merged',
 	'crossBlock',
 	'message',
+);
+
+/**
+ * Columns `wp borges duplicates` prints, one row per pair.
+ */
+const BIBLIOGRAPHY_BUILDER_CLI_DUPLICATES_FIELDS = array(
+	'postId',
+	'scope',
+	'first',
+	'second',
+	'reason',
 );
 
 /**
@@ -261,6 +273,78 @@ function bibliography_builder_cli_issue_rows( $reports ) {
 				);
 			}
 		}
+	}
+
+	return $rows;
+}
+
+/**
+ * Every post that holds a bibliography block, for `wp borges duplicates`
+ * run without post IDs.
+ *
+ * Any post type and status but revisions, auto-drafts, and the trash. One
+ * indexed query on the posts table, rather than loading every post.
+ *
+ * @return int[] Post IDs, oldest first.
+ */
+function bibliography_builder_cli_bibliography_post_ids() {
+	global $wpdb;
+
+	$sql  = "SELECT ID FROM {$wpdb->posts} WHERE post_type <> 'revision'"
+		. " AND post_status NOT IN ( 'auto-draft', 'trash' ) AND post_content LIKE %s ORDER BY ID";
+	$like = '%' . $wpdb->esc_like( '<!-- wp:bibliography-builder/bibliography' ) . '%';
+
+	return array_map(
+		'intval',
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared -- a one-off CLI scan, prepared here.
+		$wpdb->get_col( $wpdb->prepare( $sql, $like ) )
+	);
+}
+
+/**
+ * Table rows for `wp borges duplicates`: one per pair in one post.
+ *
+ * Read-only. A `bibliography` row is a later copy of a work in the same
+ * block, which `wp borges deduplicate` would remove, found by the same split
+ * (bibliography_builder_bulk_split_duplicates()); a `post` row is a work
+ * repeated across two blocks of the post, which deduplicate leaves in place.
+ * Each side is `<block index>:<citation ID>`.
+ *
+ * @param WP_Post $post Post.
+ * @return array<int, array<string, mixed>>
+ */
+function bibliography_builder_cli_duplicate_rows( $post ) {
+	$rows   = array();
+	$blocks = array();
+
+	foreach ( bibliography_builder_get_bibliographies_for_post( $post ) as $bibliography ) {
+		$index = $bibliography['index'];
+		$split = bibliography_builder_bulk_split_duplicates( $bibliography['citations'] );
+
+		$blocks[ $index ] = array(
+			'bibliographyId' => $bibliography['bibliographyId'],
+			'citations'      => $split['kept'],
+		);
+
+		foreach ( $split['removed'] as $removed ) {
+			$rows[] = array(
+				'postId' => $post->ID,
+				'scope'  => 'bibliography',
+				'first'  => $index . ':' . $removed['duplicateOf'],
+				'second' => $index . ':' . $removed['id'],
+				'reason' => $removed['reason'],
+			);
+		}
+	}
+
+	foreach ( bibliography_builder_bulk_cross_block_duplicates( $blocks ) as $pair ) {
+		$rows[] = array(
+			'postId' => $post->ID,
+			'scope'  => 'post',
+			'first'  => $pair['first']['index'] . ':' . $pair['first']['citationId'],
+			'second' => $pair['second']['index'] . ':' . $pair['second']['citationId'],
+			'reason' => $pair['reason'],
+		);
 	}
 
 	return $rows;

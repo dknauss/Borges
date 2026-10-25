@@ -355,6 +355,16 @@ function bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $e
 }
 
 /**
+ * Whether a CSL value counts as present: not null, '', or an empty list.
+ *
+ * @param mixed $value CSL value.
+ * @return bool
+ */
+function bibliography_builder_bulk_has_value( $value ) {
+	return null !== $value && '' !== $value && array() !== $value;
+}
+
+/**
  * The CSL fields a later copy of a work has and the kept copy lacks.
  *
  * Only whole top-level fields move, and only into gaps: a field the kept
@@ -366,13 +376,9 @@ function bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $e
  * @return array Fields to add to the kept copy, by name.
  */
 function bibliography_builder_bulk_missing_fields( $kept, $later ) {
-	$present = static function ( $value ) {
-		return null !== $value && '' !== $value && array() !== $value;
-	};
-
 	return array_diff_key(
-		array_filter( $later, $present ),
-		array_filter( $kept, $present ),
+		array_filter( $later, 'bibliography_builder_bulk_has_value' ),
+		array_filter( $kept, 'bibliography_builder_bulk_has_value' ),
 		array( 'id' => true )
 	);
 }

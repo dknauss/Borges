@@ -254,7 +254,9 @@ POST /wp-json/bibliography/v1/bulk/deduplicate?dry_run=false
 
 Two citations are duplicates by the editor's own rules (`citationsMatch()` in `src/lib/deduplicate.js`, the same check the `…/duplicates` review route and the add route use): the same DOI (ignoring case and a `doi.org` prefix), or the same title (ignoring case and punctuation) with the same year, the same first author, or neither.
 
-Each bibliography is read in its stored order, and **the first copy of a work stays**, with its formatted text, any manual display text, and its export strings. Later copies are removed, as if the editor had refused to add them. Nothing is merged into the copy that stays: if a later copy has a DOI the first lacks, the dry run shows it, and you can add it with `PATCH …/citations/<id>` before saving.
+Each bibliography is read in its stored order, and **the first copy of a work stays**. Later copies are removed, as if the editor had refused to add them.
+
+Before a copy goes, **any CSL field the kept copy lacks is copied into it** from that copy: a DOI, pages, a volume, an abstract. Only whole top-level fields move, and only into gaps (a missing field, or an empty string or list). A field the kept copy has is never overwritten, even when the values differ, and `id` never moves. A kept copy that gained fields is sanitized and formatted again, as an edit through `PATCH …/citations/<id>` is: it gets fresh formatted text, drops the parse warnings and BibTeX/BibLaTeX export strings that described the old record, and keeps any manual display text. The block is then sorted again, since a gained author or date can move the entry. A kept copy that gains nothing keeps its formatted text and export strings untouched. Each removed entry lists what it gave in `mergedFields`, so the dry run shows every fill before you save.
 
 Removing a copy refreshes the year suffixes of its same-author, same-year group, as `DELETE …/citations/<id>` does, so "2020a" goes back to "2020" when its twin is removed.
 
@@ -280,7 +282,7 @@ The same envelope as bulk reformat, without `style`. Each post's `bibliographies
           "bibliographyId": "…",
           "changes": {
             "removed": [
-              { "index": 2, "id": "knuth-doi", "duplicateOf": "knuth", "reason": "doi", "citation": { "id": "knuth-doi", "csl": { … }, "formattedText": "…" } }
+              { "index": 2, "id": "knuth-doi", "duplicateOf": "knuth", "reason": "doi", "mergedFields": [ "page" ], "citation": { "id": "knuth-doi", "csl": { … }, "formattedText": "…" } }
             ]
           }
         }
@@ -296,7 +298,7 @@ The same envelope as bulk reformat, without `style`. Each post's `bibliographies
 }
 ```
 
-`reason` is `doi`, `title-year`, `title-author`, or `title`, as in the review route. `index` in a removed entry is its position before the change. A post with nothing to remove is `unchanged` and is not saved, so retrying a batch is safe. `crossBlockDuplicates` is left out of `skipped` and `failed` posts. The other statuses mean what they mean for bulk reformat. Each saved post gains one revision, which still holds the removed citations.
+`reason` is `doi`, `title-year`, `title-author`, or `title`, as in the review route. `index` in a removed entry is its position before the change, and `mergedFields` names the fields copied from it into `duplicateOf` (empty when it gave none). A post with nothing to remove is `unchanged` and is not saved, so retrying a batch is safe. `crossBlockDuplicates` is left out of `skipped` and `failed` posts. The other statuses mean what they mean for bulk reformat. Each saved post gains one revision, which still holds the removed citations.
 
 ## Abilities
 
