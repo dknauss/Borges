@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.14.0
+Stable tag: 1.15.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -194,6 +194,12 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 * Internet Archive terms of use: https://archive.org/about/terms.php
 
 == Changelog ==
+
+= 1.15.0 =
+* **Added:** bulk reformat across posts. With the write routes turned on, `POST /bibliography/v1/bulk/reformat` switches every bibliography in up to 25 posts to one citation style and saves each post once. It needs `edit_others_posts` plus `edit_post` on each post, previews unless `dry_run=false`, and returns the posts it did not reach as `remaining`. The `borges/bulk-reformat` ability and `wp borges reformat <post-id>... --style=<key> --user=<user>` do the same.
+* **Added:** bulk deduplicate across posts. `POST /bibliography/v1/bulk/deduplicate`, the `borges/bulk-deduplicate` ability, and `wp borges deduplicate` remove repeated citations within each bibliography, keeping the first copy. A work listed in two bibliographies of one post is reported and left in place.
+* **Added:** a rate limit for bulk edits: 250 posts per user per 15 minutes, dry runs included, and one saving bulk request at a time per site. Responses carry `RateLimit-*` headers; a request over the limit gets `429` with `Retry-After`. Filters let hosts change the numbers. WP-CLI commands spend no budget.
+* **Fixed:** editing a citation can no longer turn it into a copy of another citation in the same bibliography. The block's field editor refuses the edit with a notice, and the REST update route and `borges/update-citation` ability return `409`. Repeats across two bibliographies on a page are still allowed.
 
 = 1.14.0 =
 * **Added:** WP-CLI commands. `wp borges list <post-id>` lists a post's bibliographies, `wp borges export <post-id>` prints one as CSL-JSON, plain text, or JSON, and `wp borges validate <post-id>` reports errors and warnings for every entry and exits 1 when there are errors. They change nothing. Without `--user` they read any post, as WordPress's own commands do; with `--user` they apply that user's permissions, the same as the REST API.
@@ -388,6 +394,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.15.0 =
+Opt-in bulk reformat and bulk deduplicate across posts (REST, abilities, and WP-CLI) with a per-user rate limit, and editing a citation can no longer create a duplicate. No configuration changes required.
 
 = 1.14.0 =
 Same-author, same-year works get 2020a and 2020b in APA, Chicago author-date, Harvard, and ABNT, and new read-only WP-CLI commands list, export, and validate bibliographies. No configuration changes required.

@@ -1,14 +1,17 @@
 # Project State
 
-_Last reviewed: 2026-10-23._
+_Last reviewed: 2026-10-25._
 
 ## Current Focus
 
-0. **`v1.14.0` (2026-10-23) is the current release baseline.** Version strings
+0. **`v1.15.0` (2026-10-25) is the current release baseline.** Version strings
    agree across the plugin header, `package.json`, `block.json`, and
-   `readme.txt` (`Stable tag: 1.14.0`, `Tested up to: 7.1`). Treat the live
+   `readme.txt` (`Stable tag: 1.15.0`, `Tested up to: 7.1`). Treat the live
    WordPress.org plugin page as canonical for the publicly available version.
-1. **1.14.0** letters same-author, same-year works (2020a, 2020b) in the
+1. **1.15.0** adds bulk reformat and bulk deduplicate across posts with a
+   per-user rate limit (Phase 05 M4), and refuses citation edits that would
+   create a duplicate (#188–#191).
+   **1.14.0** letters same-author, same-year works (2020a, 2020b) in the
    author-date styles and adds read-only WP-CLI commands (#183–#185).
    **1.13.0** enriches the rendered JSON-LD, has the post's Article cite the
    works with Yoast SEO or Rank Math, and adds the output-defaults filter
@@ -57,8 +60,9 @@ _Last reviewed: 2026-10-23._
    - 1.12.0 (2026-10-22) — newsletters and feeds, particle sorting per style, per-entry formatter cache, write abilities, refactor memo Phases A–E.
    - 1.13.0 (2026-10-23) — render-time JSON-LD enrichment, Article `citation` link, output-defaults filter.
    - 1.14.0 (2026-10-23) — year suffixes in author-date styles; read-only WP-CLI commands.
+   - 1.15.0 (2026-10-25) — bulk reformat and deduplicate with a rate limit (Phase 05 M4); duplicate-creating edits refused.
 3. **Active phases** are still only `05-writable-bibliography-rest` (M0–M3
-   shipped in 1.7.0, M5 write abilities in 1.12.0; M4 bulk routes remain) and
+   shipped in 1.7.0, M5 write abilities in 1.12.0, M4 bulk routes in 1.15.0) and
    `06-ci-optimization` (unplanned strategy sketch). Neither gates a release.
 4. Keep the release artifact, WordPress.org SVN output, Playground blueprints,
    and docs aligned whenever import behavior changes for any supported input
@@ -73,11 +77,12 @@ ordering. In short:
 2. **Sort-conformance backlog**: test items closed and year suffixes added 2026-10-23; ABNT leading articles await a product decision
 3. **WP-CLI read commands**: `list`, `export`, `validate` built 2026-10-23 (`docs/wp-cli.md`); `duplicates`, `preview`, and write commands still to consider
 4. **Reference-manager export corpus**: needs real exports from the owner
-5. **Phase 05 M4 bulk routes**: needs a rate-limiting design first
+5. **Phase 05 M4 bulk routes**: reformat and deduplicate shipped in 1.15.0
 6. **First-wave official language packs**
 
 ## Last Activity
 
+- 2026-10-25: Released 1.15.0 (#188–#191).
 - 2026-10-23: Released 1.14.0 (#183–#185).
 - 2026-10-23: Released 1.13.0 (#170).
 - 2026-10-22: Released 1.12.0 (#156–#178); refactor memo Phases A–E complete.

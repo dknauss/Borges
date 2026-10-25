@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-10-23):** `v1.14.0` (2026-10-23).
+**Current release baseline (reconciled 2026-10-25):** `v1.15.0` (2026-10-25).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -93,6 +93,10 @@ Releases since the milestone was retired, all outside any GSD phase:
 -   **1.14.0** (2026-10-23) — year suffixes (2020a, 2020b) in APA, Chicago
     author-date, Harvard, and ABNT; read-only WP-CLI commands
     (`wp borges list|export|validate`).
+-   **1.15.0** (2026-10-25) — Phase 05 M4: bulk reformat and bulk
+    deduplicate across posts (REST, abilities, `wp borges
+    reformat|deduplicate`) with a per-user rate limit; edits that would
+    create a duplicate are refused.
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -314,7 +318,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.14.0`.
+1.3.x release line. The current public release baseline is now `v1.15.0`.
 
 Completed Phase 2 outcomes:
 
@@ -448,7 +452,7 @@ The owner chose this order on 2026-10-23:
       (`src/lib/__fixtures__/reference-manager-exports/`). Still open: real,
       anonymized Zotero and Mendeley exports from the owner's libraries, then
       Papers, RefWorks, and BibDesk once samples exist
-5. **Phase 05 M4: bulk routes** — reformat and deduplicate built 2026-10-24, unreleased
+5. **Phase 05 M4: bulk routes** — reformat and deduplicate built 2026-10-24, shipped in 1.15.0
     - Design agreed with Dan 2026-10-24: synchronous batches (up to 25
       posts, a `remaining` list) instead of a polled job ID, since jobs
       would need stored records and cron; a per-user budget of 250 posts
@@ -545,7 +549,7 @@ check no capabilities, like core's commands, since shell access already reads
 the database; with `--user` they apply the same checks as the REST routes and
 abilities. Write commands will check `edit_post` and the write-routes filter
 either way. `duplicates` and `preview` are small follow-ups. `wp borges
-reformat` came with M4 (2026-10-24, unreleased): it needs `--user`,
+reformat` came with M4 (1.15.0): it needs `--user`,
 `edit_others_posts`, and the write-routes filter, and spends no rate-limit
 budget. The per-citation write commands are still to do.
 

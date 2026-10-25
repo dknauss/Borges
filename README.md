@@ -94,6 +94,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.15.0** — Opt-in bulk reformat and bulk deduplicate across posts through REST, abilities, and `wp borges reformat` / `deduplicate`, with a per-user rate limit; editing a citation can no longer turn it into a duplicate.
 - **1.14.0** — Same-author, same-year works are lettered (2020a, 2020b) in APA, Chicago author-date, Harvard, and ABNT; read-only WP-CLI commands `wp borges list`, `export`, and `validate`.
 - **1.13.0** — Richer JSON-LD for each cited work (an `@id`, identifiers and `sameAs` links, the periodical chain, pages, and a closer schema.org type), added as published posts render; with Yoast SEO or Rank Math the post's Article lists the works under `citation`; a filter sets site-wide output defaults for new bibliographies.
 - **1.12.0** — Bibliographies read correctly in newsletters and feeds (no blanket italics or broken Cite / Export panel); names with particles sort per style; no period after a "?" or "!" title; reformatting after an edit renders only the changed entries; opt-in write abilities (WordPress 6.9+) wrap the write routes.
