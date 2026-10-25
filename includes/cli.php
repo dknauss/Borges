@@ -75,6 +75,7 @@ const BIBLIOGRAPHY_BUILDER_CLI_DEDUPLICATE_FIELDS = array(
 	'postId',
 	'status',
 	'removed',
+	'merged',
 	'crossBlock',
 	'message',
 );
@@ -444,9 +445,13 @@ function bibliography_builder_cli_deduplicate_rows( $results ) {
 	return array_map(
 		static function ( $result ) {
 			$removed = 0;
+			$merged  = 0;
 
 			foreach ( $result['bibliographies'] ?? array() as $bibliography ) {
-				$removed += count( $bibliography['changes']['removed'] );
+				foreach ( $bibliography['changes']['removed'] as $entry ) {
+					++$removed;
+					$merged += count( $entry['mergedFields'] );
+				}
 			}
 
 			$cross = isset( $result['crossBlockDuplicates'] ) ? count( $result['crossBlockDuplicates'] ) : 0;
@@ -466,6 +471,7 @@ function bibliography_builder_cli_deduplicate_rows( $results ) {
 				'postId'     => $result['postId'],
 				'status'     => $result['status'],
 				'removed'    => $removed,
+				'merged'     => $merged,
 				'crossBlock' => $cross,
 				'message'    => $message,
 			);

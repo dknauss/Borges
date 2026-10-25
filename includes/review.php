@@ -617,17 +617,19 @@ function bibliography_builder_get_duplicate_reason( $first, $second ) {
  *
  * @param array $citation  Citation record (or `{ csl }`) to look for.
  * @param array $citations Citations to search; leave the citation itself out.
- * @return array{id: string|null, reason: string}|null The match, or null.
+ * @return array{index: int|string, id: string|null, reason: string}|null The
+ *         match, with its key in `$citations`, or null.
  */
 function bibliography_builder_find_duplicate_citation( $citation, $citations ) {
 	$keys = bibliography_builder_get_duplicate_keys( $citation );
 
-	foreach ( $citations as $existing ) {
+	foreach ( $citations as $index => $existing ) {
 		$existing_keys = bibliography_builder_get_duplicate_keys( $existing );
 		$reason        = bibliography_builder_get_duplicate_reason( $existing_keys, $keys );
 
 		if ( null !== $reason ) {
 			return array(
+				'index'  => $index,
 				'id'     => bibliography_builder_get_citation_id( $existing ),
 				'reason' => $reason,
 			);

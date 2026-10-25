@@ -334,6 +334,79 @@ final class BulkDeduplicateTest extends TestCase {
 		$this->assertSame( array( 'a', 'a' ), array_column( $split['removed'], 'duplicateOf' ) );
 	}
 
+	public function test_split_fills_the_kept_copy_from_later_ones() {
+		$kept                   = self::citation( 'a', 'Same Title', 'Lee', 2001 );
+		$kept['csl']['page']    = '';
+		$later                  = self::citation( 'b', 'Same title', 'Lee', 2001, '10.1000/xyz' );
+		$later['csl']['page']   = '1-10';
+		$later['csl']['type']   = 'book';
+		$later['csl']['id']     = 'b';
+		$third                  = self::citation( 'c', 'Same Title', 'Lee', 2001 );
+		$third['csl']['volume'] = '3';
+
+		$split = bibliography_builder_bulk_split_duplicates( array( $kept, $later, $third ) );
+		$csl   = $split['kept'][0]['csl'];
+
+		// Gaps are filled, even an empty string; a field the kept copy has
+		// (type) is never overwritten, and `id` never moves.
+		$this->assertSame( '10.1000/xyz', $csl['DOI'] );
+		$this->assertSame( '1-10', $csl['page'] );
+		$this->assertSame( '3', $csl['volume'] );
+		$this->assertSame( 'article-journal', $csl['type'] );
+		$this->assertArrayNotHasKey( 'id', $csl );
+		$this->assertSame( array( array( 'DOI', 'page' ), array( 'volume' ) ), array_column( $split['removed'], 'mergedFields' ) );
+
+		// `merged` holds the CSL from before the first merge.
+		$this->assertSame( array( 0 ), array_keys( $split['merged'] ) );
+		$this->assertSame( $kept['csl'], $split['merged'][0] );
+		$this->assertSame( $kept['formattedText'], $split['kept'][0]['formattedText'] );
+	}
+
+	public function test_a_commit_formats_the_filled_copy_again() {
+		$kept                    = self::citation( 'kept', 'Structured Programming', 'Dahl', 1972 );
+		$kept['displayOverride'] = 'My own text';
+		$kept['exportBibtex']    = '@article{old}';
+		$kept['parseWarnings']   = array( 'old warning' );
+
+		self::set_post(
+			204,
+			self::block(
+				array(
+					'bibliographyId' => 'filled',
+					'citationStyle'  => 'apa-7',
+					'citations'      => array(
+						$kept,
+						self::citation( 'copy', 'Structured programming', 'Dahl', 1972, '10.5555/1243380' ),
+					),
+				)
+			) . "\n"
+		);
+		bibliography_builder_test_grant_cap( self::USER_ID, 'edit_post', 204 );
+
+		$data = bibliography_builder_rest_bulk_deduplicate( self::request( array( 204 => self::etag( 204 ) ), false ) )->get_data();
+
+		$this->assertSame( 'changed', $data['results'][0]['status'] );
+		$this->assertSame( array( 'DOI' ), $data['results'][0]['bibliographies'][0]['changes']['removed'][0]['mergedFields'] );
+
+		foreach ( ( new WP_Block_Parser() )->parse( get_post( 204 )->post_content ) as $block ) {
+			if ( 'bibliography-builder/bibliography' !== $block['blockName'] ) {
+				continue;
+			}
+
+			$this->assertCount( 1, $block['attrs']['citations'] );
+			$citation = $block['attrs']['citations'][0];
+			$this->assertSame( 'kept', $citation['id'] );
+			$this->assertSame( '10.5555/1243380', $citation['csl']['DOI'] );
+			$this->assertStringContainsString( '10.5555/1243380', $citation['formattedText'] );
+			$this->assertSame( 'My own text', $citation['displayOverride'] );
+			$this->assertArrayNotHasKey( 'exportBibtex', $citation );
+			$this->assertArrayNotHasKey( 'parseWarnings', $citation );
+
+			$attrs = bibliography_builder_decode_save_attributes( wp_json_encode( $block['attrs'] ) );
+			$this->assertSame( bibliography_builder_render_save_markup( $attrs ), $block['innerHTML'] );
+		}
+	}
+
 	public function test_the_ability_wraps_the_route() {
 		add_filter( 'bibliography_builder_enable_write_routes', '__return_true' );
 		bibliography_builder_register_write_abilities();
@@ -409,6 +482,7 @@ final class BulkDeduplicateTest extends TestCase {
 					'postId'     => 201,
 					'status'     => 'preview',
 					'removed'    => 2,
+					'merged'     => 0,
 					'crossBlock' => 1,
 					'message'    => 'Some works repeat across bibliographies; those are left in place.',
 				),
@@ -416,6 +490,7 @@ final class BulkDeduplicateTest extends TestCase {
 					'postId'     => 202,
 					'status'     => 'unchanged',
 					'removed'    => 0,
+					'merged'     => 0,
 					'crossBlock' => 0,
 					'message'    => '',
 				),
