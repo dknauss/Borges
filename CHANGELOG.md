@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-10-25
+
 ### Added
 
 - **Bulk reformat across posts.** With the write routes turned on, `POST /bibliography/v1/bulk/reformat` switches every bibliography in up to 25 posts to one citation style, reformatting each as the block sidebar's style picker does and saving each post once. It needs `edit_others_posts` and `edit_post` on each post, previews unless `dry_run=false`, and checks each post's ETag before saving it. A request returns the posts it did not reach as `remaining`, so a client sends those next; there are no background jobs, and Borges still stores no settings or cron events. The `borges/bulk-reformat` ability wraps the route.
