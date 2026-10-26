@@ -1,0 +1,3122 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/ads-zero-dates-1066.biblatex.bib 1`] = `
+[
+  {
+    "DOI": "10.1063/1.44135",
+    "URL": "https://ui.adsabs.harvard.edu/#abs/1993AIPC..280..291W/abstract",
+    "abstract": "A powerful, streamlined new Astrophysics Data System",
+    "accessed": {
+      "date-parts": [
+        [
+          2018,
+          9,
+          24,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "Wilson",
+        "given": "R. B.",
+      },
+      {
+        "family": "Fishman",
+        "given": "G. J.",
+      },
+      {
+        "family": "Finger",
+        "given": "M. H.",
+      },
+      {
+        "family": "Pendleton",
+        "given": "G. N.",
+      },
+      {
+        "family": "Prince",
+        "given": "T. A.",
+      },
+      {
+        "family": "Chakrabarty",
+        "given": "D.",
+      },
+    ],
+    "citation-key": "WilsonObservationsisolatedpulsars1993",
+    "container-title": "American Institute of Physics Conference Series",
+    "id": "WilsonObservationsisolatedpulsars1993",
+    "issued": {
+      "date-parts": [
+        [
+          1993,
+        ],
+      ],
+    },
+    "language": "en",
+    "page": "291",
+    "title": "Observations of Isolated Pulsars and Disk-Fed X-Ray Binaries.",
+    "type": "article-journal",
+    "volume": "280",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/cjk-1928.biblatex.bib 1`] = `
+[
+  {
+    "author": [
+      {
+        "family": "秋谷",
+        "given": "裕幸",
+      },
+    ],
+    "citation-key": "akiyaMinHigashi2010",
+    "id": "akiyaMinHigashi2010",
+    "issued": {
+      "date-parts": [
+        [
+          2010,
+        ],
+      ],
+    },
+    "language": "ja",
+    "publisher": "福建人民出版社",
+    "publisher-place": "福州",
+    "title": "閩東區福寧片四縣市方言研究",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "秋谷",
+        "given": "裕幸",
+      },
+    ],
+    "citation-key": "qiugumindongqufuningpian2010",
+    "id": "qiugumindongqufuningpian2010",
+    "issued": {
+      "date-parts": [
+        [
+          2010,
+        ],
+      ],
+    },
+    "language": "zh",
+    "publisher": "福建人民出版社",
+    "publisher-place": "福州",
+    "title": "閩東區福寧片四縣市方言研究",
+    "type": "book",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/edtf-dates-811.biblatex.bib 1`] = `
+[
+  {
+    "author": [
+      {
+        "family": "Doe10",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe10_edtf_2011",
+    "id": "doe10_edtf_2011",
+    "issued": {
+      "date-parts": [
+        [
+          2011,
+          5,
+          25,
+        ],
+        [
+          2012,
+          6,
+          26,
+        ],
+      ],
+    },
+    "title": "EDTF Date Range, circa Begin & End: 2011-05-25~/2012-06-26~",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe11",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe11_edtf_2011",
+    "id": "doe11_edtf_2011",
+    "issued": {
+      "date-parts": [
+        [
+          2011,
+          5,
+          25,
+        ],
+        [
+          2012,
+          6,
+          26,
+        ],
+      ],
+    },
+    "title": "EDTF Date Range, circa End: 2011-05-25/2012-06-26~",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe12",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe12_edtf_2011",
+    "id": "doe12_edtf_2011",
+    "issued": {
+      "date-parts": [
+        [
+          2011,
+          5,
+        ],
+      ],
+    },
+    "title": "EDTF Date YYYY-MM~ [Month Precision & circa]: 2011-05~",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe13",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe13_season_2017",
+    "id": "doe13_season_2017",
+    "issued": {
+      "date-parts": [
+        [
+          2017,
+        ],
+      ],
+    },
+    "title": "Season circa: : 2017-24~",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe14",
+      },
+    ],
+    "citation-key": "doe14_date2010_2010",
+    "id": "doe14_date2010_2010",
+    "issued": {
+      "date-parts": [
+        [
+          2011,
+        ],
+      ],
+    },
+    "title": "Date=2010 & Extra=issued:2011",
+    "type": "book",
+  },
+  {
+    "ISBN": "0-943396-04-2 0-85131-041-9",
+    "author": [
+      {
+        "family": "Doe15",
+      },
+    ],
+    "citation-key": "doe15_multiple_2017",
+    "id": "doe15_multiple_2017",
+    "issued": {
+      "date-parts": [
+        [
+          2017,
+        ],
+      ],
+    },
+    "title": "Multiple ISBNs",
+    "type": "book",
+  },
+  {
+    "URL": "http://www.jstor.org/stable/1225428",
+    "accessed": {
+      "date-parts": [
+        [
+          2015,
+          4,
+          30,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "Doe7",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe7_politics_1985",
+    "container-title": "Cinema Journal",
+    "id": "doe7_politics_1985",
+    "issue": "3",
+    "issued": {
+      "date-parts": [
+        [
+          1985,
+        ],
+      ],
+    },
+    "page": "4-23",
+    "title": "The Politics of Film Canons: Printemps 1985",
+    "type": "article-journal",
+    "volume": "24",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe8",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe8_title_2017",
+    "id": "doe8_title_2017",
+    "issued": {
+      "date-parts": [
+        [
+          2017,
+        ],
+      ],
+    },
+    "title": "Title: 2017-23",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe9",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe9_edtf_2011",
+    "id": "doe9_edtf_2011",
+    "issued": {
+      "date-parts": [
+        [
+          2011,
+          5,
+          25,
+        ],
+        [
+          2012,
+          6,
+          26,
+        ],
+      ],
+    },
+    "title": "EDTF Date Range, circa Begin: 2011-05-25~/2012-06-26",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe1",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t1",
+    "event-date": {
+      "date-parts": [
+        [
+          1888,
+          8,
+          28,
+        ],
+      ],
+    },
+    "id": "t1",
+    "issued": {
+      "date-parts": [
+        [
+          2014,
+          12,
+          31,
+        ],
+        [
+          2015,
+          1,
+          1,
+        ],
+      ],
+    },
+    "original-date": {
+      "date-parts": [
+        [
+          1777,
+          7,
+          27,
+        ],
+        [
+          1888,
+          8,
+          28,
+        ],
+      ],
+    },
+    "title": "A Manuscript: 2014-12-31/2015-01-01",
+    "type": "manuscript",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe2",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t2",
+    "event-date": {
+      "date-parts": [
+        [
+          1800,
+          1,
+          1,
+        ],
+        [
+          1800,
+          12,
+          31,
+        ],
+      ],
+    },
+    "id": "t2",
+    "title": "Event-Date and Submitted Test",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe3",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t3",
+    "id": "t3",
+    "title": "Open-Ended Date Range Test: 2014-12-31/",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe4",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t4",
+    "id": "t4",
+    "issued": {
+      "date-parts": [
+        [
+          2014,
+          12,
+          31,
+        ],
+      ],
+    },
+    "title": "Single Date Test: 2014-12-31",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe5",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t5",
+    "event-date": {
+      "date-parts": [
+        [
+          0,
+        ],
+      ],
+    },
+    "id": "t5",
+    "issued": {
+      "date-parts": [
+        [
+          0,
+        ],
+      ],
+    },
+    "original-date": {
+      "date-parts": [
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+    },
+    "title": "BC Tests: -0333",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe6",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t6",
+    "id": "t6",
+    "issued": {
+      "date-parts": [
+        [
+          0,
+        ],
+        [
+          0,
+        ],
+      ],
+    },
+    "title": "BC Tests 2: -0099-07-12/-0043-03-15",
+    "type": "book",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/edtf-dates-811.csl.json 1`] = `
+[
+  {
+    "author": [
+      {
+        "family": "Doe10",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe10_edtf_2011",
+    "id": "doe10_edtf_2011",
+    "issued": {
+      "circa": true,
+      "date-parts": [
+        [
+          2011,
+          5,
+          25,
+        ],
+        [
+          2012,
+          6,
+          26,
+        ],
+      ],
+    },
+    "title": "EDTF date range, circa begin & end: 2011-05-25~/2012-06-26~",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe11",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe11_edtf_2011",
+    "id": "doe11_edtf_2011",
+    "issued": {
+      "circa": true,
+      "date-parts": [
+        [
+          2011,
+          5,
+          25,
+        ],
+        [
+          2012,
+          6,
+          26,
+        ],
+      ],
+    },
+    "title": "EDTF date range, circa end: 2011-05-25/2012-06-26~",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe12",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe12_edtf_2011",
+    "id": "doe12_edtf_2011",
+    "issued": {
+      "circa": true,
+      "date-parts": [
+        [
+          2011,
+          5,
+        ],
+      ],
+    },
+    "title": "EDTF date YYYY-MM~ [month precision & circa]: 2011-05~",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe13",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe13_season_2017",
+    "id": "doe13_season_2017",
+    "issued": {
+      "circa": true,
+      "date-parts": [
+        [
+          2017,
+        ],
+      ],
+      "season": 4,
+    },
+    "title": "Season circa: : 2017-24~",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "literal": "Doe14",
+      },
+    ],
+    "citation-key": "doe14_date2010_2010",
+    "id": "doe14_date2010_2010",
+    "issued": {
+      "date-parts": [
+        [
+          2011,
+        ],
+      ],
+    },
+    "title": "Date=2010 & Extra=issued:2011",
+    "type": "book",
+  },
+  {
+    "ISBN": "0-943396-04-2 0-85131-041-9",
+    "author": [
+      {
+        "literal": "Doe15",
+      },
+    ],
+    "citation-key": "doe15_multiple_2017",
+    "id": "doe15_multiple_2017",
+    "issued": {
+      "date-parts": [
+        [
+          2017,
+        ],
+      ],
+    },
+    "title": "multiple ISBNs",
+    "type": "book",
+  },
+  {
+    "URL": "http://www.jstor.org/stable/1225428",
+    "accessed": {
+      "date-parts": [
+        [
+          2015,
+          4,
+          30,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "Doe7",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe7_politics_1985",
+    "container-title": "Cinema Journal",
+    "id": "doe7_politics_1985",
+    "issue": "3",
+    "issued": {
+      "date-parts": [
+        [
+          1985,
+        ],
+      ],
+      "season": 1,
+    },
+    "page": "4–23",
+    "title": "The Politics of Film Canons: printemps 1985",
+    "type": "article-journal",
+    "volume": "24",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe8",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe8_title_2017",
+    "id": "doe8_title_2017",
+    "issued": {
+      "date-parts": [
+        [
+          2017,
+        ],
+      ],
+      "season": 3,
+    },
+    "title": "Title: 2017-23",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe9",
+        "given": "John",
+      },
+    ],
+    "citation-key": "doe9_edtf_2011",
+    "id": "doe9_edtf_2011",
+    "issued": {
+      "circa": true,
+      "date-parts": [
+        [
+          2011,
+          5,
+          25,
+        ],
+        [
+          2012,
+          6,
+          26,
+        ],
+      ],
+    },
+    "title": "EDTF date range, circa begin: 2011-05-25~/2012-06-26",
+    "type": "webpage",
+  },
+  {
+    "accessed": {
+      "circa": true,
+      "date-parts": [
+        [
+          2014,
+          12,
+          31,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "Doe1",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t1",
+    "event-date": {
+      "date-parts": [
+        [
+          "1888",
+          8,
+          28,
+        ],
+      ],
+    },
+    "id": "t1",
+    "issued": {
+      "date-parts": [
+        [
+          2014,
+          12,
+          31,
+        ],
+        [
+          2015,
+          1,
+          1,
+        ],
+      ],
+    },
+    "original-date": {
+      "date-parts": [
+        [
+          "1777",
+          7,
+          27,
+        ],
+        [
+          "1888",
+          8,
+          28,
+        ],
+      ],
+    },
+    "submitted": {
+      "date-parts": [
+        [
+          "1999",
+          9,
+          29,
+        ],
+        [
+          0,
+        ],
+      ],
+    },
+    "title": "A manuscript: 2014-12-31/2015-01-01",
+    "type": "manuscript",
+  },
+  {
+    "accessed": {
+      "literal": "13th cent",
+    },
+    "author": [
+      {
+        "family": "Doe2",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t2",
+    "event-date": {
+      "date-parts": [
+        [
+          "1800",
+          1,
+          1,
+        ],
+        [
+          "1800",
+          12,
+          31,
+        ],
+      ],
+    },
+    "id": "t2",
+    "submitted": {
+      "date-parts": [
+        [
+          "1900",
+          1,
+          1,
+        ],
+        [
+          "1900",
+          12,
+          31,
+        ],
+      ],
+    },
+    "title": "event-date and submitted test",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe3",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t3",
+    "id": "t3",
+    "issued": {
+      "date-parts": [
+        [
+          2014,
+          12,
+          31,
+        ],
+        [
+          0,
+        ],
+      ],
+    },
+    "title": "open-ended date range test: 2014-12-31/",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe4",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t4",
+    "id": "t4",
+    "issued": {
+      "date-parts": [
+        [
+          2014,
+          12,
+          31,
+        ],
+      ],
+    },
+    "title": "single date test: 2014-12-31",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe6",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t6",
+    "id": "t6",
+    "issued": {
+      "date-parts": [
+        [
+          7,
+          12,
+        ],
+        [
+          3,
+          15,
+        ],
+      ],
+    },
+    "title": "BC tests 2: -0099-07-12/-0043-03-15",
+    "type": "book",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/extra-creators-uppercase-doi-825.biblatex.bib 1`] = `
+[
+  {
+    "author": [
+      {
+        "family": "Author",
+        "given": "Ann",
+      },
+    ],
+    "citation-key": "Author2015",
+    "editor": [
+      {
+        "family": "Editrix",
+        "given": "Emma",
+      },
+      {
+        "family": "Editor",
+        "given": "Ed",
+      },
+    ],
+    "genre": "working paper",
+    "id": "Author2015",
+    "issued": {
+      "date-parts": [
+        [
+          2015,
+        ],
+      ],
+    },
+    "number": "77",
+    "publisher": "Institution",
+    "publisher-place": "Place",
+    "title": "A Report",
+    "type": "report",
+  },
+  {
+    "DOI": "10.1093/ref:odnb/10183",
+    "URL": "http://www.oxforddnb.com/view/article/10183",
+    "accessed": {
+      "date-parts": [
+        [
+          2014,
+          6,
+          13,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "Blair",
+        "given": "John",
+      },
+    ],
+    "citation-key": "Blair2004",
+    "container-title": "Oxford Dictionary of National Biography",
+    "editor": [
+      {
+        "family": "Matthew",
+        "given": "H.C.G.",
+      },
+      {
+        "family": "Harrison",
+        "given": "Brian Howard",
+      },
+    ],
+    "id": "Blair2004",
+    "issued": {
+      "date-parts": [
+        [
+          2004,
+        ],
+      ],
+    },
+    "publisher": "Oxford University Press",
+    "publisher-place": "Oxford",
+    "title": "Frithuswith (d. 727)",
+    "type": "entry",
+  },
+  {
+    "citation-key": "Doe2015",
+    "editor": [
+      {
+        "family": "Doe",
+        "given": "John",
+      },
+      {
+        "family": "Roe",
+        "given": "Rob",
+      },
+    ],
+    "genre": "film",
+    "id": "Doe2015",
+    "issued": {
+      "date-parts": [
+        [
+          2015,
+        ],
+      ],
+    },
+    "publisher": "The Distributor",
+    "publisher-place": "US/GB",
+    "title": "A Film",
+    "type": "motion_picture",
+  },
+  {
+    "citation-key": "emptybook",
+    "editor": [
+      {
+        "family": "Xxx",
+      },
+    ],
+    "id": "emptybook",
+    "type": "entry",
+  },
+  {
+    "citation-key": "friends:leia:dvd",
+    "container-title": "Friends",
+    "editor": [
+      {
+        "family": "Mancuso",
+        "given": "Gail",
+      },
+    ],
+    "genre": "video",
+    "id": "friends:leia:dvd",
+    "issued": {
+      "date-parts": [
+        [
+          2003,
+        ],
+      ],
+    },
+    "language": "en-US",
+    "original-date": {
+      "date-parts": [
+        [
+          1996,
+          9,
+          16,
+        ],
+      ],
+    },
+    "original-publisher": "NBC",
+    "publisher": "Warner Home Video",
+    "publisher-place": "US",
+    "title": "The One with the Princess Leia Fantasy",
+    "type": "motion_picture",
+    "volume": "3",
+  },
+  {
+    "citation-key": "friends:leia:tv",
+    "container-title": "Friends",
+    "editor": [
+      {
+        "family": "Mancuso",
+        "given": "Gail",
+      },
+    ],
+    "genre": "tvbroadcast",
+    "id": "friends:leia:tv",
+    "issued": {
+      "date-parts": [
+        [
+          1996,
+          9,
+          16,
+        ],
+      ],
+    },
+    "language": "en-US",
+    "publisher": "NBC",
+    "publisher-place": "US",
+    "title": "The One with the Princess Leia Fantasy",
+    "type": "motion_picture",
+    "volume": "3",
+  },
+  {
+    "citation-key": "Kubrick1964",
+    "editor": [
+      {
+        "family": "Kubrick",
+        "given": "Stanley",
+      },
+    ],
+    "genre": "tvbroadcast",
+    "id": "Kubrick1964",
+    "issued": {
+      "date-parts": [
+        [
+          1964,
+        ],
+      ],
+    },
+    "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
+    "title-short": "Dr. Strangelove",
+    "type": "motion_picture",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/incollection-booktitle-1691.biblatex.bib 1`] = `
+[
+  {
+    "URL": "http://emma.hypotheses.org/147",
+    "accessed": {
+      "date-parts": [
+        [
+          2017,
+          12,
+          12,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "Nagy",
+        "given": "Piroska",
+      },
+    ],
+    "citation-key": "NagyHistorians2008",
+    "genre": "Billet",
+    "id": "NagyHistorians2008",
+    "issued": {
+      "date-parts": [
+        [
+          2008,
+          10,
+          24,
+        ],
+      ],
+    },
+    "publisher": "Les émotions au Moyen Âge, carnet d'EMMA",
+    "title": "Historians and Emotions: New Theories, New Questions",
+    "title-short": "Historians and Emotions",
+    "type": "webpage",
+  },
+  {
+    "author": [
+      {
+        "family": "胡適",
+      },
+    ],
+    "citation-key": "胡適哲學史1917",
+    "container-title": "胡適文集",
+    "editor": [
+      {
+        "family": "歐陽哲生",
+      },
+    ],
+    "id": "胡適哲學史1917",
+    "issued": {
+      "date-parts": [
+        [
+          1998,
+        ],
+      ],
+    },
+    "original-date": {
+      "date-parts": [
+        [
+          1930,
+        ],
+      ],
+    },
+    "original-publisher": "萬有文庫",
+    "original-title": "中國哲學史大綱卷上[1919]，商務",
+    "page": "155-422",
+    "publisher": "北京大學",
+    "publisher-place": "北京",
+    "title": "中國古代哲學史",
+    "type": "chapter",
+    "volume": "冊6",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/literal-date-1476.bibtex.bib 1`] = `
+[
+  {
+    "citation-key": "TestEntry2020",
+    "id": "TestEntry2020",
+    "issued": {
+      "date-parts": [
+        [
+          2020,
+          3,
+        ],
+      ],
+    },
+    "title": "Test Entry",
+    "type": "article-journal",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/multi-character-initial-2419.bibtex.bib 1`] = `
+[
+  {
+    "DOI": "10.1103/PhysRevA.75.063630",
+    "ISSN": "1050-2947, 1094-1622",
+    "accessed": {
+      "date-parts": [
+        [
+          2023,
+          2,
+          22,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "Astrakharchik",
+        "given": "G. E.",
+      },
+      {
+        "family": "Boronat",
+        "given": "\\relax Philippe",
+      },
+      {
+        "family": "Casulleras",
+        "given": "J.",
+      },
+      {
+        "family": "Kurbakov",
+        "given": "\\relax IJsbrand",
+      },
+      {
+        "family": "Lozovik",
+        "given": "\\relax Yu. E.",
+      },
+    ],
+    "citation-key": "Astrakharchik2007",
+    "container-title": "Physical Review A",
+    "id": "Astrakharchik2007",
+    "issue": "6",
+    "issued": {
+      "date-parts": [
+        [
+          2007,
+          6,
+        ],
+      ],
+    },
+    "language": "en",
+    "page": "063630",
+    "title": "Weakly interacting two-dimensional system of dipoles: Limitations of the mean-field theory",
+    "title-short": "Weakly interacting two-dimensional system of dipoles",
+    "type": "article-journal",
+    "volume": "75",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/name-particles-313.biblatex.bib 1`] = `
+[
+  {
+    "author": [
+      {
+        "family": "Aubignac",
+        "given": "François Hédelin",
+        "suffix": "abbé d'",
+      },
+    ],
+    "citation-key": "abbot1",
+    "id": "abbot1",
+    "title": "(Aubignac) (François Hédelin, abbé d')",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Aubignac",
+        "given": "François Hédelin",
+        "non-dropping-particle": "abbé d'",
+      },
+    ],
+    "citation-key": "abbot3",
+    "id": "abbot3",
+    "title": "(abbé d' Aubignac) (François Hédelin)",
+    "type": "article-journal",
+  },
+  {
+    "ISBN": "978-1-84946-324-9",
+    "citation-key": "almeida_reading_2013",
+    "editor": [
+      {
+        "family": "Almeida",
+        "given": "Luís",
+        "non-dropping-particle": "d'",
+      },
+      {
+        "family": "Edwards",
+        "given": "James",
+      },
+      {
+        "family": "Dolcetti",
+        "given": "Andrea",
+      },
+    ],
+    "id": "almeida_reading_2013",
+    "issued": {
+      "date-parts": [
+        [
+          2013,
+        ],
+      ],
+    },
+    "language": "en",
+    "number-of-pages": "vi+309",
+    "publisher": "Hart Publishing",
+    "publisher-place": "Oxford",
+    "title": "Reading HLA Hart's: The Concept of Law",
+    "type": "book",
+  },
+  {
+    "ISBN": "978-1-4793-4771-1",
+    "author": [
+      {
+        "family": "Bennett",
+        "given": "Frank G.",
+        "suffix": "Jr.",
+      },
+    ],
+    "citation-key": "bennett_citations_2013",
+    "id": "bennett_citations_2013",
+    "issued": {
+      "date-parts": [
+        [
+          2013,
+        ],
+      ],
+    },
+    "number-of-pages": "137",
+    "publisher": "CreateSpace Independent Publishing Platform",
+    "publisher-place": "Lexington Kentucky",
+    "title": "Citations, Out of the Box",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "Jones",
+        "given": "John",
+        "non-dropping-particle": "d'",
+      },
+    ],
+    "citation-key": "bugreports_ApostropheOnParticle",
+    "id": "bugreports_ApostropheOnParticle",
+    "keyword": "imported",
+    "title": "bugreports_ApostropheOnParticle",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Co.",
+        "given": "Doe",
+      },
+    ],
+    "citation-key": "bugreports_AsmJournals",
+    "id": "bugreports_AsmJournals",
+    "keyword": "imported",
+    "title": "bugreports_AsmJournals",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "U.S. Bureau of the Census",
+      },
+    ],
+    "citation-key": "bugreports_DemoPageFullCiteCruftOnSubsequent",
+    "id": "bugreports_DemoPageFullCiteCruftOnSubsequent",
+    "keyword": "imported",
+    "title": "bugreports_DemoPageFullCiteCruftOnSubsequent",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "D'Arcus",
+        "given": "Bruce",
+      },
+    ],
+    "citation-key": "bugreports_DuplicateSpaces",
+    "id": "bugreports_DuplicateSpaces",
+    "keyword": "imported",
+    "title": "bugreports_DuplicateSpaces",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Family Name",
+        "given": "N",
+      },
+    ],
+    "citation-key": "bugreports_DuplicateSpaces3",
+    "id": "bugreports_DuplicateSpaces3",
+    "keyword": "imported",
+    "title": "bugreports_DuplicateSpaces3",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Καρυωτάκης",
+        "given": "Κώστας",
+      },
+    ],
+    "citation-key": "bugreports_GreekStyleProblems",
+    "id": "bugreports_GreekStyleProblems",
+    "keyword": "imported",
+    "title": "bugreports_GreekStyleProblems",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Happel",
+        "given": "Eduard",
+        "non-dropping-particle": "van",
+      },
+      {
+        "family": "Hoppel",
+        "given": "Gustav",
+        "non-dropping-particle": "von",
+      },
+    ],
+    "citation-key": "bugreports_parseName",
+    "id": "bugreports_parseName",
+    "keyword": "imported",
+    "title": "bugreports_parseName",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Reynoso-Santos",
+        "given": "R.",
+      },
+      {
+        "family": "Soto-Pinto",
+        "given": "L.",
+      },
+      {
+        "family": "Tejeda-Cruz",
+        "given": "C.",
+      },
+      {
+        "family": "Williams-Linera",
+        "given": "G.",
+      },
+    ],
+    "citation-key": "bugreports_ProcessorHang1",
+    "id": "bugreports_ProcessorHang1",
+    "keyword": "imported",
+    "title": "bugreports_ProcessorHang1",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Africa News",
+      },
+    ],
+    "citation-key": "bugreports_YearSuffixInHarvard1",
+    "id": "bugreports_YearSuffixInHarvard1",
+    "keyword": "imported",
+    "title": "bugreports_YearSuffixInHarvard1",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe",
+        "given": "John",
+        "suffix": "III",
+      },
+      {
+        "family": "Roe",
+        "given": "Jane",
+        "non-dropping-particle": "van",
+      },
+    ],
+    "citation-key": "decorations_AndTermUnaffectedByNameDecorations",
+    "id": "decorations_AndTermUnaffectedByNameDecorations",
+    "keyword": "imported",
+    "title": "decorations_AndTermUnaffectedByNameDecorations",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Dipheria",
+        "given": "Doug",
+        "non-dropping-particle": "von",
+      },
+    ],
+    "citation-key": "disambiguate_CitationLabelInData",
+    "id": "disambiguate_CitationLabelInData",
+    "keyword": "imported",
+    "title": "disambiguate_CitationLabelInData",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Caritas Europa",
+      },
+      {
+        "family": "JRS-Europe",
+      },
+    ],
+    "citation-key": "disambiguate_FailWithYearSuffix",
+    "id": "disambiguate_FailWithYearSuffix",
+    "keyword": "imported",
+    "title": "disambiguate_FailWithYearSuffix",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Co",
+        "given": "Smith",
+      },
+    ],
+    "citation-key": "disambiguate_YearCollapseWithInstitution",
+    "id": "disambiguate_YearCollapseWithInstitution",
+    "keyword": "imported",
+    "title": "disambiguate_YearCollapseWithInstitution",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Bennett",
+        "given": "Frank G.",
+        "suffix": "Jr.",
+      },
+    ],
+    "citation-key": "display_SecondFieldAlignMigratePunctuation",
+    "id": "display_SecondFieldAlignMigratePunctuation",
+    "keyword": "imported",
+    "title": "display_SecondFieldAlignMigratePunctuation",
+    "type": "article-journal",
+  },
+  {
+    "ISBN": "0-7100-3616-7",
+    "author": [
+      {
+        "family": "Humboldt",
+        "given": "Alexander",
+        "non-dropping-particle": "von",
+      },
+      {
+        "family": "Gooding",
+        "given": "Cuba",
+        "suffix": "Jr.",
+      },
+      {
+        "family": "La Fontaine",
+        "given": "Jean",
+        "non-dropping-particle": "de",
+      },
+      {
+        "family": "Wright",
+        "given": "Georg Henrik Auto",
+        "non-dropping-particle": "von",
+      },
+      {
+        "family": "von Wright",
+        "given": "Georg Henrik Explicit",
+      },
+    ],
+    "citation-key": "fixedkey",
+    "collection-title": "International Library of Philosophy and Scientific Method",
+    "id": "fixedkey",
+    "issued": {
+      "date-parts": [
+        [
+          1963,
+        ],
+      ],
+    },
+    "number-of-pages": "xviii+214",
+    "publisher": "Routledge & Kegan Paul",
+    "publisher-place": "Londres",
+    "title": "Norm and Action. A Logical Enquiry",
+    "title-short": "Norm and Action",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "Inc.",
+        "given": "Doe",
+      },
+    ],
+    "citation-key": "group_ComplexNesting",
+    "id": "group_ComplexNesting",
+    "keyword": "imported",
+    "title": "group_ComplexNesting",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Berge",
+        "given": "S. P",
+        "non-dropping-particle": "la",
+      },
+    ],
+    "citation-key": "integration_DuplicateItem",
+    "id": "integration_DuplicateItem",
+    "keyword": "imported",
+    "title": "integration_DuplicateItem",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "King",
+        "given": "Martin Luther",
+        "suffix": "Jr.",
+      },
+    ],
+    "citation-key": "king_have_1968",
+    "id": "king_have_1968",
+    "issued": {
+      "date-parts": [
+        [
+          1968,
+        ],
+      ],
+    },
+    "number-of-pages": "154",
+    "publisher": "Grosset & Dunlap",
+    "publisher-place": "New York",
+    "title": ""I Have a Dream" : The Quotations of Martin Luther King JR",
+    "type": "book",
+  },
+  {
+    "author": [
+      {
+        "family": "Simone",
+        "given": "Samuel",
+        "non-dropping-particle": "de",
+      },
+    ],
+    "citation-key": "magic_CapitalizeFirstOccurringNameParticle",
+    "id": "magic_CapitalizeFirstOccurringNameParticle",
+    "keyword": "imported",
+    "title": "magic_CapitalizeFirstOccurringNameParticle",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe",
+        "given": "John",
+        "non-dropping-particle": "von",
+      },
+    ],
+    "citation-key": "magic_NameParticle",
+    "id": "magic_NameParticle",
+    "keyword": "imported",
+    "title": "magic_NameParticle",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Blob",
+      },
+    ],
+    "citation-key": "magic_SuppressDuplicateVariableRendering",
+    "id": "magic_SuppressDuplicateVariableRendering",
+    "keyword": "imported",
+    "title": "magic_SuppressDuplicateVariableRendering",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe",
+        "given": "James",
+        "suffix": "III",
+      },
+    ],
+    "citation-key": "name_ArticularNameAsSortOrder",
+    "id": "name_ArticularNameAsSortOrder",
+    "keyword": "imported",
+    "title": "name_ArticularNameAsSortOrder",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe",
+        "given": "James",
+        "suffix": "Jr",
+      },
+    ],
+    "citation-key": "name_ArticularShortFormCommaSuffix",
+    "id": "name_ArticularShortFormCommaSuffix",
+    "keyword": "imported",
+    "title": "name_ArticularShortFormCommaSuffix",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe",
+        "given": "Jeffrey",
+        "suffix": "Jr.",
+      },
+    ],
+    "citation-key": "name_ArticularWithComma",
+    "id": "name_ArticularWithComma",
+    "keyword": "imported",
+    "title": "name_ArticularWithComma",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Inc.",
+        "given": "Noakes",
+      },
+    ],
+    "citation-key": "name_Delimiter",
+    "id": "name_Delimiter",
+    "keyword": "imported",
+    "title": "name_Delimiter",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Meer",
+        "given": "Gerard",
+        "non-dropping-particle": "van der",
+      },
+    ],
+    "citation-key": "name_FormattingOfParticles",
+    "id": "name_FormattingOfParticles",
+    "keyword": "imported",
+    "title": "name_FormattingOfParticles",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "One",
+        "given": "Alan",
+        "non-dropping-particle": "al",
+      },
+    ],
+    "citation-key": "name_HyphenatedNonDroppingParticle1",
+    "id": "name_HyphenatedNonDroppingParticle1",
+    "keyword": "imported",
+    "title": "name_HyphenatedNonDroppingParticle1",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Multi-National United",
+      },
+    ],
+    "citation-key": "name_Institution",
+    "id": "name_Institution",
+    "keyword": "imported",
+    "title": "name_Institution",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "São Paulo (Estado)",
+      },
+    ],
+    "citation-key": "name_InstitutionDecoration",
+    "id": "name_InstitutionDecoration",
+    "keyword": "imported",
+    "title": "name_InstitutionDecoration",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Winkle",
+        "given": "Rip",
+        "non-dropping-particle": "van",
+      },
+      {
+        "family": "Thucydides",
+        "given": "Carl",
+        "suffix": "III",
+      },
+    ],
+    "citation-key": "name_MixedFormatsInitialSortOrderAllWithDecorationsEtAl",
+    "id": "name_MixedFormatsInitialSortOrderAllWithDecorationsEtAl",
+    "keyword": "imported",
+    "title": "name_MixedFormatsInitialSortOrderAllWithDecorationsEtAl",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Alfred Benzon Foundation",
+      },
+      {
+        "family": "James Benson Foundation",
+      },
+      {
+        "family": "John Candy Foundation",
+      },
+    ],
+    "citation-key": "name_MultipleLiteral",
+    "id": "name_MultipleLiteral",
+    "keyword": "imported",
+    "title": "name_MultipleLiteral",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "La Fontaine",
+        "given": "Jean",
+        "non-dropping-particle": "de",
+        "suffix": "III",
+      },
+    ],
+    "citation-key": "name_namepartAffixes",
+    "id": "name_namepartAffixes",
+    "keyword": "imported",
+    "title": "name_namepartAffixes",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "La Fontaine",
+        "given": "Jean",
+        "non-dropping-particle": "de",
+      },
+    ],
+    "citation-key": "name_ParsedDroppingParticleWithAffixes",
+    "id": "name_ParsedDroppingParticleWithAffixes",
+    "keyword": "imported",
+    "title": "name_ParsedDroppingParticleWithAffixes",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Fontaine",
+        "given": "Jean",
+        "non-dropping-particle": "de la",
+      },
+    ],
+    "citation-key": "name_ParsedNonDroppingParticleWithAffixes",
+    "id": "name_ParsedNonDroppingParticleWithAffixes",
+    "keyword": "imported",
+    "title": "name_ParsedNonDroppingParticleWithAffixes",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Aubignac",
+        "given": "François Hédelin",
+        "non-dropping-particle": "d'",
+        "suffix": "abbé d'",
+      },
+    ],
+    "citation-key": "name_ParsedNonDroppingParticleWithApostrophe",
+    "id": "name_ParsedNonDroppingParticleWithApostrophe",
+    "keyword": "imported",
+    "title": "name_ParsedNonDroppingParticleWithApostrophe",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Vlist",
+        "given": "Eric",
+        "non-dropping-particle": "van der",
+      },
+      {
+        "family": "Gogh",
+        "given": "Vincent",
+        "non-dropping-particle": "van",
+      },
+    ],
+    "citation-key": "name_ParseNames",
+    "id": "name_ParseNames",
+    "keyword": "imported",
+    "title": "name_ParseNames",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "One",
+        "given": "Onename",
+        "non-dropping-particle": "van",
+      },
+      {
+        "family": "Two",
+        "given": "Twoname",
+        "non-dropping-particle": "van",
+      },
+      {
+        "family": "Three",
+        "given": "Threename",
+        "non-dropping-particle": "van",
+      },
+      {
+        "family": "Van Four",
+        "given": "Fourname",
+      },
+    ],
+    "citation-key": "name_ParticleCaps1",
+    "id": "name_ParticleCaps1",
+    "keyword": "imported",
+    "title": "name_ParticleCaps1",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Van Dyke",
+        "given": "Dick",
+      },
+    ],
+    "citation-key": "name_ParticleCaps3",
+    "id": "name_ParticleCaps3",
+    "keyword": "imported",
+    "title": "name_ParticleCaps3",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe",
+        "given": "John",
+        "non-dropping-particle": "de la",
+      },
+    ],
+    "citation-key": "name_ParticleFormatting",
+    "id": "name_ParticleFormatting",
+    "keyword": "imported",
+    "title": "name_ParticleFormatting",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Las Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "de",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "del",
+      },
+      {
+        "family": "Di Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "Da Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "Do Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "Des Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "Lou Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "Pietro Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "de",
+      },
+      {
+        "family": "La Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "de",
+      },
+      {
+        "family": "Le Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "La Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "L'Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "Saint Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "Sainte Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "St. Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "Ste. Familyname",
+        "given": "Givenname",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "van",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "van de",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "van der",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "van den",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "vander",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "v.d.",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "vd",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "van het",
+      },
+      {
+        "family": "Familyname",
+        "given": "Givenname",
+        "non-dropping-particle": "ver",
+      },
+    ],
+    "citation-key": "name_ParticlesDemoteNonDroppingNever",
+    "id": "name_ParticlesDemoteNonDroppingNever",
+    "keyword": "imported",
+    "title": "name_ParticlesDemoteNonDroppingNever",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Doe",
+        "given": "Jacques",
+        "non-dropping-particle": "van",
+      },
+    ],
+    "citation-key": "name_WesternArticularLowercase",
+    "id": "name_WesternArticularLowercase",
+    "keyword": "imported",
+    "title": "name_WesternArticularLowercase",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Martinière",
+        "given": "Gérard",
+        "non-dropping-particle": "de la",
+        "suffix": "III",
+      },
+    ],
+    "citation-key": "nameorder_Long",
+    "id": "nameorder_Long",
+    "keyword": "imported",
+    "title": "nameorder_Long",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Organization",
+        "given": "Al-Khatib",
+      },
+    ],
+    "citation-key": "position_IbidWithSuffix",
+    "id": "position_IbidWithSuffix",
+    "keyword": "imported",
+    "title": "position_IbidWithSuffix",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "De Quincey",
+        "given": "Alan",
+      },
+    ],
+    "citation-key": "sort_ChangeInNameSort",
+    "id": "sort_ChangeInNameSort",
+    "keyword": "imported",
+    "title": "sort_ChangeInNameSort",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Zoo",
+        "given": "Beijing",
+      },
+      {
+        "family": "Beijing Zoo",
+      },
+    ],
+    "citation-key": "sort_ChicagoYearSuffix1",
+    "id": "sort_ChicagoYearSuffix1",
+    "keyword": "imported",
+    "title": "sort_ChicagoYearSuffix1",
+    "type": "article-journal",
+  },
+  {
+    "author": [
+      {
+        "family": "Group",
+        "given": "ANZ",
+      },
+    ],
+    "citation-key": "sort_FamilyOnly",
+    "id": "sort_FamilyOnly",
+    "keyword": "imported",
+    "title": "sort_FamilyOnly",
+    "type": "article-journal",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/new-item-types-2496.biblatex.bib 1`] = `
+[
+  {
+    "DOI": "the DOI",
+    "URL": "the%20url",
+    "abstract": "This is the abstract",
+    "accessed": {
+      "date-parts": [
+        [
+          2022,
+          3,
+          3,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "Foo",
+        "given": "John",
+      },
+    ],
+    "citation-key": "Foo2021",
+    "genre": "This is the dataset type",
+    "id": "Foo2021",
+    "issued": {
+      "date-parts": [
+        [
+          2021,
+        ],
+      ],
+    },
+    "publisher": "the repository",
+    "publisher-place": "the repo location",
+    "status": "The status",
+    "title": "Faulty Standard Export",
+    "title-short": "the short title",
+    "type": "standard",
+    "version": "3333",
+  },
+  {
+    "DOI": "10.25592/dgs.corpus-1.0",
+    "author": [
+      {
+        "family": "Konrad",
+        "given": "Reiner",
+      },
+      {
+        "family": "Hanke",
+        "given": "Thomas",
+      },
+      {
+        "family": "Langer",
+        "given": "Gabriele",
+      },
+      {
+        "family": "Blanck",
+        "given": "Dolly",
+      },
+      {
+        "family": "Bleicken",
+        "given": "Julian",
+      },
+      {
+        "family": "Hofmann",
+        "given": "Ilona",
+      },
+      {
+        "family": "Jeziorski",
+        "given": "Olga",
+      },
+      {
+        "family": "König",
+        "given": "Lutz",
+      },
+      {
+        "family": "König",
+        "given": "Susanne",
+      },
+      {
+        "family": "Nishio",
+        "given": "Rie",
+      },
+      {
+        "family": "Regen",
+        "given": "Anja",
+      },
+      {
+        "family": "Salden",
+        "given": "Uta",
+      },
+      {
+        "family": "Wagner",
+        "given": "Sven",
+      },
+      {
+        "family": "Worseck",
+        "given": "Satu",
+      },
+    ],
+    "citation-key": "MyDGS_annotated",
+    "id": "MyDGS_annotated",
+    "issued": {
+      "date-parts": [
+        [
+          2018,
+        ],
+      ],
+    },
+    "publisher": "DGS-Korpus project, IDGS, Hamburg University",
+    "title": "MY DGS – annotated. Public Corpus of German Sign Language",
+    "title-short": "Public DGS Corpus",
+    "type": "dataset",
+    "version": "1.0",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/patent-1060.biblatex.bib 1`] = `
+[
+  {
+    "author": [
+      {
+        "family": "Inventor",
+        "given": "Some",
+      },
+    ],
+    "citation-key": "inventorCombinatorialProblemStabilityIssueDate",
+    "genre": "patent",
+    "id": "inventorCombinatorialProblemStabilityIssueDate",
+    "issued": {
+      "literal": "Issue Date",
+    },
+    "jurisdiction": "Country",
+    "number": "Patent Number",
+    "page": "247-261",
+    "publisher-place": "Country",
+    "status": "Legal Status",
+    "title": "A Combinatorial Problem; Stability and Order for Models and Theories in Infinitary Languages",
+    "type": "patent",
+  },
+  {
+    "URL": "http://www.freepatentsonline.com/DE10361215.html",
+    "abstract": "Die Erfindung betrifft eine elektrische Einrichtung mit einem Generator 12, insbesondere für die Verwendung in dem Bordnetz 13 eines Kraftfahrzeugs, mit einem Regler 12B für die Regelung der Generatorspannung. Bei der Einrichtung sind ein Bereich 30 für die Regelung vorgesehen, in dem eine Spannungsregelung durchgeführt wird, und Bereiche 31, 32, in denen eine Momentenregelung durchgeführt wird. Weiterhin betrifft die Erfindung Verfahren für den Betrieb einer solchen Einrichtung.",
+    "accessed": {
+      "date-parts": [
+        [
+          2018,
+          9,
+          5,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "Laufenberg",
+        "given": "Xaver",
+      },
+      {
+        "family": "Eynius",
+        "given": "Dominique",
+      },
+      {
+        "family": "Suelzle",
+        "given": "Helmut",
+      },
+      {
+        "family": "Usbeck",
+        "given": "Stephan",
+      },
+      {
+        "family": "Spaeth",
+        "given": "Matthias",
+      },
+      {
+        "family": "Neuser-Hoffmann",
+        "given": "Miriam",
+      },
+      {
+        "family": "Myrzik",
+        "given": "Christian",
+      },
+      {
+        "family": "Schmid",
+        "given": "Manfred",
+      },
+      {
+        "family": "Nietfeld",
+        "given": "Franz",
+      },
+      {
+        "family": "Thiel",
+        "given": "Alexander",
+      },
+      {
+        "family": "Braun",
+        "given": "Harald",
+      },
+      {
+        "family": "Ebner",
+        "given": "Norbert",
+      },
+    ],
+    "citation-key": "laufenbergElektrischeEinrichtungUnd2005",
+    "genre": "patentde",
+    "id": "laufenbergElektrischeEinrichtungUnd2005",
+    "issued": {
+      "date-parts": [
+        [
+          2005,
+          7,
+          28,
+        ],
+      ],
+    },
+    "number": "10361215",
+    "title": "Elektrische Einrichtung Und Betriebsverfahren",
+    "type": "patent",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/preprint-2080.bibtex.bib 1`] = `
+[
+  {
+    "author": [
+      {
+        "family": "Shelah",
+        "given": "Saharon",
+      },
+    ],
+    "citation-key": "bentley_academic_2011",
+    "id": "bentley_academic_2011",
+    "issued": {
+      "date-parts": [
+        [
+          1972,
+        ],
+      ],
+    },
+    "note": "MR 46:7018",
+    "title": "A Combinatorial Problem; Stability and Order for Models and Theories in Infinitary Languages",
+    "type": "document",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/webpage-misc-329.bibtex.bib 1`] = `
+[
+  {
+    "URL": "http://www.ntp.org/ntpfaq/NTP-s-sw-clocks-quality.htm",
+    "accessed": {
+      "date-parts": [
+        [
+          2015,
+          2,
+          13,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "NTP.org",
+      },
+    ],
+    "citation-key": "ntp.org_clock_2015",
+    "id": "ntp.org_clock_2015",
+    "issued": {
+      "date-parts": [
+        [
+          2015,
+        ],
+      ],
+    },
+    "note": "(accessed 2015-02-13)",
+    "title": "Clock Quality",
+    "type": "document",
+  },
+  {
+    "URL": "http://www.ntp.org/ntpfaq/NTP-s-sw-clocks-quality.htm",
+    "author": [
+      {
+        "family": "NTP.org",
+      },
+    ],
+    "citation-key": "ntp.org_clock_2015-1",
+    "id": "ntp.org_clock_2015-1",
+    "issued": {
+      "date-parts": [
+        [
+          2015,
+        ],
+      ],
+    },
+    "title": "Clock Quality",
+    "type": "document",
+  },
+  {
+    "URL": "http://www.ntp.org/ntpfaq/NTP-s-sw-clocks-quality.htm",
+    "author": [
+      {
+        "family": "NTP.org",
+      },
+    ],
+    "citation-key": "ntp.org_clock_2015-2",
+    "id": "ntp.org_clock_2015-2",
+    "issued": {
+      "date-parts": [
+        [
+          2015,
+        ],
+      ],
+    },
+    "title": "Clock Quality",
+    "type": "document",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/jabref/complex.bib 1`] = `
+[
+  {
+    "author": [
+      {
+        "family": "deBraga",
+        "given": "Michael",
+      },
+    ],
+    "citation-key": "deBraga2001",
+    "genre": "PhD thesis",
+    "id": "deBraga2001",
+    "issued": {
+      "date-parts": [
+        [
+          2001,
+        ],
+      ],
+    },
+    "note": "303 pp.",
+    "publisher": "Department of Zoology, University of Toronto",
+    "publisher-place": "Canada",
+    "title": "The postcranial anatomy of Procolophon (Parareptilia: Procolophonidae) and its implications for the origin of turtles",
+    "type": "thesis",
+  },
+  {
+    "DOI": "http://dx.doi.org/10.1007/s00779-005-0347-6",
+    "ISSN": "1617-4909",
+    "author": [
+      {
+        "family": "Bardram",
+        "given": "E.",
+      },
+    ],
+    "citation-key": "1102917",
+    "container-title": "Personal Ubiquitous Comput.",
+    "id": "1102917",
+    "issue": "6",
+    "issued": {
+      "date-parts": [
+        [
+          2005,
+        ],
+      ],
+    },
+    "page": "357-367",
+    "publisher": "Springer-Verlag",
+    "publisher-place": "London, UK",
+    "title": "The trouble with login: on usability and computer security in ubiquitous computing",
+    "type": "article-journal",
+    "volume": "9",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1137627.1137631",
+    "ISBN": "1-59593-411-1",
+    "author": [
+      {
+        "family": "Boström",
+        "given": "Gustav",
+      },
+      {
+        "family": "Wäyrynen",
+        "given": "Jaana",
+      },
+      {
+        "family": "Bodén",
+        "given": "Marine",
+      },
+      {
+        "family": "Beznosov",
+        "given": "Konstantin",
+      },
+      {
+        "family": "Philippe Kruchten",
+        "given": "Churchill",
+      },
+    ],
+    "citation-key": "1137631",
+    "container-title": "SESS '06: Proceedings of the 2006 international workshop on Software engineering for secure systems",
+    "id": "1137631",
+    "issued": {
+      "date-parts": [
+        [
+          2006,
+        ],
+      ],
+    },
+    "page": "11-18",
+    "publisher": "ACM",
+    "publisher-place": "Shanghai, China",
+    "title": "Extending XP practices to support security requirements engineering",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1132736.1132768",
+    "ISBN": "1-59593-350-6",
+    "author": [
+      {
+        "family": "Braz",
+        "given": "Christina",
+      },
+      {
+        "family": "Robert",
+        "given": "Jean-Marc",
+      },
+    ],
+    "citation-key": "1132768",
+    "container-title": "IHM '06: Proceedings of the 18th International Conferenceof the Association Francophone d'Interaction Homme-Machine",
+    "id": "1132768",
+    "issued": {
+      "date-parts": [
+        [
+          2006,
+        ],
+      ],
+    },
+    "page": "199-203",
+    "publisher": "ACM",
+    "publisher-place": "Montreal, Canada",
+    "title": "Security and usability: the case of the user authentication methods",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1137627.1137628",
+    "ISBN": "1-59593-411-1",
+    "author": [
+      {
+        "family": "Bruschi",
+        "given": "Danilo",
+      },
+      {
+        "family": "Win",
+        "given": "Bart De",
+      },
+      {
+        "family": "Monga",
+        "given": "Mattia",
+      },
+    ],
+    "citation-key": "1137628",
+    "container-title": "SESS '06: Proceedings of the 2006 international workshop on Software engineering for secure systems",
+    "id": "1137628",
+    "issued": {
+      "date-parts": [
+        [
+          2006,
+        ],
+      ],
+    },
+    "page": "1-2",
+    "publisher": "ACM",
+    "publisher-place": "Shanghai, China",
+    "title": "Introduction to software engineering for secure systems: SESS06 – secure by design",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://dx.doi.org/10.1109/MIC.2008.67",
+    "ISSN": "1089-7801",
+    "author": [
+      {
+        "family": "Churchill",
+        "given": "Elizabeth",
+      },
+      {
+        "family": "Nelson",
+        "given": "Les",
+      },
+      {
+        "family": "Smetters",
+        "given": "Diana K.",
+      },
+    ],
+    "citation-key": "1373163",
+    "container-title": "IEEE Internet Computing",
+    "id": "1373163",
+    "issue": "3",
+    "issued": {
+      "date-parts": [
+        [
+          2008,
+        ],
+      ],
+    },
+    "page": "10-12",
+    "publisher": "IEEE Educational Activities Department",
+    "publisher-place": "Piscataway, NJ, USA",
+    "title": "Useful Computer Security",
+    "type": "article-journal",
+    "volume": "12",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/820127.820136",
+    "ISSN": "0097-8418",
+    "author": [
+      {
+        "family": "Clear",
+        "given": "Tony",
+      },
+    ],
+    "citation-key": "820136",
+    "container-title": "SIGCSE Bull.",
+    "id": "820136",
+    "issue": "4",
+    "issued": {
+      "date-parts": [
+        [
+          2002,
+        ],
+      ],
+    },
+    "page": "13-14",
+    "publisher": "ACM",
+    "publisher-place": "New York, NY, USA",
+    "title": "Design and usability in security systems: daily life as a context of use?",
+    "type": "article-journal",
+    "volume": "34",
+  },
+  {
+    "ISBN": "0596008279",
+    "author": [
+      {
+        "family": "Cranor",
+        "given": "Lorrie",
+      },
+      {
+        "family": "Garfinkel",
+        "given": "Simson",
+      },
+    ],
+    "citation-key": "1098730",
+    "id": "1098730",
+    "issued": {
+      "date-parts": [
+        [
+          2005,
+        ],
+      ],
+    },
+    "publisher": "O'Reilly Media, Inc.",
+    "title": "Security and Usability",
+    "type": "book",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1143120.1143122",
+    "ISBN": "1-59593-448-0",
+    "author": [
+      {
+        "family": "DeWitt",
+        "given": "Alexander J.",
+      },
+      {
+        "family": "Kuljis",
+        "given": "Jasna",
+      },
+    ],
+    "citation-key": "1143122",
+    "container-title": "SOUPS '06: Proceedings of the second symposium on Usable privacy and security",
+    "id": "1143122",
+    "issued": {
+      "date-parts": [
+        [
+          2006,
+        ],
+      ],
+    },
+    "page": "1-7",
+    "publisher": "ACM",
+    "publisher-place": "Pittsburgh, Pennsylvania",
+    "title": "Aligning usability and security: a usability study of Polaris",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1233341.1233448",
+    "ISBN": "978-1-59593-629-5",
+    "abstract": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id bibendum magna, ac tristique nulla. Aliquam ut vulputate velit, ac vulputate leo. Sed malesuada nisi eget lacus rhoncus, et feugiat libero suscipit. Sed vitae ultricies diam. Phasellus arcu tellus, scelerisque a lorem quis, molestie fermentum mi. Morbi nibh ante, sodales at nisl nec, tincidunt dapibus leo. Praesent auctor egestas commodo. Cras elit erat, accumsan a felis at, malesuada iaculis risus. Nunc in tincidunt metus.",
+    "author": [
+      {
+        "family": "Hinds",
+        "given": "Cheryl",
+      },
+      {
+        "family": "Ekwueme",
+        "given": "Chinedu",
+      },
+    ],
+    "citation-key": "1233448",
+    "container-title": "ACM-SE 45: Proceedings of the 45th annual southeast regional conference",
+    "id": "1233448",
+    "issued": {
+      "date-parts": [
+        [
+          2007,
+        ],
+      ],
+    },
+    "page": "529-530",
+    "publisher": "ACM",
+    "publisher-place": "Winston-Salem, North Carolina",
+    "title": "Increasing security and usability of computer systems with graphical passwords",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://dx.doi.org/10.1109/MSP.2004.81",
+    "ISSN": "1540-7993",
+    "author": [
+      {
+        "family": "Hippel",
+        "given": "Eric",
+        "non-dropping-particle": "von",
+      },
+      {
+        "family": "Reagle",
+        "given": "Joseph M.",
+        "suffix": "Jr.",
+      },
+      {
+        "family": "Sherry",
+        "given": "Jr.",
+        "suffix": "John F.",
+      },
+      {
+        "family": "Huevel",
+        "given": "Johan A",
+        "non-dropping-particle": "van den",
+        "suffix": "Jr.",
+      },
+    ],
+    "citation-key": "10250999",
+    "container-title": "IEEE Security and Privacy",
+    "id": "10250999",
+    "issue": "5",
+    "issued": {
+      "date-parts": [
+        [
+          2004,
+        ],
+      ],
+    },
+    "page": "25-31",
+    "publisher": "IEEE Educational Activities Department",
+    "publisher-place": "Piscataway, NJ, USA",
+    "title": "Article with complex Authornames",
+    "type": "article-journal",
+    "volume": "2",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1314276.1314293",
+    "ISBN": "978-1-59593-884-8",
+    "author": [
+      {
+        "family": "Jakubowski",
+        "given": "Mariusz H.",
+      },
+      {
+        "family": "Venkatesan",
+        "given": "Ramarathnam",
+      },
+    ],
+    "citation-key": "1314293",
+    "container-title": "DRM '07: Proceedings of the 2007 ACM workshop on Digital Rights Management",
+    "id": "1314293",
+    "issued": {
+      "date-parts": [
+        [
+          2007,
+        ],
+      ],
+    },
+    "page": "90-94",
+    "publisher": "ACM",
+    "publisher-place": "Alexandria, Virginia, USA",
+    "title": "Randomized radon transforms for biometric authentication via fingerprint hashing",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1358628.1358810",
+    "ISBN": "978-1-60558-012-8",
+    "author": [
+      {
+        "family": "Kostakos",
+        "given": "Vassilis",
+      },
+    ],
+    "citation-key": "1358810",
+    "container-title": "CHI '08: CHI '08 extended abstracts on Human factors in computing systems",
+    "id": "1358810",
+    "issued": {
+      "date-parts": [
+        [
+          2008,
+        ],
+      ],
+    },
+    "page": "3075-3080",
+    "publisher": "ACM",
+    "publisher-place": "Florence, Italy",
+    "title": "Human-in-the-loop: rethinking security in mobile and pervasive systems",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1137627.1137636",
+    "ISBN": "1-59593-411-1",
+    "author": [
+      {
+        "family": "Naedele",
+        "given": "Martin",
+      },
+      {
+        "family": "Koch",
+        "given": "Thomas E.",
+      },
+    ],
+    "citation-key": "1137636",
+    "container-title": "SESS '06: Proceedings of the 2006 international workshop on Software engineering for secure systems",
+    "id": "1137636",
+    "issued": {
+      "date-parts": [
+        [
+          2006,
+        ],
+      ],
+    },
+    "page": "51-58",
+    "publisher": "ACM",
+    "publisher-place": "Shanghai, China",
+    "title": "Trust and tamper-proof software delivery",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1182475.1182529",
+    "ISBN": "1-59593-325-5",
+    "author": [
+      {
+        "family": "Nosseir",
+        "given": "Ann",
+      },
+      {
+        "family": "Connor",
+        "given": "Richard",
+      },
+      {
+        "family": "Revie",
+        "given": "Crawford",
+      },
+      {
+        "family": "Terzis",
+        "given": "Sotirios",
+      },
+    ],
+    "citation-key": "1182529",
+    "container-title": "NordiCHI '06: Proceedings of the 4th Nordic conference on Human-computer interaction",
+    "id": "1182529",
+    "issued": {
+      "date-parts": [
+        [
+          2006,
+        ],
+      ],
+    },
+    "page": "429-432",
+    "publisher": "ACM",
+    "publisher-place": "Oslo, Norway",
+    "title": "Question-based authentication using context data",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1073001.1073004",
+    "ISBN": "1-59593-178-3",
+    "author": [
+      {
+        "family": "Paula",
+        "given": "Rogério",
+        "non-dropping-particle": "de",
+      },
+      {
+        "family": "Ding",
+        "given": "Xianghua",
+      },
+      {
+        "family": "Dourish",
+        "given": "Paul",
+      },
+      {
+        "family": "Nies",
+        "given": "Kari",
+      },
+      {
+        "family": "Pillet",
+        "given": "Ben",
+      },
+      {
+        "family": "Redmiles",
+        "given": "David",
+      },
+      {
+        "family": "Ren",
+        "given": "Jie",
+      },
+      {
+        "family": "Rode",
+        "given": "Jennifer",
+      },
+      {
+        "family": "Filho",
+        "given": "Roberto Silva",
+      },
+    ],
+    "citation-key": "1073004",
+    "container-title": "SOUPS '05: Proceedings of the 2005 symposium on Usable privacy and security",
+    "id": "1073004",
+    "issued": {
+      "date-parts": [
+        [
+          2005,
+        ],
+      ],
+    },
+    "page": "25-34",
+    "publisher": "ACM",
+    "publisher-place": "Pittsburgh, Pennsylvania",
+    "title": "Two experiences designing for effective security",
+    "type": "paper-conference",
+  },
+  {
+    "author": [
+      {
+        "family": "Rozinov",
+        "given": "Konstantin",
+      },
+    ],
+    "citation-key": "00000000",
+    "id": "00000000",
+    "issued": {
+      "date-parts": [
+        [
+          2004,
+        ],
+      ],
+    },
+    "title": "Are Usability and Security Two Opposite Directions in Computer Systems?",
+    "type": "paper-conference",
+  },
+  {
+    "author": [
+      {
+        "family": "Whitten",
+        "given": "Alma",
+      },
+      {
+        "family": "Tygar",
+        "given": "J. D.",
+      },
+    ],
+    "citation-key": "1251435",
+    "container-title": "SSYM'99: Proceedings of the 8th conference on USENIX Security Symposium",
+    "id": "1251435",
+    "issued": {
+      "date-parts": [
+        [
+          1999,
+        ],
+      ],
+    },
+    "page": "14-14",
+    "publisher": "USENIX Association",
+    "publisher-place": "Washington, D.C.",
+    "title": "Why Johnny can't encrypt: a usability evaluation of PGP 5.0",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://doi.acm.org/10.1145/1137627.1137633",
+    "ISBN": "1-59593-411-1",
+    "author": [
+      {
+        "family": "Win",
+        "given": "Bart De",
+      },
+      {
+        "family": "Piessens",
+        "given": "Frank",
+      },
+      {
+        "family": "Joosen",
+        "given": "Wouter",
+      },
+    ],
+    "citation-key": "1137633",
+    "container-title": "SESS '06: Proceedings of the 2006 international workshop on Software engineering for secure systems",
+    "id": "1137633",
+    "issued": {
+      "date-parts": [
+        [
+          2006,
+        ],
+      ],
+    },
+    "page": "27-34",
+    "publisher": "ACM",
+    "publisher-place": "Shanghai, China",
+    "title": "How secure is AOP and what can we do about it?",
+    "type": "paper-conference",
+  },
+  {
+    "DOI": "http://dx.doi.org/10.1109/MSP.2004.81",
+    "ISSN": "1540-7993",
+    "author": [
+      {
+        "family": "Yan",
+        "given": "Jeff",
+      },
+      {
+        "family": "Blackwell",
+        "given": "Alan",
+      },
+      {
+        "family": "Anderson",
+        "given": "Ross",
+      },
+      {
+        "family": "Grant",
+        "given": "Alasdair",
+      },
+    ],
+    "citation-key": "1025014",
+    "container-title": "IEEE Security and Privacy",
+    "id": "1025014",
+    "issue": "5",
+    "issued": {
+      "date-parts": [
+        [
+          2004,
+        ],
+      ],
+    },
+    "page": "25-31",
+    "publisher": "IEEE Educational Activities Department",
+    "publisher-place": "Piscataway, NJ, USA",
+    "title": "Password Memorability and Security: Empirical Results",
+    "type": "article-journal",
+    "volume": "2",
+  },
+]
+`;

@@ -274,6 +274,33 @@ Two.},
 		expect(result.entries[0].csl.title).toBe('Only Entry');
 	});
 
+	it('drops prose between entries in a file with @string, @comment, or @preamble blocks', async () => {
+		// JabRef keeps comments like these in the files it saves, and BibTeX
+		// itself ignores any text outside an entry.
+		const result = await parsePastedInput(`@String{pub = {P}}
+A comment the user typed in JabRef.
+
+@book{d, title = {Only Book}, publisher = pub, year = {2003}}
+
+Some trailing text`);
+
+		expect(result.errors).toEqual([]);
+		expect(result.remainingInput).toBe('');
+		expect(result.entries).toHaveLength(1);
+		expect(result.entries[0].csl.publisher).toBe('P');
+	});
+
+	it('still reads text between entries when the paste has no file-level blocks', async () => {
+		const result =
+			await parsePastedInput(`@book{e, title = {A Book}, publisher = {P}, year = {2004}}
+
+not a citation at all`);
+
+		expect(result.entries).toHaveLength(1);
+		expect(result.errors).toHaveLength(1);
+		expect(result.remainingInput).toBe('not a citation at all');
+	});
+
 	it('keeps an entry whole when a field mentions another @type{ key', async () => {
 		const result = await parsePastedInput(`@article{outer,
   title = {Outer Entry},

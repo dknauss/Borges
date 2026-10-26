@@ -1,0 +1,217 @@
+{
+	"$comment": "Real reference-manager exports for src/lib/reference-manager-corpus.test.js. See README.md for the fields and how to add a file.",
+	"files": [
+		{
+			"path": "public/better-bibtex/ads-zero-dates-1066.biblatex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibLaTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/ADS%20exports%20dates%20like%201993-00-00%20%231066.biblatex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "A date with zero month and day, as NASA ADS supplies it",
+			"expect": {
+				"entries": 1,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/better-bibtex/cjk-1928.biblatex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibLaTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/Kuroshiro%20hardcoded%20to%20apply%20to%20all%20CJK%20language%20items%20when%20option%20checked%20%231928.biblatex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "Chinese and Japanese titles, authors, and places",
+			"expect": {
+				"entries": 2,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/better-bibtex/edtf-dates-811.biblatex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibLaTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/Date%20export%20to%20Better%20CSL-JSON%20%23360%20%23811.biblatex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "EDTF dates: ranges, circa, seasons, open ends",
+			"expect": {
+				"entries": 15,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/better-bibtex/edtf-dates-811.csl.json",
+			"manager": "Zotero",
+			"exporter": "Better CSL JSON",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/Date%20export%20to%20Better%20CSL-JSON%20%23360%20%23811.csl.json",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "The same EDTF dates as CSL-JSON, including BC years written as strings",
+			"expect": {
+				"entries": 14,
+				"errors": 1,
+				"truncated": false,
+				"inputFormat": "csl-json"
+			},
+			"knownGaps": "Item 14 is skipped: its BC years are strings (\"-334\"), and the CSL sanitizer only accepts a negative year as a number."
+		},
+		{
+			"path": "public/better-bibtex/extra-creators-uppercase-doi-825.biblatex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibLaTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/Export%20of%20creator-type%20fields%20from%20embedded%20CSL%20variables%20%23365%20uppercase%20DOI%20%23825.biblatex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "Creators from the Extra field, uppercase DOI",
+			"expect": {
+				"entries": 7,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/better-bibtex/incollection-booktitle-1691.biblatex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibLaTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/Book%20Title%20exports%20to%20Journaltitle%20for%20Biblatex%20%40incollection%20reference%20type%20%231691.biblatex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "@incollection with booktitle",
+			"expect": {
+				"entries": 2,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/better-bibtex/literal-date-1476.bibtex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/30-Mar-2020%20parsed%20as%20literal%20%231476.bibtex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "Bare month macro, double-braced title, no author",
+			"expect": {
+				"entries": 1,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/better-bibtex/multi-character-initial-2419.bibtex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/Author%20multi-character%20initial%20gets%20shortened%20%232419.bibtex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "Multi-letter initials and a numeric year",
+			"expect": {
+				"entries": 1,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/better-bibtex/name-particles-313.biblatex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibLaTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/%28non-%29dropping%20particle%20handling%20%23313.biblatex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "Name particles (van, de, d', 't) in every position; 54 entries, so the paste cap of 50 applies",
+			"expect": {
+				"entries": 50,
+				"errors": 0,
+				"truncated": true,
+				"inputFormat": "bibtex"
+			},
+			"knownGaps": "The last 4 of 54 entries stay in the paste box (MAX_ENTRIES_PER_PASTE is 50)."
+		},
+		{
+			"path": "public/better-bibtex/new-item-types-2496.biblatex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibLaTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/Add%20support%20for%20new%20Zotero%20item%20types%20%232496.biblatex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "Zotero 7 item types (dataset, standard)",
+			"expect": {
+				"entries": 2,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/better-bibtex/patent-1060.biblatex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibLaTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/BibLaTeX%20Patent%20author%20handling%2C%20type%20%231060.biblatex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "@patent with holder and type",
+			"expect": {
+				"entries": 2,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/better-bibtex/preprint-2080.bibtex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/BibTeX%20export%20is%20incompatible%20with%20Zotero%206%20Preprint%20item%20type.%20%232080.bibtex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "Zotero 6 preprint exported as @misc",
+			"expect": {
+				"entries": 1,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/better-bibtex/webpage-misc-329.bibtex.bib",
+			"manager": "Zotero",
+			"exporter": "Better BibTeX",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/export/Export%20web%20page%20to%20misc%20type%20with%20notes%20and%20howpublished%20custom%20fields%20%23329.bibtex",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "Web pages exported as @misc with howpublished and note",
+			"expect": {
+				"entries": 3,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/jabref/complex.bib",
+			"manager": "JabRef",
+			"exporter": "JabRef database file",
+			"source": "https://github.com/JabRef/jabref/blob/e11c21defd44ac6a2345bcdba36a9b949024e65b/jablib/src/test/resources/testbib/complex.bib",
+			"license": "MIT",
+			"licenseFile": "public/jabref/LICENSE",
+			"quirks": "@Preamble and @String blocks, prose comments between entries, DOIs written as URLs, LaTeX accents, jabref-meta @Comment footer",
+			"expect": {
+				"entries": 20,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		}
+	]
+}

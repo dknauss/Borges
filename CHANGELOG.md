@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Comments in JabRef files.** Pasting a whole `.bib` file that holds `@string`, `@comment`, or `@preamble` blocks no longer reports the plain-text comments between its entries as citations Borges couldn't read, or leaves them in the paste box. BibTeX ignores text outside entries, and JabRef keeps such comments in the files it saves. Pastes without those blocks still read text between entries as citations.
+
+### Testing
+
+- **Real reference-manager exports.** `src/lib/reference-manager-corpus.test.js` runs real exporter output through the parser: 13 files from Better BibTeX's own tests (Better BibTeX, Better BibLaTeX, and Better CSL JSON) and a JabRef database file, both MIT-licensed. `manifest.json` records each file's source, license, and expected entry and error counts, and the suite snapshots the CSL-JSON every file yields. Maintainers' own exports go in `contributed/`; see the corpus README.
+
 ## [1.15.0] - 2026-10-25
 
 ### Added
