@@ -384,6 +384,40 @@ function bibliography_builder_bulk_missing_fields( $kept, $later ) {
 }
 
 /**
+ * Fold a later copy of a work into a kept copy, for the split.
+ *
+ * Copies the fields the kept copy lacks (bibliography_builder_bulk_missing_fields())
+ * and records the later copy as removed, pointing at the kept one.
+ *
+ * @param array $state    Split state: `kept` (records of `citation`, `index`,
+ *                        `original`, `before`) and `removed`.
+ * @param int   $position The kept copy's position in `kept`.
+ * @param array $later    The later copy's record.
+ * @param array $pair     `{ id, reason }`: the kept copy's ID and why they match.
+ * @return bool Whether the kept copy gained fields.
+ */
+function bibliography_builder_bulk_absorb_duplicate( &$state, $position, $later, $pair ) {
+	$csl  = bibliography_builder_citation_csl( $state['kept'][ $position ]['citation'] );
+	$fill = bibliography_builder_bulk_missing_fields( $csl, bibliography_builder_citation_csl( $later['citation'] ) );
+
+	if ( array() !== $fill ) {
+		$state['kept'][ $position ]['before']        ??= $csl;
+		$state['kept'][ $position ]['citation']['csl'] = array_replace( $csl, $fill );
+	}
+
+	$state['removed'][] = array(
+		'index'        => $later['index'],
+		'id'           => bibliography_builder_get_citation_id( $later['original'] ),
+		'duplicateOf'  => $pair['id'],
+		'reason'       => $pair['reason'],
+		'mergedFields' => array_keys( $fill ),
+		'citation'     => $later['original'],
+	);
+
+	return array() !== $fill;
+}
+
+/**
  * Split citations into the ones to keep and later copies of them.
  *
  * Walks the list in order and keeps a citation unless it matches one already
@@ -397,49 +431,110 @@ function bibliography_builder_bulk_missing_fields( $kept, $later ) {
  * removing a copy never loses data. The kept copy's CSL changes, but not its
  * `formattedText`: the caller formats it again (see `merged`).
  *
+ * A gained field can make the kept copy match another kept citation (an
+ * author fills in, and now title and author agree), so after each fill the
+ * kept copy is checked again until nothing matches: the later of the two in
+ * stored order folds into the earlier, which may gain fields in turn. Every
+ * fold removes one citation, so this ends, and one run leaves nothing for a
+ * second run to remove.
+ *
  * @param array $citations Citation records, in stored order.
- * @return array{kept: array, removed: array, merged: array} `removed` entries
- *         are `{ index, id, duplicateOf, reason, mergedFields, citation }`,
- *         where `index` is the position in `$citations`, `duplicateOf` the
- *         kept copy's ID, and `mergedFields` the field names copied into it.
- *         `merged` maps each position in `kept` that gained fields to its
- *         CSL before the merge.
+ * @return array{kept: array, removed: array, merged: array} `removed` entries,
+ *         in stored order, are `{ index, id, duplicateOf, reason,
+ *         mergedFields, citation }`, where `index` is the position in
+ *         `$citations`, `duplicateOf` the kept copy's ID, `mergedFields` the
+ *         field names copied into it, and `citation` the record as stored.
+ *         `merged` maps each position in `kept` that gained fields to its CSL
+ *         before the first fill.
  */
 function bibliography_builder_bulk_split_duplicates( $citations ) {
-	$kept    = array();
-	$removed = array();
-	$merged  = array();
+	$state = array(
+		'kept'    => array(),
+		'removed' => array(),
+	);
 
 	foreach ( array_values( $citations ) as $index => $citation ) {
-		$duplicate = bibliography_builder_find_duplicate_citation( $citation, $kept );
+		$record = array(
+			'citation' => $citation,
+			'index'    => $index,
+			'original' => $citation,
+			'before'   => null,
+		);
+		$match  = bibliography_builder_find_duplicate_citation(
+			$citation,
+			array_column( $state['kept'], 'citation' )
+		);
 
-		if ( null === $duplicate ) {
-			$kept[] = $citation;
+		if ( null === $match ) {
+			$state['kept'][] = $record;
 			continue;
 		}
 
-		$position = $duplicate['index'];
-		$csl      = bibliography_builder_citation_csl( $kept[ $position ] );
-		$fill     = bibliography_builder_bulk_missing_fields( $csl, bibliography_builder_citation_csl( $citation ) );
+		$position = (int) $match['index'];
 
-		if ( array() !== $fill ) {
-			$merged                  += array( $position => $csl );
-			$kept[ $position ]['csl'] = array_replace( $csl, $fill );
+		if ( ! bibliography_builder_bulk_absorb_duplicate( $state, $position, $record, $match ) ) {
+			continue;
 		}
 
-		$removed[] = array(
-			'index'        => $index,
-			'id'           => bibliography_builder_get_citation_id( $citation ),
-			'duplicateOf'  => $duplicate['id'],
-			'reason'       => $duplicate['reason'],
-			'mergedFields' => array_keys( $fill ),
-			'citation'     => $citation,
-		);
+		// The kept copy changed: fold any kept citation it now matches.
+		do {
+			$match = bibliography_builder_find_duplicate_citation(
+				$state['kept'][ $position ]['citation'],
+				array_diff_key( array_column( $state['kept'], 'citation' ), array( $position => true ) )
+			);
+
+			if ( null === $match ) {
+				break;
+			}
+
+			$other = (int) $match['index'];
+			$first = min( $position, $other );
+			$last  = max( $position, $other );
+			$later = $state['kept'][ $last ];
+			$id    = bibliography_builder_get_citation_id( $state['kept'][ $first ]['citation'] );
+			$gone  = bibliography_builder_get_citation_id( $later['citation'] );
+
+			array_splice( $state['kept'], $last, 1 );
+
+			// Copies already folded into the one going now point at its keeper.
+			foreach ( $state['removed'] as &$removed ) {
+				if ( null !== $gone && $gone === $removed['duplicateOf'] ) {
+					$removed['duplicateOf'] = $id;
+				}
+			}
+			unset( $removed );
+
+			bibliography_builder_bulk_absorb_duplicate(
+				$state,
+				$first,
+				$later,
+				array(
+					'id'     => $id,
+					'reason' => $match['reason'],
+				)
+			);
+			$position = $first;
+		} while ( true );
+	}
+
+	usort(
+		$state['removed'],
+		static function ( array $a, array $b ): int {
+			return $a['index'] <=> $b['index'];
+		}
+	);
+
+	$merged = array();
+
+	foreach ( $state['kept'] as $position => $record ) {
+		if ( null !== $record['before'] ) {
+			$merged[ $position ] = $record['before'];
+		}
 	}
 
 	return array(
-		'kept'    => $kept,
-		'removed' => $removed,
+		'kept'    => array_column( $state['kept'], 'citation' ),
+		'removed' => $state['removed'],
 		'merged'  => $merged,
 	);
 }

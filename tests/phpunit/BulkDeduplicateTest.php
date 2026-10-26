@@ -363,6 +363,80 @@ final class BulkDeduplicateTest extends TestCase {
 		$this->assertSame( $kept['formattedText'], $split['kept'][0]['formattedText'] );
 	}
 
+	public function test_split_folds_kept_citations_a_fill_makes_match() {
+		// A has no author; B is another year; C fills A's author, and then A
+		// and B match by title and author.
+		$a = self::citation( 'a', 'Shared Title', 'Lee', 2000 );
+		unset( $a['csl']['author'] );
+		$b = self::citation( 'b', 'Shared title', 'Lee', 2001 );
+		$c = self::citation( 'c', 'Shared Title', 'Lee', 2000 );
+
+		$split = bibliography_builder_bulk_split_duplicates( array( $a, $b, $c ) );
+
+		$this->assertSame( array( 'a' ), array_column( $split['kept'], 'id' ) );
+		$this->assertSame( array( 'b', 'c' ), array_column( $split['removed'], 'id' ) );
+		$this->assertSame( array( 'a', 'a' ), array_column( $split['removed'], 'duplicateOf' ) );
+		$this->assertSame( array( 'title-author', 'title-year' ), array_column( $split['removed'], 'reason' ) );
+		$this->assertSame( array( array(), array( 'author' ) ), array_column( $split['removed'], 'mergedFields' ) );
+		$this->assertSame( $b, $split['removed'][0]['citation'], 'a removed entry is the record as stored' );
+		$this->assertSame( array( 0 => $a['csl'] ), $split['merged'] );
+
+		// A second run finds nothing.
+		$this->assertSame( array(), bibliography_builder_bulk_split_duplicates( $split['kept'] )['removed'] );
+	}
+
+	public function test_split_points_copies_at_the_citation_that_stays() {
+		// C folds into B by year. D then fills A's author, so B folds into A,
+		// and C's duplicateOf follows B to A.
+		$a = self::citation( 'a', 'Shared Title', 'Lee', 2000 );
+		unset( $a['csl']['author'] );
+		$b = self::citation( 'b', 'Shared title', 'Lee', 2001 );
+		$c = self::citation( 'c', 'Shared Title', 'Kim', 2001, '10.1000/c' );
+		$d = self::citation( 'd', 'Shared Title', 'Lee', 2000 );
+
+		$split = bibliography_builder_bulk_split_duplicates( array( $a, $b, $c, $d ) );
+
+		$this->assertSame( array( 'a' ), array_column( $split['kept'], 'id' ) );
+		$this->assertSame( array( 'b', 'c', 'd' ), array_column( $split['removed'], 'id' ) );
+		$this->assertSame( array( 'a', 'a', 'a' ), array_column( $split['removed'], 'duplicateOf' ) );
+
+		// The DOI C gave B moves on to A.
+		$this->assertSame( '10.1000/c', $split['kept'][0]['csl']['DOI'] );
+		$this->assertSame( 'Lee', $split['kept'][0]['csl']['author'][0]['family'] );
+		$this->assertSame( array(), bibliography_builder_bulk_split_duplicates( $split['kept'] )['removed'] );
+	}
+
+	public function test_a_second_commit_removes_nothing() {
+		$a = self::citation( 'a', 'Shared Title', 'Lee', 2000 );
+		unset( $a['csl']['author'] );
+
+		self::set_post(
+			205,
+			self::block(
+				array(
+					'bibliographyId' => 'settle',
+					'citationStyle'  => 'apa-7',
+					'citations'      => array(
+						$a,
+						self::citation( 'b', 'Shared title', 'Lee', 2001 ),
+						self::citation( 'c', 'Shared Title', 'Lee', 2000 ),
+					),
+				)
+			) . "\n"
+		);
+		bibliography_builder_test_grant_cap( self::USER_ID, 'edit_post', 205 );
+
+		$first = bibliography_builder_rest_bulk_deduplicate( self::request( array( 205 => self::etag( 205 ) ), false ) )->get_data();
+		$this->assertSame( 'changed', $first['results'][0]['status'] );
+		$this->assertSame( array( 'settle' => array( 'a' ) ), self::citation_ids( 205 ) );
+
+		$again = bibliography_builder_rest_bulk_deduplicate( self::request( array( 205 => self::etag( 205 ) ), false ) )->get_data();
+		$this->assertSame( 'unchanged', $again['results'][0]['status'] );
+
+		bibliography_builder_test_set_current_user( 0 );
+		$this->assertSame( array(), self::run_duplicates( array( '205' ) )['rows'] );
+	}
+
 	public function test_a_commit_formats_the_filled_copy_again() {
 		$kept                    = self::citation( 'kept', 'Structured Programming', 'Dahl', 1972 );
 		$kept['displayOverride'] = 'My own text';
