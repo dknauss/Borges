@@ -301,6 +301,37 @@
 				"inputFormat": "none"
 			},
 			"knownGaps": "Borges does not import RIS; offline the whole file is one unreadable paste. Kept as a sample for deciding whether to import RIS."
+		},
+		{
+			"path": "public/better-bibtex/endnote-keyless.bibtex.bib",
+			"manager": "EndNote (version not recorded)",
+			"exporter": "BibTeX Export output style",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/import/Endnote%20should%20parse.bib",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "A user's EndNote export from a Better BibTeX import test: no cite key (@article{ straight into the fields), tab indentation, a leading blank line, initials with periods, a PubMed-style note with line breaks, single-hyphen abbreviated pages (1204-22)",
+			"expect": {
+				"entries": 1,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/jabref/endnote-20-report.xml",
+			"manager": "EndNote 20.0",
+			"exporter": "EndNote XML",
+			"source": "https://github.com/JabRef/jabref/blob/6124ec88896b20358472edd1de42694df4d184bf/jablib/src/test/resources/org/jabref/logic/importer/fileformat/EndnoteXmlImporterTestReport.xml",
+			"license": "MIT",
+			"licenseFile": "public/jabref/LICENSE",
+			"quirks": "One Report record (ref-type 27) with every value wrapped in <style face=… font=… size=…>, a database path, a label, and a URL written into pages",
+			"expect": {
+				"entries": 0,
+				"errors": 1,
+				"truncated": false,
+				"inputFormat": "none"
+			},
+			"knownGaps": "Borges does not import EndNote XML; it now says so instead of saving the markup as a free-text citation. Kept as a sample for deciding whether to import it."
 		}
 	]
 }

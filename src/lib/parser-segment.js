@@ -289,14 +289,33 @@ const BIBTEX_ENTRY_TYPE_ALIASES = {
 	insammlung: 'incollection',
 };
 
+// EndNote's "BibTeX Export" output style writes entries without a cite key
+// (`@article{` straight into the fields), and Mendeley writes `@misc{,` for an
+// item it has no key for. citation-js rejects both, so a placeholder key is
+// added here; the BibTeX backend drops it from the result again.
+export const BIBTEX_MISSING_KEY = 'borges-missing-key';
+
+const BIBTEX_FILE_LEVEL_TYPES = new Set(['string', 'comment', 'preamble']);
+
 export function normalizeBibtexInput(value) {
 	return value.replace(
-		/^(\s*)@([a-z-]+)\s*\{/iu,
-		(match, leadingWhitespace, entryType) => {
+		/^(\s*)@([a-z-]+)\s*\{(?:(?=(\s*(?:,|\}|[a-z][\w:.-]*\s*=)))|)/iu,
+		(match, leadingWhitespace, entryType, missingKey) => {
+			const type = entryType.toLowerCase();
 			const normalizedEntryType =
-				BIBTEX_ENTRY_TYPE_ALIASES[entryType.toLowerCase()] || entryType;
+				BIBTEX_ENTRY_TYPE_ALIASES[type] || entryType;
+			let key = '';
 
-			return `${leadingWhitespace}@${normalizedEntryType}{`;
+			if (
+				missingKey !== undefined &&
+				!BIBTEX_FILE_LEVEL_TYPES.has(type)
+			) {
+				key = missingKey.trimStart().startsWith(',')
+					? BIBTEX_MISSING_KEY
+					: `${BIBTEX_MISSING_KEY},`;
+			}
+
+			return `${leadingWhitespace}@${normalizedEntryType}{${key}`;
 		}
 	);
 }

@@ -42,6 +42,7 @@ import {
 	runSerially,
 } from './parser-resolvers';
 import {
+	BIBTEX_MISSING_KEY,
 	createDetectedItem,
 	normalizeBibtexInput,
 	segmentPastedInput,
@@ -52,6 +53,10 @@ const MAX_INPUT_SIZE = 1024 * 1024; // 1 MB
 const PARSE_CONCURRENCY = 4;
 const LATEX_DOCUMENT_PATTERN =
 	/\\documentclass\b|\\begin\{document\}|\\printbibliography\b|\\addbibresource\b|\\(?:auto|foot|paren|text)?cite\w*\{/u;
+// EndNote XML, Word bibliography XML, and MODS exports. Without this they
+// fall through to the free-text parser, which saves the markup as a citation.
+const XML_DOCUMENT_PATTERN =
+	/^\uFEFF?\s*<(?:\?xml\b|xml>|b:Sources\b|modsCollection\b|mods\b)/iu;
 export { validateAndSanitizeCsl };
 
 /**
@@ -188,7 +193,9 @@ const PARSER_BACKENDS = {
 		const rawEntry = cslItems.length === 1 ? value : undefined;
 
 		return {
-			cslItems: cslItems.map((csl) => normalizeBibtexCsl(csl, rawEntry)),
+			cslItems: cslItems.map((csl) =>
+				normalizeBibtexCsl(dropMissingBibtexKey(csl), rawEntry)
+			),
 		};
 	},
 	freetext: async (value) => {
@@ -228,6 +235,23 @@ async function mapWithConcurrency(items, concurrency, mapper) {
 	return results;
 }
 
+/**
+ * Remove the placeholder key `normalizeBibtexInput()` gave a keyless entry, so
+ * export builds a key from the author and year instead of reusing it.
+ *
+ * @param {Object} csl CSL item produced by citation-js.
+ * @return {Object} The item without the placeholder `id` and `citation-key`.
+ */
+function dropMissingBibtexKey(csl) {
+	if (csl['citation-key'] !== BIBTEX_MISSING_KEY) {
+		return csl;
+	}
+
+	const { id, 'citation-key': citationKey, ...rest } = csl;
+
+	return rest;
+}
+
 function formatUnsupportedInputError() {
 	return SUPPORTED_INPUT_MESSAGE;
 }
@@ -235,6 +259,13 @@ function formatUnsupportedInputError() {
 function formatLatexDocumentError() {
 	return __(
 		'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation instead.',
+		'borges-bibliography-builder'
+	);
+}
+
+function formatXmlDocumentError() {
+	return __(
+		"Borges can't read XML exports, such as EndNote XML. Export the references as BibTeX or CSL JSON and paste that instead.",
 		'borges-bibliography-builder'
 	);
 }
@@ -373,6 +404,15 @@ export async function parsePastedInput(
 		return {
 			entries: [],
 			errors: [formatLatexDocumentError()],
+			truncated: false,
+			remainingInput: input.trim(),
+		};
+	}
+
+	if (XML_DOCUMENT_PATTERN.test(input)) {
+		return {
+			entries: [],
+			errors: [formatXmlDocumentError()],
 			truncated: false,
 			remainingInput: input.trim(),
 		};

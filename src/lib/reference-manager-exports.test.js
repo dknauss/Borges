@@ -301,6 +301,40 @@ not a citation at all`);
 		expect(result.remainingInput).toBe('not a citation at all');
 	});
 
+	it('reads entries with no cite key, as EndNote and Mendeley write them', async () => {
+		const result = await parsePastedInput(`@article{
+	author = {Huang, Y. and Mucke, L.},
+	title = {Alzheimer mechanisms},
+	journal = {Cell},
+	year = {2012}
+}
+@misc{,
+   title = {A Web Page},
+   url = {https://example.org/}
+}`);
+
+		expect(result.errors).toEqual([]);
+		expect(result.entries.map((entry) => entry.csl.title)).toEqual([
+			'Alzheimer mechanisms',
+			'A Web Page',
+		]);
+		result.entries.forEach((entry) => {
+			expect(entry.csl).not.toHaveProperty('citation-key');
+		});
+	});
+
+	it('leaves @string macros alone when adding a missing key', async () => {
+		const result = await parsePastedInput(`@string{cell = {Cell}}
+@article{
+	title = {Keyless},
+	journal = cell,
+	year = {2012}
+}`);
+
+		expect(result.errors).toEqual([]);
+		expect(result.entries[0].csl['container-title']).toBe('Cell');
+	});
+
 	it('keeps an entry whole when a field mentions another @type{ key', async () => {
 		const result = await parsePastedInput(`@article{outer,
   title = {Outer Entry},
