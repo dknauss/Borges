@@ -1,6 +1,7 @@
 import {
 	getArxivUrlFromRawEntry,
 	normalizeBibtexCsl,
+	renameBibtexCityField,
 	normalizeBibtexLanguage,
 } from './bibtex-fields';
 
@@ -163,5 +164,29 @@ describe('normalizeBibtexCsl', () => {
 				''
 			).genre
 		).toBe('Doctoral dissertation');
+	});
+});
+
+describe('renameBibtexCityField', () => {
+	it("reads Mendeley's city field as address", () => {
+		expect(
+			renameBibtexCityField(
+				'@book{a,\n   city = {Chicago},\n   title = {T}\n}'
+			)
+		).toBe('@book{a,\n   address = {Chicago},\n   title = {T}\n}');
+	});
+
+	it('keeps an entry that already has address or location', () => {
+		const entry = '@book{a, location = {Paris}, city = {Lyon}}';
+
+		expect(renameBibtexCityField(entry)).toBe(entry);
+	});
+
+	it('leaves @string macros before the entry alone', () => {
+		expect(
+			renameBibtexCityField(
+				'@string{city = {Chicago}}\n@book{a, city = city}'
+			)
+		).toBe('@string{city = {Chicago}}\n@book{a, address = city}');
 	});
 });

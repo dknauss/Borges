@@ -1,5 +1,235 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`reference-manager corpus (real citation-js) contributed/mendeley-reference-manager.bib 1`] = `
+[
+  {
+    "author": [
+      {
+        "family": "Kuhn",
+        "given": "Thomas S",
+      },
+    ],
+    "citation-key": "Kuhn1962",
+    "id": "Kuhn1962",
+    "issued": {
+      "date-parts": [
+        [
+          1962,
+        ],
+      ],
+    },
+    "publisher": "University of Chicago Press",
+    "publisher-place": "Chicago",
+    "title": "The Structure of Scientific Revolutions",
+    "type": "book",
+  },
+  {
+    "DOI": "10.1038/s41586-020-2649-2",
+    "author": [
+      {
+        "family": "Harris",
+        "given": "Charles R",
+      },
+      {
+        "family": "Millman",
+        "given": "K Jarrod",
+      },
+      {
+        "family": "Walt",
+        "given": "Stéfan J",
+        "non-dropping-particle": "van der",
+      },
+      {
+        "family": "Gommers",
+        "given": "Ralf",
+      },
+    ],
+    "citation-key": "Harris2020",
+    "container-title": "Nature",
+    "id": "Harris2020",
+    "issue": "7825",
+    "issued": {
+      "date-parts": [
+        [
+          2020,
+        ],
+      ],
+    },
+    "page": "357-362",
+    "title": "Array programming with NumPy",
+    "type": "article-journal",
+    "volume": "585",
+  },
+  {
+    "author": [
+      {
+        "family": "Geertz",
+        "given": "Clifford",
+      },
+    ],
+    "citation-key": "Geertz1973",
+    "container-title": "The Interpretation of Cultures",
+    "id": "Geertz1973",
+    "issued": {
+      "date-parts": [
+        [
+          1973,
+        ],
+      ],
+    },
+    "page": "3-30",
+    "publisher": "Basic Books",
+    "publisher-place": "New York",
+    "title": "Thick Description: Toward an Interpretive Theory of Culture",
+    "type": "chapter",
+  },
+  {
+    "DOI": "10.1007/BF01700692",
+    "author": [
+      {
+        "family": "Gödel",
+        "given": "Kurt",
+      },
+    ],
+    "citation-key": "Gdel1931",
+    "container-title": "Monatshefte für Mathematik und Physik",
+    "id": "Gdel1931",
+    "issue": "1",
+    "issued": {
+      "date-parts": [
+        [
+          1931,
+        ],
+      ],
+    },
+    "page": "173-198",
+    "title": "Über formal unentscheidbare Sätze der Principia Mathematica und verwandter Systeme I",
+    "type": "article-journal",
+    "volume": "38",
+  },
+  {
+    "DOI": "10.1002/j.1538-7305.1948.tb01338.x",
+    "author": [
+      {
+        "family": "Shannon",
+        "given": "Claude E",
+      },
+    ],
+    "citation-key": "Shannon1948",
+    "container-title": "Bell System Technical Journal",
+    "id": "Shannon1948",
+    "issue": "3",
+    "issued": {
+      "date-parts": [
+        [
+          1948,
+        ],
+      ],
+    },
+    "page": "379-423",
+    "title": "A Mathematical Theory of Communication",
+    "type": "article-journal",
+    "volume": "27",
+  },
+  {
+    "author": [
+      {
+        "family": "Shannon",
+        "given": "Claude E",
+      },
+    ],
+    "citation-key": "Shannon1940",
+    "genre": "PhD thesis",
+    "id": "Shannon1940",
+    "issued": {
+      "date-parts": [
+        [
+          1940,
+        ],
+      ],
+    },
+    "publisher": "Massachusetts Institute of Technology",
+    "publisher-place": "Cambridge, MA",
+    "title": "A Symbolic Analysis of Relay and Switching Circuits",
+    "type": "thesis",
+  },
+  {
+    "author": [
+      {
+        "family": "Beauvoir",
+        "given": "Simone",
+        "non-dropping-particle": "de",
+      },
+    ],
+    "citation-key": "deBeauvoir1949",
+    "id": "deBeauvoir1949",
+    "issued": {
+      "date-parts": [
+        [
+          1949,
+        ],
+      ],
+    },
+    "publisher": "Gallimard",
+    "publisher-place": "Paris",
+    "title": "Le Deuxième Sexe",
+    "type": "book",
+  },
+  {
+    "DOI": "10.1038/171737a0",
+    "author": [
+      {
+        "family": "Watson",
+        "given": "J D",
+      },
+      {
+        "family": "Crick",
+        "given": "F H C",
+      },
+    ],
+    "citation-key": "Watson1953",
+    "container-title": "Nature",
+    "id": "Watson1953",
+    "issue": "4356",
+    "issued": {
+      "date-parts": [
+        [
+          1953,
+        ],
+      ],
+    },
+    "page": "737-738",
+    "title": "Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid",
+    "type": "article-journal",
+    "volume": "171",
+  },
+  {
+    "author": [
+      {
+        "family": "Bush",
+        "given": "Vannevar",
+      },
+    ],
+    "citation-key": "Bush1945",
+    "genre": "technical report",
+    "id": "Bush1945",
+    "issued": {
+      "date-parts": [
+        [
+          1945,
+        ],
+      ],
+    },
+    "publisher": "United States Government Printing Office",
+    "publisher-place": "Washington, DC",
+    "title": "Science, the Endless Frontier",
+    "type": "report",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) contributed/mendeley-reference-manager.ris 1`] = `[]`;
+
 exports[`reference-manager corpus (real citation-js) contributed/zotero.ris 1`] = `[]`;
 
 exports[`reference-manager corpus (real citation-js) contributed/zotero-biblatex.bib 1`] = `
@@ -1875,6 +2105,38 @@ exports[`reference-manager corpus (real citation-js) public/better-bibtex/edtf-d
     },
     "title": "BC tests 2: -0099-07-12/-0043-03-15",
     "type": "book",
+  },
+]
+`;
+
+exports[`reference-manager corpus (real citation-js) public/better-bibtex/endnote-keyless.bibtex.bib 1`] = `
+[
+  {
+    "abstract": "There are still no effective treatments to prevent, halt, or reverse Alzheimer's disease, but research advances over the past three decades could change this gloomy picture. Genetic studies demonstrate that the disease has multiple causes. Interdisciplinary approaches combining biochemistry, molecular and cell biology, and transgenic modeling have revealed some of its molecular mechanisms. Progress in chemistry, radiology, and systems biology is beginning to provide useful biomarkers, and the emergence of personalized medicine is poised to transform pharmaceutical development and clinical trials. However, investigative and drug development efforts should be diversified to fully address the multifactoriality of the disease.",
+    "author": [
+      {
+        "family": "Huang",
+        "given": "Y.",
+      },
+      {
+        "family": "Mucke",
+        "given": "L.",
+      },
+    ],
+    "container-title": "Cell",
+    "issue": "6",
+    "issued": {
+      "date-parts": [
+        [
+          2012,
+        ],
+      ],
+    },
+    "note": "Huang, Yadong Mucke, Lennart AG011385/AG/NIA NIH HHS/ AG022074/AG/NIA NIH HHS/ Cell. 2012 Mar 16;148(6):1204-22.",
+    "page": "1204-22",
+    "title": "Alzheimer mechanisms and therapeutic strategies",
+    "type": "article-journal",
+    "volume": "148",
   },
 ]
 `;
@@ -4111,3 +4373,5 @@ exports[`reference-manager corpus (real citation-js) public/jabref/complex.bib 1
   },
 ]
 `;
+
+exports[`reference-manager corpus (real citation-js) public/jabref/endnote-20-report.xml 1`] = `[]`;

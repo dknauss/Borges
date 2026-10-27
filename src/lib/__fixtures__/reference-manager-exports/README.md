@@ -38,8 +38,8 @@ RIS fixture.
 
 | Directory | Contents | License |
 |---|---|---|
-| `public/better-bibtex/` | Output of Zotero's Better BibTeX, Better BibLaTeX, and Better CSL JSON exporters, from Better BibTeX's regression tests (`test/fixtures/export/`, pinned to a commit in `manifest.json`). The records are often minimal test items, but the syntax is what the exporter writes. | MIT, `public/better-bibtex/LICENSE` |
-| `public/jabref/` | `complex.bib`, a JabRef database file from JabRef's test resources, with `@Preamble`, `@String`, prose comments between entries, and the `jabref-meta` footer. | MIT, `public/jabref/LICENSE` |
+| `public/better-bibtex/` | Output of Zotero's Better BibTeX, Better BibLaTeX, and Better CSL JSON exporters, from Better BibTeX's regression tests (`test/fixtures/export/`, pinned to a commit in `manifest.json`). The records are often minimal test items, but the syntax is what the exporter writes. Also `endnote-keyless.bibtex.bib`, a user's EndNote BibTeX export from the import tests (`test/fixtures/import/`). | MIT, `public/better-bibtex/LICENSE` |
+| `public/jabref/` | `complex.bib`, a JabRef database file from JabRef's test resources, with `@Preamble`, `@String`, prose comments between entries, and the `jabref-meta` footer; and `endnote-20-report.xml`, an EndNote 20 XML export from its EndNote XML importer tests. | MIT, `public/jabref/LICENSE` |
 | `contributed/` | Exports from the maintainers' own reference managers: Zotero 10.0.6 exporting `borges-sample.ris` as BibTeX, BibLaTeX, CSL JSON, and RIS. See `contributed/README.md`. | Contributed to this project under its license |
 
 Files are renamed to short, space-free names; `manifest.json` records each
@@ -74,3 +74,17 @@ way round. It also snapshots the CSL-JSON each file yields, in
    what a pasted export would store.
 4. A real export that disagrees with a hand-authored fixture is the more
    trustworthy of the two; fix the fixture or the parser, not the export.
+
+### EndNote samples
+
+EndNote is paid, so it has no contributed exports yet (an EndNote trial or a
+demo copy is on the backlog). The public samples above are what qualified.
+Looked at and not used:
+
+- JabRef's other EndNote XML test files: three were written by Bookends, not
+  EndNote, and the rest hold copies of one EndNote 15 record (line-wrapped by
+  an editor, not as EndNote writes it) and of the EndNote 20 record kept here.
+- JabRef's `.enw` (EndNote tagged) files: a few lines each, hand-made for
+  pattern tests, and Borges reads no tagged format.
+- Zotero's translator test cases (EndNote XML, RIS, Refer/BibIX): AGPL, which
+  the corpus does not take.

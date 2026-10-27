@@ -270,6 +270,67 @@
 				"inputFormat": "none"
 			},
 			"knownGaps": "Borges does not import RIS. Online, the 4 records with a DO line are looked up on CrossRef by DOI alone (so the RIS fields are ignored) and the other 8 come back as unreadable input; the test runs offline, so all 12 are errors. Kept as a sample for deciding whether to import RIS."
+		},
+		{
+			"path": "contributed/mendeley-reference-manager.bib",
+			"exporter": "BibTeX (Export…)",
+			"manager": "Mendeley Reference Manager 2.150.0",
+			"source": "Contributed by Dan Knauss, 2026-10-27: Mendeley Reference Manager 2.150.0 on macOS, a new collection holding borges-sample.ris, exported by hand (select the collection's items, Export…) with default options. Mendeley's RIS import kept 9 of the 12 works: it silently dropped the conference paper (CPAPER), the edited reference work (EDBOOK), and the web page (ELEC)",
+			"license": "GPL-2.0-or-later",
+			"quirks": "Three-space indentation, no blank lines between entries, LF. Names written First Last with periods dropped (Thomas S Kuhn, J D Watson and F H C Crick), issue instead of number, city instead of address, @inbook for the chapter, @phdthesis with publisher (not school) for a master's thesis, @techReport. Cite keys drop non-ASCII letters (Gdel1931). No month or language even where the sample had them",
+			"expect": {
+				"entries": 9,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			},
+			"knownGaps": "Shannon's master's thesis imports as a PhD thesis, because that is what Mendeley wrote."
+		},
+		{
+			"path": "contributed/mendeley-reference-manager.ris",
+			"exporter": "RIS (Export…)",
+			"manager": "Mendeley Reference Manager 2.150.0",
+			"source": "Contributed by Dan Knauss, 2026-10-27: Mendeley Reference Manager 2.150.0 on macOS, a new collection holding borges-sample.ris, exported by hand (select the collection's items, Export…) with default options. Mendeley's RIS import kept 9 of the 12 works: it silently dropped the conference paper (CPAPER), the edited reference work (EDBOOK), and the web page (ELEC)",
+			"license": "GPL-2.0-or-later",
+			"quirks": "LF line endings, ER  - with no trailing space and no blank line between records, GEN for the master's thesis, no DA or LA lines",
+			"expect": {
+				"entries": 0,
+				"errors": 1,
+				"truncated": false,
+				"inputFormat": "none"
+			},
+			"knownGaps": "Borges does not import RIS; offline the whole file is one unreadable paste. Kept as a sample for deciding whether to import RIS."
+		},
+		{
+			"path": "public/better-bibtex/endnote-keyless.bibtex.bib",
+			"manager": "EndNote (version not recorded)",
+			"exporter": "BibTeX Export output style",
+			"source": "https://github.com/retorquere/zotero-better-bibtex/blob/6c581839df9b1ae3fd944445c9d54a48c124ab42/test/fixtures/import/Endnote%20should%20parse.bib",
+			"license": "MIT",
+			"licenseFile": "public/better-bibtex/LICENSE",
+			"quirks": "A user's EndNote export from a Better BibTeX import test: no cite key (@article{ straight into the fields), tab indentation, a leading blank line, initials with periods, a PubMed-style note with line breaks, single-hyphen abbreviated pages (1204-22)",
+			"expect": {
+				"entries": 1,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			}
+		},
+		{
+			"path": "public/jabref/endnote-20-report.xml",
+			"manager": "EndNote 20.0",
+			"exporter": "EndNote XML",
+			"source": "https://github.com/JabRef/jabref/blob/6124ec88896b20358472edd1de42694df4d184bf/jablib/src/test/resources/org/jabref/logic/importer/fileformat/EndnoteXmlImporterTestReport.xml",
+			"license": "MIT",
+			"licenseFile": "public/jabref/LICENSE",
+			"quirks": "One Report record (ref-type 27) with every value wrapped in <style face=… font=… size=…>, a database path, a label, and a URL written into pages",
+			"expect": {
+				"entries": 0,
+				"errors": 1,
+				"truncated": false,
+				"inputFormat": "none"
+			},
+			"knownGaps": "Borges does not import EndNote XML; it now says so instead of saving the markup as a free-text citation. Kept as a sample for deciding whether to import it."
 		}
 	]
 }

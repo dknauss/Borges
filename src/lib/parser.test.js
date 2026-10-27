@@ -1083,6 +1083,28 @@ Hallo world\\cite{einstein}
 		expect(result.remainingInput).toContain('\\documentclass{article}');
 	});
 
+	it.each([
+		[
+			'EndNote XML',
+			'<?xml version="1.0" encoding="UTF-8"?>\n<xml><records><record><titles><title>T</title></titles></record></records></xml>',
+		],
+		[
+			'Word bibliography XML',
+			'<b:Sources xmlns:b="http://schemas.openxmlformats.org/officeDocument/2006/bibliography"></b:Sources>',
+		],
+	])(
+		'rejects %s instead of reading it as free text',
+		async (label, input) => {
+			const result = await parsePastedInput(input);
+
+			expect(result.entries).toEqual([]);
+			expect(result.errors).toEqual([
+				"Borges can't read XML exports, such as EndNote XML. Export the references as BibTeX or CSL JSON and paste that instead.",
+			]);
+			expect(result.remainingInput).toBe(input);
+		}
+	);
+
 	it('detects BibLaTeX citation command input and returns a friendlier error', async () => {
 		const result = await parsePastedInput(`\\autocite{einstein}`);
 
