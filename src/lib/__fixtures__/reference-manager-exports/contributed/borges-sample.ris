@@ -1,0 +1,130 @@
+TY  - JOUR
+AU  - Harris, Charles R.
+AU  - Millman, K. Jarrod
+AU  - van der Walt, Stéfan J.
+AU  - Gommers, Ralf
+TI  - Array programming with NumPy
+T2  - Nature
+PY  - 2020
+DA  - 2020/09/17
+VL  - 585
+IS  - 7825
+SP  - 357
+EP  - 362
+DO  - 10.1038/s41586-020-2649-2
+LA  - en
+ER  - 
+
+TY  - BOOK
+AU  - Kuhn, Thomas S.
+TI  - The Structure of Scientific Revolutions
+PY  - 1962
+PB  - University of Chicago Press
+CY  - Chicago
+ER  - 
+
+TY  - CHAP
+AU  - Geertz, Clifford
+TI  - Thick Description: Toward an Interpretive Theory of Culture
+T2  - The Interpretation of Cultures
+PY  - 1973
+PB  - Basic Books
+CY  - New York
+SP  - 3
+EP  - 30
+ER  - 
+
+TY  - CPAPER
+AU  - Vaswani, Ashish
+AU  - Shazeer, Noam
+AU  - Parmar, Niki
+AU  - Uszkoreit, Jakob
+AU  - Jones, Llion
+AU  - Gomez, Aidan N.
+AU  - Kaiser, Łukasz
+AU  - Polosukhin, Illia
+TI  - Attention Is All You Need
+T2  - Advances in Neural Information Processing Systems
+VL  - 30
+PY  - 2017
+UR  - https://arxiv.org/abs/1706.03762
+ER  - 
+
+TY  - JOUR
+AU  - Gödel, Kurt
+TI  - Über formal unentscheidbare Sätze der Principia Mathematica und verwandter Systeme I
+T2  - Monatshefte für Mathematik und Physik
+PY  - 1931
+VL  - 38
+IS  - 1
+SP  - 173
+EP  - 198
+DO  - 10.1007/BF01700692
+LA  - de
+ER  - 
+
+TY  - JOUR
+AU  - Shannon, Claude E.
+TI  - A Mathematical Theory of Communication
+T2  - Bell System Technical Journal
+PY  - 1948
+VL  - 27
+IS  - 3
+SP  - 379
+EP  - 423
+DO  - 10.1002/j.1538-7305.1948.tb01338.x
+ER  - 
+
+TY  - THES
+AU  - Shannon, Claude E.
+TI  - A Symbolic Analysis of Relay and Switching Circuits
+PY  - 1940
+PB  - Massachusetts Institute of Technology
+CY  - Cambridge, MA
+M3  - Master's thesis
+ER  - 
+
+TY  - BOOK
+AU  - de Beauvoir, Simone
+TI  - Le Deuxième Sexe
+PY  - 1949
+PB  - Gallimard
+CY  - Paris
+LA  - fr
+ER  - 
+
+TY  - EDBOOK
+A2  - Zalta, Edward N.
+TI  - The Stanford Encyclopedia of Philosophy
+PB  - Metaphysics Research Lab, Stanford University
+CY  - Stanford, CA
+UR  - https://plato.stanford.edu/
+ER  - 
+
+TY  - ELEC
+AU  - Citation Style Language
+TI  - Citation Style Language
+UR  - https://citationstyles.org/
+Y2  - 2024/03/11
+ER  - 
+
+TY  - JOUR
+AU  - Watson, J. D.
+AU  - Crick, F. H. C.
+TI  - Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid
+T2  - Nature
+PY  - 1953
+VL  - 171
+IS  - 4356
+SP  - 737
+EP  - 738
+DO  - 10.1038/171737a0
+ER  - 
+
+TY  - RPRT
+AU  - Bush, Vannevar
+TI  - Science, the Endless Frontier
+PY  - 1945
+PB  - United States Government Printing Office
+CY  - Washington, DC
+ER  - 

@@ -144,4 +144,24 @@ describe('normalizeBibtexCsl', () => {
 			).URL
 		).toBe('https://example.org/paper');
 	});
+
+	it.each([
+		['mathesis', "Master's thesis"],
+		['phdthesis', 'PhD thesis'],
+		['techreport', 'technical report'],
+		['patentde', 'German patent'],
+	])('turns the BibLaTeX type key %s into the label %s', (key, label) => {
+		expect(normalizeBibtexCsl({ title: 'T', genre: key }, '').genre).toBe(
+			label
+		);
+	});
+
+	it('keeps a genre that is not a BibLaTeX type key', () => {
+		expect(
+			normalizeBibtexCsl(
+				{ title: 'T', genre: 'Doctoral dissertation' },
+				''
+			).genre
+		).toBe('Doctoral dissertation');
+	});
 });

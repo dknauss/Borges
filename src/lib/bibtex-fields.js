@@ -193,6 +193,36 @@ const ENDNOTE_REFERENCE_TYPES = new Set([
 	'web page',
 ]);
 
+// citation-js turns `@mastersthesis`, `@phdthesis`, and `@techreport`, and a
+// BibLaTeX `type` field holding one of the standard type keys (`mathesis`,
+// `patentde`), into a CSL `genre` that is the bare key, so a style that prints
+// genre would show "[mathesis]". These are the BibLaTeX manual's type keys,
+// with the localized strings biblatex prints for them (the same labels
+// citation-js uses when it exports them).
+const BIBLATEX_TYPE_KEY_LABELS = {
+	bathesis: "Bachelor's thesis",
+	mathesis: "Master's thesis",
+	phdthesis: 'PhD thesis',
+	candthesis: 'Candidate thesis',
+	techreport: 'technical report',
+	resreport: 'research report',
+	software: 'computer software',
+	datacd: 'data CD',
+	audiocd: 'audio CD',
+	patent: 'patent',
+	patentde: 'German patent',
+	patenteu: 'European patent',
+	patentfr: 'French patent',
+	patentuk: 'British patent',
+	patentus: 'U.S. patent',
+	patreq: 'patent request',
+	patreqde: 'German patent request',
+	patreqeu: 'European patent request',
+	patreqfr: 'French patent request',
+	patrequk: 'British patent request',
+	patrequs: 'U.S. patent request',
+};
+
 /**
  * Apply BibTeX/BibLaTeX-specific CSL fixes to one citation-js result.
  *
@@ -208,6 +238,19 @@ export function normalizeBibtexCsl(csl, rawEntry) {
 		ENDNOTE_REFERENCE_TYPES.has(normalized.genre.trim().toLowerCase())
 	) {
 		delete normalized.genre;
+	}
+
+	if (typeof normalized.genre === 'string') {
+		const typeKey = normalized.genre.trim().toLowerCase();
+
+		if (
+			Object.prototype.hasOwnProperty.call(
+				BIBLATEX_TYPE_KEY_LABELS,
+				typeKey
+			)
+		) {
+			normalized.genre = BIBLATEX_TYPE_KEY_LABELS[typeKey];
+		}
 	}
 
 	if ('language' in normalized) {

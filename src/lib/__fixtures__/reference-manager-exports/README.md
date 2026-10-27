@@ -40,7 +40,7 @@ RIS fixture.
 |---|---|---|
 | `public/better-bibtex/` | Output of Zotero's Better BibTeX, Better BibLaTeX, and Better CSL JSON exporters, from Better BibTeX's regression tests (`test/fixtures/export/`, pinned to a commit in `manifest.json`). The records are often minimal test items, but the syntax is what the exporter writes. | MIT, `public/better-bibtex/LICENSE` |
 | `public/jabref/` | `complex.bib`, a JabRef database file from JabRef's test resources, with `@Preamble`, `@String`, prose comments between entries, and the `jabref-meta` footer. | MIT, `public/jabref/LICENSE` |
-| `contributed/` | Exports from the maintainers' own libraries. See `contributed/README.md`. | Contributed to this project under its license |
+| `contributed/` | Exports from the maintainers' own reference managers: Zotero 10.0.6 exporting `borges-sample.ris` as BibTeX, BibLaTeX, CSL JSON, and RIS. See `contributed/README.md`. | Contributed to this project under its license |
 
 Files are renamed to short, space-free names; `manifest.json` records each
 original path. Only take files whose license is GPL-compatible (MIT, BSD,

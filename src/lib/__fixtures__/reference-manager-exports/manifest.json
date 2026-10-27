@@ -212,6 +212,65 @@
 				"truncated": false,
 				"inputFormat": "bibtex"
 			}
+		},
+		{
+			"path": "contributed/zotero-bibtex.bib",
+			"exporter": "BibTeX (built-in)",
+			"manager": "Zotero 10.0.6",
+			"source": "Contributed by Dan Knauss, 2026-10-27: Zotero 10.0.6 on macOS, a fresh library holding borges-sample.ris (12 published works), exported through Zotero's local API (/api/users/0/items/top?format=…), which runs the built-in export translators with default options",
+			"license": "GPL-2.0-or-later",
+			"quirks": "Leading blank line, tab indentation, {Protected} capitals in titles, bare month = sep, raw UTF-8, particles inline (van der Walt, de Beauvoir), @mastersthesis, @techreport, @misc web page with urldate, a corporate author in double braces. The access date reads 2024-03-12 for a sample that says 2024/03/11: Zotero stored the local date (UTC-6) in UTC",
+			"expect": {
+				"entries": 12,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			},
+			"knownGaps": "The @misc web page imports as type document, not webpage, and the conference paper has no booktitle (Zotero writes none)."
+		},
+		{
+			"path": "contributed/zotero-biblatex.bib",
+			"exporter": "BibLaTeX (built-in)",
+			"manager": "Zotero 10.0.6",
+			"source": "Contributed by Dan Knauss, 2026-10-27: Zotero 10.0.6 on macOS, a fresh library holding borges-sample.ris (12 published works), exported through Zotero's local API (/api/users/0/items/top?format=…), which runs the built-in export translators with default options",
+			"license": "GPL-2.0-or-later",
+			"quirks": "journaltitle, date, langid (english, german, french), location with {MA}/{DC} protection, @thesis with type, @report, @online, eventtitle, editorb with editorbtype = redactor. The access date reads 2024-03-12 for a sample that says 2024/03/11: Zotero stored the local date (UTC-6) in UTC",
+			"expect": {
+				"entries": 12,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			},
+			"knownGaps": "The Stanford Encyclopedia editor (editorb, editorbtype = redactor) is dropped."
+		},
+		{
+			"path": "contributed/zotero-csl.json",
+			"exporter": "CSL JSON (built-in)",
+			"manager": "Zotero 10.0.6",
+			"source": "Contributed by Dan Knauss, 2026-10-27: Zotero 10.0.6 on macOS, a fresh library holding borges-sample.ris (12 published works), exported through Zotero's local API (/api/users/0/items/top?format=…), which runs the built-in export translators with default options",
+			"license": "GPL-2.0-or-later",
+			"quirks": "Tab-indented array with no final newline, local-library URI ids, string years beside numeric months, particles split into non-dropping-particle, a literal corporate author, collection-editor, event-title. The access date reads 2024-03-12 for a sample that says 2024/03/11: Zotero stored the local date (UTC-6) in UTC",
+			"expect": {
+				"entries": 12,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "csl-json"
+			}
+		},
+		{
+			"path": "contributed/zotero.ris",
+			"exporter": "RIS (built-in)",
+			"manager": "Zotero 10.0.6",
+			"source": "Contributed by Dan Knauss, 2026-10-27: Zotero 10.0.6 on macOS, a fresh library holding borges-sample.ris (12 published works), exported through Zotero's local API (/api/users/0/items/top?format=…), which runs the built-in export translators with default options",
+			"license": "GPL-2.0-or-later",
+			"quirks": "CRLF line endings (kept by .gitattributes), DA dates like 1962///, CONF for the conference paper, A2 for a series editor",
+			"expect": {
+				"entries": 0,
+				"errors": 12,
+				"truncated": false,
+				"inputFormat": "none"
+			},
+			"knownGaps": "Borges does not import RIS. Online, the 4 records with a DO line are looked up on CrossRef by DOI alone (so the RIS fields are ignored) and the other 8 come back as unreadable input; the test runs offline, so all 12 are errors. Kept as a sample for deciding whether to import RIS."
 		}
 	]
 }
