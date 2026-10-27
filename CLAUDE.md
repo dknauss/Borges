@@ -52,7 +52,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
 
 | Responsibility | Owner |
 |---|---|
-| Input parsing (DOI, PubMed/PMID, BibTeX, free text) | JS (`src/lib/parser.js`, `free-text-parser.js`) plus PHP PMID REST proxy |
+| Input parsing (DOI, PubMed/PMID, BibTeX, RIS, free text) | JS (`src/lib/parser.js`, `free-text-parser.js`, `ris-fields.js`) plus PHP PMID REST proxy |
 | CSL-JSON as internal exchange format | Both |
 | Formatting to HTML citation strings | PHP via citeproc-php (REST call) |
 | Deduplication, sorting, export | JS client-side |

@@ -34,8 +34,8 @@ const NON_EXPORT_FILES = new Set([
 	'borges-sample.ris',
 ]);
 
-// A file Borges does not read as BibTeX or CSL-JSON (RIS, say) can still hold
-// DOIs, which the parser looks up online. The corpus pins what Borges makes of
+// A file Borges does not read as BibTeX, RIS, or CSL-JSON can still hold DOIs,
+// which the parser looks up online. The corpus pins what Borges makes of
 // the file itself, so lookups fail here instead of reaching CrossRef.
 const offlineFetch = () =>
 	Promise.reject(new Error('No network in the reference-manager corpus'));

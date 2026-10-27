@@ -1,9 +1,9 @@
 /**
  * Input format detection and citation-js orchestration.
  *
- * Splits pasted input into individual entries, detects DOIs and BibTeX
- * (including BibLaTeX, which shares the same detection and backend),
- * and resolves them to CSL-JSON via citation-js.
+ * Splits pasted input into individual entries, detects DOIs, RIS records,
+ * and BibTeX (including BibLaTeX, which shares the same detection and
+ * backend), and resolves them to CSL-JSON via citation-js.
  */
 
 import { normalizeBibtexCsl, renameBibtexCityField } from './bibtex-fields';
@@ -18,6 +18,7 @@ import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
 import '@citation-js/plugin-doi';
 import '@citation-js/plugin-bibtex';
+import '@citation-js/plugin-ris';
 import { parseJsonDocument, readCslJsonDocument } from './parser-csl-json';
 import {
 	OPEN_LIBRARY_WORK_ERROR,
@@ -32,6 +33,7 @@ import {
 	normalizePmidInput,
 } from './parser-identifiers';
 import { normalizeResolvedCsl } from './parser-normalize';
+import { normalizeRisCsl } from './ris-fields';
 import {
 	ARCHIVE_REST_ENDPOINT,
 	CATALOG_REST_ENDPOINT,
@@ -200,6 +202,17 @@ const PARSER_BACKENDS = {
 			),
 		};
 	},
+	ris: async (value) => {
+		// One record per segment (see segmentPastedInput()), so the raw record
+		// can be read back for the tags citation-js drops.
+		const cite = await Cite.async(value, { forceType: '@ris/file' });
+
+		return {
+			cslItems: cite
+				.get({ type: 'json' })
+				.map((csl) => normalizeRisCsl(csl, value)),
+		};
+	},
 	freetext: async (value) => {
 		const parsedCitation = parseFreeTextCitation(value);
 
@@ -260,14 +273,14 @@ function formatUnsupportedInputError() {
 
 function formatLatexDocumentError() {
 	return __(
-		'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation instead.',
+		'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, RIS record, CSL-JSON, or supported citation instead.',
 		'borges-bibliography-builder'
 	);
 }
 
 function formatXmlDocumentError() {
 	return __(
-		"Borges can't read XML exports, such as EndNote XML. Export the references as BibTeX or CSL JSON and paste that instead.",
+		"Borges can't read XML exports, such as EndNote XML. Export the references as BibTeX, RIS, or CSL JSON and paste that instead.",
 		'borges-bibliography-builder'
 	);
 }
@@ -339,6 +352,13 @@ function formatBackendParseError(format, err) {
 	if (format === 'bibtex') {
 		return __(
 			"Couldn't parse the BibTeX entry. Check it and try again.",
+			'borges-bibliography-builder'
+		);
+	}
+
+	if (format === 'ris') {
+		return __(
+			"Couldn't parse the RIS record. Check it and try again.",
 			'borges-bibliography-builder'
 		);
 	}
@@ -440,6 +460,10 @@ export async function parsePastedInput(
 	let detected = segmentPastedInput(input).flatMap((segment) => {
 		if (segment.bibtex) {
 			return [createDetectedItem('bibtex', segment.value, segment.raw)];
+		}
+
+		if (segment.ris) {
+			return [createDetectedItem('ris', segment.value, segment.raw)];
 		}
 
 		// Split on blank lines first; for multi-line chunks, use conservative

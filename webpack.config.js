@@ -71,6 +71,12 @@ module.exports = {
 					chunks: 'async',
 					enforce: true,
 				},
+				citationRis: {
+					test: /[\\/]node_modules[\\/]@citation-js[\\/]plugin-ris[\\/]/,
+					name: 'citation-plugin-ris',
+					chunks: 'async',
+					enforce: true,
+				},
 				citationCore: {
 					test: /[\\/]node_modules[\\/]@citation-js[\\/](core|date|name)[\\/]/,
 					name: 'citation-core',

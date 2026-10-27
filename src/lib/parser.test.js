@@ -8,6 +8,9 @@ jest.mock('@citation-js/plugin-doi', () =>
 jest.mock('@citation-js/plugin-bibtex', () =>
 	require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
 );
+jest.mock('@citation-js/plugin-ris', () =>
+	require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
+);
 jest.mock('./formatting/csl', () =>
 	require('../__test-utils__/citation-js-mocks').stubFormattingFactory()
 );
@@ -1060,7 +1063,7 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
+			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, RIS record, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 		]);
 		expect(result.remainingInput).toBe(
 			'This input is not a parseable citation.'
@@ -1078,7 +1081,7 @@ Hallo world\\cite{einstein}
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation instead.',
+			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, RIS record, CSL-JSON, or supported citation instead.',
 		]);
 		expect(result.remainingInput).toContain('\\documentclass{article}');
 	});
@@ -1099,7 +1102,7 @@ Hallo world\\cite{einstein}
 
 			expect(result.entries).toEqual([]);
 			expect(result.errors).toEqual([
-				"Borges can't read XML exports, such as EndNote XML. Export the references as BibTeX or CSL JSON and paste that instead.",
+				"Borges can't read XML exports, such as EndNote XML. Export the references as BibTeX, RIS, or CSL JSON and paste that instead.",
 			]);
 			expect(result.remainingInput).toBe(input);
 		}
@@ -1110,7 +1113,7 @@ Hallo world\\cite{einstein}
 
 		expect(result.entries).toEqual([]);
 		expect(result.errors).toEqual([
-			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, CSL-JSON, or supported citation instead.',
+			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, RIS record, CSL-JSON, or supported citation instead.',
 		]);
 		expect(result.remainingInput).toBe('\\autocite{einstein}');
 	});
@@ -1512,6 +1515,9 @@ describe('PMID fallback resolution', () => {
 			require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
 		);
 		jest.doMock('@citation-js/plugin-bibtex', () =>
+			require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
+		);
+		jest.doMock('@citation-js/plugin-ris', () =>
 			require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
 		);
 		jest.doMock('./formatting/csl', () =>

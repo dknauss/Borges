@@ -262,14 +262,14 @@
 			"manager": "Zotero 10.0.6",
 			"source": "Contributed by Dan Knauss, 2026-10-27: Zotero 10.0.6 on macOS, a fresh library holding borges-sample.ris (12 published works), exported through Zotero's local API (/api/users/0/items/top?format=…), which runs the built-in export translators with default options",
 			"license": "GPL-2.0-or-later",
-			"quirks": "CRLF line endings (kept by .gitattributes), DA dates like 1962///, CONF for the conference paper, A2 for a series editor",
+			"quirks": "CRLF line endings (kept by .gitattributes), DA dates like 1962///, CONF for the conference paper, A2 for a series editor, Y2 for the web page's access date",
 			"expect": {
-				"entries": 0,
-				"errors": 12,
+				"entries": 12,
+				"errors": 0,
 				"truncated": false,
-				"inputFormat": "none"
+				"inputFormat": "ris"
 			},
-			"knownGaps": "Borges does not import RIS. Online, the 4 records with a DO line are looked up on CrossRef by DOI alone (so the RIS fields are ignored) and the other 8 come back as unreadable input; the test runs offline, so all 12 are errors. Kept as a sample for deciding whether to import RIS."
+			"knownGaps": "The conference paper also gets an event-date, from its DA line, equal to its issued date."
 		},
 		{
 			"path": "contributed/mendeley-reference-manager.bib",
@@ -294,12 +294,12 @@
 			"license": "GPL-2.0-or-later",
 			"quirks": "LF line endings, ER  - with no trailing space and no blank line between records, GEN for the master's thesis, no DA or LA lines",
 			"expect": {
-				"entries": 0,
-				"errors": 1,
+				"entries": 9,
+				"errors": 0,
 				"truncated": false,
-				"inputFormat": "none"
+				"inputFormat": "ris"
 			},
-			"knownGaps": "Borges does not import RIS; offline the whole file is one unreadable paste. Kept as a sample for deciding whether to import RIS."
+			"knownGaps": "Shannon's master's thesis imports as a generic document, because Mendeley wrote it as GEN."
 		},
 		{
 			"path": "public/better-bibtex/endnote-keyless.bibtex.bib",

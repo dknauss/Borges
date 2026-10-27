@@ -31,8 +31,8 @@ The records are real publications (NumPy in *Nature*, Kuhn, Geertz, Vaswani
 et al., Gödel, Shannon), so their metadata can be checked against the
 published works.
 
-RIS import is out of scope (RIS is an export format only), so there is no
-RIS fixture.
+RIS has no hand-authored fixture: the RIS files in `contributed/` are real
+exports, and `src/lib/ris-import.test.js` checks the RIS import itself.
 
 ## Real exports
 
