@@ -641,6 +641,30 @@ final class RestEdgeCasesTest extends TestCase {
 		);
 	}
 
+	public function test_csl_sanitizer_normalizes_bc_years_written_as_strings(): void {
+		// Better CSL JSON writes every year as a string, BC years included.
+		$sanitized = bibliography_builder_validate_and_sanitize_csl_item(
+			array(
+				'type'     => 'book',
+				'title'    => 'BC tests',
+				'issued'   => array(
+					'date-parts' => array(
+						array( '-100', 7, 12 ),
+						array( '-44', '3', '15' ),
+					),
+				),
+				'accessed' => array( 'date-parts' => array( array( '-334', -2, '-0', '+7', '--5', '1.5' ) ) ),
+			)
+		);
+
+		$this->assertIsArray( $sanitized );
+		$this->assertSame(
+			array( array( -100, 7, 12 ), array( -44, 3, 15 ) ),
+			$sanitized['issued']['date-parts']
+		);
+		$this->assertSame( array( array( -334, -2, 0 ) ), $sanitized['accessed']['date-parts'] );
+	}
+
 	public function test_csl_sanitizer_accepts_literal_and_raw_dates(): void {
 		$sanitized = bibliography_builder_validate_and_sanitize_csl_item(
 			array(

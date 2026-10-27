@@ -276,7 +276,7 @@ function bibliography_builder_get_formatter_style_cache_payload( $style_key, $st
  * @return string
  */
 function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style ) {
-	$payload = array( 'version' => 3 )
+	$payload = array( 'version' => 4 )
 		+ bibliography_builder_get_formatter_style_cache_payload( $style_key, $style )
 		+ array( 'csl_items' => bibliography_builder_sort_for_cache_key( array_values( $csl_items ) ) );
 
@@ -295,7 +295,7 @@ function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $
  * @return string
  */
 function bibliography_builder_get_formatter_entry_map_key( $style_key, $style ) {
-	$payload = array( 'version' => 1 ) + bibliography_builder_get_formatter_style_cache_payload( $style_key, $style );
+	$payload = array( 'version' => 2 ) + bibliography_builder_get_formatter_style_cache_payload( $style_key, $style );
 
 	return 'entries_' . bibliography_builder_hash_cache_payload( $payload );
 }
@@ -465,12 +465,16 @@ function bibliography_builder_extract_citeproc_entries( $html, $style ) {
  *   so citeproc-php prints "Duijnhoven, Elza van". Other styles print the name
  *   as stored, so their output is unchanged; splitting there would also make
  *   citeproc-php print an elided particle with a space ("d’ Alembert").
+ * - Years before 1000, BC years among them: citeproc-php renders none of
+ *   them, so such a date becomes a year-only literal. See
+ *   bibliography_builder_early_date_literal().
  *
- * @param array $item                    CSL-JSON item.
- * @param bool  $demote_particle_display Whether the style demotes particles in display.
+ * @param array  $item                    CSL-JSON item.
+ * @param bool   $demote_particle_display Whether the style demotes particles in display.
+ * @param string $locale                  The style's locale, for the BC label.
  * @return array
  */
-function bibliography_builder_prepare_csl_for_formatter( $item, $demote_particle_display = false ) {
+function bibliography_builder_prepare_csl_for_formatter( $item, $demote_particle_display = false, $locale = 'en-US' ) {
 	$name_variables = array(
 		'author',
 		'collection-editor',
@@ -523,7 +527,88 @@ function bibliography_builder_prepare_csl_for_formatter( $item, $demote_particle
 		}
 	}
 
+	foreach ( bibliography_builder_csl_date_variables() as $variable ) {
+		$literal = isset( $item[ $variable ] )
+			? bibliography_builder_early_date_literal( $item[ $variable ], $locale )
+			: null;
+
+		if ( null !== $literal ) {
+			$item[ $variable ] = array( 'literal' => $literal );
+		}
+	}
+
 	return $item;
+}
+
+/**
+ * The CSL date variables.
+ *
+ * @return string[]
+ */
+function bibliography_builder_csl_date_variables() {
+	return array( 'accessed', 'available-date', 'event-date', 'issued', 'original-date', 'submitted' );
+}
+
+/**
+ * A year-only literal for a CSL date citeproc-php cannot render, else null.
+ *
+ * The citeproc-php 2.7 library puts an empty date before any date whose year
+ * is below 1000 (`Date::createDateTime()`), and then renders that empty date
+ * in its place: a lone year of 731 or -334 prints nothing, and a range prints
+ * only a dash and its end. Its BC handling (`DatePart::renderYear()`) is never
+ * reached. A literal date is printed as given, inside the style's affixes, so
+ * the year survives in every style. Month and day are left out: a style that
+ * cites a full date (MLA) would place them around the year in its own order,
+ * which a literal cannot follow, and early works are cited by year.
+ *
+ * CSL-JSON writes a BC year as a negative number, so -334 reads "334 BC"
+ * ("334 a.C." in Portuguese, after NBR 6023); AD years print bare. A range
+ * reads "100–44 BC" when both ends are BC, else "4 BC–30".
+ *
+ * @param mixed  $date   CSL date value, as sanitized.
+ * @param string $locale Style locale, such as en-US or pt-BR.
+ * @return string|null
+ */
+function bibliography_builder_early_date_literal( $date, $locale ) {
+	if ( ! is_array( $date ) || empty( $date['date-parts'] ) || ! is_array( $date['date-parts'] ) ) {
+		return null;
+	}
+
+	$years = array();
+
+	foreach ( array_slice( $date['date-parts'], 0, 2 ) as $parts ) {
+		// Only `issued` and `accessed` are sanitized to integers; other date
+		// variables keep the strings an exporter wrote ("-334").
+		$year = is_array( $parts ) && isset( $parts[0] )
+			? bibliography_builder_normalize_csl_date_part( $parts[0] )
+			: null;
+
+		if ( null !== $year ) {
+			$years[] = $year;
+		}
+	}
+
+	if ( empty( $years ) || min( $years ) >= 1000 ) {
+		return null;
+	}
+
+	$bc = 0 === strpos( strtolower( (string) $locale ), 'pt' ) ? 'a.C.' : 'BC';
+
+	if ( 2 === count( $years ) && $years[0] === $years[1] ) {
+		$years = array( $years[0] );
+	}
+
+	if ( 2 === count( $years ) && $years[0] < 0 && $years[1] < 0 ) {
+		return abs( $years[0] ) . "\u{2013}" . abs( $years[1] ) . ' ' . $bc;
+	}
+
+	$labels = array();
+
+	foreach ( $years as $year ) {
+		$labels[] = $year < 0 ? abs( $year ) . ' ' . $bc : (string) $year;
+	}
+
+	return implode( "\u{2013}", $labels );
 }
 
 /**
@@ -752,7 +837,8 @@ function bibliography_builder_render_csl_items( $csl_items, $style ) {
 	foreach ( $csl_items as $index => $item ) {
 		$item_array               = bibliography_builder_prepare_csl_for_formatter(
 			is_array( $item ) ? $item : array(),
-			$demote_particle
+			$demote_particle,
+			isset( $style['locale'] ) ? (string) $style['locale'] : 'en-US'
 		);
 		$item_array['id']         = 'bibliography-builder-format-' . $index;
 		$prepared_items[ $index ] = $item_array;
