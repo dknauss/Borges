@@ -164,4 +164,22 @@ describe('normalizeBibtexCsl', () => {
 			).genre
 		).toBe('Doctoral dissertation');
 	});
+
+	it("reads Mendeley's city field as the place of publication", () => {
+		expect(
+			normalizeBibtexCsl(
+				{ type: 'book', title: 'T' },
+				'@book{a,\n   city = {Chicago},\n   title = {T}\n}'
+			)['publisher-place']
+		).toBe('Chicago');
+	});
+
+	it('keeps a place citation-js already mapped over city', () => {
+		expect(
+			normalizeBibtexCsl(
+				{ type: 'book', title: 'T', 'publisher-place': 'Paris' },
+				'@book{a, address = {Paris}, city = {Lyon}}'
+			)['publisher-place']
+		).toBe('Paris');
+	});
 });

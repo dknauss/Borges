@@ -271,6 +271,36 @@
 				"inputFormat": "none"
 			},
 			"knownGaps": "Borges does not import RIS. Online, the 4 records with a DO line are looked up on CrossRef by DOI alone (so the RIS fields are ignored) and the other 8 come back as unreadable input; the test runs offline, so all 12 are errors. Kept as a sample for deciding whether to import RIS."
+		},
+		{
+			"path": "contributed/mendeley-reference-manager.bib",
+			"exporter": "BibTeX (Export…)",
+			"manager": "Mendeley Reference Manager 2.150.0",
+			"source": "Contributed by Dan Knauss, 2026-10-27: Mendeley Reference Manager 2.150.0 on macOS, a new collection holding borges-sample.ris, exported by hand (select the collection's items, Export…) with default options. Mendeley's RIS import kept 9 of the 12 works: it silently dropped the conference paper (CPAPER), the edited reference work (EDBOOK), and the web page (ELEC)",
+			"license": "GPL-2.0-or-later",
+			"quirks": "Three-space indentation, no blank lines between entries, LF. Names written First Last with periods dropped (Thomas S Kuhn, J D Watson and F H C Crick), issue instead of number, city instead of address, @inbook for the chapter, @phdthesis with publisher (not school) for a master's thesis, @techReport. Cite keys drop non-ASCII letters (Gdel1931). No month or language even where the sample had them",
+			"expect": {
+				"entries": 9,
+				"errors": 0,
+				"truncated": false,
+				"inputFormat": "bibtex"
+			},
+			"knownGaps": "Shannon's master's thesis imports as a PhD thesis, because that is what Mendeley wrote."
+		},
+		{
+			"path": "contributed/mendeley-reference-manager.ris",
+			"exporter": "RIS (Export…)",
+			"manager": "Mendeley Reference Manager 2.150.0",
+			"source": "Contributed by Dan Knauss, 2026-10-27: Mendeley Reference Manager 2.150.0 on macOS, a new collection holding borges-sample.ris, exported by hand (select the collection's items, Export…) with default options. Mendeley's RIS import kept 9 of the 12 works: it silently dropped the conference paper (CPAPER), the edited reference work (EDBOOK), and the web page (ELEC)",
+			"license": "GPL-2.0-or-later",
+			"quirks": "LF line endings, ER  - with no trailing space and no blank line between records, GEN for the master's thesis, no DA or LA lines",
+			"expect": {
+				"entries": 0,
+				"errors": 1,
+				"truncated": false,
+				"inputFormat": "none"
+			},
+			"knownGaps": "Borges does not import RIS; offline the whole file is one unreadable paste. Kept as a sample for deciding whether to import RIS."
 		}
 	]
 }

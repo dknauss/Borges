@@ -2,8 +2,8 @@
  * BibTeX/BibLaTeX field normalization applied after citation-js parsing.
  *
  * citation-js maps BibLaTeX natively (`date`, `journaltitle`, `location`,
- * `urldate`, `@online`, `@report`, ...), but three fields reach CSL in a shape
- * Borges cannot use as-is:
+ * `urldate`, `@online`, `@report`, ...), but these fields reach CSL in a shape
+ * Borges cannot use as-is, or not at all:
  *
  * - `langid` / `language` carry babel/polyglossia names ("ngerman",
  *   "american") that citation-js copies verbatim into CSL `language`, which
@@ -13,6 +13,8 @@
  *   dropped entirely, leaving arXiv preprints with no link.
  * - `type` in EndNote's BibTeX export holds EndNote's reference-type name
  *   ("Journal Article"), which would otherwise surface as CSL `genre`.
+ * - `city` is where Mendeley's BibTeX export writes the place of publication,
+ *   instead of `address` or `location`, so citation-js drops it.
  */
 
 // Babel and polyglossia language names, lowercased, mapped to BCP 47 tags.
@@ -260,6 +262,17 @@ export function normalizeBibtexCsl(csl, rawEntry) {
 			normalized.language = language;
 		} else {
 			delete normalized.language;
+		}
+	}
+
+	if (!normalized['publisher-place']) {
+		const city =
+			typeof rawEntry === 'string'
+				? readRawField(rawEntry, 'city')
+				: undefined;
+
+		if (city) {
+			normalized['publisher-place'] = city;
 		}
 	}
 

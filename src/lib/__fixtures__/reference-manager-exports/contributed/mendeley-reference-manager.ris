@@ -1,0 +1,86 @@
+TY  - BOOK
+AU  - Kuhn, Thomas S
+CY  - Chicago
+PB  - University of Chicago Press
+PY  - 1962
+TI  - The Structure of Scientific Revolutions
+ER  -
+TY  - JOUR
+AU  - Harris, Charles R
+AU  - Millman, K Jarrod
+AU  - van der Walt, Stéfan J
+AU  - Gommers, Ralf
+DO  - 10.1038/s41586-020-2649-2
+IS  - 7825
+PY  - 2020
+SP  - 357
+EP  - 362
+TI  - Array programming with NumPy
+T2  - Nature
+VL  - 585
+ER  -
+TY  - CHAP
+AU  - Geertz, Clifford
+CY  - New York
+PB  - Basic Books
+PY  - 1973
+SP  - 3
+EP  - 30
+TI  - Thick Description: Toward an Interpretive Theory of Culture
+T2  - The Interpretation of Cultures
+ER  -
+TY  - JOUR
+AU  - Gödel, Kurt
+DO  - 10.1007/BF01700692
+IS  - 1
+PY  - 1931
+SP  - 173
+EP  - 198
+TI  - Über formal unentscheidbare Sätze der Principia Mathematica und verwandter Systeme I
+T2  - Monatshefte für Mathematik und Physik
+VL  - 38
+ER  -
+TY  - JOUR
+AU  - Shannon, Claude E
+DO  - 10.1002/j.1538-7305.1948.tb01338.x
+IS  - 3
+PY  - 1948
+SP  - 379
+EP  - 423
+TI  - A Mathematical Theory of Communication
+T2  - Bell System Technical Journal
+VL  - 27
+ER  -
+TY  - GEN
+AU  - Shannon, Claude E
+CY  - Cambridge, MA
+PB  - Massachusetts Institute of Technology
+PY  - 1940
+TI  - A Symbolic Analysis of Relay and Switching Circuits
+ER  -
+TY  - BOOK
+AU  - de Beauvoir, Simone
+CY  - Paris
+PB  - Gallimard
+PY  - 1949
+TI  - Le Deuxième Sexe
+ER  -
+TY  - JOUR
+AU  - Watson, J D
+AU  - Crick, F H C
+DO  - 10.1038/171737a0
+IS  - 4356
+PY  - 1953
+SP  - 737
+EP  - 738
+TI  - Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid
+T2  - Nature
+VL  - 171
+ER  -
+TY  - RPRT
+AU  - Bush, Vannevar
+CY  - Washington, DC
+PB  - United States Government Printing Office
+PY  - 1945
+TI  - Science, the Endless Frontier
+ER  -

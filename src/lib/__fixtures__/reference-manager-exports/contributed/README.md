@@ -20,9 +20,15 @@ Current files:
 | File | Manager | How it was made |
 |---|---|---|
 | `zotero-bibtex.bib`, `zotero-biblatex.bib`, `zotero-csl.json`, `zotero.ris` | Zotero 10.0.6, macOS | A throwaway profile; the sample imported through the connector endpoint (`POST /connector/import`), then exported through the local API (`/api/users/0/items/top?format=bibtex`, `biblatex`, `csljson`, `ris`), which runs the built-in export translators with default options |
+| `mendeley-reference-manager.bib`, `mendeley-reference-manager.ris` | Mendeley Reference Manager 2.150.0, macOS | The sample imported by hand into a new collection, then that collection's items exported by hand as BibTeX and RIS with default options. Mendeley's RIS import silently dropped 3 of the 12 works (the CPAPER conference paper, the EDBOOK reference work, and the ELEC web page), so these files hold 9 |
 
-Still wanted: Mendeley Reference Manager (BibTeX and RIS) and EndNote (its
-BibTeX Export output style and RIS).
+Still wanted: EndNote (its BibTeX Export output style and RIS). Mendeley
+also exported EndNote XML and Word bibliography XML; Borges reads neither, so
+they are not kept.
+
+When exporting from Mendeley, select the items inside the sample's
+collection, not in All References: a select-all there exports your whole
+library.
 
 ## Adding a file
 

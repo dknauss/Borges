@@ -21,10 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Comments in JabRef files.** Pasting a whole `.bib` file that holds `@string`, `@comment`, or `@preamble` blocks no longer reports the plain-text comments between its entries as citations Borges couldn't read, or leaves them in the paste box. BibTeX ignores text outside entries, and JabRef keeps such comments in the files it saves. Pastes without those blocks still read text between entries as citations.
 - **Thesis and report types from BibTeX.** A BibTeX `@mastersthesis`, `@phdthesis`, or `@techreport`, or a BibLaTeX `type` holding a standard type key such as `mathesis` or `patentde`, now imports with a readable genre ("Master's thesis", "PhD thesis", "technical report", "German patent"). Before, the bare key was stored, so a style that prints the genre showed "[mathesis]". Found in Zotero's own BibTeX export.
+- **Place of publication from Mendeley BibTeX.** Mendeley Reference Manager writes the place into a nonstandard `city` field, which was dropped, so its books, chapters, and reports imported with no place. Borges now reads `city` when the entry has no `address` or `location`.
 
 ### Testing
 
-- **Real reference-manager exports.** `src/lib/reference-manager-corpus.test.js` runs real exporter output through the parser: 13 files from Better BibTeX's own tests (Better BibTeX, Better BibLaTeX, and Better CSL JSON) and a JabRef database file, both MIT-licensed. `manifest.json` records each file's source, license, and expected entry and error counts, and the suite snapshots the CSL-JSON every file yields. Maintainers' own exports go in `contributed/`, which now holds Zotero 10's BibTeX, BibLaTeX, CSL JSON, and RIS exports of a 12-work sample library (`contributed/borges-sample.ris`); see the corpus README.
+- **Real reference-manager exports.** `src/lib/reference-manager-corpus.test.js` runs real exporter output through the parser: 13 files from Better BibTeX's own tests (Better BibTeX, Better BibLaTeX, and Better CSL JSON) and a JabRef database file, both MIT-licensed. `manifest.json` records each file's source, license, and expected entry and error counts, and the suite snapshots the CSL-JSON every file yields. Maintainers' own exports go in `contributed/`, which now holds Zotero 10's BibTeX, BibLaTeX, CSL JSON, and RIS exports of a 12-work sample library (`contributed/borges-sample.ris`), and Mendeley Reference Manager 2.150's BibTeX and RIS exports of the 9 works its RIS import kept; see the corpus README.
 
 ## [1.15.0] - 2026-10-25
 
