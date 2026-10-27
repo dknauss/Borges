@@ -592,7 +592,7 @@ function bibliography_builder_early_date_literal( $date, $locale ) {
 		return null;
 	}
 
-	$bc = 0 === strpos( strtolower( (string) $locale ), 'pt' ) ? 'a.C.' : 'BC';
+	$bc = 0 === strpos( strtolower( $locale ), 'pt' ) ? 'a.C.' : 'BC';
 
 	if ( 2 === count( $years ) && $years[0] === $years[1] ) {
 		$years = array( $years[0] );
