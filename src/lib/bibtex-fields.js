@@ -278,36 +278,164 @@ export function normalizeBibtexCsl(csl, rawEntry) {
 	return normalized;
 }
 
-const BIBTEX_PLACE_FIELD_REGEX = /[,{\s](?:address|location)\s*=/iu;
-const BIBTEX_CITY_FIELD_REGEX = /([,{\s])city(\s*=)/iu;
-const BIBTEX_LAST_ENTRY_REGEX =
-	/@\s*(?!(?:string|comment|preamble)\b)[a-z][\w-]*\s*\{(?![^]*@\s*[a-z][\w-]*\s*\{)/iu;
+const BIBTEX_MACRO_TYPES = new Set(['string', 'comment', 'preamble']);
+const BIBTEX_BLOCK_START_REGEX = /@\s*([a-z][\w-]*)\s*\{/iuy;
+const BIBTEX_FIELD_NAME_REGEX = /\s*([a-z][\w:.+-]*)\s*=/iuy;
+
+/**
+ * Find the index past the brace that closes the block opened at `open`.
+ *
+ * @param {string} value BibTeX text.
+ * @param {number} open  Index of the block's opening brace.
+ * @return {number} Index after the closing brace, or the text length when
+ *                  the block is never closed.
+ */
+function findBibtexBlockEnd(value, open) {
+	let depth = 0;
+
+	for (let index = open; index < value.length; index++) {
+		if (value[index] === '{') {
+			depth++;
+		} else if (value[index] === '}') {
+			depth--;
+
+			if (depth === 0) {
+				return index + 1;
+			}
+		}
+	}
+
+	return value.length;
+}
+
+/**
+ * Find the opening brace of the first entry that is not a macro block.
+ *
+ * Only `@` signs outside every block count, so text inside a field value or
+ * an `@string` macro (`title = {On @book{} keys}`) never starts an entry.
+ *
+ * @param {string} value BibTeX segment text.
+ * @return {number} Index of the entry's opening brace, or -1.
+ */
+function findBibtexEntryOpenBrace(value) {
+	let index = 0;
+
+	while (index < value.length) {
+		const at = value.indexOf('@', index);
+
+		if (at === -1) {
+			return -1;
+		}
+
+		BIBTEX_BLOCK_START_REGEX.lastIndex = at;
+		const match = BIBTEX_BLOCK_START_REGEX.exec(value);
+
+		if (!match) {
+			index = at + 1;
+			continue;
+		}
+
+		const open = at + match[0].length - 1;
+
+		if (!BIBTEX_MACRO_TYPES.has(match[1].toLowerCase())) {
+			return open;
+		}
+
+		index = findBibtexBlockEnd(value, open);
+	}
+
+	return -1;
+}
+
+/**
+ * List an entry's field names and where each one starts.
+ *
+ * Walks the entry from its opening brace and reads a name only where BibTeX
+ * allows one: right after the brace (a keyless entry) or after a comma, at
+ * the entry's own brace depth and outside a quoted value. Text inside a value
+ * (`title = {Why city = culture matters}`) is never read as a field name.
+ *
+ * @param {string} value BibTeX text.
+ * @param {number} open  Index of the entry's opening brace.
+ * @return {Array<{name: string, index: number}>} Lowercased names, in order,
+ *         with the index of each name's first character.
+ */
+function getBibtexFieldNames(value, open) {
+	const fields = [];
+	let depth = 0;
+	let inQuotes = false;
+
+	for (let index = open; index < value.length; index++) {
+		const char = value[index];
+
+		if (char === '{') {
+			depth++;
+		} else if (char === '}') {
+			depth--;
+
+			if (depth === 0) {
+				break;
+			}
+		} else if (char === '"' && depth === 1) {
+			inQuotes = !inQuotes;
+		}
+
+		const startsField =
+			depth === 1 &&
+			!inQuotes &&
+			((char === '{' && index === open) || char === ',');
+
+		if (!startsField) {
+			continue;
+		}
+
+		BIBTEX_FIELD_NAME_REGEX.lastIndex = index + 1;
+		const match = BIBTEX_FIELD_NAME_REGEX.exec(value);
+
+		if (match) {
+			fields.push({
+				name: match[1].toLowerCase(),
+				index: index + 1 + match[0].indexOf(match[1]),
+			});
+		}
+	}
+
+	return fields;
+}
 
 /**
  * Rename Mendeley's `city` field to `address` in a segment's entry.
  *
- * A segment is one entry, after any `@string` macros, so only the text from
- * the last entry on is changed; an entry that already has `address` or
- * `location` is left alone.
+ * A segment is one entry, after any `@string` macros, so only that entry is
+ * changed. Only real field names are matched, never text inside a value,
+ * and an entry that already has an `address` or `location` field is left
+ * alone.
  *
  * @param {string} value BibTeX segment text.
  * @return {string} The segment with `city` read as `address`.
  */
 export function renameBibtexCityField(value) {
-	const start = value.search(BIBTEX_LAST_ENTRY_REGEX);
+	const open = findBibtexEntryOpenBrace(value);
 
-	if (start === -1) {
+	if (open === -1) {
 		return value;
 	}
 
-	const entry = value.slice(start);
+	const fields = getBibtexFieldNames(value, open);
 
-	if (BIBTEX_PLACE_FIELD_REGEX.test(entry)) {
+	if (fields.some(({ name }) => name === 'address' || name === 'location')) {
+		return value;
+	}
+
+	const city = fields.find(({ name }) => name === 'city');
+
+	if (!city) {
 		return value;
 	}
 
 	return (
-		value.slice(0, start) +
-		entry.replace(BIBTEX_CITY_FIELD_REGEX, '$1address$2')
+		value.slice(0, city.index) +
+		'address' +
+		value.slice(city.index + 'city'.length)
 	);
 }
