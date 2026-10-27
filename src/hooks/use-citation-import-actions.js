@@ -138,19 +138,19 @@ function shouldWarnParseResult({
  * Async operation tokens are injected from `edit.js` so all editor mutations
  * still share one latest-operation guard.
  *
- * @param {Object}   options                         Hook options.
- * @param {Function} options.announce                Notice announcer.
- * @param {Function} options.beginAsyncOperation     Latest-operation starter.
- * @param {string}   options.citationStyle           Current citation style.
- * @param {Object}   options.citationsRef            Mutable citations ref.
- * @param {Function} options.clearNotice             Notice clearer.
- * @param {string}   options.inputValue              Current paste/import text.
- * @param {Function} options.isCurrentAsyncOperation Latest-operation checker.
- * @param {boolean}  options.outputCiteExport        Whether Cite/Export is on.
- * @param {Function} options.queueFocus              Focus queue helper.
- * @param {Function} options.setAttributes           Block attribute setter.
- * @param {Function} options.setIsLoading            Loading state setter.
- * @param {Function} options.updatePasteInput        Paste input updater.
+ * @param {Object}                                                      options                         Hook options.
+ * @param {(status: string, message: string, options?: Object) => void} options.announce                Notice announcer.
+ * @param {() => number}                                                options.beginAsyncOperation     Latest-operation starter.
+ * @param {string}                                                      options.citationStyle           Current citation style.
+ * @param {Object}                                                      options.citationsRef            Mutable citations ref.
+ * @param {() => void}                                                  options.clearNotice             Notice clearer.
+ * @param {string}                                                      options.inputValue              Current paste/import text.
+ * @param {(operationId: number) => boolean}                            options.isCurrentAsyncOperation Latest-operation checker.
+ * @param {boolean}                                                     options.outputCiteExport        Whether Cite/Export is on.
+ * @param {(target: Object) => void}                                    options.queueFocus              Focus queue helper.
+ * @param {(attributes: Object) => void}                                options.setAttributes           Block attribute setter.
+ * @param {(isLoading: boolean) => void}                                options.setIsLoading            Loading state setter.
+ * @param {(value: string, options?: {syncDom?: boolean}) => void}      options.updatePasteInput        Paste input updater.
  * @return {Object} Paste/import action handlers.
  */
 export function useCitationImportActions({
@@ -337,7 +337,7 @@ export function useCitationImportActions({
 			}
 
 			updatePasteInput(remainingInput, { syncDom: true });
-		} catch (err) {
+		} catch {
 			announce(
 				'error',
 				__(

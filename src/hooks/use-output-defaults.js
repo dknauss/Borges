@@ -15,9 +15,9 @@ import {
  * for the same reason: the author did not make the change, so it should not
  * be an undo step.
  *
- * @param {Object}   params
- * @param {Object}   params.attributes    Block attributes.
- * @param {Function} params.setAttributes Block attribute setter.
+ * @param {Object}                       params
+ * @param {Object}                       params.attributes    Block attributes.
+ * @param {(attributes: Object) => void} params.setAttributes Block attribute setter.
  */
 export function useOutputDefaults({ attributes, setAttributes }) {
 	const registry = useRegistry();

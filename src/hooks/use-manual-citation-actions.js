@@ -28,18 +28,18 @@ const FORMATTER_FALLBACK_MESSAGE = __(
  * add remains coordinated with paste, delete, structured edit, and style
  * changes.
  *
- * @param {Object}   options                         Hook options.
- * @param {Function} options.announce                Notice announcer.
- * @param {Function} options.beginAsyncOperation     Latest-operation starter.
- * @param {string}   options.citationStyle           Current citation style.
- * @param {Object}   options.citationsRef            Mutable citations ref.
- * @param {Function} options.clearNotice             Notice clearer.
- * @param {Object}   options.currentNotice           Current block notice.
- * @param {Function} options.isCurrentAsyncOperation Latest-operation checker.
- * @param {boolean}  options.outputCiteExport        Whether Cite/Export is on.
- * @param {Object}   options.pasteZoneRef            First field/focus ref.
- * @param {Function} options.queueFocus              Focus queue helper.
- * @param {Function} options.setAttributes           Block attribute setter.
+ * @param {Object}                                                      options                         Hook options.
+ * @param {(status: string, message: string, options?: Object) => void} options.announce                Notice announcer.
+ * @param {() => number}                                                options.beginAsyncOperation     Latest-operation starter.
+ * @param {string}                                                      options.citationStyle           Current citation style.
+ * @param {Object}                                                      options.citationsRef            Mutable citations ref.
+ * @param {() => void}                                                  options.clearNotice             Notice clearer.
+ * @param {Object}                                                      options.currentNotice           Current block notice.
+ * @param {(operationId: number) => boolean}                            options.isCurrentAsyncOperation Latest-operation checker.
+ * @param {boolean}                                                     options.outputCiteExport        Whether Cite/Export is on.
+ * @param {Object}                                                      options.pasteZoneRef            First field/focus ref.
+ * @param {(target: Object) => void}                                    options.queueFocus              Focus queue helper.
+ * @param {(attributes: Object) => void}                                options.setAttributes           Block attribute setter.
  * @return {Object} Manual-entry state and handlers.
  */
 export function useManualCitationActions({
@@ -233,7 +233,7 @@ export function useManualCitationActions({
 					? { type: 'notice' }
 					: { type: 'entry', id: entry.id }
 			);
-		} catch (error) {
+		} catch {
 			announce(
 				'error',
 				__(

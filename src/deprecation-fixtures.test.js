@@ -366,8 +366,8 @@ function fixtureAttributes(version) {
  * Register the block under a throwaway name with a specific save implementation,
  * serialize one instance, then unregister. Used only to mint fixtures.
  *
- * @param {Function} saveImplementation The save function to serialize with.
- * @param {Object}   attributes         Block attributes.
+ * @param {(props: Object) => Object} saveImplementation The save function to serialize with.
+ * @param {Object}                    attributes         Block attributes.
  * @return {string} Serialized block markup.
  */
 function serializeWith(saveImplementation, attributes = FIXTURE_ATTRIBUTES) {
@@ -408,8 +408,9 @@ function registerCurrentBlock() {
  * passing run that is tens of kilobytes of expected noise per fixture. Failures
  * still surface through the assertions.
  *
- * @param {Function} fn Function to run.
- * @return {*} Whatever `fn` returns.
+ * @template T
+ * @param {() => T} fn Function to run.
+ * @return {T} Whatever `fn` returns.
  */
 /* eslint-disable no-console -- swapping the console methods out is the point. */
 function withMutedConsole(fn) {

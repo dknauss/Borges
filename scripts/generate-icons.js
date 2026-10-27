@@ -1,4 +1,4 @@
-/* eslint-disable no-console, no-bitwise, curly */
+/* eslint-disable no-console, no-bitwise */
 /**
  * Generate plugin icon PNGs from the dashicons "book" SVG path.
  * White background, #3c434a fill — matches the banner style.

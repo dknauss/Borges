@@ -206,7 +206,6 @@ export function wrapJsonLdItemList(items) {
 		'@context': 'https://schema.org',
 		'@type': 'ItemList',
 		itemListElement: items.map((item, index) => {
-			// eslint-disable-next-line no-unused-vars -- dropped on purpose.
 			const { '@context': context, ...work } = item;
 			return {
 				'@type': 'ListItem',

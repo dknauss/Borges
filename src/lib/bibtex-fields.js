@@ -105,7 +105,7 @@ const ARXIV_ID_PATTERN =
 /**
  * Convert a BibTeX/BibLaTeX language value to a BCP 47 tag.
  *
- * @param {*} value CSL `language` value produced by citation-js.
+ * @param {unknown} value CSL `language` value produced by citation-js.
  * @return {string|undefined} A BCP 47 tag, or undefined when none applies.
  */
 export function normalizeBibtexLanguage(value) {

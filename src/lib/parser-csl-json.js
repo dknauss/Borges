@@ -32,7 +32,7 @@ export function parseJsonDocument(input) {
 		const parsed = JSON.parse(trimmed);
 
 		return typeof parsed === 'object' && parsed !== null ? parsed : null;
-	} catch (_error) {
+	} catch {
 		return null;
 	}
 }
@@ -85,7 +85,7 @@ export function readCslJsonDocument(document, existingDoiSet, input) {
 
 		try {
 			csl = validateAndSanitizeCsl(item);
-		} catch (_error) {
+		} catch {
 			invalidPositions.push(index + 1);
 			remainingItems.splice(invalidPositions.length - 1, 0, item);
 			return;

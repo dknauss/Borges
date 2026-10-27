@@ -199,7 +199,7 @@ async function addCitations(page, editorFrame, text) {
 				window.wp?.data
 					?.dispatch('core/preferences')
 					?.set('core', 'welcomeGuide', false);
-			} catch (e) {
+			} catch {
 				// Older/newer editors may expose a different store; ignore.
 			}
 		})

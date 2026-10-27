@@ -45,10 +45,10 @@ function getOrderedBibliographyBlocks(editor) {
  * The assignment is marked non-persistent where the block editor supports it,
  * so it does not add an undo step the author never made.
  *
- * @param {Object}   params
- * @param {string}   params.clientId      This block's client ID.
- * @param {Object}   params.attributes    Block attributes.
- * @param {Function} params.setAttributes Block attribute setter.
+ * @param {Object}                       params
+ * @param {string}                       params.clientId      This block's client ID.
+ * @param {Object}                       params.attributes    Block attributes.
+ * @param {(attributes: Object) => void} params.setAttributes Block attribute setter.
  */
 export function useStableIds({ clientId, attributes, setAttributes }) {
 	const registry = useRegistry();

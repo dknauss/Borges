@@ -86,9 +86,9 @@ export function buildCoins(csl) {
 /**
  * Add a parameter to the params array if the value is defined and non-empty.
  *
- * @param {Array}  params Array to push to.
- * @param {string} key    Parameter key.
- * @param {*}      value  Parameter value.
+ * @param {Array}   params Array to push to.
+ * @param {string}  key    Parameter key.
+ * @param {unknown} value  Parameter value.
  */
 function addParam(params, key, value) {
 	if (value !== undefined && value !== null && value !== '') {

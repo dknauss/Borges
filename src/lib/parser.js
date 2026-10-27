@@ -83,7 +83,7 @@ async function formatParsedEntries(entries, styleKey) {
  * Resolvers per input kind. Each takes the raw value, plus an optional
  * `fetchFn` for the backends that call the network directly.
  *
- * @type {Record<string, (value: string, options?: {fetchFn?: Function}) => Promise<Object>>}
+ * @type {Record<string, (value: string, options?: {fetchFn?: typeof fetch}) => Promise<Object>>}
  */
 const PARSER_BACKENDS = {
 	pmid: async (value, { fetchFn } = {}) => {
@@ -372,20 +372,20 @@ function formatBackendParseError(format, err) {
 /**
  * Parse pasted input into an array of CSL-JSON citation objects.
  *
- * @param {string}   input                       Raw pasted text.
- * @param {string}   styleKey                    Style key for derived formatting.
- * @param {Object}   [options={}]                Parse options.
- * @param {boolean}  [options.deferFormatting]   When true (default), leave
- *                                               `formattedText` empty so callers
- *                                               can decide if and when to format.
- *                                               When false, format entries inside
- *                                               the parser for legacy/explicit
- *                                               call sites.
- * @param {Function} [options.fetchFn]           Fetch implementation for PMID
- *                                               resolution.
- * @param {Array}    [options.existingDoiValues] Existing normalized or raw DOI
- *                                               values already present in the
- *                                               bibliography.
+ * @param {string}       input                       Raw pasted text.
+ * @param {string}       styleKey                    Style key for derived formatting.
+ * @param {Object}       [options={}]                Parse options.
+ * @param {boolean}      [options.deferFormatting]   When true (default), leave
+ *                                                   `formattedText` empty so callers
+ *                                                   can decide if and when to format.
+ *                                                   When false, format entries inside
+ *                                                   the parser for legacy/explicit
+ *                                                   call sites.
+ * @param {typeof fetch} [options.fetchFn]           Fetch implementation for PMID
+ *                                                   resolution.
+ * @param {Array}        [options.existingDoiValues] Existing normalized or raw DOI
+ *                                                   values already present in the
+ *                                                   bibliography.
  * @return {Promise<Object>} { entries: Array, errors: Array, truncated: boolean }
  *
  * @since 0.1.0
@@ -553,7 +553,7 @@ export async function parsePastedInput(
 							item,
 							entries: mapCslToEntries(cslItems, 'freetext'),
 						};
-					} catch (_fallbackErr) {
+					} catch {
 						// Both resolver and freetext failed — report as
 						// unsupported input so the user sees the guidance
 						// message rather than a confusing DOI/PMID error.

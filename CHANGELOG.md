@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Bulk deduplicate keeps every field.** Before it drops a later copy of a work, it copies any field the kept copy lacks, such as a DOI, pages, or a volume, into it, and formats that entry again. A field the kept copy has is never overwritten. Each removed entry lists what it gave in `mergedFields`, and `wp borges deduplicate` gains a `merged` column.
-- Development dependencies refreshed to clear the `zod` (GHSA-mrhx-c7xc-m3w5) and `qs` advisories: `package.json` overrides `zod` to 4.6.7 and `qs` to 6.16.2, keeping `@wordpress/scripts` on 31.x, and `tools/markup-value` moves to Lighthouse 13.5.0. None of them ship in the plugin.
+- Development dependencies refreshed to clear the `zod` (GHSA-mrhx-c7xc-m3w5), `qs`, `serialize-javascript`, `katex`, and `smol-toml` advisories. `@wordpress/scripts` moves from 31 to 37, which retires the interim `zod` override, and `tools/markup-value` moves to Lighthouse 13.5.0. None of them ship in the plugin.
+- Build tooling: `@wordpress/scripts` 37 lints with ESLint 10, so the repo gains a flat `eslint.config.js` that keeps Jest's rules and globals for tests (the default now assumes Vitest), and `npm test` runs Jest through `wp-scripts test-unit-jest`. Formatting is unchanged. Catch bindings that were never read are dropped, JSDoc `Function` and `*` types are spelled out, and the visually hidden styles use `clip-path: inset(50%)` in place of the deprecated `clip`.
 
 ### Fixed
 

@@ -78,7 +78,7 @@ async function resolveNcbiViaFetch(source, id, fetchFn) {
  *
  * @param {'pmid'|'pmcid'} sourceKey Which NCBI source to query.
  * @param {string}         id        Digits only (no `PMC` prefix).
- * @param {Function}       [fetchFn] Optional fetch implementation.
+ * @param {typeof fetch}   [fetchFn] Optional fetch implementation.
  * @return {Promise<Object>} CSL-JSON item.
  */
 export async function resolveNcbiCsl(sourceKey, id, fetchFn) {
@@ -207,9 +207,10 @@ export function clearDoiMetadataCache() {
  * A failed task does not block the queue; its rejection still reaches the
  * caller of that task.
  *
- * @param {string}             queueName Queue to serialize on, e.g. 'arxiv'.
- * @param {() => Promise<any>} task      Work to run.
- * @return {Promise<any>} The task's result.
+ * @template T
+ * @param {string}           queueName Queue to serialize on, e.g. 'arxiv'.
+ * @param {() => Promise<T>} task      Work to run.
+ * @return {Promise<T>} The task's result.
  */
 export function runSerially(queueName, task) {
 	const previous = SERIAL_QUEUES.get(queueName) || Promise.resolve();

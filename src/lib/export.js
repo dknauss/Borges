@@ -342,7 +342,7 @@ export async function downloadBibtexExport(
  *
  * BibLaTeX uses richer field semantics than legacy BibTeX: `date` instead of
  * `year`, `journaltitle` instead of `journal`, and full Unicode support without
- * TeX ligatures. The same @citation-js/plugin-bibtex package provides the
+ * TeX ligatures. The same `@citation-js/plugin-bibtex` package provides the
  * `biblatex` format string.
  *
  * @param {Array}  citations          Array of citation objects.

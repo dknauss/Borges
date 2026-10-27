@@ -57,7 +57,7 @@ function getLabels(entry) {
 		const translated = JSON.parse(section.getAttribute('data-cite-labels'));
 
 		return { ...DEFAULT_LABELS, ...translated };
-	} catch (error) {
+	} catch {
 		return DEFAULT_LABELS;
 	}
 }

@@ -24,7 +24,7 @@ const TYPES = {
  * Serves out/ at the root, and the plugin's build/ at /assets/, the way a
  * WordPress site serves the block's front-end CSS and view script.
  *
- * @return {Promise<{url: string, close: Function}>} Base URL and a closer.
+ * @return {Promise<{url: string, close: () => Promise<void>}>} Base URL and a closer.
  */
 export async function serve() {
 	const server = createServer(async (req, res) => {
@@ -68,7 +68,7 @@ export const manifest = () => readJson(join(OUT_DIR, 'manifest.json'));
  * hyphens, curly quotes straightened, whitespace collapsed, and edge
  * punctuation trimmed.
  *
- * @param {*} value Any value.
+ * @param {unknown} value Any value.
  * @return {string} Normalized string, '' for empty values.
  */
 export function norm(value) {
@@ -89,7 +89,7 @@ export function norm(value) {
 /**
  * ISBN digits only, so hyphenation differences do not count.
  *
- * @param {*} value Raw ISBN, with or without hyphens.
+ * @param {unknown} value Raw ISBN, with or without hyphens.
  */
 export const isbnDigits = (value) =>
 	String(value || '')
