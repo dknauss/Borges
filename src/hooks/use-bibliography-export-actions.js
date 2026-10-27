@@ -17,11 +17,11 @@ import { getPlainDisplayText } from '../lib/formatting';
  * operation guards remain with citation mutation flows because downloads/copies
  * do not commit block state.
  *
- * @param {Object}   options               Hook options.
- * @param {Function} options.announce      Notice announcer.
- * @param {string}   options.citationStyle Current citation style.
- * @param {Object}   options.citationsRef  Mutable citations ref.
- * @param {Function} options.queueFocus    Focus queue helper.
+ * @param {Object}                                                      options               Hook options.
+ * @param {(status: string, message: string, options?: Object) => void} options.announce      Notice announcer.
+ * @param {string}                                                      options.citationStyle Current citation style.
+ * @param {Object}                                                      options.citationsRef  Mutable citations ref.
+ * @param {(target: Object) => void}                                    options.queueFocus    Focus queue helper.
  * @return {Object} Clipboard/export action handlers.
  */
 export function useBibliographyExportActions({
@@ -49,7 +49,7 @@ export function useBibliographyExportActions({
 					type: 'snackbar',
 				}
 			);
-		} catch (error) {
+		} catch {
 			announce(
 				'error',
 				__(
@@ -72,7 +72,7 @@ export function useBibliographyExportActions({
 						type: 'snackbar',
 					}
 				);
-			} catch (error) {
+			} catch {
 				announce(
 					'error',
 					__(
@@ -103,7 +103,7 @@ export function useBibliographyExportActions({
 					type: 'snackbar',
 				}
 			);
-		} catch (error) {
+		} catch {
 			announce(
 				'error',
 				__(
@@ -129,7 +129,7 @@ export function useBibliographyExportActions({
 					type: 'snackbar',
 				}
 			);
-		} catch (error) {
+		} catch {
 			announce(
 				'error',
 				__(
@@ -158,7 +158,7 @@ export function useBibliographyExportActions({
 					type: 'snackbar',
 				}
 			);
-		} catch (error) {
+		} catch {
 			announce(
 				'error',
 				__(
@@ -184,7 +184,7 @@ export function useBibliographyExportActions({
 					type: 'snackbar',
 				}
 			);
-		} catch (error) {
+		} catch {
 			announce(
 				'error',
 				__(

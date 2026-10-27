@@ -11,7 +11,7 @@ export const HEADING_LEVELS = Object.freeze([2, 3, 4, 5, 6]);
  * Mirrored by bibliography_builder_save_heading_tag() in
  * includes/save-markup.php.
  *
- * @param {*} headingLevel The `headingLevel` attribute.
+ * @param {number} headingLevel The `headingLevel` attribute (an integer in `block.json`).
  * @return {string} `h2` to `h6`, or `p` for 0 and anything else.
  */
 export function getHeadingTag(headingLevel) {

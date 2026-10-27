@@ -335,7 +335,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						})),
 						citationStyle
 					);
-				} catch (error) {
+				} catch {
 					formatterFallback = true;
 				}
 			}

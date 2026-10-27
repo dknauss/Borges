@@ -1,4 +1,3 @@
-/* eslint-disable jest/no-done-callback */
 const { test, expect } = require('@playwright/test');
 
 function getPluginRow(page) {

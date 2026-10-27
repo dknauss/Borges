@@ -1,4 +1,3 @@
-/* eslint-disable jest/no-done-callback */
 /**
  * MLA 9 repeated authors in the real block editor.
  *

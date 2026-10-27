@@ -156,7 +156,7 @@ function sanitizeNameList(names, field) {
  * "-334" arrives too. A signed digit string becomes that integer; "-0" becomes
  * 0 rather than -0, which would print as "0" but compare oddly.
  *
- * @param {*} part Date part.
+ * @param {unknown} part Date part.
  * @return {number|undefined} The integer, or undefined to drop the part.
  */
 function normalizeDatePart(part) {

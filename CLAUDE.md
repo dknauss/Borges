@@ -9,9 +9,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run build          # Production build via wp-scripts/webpack
 npm start              # Dev build with file watching
-npm test               # Jest unit tests
+npm test               # Jest unit tests (wp-scripts test-unit-jest; wp-scripts 37's test-unit-js is Vitest)
 npm run test:js:coverage
-npm run lint:js
+npm run lint:js        # ESLint 10 via eslint.config.js: the wp-scripts default, with Jest rules for tests
 npm run lint:css
 npm run format:check   # Prettier on JSON/YAML/JS; Markdown, SCSS, fixtures, and generated files are ignored (.prettierignore)
 npm run typecheck:js   # tsc checkJs over src/lib/ (tsconfig.checkjs.json): JSDoc types, no emit; tests and fixtures excluded

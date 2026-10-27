@@ -9,7 +9,7 @@
  * string or an array of strings. Export and metadata builders should use one
  * primary string value and ignore empty/non-string array entries.
  *
- * @param {*} value CSL-JSON identifier field value.
+ * @param {unknown} value CSL-JSON identifier field value.
  * @return {string} Primary identifier string, or an empty string.
  */
 export function getPrimaryIdentifierValue(value) {

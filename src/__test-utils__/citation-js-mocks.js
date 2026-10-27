@@ -1,5 +1,3 @@
-/* eslint-disable jsdoc/no-undefined-types, jsdoc/require-returns-description, no-undef, jsdoc/check-tag-names */
-
 /**
  * Shared citation-js mock factories for Jest test files.
  *

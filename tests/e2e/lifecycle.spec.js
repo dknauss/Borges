@@ -1,4 +1,3 @@
-/* eslint-disable jest/no-done-callback */
 const { test, expect } = require('@playwright/test');
 const { waitForEditorReady } = require('./helpers/editor');
 
@@ -363,7 +362,7 @@ async function seedPluginTransient(page) {
 				}),
 			});
 			return response.status;
-		} catch (error) {
+		} catch {
 			return null;
 		}
 	});

@@ -1,4 +1,3 @@
-/* eslint-disable jest/no-done-callback */
 const { test, expect } = require('@playwright/test');
 
 // Configure via environment variables when running against a specific WordPress install:

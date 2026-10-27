@@ -1,4 +1,3 @@
-/* eslint-disable jest/no-done-callback */
 const { test, expect } = require('@playwright/test');
 const { insertBlock, waitForEditorReady } = require('./helpers/editor');
 

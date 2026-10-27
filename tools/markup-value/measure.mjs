@@ -90,9 +90,9 @@ function truth(item) {
 /**
  * Whether an extracted value matches the truth for a field.
  *
- * @param {string} field    Field name from FIELDS.
- * @param {*}      expected Ground-truth value.
- * @param {*}      actual   Extracted value.
+ * @param {string}  field    Field name from FIELDS.
+ * @param {unknown} expected Ground-truth value.
+ * @param {unknown} actual   Extracted value.
  */
 function matches(field, expected, actual) {
 	if (actual === undefined || actual === null || actual === '') {
@@ -219,9 +219,9 @@ function fromCsl(csl) {
  * unlabeled: a reader needs a citation parser or an LLM to say which words
  * are the title, the journal, or the publisher.
  *
- * @param {string} field    Field name from FIELDS.
- * @param {*}      expected Ground-truth value.
- * @param {string} text     The entry's text and link targets.
+ * @param {string}  field    Field name from FIELDS.
+ * @param {unknown} expected Ground-truth value.
+ * @param {string}  text     The entry's text and link targets.
  */
 function fromText(field, expected, text) {
 	if (field === 'isbn') {
@@ -495,7 +495,7 @@ async function launchChromium() {
 	const { chromium } = require('@playwright/test');
 	try {
 		return await chromium.launch();
-	} catch (error) {
+	} catch {
 		const executablePath =
 			process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium';
 		return chromium.launch({ executablePath });
@@ -507,7 +507,6 @@ async function browserChecks(browser, url) {
 	await page.goto(url, { waitUntil: 'load' });
 	await page.addScriptTag({ path: require.resolve('axe-core/axe.min.js') });
 	const axe = await page.evaluate(async () => {
-		// eslint-disable-next-line no-undef
 		const result = await window.axe.run(document, {
 			resultTypes: ['violations'],
 		});

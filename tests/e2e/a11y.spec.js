@@ -1,4 +1,4 @@
-/* eslint-disable jest/no-done-callback, @wordpress/no-global-active-element */
+/* eslint-disable @wordpress/no-global-active-element */
 const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 const {

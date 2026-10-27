@@ -177,9 +177,9 @@ function isUnformatted(citation) {
  * For each citation in display order, the author names to replace with
  * three hyphens, or null.
  *
- * @param {Array}    citations   Citations in display order.
- * @param {string}   styleKey    Citation style.
- * @param {Function} displayText (citation) => its display text.
+ * @param {Array}                        citations   Citations in display order.
+ * @param {string}                       styleKey    Citation style.
+ * @param {(citation: Object) => string} displayText Gives a citation's display text.
  * @return {Array<string|null>} Per-citation prefix.
  */
 export function getRepeatedAuthorPrefixes(citations, styleKey, displayText) {

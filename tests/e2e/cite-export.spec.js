@@ -1,4 +1,3 @@
-/* eslint-disable jest/no-done-callback */
 /**
  * Frontend regression coverage for the per-entry Cite / Export affordances
  * (shipped in 1.4.x via PR #37). Guards the deterministic half of the original
