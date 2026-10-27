@@ -15,20 +15,20 @@ const ENGLISH_ARTICLES = /^(a|an|the)\s+/i;
  * @param {string} locale Style locale, such as pt-BR.
  * @return {RegExp} Pattern for one leading article and the space after it.
  */
-export function getLeadingArticlesPattern(locale = 'en-US') {
-	const language = locale.split('-')[0].toLowerCase();
-	const articles = new Set([
+export function getLeadingArticlesPattern( locale = 'en-US' ) {
+	const language = locale.split( '-' )[ 0 ].toLowerCase();
+	const articles = new Set( [
 		...styleData.leadingArticles.en,
-		...(styleData.leadingArticles[language] || []),
-	]);
+		...( styleData.leadingArticles[ language ] || [] ),
+	] );
 
-	return new RegExp(`^(${[...articles].join('|')})\\s+`, 'i');
+	return new RegExp( `^(${ [ ...articles ].join( '|' ) })\\s+`, 'i' );
 }
 
-function getPrimaryContributors(csl = {}) {
+function getPrimaryContributors( csl = {} ) {
 	return (
-		(csl.author && csl.author.length && csl.author) ||
-		(csl.editor && csl.editor.length && csl.editor) ||
+		( csl.author && csl.author.length && csl.author ) ||
+		( csl.editor && csl.editor.length && csl.editor ) ||
 		null
 	);
 }
@@ -40,8 +40,8 @@ function getPrimaryContributors(csl = {}) {
  * @param {RegExp} articles Leading-article pattern (getLeadingArticlesPattern()).
  * @return {string} Title without leading article.
  */
-function stripArticles(title, articles = ENGLISH_ARTICLES) {
-	return (title || '').replace(articles, '');
+function stripArticles( title, articles = ENGLISH_ARTICLES ) {
+	return ( title || '' ).replace( articles, '' );
 }
 
 /**
@@ -54,9 +54,9 @@ function stripArticles(title, articles = ENGLISH_ARTICLES) {
  * @param {Object|null} particles   `{ demote }`, or null for the legacy key.
  * @return {string} Family sort string, or '' when the name has none.
  */
-function getContributorFamily(contributor = {}, particles = null) {
+function getContributorFamily( contributor = {}, particles = null ) {
 	return particles
-		? getSortFamily(contributor, particles.demote)
+		? getSortFamily( contributor, particles.demote )
 		: contributor.family || '';
 }
 
@@ -73,17 +73,17 @@ function getAuthorSort(
 	particles = null,
 	articles = ENGLISH_ARTICLES
 ) {
-	const primaryContributors = getPrimaryContributors(csl);
+	const primaryContributors = getPrimaryContributors( csl );
 
-	if (!primaryContributors) {
+	if ( ! primaryContributors ) {
 		return csl.title
-			? stripArticles(csl.title, articles).toLowerCase()
+			? stripArticles( csl.title, articles ).toLowerCase()
 			: '\uffff';
 	}
 
-	const first = primaryContributors[0];
+	const first = primaryContributors[ 0 ];
 	return (
-		getContributorFamily(first, particles) ||
+		getContributorFamily( first, particles ) ||
 		first.literal ||
 		''
 	).toLowerCase();
@@ -96,14 +96,14 @@ function getAuthorSort(
  * @param {Object} csl CSL-JSON object.
  * @return {number} Year or Infinity if not present.
  */
-function getSortableYear(csl = {}) {
+function getSortableYear( csl = {} ) {
 	if (
 		csl.issued &&
-		csl.issued['date-parts'] &&
-		csl.issued['date-parts'][0] &&
-		csl.issued['date-parts'][0][0]
+		csl.issued[ 'date-parts' ] &&
+		csl.issued[ 'date-parts' ][ 0 ] &&
+		csl.issued[ 'date-parts' ][ 0 ][ 0 ]
 	) {
-		return csl.issued['date-parts'][0][0];
+		return csl.issued[ 'date-parts' ][ 0 ][ 0 ];
 	}
 
 	return Infinity;
@@ -116,79 +116,83 @@ function getSortableYear(csl = {}) {
  * @param {RegExp} articles Leading-article pattern.
  * @return {string} Lowercase title without leading articles.
  */
-function getTitleSort(csl = {}, articles = ENGLISH_ARTICLES) {
-	return stripArticles(csl.title || '', articles).toLowerCase();
+function getTitleSort( csl = {}, articles = ENGLISH_ARTICLES ) {
+	return stripArticles( csl.title || '', articles ).toLowerCase();
 }
 
-function compareAuthors(a, b, locale, { particles, articles }) {
-	const authorA = getAuthorSort(a.csl, particles, articles);
-	const authorB = getAuthorSort(b.csl, particles, articles);
+function compareAuthors( a, b, locale, { particles, articles } ) {
+	const authorA = getAuthorSort( a.csl, particles, articles );
+	const authorB = getAuthorSort( b.csl, particles, articles );
 
-	return authorA.localeCompare(authorB, locale, {
+	return authorA.localeCompare( authorB, locale, {
 		sensitivity: 'base',
-	});
+	} );
 }
 
-function compareTitles(a, b, locale, { articles }) {
-	const titleA = getTitleSort(a.csl, articles);
-	const titleB = getTitleSort(b.csl, articles);
+function compareTitles( a, b, locale, { articles } ) {
+	const titleA = getTitleSort( a.csl, articles );
+	const titleB = getTitleSort( b.csl, articles );
 
-	return titleA.localeCompare(titleB, locale, {
+	return titleA.localeCompare( titleB, locale, {
 		sensitivity: 'base',
-	});
+	} );
 }
 
-function compareYears(a, b) {
-	return getSortableYear(a.csl) - getSortableYear(b.csl);
+function compareYears( a, b ) {
+	return getSortableYear( a.csl ) - getSortableYear( b.csl );
 }
 
-function normalizeContributorKey(contributor = {}, particles = null) {
-	const family = getContributorFamily(contributor, particles)
+function normalizeContributorKey( contributor = {}, particles = null ) {
+	const family = getContributorFamily( contributor, particles )
 		.trim()
 		.toLowerCase();
-	const given = (contributor.given || '').trim().toLowerCase();
-	const literal = (contributor.literal || '').trim().toLowerCase();
+	const given = ( contributor.given || '' ).trim().toLowerCase();
+	const literal = ( contributor.literal || '' ).trim().toLowerCase();
 
-	return family ? `${family}|${given}` : literal;
+	return family ? `${ family }|${ given }` : literal;
 }
 
-function getAuthorChain(csl = {}, particles = null) {
-	const primaryContributors = getPrimaryContributors(csl) || [];
-	return primaryContributors.map((contributor) =>
-		normalizeContributorKey(contributor, particles)
+function getAuthorChain( csl = {}, particles = null ) {
+	const primaryContributors = getPrimaryContributors( csl ) || [];
+	return primaryContributors.map( ( contributor ) =>
+		normalizeContributorKey( contributor, particles )
 	);
 }
 
-function compareAuthorChains(chainA, chainB, locale) {
-	const firstCmp = (chainA[0] || '').localeCompare(chainB[0] || '', locale, {
-		sensitivity: 'base',
-	});
+function compareAuthorChains( chainA, chainB, locale ) {
+	const firstCmp = ( chainA[ 0 ] || '' ).localeCompare(
+		chainB[ 0 ] || '',
+		locale,
+		{
+			sensitivity: 'base',
+		}
+	);
 
-	if (firstCmp !== 0) {
+	if ( firstCmp !== 0 ) {
 		return firstCmp;
 	}
 
-	if (chainA.length !== chainB.length) {
-		if (chainA.length === 1) {
+	if ( chainA.length !== chainB.length ) {
+		if ( chainA.length === 1 ) {
 			return -1;
 		}
 
-		if (chainB.length === 1) {
+		if ( chainB.length === 1 ) {
 			return 1;
 		}
 	}
 
-	const chainLength = Math.min(chainA.length, chainB.length);
-	for (let index = 1; index < chainLength; index++) {
-		const contributorCmp = chainA[index].localeCompare(
-			chainB[index],
+	const chainLength = Math.min( chainA.length, chainB.length );
+	for ( let index = 1; index < chainLength; index++ ) {
+		const contributorCmp = chainA[ index ].localeCompare(
+			chainB[ index ],
 			locale,
 			{
 				sensitivity: 'base',
 			}
 		);
 
-		if (contributorCmp !== 0) {
+		if ( contributorCmp !== 0 ) {
 			return contributorCmp;
 		}
 	}
@@ -210,18 +214,18 @@ function compareAuthorChains(chainA, chainB, locale) {
  * @param {Object} rule   Sort rule from sortCitations().
  * @return {number} Comparison result.
  */
-function compareAuthorChainsOrKeys(a, b, locale, rule) {
-	const chainA = getAuthorChain(a.csl, rule.particles);
-	const chainB = getAuthorChain(b.csl, rule.particles);
+function compareAuthorChainsOrKeys( a, b, locale, rule ) {
+	const chainA = getAuthorChain( a.csl, rule.particles );
+	const chainB = getAuthorChain( b.csl, rule.particles );
 
-	if (chainA.length && chainB.length) {
-		const chainCmp = compareAuthorChains(chainA, chainB, locale);
-		if (chainCmp !== 0) {
+	if ( chainA.length && chainB.length ) {
+		const chainCmp = compareAuthorChains( chainA, chainB, locale );
+		if ( chainCmp !== 0 ) {
 			return chainCmp;
 		}
 	}
 
-	return compareAuthors(a, b, locale, rule);
+	return compareAuthors( a, b, locale, rule );
 }
 
 /**
@@ -239,46 +243,46 @@ function compareAuthorChainsOrKeys(a, b, locale, rule) {
  * @param {Object} rule   Sort rule from sortCitations().
  * @return {number} Comparison result.
  */
-function compareNotes(a, b, locale, rule) {
+function compareNotes( a, b, locale, rule ) {
 	const authorCmp = rule.authorChains
-		? compareAuthorChainsOrKeys(a, b, locale, rule)
-		: compareAuthors(a, b, locale, rule);
-	if (authorCmp !== 0) {
+		? compareAuthorChainsOrKeys( a, b, locale, rule )
+		: compareAuthors( a, b, locale, rule );
+	if ( authorCmp !== 0 ) {
 		return authorCmp;
 	}
 
-	const titleCmp = compareTitles(a, b, locale, rule);
-	if (titleCmp !== 0) {
+	const titleCmp = compareTitles( a, b, locale, rule );
+	if ( titleCmp !== 0 ) {
 		return titleCmp;
 	}
 
-	return compareYears(a, b);
+	return compareYears( a, b );
 }
 
-function compareAuthorDate(a, b, locale, rule) {
-	const authorCmp = compareAuthorChainsOrKeys(a, b, locale, rule);
-	if (authorCmp !== 0) {
+function compareAuthorDate( a, b, locale, rule ) {
+	const authorCmp = compareAuthorChainsOrKeys( a, b, locale, rule );
+	if ( authorCmp !== 0 ) {
 		return authorCmp;
 	}
 
-	const yearCmp = compareYears(a, b);
-	if (yearCmp !== 0) {
+	const yearCmp = compareYears( a, b );
+	if ( yearCmp !== 0 ) {
 		return yearCmp;
 	}
 
-	return compareTitles(a, b, locale, rule);
+	return compareTitles( a, b, locale, rule );
 }
 
-function getComparatorForFamily(family, locale, rule) {
-	switch (family) {
+function getComparatorForFamily( family, locale, rule ) {
+	switch ( family ) {
 		case 'notes':
-			return (a, b) => compareNotes(a, b, locale, rule);
+			return ( a, b ) => compareNotes( a, b, locale, rule );
 		case 'author-date':
-			return (a, b) => compareAuthorDate(a, b, locale, rule);
+			return ( a, b ) => compareAuthorDate( a, b, locale, rule );
 		case 'numeric':
 			return null;
 		default:
-			return (a, b) => compareAuthorDate(a, b, locale, rule);
+			return ( a, b ) => compareAuthorDate( a, b, locale, rule );
 	}
 }
 
@@ -324,7 +328,7 @@ export function sortCitations(
 		notesAuthorChains = true,
 	} = {}
 ) {
-	const style = getStyleDefinition(styleKey);
+	const style = getStyleDefinition( styleKey );
 	const locale = style.locale || 'en-US';
 	const rule = {
 		particles: particleAwareSort
@@ -332,24 +336,24 @@ export function sortCitations(
 					demote: demotesParticleForSort(
 						style.demoteNonDroppingParticle
 					),
-			  }
+				}
 			: null,
 		articles: localeArticles
-			? getLeadingArticlesPattern(locale)
+			? getLeadingArticlesPattern( locale )
 			: ENGLISH_ARTICLES,
 		authorChains: notesAuthorChains,
 	};
-	const comparator = getComparatorForFamily(style.family, locale, rule);
+	const comparator = getComparatorForFamily( style.family, locale, rule );
 
-	if (comparator === null) {
-		return [...citations];
+	if ( comparator === null ) {
+		return [ ...citations ];
 	}
 
-	return [...citations]
-		.map((citation, index) => ({ citation, index }))
-		.sort((left, right) => {
-			const comparison = comparator(left.citation, right.citation);
+	return [ ...citations ]
+		.map( ( citation, index ) => ( { citation, index } ) )
+		.sort( ( left, right ) => {
+			const comparison = comparator( left.citation, right.citation );
 			return comparison === 0 ? left.index - right.index : comparison;
-		})
-		.map(({ citation }) => citation);
+		} )
+		.map( ( { citation } ) => citation );
 }

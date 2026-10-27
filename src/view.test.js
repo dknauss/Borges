@@ -10,147 +10,147 @@ import {
 	buildCiteExportPanels,
 } from './view';
 
-describe('applyExportFilenames (cite/export download filename PE)', () => {
-	afterEach(() => {
+describe( 'applyExportFilenames (cite/export download filename PE)', () => {
+	afterEach( () => {
 		document.body.innerHTML = '';
-	});
+	} );
 
-	function panel(inner) {
-		document.body.innerHTML = `<div class="bibliography-builder-cite-export">${inner}</div>`;
+	function panel( inner ) {
+		document.body.innerHTML = `<div class="bibliography-builder-cite-export">${ inner }</div>`;
 	}
 
-	it('copies data-cite-export-filename onto the download attribute', () => {
+	it( 'copies data-cite-export-filename onto the download attribute', () => {
 		panel(
 			'<a href="data:text/plain,x" download data-cite-export-filename="citation-abc.ris">RIS</a>'
 		);
 
-		applyExportFilenames(document);
+		applyExportFilenames( document );
 
-		expect(document.querySelector('a').getAttribute('download')).toBe(
+		expect( document.querySelector( 'a' ).getAttribute( 'download' ) ).toBe(
 			'citation-abc.ris'
 		);
-	});
+	} );
 
-	it('sets the correct per-format name on every export link', () => {
+	it( 'sets the correct per-format name on every export link', () => {
 		panel(
 			[
 				'<a download data-cite-export-filename="citation-1.ris">RIS</a>',
 				'<a download data-cite-export-filename="citation-1.csl.json">CSL-JSON</a>',
 				'<a download data-cite-export-filename="citation-1.bib">BibTeX</a>',
 				'<a download data-cite-export-filename="citation-1.biblatex.bib">BibLaTeX</a>',
-			].join('')
+			].join( '' )
 		);
 
-		applyExportFilenames(document);
+		applyExportFilenames( document );
 
-		const names = [...document.querySelectorAll('a')].map((a) =>
-			a.getAttribute('download')
+		const names = [ ...document.querySelectorAll( 'a' ) ].map( ( a ) =>
+			a.getAttribute( 'download' )
 		);
-		expect(names).toEqual([
+		expect( names ).toEqual( [
 			'citation-1.ris',
 			'citation-1.csl.json',
 			'citation-1.bib',
 			'citation-1.biblatex.bib',
-		]);
-	});
+		] );
+	} );
 
-	it('leaves links without the data attribute untouched', () => {
-		panel('<a href="https://example.com">External</a>');
+	it( 'leaves links without the data attribute untouched', () => {
+		panel( '<a href="https://example.com">External</a>' );
 
-		applyExportFilenames(document);
+		applyExportFilenames( document );
 
-		expect(document.querySelector('a').hasAttribute('download')).toBe(
+		expect( document.querySelector( 'a' ).hasAttribute( 'download' ) ).toBe(
 			false
 		);
-	});
-});
+	} );
+} );
 
-describe('attachCiteCopy (cite copy-to-clipboard PE)', () => {
+describe( 'attachCiteCopy (cite copy-to-clipboard PE)', () => {
 	let writeText;
 
-	beforeEach(() => {
+	beforeEach( () => {
 		writeText = jest.fn().mockResolvedValue();
-		Object.defineProperty(window.navigator, 'clipboard', {
+		Object.defineProperty( window.navigator, 'clipboard', {
 			configurable: true,
 			value: { writeText },
-		});
-	});
+		} );
+	} );
 
-	afterEach(() => {
+	afterEach( () => {
 		document.body.innerHTML = '';
 		jest.useRealTimers();
-	});
+	} );
 
-	function copyPanel(citeText = 'Smith, A. Example. 2024.') {
-		document.body.innerHTML = `<div class="bibliography-builder-cite-export"><button class="bibliography-builder-cite-copy" data-cite-text="${citeText}">Copy citation</button></div>`;
-		return document.querySelector('button');
+	function copyPanel( citeText = 'Smith, A. Example. 2024.' ) {
+		document.body.innerHTML = `<div class="bibliography-builder-cite-export"><button class="bibliography-builder-cite-copy" data-cite-text="${ citeText }">Copy citation</button></div>`;
+		return document.querySelector( 'button' );
 	}
 
-	it('copies the citation text to the clipboard on click', () => {
-		const button = copyPanel('Smith, A. Example. 2024.');
-		attachCiteCopy(document);
+	it( 'copies the citation text to the clipboard on click', () => {
+		const button = copyPanel( 'Smith, A. Example. 2024.' );
+		attachCiteCopy( document );
 		button.click();
-		expect(writeText).toHaveBeenCalledWith('Smith, A. Example. 2024.');
-	});
+		expect( writeText ).toHaveBeenCalledWith( 'Smith, A. Example. 2024.' );
+	} );
 
-	it('does nothing when there is no cite text', () => {
+	it( 'does nothing when there is no cite text', () => {
 		document.body.innerHTML =
 			'<div class="bibliography-builder-cite-export"><button class="bibliography-builder-cite-copy" data-cite-text="">Copy citation</button></div>';
-		attachCiteCopy(document);
-		document.querySelector('button').click();
-		expect(writeText).not.toHaveBeenCalled();
-	});
+		attachCiteCopy( document );
+		document.querySelector( 'button' ).click();
+		expect( writeText ).not.toHaveBeenCalled();
+	} );
 
-	it('binds each button once even if called repeatedly', () => {
-		const button = copyPanel('X');
-		attachCiteCopy(document);
-		attachCiteCopy(document);
+	it( 'binds each button once even if called repeatedly', () => {
+		const button = copyPanel( 'X' );
+		attachCiteCopy( document );
+		attachCiteCopy( document );
 		button.click();
-		expect(writeText).toHaveBeenCalledTimes(1);
-	});
+		expect( writeText ).toHaveBeenCalledTimes( 1 );
+	} );
 
-	it('shows copied feedback then restores the original label', async () => {
+	it( 'shows copied feedback then restores the original label', async () => {
 		jest.useFakeTimers();
-		const button = copyPanel('X');
-		attachCiteCopy(document);
+		const button = copyPanel( 'X' );
+		attachCiteCopy( document );
 		button.click();
 		await Promise.resolve();
-		expect(button.textContent).toBe('Copied');
-		expect(button.classList.contains('is-copied')).toBe(true);
-		jest.advanceTimersByTime(2000);
-		expect(button.textContent).toBe('Copy citation');
-		expect(button.classList.contains('is-copied')).toBe(false);
-	});
+		expect( button.textContent ).toBe( 'Copied' );
+		expect( button.classList.contains( 'is-copied' ) ).toBe( true );
+		jest.advanceTimersByTime( 2000 );
+		expect( button.textContent ).toBe( 'Copy citation' );
+		expect( button.classList.contains( 'is-copied' ) ).toBe( false );
+	} );
 
-	it('shows a server-supplied copied label', async () => {
-		const button = copyPanel('X');
-		button.setAttribute('data-copied-label', 'Copié');
-		attachCiteCopy(document);
+	it( 'shows a server-supplied copied label', async () => {
+		const button = copyPanel( 'X' );
+		button.setAttribute( 'data-copied-label', 'Copié' );
+		attachCiteCopy( document );
 		button.click();
 		await Promise.resolve();
 
-		expect(button.textContent).toBe('Copié');
-	});
-});
+		expect( button.textContent ).toBe( 'Copié' );
+	} );
+} );
 
-describe('view.js translation', () => {
-	it('loads no i18n library: labels arrive translated from the server', () => {
+describe( 'view.js translation', () => {
+	it( 'loads no i18n library: labels arrive translated from the server', () => {
 		// includes/frontend-labels.php translates the saved labels as the block
 		// renders. Importing @wordpress/i18n here would add wp-i18n and
 		// wp-hooks to every page that shows a bibliography.
-		const source = readFileSync(join(__dirname, 'view.js'), 'utf8');
+		const source = readFileSync( join( __dirname, 'view.js' ), 'utf8' );
 
-		expect(source).not.toMatch(/@wordpress\/i18n|cite-export-labels/);
-	});
-});
+		expect( source ).not.toMatch( /@wordpress\/i18n|cite-export-labels/ );
+	} );
+} );
 
-describe('buildCiteExportPanels (panel built from saved data)', () => {
-	afterEach(() => {
+describe( 'buildCiteExportPanels (panel built from saved data)', () => {
+	afterEach( () => {
 		document.body.innerHTML = '';
-	});
+	} );
 
-	function bibliography(entryAttributes, sectionAttributes = '') {
-		document.body.innerHTML = `<section class="wp-block-bibliography-builder-bibliography"${sectionAttributes}><ul><li id="ref-a"${entryAttributes}><span class="bibliography-builder-entry-text">Alpha, Ada. <i>A Book</i>.</span></li></ul></section>`;
+	function bibliography( entryAttributes, sectionAttributes = '' ) {
+		document.body.innerHTML = `<section class="wp-block-bibliography-builder-bibliography"${ sectionAttributes }><ul><li id="ref-a"${ entryAttributes }><span class="bibliography-builder-entry-text">Alpha, Ada. <i>A Book</i>.</span></li></ul></section>`;
 	}
 
 	const fullData =
@@ -158,109 +158,117 @@ describe('buildCiteExportPanels (panel built from saved data)', () => {
 		' data-cite-ris="TY  - BOOK&#10;ER  - " data-cite-csl-json="{&quot;type&quot;: &quot;book&quot;}&#10;"' +
 		' data-cite-bibtex="@book{a}" data-cite-biblatex="@book{a, date = {2018}}"';
 
-	it('builds the same panel that save() used to write, after the entry text', () => {
-		bibliography(fullData);
-		buildCiteExportPanels(document);
+	it( 'builds the same panel that save() used to write, after the entry text', () => {
+		bibliography( fullData );
+		buildCiteExportPanels( document );
 
-		const entry = document.querySelector('#ref-a');
+		const entry = document.querySelector( '#ref-a' );
 		const details = entry.lastElementChild;
 
 		expect(
-			details.matches('details.bibliography-builder-cite-export')
-		).toBe(true);
-		expect(details.querySelector('summary').textContent).toBe(
+			details.matches( 'details.bibliography-builder-cite-export' )
+		).toBe( true );
+		expect( details.querySelector( 'summary' ).textContent ).toBe(
 			'Cite / Export'
 		);
 
-		const copy = details.querySelector('.bibliography-builder-cite-copy');
-		expect(copy.getAttribute('type')).toBe('button');
-		expect(copy.getAttribute('data-cite-text')).toBe('Alpha, Ada. A Book.');
-		expect(copy.getAttribute('data-copied-label')).toBe('Copied');
+		const copy = details.querySelector( '.bibliography-builder-cite-copy' );
+		expect( copy.getAttribute( 'type' ) ).toBe( 'button' );
+		expect( copy.getAttribute( 'data-cite-text' ) ).toBe(
+			'Alpha, Ada. A Book.'
+		);
+		expect( copy.getAttribute( 'data-copied-label' ) ).toBe( 'Copied' );
 
-		const links = [...details.querySelectorAll('a')];
-		expect(links.map((a) => a.textContent)).toEqual([
+		const links = [ ...details.querySelectorAll( 'a' ) ];
+		expect( links.map( ( a ) => a.textContent ) ).toEqual( [
 			'RIS',
 			'CSL-JSON',
 			'BibTeX',
 			'BibLaTeX',
-		]);
-		expect(links.map((a) => a.getAttribute('download'))).toEqual([
+		] );
+		expect( links.map( ( a ) => a.getAttribute( 'download' ) ) ).toEqual( [
 			'Alpha-2018.ris',
 			'Alpha-2018.csl.json',
 			'Alpha-2018.bib',
 			'Alpha-2018.biblatex.bib',
-		]);
-		expect(decodeURIComponent(links[0].getAttribute('href'))).toBe(
+		] );
+		expect( decodeURIComponent( links[ 0 ].getAttribute( 'href' ) ) ).toBe(
 			'data:application/x-research-info-systems;charset=utf-8,TY  - BOOK\nER  - '
 		);
-		expect(decodeURIComponent(links[1].getAttribute('href'))).toBe(
+		expect( decodeURIComponent( links[ 1 ].getAttribute( 'href' ) ) ).toBe(
 			'data:application/vnd.citationstyles.csl+json;charset=utf-8,{"type": "book"}\n'
 		);
-	});
+	} );
 
-	it('offers only the downloads the entry has data for', () => {
+	it( 'offers only the downloads the entry has data for', () => {
 		bibliography(
 			' data-cite-text="x" data-cite-filename="x" data-cite-ris="TY  - BOOK" data-cite-csl-json="{}"'
 		);
-		buildCiteExportPanels(document);
+		buildCiteExportPanels( document );
 
 		expect(
-			[...document.querySelectorAll('a')].map((a) => a.textContent)
-		).toEqual(['RIS', 'CSL-JSON']);
-	});
+			[ ...document.querySelectorAll( 'a' ) ].map(
+				( a ) => a.textContent
+			)
+		).toEqual( [ 'RIS', 'CSL-JSON' ] );
+	} );
 
-	it('uses translated labels from the section when the server supplies them', () => {
+	it( 'uses translated labels from the section when the server supplies them', () => {
 		bibliography(
 			fullData,
 			` data-cite-labels='{"toggle":"Citer / Exporter","copied":"Copié"}'`
 		);
-		buildCiteExportPanels(document);
+		buildCiteExportPanels( document );
 
-		expect(document.querySelector('summary').textContent).toBe(
+		expect( document.querySelector( 'summary' ).textContent ).toBe(
 			'Citer / Exporter'
 		);
 		expect(
 			document
-				.querySelector('.bibliography-builder-cite-copy')
-				.getAttribute('data-copied-label')
-		).toBe('Copié');
-		expect(document.querySelector('a').textContent).toBe('RIS');
-	});
+				.querySelector( '.bibliography-builder-cite-copy' )
+				.getAttribute( 'data-copied-label' )
+		).toBe( 'Copié' );
+		expect( document.querySelector( 'a' ).textContent ).toBe( 'RIS' );
+	} );
 
-	it('falls back to English labels and a generic filename on bad data', () => {
+	it( 'falls back to English labels and a generic filename on bad data', () => {
 		bibliography(
 			' data-cite-ris="TY  - BOOK" data-cite-csl-json="{}"',
 			` data-cite-labels="not json"`
 		);
-		buildCiteExportPanels(document);
+		buildCiteExportPanels( document );
 
-		expect(document.querySelector('summary').textContent).toBe(
+		expect( document.querySelector( 'summary' ).textContent ).toBe(
 			'Cite / Export'
 		);
-		const copy = document.querySelector('.bibliography-builder-cite-copy');
-		expect(copy.getAttribute('data-cite-text')).toBe('');
+		const copy = document.querySelector(
+			'.bibliography-builder-cite-copy'
+		);
+		expect( copy.getAttribute( 'data-cite-text' ) ).toBe( '' );
 		expect(
-			[...document.querySelectorAll('a')].map((a) =>
-				a.getAttribute('download')
+			[ ...document.querySelectorAll( 'a' ) ].map( ( a ) =>
+				a.getAttribute( 'download' )
 			)
-		).toEqual(['citation.ris', 'citation.csl.json']);
-	});
+		).toEqual( [ 'citation.ris', 'citation.csl.json' ] );
+	} );
 
-	it('falls back to the canonical labels save() and the PHP filter use', () => {
-		bibliography(fullData);
-		buildCiteExportPanels(document);
+	it( 'falls back to the canonical labels save() and the PHP filter use', () => {
+		bibliography( fullData );
+		buildCiteExportPanels( document );
 
-		const copy = document.querySelector('.bibliography-builder-cite-copy');
+		const copy = document.querySelector(
+			'.bibliography-builder-cite-copy'
+		);
 
 		// view.js keeps its own copy so the front end needs no wp-i18n.
-		expect({
-			toggle: document.querySelector('summary').textContent,
+		expect( {
+			toggle: document.querySelector( 'summary' ).textContent,
 			copy: copy.textContent,
-			copied: copy.getAttribute('data-copied-label'),
-			links: [...document.querySelectorAll('a')].map(
-				(a) => a.textContent
+			copied: copy.getAttribute( 'data-copied-label' ),
+			links: [ ...document.querySelectorAll( 'a' ) ].map(
+				( a ) => a.textContent
 			),
-		}).toEqual({
+		} ).toEqual( {
 			toggle: CITE_EXPORT_LABELS.toggle,
 			copy: CITE_EXPORT_LABELS.copy,
 			copied: CITE_EXPORT_LABELS.copied,
@@ -270,44 +278,44 @@ describe('buildCiteExportPanels (panel built from saved data)', () => {
 				CITE_EXPORT_LABELS.bibtex,
 				CITE_EXPORT_LABELS.biblatex,
 			],
-		});
+		} );
 		// Untranslated, the editor's labels are the canonical ones too.
-		expect(getTranslatedCiteExportLabels()).toEqual(CITE_EXPORT_LABELS);
-	});
+		expect( getTranslatedCiteExportLabels() ).toEqual( CITE_EXPORT_LABELS );
+	} );
 
-	it('builds each panel once, and leaves entries without data alone', () => {
-		bibliography(fullData);
+	it( 'builds each panel once, and leaves entries without data alone', () => {
+		bibliography( fullData );
 		document
-			.querySelector('ul')
+			.querySelector( 'ul' )
 			.insertAdjacentHTML(
 				'beforeend',
 				'<li id="ref-b"><span class="bibliography-builder-entry-text">Beta.</span></li>'
 			);
-		buildCiteExportPanels(document);
-		buildCiteExportPanels(document);
+		buildCiteExportPanels( document );
+		buildCiteExportPanels( document );
 
 		expect(
 			document.querySelectorAll(
 				'#ref-a .bibliography-builder-cite-export'
 			)
-		).toHaveLength(1);
+		).toHaveLength( 1 );
 		expect(
-			document.querySelector('#ref-b .bibliography-builder-cite-export')
+			document.querySelector( '#ref-b .bibliography-builder-cite-export' )
 		).toBeNull();
-	});
+	} );
 
-	it('wires the built copy button to the clipboard', () => {
-		const writeText = jest.fn(() => Promise.resolve());
-		Object.defineProperty(window.navigator, 'clipboard', {
+	it( 'wires the built copy button to the clipboard', () => {
+		const writeText = jest.fn( () => Promise.resolve() );
+		Object.defineProperty( window.navigator, 'clipboard', {
 			value: { writeText },
 			configurable: true,
-		});
-		bibliography(fullData);
-		buildCiteExportPanels(document);
-		attachCiteCopy(document);
+		} );
+		bibliography( fullData );
+		buildCiteExportPanels( document );
+		attachCiteCopy( document );
 
-		document.querySelector('.bibliography-builder-cite-copy').click();
+		document.querySelector( '.bibliography-builder-cite-copy' ).click();
 
-		expect(writeText).toHaveBeenCalledWith('Alpha, Ada. A Book.');
-	});
-});
+		expect( writeText ).toHaveBeenCalledWith( 'Alpha, Ada. A Book.' );
+	} );
+} );

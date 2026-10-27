@@ -4,66 +4,66 @@ import { parsePastedInput } from '../lib/parser';
 import { partitionDuplicateCitations } from '../lib/deduplicate';
 import { computeExportStrings } from './compute-export-strings';
 
-jest.mock('@wordpress/element', () => {
-	const React = require('react');
+jest.mock( '@wordpress/element', () => {
+	const React = require( 'react' );
 	return { useCallback: React.useCallback };
-});
+} );
 
-jest.mock('@wordpress/i18n', () => ({
-	__: (text) => text,
-	_n: (single, plural, count) => (count === 1 ? single : plural),
-	sprintf: (template, ...values) =>
-		template.replace(/%((\d+)\$)?[sd]/g, (match, _pos, index) => {
-			const valueIndex = index ? Number(index) - 1 : 0;
-			return String(values[valueIndex] ?? '');
-		}),
-}));
+jest.mock( '@wordpress/i18n', () => ( {
+	__: ( text ) => text,
+	_n: ( single, plural, count ) => ( count === 1 ? single : plural ),
+	sprintf: ( template, ...values ) =>
+		template.replace( /%((\d+)\$)?[sd]/g, ( match, _pos, index ) => {
+			const valueIndex = index ? Number( index ) - 1 : 0;
+			return String( values[ valueIndex ] ?? '' );
+		} ),
+} ) );
 
-jest.mock('../lib/deduplicate', () => ({
+jest.mock( '../lib/deduplicate', () => ( {
 	partitionDuplicateCitations: jest.fn(),
-}));
+} ) );
 
-jest.mock('../lib/input-support', () => ({
+jest.mock( '../lib/input-support', () => ( {
 	SUPPORTED_INPUT_MESSAGE: 'supported input',
-}));
+} ) );
 
-jest.mock('../lib/sorter', () => ({
-	sortCitations: jest.fn((citations) => citations),
-}));
+jest.mock( '../lib/sorter', () => ( {
+	sortCitations: jest.fn( ( citations ) => citations ),
+} ) );
 
-jest.mock('./compute-export-strings', () => ({
-	computeExportStrings: jest.fn(async (cslObjects) =>
-		(cslObjects || []).map(() => ({
+jest.mock( './compute-export-strings', () => ( {
+	computeExportStrings: jest.fn( async ( cslObjects ) =>
+		( cslObjects || [] ).map( () => ( {
 			exportBibtex: 'BIBTEX',
 			exportBiblatex: 'BIBLATEX',
-		}))
+		} ) )
 	),
-}));
+} ) );
 
-jest.mock('../lib/citation-limits', () => ({
+jest.mock( '../lib/citation-limits', () => ( {
 	MAX_CITATIONS_PER_BIBLIOGRAPHY: 100,
-	getBibliographyLimitExceededMessage: jest.fn(() => 'exceeded'),
-	getBibliographyLimitReachedMessage: jest.fn(() => 'reached'),
-}));
+	getBibliographyLimitExceededMessage: jest.fn( () => 'exceeded' ),
+	getBibliographyLimitReachedMessage: jest.fn( () => 'reached' ),
+} ) );
 
-jest.mock('../lib/parser', () => ({ parsePastedInput: jest.fn() }));
+jest.mock( '../lib/parser', () => ( { parsePastedInput: jest.fn() } ) );
 
-jest.mock('../lib/formatting/csl', () => ({
-	formatBibliographyEntries: jest.fn((items) =>
-		items.map(() => 'Formatted entry')
+jest.mock( '../lib/formatting/csl', () => ( {
+	formatBibliographyEntries: jest.fn( ( items ) =>
+		items.map( () => 'Formatted entry' )
 	),
-}));
+} ) );
 
-function makeArgs(overrides = {}) {
+function makeArgs( overrides = {} ) {
 	const citationsRef = { current: [] };
 	return {
 		announce: jest.fn(),
-		beginAsyncOperation: jest.fn(() => 1),
+		beginAsyncOperation: jest.fn( () => 1 ),
 		citationStyle: 'apa-7',
 		citationsRef,
 		clearNotice: jest.fn(),
 		inputValue: '10.1234/example',
-		isCurrentAsyncOperation: jest.fn(() => true),
+		isCurrentAsyncOperation: jest.fn( () => true ),
 		outputCiteExport: true,
 		queueFocus: jest.fn(),
 		setAttributes: jest.fn(),
@@ -73,38 +73,38 @@ function makeArgs(overrides = {}) {
 	};
 }
 
-describe('useCitationImportActions — export-string pre-computation', () => {
-	beforeEach(() => {
+describe( 'useCitationImportActions — export-string pre-computation', () => {
+	beforeEach( () => {
 		jest.clearAllMocks();
-		parsePastedInput.mockResolvedValue({
-			entries: [{ id: 'new-1', csl: { title: 'Imported' } }],
+		parsePastedInput.mockResolvedValue( {
+			entries: [ { id: 'new-1', csl: { title: 'Imported' } } ],
 			errors: [],
 			truncated: false,
 			remainingInput: '',
 			skippedDuplicateCount: 0,
-		});
-		partitionDuplicateCitations.mockReturnValue({
-			uniqueEntries: [{ id: 'new-1', csl: { title: 'Imported' } }],
+		} );
+		partitionDuplicateCitations.mockReturnValue( {
+			uniqueEntries: [ { id: 'new-1', csl: { title: 'Imported' } } ],
 			duplicateEntries: [],
-		});
-		computeExportStrings.mockImplementation(async (cslObjects) =>
-			(cslObjects || []).map(() => ({
+		} );
+		computeExportStrings.mockImplementation( async ( cslObjects ) =>
+			( cslObjects || [] ).map( () => ( {
 				exportBibtex: 'BIBTEX',
 				exportBiblatex: 'BIBLATEX',
-			}))
+			} ) )
 		);
-	});
+	} );
 
-	it('stores exportBibtex/exportBiblatex on imported citations', async () => {
+	it( 'stores exportBibtex/exportBiblatex on imported citations', async () => {
 		const args = makeArgs();
-		const { result } = renderHook(() => useCitationImportActions(args));
+		const { result } = renderHook( () => useCitationImportActions( args ) );
 
-		await act(() => result.current.handleParse());
+		await act( () => result.current.handleParse() );
 
-		expect(args.setAttributes).toHaveBeenCalledTimes(1);
-		const saved = args.setAttributes.mock.calls[0][0].citations[0];
-		expect(saved.exportBibtex).toBe('BIBTEX');
-		expect(saved.exportBiblatex).toBe('BIBLATEX');
-		expect(saved.formattedText).toBe('Formatted entry');
-	});
-});
+		expect( args.setAttributes ).toHaveBeenCalledTimes( 1 );
+		const saved = args.setAttributes.mock.calls[ 0 ][ 0 ].citations[ 0 ];
+		expect( saved.exportBibtex ).toBe( 'BIBTEX' );
+		expect( saved.exportBiblatex ).toBe( 'BIBLATEX' );
+		expect( saved.formattedText ).toBe( 'Formatted entry' );
+	} );
+} );

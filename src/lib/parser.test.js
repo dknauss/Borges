@@ -1,20 +1,20 @@
-jest.mock('@citation-js/core', () =>
-	require('../__test-utils__/citation-js-mocks').citationJsCoreMock()
+jest.mock( '@citation-js/core', () =>
+	require( '../__test-utils__/citation-js-mocks' ).citationJsCoreMock()
 );
 
-jest.mock('@citation-js/plugin-doi', () =>
-	require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
+jest.mock( '@citation-js/plugin-doi', () =>
+	require( '../__test-utils__/citation-js-mocks' ).citationJsPluginMock()
 );
-jest.mock('@citation-js/plugin-bibtex', () =>
-	require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
+jest.mock( '@citation-js/plugin-bibtex', () =>
+	require( '../__test-utils__/citation-js-mocks' ).citationJsPluginMock()
 );
-jest.mock('@citation-js/plugin-ris', () =>
-	require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
+jest.mock( '@citation-js/plugin-ris', () =>
+	require( '../__test-utils__/citation-js-mocks' ).citationJsPluginMock()
 );
-jest.mock('./formatting/csl', () =>
-	require('../__test-utils__/citation-js-mocks').stubFormattingFactory()
+jest.mock( './formatting/csl', () =>
+	require( '../__test-utils__/citation-js-mocks' ).stubFormattingFactory()
 );
-jest.mock('@wordpress/api-fetch', () => jest.fn());
+jest.mock( '@wordpress/api-fetch', () => jest.fn() );
 
 import { Cite } from '@citation-js/core';
 import apiFetch from '@wordpress/api-fetch';
@@ -33,12 +33,12 @@ import { formatBibliographyEntries } from './formatting/csl';
 
 // parsePastedInput lazily imports './formatting/csl' at call time, so the
 // module registry must keep resolving to these file-level mock instances.
-const formattingCslMock = jest.requireMock('./formatting/csl');
-const apiFetchMock = jest.requireMock('@wordpress/api-fetch');
+const formattingCslMock = jest.requireMock( './formatting/csl' );
+const apiFetchMock = jest.requireMock( '@wordpress/api-fetch' );
 
-describe('validateAndSanitizeCsl', () => {
-	it('sanitizes nested values and normalizes issued date-parts', () => {
-		const sanitized = validateAndSanitizeCsl({
+describe( 'validateAndSanitizeCsl', () => {
+	it( 'sanitizes nested values and normalizes issued date-parts', () => {
+		const sanitized = validateAndSanitizeCsl( {
 			type: 'article-journal',
 			title: 'Safe title',
 			author: [
@@ -53,14 +53,14 @@ describe('validateAndSanitizeCsl', () => {
 				},
 			],
 			issued: {
-				'date-parts': [['2024', '5', '1']],
+				'date-parts': [ [ '2024', '5', '1' ] ],
 			},
 			extra: {
 				note: 'Retained',
 			},
-		});
+		} );
 
-		expect(sanitized).toMatchObject({
+		expect( sanitized ).toMatchObject( {
 			type: 'article-journal',
 			title: 'Safe title',
 			author: [
@@ -74,59 +74,61 @@ describe('validateAndSanitizeCsl', () => {
 				},
 			],
 			issued: {
-				'date-parts': [[2024, 5, 1]],
+				'date-parts': [ [ 2024, 5, 1 ] ],
 			},
 			extra: {
 				note: 'Retained',
 			},
-		});
+		} );
 		expect(
 			Object.prototype.hasOwnProperty.call(
-				sanitized.author[0].meta,
+				sanitized.author[ 0 ].meta,
 				'constructor'
 			)
-		).toBe(false);
-	});
+		).toBe( false );
+	} );
 
-	it('strips HTML tags from string fields', () => {
-		const sanitized = validateAndSanitizeCsl({
+	it( 'strips HTML tags from string fields', () => {
+		const sanitized = validateAndSanitizeCsl( {
 			type: 'article-journal',
 			title: '<i>\u201c</i>Contagious Air[s]\u201d: Wordsworth\u2019s Poetics and Politics of Immunity',
 			'container-title': 'European <i>Romantic</i> Review',
-		});
+		} );
 
-		expect(sanitized.title).toBe(
+		expect( sanitized.title ).toBe(
 			'\u201cContagious Air[s]\u201d: Wordsworth\u2019s Poetics and Politics of Immunity'
 		);
-		expect(sanitized['container-title']).toBe('European Romantic Review');
-	});
+		expect( sanitized[ 'container-title' ] ).toBe(
+			'European Romantic Review'
+		);
+	} );
 
-	it('strips nested HTML tags that survive a single replacement pass', () => {
-		const sanitized = validateAndSanitizeCsl({
+	it( 'strips nested HTML tags that survive a single replacement pass', () => {
+		const sanitized = validateAndSanitizeCsl( {
 			type: 'article-journal',
 			title: '<scr<script>ipt>alert(1)</scr</script>ipt>',
 			'container-title': '<<b>img src=x</b>>',
-		});
+		} );
 
 		// No intact HTML tags survive — leftover fragments are harmless text
-		expect(sanitized.title).not.toMatch(/<[^>]*>/u);
-		expect(sanitized['container-title']).not.toMatch(/<[^>]*>/u);
-	});
+		expect( sanitized.title ).not.toMatch( /<[^>]*>/u );
+		expect( sanitized[ 'container-title' ] ).not.toMatch( /<[^>]*>/u );
+	} );
 
-	it('rejects invalid scalar CSL fields like DOI objects', () => {
-		expect(() =>
-			validateAndSanitizeCsl({
+	it( 'rejects invalid scalar CSL fields like DOI objects', () => {
+		expect( () =>
+			validateAndSanitizeCsl( {
 				type: 'article-journal',
 				title: 'Unsafe DOI',
 				DOI: {
 					value: '10.1234/example',
 				},
-			})
-		).toThrow('Invalid CSL DOI.');
-	});
+			} )
+		).toThrow( 'Invalid CSL DOI.' );
+	} );
 
-	it('sanitizes editor and accessed fields using the same structured rules', () => {
-		const sanitized = validateAndSanitizeCsl({
+	it( 'sanitizes editor and accessed fields using the same structured rules', () => {
+		const sanitized = validateAndSanitizeCsl( {
 			type: 'webpage',
 			title: 'Structured webpage',
 			editor: [
@@ -136,11 +138,11 @@ describe('validateAndSanitizeCsl', () => {
 				},
 			],
 			accessed: {
-				'date-parts': [['2026', '4', '3']],
+				'date-parts': [ [ '2026', '4', '3' ] ],
 			},
-		});
+		} );
 
-		expect(sanitized).toMatchObject({
+		expect( sanitized ).toMatchObject( {
 			editor: [
 				{
 					family: 'Marks',
@@ -148,13 +150,13 @@ describe('validateAndSanitizeCsl', () => {
 				},
 			],
 			accessed: {
-				'date-parts': [[2026, 4, 3]],
+				'date-parts': [ [ 2026, 4, 3 ] ],
 			},
-		});
-	});
+		} );
+	} );
 
-	it('sanitizes reviewed-author as a CSL name list', () => {
-		const sanitized = validateAndSanitizeCsl({
+	it( 'sanitizes reviewed-author as a CSL name list', () => {
+		const sanitized = validateAndSanitizeCsl( {
 			type: 'review-book',
 			title: 'Review title',
 			'reviewed-author': [
@@ -163,125 +165,132 @@ describe('validateAndSanitizeCsl', () => {
 					given: 'Mary',
 				},
 			],
-		});
+		} );
 
-		expect(sanitized).toMatchObject({
+		expect( sanitized ).toMatchObject( {
 			'reviewed-author': [
 				{
 					family: 'Gabriel',
 					given: 'Mary',
 				},
 			],
-		});
-	});
-});
+		} );
+	} );
+} );
 
-describe('normalizeCrossRefCsl (CrossRef type mapping)', () => {
-	it('copies a journal article number to the CSL number variable', () => {
+describe( 'normalizeCrossRefCsl (CrossRef type mapping)', () => {
+	it( 'copies a journal article number to the CSL number variable', () => {
 		expect(
-			normalizeCrossRefCsl({
+			normalizeCrossRefCsl( {
 				type: 'journal-article',
 				'article-number': ' 108125 ',
 				page: '108125',
-			})
-		).toMatchObject({
+			} )
+		).toMatchObject( {
 			type: 'article-journal',
 			number: '108125',
 			// Trimmed too, so the editor can match the copy against it.
 			'article-number': '108125',
 			page: '108125',
-		});
+		} );
 		// An existing number wins, and other types are left alone.
 		expect(
-			normalizeCrossRefCsl({
+			normalizeCrossRefCsl( {
 				type: 'journal-article',
 				number: '7',
 				'article-number': '108125',
-			}).number
-		).toBe('7');
+			} ).number
+		).toBe( '7' );
 		expect(
-			normalizeCrossRefCsl({ type: 'book', 'article-number': '5' }).number
+			normalizeCrossRefCsl( { type: 'book', 'article-number': '5' } )
+				.number
 		).toBeUndefined();
 		expect(
-			normalizeCrossRefCsl({
+			normalizeCrossRefCsl( {
 				type: 'journal-article',
 				'article-number': 5,
-			}).number
+			} ).number
 		).toBeUndefined();
-	});
+	} );
 
-	it('maps CrossRef "monograph" to the CSL "book" type', () => {
-		expect(normalizeCrossRefCsl({ type: 'monograph' }).type).toBe('book');
-	});
-
-	it('maps other CrossRef book/reference types to valid CSL types', () => {
-		expect(normalizeCrossRefCsl({ type: 'edited-book' }).type).toBe('book');
-		expect(normalizeCrossRefCsl({ type: 'reference-book' }).type).toBe(
+	it( 'maps CrossRef "monograph" to the CSL "book" type', () => {
+		expect( normalizeCrossRefCsl( { type: 'monograph' } ).type ).toBe(
 			'book'
 		);
-		expect(normalizeCrossRefCsl({ type: 'reference-entry' }).type).toBe(
+	} );
+
+	it( 'maps other CrossRef book/reference types to valid CSL types', () => {
+		expect( normalizeCrossRefCsl( { type: 'edited-book' } ).type ).toBe(
+			'book'
+		);
+		expect( normalizeCrossRefCsl( { type: 'reference-book' } ).type ).toBe(
+			'book'
+		);
+		expect( normalizeCrossRefCsl( { type: 'reference-entry' } ).type ).toBe(
 			'entry-encyclopedia'
 		);
-		expect(normalizeCrossRefCsl({ type: 'book-section' }).type).toBe(
+		expect( normalizeCrossRefCsl( { type: 'book-section' } ).type ).toBe(
 			'chapter'
 		);
-	});
+	} );
 
-	it('keeps existing mappings (journal-article -> article-journal)', () => {
-		expect(normalizeCrossRefCsl({ type: 'journal-article' }).type).toBe(
+	it( 'keeps existing mappings (journal-article -> article-journal)', () => {
+		expect( normalizeCrossRefCsl( { type: 'journal-article' } ).type ).toBe(
 			'article-journal'
 		);
-	});
+	} );
 
-	it('falls back any unknown type to the generic "document"', () => {
-		expect(normalizeCrossRefCsl({ type: 'grant' }).type).toBe('document');
-		expect(normalizeCrossRefCsl({ type: 'totally-made-up' }).type).toBe(
+	it( 'falls back any unknown type to the generic "document"', () => {
+		expect( normalizeCrossRefCsl( { type: 'grant' } ).type ).toBe(
 			'document'
 		);
-	});
+		expect( normalizeCrossRefCsl( { type: 'totally-made-up' } ).type ).toBe(
+			'document'
+		);
+	} );
 
-	it('preserves other fields, and a monograph now passes validation', () => {
+	it( 'preserves other fields, and a monograph now passes validation', () => {
 		const csl = {
 			type: 'monograph',
 			title: 'The Structure of Scientific Revolutions',
-			author: [{ given: 'Thomas S.', family: 'Kuhn' }],
-			issued: { 'date-parts': [[2012]] },
+			author: [ { given: 'Thomas S.', family: 'Kuhn' } ],
+			issued: { 'date-parts': [ [ 2012 ] ] },
 		};
-		const normalized = normalizeCrossRefCsl(csl);
+		const normalized = normalizeCrossRefCsl( csl );
 
-		expect(normalized.title).toBe(
+		expect( normalized.title ).toBe(
 			'The Structure of Scientific Revolutions'
 		);
-		expect(() => validateAndSanitizeCsl(normalized)).not.toThrow();
-	});
-});
+		expect( () => validateAndSanitizeCsl( normalized ) ).not.toThrow();
+	} );
+} );
 
-describe('parsePastedInput', () => {
+describe( 'parsePastedInput', () => {
 	let originalCrypto;
 
-	beforeEach(() => {
+	beforeEach( () => {
 		jest.clearAllMocks();
 		clearDoiMetadataCache();
 		apiFetch.mockReset();
 		originalCrypto = global.crypto;
-		Object.defineProperty(global, 'crypto', {
+		Object.defineProperty( global, 'crypto', {
 			configurable: true,
 			value: {
 				...originalCrypto,
-				randomUUID: jest.fn(() => 'test-uuid'),
+				randomUUID: jest.fn( () => 'test-uuid' ),
 			},
-		});
-	});
+		} );
+	} );
 
-	afterEach(() => {
-		Object.defineProperty(global, 'crypto', {
+	afterEach( () => {
+		Object.defineProperty( global, 'crypto', {
 			configurable: true,
 			value: originalCrypto,
-		});
-	});
+		} );
+	} );
 
-	it('rejects parsed entries with invalid CSL shapes before persisting', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'rejects parsed entries with invalid CSL shapes before persisting', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: {
@@ -290,35 +299,35 @@ describe('parsePastedInput', () => {
 					title: 'Unsafe shape',
 				},
 			],
-		});
+		} );
 
-		const result = await parsePastedInput('10.1234/example-doi');
+		const result = await parsePastedInput( '10.1234/example-doi' );
 
-		expect(result.entries).toHaveLength(0);
-		expect(result.errors).toHaveLength(1);
-		expect(result.errors[0]).toMatch(/Invalid CSL type/);
-	});
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toHaveLength( 1 );
+		expect( result.errors[ 0 ] ).toMatch( /Invalid CSL type/ );
+	} );
 
-	it('preserves suspicious BibTeX title text as inert data', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'preserves suspicious BibTeX title text as inert data', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'book',
 					title: '<script>alert(1)</script>',
 				},
 			],
-		});
+		} );
 
 		const result = await parsePastedInput(
 			'@book{safe,title={<script>alert(1)</script>}}'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries[0].csl.title).toBe('alert(1)');
-	});
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries[ 0 ].csl.title ).toBe( 'alert(1)' );
+	} );
 
-	it('does not throw when review-title cleanup sees regex metacharacters in names', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'does not throw when review-title cleanup sees regex metacharacters in names', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
@@ -326,83 +335,89 @@ describe('parsePastedInput', () => {
 					'container-title': 'Example Review Journal',
 				},
 			],
-		});
+		} );
 
-		const result = await parsePastedInput('10.1234/review-metacharacters');
+		const result = await parsePastedInput(
+			'10.1234/review-metacharacters'
+		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0].csl.title).toContain('John Smith (Jr.).');
-	});
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ].csl.title ).toContain(
+			'John Smith (Jr.).'
+		);
+	} );
 
-	it('passes the requested style key through the formatting boundary', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'passes the requested style key through the formatting boundary', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
 					title: 'Example title',
 				},
 			],
-		});
+		} );
 
-		const result = await parsePastedInput('10.1234/example-doi', 'apa-7', {
+		const result = await parsePastedInput( '10.1234/example-doi', 'apa-7', {
 			deferFormatting: false,
-		});
+		} );
 
-		expect(result.entries).toHaveLength(1);
-		expect(formatBibliographyEntries).toHaveBeenCalledWith(
+		expect( result.entries ).toHaveLength( 1 );
+		expect( formatBibliographyEntries ).toHaveBeenCalledWith(
 			[
-				expect.objectContaining({
+				expect.objectContaining( {
 					type: 'article-journal',
 					title: 'Example title',
-				}),
+				} ),
 			],
 			'apa-7'
 		);
-		expect(result.entries[0].formattedText).toBe(
+		expect( result.entries[ 0 ].formattedText ).toBe(
 			'Formatted bibliography entry'
 		);
-	});
+	} );
 
-	it('defaults to parse-first behavior without formatter work', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'defaults to parse-first behavior without formatter work', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
 					title: 'Deferred formatting example',
 				},
 			],
-		});
+		} );
 
-		const result = await parsePastedInput('10.1234/deferred-formatting');
+		const result = await parsePastedInput( '10.1234/deferred-formatting' );
 
-		expect(formatBibliographyEntries).not.toHaveBeenCalled();
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0].formattedText).toBeNull();
-	});
+		expect( formatBibliographyEntries ).not.toHaveBeenCalled();
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ].formattedText ).toBeNull();
+	} );
 
-	it('returns no entries for empty or whitespace-only pasted input', async () => {
-		await expect(parsePastedInput('')).resolves.toMatchObject({
+	it( 'returns no entries for empty or whitespace-only pasted input', async () => {
+		await expect( parsePastedInput( '' ) ).resolves.toMatchObject( {
 			entries: [],
 			errors: [],
 			remainingInput: '',
-		});
-		await expect(parsePastedInput('   \n\t  ')).resolves.toMatchObject({
-			entries: [],
-			errors: [],
-			remainingInput: '',
-		});
-	});
+		} );
+		await expect( parsePastedInput( '   \n\t  ' ) ).resolves.toMatchObject(
+			{
+				entries: [],
+				errors: [],
+				remainingInput: '',
+			}
+		);
+	} );
 
-	it('can still opt in to parser-owned formatting explicitly', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'can still opt in to parser-owned formatting explicitly', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
 					title: 'Explicit formatting example',
 				},
 			],
-		});
+		} );
 
 		const result = await parsePastedInput(
 			'10.1234/explicit-formatting',
@@ -410,33 +425,33 @@ describe('parsePastedInput', () => {
 			{ deferFormatting: false }
 		);
 
-		expect(formatBibliographyEntries).toHaveBeenCalledWith(
+		expect( formatBibliographyEntries ).toHaveBeenCalledWith(
 			[
-				expect.objectContaining({
+				expect.objectContaining( {
 					type: 'article-journal',
 					title: 'Explicit formatting example',
-				}),
+				} ),
 			],
 			'harvard'
 		);
-		expect(result.entries[0].formattedText).toBe(
+		expect( result.entries[ 0 ].formattedText ).toBe(
 			'Formatted bibliography entry'
 		);
-	});
+	} );
 
-	it('persists only the reduced citation payload fields for new entries', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'persists only the reduced citation payload fields for new entries', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
 					title: 'Lean payload example',
 				},
 			],
-		});
+		} );
 
-		const result = await parsePastedInput('10.1234/lean-payload');
+		const result = await parsePastedInput( '10.1234/lean-payload' );
 
-		expect(result.entries[0]).toMatchObject({
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			id: 'test-uuid',
 			csl: {
 				type: 'article-journal',
@@ -446,155 +461,157 @@ describe('parsePastedInput', () => {
 			displayOverride: null,
 			inputFormat: 'doi',
 			parseWarnings: [],
-		});
-		expect(result.entries[0]).not.toHaveProperty('inputRaw');
-		expect(result.entries[0]).not.toHaveProperty('parsedAt');
-		expect(result.entries[0]).not.toHaveProperty('parseConfidence');
-	});
+		} );
+		expect( result.entries[ 0 ] ).not.toHaveProperty( 'inputRaw' );
+		expect( result.entries[ 0 ] ).not.toHaveProperty( 'parsedAt' );
+		expect( result.entries[ 0 ] ).not.toHaveProperty( 'parseConfidence' );
+	} );
 
-	it('normalizes additional common BibTeX entry-type aliases like @buch and @insammlung', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'normalizes additional common BibTeX entry-type aliases like @buch and @insammlung', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'book',
 					title: 'Beispiel Buch',
 				},
 			],
-		});
+		} );
 
-		await parsePastedInput(`@buch{foo,
+		await parsePastedInput( `@buch{foo,
   title = {Beispiel Buch}
-}`);
-		expect(Cite.async).toHaveBeenCalledWith(
-			expect.stringContaining('@book{foo')
+}` );
+		expect( Cite.async ).toHaveBeenCalledWith(
+			expect.stringContaining( '@book{foo' )
 		);
 
-		await parsePastedInput(`@insammlung{bar,
+		await parsePastedInput( `@insammlung{bar,
   title = {Beispiel Kapitel}
-}`);
-		expect(Cite.async).toHaveBeenCalledWith(
-			expect.stringContaining('@incollection{bar')
+}` );
+		expect( Cite.async ).toHaveBeenCalledWith(
+			expect.stringContaining( '@incollection{bar' )
 		);
-	});
+	} );
 
-	it('normalizes BibTeX entry-type aliases @artikel and @inbuch', async () => {
-		Cite.async.mockResolvedValue({
-			get: () => [{ type: 'article-journal', title: 'Beispiel Artikel' }],
-		});
+	it( 'normalizes BibTeX entry-type aliases @artikel and @inbuch', async () => {
+		Cite.async.mockResolvedValue( {
+			get: () => [
+				{ type: 'article-journal', title: 'Beispiel Artikel' },
+			],
+		} );
 
-		await parsePastedInput(`@artikel{baz,
+		await parsePastedInput( `@artikel{baz,
   title = {Beispiel Artikel}
-}`);
-		expect(Cite.async).toHaveBeenCalledWith(
-			expect.stringContaining('@article{baz')
+}` );
+		expect( Cite.async ).toHaveBeenCalledWith(
+			expect.stringContaining( '@article{baz' )
 		);
 
-		Cite.async.mockResolvedValue({
-			get: () => [{ type: 'chapter', title: 'Beispiel Kapitel' }],
-		});
+		Cite.async.mockResolvedValue( {
+			get: () => [ { type: 'chapter', title: 'Beispiel Kapitel' } ],
+		} );
 
-		await parsePastedInput(`@inbuch{qux,
+		await parsePastedInput( `@inbuch{qux,
   title = {Beispiel Kapitel}
-}`);
-		expect(Cite.async).toHaveBeenCalledWith(
-			expect.stringContaining('@inbook{qux')
+}` );
+		expect( Cite.async ).toHaveBeenCalledWith(
+			expect.stringContaining( '@inbook{qux' )
 		);
-	});
+	} );
 
-	it('falls back to a generated citation id when crypto.randomUUID is unavailable', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'falls back to a generated citation id when crypto.randomUUID is unavailable', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'book',
 					title: 'Fallback ID Example',
 				},
 			],
-		});
+		} );
 
-		Object.defineProperty(global, 'crypto', {
+		Object.defineProperty( global, 'crypto', {
 			configurable: true,
 			value: {},
-		});
+		} );
 
-		const result = await parsePastedInput(`@book{fallback,
+		const result = await parsePastedInput( `@book{fallback,
   title = {Fallback ID Example}
-}`);
+}` );
 
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0].id).toMatch(/^citation-/u);
-	});
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ].id ).toMatch( /^citation-/u );
+	} );
 
-	it('enforces the 50-entry paste cap and preserves overflow input for retry', async () => {
-		Cite.async.mockImplementation(async (value) => ({
+	it( 'enforces the 50-entry paste cap and preserves overflow input for retry', async () => {
+		Cite.async.mockImplementation( async ( value ) => ( {
 			get: () => [
 				{
 					type: 'article-journal',
-					title: String(value),
+					title: String( value ),
 				},
 			],
-		}));
+		} ) );
 
 		const input = Array.from(
 			{ length: 55 },
-			(_, index) => `10.1234/example-${index + 1}`
-		).join('\n');
-		const result = await parsePastedInput(input);
+			( _, index ) => `10.1234/example-${ index + 1 }`
+		).join( '\n' );
+		const result = await parsePastedInput( input );
 
-		expect(result.entries).toHaveLength(50);
-		expect(result.truncated).toBe(true);
-		expect(result.remainingInput).toContain('10.1234/example-51');
-		expect(result.remainingInput).toContain('10.1234/example-55');
-	});
+		expect( result.entries ).toHaveLength( 50 );
+		expect( result.truncated ).toBe( true );
+		expect( result.remainingInput ).toContain( '10.1234/example-51' );
+		expect( result.remainingInput ).toContain( '10.1234/example-55' );
+	} );
 
-	it('rejects input larger than 1MB', async () => {
-		const result = await parsePastedInput('a'.repeat(1024 * 1024 + 1));
+	it( 'rejects input larger than 1MB', async () => {
+		const result = await parsePastedInput( 'a'.repeat( 1024 * 1024 + 1 ) );
 
-		expect(result.entries).toEqual([]);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toEqual( [] );
+		expect( result.errors ).toEqual( [
 			'The pasted input is too large. Maximum size is 1 MB.',
-		]);
-	});
+		] );
+	} );
 
-	it('serializes DOI batches while preserving order', async () => {
+	it( 'serializes DOI batches while preserving order', async () => {
 		let activeCount = 0;
 		let maxActiveCount = 0;
 
-		Cite.async.mockImplementation(async (value) => {
+		Cite.async.mockImplementation( async ( value ) => {
 			activeCount += 1;
-			maxActiveCount = Math.max(maxActiveCount, activeCount);
-			await new Promise((resolve) => setTimeout(resolve, 10));
+			maxActiveCount = Math.max( maxActiveCount, activeCount );
+			await new Promise( ( resolve ) => setTimeout( resolve, 10 ) );
 			activeCount -= 1;
 
 			return {
 				get: () => [
 					{
 						type: 'article-journal',
-						title: `Resolved ${value}`,
+						title: `Resolved ${ value }`,
 					},
 				],
 			};
-		});
+		} );
 
 		const result = await parsePastedInput(
 			`10.1000/a\n10.1000/b\n10.1000/c\n10.1000/d\n10.1000/e`
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(5);
-		expect(maxActiveCount).toBe(1);
-		expect(result.entries.map((entry) => entry.csl.title)).toEqual([
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 5 );
+		expect( maxActiveCount ).toBe( 1 );
+		expect( result.entries.map( ( entry ) => entry.csl.title ) ).toEqual( [
 			'Resolved 10.1000/a',
 			'Resolved 10.1000/b',
 			'Resolved 10.1000/c',
 			'Resolved 10.1000/d',
 			'Resolved 10.1000/e',
-		]);
-	});
+		] );
+	} );
 
-	it('resolves DOI metadata through CrossRef when a fetch transport is available', async () => {
-		const fetchFn = jest.fn().mockResolvedValue({
+	it( 'resolves DOI metadata through CrossRef when a fetch transport is available', async () => {
+		const fetchFn = jest.fn().mockResolvedValue( {
 			ok: true,
-			json: async () => ({
+			json: async () => ( {
 				type: 'journal-article',
 				title: 'Array programming with NumPy',
 				DOI: '10.1038/s41586-020-2649-2',
@@ -604,8 +621,8 @@ describe('parsePastedInput', () => {
 						family: 'Harris',
 					},
 				],
-			}),
-		});
+			} ),
+		} );
 
 		const result = await parsePastedInput(
 			'10.1038/s41586-020-2649-2',
@@ -613,30 +630,30 @@ describe('parsePastedInput', () => {
 			{ fetchFn }
 		);
 
-		expect(fetchFn).toHaveBeenCalledWith(
+		expect( fetchFn ).toHaveBeenCalledWith(
 			'https://api.crossref.org/works/10.1038%2Fs41586-020-2649-2/transform/application/vnd.citationstyles.csl+json'
 		);
-		expect(Cite.async).not.toHaveBeenCalled();
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0].csl).toMatchObject({
+		expect( Cite.async ).not.toHaveBeenCalled();
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ].csl ).toMatchObject( {
 			type: 'article-journal',
 			title: 'Array programming with NumPy',
 			DOI: '10.1038/s41586-020-2649-2',
-		});
-	});
+		} );
+	} );
 
-	it('title-cases ALL-CAPS author names and titles returned by CrossRef', async () => {
-		const fetchFn = jest.fn().mockResolvedValue({
+	it( 'title-cases ALL-CAPS author names and titles returned by CrossRef', async () => {
+		const fetchFn = jest.fn().mockResolvedValue( {
 			ok: true,
-			json: async () => ({
+			json: async () => ( {
 				type: 'journal-article',
 				title: 'I.—COMPUTING MACHINERY AND INTELLIGENCE',
 				'container-title': 'Mind',
 				DOI: '10.1093/mind/LIX.236.433',
-				author: [{ given: 'A. M.', family: 'TURING' }],
-			}),
-		});
+				author: [ { given: 'A. M.', family: 'TURING' } ],
+			} ),
+		} );
 
 		const result = await parsePastedInput(
 			'10.1093/mind/LIX.236.433',
@@ -646,18 +663,18 @@ describe('parsePastedInput', () => {
 			}
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries[0].csl.author).toEqual([
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries[ 0 ].csl.author ).toEqual( [
 			{ given: 'A. M.', family: 'Turing' },
-		]);
-		expect(result.entries[0].csl.title).toBe(
+		] );
+		expect( result.entries[ 0 ].csl.title ).toBe(
 			'I.—Computing Machinery and Intelligence'
 		);
-		expect(result.entries[0].csl['container-title']).toBe('Mind');
-	});
+		expect( result.entries[ 0 ].csl[ 'container-title' ] ).toBe( 'Mind' );
+	} );
 
-	it('reuses DOI metadata for duplicate DOI values within one paste', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'reuses DOI metadata for duplicate DOI values within one paste', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
@@ -665,21 +682,21 @@ describe('parsePastedInput', () => {
 					DOI: '10.1234/shared',
 				},
 			],
-		});
+		} );
 
 		const result = await parsePastedInput(
 			`https://doi.org/10.1234/shared\n10.1234/shared`
 		);
 
-		expect(Cite.async).toHaveBeenCalledTimes(1);
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(2);
-		expect(result.entries[0].csl.title).toBe('Shared DOI metadata');
-		expect(result.entries[1].csl.title).toBe('Shared DOI metadata');
-	});
+		expect( Cite.async ).toHaveBeenCalledTimes( 1 );
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 2 );
+		expect( result.entries[ 0 ].csl.title ).toBe( 'Shared DOI metadata' );
+		expect( result.entries[ 1 ].csl.title ).toBe( 'Shared DOI metadata' );
+	} );
 
-	it('reuses successful DOI metadata across parser calls in the same session', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'reuses successful DOI metadata across parser calls in the same session', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
@@ -687,35 +704,37 @@ describe('parsePastedInput', () => {
 					DOI: '10.1234/session-cache',
 				},
 			],
-		});
+		} );
 
-		await parsePastedInput('10.1234/session-cache');
+		await parsePastedInput( '10.1234/session-cache' );
 		const second = await parsePastedInput(
 			'https://doi.org/10.1234/session-cache'
 		);
 
-		expect(Cite.async).toHaveBeenCalledTimes(1);
-		expect(second.entries).toHaveLength(1);
-		expect(second.entries[0].csl.title).toBe('Session cached DOI metadata');
-	});
+		expect( Cite.async ).toHaveBeenCalledTimes( 1 );
+		expect( second.entries ).toHaveLength( 1 );
+		expect( second.entries[ 0 ].csl.title ).toBe(
+			'Session cached DOI metadata'
+		);
+	} );
 
-	it('skips DOI resolution for DOI values already present in the bibliography', async () => {
+	it( 'skips DOI resolution for DOI values already present in the bibliography', async () => {
 		const result = await parsePastedInput(
 			'https://doi.org/10.1234/already-present',
 			'apa-7',
 			{
-				existingDoiValues: ['10.1234/already-present'],
+				existingDoiValues: [ '10.1234/already-present' ],
 			}
 		);
 
-		expect(Cite.async).not.toHaveBeenCalled();
-		expect(result.entries).toEqual([]);
-		expect(result.errors).toEqual([]);
-		expect(result.skippedDuplicateCount).toBe(1);
-	});
+		expect( Cite.async ).not.toHaveBeenCalled();
+		expect( result.entries ).toEqual( [] );
+		expect( result.errors ).toEqual( [] );
+		expect( result.skippedDuplicateCount ).toBe( 1 );
+	} );
 
-	it('normalizes common BibTeX entry-type aliases like @artikel before parsing', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'normalizes common BibTeX entry-type aliases like @artikel before parsing', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
@@ -725,7 +744,7 @@ describe('parsePastedInput', () => {
 					issue: '10',
 					page: '891-921',
 					issued: {
-						'date-parts': [[1905]],
+						'date-parts': [ [ 1905 ] ],
 					},
 					author: [
 						{
@@ -735,7 +754,7 @@ describe('parsePastedInput', () => {
 					],
 				},
 			],
-		});
+		} );
 
 		const input = `@artikel{einstein,
   author = {Albert Einstein},
@@ -746,14 +765,14 @@ describe('parsePastedInput', () => {
   number = {10},
   pages = {891-921}
 }`;
-		const result = await parsePastedInput(input);
+		const result = await parsePastedInput( input );
 
-		expect(Cite.async).toHaveBeenCalledWith(
-			expect.stringContaining('@article{einstein')
+		expect( Cite.async ).toHaveBeenCalledWith(
+			expect.stringContaining( '@article{einstein' )
 		);
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'bibtex',
 			csl: {
 				type: 'article-journal',
@@ -762,11 +781,11 @@ describe('parsePastedInput', () => {
 				issue: '10',
 				page: '891-921',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('normalizes duplicated review metadata in DOI-derived titles before persisting', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'normalizes duplicated review metadata in DOI-derived titles before persisting', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
@@ -776,7 +795,7 @@ describe('parsePastedInput', () => {
 					issue: '1',
 					DOI: '10.1177/00018392251368878',
 					issued: {
-						'date-parts': [[2025, 8, 27]],
+						'date-parts': [ [ 2025, 8, 27 ] ],
 					},
 					author: [
 						{
@@ -786,22 +805,22 @@ describe('parsePastedInput', () => {
 					],
 				},
 			],
-		});
+		} );
 
-		const result = await parsePastedInput('10.1177/00018392251368878');
+		const result = await parsePastedInput( '10.1177/00018392251368878' );
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0].csl.title).toBe(
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ].csl.title ).toBe(
 			'Amy J. Binder and Jeffrey L. Kidder. The Channels of Student Activism: How the Left and Right Are Winning (and Losing) in Campus Politics Today'
 		);
-		expect(result.entries[0].parseWarnings).toEqual([
+		expect( result.entries[ 0 ].parseWarnings ).toEqual( [
 			'review-metadata-incomplete',
-		]);
-	});
+		] );
+	} );
 
-	it('does not flag review metadata as incomplete when DOI-derived review records include page metadata', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'does not flag review metadata as incomplete when DOI-derived review records include page metadata', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
@@ -812,7 +831,7 @@ describe('parsePastedInput', () => {
 					page: '471-485',
 					DOI: '10.1177/00018392251368878',
 					issued: {
-						'date-parts': [[2025, 8, 27]],
+						'date-parts': [ [ 2025, 8, 27 ] ],
 					},
 					author: [
 						{
@@ -822,20 +841,20 @@ describe('parsePastedInput', () => {
 					],
 				},
 			],
-		});
+		} );
 
-		const result = await parsePastedInput('10.1177/00018392251368878');
+		const result = await parsePastedInput( '10.1177/00018392251368878' );
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0].csl.title).toBe(
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ].csl.title ).toBe(
 			'Amy J. Binder and Jeffrey L. Kidder. The Channels of Student Activism: How the Left and Right Are Winning (and Losing) in Campus Politics Today'
 		);
-		expect(result.entries[0].parseWarnings).toEqual([]);
-	});
+		expect( result.entries[ 0 ].parseWarnings ).toEqual( [] );
+	} );
 
-	it('normalizes another duplicated review DOI title fixture before persisting', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'normalizes another duplicated review DOI title fixture before persisting', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
@@ -843,7 +862,7 @@ describe('parsePastedInput', () => {
 					'container-title': 'New York Times Book Review',
 					DOI: '10.1000/review-fixture',
 					issued: {
-						'date-parts': [[2023, 10, 8]],
+						'date-parts': [ [ 2023, 10, 8 ] ],
 					},
 					author: [
 						{
@@ -853,65 +872,65 @@ describe('parsePastedInput', () => {
 					],
 				},
 			],
-		});
+		} );
 
-		const result = await parsePastedInput('10.1000/review-fixture');
+		const result = await parsePastedInput( '10.1000/review-fixture' );
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0].csl.title).toBe(
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ].csl.title ).toBe(
 			'Mary Gabriel. Madonna: A Rebel Life'
 		);
-		expect(result.entries[0].parseWarnings).toEqual([
+		expect( result.entries[ 0 ].parseWarnings ).toEqual( [
 			'review-metadata-incomplete',
-		]);
-	});
+		] );
+	} );
 
-	it('parses supported free-text citations via the new parser backend', async () => {
+	it( 'parses supported free-text citations via the new parser backend', async () => {
 		const result = await parsePastedInput(
 			'Amy J. Binder and Jeffrey L. Kidder, The Channels of Student Activism: How the Left and Right Are Winning (and Losing) in Campus Politics Today (University of Chicago Press, 2022), 117–18.',
 			'apa-7'
 		);
 
-		expect(Cite.async).not.toHaveBeenCalled();
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( Cite.async ).not.toHaveBeenCalled();
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'book',
 				publisher: 'University of Chicago Press',
 				page: '117–18',
 			},
-		});
-		expect(formatBibliographyEntries).not.toHaveBeenCalled();
-	});
+		} );
+		expect( formatBibliographyEntries ).not.toHaveBeenCalled();
+	} );
 
-	it('parses sentence-style free-text book citations via the parser backend', async () => {
+	it( 'parses sentence-style free-text book citations via the parser backend', async () => {
 		const result = await parsePastedInput(
 			'Binder, Amy J., and Jeffrey L. Kidder. The Channels of Student Activism: How the Left and Right Are Winning (and Losing) in Campus Politics Today. University of Chicago Press, 2022.'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'book',
 				title: 'The Channels of Student Activism: How the Left and Right Are Winning (and Losing) in Campus Politics Today',
 				publisher: 'University of Chicago Press',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('parses sentence-style chapter citations via the parser backend', async () => {
+	it( 'parses sentence-style chapter citations via the parser backend', async () => {
 		const result = await parsePastedInput(
 			'Doyle, Kathleen. “The Queen Mary Psalter.” In The Book by Design: The Remarkable Story of the World’s Greatest Invention, edited by P. J. M. Marks and Stephen Parkin. University of Chicago Press, 2023.'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'chapter',
@@ -920,12 +939,12 @@ describe('parsePastedInput', () => {
 					'The Book by Design: The Remarkable Story of the World’s Greatest Invention',
 				publisher: 'University of Chicago Press',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('parses sentence-style Chicago book citations with editors, editions, URLs, and platform tails', async () => {
+	it( 'parses sentence-style Chicago book citations with editors, editions, URLs, and platform tails', async () => {
 		const result =
-			await parsePastedInput(`Marks, P. J. M., and Stephen Parkin, eds. The Book by Design: The Remarkable Story of the World’s Greatest Invention. University of Chicago Press, 2023.
+			await parsePastedInput( `Marks, P. J. M., and Stephen Parkin, eds. The Book by Design: The Remarkable Story of the World’s Greatest Invention. University of Chicago Press, 2023.
 
 Borel, Brooke. The Chicago Guide to Fact-Checking. 2nd ed. University of Chicago Press, 2023. EBSCOhost.
 
@@ -933,46 +952,46 @@ Kurland, Philip B., and Ralph Lerner, eds. The Founders’ Constitution. Univers
 
 Melville, Herman. Moby-Dick; or, The Whale. New York, 1851. https://melville.electroniclibrary.org/moby-dick-side-by-side.
 
-Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
+Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.` );
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(5);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 5 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'collection',
-				editor: expect.any(Array),
+				editor: expect.any( Array ),
 			},
-		});
-		expect(result.entries[1]).toMatchObject({
+		} );
+		expect( result.entries[ 1 ] ).toMatchObject( {
 			csl: {
 				type: 'book',
 				edition: '2',
 				medium: 'EBSCOhost',
 			},
-		});
-		expect(result.entries[2]).toMatchObject({
+		} );
+		expect( result.entries[ 2 ] ).toMatchObject( {
 			csl: {
 				type: 'collection',
 				URL: 'https://press-pubs.uchicago.edu/founders/',
 			},
-		});
-		expect(result.entries[3]).toMatchObject({
+		} );
+		expect( result.entries[ 3 ] ).toMatchObject( {
 			csl: {
 				type: 'book',
 				'publisher-place': 'New York',
 				URL: 'https://melville.electroniclibrary.org/moby-dick-side-by-side',
 			},
-		});
-		expect(result.entries[4]).toMatchObject({
+		} );
+		expect( result.entries[ 4 ] ).toMatchObject( {
 			csl: {
 				type: 'book',
 				medium: 'Kindle',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('parses free-text journal citations even when they include an inline DOI URL', async () => {
+	it( 'parses free-text journal citations even when they include an inline DOI URL', async () => {
 		// Phase 7: embedded DOIs now trigger DOI resolution. When no fetchFn is
 		// provided, Cite.async is used and fails (mock returns undefined), so the
 		// graceful degradation falls back to the freetext heuristic parser.
@@ -984,9 +1003,9 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 			'apa-7'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'article-journal',
@@ -994,26 +1013,26 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 				'container-title': 'Journal of WordPress Studies',
 				DOI: '10.1234/example-doi',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('preserves low-confidence heuristic parse metadata for expanded free-text patterns', async () => {
+	it( 'preserves low-confidence heuristic parse metadata for expanded free-text patterns', async () => {
 		const result = await parsePastedInput(
 			'OpenAI, “Responses API,” https://platform.openai.com/docs/api-reference/responses.'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'webpage',
 				title: 'Responses API',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('parses APA-like journal citations with volume, issue, and DOI via heuristics', async () => {
+	it( 'parses APA-like journal citations with volume, issue, and DOI via heuristics', async () => {
 		// Phase 7: embedded DOI triggers DOI resolution. With no fetchFn and a
 		// reset Cite.async (returns undefined → throws), degradation falls back to
 		// the freetext heuristic parser which extracts the full citation metadata.
@@ -1024,9 +1043,9 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 			'King, B. G. (2025). Amy J. Binder and Jeffrey L. Kidder. The Channels of Student Activism: How the Left and Right Are Winning (and Losing) in Campus Politics Today BinderAmy J.KidderJeffrey L.The Channels of Student Activism: How the Left and Right Are Winning (and Losing) in Campus Politics Today. University of Chicago Press, 2022. 224 pp. $25, paper. Administrative Science Quarterly, 71(1). https://doi.org/10.1177/00018392251368878'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'article-journal',
@@ -1035,17 +1054,17 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 				issue: '1',
 				DOI: '10.1177/00018392251368878',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('parses low-confidence APA-like title/volume/page citations via heuristics', async () => {
+	it( 'parses low-confidence APA-like title/volume/page citations via heuristics', async () => {
 		const result = await parsePastedInput(
 			'Einstein, A. (1905). the true about tree (Vol. 322, pp. 891–921).'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'article-journal',
@@ -1053,40 +1072,40 @@ Roy, Arundhati. The God of Small Things. Random House, 2008. Kindle.`);
 				volume: '322',
 				page: '891–921',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('reports limited free-text support when heuristics cannot parse the input', async () => {
+	it( 'reports limited free-text support when heuristics cannot parse the input', async () => {
 		const result = await parsePastedInput(
 			'This input is not a parseable citation.'
 		);
 
-		expect(result.entries).toEqual([]);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toEqual( [] );
+		expect( result.errors ).toEqual( [
 			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, RIS record, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
-		]);
-		expect(result.remainingInput).toBe(
+		] );
+		expect( result.remainingInput ).toBe(
 			'This input is not a parseable citation.'
 		);
-	});
+	} );
 
-	it('detects LaTeX document input and returns a friendlier error', async () => {
-		const result = await parsePastedInput(`\\documentclass{article}
+	it( 'detects LaTeX document input and returns a friendlier error', async () => {
+		const result = await parsePastedInput( `\\documentclass{article}
 \\usepackage[backend=bibtex]{biblatex}
 \\addbibresource{references.bib}
 \\begin{document}
 Hallo world\\cite{einstein}
 \\printbibliography
-\\end{document}`);
+\\end{document}` );
 
-		expect(result.entries).toEqual([]);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toEqual( [] );
+		expect( result.errors ).toEqual( [
 			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, RIS record, CSL-JSON, or supported citation instead.',
-		]);
-		expect(result.remainingInput).toContain('\\documentclass{article}');
-	});
+		] );
+		expect( result.remainingInput ).toContain( '\\documentclass{article}' );
+	} );
 
-	it.each([
+	it.each( [
 		[
 			'EndNote XML',
 			'<?xml version="1.0" encoding="UTF-8"?>\n<xml><records><record><titles><title>T</title></titles></record></records></xml>',
@@ -1095,103 +1114,105 @@ Hallo world\\cite{einstein}
 			'Word bibliography XML',
 			'<b:Sources xmlns:b="http://schemas.openxmlformats.org/officeDocument/2006/bibliography"></b:Sources>',
 		],
-	])(
+	] )(
 		'rejects %s instead of reading it as free text',
-		async (label, input) => {
-			const result = await parsePastedInput(input);
+		async ( label, input ) => {
+			const result = await parsePastedInput( input );
 
-			expect(result.entries).toEqual([]);
-			expect(result.errors).toEqual([
+			expect( result.entries ).toEqual( [] );
+			expect( result.errors ).toEqual( [
 				"Borges can't read XML exports, such as EndNote XML. Export the references as BibTeX, RIS, or CSL JSON and paste that instead.",
-			]);
-			expect(result.remainingInput).toBe(input);
+			] );
+			expect( result.remainingInput ).toBe( input );
 		}
 	);
 
-	it('detects BibLaTeX citation command input and returns a friendlier error', async () => {
-		const result = await parsePastedInput(`\\autocite{einstein}`);
+	it( 'detects BibLaTeX citation command input and returns a friendlier error', async () => {
+		const result = await parsePastedInput( `\\autocite{einstein}` );
 
-		expect(result.entries).toEqual([]);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toEqual( [] );
+		expect( result.errors ).toEqual( [
 			'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, RIS record, CSL-JSON, or supported citation instead.',
-		]);
-		expect(result.remainingInput).toBe('\\autocite{einstein}');
-	});
+		] );
+		expect( result.remainingInput ).toBe( '\\autocite{einstein}' );
+	} );
 
-	it('splits multiple standalone formatted citations on separate lines without requiring blank lines', async () => {
+	it( 'splits multiple standalone formatted citations on separate lines without requiring blank lines', async () => {
 		const result = await parsePastedInput(
 			`Glantz, A. (2009). The war comes home: Washington's battle against America's veterans. University of California Press.
 Ginsberg, J. P. (2009). The war comes home: Washington's battle against America's veterans. University of California Press.`
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(2);
-		expect(result.entries[0].csl.title).toBe(
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 2 );
+		expect( result.entries[ 0 ].csl.title ).toBe(
 			"The war comes home: Washington's battle against America's veterans"
 		);
-		expect(result.entries[1].csl.title).toBe(
+		expect( result.entries[ 1 ].csl.title ).toBe(
 			"The war comes home: Washington's battle against America's veterans"
 		);
-		expect(result.remainingInput).toBe('');
-	});
+		expect( result.remainingInput ).toBe( '' );
+	} );
 
-	it('accepts doi.org links without an explicit URL scheme', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'accepts doi.org links without an explicit URL scheme', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
 					title: 'Example title',
 				},
 			],
-		});
+		} );
 
-		const result = await parsePastedInput('doi.org/10.1234/example-doi');
+		const result = await parsePastedInput( 'doi.org/10.1234/example-doi' );
 
-		expect(Cite.async).toHaveBeenCalledWith('doi.org/10.1234/example-doi');
-		expect(result.entries).toHaveLength(1);
-	});
+		expect( Cite.async ).toHaveBeenCalledWith(
+			'doi.org/10.1234/example-doi'
+		);
+		expect( result.entries ).toHaveLength( 1 );
+	} );
 
-	it('accepts DOI URLs with trailing punctuation', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'accepts DOI URLs with trailing punctuation', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
 					title: 'Example title',
 				},
 			],
-		});
+		} );
 
 		const result = await parsePastedInput(
 			'https://doi.org/10.1086/725865.'
 		);
 
-		expect(Cite.async).toHaveBeenCalledWith(
+		expect( Cite.async ).toHaveBeenCalledWith(
 			'https://doi.org/10.1086/725865'
 		);
-		expect(result.entries).toHaveLength(1);
-	});
+		expect( result.entries ).toHaveLength( 1 );
+	} );
 
-	it('accepts doi:-prefixed DOI URLs and normalizes them for lookup', async () => {
-		Cite.async.mockResolvedValue({
+	it( 'accepts doi:-prefixed DOI URLs and normalizes them for lookup', async () => {
+		Cite.async.mockResolvedValue( {
 			get: () => [
 				{
 					type: 'article-journal',
 					title: 'Example title',
 				},
 			],
-		});
+		} );
 
 		const result = await parsePastedInput(
 			'https://doi:10.1016/j.janxdis.2007.08.009'
 		);
 
-		expect(Cite.async).toHaveBeenCalledWith(
+		expect( Cite.async ).toHaveBeenCalledWith(
 			'10.1016/j.janxdis.2007.08.009'
 		);
-		expect(result.entries).toHaveLength(1);
-	});
+		expect( result.entries ).toHaveLength( 1 );
+	} );
 
-	it('parses APA journal citations with multiple authors and doi: URL form via heuristics', async () => {
+	it( 'parses APA journal citations with multiple authors and doi: URL form via heuristics', async () => {
 		// Phase 7: embedded DOI triggers DOI resolution attempt. With no fetchFn
 		// and a reset Cite.async, degradation falls back to the freetext parser.
 		Cite.async.mockReset();
@@ -1201,9 +1222,9 @@ Ginsberg, J. P. (2009). The war comes home: Washington's battle against America'
 			'Ginsberg, J. P., Ayers, E., Burriss, L., & Powell, D. A. (2008). Discriminative delay Pavlovian eye-blink conditioning in veterans with and without post-traumatic stress disorder. Journal of Anxiety Disorders, 22, 809-823. https://doi:10.1016/j.janxdis.2007.08.009'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'article-journal',
@@ -1219,35 +1240,35 @@ Ginsberg, J. P. (2009). The war comes home: Washington's battle against America'
 					{ family: 'Powell', given: 'D. A' },
 				],
 			},
-		});
-	});
+		} );
+	} );
 
-	it('parses APA-style book citations via heuristics', async () => {
+	it( 'parses APA-style book citations via heuristics', async () => {
 		const result = await parsePastedInput(
 			"Ginsberg, J. P. (2009). The war comes home: Washington's battle against America's veterans. University of California Press."
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'book',
 				title: "The war comes home: Washington's battle against America's veterans",
 				publisher: 'University of California Press',
-				author: [{ family: 'Ginsberg', given: 'J. P' }],
+				author: [ { family: 'Ginsberg', given: 'J. P' } ],
 			},
-		});
-	});
+		} );
+	} );
 
-	it('parses APA-style corporate-author book citations with G.P.O. publishers via heuristics', async () => {
+	it( 'parses APA-style corporate-author book citations with G.P.O. publishers via heuristics', async () => {
 		const result = await parsePastedInput(
 			'United States. Congress. House Committee on Foreign Affairs. Subcommittee on the Middle East and South Asia. (2007). Working in a war zone: Post traumatic stress disorder in civilians returning from Iraq. G.P.O.'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'book',
@@ -1260,17 +1281,17 @@ Ginsberg, J. P. (2009). The war comes home: Washington's battle against America'
 					},
 				],
 			},
-		});
-	});
+		} );
+	} );
 
-	it('parses Chicago-style dissertation citations via heuristics', async () => {
+	it( 'parses Chicago-style dissertation citations via heuristics', async () => {
 		const result = await parsePastedInput(
 			'Blajer de la Garza, Yuna. “A House Is Not a Home: Citizenship and Belonging in Contemporary Democracies.” PhD diss., University of Chicago, 2019. ProQuest (13865986).'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'thesis',
@@ -1285,10 +1306,10 @@ Ginsberg, J. P. (2009). The war comes home: Washington's battle against America'
 					},
 				],
 			},
-		});
-	});
+		} );
+	} );
 
-	it('parses sentence-style Chicago journal citations with or without an inline DOI', async () => {
+	it( 'parses sentence-style Chicago journal citations with or without an inline DOI', async () => {
 		// Phase 7: embedded DOI triggers DOI resolution attempt. Reset Cite.async
 		// so it throws and the degradation falls back to the freetext heuristic.
 		Cite.async.mockReset();
@@ -1301,11 +1322,11 @@ Ginsberg, J. P. (2009). The war comes home: Washington's battle against America'
 			'Dittmar, Emily L., and Douglas W. Schemske. “Temporal Variation in Selection Influences Microgeographic Local Adaptation.” American Naturalist 202, no. 4 (2023): 471–85.'
 		);
 
-		expect(withDoi.errors).toEqual([]);
-		expect(withoutDoi.errors).toEqual([]);
-		expect(withDoi.entries).toHaveLength(1);
-		expect(withoutDoi.entries).toHaveLength(1);
-		expect(withDoi.entries[0]).toMatchObject({
+		expect( withDoi.errors ).toEqual( [] );
+		expect( withoutDoi.errors ).toEqual( [] );
+		expect( withDoi.entries ).toHaveLength( 1 );
+		expect( withoutDoi.entries ).toHaveLength( 1 );
+		expect( withDoi.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'article-journal',
@@ -1326,8 +1347,8 @@ Ginsberg, J. P. (2009). The war comes home: Washington's battle against America'
 					},
 				],
 			},
-		});
-		expect(withoutDoi.entries[0]).toMatchObject({
+		} );
+		expect( withoutDoi.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: {
 				type: 'article-journal',
@@ -1347,146 +1368,146 @@ Ginsberg, J. P. (2009). The war comes home: Washington's battle against America'
 					},
 				],
 			},
-		});
-	});
-});
+		} );
+	} );
+} );
 
-describe('PMID input resolution', () => {
+describe( 'PMID input resolution', () => {
 	const SAMPLE_CSL = {
 		type: 'article-journal',
 		title: 'CRISPR–Cas9 for medical genetic screens: applications and future perspectives',
 		'container-title': 'Journal of medical genetics',
-		author: [{ family: 'Xue', given: 'Hui-Ying' }],
-		issued: { 'date-parts': [[2016, 2]] },
+		author: [ { family: 'Xue', given: 'Hui-Ying' } ],
+		issued: { 'date-parts': [ [ 2016, 2 ] ] },
 		DOI: '10.1136/jmedgenet-2015-103409',
 		PMID: '26673779',
 	};
 
-	function makeFetchFn(status = 200, body = SAMPLE_CSL) {
-		return jest.fn().mockResolvedValue({
+	function makeFetchFn( status = 200, body = SAMPLE_CSL ) {
+		return jest.fn().mockResolvedValue( {
 			ok: status >= 200 && status < 300,
 			status,
-			json: jest.fn().mockResolvedValue(body),
-		});
+			json: jest.fn().mockResolvedValue( body ),
+		} );
 	}
 
-	it('detects PMID: prefixed input and fetches from NCBI API', async () => {
+	it( 'detects PMID: prefixed input and fetches from NCBI API', async () => {
 		const fetchFn = makeFetchFn();
 
-		const result = await parsePastedInput('PMID:26673779', 'apa', {
+		const result = await parsePastedInput( 'PMID:26673779', 'apa', {
 			fetchFn,
-		});
+		} );
 
-		expect(fetchFn).toHaveBeenCalledWith(
+		expect( fetchFn ).toHaveBeenCalledWith(
 			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=26673779'
 		);
-		expect(result.entries).toHaveLength(1);
-		expect(result.errors).toHaveLength(0);
-	});
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.errors ).toHaveLength( 0 );
+	} );
 
-	it('accepts lowercase pmid: prefix', async () => {
+	it( 'accepts lowercase pmid: prefix', async () => {
 		const fetchFn = makeFetchFn();
 
-		const result = await parsePastedInput('pmid:26673779', 'apa', {
+		const result = await parsePastedInput( 'pmid:26673779', 'apa', {
 			fetchFn,
-		});
+		} );
 
-		expect(fetchFn).toHaveBeenCalledWith(
+		expect( fetchFn ).toHaveBeenCalledWith(
 			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=26673779'
 		);
-		expect(result.entries).toHaveLength(1);
-	});
+		expect( result.entries ).toHaveLength( 1 );
+	} );
 
-	it('accepts PMID: with a space before the number', async () => {
+	it( 'accepts PMID: with a space before the number', async () => {
 		const fetchFn = makeFetchFn();
 
-		const result = await parsePastedInput('PMID: 26673779', 'apa', {
+		const result = await parsePastedInput( 'PMID: 26673779', 'apa', {
 			fetchFn,
-		});
+		} );
 
-		expect(fetchFn).toHaveBeenCalledWith(
+		expect( fetchFn ).toHaveBeenCalledWith(
 			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=26673779'
 		);
-		expect(result.entries).toHaveLength(1);
-	});
+		expect( result.entries ).toHaveLength( 1 );
+	} );
 
-	it('maps NCBI CSL-JSON to a citation entry with inputFormat pmid', async () => {
+	it( 'maps NCBI CSL-JSON to a citation entry with inputFormat pmid', async () => {
 		const fetchFn = makeFetchFn();
 
-		const result = await parsePastedInput('PMID:26673779', 'apa', {
+		const result = await parsePastedInput( 'PMID:26673779', 'apa', {
 			fetchFn,
-		});
+		} );
 
-		expect(result.entries[0]).toMatchObject({
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'pmid',
 			csl: {
 				type: 'article-journal',
 				title: 'CRISPR–Cas9 for medical genetic screens: applications and future perspectives',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('uses the WordPress REST proxy for PMID resolution by default', async () => {
-		apiFetch.mockResolvedValue(SAMPLE_CSL);
+	it( 'uses the WordPress REST proxy for PMID resolution by default', async () => {
+		apiFetch.mockResolvedValue( SAMPLE_CSL );
 
-		const result = await parsePastedInput('PMID:26673779', 'apa');
+		const result = await parsePastedInput( 'PMID:26673779', 'apa' );
 
-		expect(apiFetch).toHaveBeenCalledWith({
+		expect( apiFetch ).toHaveBeenCalledWith( {
 			path: '/bibliography/v1/pmid/26673779',
-		});
-		expect(result.entries).toHaveLength(1);
-		expect(result.errors).toHaveLength(0);
-	});
+		} );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.errors ).toHaveLength( 0 );
+	} );
 
-	it('returns an error when NCBI returns a non-OK status', async () => {
-		const fetchFn = makeFetchFn(404);
+	it( 'returns an error when NCBI returns a non-OK status', async () => {
+		const fetchFn = makeFetchFn( 404 );
 
-		const result = await parsePastedInput('PMID:99999999', 'apa', {
+		const result = await parsePastedInput( 'PMID:99999999', 'apa', {
 			fetchFn,
-		});
+		} );
 
-		expect(result.entries).toHaveLength(0);
-		expect(result.errors).toHaveLength(1);
-		expect(result.errors[0]).toMatch(/PMID/i);
-	});
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toHaveLength( 1 );
+		expect( result.errors[ 0 ] ).toMatch( /PMID/i );
+	} );
 
-	it('returns a PMID error when the WordPress REST transport fails', async () => {
-		apiFetch.mockRejectedValue(new Error('WordPress API unavailable'));
+	it( 'returns a PMID error when the WordPress REST transport fails', async () => {
+		apiFetch.mockRejectedValue( new Error( 'WordPress API unavailable' ) );
 
-		const result = await parsePastedInput('PMID:26673779', 'apa');
+		const result = await parsePastedInput( 'PMID:26673779', 'apa' );
 
-		expect(result.entries).toHaveLength(0);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toEqual( [
 			"Couldn't resolve the PMID. Check the number and try again.",
-		]);
-	});
+		] );
+	} );
 
-	it('does not call Cite.async for PMID inputs', async () => {
+	it( 'does not call Cite.async for PMID inputs', async () => {
 		const fetchFn = makeFetchFn();
 		Cite.async.mockClear();
 
-		await parsePastedInput('PMID:26673779', 'apa', { fetchFn });
+		await parsePastedInput( 'PMID:26673779', 'apa', { fetchFn } );
 
-		expect(Cite.async).not.toHaveBeenCalled();
-	});
+		expect( Cite.async ).not.toHaveBeenCalled();
+	} );
 
-	it('resolves multiple PMID lines when pasted together', async () => {
+	it( 'resolves multiple PMID lines when pasted together', async () => {
 		const fetchFn = jest
 			.fn()
-			.mockResolvedValueOnce({
+			.mockResolvedValueOnce( {
 				ok: true,
 				status: 200,
 				json: jest
 					.fn()
-					.mockResolvedValue({ ...SAMPLE_CSL, PMID: '11111111' }),
-			})
-			.mockResolvedValueOnce({
+					.mockResolvedValue( { ...SAMPLE_CSL, PMID: '11111111' } ),
+			} )
+			.mockResolvedValueOnce( {
 				ok: true,
 				status: 200,
 				json: jest
 					.fn()
-					.mockResolvedValue({ ...SAMPLE_CSL, PMID: '22222222' }),
-			});
+					.mockResolvedValue( { ...SAMPLE_CSL, PMID: '22222222' } ),
+			} );
 
 		const result = await parsePastedInput(
 			'PMID:11111111\nPMID:22222222',
@@ -1494,246 +1515,250 @@ describe('PMID input resolution', () => {
 			{ fetchFn }
 		);
 
-		expect(result.entries).toHaveLength(2);
-		expect(result.errors).toHaveLength(0);
-	});
-});
+		expect( result.entries ).toHaveLength( 2 );
+		expect( result.errors ).toHaveLength( 0 );
+	} );
+} );
 
-describe('PMID fallback resolution', () => {
+describe( 'PMID fallback resolution', () => {
 	const SAMPLE_CSL = {
 		type: 'article-journal',
 		title: 'Fallback PMID citation',
 		PMID: '26673779',
 	};
 
-	function mockParserDependencies(apiFetchModule) {
+	function mockParserDependencies( apiFetchModule ) {
 		jest.resetModules();
-		jest.doMock('@citation-js/core', () =>
-			require('../__test-utils__/citation-js-mocks').citationJsCoreMock()
+		jest.doMock( '@citation-js/core', () =>
+			require( '../__test-utils__/citation-js-mocks' ).citationJsCoreMock()
 		);
-		jest.doMock('@citation-js/plugin-doi', () =>
-			require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
+		jest.doMock( '@citation-js/plugin-doi', () =>
+			require( '../__test-utils__/citation-js-mocks' ).citationJsPluginMock()
 		);
-		jest.doMock('@citation-js/plugin-bibtex', () =>
-			require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
+		jest.doMock( '@citation-js/plugin-bibtex', () =>
+			require( '../__test-utils__/citation-js-mocks' ).citationJsPluginMock()
 		);
-		jest.doMock('@citation-js/plugin-ris', () =>
-			require('../__test-utils__/citation-js-mocks').citationJsPluginMock()
+		jest.doMock( '@citation-js/plugin-ris', () =>
+			require( '../__test-utils__/citation-js-mocks' ).citationJsPluginMock()
 		);
-		jest.doMock('./formatting/csl', () =>
-			require('../__test-utils__/citation-js-mocks').stubFormattingFactory()
+		jest.doMock( './formatting/csl', () =>
+			require( '../__test-utils__/citation-js-mocks' ).stubFormattingFactory()
 		);
-		jest.doMock('@wordpress/api-fetch', () => apiFetchModule);
+		jest.doMock( '@wordpress/api-fetch', () => apiFetchModule );
 	}
 
-	afterEach(() => {
+	afterEach( () => {
 		// Undo mockParserDependencies: after resetModules the registry would
 		// hand parser's lazy import a fresh formatter mock the other tests in
 		// this file never see, and api-fetch would stay mocked as undefined.
 		jest.resetModules();
-		jest.doMock('./formatting/csl', () => formattingCslMock);
-		jest.doMock('@wordpress/api-fetch', () => apiFetchMock);
-	});
+		jest.doMock( './formatting/csl', () => formattingCslMock );
+		jest.doMock( '@wordpress/api-fetch', () => apiFetchMock );
+	} );
 
-	it('falls back to window.fetch when the WordPress REST helper is unavailable', async () => {
+	it( 'falls back to window.fetch when the WordPress REST helper is unavailable', async () => {
 		const originalFetch = window.fetch;
-		const fetchMock = jest.fn().mockResolvedValue({
+		const fetchMock = jest.fn().mockResolvedValue( {
 			ok: true,
 			status: 200,
-			json: jest.fn().mockResolvedValue(SAMPLE_CSL),
-		});
+			json: jest.fn().mockResolvedValue( SAMPLE_CSL ),
+		} );
 
-		mockParserDependencies({ __esModule: true, default: undefined });
+		mockParserDependencies( { __esModule: true, default: undefined } );
 		window.fetch = fetchMock;
 
-		const { parsePastedInput: parseWithFallback } = require('./parser');
-		const result = await parseWithFallback('PMID:26673779', 'apa');
+		const { parsePastedInput: parseWithFallback } = require( './parser' );
+		const result = await parseWithFallback( 'PMID:26673779', 'apa' );
 
-		expect(fetchMock).toHaveBeenCalledWith(
+		expect( fetchMock ).toHaveBeenCalledWith(
 			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pubmed/?format=csl&id=26673779'
 		);
-		expect(result.errors).toEqual([]);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'pmid',
 			csl: SAMPLE_CSL,
-		});
+		} );
 
 		window.fetch = originalFetch;
-	});
+	} );
 
-	it('reports a PMID error when no REST or fetch transport is available', async () => {
+	it( 'reports a PMID error when no REST or fetch transport is available', async () => {
 		const originalFetch = window.fetch;
 
-		mockParserDependencies({ __esModule: true, default: undefined });
+		mockParserDependencies( { __esModule: true, default: undefined } );
 		delete window.fetch;
 
-		const { parsePastedInput: parseWithoutTransport } = require('./parser');
-		const result = await parseWithoutTransport('PMID:26673779', 'apa');
+		const {
+			parsePastedInput: parseWithoutTransport,
+		} = require( './parser' );
+		const result = await parseWithoutTransport( 'PMID:26673779', 'apa' );
 
-		expect(result.entries).toEqual([]);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toEqual( [] );
+		expect( result.errors ).toEqual( [
 			"Couldn't resolve the PMID. Check the number and try again.",
-		]);
+		] );
 
 		window.fetch = originalFetch;
-	});
-});
+	} );
+} );
 
-describe('extractEmbeddedIdentifier', () => {
-	it('extracts an embedded DOI from a full free-text citation string', () => {
+describe( 'extractEmbeddedIdentifier', () => {
+	it( 'extracts an embedded DOI from a full free-text citation string', () => {
 		const chunk =
 			'Author. Title. Journal 1 (2024): 1-10. https://doi.org/10.1234/abcd';
-		const result = extractEmbeddedIdentifier(chunk);
+		const result = extractEmbeddedIdentifier( chunk );
 
-		expect(result).not.toBeNull();
-		expect(result.format).toBe('doi');
-		expect(result.value).toMatch(/10\.1234\/abcd/);
-		expect(result.rawValue).toBe(chunk);
-	});
+		expect( result ).not.toBeNull();
+		expect( result.format ).toBe( 'doi' );
+		expect( result.value ).toMatch( /10\.1234\/abcd/ );
+		expect( result.rawValue ).toBe( chunk );
+	} );
 
-	it('strips trailing sentence punctuation from an extracted DOI', () => {
+	it( 'strips trailing sentence punctuation from an extracted DOI', () => {
 		const chunk =
 			'Author. Title. Journal 1 (2024): 1-10. https://doi.org/10.1234/abcd.';
-		const result = extractEmbeddedIdentifier(chunk);
+		const result = extractEmbeddedIdentifier( chunk );
 
-		expect(result).not.toBeNull();
-		expect(result.format).toBe('doi');
-		expect(result.value).not.toMatch(/\.$/);
-		expect(result.value).toMatch(/10\.1234\/abcd$/);
-		expect(result.rawValue).toBe(chunk);
-	});
+		expect( result ).not.toBeNull();
+		expect( result.format ).toBe( 'doi' );
+		expect( result.value ).not.toMatch( /\.$/ );
+		expect( result.value ).toMatch( /10\.1234\/abcd$/ );
+		expect( result.rawValue ).toBe( chunk );
+	} );
 
-	it('extracts a labeled PMID from a free-text citation string', () => {
+	it( 'extracts a labeled PMID from a free-text citation string', () => {
 		const chunk = 'Author. Title. PMID: 12345678';
-		const result = extractEmbeddedIdentifier(chunk);
+		const result = extractEmbeddedIdentifier( chunk );
 
-		expect(result).not.toBeNull();
-		expect(result.format).toBe('pmid');
-		expect(result.value).toBe('PMID:12345678');
-		expect(result.rawValue).toBe(chunk);
-	});
+		expect( result ).not.toBeNull();
+		expect( result.format ).toBe( 'pmid' );
+		expect( result.value ).toBe( 'PMID:12345678' );
+		expect( result.rawValue ).toBe( chunk );
+	} );
 
-	it('accepts "PMID 12345678" (space separator) as a valid PMID form', () => {
+	it( 'accepts "PMID 12345678" (space separator) as a valid PMID form', () => {
 		const chunk = 'Author. Title. Journal, 2020. PMID 12345678';
-		const result = extractEmbeddedIdentifier(chunk);
+		const result = extractEmbeddedIdentifier( chunk );
 
-		expect(result).not.toBeNull();
-		expect(result.format).toBe('pmid');
-		expect(result.value).toBe('PMID:12345678');
-		expect(result.rawValue).toBe(chunk);
-	});
+		expect( result ).not.toBeNull();
+		expect( result.format ).toBe( 'pmid' );
+		expect( result.value ).toBe( 'PMID:12345678' );
+		expect( result.rawValue ).toBe( chunk );
+	} );
 
-	it('returns null for a free-text string with no embedded identifier', () => {
+	it( 'returns null for a free-text string with no embedded identifier', () => {
 		const chunk = 'Smith, J. A History of Things. Boston: Beacon, 2019.';
-		expect(extractEmbeddedIdentifier(chunk)).toBeNull();
-	});
+		expect( extractEmbeddedIdentifier( chunk ) ).toBeNull();
+	} );
 
-	it('preserves rawValue as the original full input chunk', () => {
+	it( 'preserves rawValue as the original full input chunk', () => {
 		const chunk =
 			'Harris CR et al. Array programming. Nature. 2020. https://doi.org/10.1038/s41586-020-2649-2';
-		const result = extractEmbeddedIdentifier(chunk);
+		const result = extractEmbeddedIdentifier( chunk );
 
-		expect(result.rawValue).toBe(chunk);
-	});
+		expect( result.rawValue ).toBe( chunk );
+	} );
 
 	// DOI false-positive guards
-	it('returns null for "Chapter 10. Methodology" — no slash+path after 10.NNNN', () => {
+	it( 'returns null for "Chapter 10. Methodology" — no slash+path after 10.NNNN', () => {
 		expect(
-			extractEmbeddedIdentifier('Chapter 10. Methodology of the study.')
+			extractEmbeddedIdentifier( 'Chapter 10. Methodology of the study.' )
 		).toBeNull();
-	});
+	} );
 
-	it('returns null for "Table 10.1 and Section 10.2.3" — decimal refs without DOI path', () => {
+	it( 'returns null for "Table 10.1 and Section 10.2.3" — decimal refs without DOI path', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'See Table 10.1 and Section 10.2.3 for detail.'
 			)
 		).toBeNull();
-	});
+	} );
 
-	it('returns null for "Pages 10.1000" — 10.NNNN without a slash and path', () => {
+	it( 'returns null for "Pages 10.1000" — 10.NNNN without a slash and path', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Pages 10.1000 covered in the 2019 edition.'
 			)
 		).toBeNull();
-	});
+	} );
 
 	// PMID false-positive guards
-	it('returns null for a bare 8-digit phone/support number without PMID label', () => {
+	it( 'returns null for a bare 8-digit phone/support number without PMID label', () => {
 		expect(
-			extractEmbeddedIdentifier('Call 12345678 for support.')
+			extractEmbeddedIdentifier( 'Call 12345678 for support.' )
 		).toBeNull();
-	});
+	} );
 
-	it('returns null for an 8-digit page range without PMID label', () => {
-		expect(extractEmbeddedIdentifier('pp. 12345678-12345680')).toBeNull();
-	});
+	it( 'returns null for an 8-digit page range without PMID label', () => {
+		expect(
+			extractEmbeddedIdentifier( 'pp. 12345678-12345680' )
+		).toBeNull();
+	} );
 
 	// DOI-over-PMID precedence
-	it('returns DOI when both a DOI and a labeled PMID are present in the same chunk', () => {
+	it( 'returns DOI when both a DOI and a labeled PMID are present in the same chunk', () => {
 		const chunk =
 			'Author. Title. https://doi.org/10.1234/abcd PMID: 12345678';
-		const result = extractEmbeddedIdentifier(chunk);
+		const result = extractEmbeddedIdentifier( chunk );
 
-		expect(result).not.toBeNull();
-		expect(result.format).toBe('doi');
-		expect(result.value).toMatch(/10\.1234\/abcd/);
-	});
+		expect( result ).not.toBeNull();
+		expect( result.format ).toBe( 'doi' );
+		expect( result.value ).toMatch( /10\.1234\/abcd/ );
+	} );
 
 	// Full DOI path with special characters
-	it('captures a DOI path containing hyphens, underscores, and parentheses intact', () => {
+	it( 'captures a DOI path containing hyphens, underscores, and parentheses intact', () => {
 		const chunk =
 			'Harris CR et al. Nature 585 (2020): 357-362. https://doi.org/10.1038/s41586-020-2649-2';
-		const result = extractEmbeddedIdentifier(chunk);
+		const result = extractEmbeddedIdentifier( chunk );
 
-		expect(result).not.toBeNull();
-		expect(result.format).toBe('doi');
-		expect(result.value).toMatch(/10\.1038\/s41586-020-2649-2$/);
-	});
-});
+		expect( result ).not.toBeNull();
+		expect( result.format ).toBe( 'doi' );
+		expect( result.value ).toMatch( /10\.1038\/s41586-020-2649-2$/ );
+	} );
+} );
 
-describe('parsePastedInput — embedded identifier resolution', () => {
+describe( 'parsePastedInput — embedded identifier resolution', () => {
 	const CROSSREF_SAMPLE_CSL = {
 		type: 'journal-article',
 		title: 'Array programming with NumPy',
 		DOI: '10.1234/abcd',
-		author: [{ given: 'Ada', family: 'Smith' }],
-		issued: { 'date-parts': [[2024, 1]] },
+		author: [ { given: 'Ada', family: 'Smith' } ],
+		issued: { 'date-parts': [ [ 2024, 1 ] ] },
 	};
 
 	const PMID_SAMPLE_CSL = {
 		type: 'article-journal',
 		title: 'CRISPR–Cas9 for medical genetic screens',
 		'container-title': 'Journal of medical genetics',
-		author: [{ family: 'Xue', given: 'Hui-Ying' }],
-		issued: { 'date-parts': [[2016, 2]] },
+		author: [ { family: 'Xue', given: 'Hui-Ying' } ],
+		issued: { 'date-parts': [ [ 2016, 2 ] ] },
 		DOI: '10.1136/jmedgenet-2015-103409',
 		PMID: '12345678',
 	};
 
-	function makeCrossRefFetchFn(status = 200, body = CROSSREF_SAMPLE_CSL) {
-		return jest.fn().mockResolvedValue({
+	function makeCrossRefFetchFn( status = 200, body = CROSSREF_SAMPLE_CSL ) {
+		return jest.fn().mockResolvedValue( {
 			ok: status >= 200 && status < 300,
 			status,
-			json: jest.fn().mockResolvedValue(body),
-		});
+			json: jest.fn().mockResolvedValue( body ),
+		} );
 	}
 
-	function makePmidFetchFn(status = 200, body = PMID_SAMPLE_CSL) {
-		return jest.fn().mockResolvedValue({
+	function makePmidFetchFn( status = 200, body = PMID_SAMPLE_CSL ) {
+		return jest.fn().mockResolvedValue( {
 			ok: status >= 200 && status < 300,
 			status,
-			json: jest.fn().mockResolvedValue(body),
-		});
+			json: jest.fn().mockResolvedValue( body ),
+		} );
 	}
 
-	beforeEach(() => {
+	beforeEach( () => {
 		clearDoiMetadataCache();
-	});
+	} );
 
 	// Task 1: Route embedded DOI + PMID through existing backends
-	it('resolves an embedded DOI via CrossRef and returns inputFormat "doi"', async () => {
+	it( 'resolves an embedded DOI via CrossRef and returns inputFormat "doi"', async () => {
 		const fetchFn = makeCrossRefFetchFn();
 
 		const result = await parsePastedInput(
@@ -1742,19 +1767,19 @@ describe('parsePastedInput — embedded identifier resolution', () => {
 			{ fetchFn }
 		);
 
-		expect(result.entries).toHaveLength(1);
-		expect(result.errors).toHaveLength(0);
-		expect(result.entries[0].inputFormat).toBe('doi');
-		expect(result.entries[0].csl.title).toBe(
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.errors ).toHaveLength( 0 );
+		expect( result.entries[ 0 ].inputFormat ).toBe( 'doi' );
+		expect( result.entries[ 0 ].csl.title ).toBe(
 			'Array programming with NumPy'
 		);
-		expect(fetchFn).toHaveBeenCalledWith(
-			expect.stringContaining('api.crossref.org/works/')
+		expect( fetchFn ).toHaveBeenCalledWith(
+			expect.stringContaining( 'api.crossref.org/works/' )
 		);
-		expect(fetchFn.mock.calls[0][0]).toContain('10.1234%2Fabcd');
-	});
+		expect( fetchFn.mock.calls[ 0 ][ 0 ] ).toContain( '10.1234%2Fabcd' );
+	} );
 
-	it('resolves an embedded PMID via the PMID backend and returns inputFormat "pmid"', async () => {
+	it( 'resolves an embedded PMID via the PMID backend and returns inputFormat "pmid"', async () => {
 		const fetchFn = makePmidFetchFn();
 
 		const result = await parsePastedInput(
@@ -1763,18 +1788,18 @@ describe('parsePastedInput — embedded identifier resolution', () => {
 			{ fetchFn }
 		);
 
-		expect(result.entries).toHaveLength(1);
-		expect(result.errors).toHaveLength(0);
-		expect(result.entries[0].inputFormat).toBe('pmid');
-		expect(result.entries[0].csl.title).toBe(
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.errors ).toHaveLength( 0 );
+		expect( result.entries[ 0 ].inputFormat ).toBe( 'pmid' );
+		expect( result.entries[ 0 ].csl.title ).toBe(
 			'CRISPR–Cas9 for medical genetic screens'
 		);
-		expect(fetchFn).toHaveBeenCalledWith(
-			expect.stringContaining('api.ncbi.nlm.nih.gov')
+		expect( fetchFn ).toHaveBeenCalledWith(
+			expect.stringContaining( 'api.ncbi.nlm.nih.gov' )
 		);
-	});
+	} );
 
-	it('resolves paragraph 1 via embedded DOI and falls through paragraph 2 as freetext', async () => {
+	it( 'resolves paragraph 1 via embedded DOI and falls through paragraph 2 as freetext', async () => {
 		const fetchFn = makeCrossRefFetchFn();
 
 		const result = await parsePastedInput(
@@ -1783,17 +1808,17 @@ describe('parsePastedInput — embedded identifier resolution', () => {
 			{ fetchFn }
 		);
 
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0].inputFormat).toBe('doi');
-		expect(result.errors).toHaveLength(1);
-		expect(result.remainingInput).toContain(
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ].inputFormat ).toBe( 'doi' );
+		expect( result.errors ).toHaveLength( 1 );
+		expect( result.remainingInput ).toContain(
 			'This input is not a parseable citation at all.'
 		);
-	});
+	} );
 
 	// Task 2: Graceful degradation
-	it('falls back to freetext when the embedded-DOI resolver returns a 404', async () => {
-		const fetchFn = makeCrossRefFetchFn(404);
+	it( 'falls back to freetext when the embedded-DOI resolver returns a 404', async () => {
+		const fetchFn = makeCrossRefFetchFn( 404 );
 
 		// This citation can be parsed by the heuristic freetext parser.
 		const result = await parsePastedInput(
@@ -1802,46 +1827,46 @@ describe('parsePastedInput — embedded identifier resolution', () => {
 			{ fetchFn }
 		);
 
-		expect(result.errors).toHaveLength(0);
-		expect(result.entries).toHaveLength(1);
+		expect( result.errors ).toHaveLength( 0 );
+		expect( result.entries ).toHaveLength( 1 );
 		// Falls back to freetext — the freetext parser, not CrossRef, produces the entry.
-		expect(result.entries[0].inputFormat).toBe('freetext');
-		expect(result.entries[0].csl.title).toBe('Learning Blocks');
-	});
+		expect( result.entries[ 0 ].inputFormat ).toBe( 'freetext' );
+		expect( result.entries[ 0 ].csl.title ).toBe( 'Learning Blocks' );
+	} );
 
-	it('surfaces SUPPORTED_INPUT_MESSAGE and original string when both resolver and freetext fail', async () => {
-		const fetchFn = makeCrossRefFetchFn(404);
+	it( 'surfaces SUPPORTED_INPUT_MESSAGE and original string when both resolver and freetext fail', async () => {
+		const fetchFn = makeCrossRefFetchFn( 404 );
 		const FULL_CITATION =
 			'This input is not a parseable citation at all. https://doi.org/10.1234/abcd';
 
-		const result = await parsePastedInput(FULL_CITATION, 'apa-7', {
+		const result = await parsePastedInput( FULL_CITATION, 'apa-7', {
 			fetchFn,
-		});
+		} );
 
-		expect(result.entries).toHaveLength(0);
-		expect(result.errors).toHaveLength(1);
-		expect(result.errors[0]).toContain('Paste a DOI');
-		expect(result.remainingInput).toBe(FULL_CITATION);
-	});
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toHaveLength( 1 );
+		expect( result.errors[ 0 ] ).toContain( 'Paste a DOI' );
+		expect( result.remainingInput ).toBe( FULL_CITATION );
+	} );
 
-	it('does not retry freetext for a bare-identifier DOI failure — keeps existing error path', async () => {
-		const fetchFn = makeCrossRefFetchFn(404);
+	it( 'does not retry freetext for a bare-identifier DOI failure — keeps existing error path', async () => {
+		const fetchFn = makeCrossRefFetchFn( 404 );
 
-		const result = await parsePastedInput('10.1234/abcd', 'apa-7', {
+		const result = await parsePastedInput( '10.1234/abcd', 'apa-7', {
 			fetchFn,
-		});
+		} );
 
-		expect(result.entries).toHaveLength(0);
-		expect(result.errors).toHaveLength(1);
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toHaveLength( 1 );
 		// Bare DOI gets the backend error, not the SUPPORTED_INPUT_MESSAGE.
-		expect(result.errors[0]).toMatch(/Couldn't parse the DOI/i);
-	});
+		expect( result.errors[ 0 ] ).toMatch( /Couldn't parse the DOI/i );
+	} );
 
 	// Task 3: Dedup parity + no-new-SSRF regression
-	it('deduplicates embedded DOI identically to a bare-DOI paste', async () => {
+	it( 'deduplicates embedded DOI identically to a bare-DOI paste', async () => {
 		const fetchFn = makeCrossRefFetchFn();
 		// The normalized form that normalizeDoiValueForLookup produces for the embedded DOI.
-		const existingDoiValues = ['10.1234/abcd'];
+		const existingDoiValues = [ '10.1234/abcd' ];
 
 		const result = await parsePastedInput(
 			'Author. Title. Journal 1 (2024): 1-10. https://doi.org/10.1234/abcd',
@@ -1849,14 +1874,14 @@ describe('parsePastedInput — embedded identifier resolution', () => {
 			{ fetchFn, existingDoiValues }
 		);
 
-		expect(result.entries).toHaveLength(0);
-		expect(result.errors).toHaveLength(0);
-		expect(result.skippedDuplicateCount).toBe(1);
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toHaveLength( 0 );
+		expect( result.skippedDuplicateCount ).toBe( 1 );
 		// fetchFn must NOT be called because the item was deduped before resolution.
-		expect(fetchFn).not.toHaveBeenCalled();
-	});
+		expect( fetchFn ).not.toHaveBeenCalled();
+	} );
 
-	it('fetchFn is only called with CrossRef or NCBI fixed hosts — no arbitrary URL fetch', async () => {
+	it( 'fetchFn is only called with CrossRef or NCBI fixed hosts — no arbitrary URL fetch', async () => {
 		const fetchFn = makeCrossRefFetchFn();
 
 		await parsePastedInput(
@@ -1871,96 +1896,99 @@ describe('parsePastedInput — embedded identifier resolution', () => {
 			'https://api.ncbi.nlm.nih.gov/',
 		];
 
-		for (const [calledUrl] of fetchFn.mock.calls) {
-			const isAllowed = ALLOWED_HOSTS.some((host) =>
-				calledUrl.startsWith(host)
+		for ( const [ calledUrl ] of fetchFn.mock.calls ) {
+			const isAllowed = ALLOWED_HOSTS.some( ( host ) =>
+				calledUrl.startsWith( host )
 			);
-			expect(isAllowed).toBe(true);
+			expect( isAllowed ).toBe( true );
 		}
-	});
-});
+	} );
+} );
 
-describe('PMCID input resolution', () => {
+describe( 'PMCID input resolution', () => {
 	const PMC_CSL = {
 		type: 'article-journal',
 		title: 'A PubMed Central Article',
 		'container-title': 'Journal of Open Access',
-		author: [{ family: 'Rivera', given: 'Ana' }],
-		issued: { 'date-parts': [[2012, 12]] },
+		author: [ { family: 'Rivera', given: 'Ana' } ],
+		issued: { 'date-parts': [ [ 2012, 12 ] ] },
 		DOI: '10.1000/pmc.example',
 		PMCID: 'PMC3531190',
 	};
 
-	function makeFetchFn(status = 200, body = PMC_CSL) {
-		return jest.fn().mockResolvedValue({
+	function makeFetchFn( status = 200, body = PMC_CSL ) {
+		return jest.fn().mockResolvedValue( {
 			ok: status >= 200 && status < 300,
 			status,
-			json: jest.fn().mockResolvedValue(body),
-		});
+			json: jest.fn().mockResolvedValue( body ),
+		} );
 	}
 
-	beforeEach(() => {
+	beforeEach( () => {
 		jest.clearAllMocks();
-	});
+	} );
 
-	it.each([
+	it.each( [
 		'PMC3531190',
 		'pmc3531190',
 		'PMCID: PMC3531190',
 		'PMCID:PMC3531190',
-	])('detects %p and fetches from the NCBI PMC exporter', async (input) => {
+	] )(
+		'detects %p and fetches from the NCBI PMC exporter',
+		async ( input ) => {
+			const fetchFn = makeFetchFn();
+
+			const result = await parsePastedInput( input, 'apa', { fetchFn } );
+
+			expect( fetchFn ).toHaveBeenCalledWith(
+				'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pmc/?format=csl&id=3531190'
+			);
+			expect( result.errors ).toEqual( [] );
+			expect( result.entries ).toHaveLength( 1 );
+			expect( result.entries[ 0 ] ).toMatchObject( {
+				inputFormat: 'pmcid',
+				csl: { title: 'A PubMed Central Article' },
+			} );
+		}
+	);
+
+	it( 'keeps routing PMID input to the PubMed exporter', async () => {
 		const fetchFn = makeFetchFn();
 
-		const result = await parsePastedInput(input, 'apa', { fetchFn });
+		await parsePastedInput( 'PMID:26673779', 'apa', { fetchFn } );
 
-		expect(fetchFn).toHaveBeenCalledWith(
-			'https://api.ncbi.nlm.nih.gov/lit/ctxp/v1/pmc/?format=csl&id=3531190'
+		expect( fetchFn ).toHaveBeenCalledWith(
+			expect.stringContaining( '/pubmed/?format=csl&id=26673779' )
 		);
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
-			inputFormat: 'pmcid',
-			csl: { title: 'A PubMed Central Article' },
-		});
-	});
+	} );
 
-	it('keeps routing PMID input to the PubMed exporter', async () => {
-		const fetchFn = makeFetchFn();
+	it( 'uses the WordPress REST proxy for PMCID resolution by default', async () => {
+		apiFetch.mockResolvedValue( PMC_CSL );
 
-		await parsePastedInput('PMID:26673779', 'apa', { fetchFn });
+		const result = await parsePastedInput( 'PMC3531190', 'apa' );
 
-		expect(fetchFn).toHaveBeenCalledWith(
-			expect.stringContaining('/pubmed/?format=csl&id=26673779')
-		);
-	});
-
-	it('uses the WordPress REST proxy for PMCID resolution by default', async () => {
-		apiFetch.mockResolvedValue(PMC_CSL);
-
-		const result = await parsePastedInput('PMC3531190', 'apa');
-
-		expect(apiFetch).toHaveBeenCalledWith({
+		expect( apiFetch ).toHaveBeenCalledWith( {
 			path: '/bibliography/v1/pmcid/PMC3531190',
-		});
-		expect(result.entries).toHaveLength(1);
-		expect(result.errors).toHaveLength(0);
-	});
+		} );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.errors ).toHaveLength( 0 );
+	} );
 
-	it('returns a PMCID error when resolution fails', async () => {
-		apiFetch.mockRejectedValue(new Error('Not found'));
+	it( 'returns a PMCID error when resolution fails', async () => {
+		apiFetch.mockRejectedValue( new Error( 'Not found' ) );
 
-		const result = await parsePastedInput('PMC99999999', 'apa');
+		const result = await parsePastedInput( 'PMC99999999', 'apa' );
 
-		expect(result.entries).toHaveLength(0);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toEqual( [
 			"Couldn't resolve the PMCID. Check the number and try again.",
-		]);
-	});
+		] );
+	} );
 
-	it('resolves a mixed list of DOI, PMID, and PMCID lines as separate items', async () => {
-		apiFetch.mockImplementation(({ path }) =>
+	it( 'resolves a mixed list of DOI, PMID, and PMCID lines as separate items', async () => {
+		apiFetch.mockImplementation( ( { path } ) =>
 			Promise.resolve(
-				path.includes('/pmcid/')
+				path.includes( '/pmcid/' )
 					? PMC_CSL
 					: { ...PMC_CSL, title: 'PubMed Article', DOI: '10.1000/pm' }
 			)
@@ -1971,238 +1999,244 @@ describe('PMCID input resolution', () => {
 			'apa'
 		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.entries.map((entry) => entry.inputFormat)).toEqual([
-			'pmid',
-			'pmcid',
-		]);
-	});
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries.map( ( entry ) => entry.inputFormat ) ).toEqual(
+			[ 'pmid', 'pmcid' ]
+		);
+	} );
 
-	it('does not call Cite.async for PMCID inputs', async () => {
-		await parsePastedInput('PMC3531190', 'apa', { fetchFn: makeFetchFn() });
+	it( 'does not call Cite.async for PMCID inputs', async () => {
+		await parsePastedInput( 'PMC3531190', 'apa', {
+			fetchFn: makeFetchFn(),
+		} );
 
-		expect(Cite.async).not.toHaveBeenCalled();
-	});
-});
+		expect( Cite.async ).not.toHaveBeenCalled();
+	} );
+} );
 
-describe('extractEmbeddedIdentifier — PMCID', () => {
-	it('extracts a labeled PMCID from a free-text citation', () => {
+describe( 'extractEmbeddedIdentifier — PMCID', () => {
+	it( 'extracts a labeled PMCID from a free-text citation', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Rivera A. A PubMed Central Article. J Open Access. 2012;4:1-9. PMCID: PMC3531190.'
 			)
-		).toMatchObject({ format: 'pmcid', value: 'PMC3531190' });
-	});
+		).toMatchObject( { format: 'pmcid', value: 'PMC3531190' } );
+	} );
 
-	it('extracts an unlabeled PMC identifier', () => {
+	it( 'extracts an unlabeled PMC identifier', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Rivera A. A PubMed Central Article. 2012. PMC3531190'
 			)
-		).toMatchObject({ format: 'pmcid', value: 'PMC3531190' });
-	});
+		).toMatchObject( { format: 'pmcid', value: 'PMC3531190' } );
+	} );
 
-	it('prefers a PMID over a PMCID in the same citation', () => {
+	it( 'prefers a PMID over a PMCID in the same citation', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Rivera A. Article. 2012. PMID: 23300456; PMCID: PMC3531190.'
 			)
-		).toMatchObject({ format: 'pmid', value: 'PMID:23300456' });
-	});
+		).toMatchObject( { format: 'pmid', value: 'PMID:23300456' } );
+	} );
 
-	it('prefers a DOI over a PMCID in the same citation', () => {
+	it( 'prefers a DOI over a PMCID in the same citation', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Rivera A. Article. 2012. doi:10.1000/xyz123. PMC3531190'
 			)
-		).toMatchObject({ format: 'doi' });
-	});
+		).toMatchObject( { format: 'doi' } );
+	} );
 
-	it('ignores short PMC tokens that are unlikely to be identifiers', () => {
-		expect(extractEmbeddedIdentifier('Report PMC12, annex 3.')).toBeNull();
-		expect(extractEmbeddedIdentifier('The PMCs of 2012.')).toBeNull();
-	});
-});
+	it( 'ignores short PMC tokens that are unlikely to be identifiers', () => {
+		expect(
+			extractEmbeddedIdentifier( 'Report PMC12, annex 3.' )
+		).toBeNull();
+		expect( extractEmbeddedIdentifier( 'The PMCs of 2012.' ) ).toBeNull();
+	} );
+} );
 
-describe('arXiv input resolution', () => {
+describe( 'arXiv input resolution', () => {
 	const ARXIV_CSL = {
 		type: 'article',
 		title: 'Attention Is All You Need',
-		author: [{ family: 'Vaswani', given: 'Ashish' }],
-		issued: { 'date-parts': [[2017, 6, 12]] },
+		author: [ { family: 'Vaswani', given: 'Ashish' } ],
+		issued: { 'date-parts': [ [ 2017, 6, 12 ] ] },
 		publisher: 'arXiv',
 		number: 'arXiv:1706.03762',
 		DOI: '10.48550/arXiv.1706.03762',
 		URL: 'https://arxiv.org/abs/1706.03762',
 	};
 
-	beforeEach(() => {
+	beforeEach( () => {
 		jest.clearAllMocks();
 		clearDoiMetadataCache();
-		apiFetch.mockResolvedValue(ARXIV_CSL);
-	});
+		apiFetch.mockResolvedValue( ARXIV_CSL );
+	} );
 
-	it.each([
-		['arXiv:1706.03762', '1706.03762'],
-		['arxiv: 1706.03762v5', '1706.03762v5'],
-		['https://arxiv.org/abs/1706.03762', '1706.03762'],
-		['arxiv.org/pdf/1706.03762v2.pdf', '1706.03762v2'],
-		['https://export.arxiv.org/abs/hep-th/9901001', 'hep-th/9901001'],
-		['arXiv:math.GT/0309136', 'math.GT/0309136'],
-		['10.48550/arXiv.1706.03762', '1706.03762'],
-		['https://doi.org/10.48550/arXiv.1706.03762', '1706.03762'],
-	])('routes %p to the arXiv proxy as %p', async (input, expectedId) => {
-		const result = await parsePastedInput(input, 'apa');
+	it.each( [
+		[ 'arXiv:1706.03762', '1706.03762' ],
+		[ 'arxiv: 1706.03762v5', '1706.03762v5' ],
+		[ 'https://arxiv.org/abs/1706.03762', '1706.03762' ],
+		[ 'arxiv.org/pdf/1706.03762v2.pdf', '1706.03762v2' ],
+		[ 'https://export.arxiv.org/abs/hep-th/9901001', 'hep-th/9901001' ],
+		[ 'arXiv:math.GT/0309136', 'math.GT/0309136' ],
+		[ '10.48550/arXiv.1706.03762', '1706.03762' ],
+		[ 'https://doi.org/10.48550/arXiv.1706.03762', '1706.03762' ],
+	] )( 'routes %p to the arXiv proxy as %p', async ( input, expectedId ) => {
+		const result = await parsePastedInput( input, 'apa' );
 
-		expect(apiFetch).toHaveBeenCalledWith({
-			path: `/bibliography/v1/arxiv?id=${encodeURIComponent(expectedId)}`,
-		});
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		expect( apiFetch ).toHaveBeenCalledWith( {
+			path: `/bibliography/v1/arxiv?id=${ encodeURIComponent( expectedId ) }`,
+		} );
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'arxiv',
 			csl: {
 				type: 'article',
 				publisher: 'arXiv',
 				DOI: '10.48550/arXiv.1706.03762',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('does not treat a bare arXiv-shaped number as an arXiv ID', async () => {
-		const result = await parsePastedInput('1706.03762', 'apa');
+	it( 'does not treat a bare arXiv-shaped number as an arXiv ID', async () => {
+		const result = await parsePastedInput( '1706.03762', 'apa' );
 
-		expect(apiFetch).not.toHaveBeenCalledWith(
-			expect.objectContaining({
-				path: expect.stringContaining('/arxiv'),
-			})
+		expect( apiFetch ).not.toHaveBeenCalledWith(
+			expect.objectContaining( {
+				path: expect.stringContaining( '/arxiv' ),
+			} )
 		);
-		expect(result.entries.every((e) => e.inputFormat !== 'arxiv')).toBe(
-			true
-		);
-	});
+		expect(
+			result.entries.every( ( e ) => e.inputFormat !== 'arxiv' )
+		).toBe( true );
+	} );
 
-	it('leaves ordinary DOIs on the DOI backend', async () => {
-		const fetchFn = jest.fn().mockResolvedValue({
+	it( 'leaves ordinary DOIs on the DOI backend', async () => {
+		const fetchFn = jest.fn().mockResolvedValue( {
 			ok: true,
 			status: 200,
-			json: jest.fn().mockResolvedValue({
+			json: jest.fn().mockResolvedValue( {
 				type: 'journal-article',
 				title: 'Regular Article',
 				DOI: '10.1000/xyz123',
-			}),
-		});
+			} ),
+		} );
 
-		const result = await parsePastedInput('10.1000/xyz123', 'apa', {
+		const result = await parsePastedInput( '10.1000/xyz123', 'apa', {
 			fetchFn,
-		});
+		} );
 
-		expect(result.entries[0].inputFormat).toBe('doi');
-		expect(apiFetch).not.toHaveBeenCalled();
-	});
+		expect( result.entries[ 0 ].inputFormat ).toBe( 'doi' );
+		expect( apiFetch ).not.toHaveBeenCalled();
+	} );
 
-	it('resolves several arXiv IDs one at a time', async () => {
+	it( 'resolves several arXiv IDs one at a time', async () => {
 		let inFlight = 0;
 		let maxInFlight = 0;
-		apiFetch.mockImplementation(async () => {
+		apiFetch.mockImplementation( async () => {
 			inFlight += 1;
-			maxInFlight = Math.max(maxInFlight, inFlight);
-			await new Promise((resolve) => setTimeout(resolve, 5));
+			maxInFlight = Math.max( maxInFlight, inFlight );
+			await new Promise( ( resolve ) => setTimeout( resolve, 5 ) );
 			inFlight -= 1;
 			return ARXIV_CSL;
-		});
+		} );
 
 		const result = await parsePastedInput(
 			'arXiv:1706.03762\narXiv:2301.00001\narXiv:hep-th/9901001',
 			'apa'
 		);
 
-		expect(result.entries).toHaveLength(3);
-		expect(maxInFlight).toBe(1);
-	});
+		expect( result.entries ).toHaveLength( 3 );
+		expect( maxInFlight ).toBe( 1 );
+	} );
 
-	it('returns an arXiv error when resolution fails', async () => {
-		apiFetch.mockRejectedValue(new Error('Not found'));
+	it( 'returns an arXiv error when resolution fails', async () => {
+		apiFetch.mockRejectedValue( new Error( 'Not found' ) );
 
-		const result = await parsePastedInput('arXiv:9999.99999', 'apa');
+		const result = await parsePastedInput( 'arXiv:9999.99999', 'apa' );
 
-		expect(result.entries).toHaveLength(0);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toEqual( [
 			"Couldn't resolve the arXiv ID. Check it and try again.",
-		]);
-	});
-});
+		] );
+	} );
+} );
 
-describe('extractEmbeddedIdentifier — arXiv', () => {
-	it('extracts a labeled arXiv ID from a free-text citation', () => {
+describe( 'extractEmbeddedIdentifier — arXiv', () => {
+	it( 'extracts a labeled arXiv ID from a free-text citation', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Vaswani A, et al. Attention Is All You Need. 2017. arXiv:1706.03762.'
 			)
-		).toMatchObject({ format: 'arxiv', value: 'arXiv:1706.03762' });
-	});
+		).toMatchObject( { format: 'arxiv', value: 'arXiv:1706.03762' } );
+	} );
 
-	it('extracts an arxiv.org URL from a free-text citation', () => {
+	it( 'extracts an arxiv.org URL from a free-text citation', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Vaswani A. Attention. Preprint, https://arxiv.org/abs/1706.03762v7'
 			)
-		).toMatchObject({ format: 'arxiv', value: 'arXiv:1706.03762v7' });
-	});
+		).toMatchObject( { format: 'arxiv', value: 'arXiv:1706.03762v7' } );
+	} );
 
-	it('routes an embedded arXiv DOI to arXiv rather than CrossRef', () => {
+	it( 'routes an embedded arXiv DOI to arXiv rather than CrossRef', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Vaswani A. Attention. 2017. https://doi.org/10.48550/arXiv.1706.03762'
 			)
-		).toMatchObject({ format: 'arxiv', value: 'arXiv:1706.03762' });
-	});
+		).toMatchObject( { format: 'arxiv', value: 'arXiv:1706.03762' } );
+	} );
 
-	it('prefers a journal DOI over an arXiv label in the same citation', () => {
+	it( 'prefers a journal DOI over an arXiv label in the same citation', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Author. Title. Nature 1 (2020). doi:10.1038/s41586-020-2649-2. arXiv:2006.10256'
 			)
-		).toMatchObject({ format: 'doi' });
-	});
-});
+		).toMatchObject( { format: 'doi' } );
+	} );
+} );
 
-describe('normalizeIsbn', () => {
-	it.each([
-		['9780140328721', '9780140328721'],
-		['978-0-14-032872-1', '9780140328721'],
-		['0140328726', '9780140328721'],
-		['0-14-032872-6', '9780140328721'],
-		['080442957X', '9780804429573'],
-		['080442957x', '9780804429573'],
-	])('normalizes %p to %p', (input, expected) => {
-		expect(normalizeIsbn(input)).toBe(expected);
-	});
+describe( 'normalizeIsbn', () => {
+	it.each( [
+		[ '9780140328721', '9780140328721' ],
+		[ '978-0-14-032872-1', '9780140328721' ],
+		[ '0140328726', '9780140328721' ],
+		[ '0-14-032872-6', '9780140328721' ],
+		[ '080442957X', '9780804429573' ],
+		[ '080442957x', '9780804429573' ],
+	] )( 'normalizes %p to %p', ( input, expected ) => {
+		expect( normalizeIsbn( input ) ).toBe( expected );
+	} );
 
-	it.each(['9780140328722', '0140328727', '9770140328721', '12345', 'abc'])(
-		'rejects %p',
-		(input) => {
-			expect(normalizeIsbn(input)).toBeNull();
-		}
-	);
-});
+	it.each( [
+		'9780140328722',
+		'0140328727',
+		'9770140328721',
+		'12345',
+		'abc',
+	] )( 'rejects %p', ( input ) => {
+		expect( normalizeIsbn( input ) ).toBeNull();
+	} );
+} );
 
-describe('ISBN input resolution', () => {
+describe( 'ISBN input resolution', () => {
 	const BOOK_CSL = {
 		type: 'book',
 		title: 'Fantastic Mr. Fox',
-		author: [{ family: 'Dahl', given: 'Roald' }],
+		author: [ { family: 'Dahl', given: 'Roald' } ],
 		publisher: 'Puffin',
-		issued: { 'date-parts': [[1988]] },
+		issued: { 'date-parts': [ [ 1988 ] ] },
 		ISBN: '9780140328721',
 	};
 
-	beforeEach(() => {
+	beforeEach( () => {
 		jest.clearAllMocks();
-		apiFetch.mockResolvedValue(BOOK_CSL);
-	});
+		apiFetch.mockResolvedValue( BOOK_CSL );
+	} );
 
-	it.each([
+	it.each( [
 		'ISBN 9780140328721',
 		'ISBN: 978-0-14-032872-1',
 		'ISBN-13: 9780140328721',
@@ -2210,160 +2244,160 @@ describe('ISBN input resolution', () => {
 		'isbn 0140328726',
 		'9780140328721',
 		'978-0-14-032872-1',
-	])('routes %p to the ISBN proxy as an ISBN-13', async (input) => {
-		const result = await parsePastedInput(input, 'apa');
+	] )( 'routes %p to the ISBN proxy as an ISBN-13', async ( input ) => {
+		const result = await parsePastedInput( input, 'apa' );
 
-		expect(apiFetch).toHaveBeenCalledWith({
+		expect( apiFetch ).toHaveBeenCalledWith( {
 			path: '/bibliography/v1/isbn/9780140328721',
-		});
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		} );
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'isbn',
 			csl: { type: 'book', ISBN: '9780140328721' },
-		});
-	});
+		} );
+	} );
 
-	it('does not treat a bare ISBN-10 or a bad checksum as an ISBN', async () => {
-		await parsePastedInput('0140328726', 'apa');
-		await parsePastedInput('ISBN 9780140328722', 'apa');
+	it( 'does not treat a bare ISBN-10 or a bad checksum as an ISBN', async () => {
+		await parsePastedInput( '0140328726', 'apa' );
+		await parsePastedInput( 'ISBN 9780140328722', 'apa' );
 
-		expect(apiFetch).not.toHaveBeenCalledWith(
-			expect.objectContaining({
-				path: expect.stringContaining('/isbn/'),
-			})
+		expect( apiFetch ).not.toHaveBeenCalledWith(
+			expect.objectContaining( {
+				path: expect.stringContaining( '/isbn/' ),
+			} )
 		);
-	});
+	} );
 
-	it('returns an ISBN error when resolution fails', async () => {
-		apiFetch.mockRejectedValue(new Error('Not found'));
+	it( 'returns an ISBN error when resolution fails', async () => {
+		apiFetch.mockRejectedValue( new Error( 'Not found' ) );
 
-		const result = await parsePastedInput('ISBN 9780140328721', 'apa');
+		const result = await parsePastedInput( 'ISBN 9780140328721', 'apa' );
 
-		expect(result.entries).toHaveLength(0);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toEqual( [
 			"Couldn't resolve the ISBN. Check it and try again.",
-		]);
-	});
-});
+		] );
+	} );
+} );
 
-describe('extractEmbeddedIdentifier — ISBN', () => {
-	it('extracts a labeled ISBN from a free-text book citation', () => {
+describe( 'extractEmbeddedIdentifier — ISBN', () => {
+	it( 'extracts a labeled ISBN from a free-text book citation', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Dahl, Roald. Fantastic Mr. Fox. New York: Puffin, 1988. ISBN 978-0-14-032872-1.'
 			)
-		).toMatchObject({ format: 'isbn', value: 'ISBN 9780140328721' });
-	});
+		).toMatchObject( { format: 'isbn', value: 'ISBN 9780140328721' } );
+	} );
 
-	it('ignores an ISBN-shaped number with a bad checksum', () => {
+	it( 'ignores an ISBN-shaped number with a bad checksum', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Some Book. 2001. ISBN 978-0-14-032872-2.'
 			)
 		).toBeNull();
-	});
+	} );
 
-	it('prefers a DOI over an ISBN in the same citation', () => {
+	it( 'prefers a DOI over an ISBN in the same citation', () => {
 		expect(
 			extractEmbeddedIdentifier(
 				'Author. Book. Press, 2020. ISBN 9780140328721. doi:10.1000/book.1'
 			)
-		).toMatchObject({ format: 'doi' });
-	});
-});
+		).toMatchObject( { format: 'doi' } );
+	} );
+} );
 
-describe('arXiv link host boundary', () => {
-	it.each([
+describe( 'arXiv link host boundary', () => {
+	it.each( [
 		'Preprint. https://evilarxiv.org/abs/1706.03762',
 		'Mirror copy: https://mirror.arxiv.org/abs/1706.03762',
 		'Tagged notarxiv:1706.03762 in the text',
-	])('does not treat %p as an arXiv link', (text) => {
-		expect(extractEmbeddedIdentifier(text)).toBeNull();
-	});
+	] )( 'does not treat %p as an arXiv link', ( text ) => {
+		expect( extractEmbeddedIdentifier( text ) ).toBeNull();
+	} );
 
-	it.each([
-		['See (https://arxiv.org/abs/1706.03762).', 'arXiv:1706.03762'],
-		['https://www.arxiv.org/pdf/1706.03762v2', 'arXiv:1706.03762v2'],
-	])('still extracts %p', (text, expected) => {
-		expect(extractEmbeddedIdentifier(text)).toMatchObject({
+	it.each( [
+		[ 'See (https://arxiv.org/abs/1706.03762).', 'arXiv:1706.03762' ],
+		[ 'https://www.arxiv.org/pdf/1706.03762v2', 'arXiv:1706.03762v2' ],
+	] )( 'still extracts %p', ( text, expected ) => {
+		expect( extractEmbeddedIdentifier( text ) ).toMatchObject( {
 			format: 'arxiv',
 			value: expected,
-		});
-	});
-});
+		} );
+	} );
+} );
 
-describe('ISBN request pacing', () => {
+describe( 'ISBN request pacing', () => {
 	const BOOK = { type: 'book', title: 'Book', ISBN: '9780140328721' };
 
-	beforeEach(() => {
+	beforeEach( () => {
 		jest.clearAllMocks();
 		clearDoiMetadataCache();
-	});
+	} );
 
-	it('resolves several ISBNs one at a time', async () => {
+	it( 'resolves several ISBNs one at a time', async () => {
 		let inFlight = 0;
 		let maxInFlight = 0;
-		apiFetch.mockImplementation(async () => {
+		apiFetch.mockImplementation( async () => {
 			inFlight += 1;
-			maxInFlight = Math.max(maxInFlight, inFlight);
-			await new Promise((resolve) => setTimeout(resolve, 5));
+			maxInFlight = Math.max( maxInFlight, inFlight );
+			await new Promise( ( resolve ) => setTimeout( resolve, 5 ) );
 			inFlight -= 1;
 			return BOOK;
-		});
+		} );
 
 		const result = await parsePastedInput(
 			'ISBN 9780140328721\nISBN 9780804429573\nISBN 0-14-032872-6',
 			'apa'
 		);
 
-		expect(result.entries).toHaveLength(3);
-		expect(maxInFlight).toBe(1);
-	});
+		expect( result.entries ).toHaveLength( 3 );
+		expect( maxInFlight ).toBe( 1 );
+	} );
 
-	it('keeps the queue moving after a failed lookup', async () => {
+	it( 'keeps the queue moving after a failed lookup', async () => {
 		apiFetch
-			.mockRejectedValueOnce(new Error('upstream down'))
-			.mockResolvedValueOnce(BOOK);
+			.mockRejectedValueOnce( new Error( 'upstream down' ) )
+			.mockResolvedValueOnce( BOOK );
 
 		const result = await parsePastedInput(
 			'ISBN 9780140328721\nISBN 9780804429573',
 			'apa'
 		);
 
-		expect(result.entries).toHaveLength(1);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.errors ).toEqual( [
 			"Couldn't resolve the ISBN. Check it and try again.",
-		]);
-		expect(apiFetch).toHaveBeenCalledTimes(2);
-	});
+		] );
+		expect( apiFetch ).toHaveBeenCalledTimes( 2 );
+	} );
 
-	it('paces ISBN and arXiv lookups on separate queues', async () => {
+	it( 'paces ISBN and arXiv lookups on separate queues', async () => {
 		let inFlight = 0;
 		let maxInFlight = 0;
-		apiFetch.mockImplementation(async ({ path }) => {
+		apiFetch.mockImplementation( async ( { path } ) => {
 			inFlight += 1;
-			maxInFlight = Math.max(maxInFlight, inFlight);
-			await new Promise((resolve) => setTimeout(resolve, 5));
+			maxInFlight = Math.max( maxInFlight, inFlight );
+			await new Promise( ( resolve ) => setTimeout( resolve, 5 ) );
 			inFlight -= 1;
-			return path.includes('/isbn/')
+			return path.includes( '/isbn/' )
 				? BOOK
 				: { type: 'article', title: 'Preprint' };
-		});
+		} );
 
 		const result = await parsePastedInput(
 			'ISBN 9780140328721\narXiv:1706.03762',
 			'apa'
 		);
 
-		expect(result.entries).toHaveLength(2);
+		expect( result.entries ).toHaveLength( 2 );
 		// One ISBN and one arXiv lookup overlapped: each upstream has its own
 		// queue, so pacing one never delays the other.
-		expect(maxInFlight).toBe(2);
-	});
-});
+		expect( maxInFlight ).toBe( 2 );
+	} );
+} );
 
-describe('CSL-JSON paste', () => {
+describe( 'CSL-JSON paste', () => {
 	const webpage = {
 		type: 'webpage',
 		title: 'Usage Statistics for Drupal Core',
@@ -2373,216 +2407,227 @@ describe('CSL-JSON paste', () => {
 		type: 'paper-conference',
 		title: 'A Paper',
 		DOI: '10.14722/ndss.2019.23386',
-		author: [{ family: 'Lee', given: 'Kim' }],
+		author: [ { family: 'Lee', given: 'Kim' } ],
 	};
 
-	it('imports an array of CSL items and a single item', async () => {
-		const result = await parsePastedInput(JSON.stringify([webpage, paper]));
+	it( 'imports an array of CSL items and a single item', async () => {
+		const result = await parsePastedInput(
+			JSON.stringify( [ webpage, paper ] )
+		);
 
-		expect(result.errors).toEqual([]);
-		expect(result.remainingInput).toBe('');
-		expect(result.entries).toHaveLength(2);
-		expect(result.entries[0]).toMatchObject({
+		expect( result.errors ).toEqual( [] );
+		expect( result.remainingInput ).toBe( '' );
+		expect( result.entries ).toHaveLength( 2 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			csl: { type: 'webpage', title: webpage.title },
 			formattedText: null,
 			displayOverride: null,
 			inputFormat: 'csl-json',
-		});
+		} );
 
-		const single = await parsePastedInput(JSON.stringify(paper));
-		expect(single.entries.map((entry) => entry.csl.type)).toEqual([
+		const single = await parsePastedInput( JSON.stringify( paper ) );
+		expect( single.entries.map( ( entry ) => entry.csl.type ) ).toEqual( [
 			'paper-conference',
-		]);
-	});
+		] );
+	} );
 
-	it('sanitizes items like every other import', async () => {
+	it( 'sanitizes items like every other import', async () => {
 		const result = await parsePastedInput(
-			JSON.stringify([{ ...webpage, title: '<b>Usage</b> Statistics' }])
+			JSON.stringify( [
+				{ ...webpage, title: '<b>Usage</b> Statistics' },
+			] )
 		);
 
-		expect(result.entries[0].csl.title).toBe('Usage Statistics');
-	});
+		expect( result.entries[ 0 ].csl.title ).toBe( 'Usage Statistics' );
+	} );
 
-	it('skips invalid items, says which, and keeps only them to retry', async () => {
+	it( 'skips invalid items, says which, and keeps only them to retry', async () => {
 		const bad = { type: 'not-a-type', title: 'Bad' };
 		const result = await parsePastedInput(
-			JSON.stringify([webpage, bad, paper])
+			JSON.stringify( [ webpage, bad, paper ] )
 		);
 
-		expect(result.entries).toHaveLength(2);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toHaveLength( 2 );
+		expect( result.errors ).toEqual( [
 			'Skipped CSL-JSON items that are not valid citations (item 2).',
-		]);
-		expect(JSON.parse(result.remainingInput)).toEqual([bad]);
-	});
+		] );
+		expect( JSON.parse( result.remainingInput ) ).toEqual( [ bad ] );
+	} );
 
-	it('says plainly when the JSON is not CSL-JSON', async () => {
+	it( 'says plainly when the JSON is not CSL-JSON', async () => {
 		const input = '{ "name": "package", "version": "1.0.0" }';
-		const result = await parsePastedInput(input);
+		const result = await parsePastedInput( input );
 
-		expect(result.entries).toEqual([]);
-		expect(result.errors).toEqual([
+		expect( result.entries ).toEqual( [] );
+		expect( result.errors ).toEqual( [
 			'This JSON is not CSL-JSON. Paste a CSL-JSON array, such as a reference manager’s CSL JSON export, or use BibTeX or manual entry.',
-		]);
-		expect(result.remainingInput).toBe(input);
-	});
+		] );
+		expect( result.remainingInput ).toBe( input );
+	} );
 
-	it('skips items whose DOI is already in the bibliography', async () => {
+	it( 'skips items whose DOI is already in the bibliography', async () => {
 		const result = await parsePastedInput(
-			JSON.stringify([webpage, paper]),
+			JSON.stringify( [ webpage, paper ] ),
 			undefined,
-			{ existingDoiValues: ['https://doi.org/10.14722/ndss.2019.23386'] }
+			{
+				existingDoiValues: [
+					'https://doi.org/10.14722/ndss.2019.23386',
+				],
+			}
 		);
 
-		expect(result.entries.map((entry) => entry.csl.type)).toEqual([
+		expect( result.entries.map( ( entry ) => entry.csl.type ) ).toEqual( [
 			'webpage',
-		]);
-		expect(result.skippedDuplicateCount).toBe(1);
-		expect(result.errors).toEqual([]);
-	});
+		] );
+		expect( result.skippedDuplicateCount ).toBe( 1 );
+		expect( result.errors ).toEqual( [] );
+	} );
 
-	it('formats the items when formatting is not deferred', async () => {
-		formatBibliographyEntries.mockResolvedValueOnce(['Formatted.']);
+	it( 'formats the items when formatting is not deferred', async () => {
+		formatBibliographyEntries.mockResolvedValueOnce( [ 'Formatted.' ] );
 
 		const result = await parsePastedInput(
-			JSON.stringify([webpage]),
+			JSON.stringify( [ webpage ] ),
 			'chicago-notes-bibliography',
 			{ deferFormatting: false }
 		);
 
-		expect(result.entries[0].formattedText).toBe('Formatted.');
-	});
+		expect( result.entries[ 0 ].formattedText ).toBe( 'Formatted.' );
+	} );
 
-	it('keeps items over the per-paste limit to retry', async () => {
-		const items = Array.from({ length: 52 }, (_, index) => ({
+	it( 'keeps items over the per-paste limit to retry', async () => {
+		const items = Array.from( { length: 52 }, ( _, index ) => ( {
 			...webpage,
-			title: `Page ${index + 1}`,
-		}));
-		const result = await parsePastedInput(JSON.stringify(items));
+			title: `Page ${ index + 1 }`,
+		} ) );
+		const result = await parsePastedInput( JSON.stringify( items ) );
 
-		expect(result.entries).toHaveLength(50);
-		expect(result.truncated).toBe(true);
+		expect( result.entries ).toHaveLength( 50 );
+		expect( result.truncated ).toBe( true );
 		expect(
-			JSON.parse(result.remainingInput).map((item) => item.title)
-		).toEqual(['Page 51', 'Page 52']);
-	});
-});
+			JSON.parse( result.remainingInput ).map( ( item ) => item.title )
+		).toEqual( [ 'Page 51', 'Page 52' ] );
+	} );
+} );
 
-describe('library catalog numbers', () => {
+describe( 'library catalog numbers', () => {
 	const BOOK_CSL = {
 		type: 'book',
 		title: 'Limits to medicine: medical nemesis: the expropriation of health',
-		author: [{ family: 'Illich', given: 'Ivan' }],
+		author: [ { family: 'Illich', given: 'Ivan' } ],
 		publisher: 'Penguin',
 		'publisher-place': 'Harmondsworth',
-		issued: { 'date-parts': [[1977]] },
+		issued: { 'date-parts': [ [ 1977 ] ] },
 	};
 
-	beforeEach(() => {
+	beforeEach( () => {
 		jest.clearAllMocks();
-		apiFetch.mockResolvedValue(BOOK_CSL);
-	});
+		apiFetch.mockResolvedValue( BOOK_CSL );
+	} );
 
-	it.each([
-		['OCLC 2121853', 'OCLC:2121853'],
-		['oclc: 2121853', 'OCLC:2121853'],
-		['OCLC no. 2121853', 'OCLC:2121853'],
-		['(OCoLC)ocm02121853', 'OCLC:2121853'],
-		['urn:oclc:record:1035892241', 'OCLC:1035892241'],
-		['https://www.worldcat.org/oclc/2121853', 'OCLC:2121853'],
-		['https://search.worldcat.org/title/2121853', 'OCLC:2121853'],
+	it.each( [
+		[ 'OCLC 2121853', 'OCLC:2121853' ],
+		[ 'oclc: 2121853', 'OCLC:2121853' ],
+		[ 'OCLC no. 2121853', 'OCLC:2121853' ],
+		[ '(OCoLC)ocm02121853', 'OCLC:2121853' ],
+		[ 'urn:oclc:record:1035892241', 'OCLC:1035892241' ],
+		[ 'https://www.worldcat.org/oclc/2121853', 'OCLC:2121853' ],
+		[ 'https://search.worldcat.org/title/2121853', 'OCLC:2121853' ],
 		[
 			'https://www.worldcat.org/title/limits-to-medicine/oclc/2121853',
 			'OCLC:2121853',
 		],
-		['LCCN 78-315129', 'LCCN:78315129'],
-		['LCCN: 78315129', 'LCCN:78315129'],
-		['https://lccn.loc.gov/78315129', 'LCCN:78315129'],
-		['OL4288142M', 'OLID:OL4288142M'],
-		['olid:ol4288142m', 'OLID:OL4288142M'],
+		[ 'LCCN 78-315129', 'LCCN:78315129' ],
+		[ 'LCCN: 78315129', 'LCCN:78315129' ],
+		[ 'https://lccn.loc.gov/78315129', 'LCCN:78315129' ],
+		[ 'OL4288142M', 'OLID:OL4288142M' ],
+		[ 'olid:ol4288142m', 'OLID:OL4288142M' ],
 		[
 			'https://openlibrary.org/books/OL4288142M/Limits_to_medicine',
 			'OLID:OL4288142M',
 		],
-	])('reads %p as %p', (input, key) => {
-		expect(getCatalogKey(input)).toBe(key);
-	});
+	] )( 'reads %p as %p', ( input, key ) => {
+		expect( getCatalogKey( input ) ).toBe( key );
+	} );
 
-	it.each(['2121853', 'OCLC 0', 'LCCN 12', 'OL2848897W', 'OCLC 12 and more'])(
-		'does not read %p as a catalog number',
-		(input) => {
-			expect(getCatalogKey(input)).toBeNull();
-		}
-	);
+	it.each( [
+		'2121853',
+		'OCLC 0',
+		'LCCN 12',
+		'OL2848897W',
+		'OCLC 12 and more',
+	] )( 'does not read %p as a catalog number', ( input ) => {
+		expect( getCatalogKey( input ) ).toBeNull();
+	} );
 
-	it('normalizes LCCNs the way Library of Congress does', () => {
-		expect(normalizeLccn('n 78-890351')).toBe('n78890351');
-		expect(normalizeLccn('76028766/r85')).toBe('76028766');
-		expect(normalizeLccn('12-')).toBeNull();
-		expect(normalizeLccn('123456789')).toBeNull();
-		expect(normalizeLccn('76-123456789')).toBeNull();
-		expect(normalizeLccn('2001-012345')).toBe('2001012345');
-	});
+	it( 'normalizes LCCNs the way Library of Congress does', () => {
+		expect( normalizeLccn( 'n 78-890351' ) ).toBe( 'n78890351' );
+		expect( normalizeLccn( '76028766/r85' ) ).toBe( '76028766' );
+		expect( normalizeLccn( '12-' ) ).toBeNull();
+		expect( normalizeLccn( '123456789' ) ).toBeNull();
+		expect( normalizeLccn( '76-123456789' ) ).toBeNull();
+		expect( normalizeLccn( '2001-012345' ) ).toBe( '2001012345' );
+	} );
 
-	it('routes a catalog number to the catalog proxy', async () => {
-		const result = await parsePastedInput('LCCN 78-315129', 'apa');
+	it( 'routes a catalog number to the catalog proxy', async () => {
+		const result = await parsePastedInput( 'LCCN 78-315129', 'apa' );
 
-		expect(apiFetch).toHaveBeenCalledWith({
+		expect( apiFetch ).toHaveBeenCalledWith( {
 			path: '/bibliography/v1/catalog?id=LCCN%3A78315129',
-		});
-		expect(result.errors).toEqual([]);
-		expect(result.entries).toHaveLength(1);
-		expect(result.entries[0]).toMatchObject({
+		} );
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'catalog',
 			csl: { type: 'book', publisher: 'Penguin' },
-		});
-	});
+		} );
+	} );
 
-	it('resolves one catalog number per line', async () => {
+	it( 'resolves one catalog number per line', async () => {
 		const result = await parsePastedInput(
 			'OCLC 2121853\nOL4288142M',
 			'apa'
 		);
 
-		expect(apiFetch).toHaveBeenCalledTimes(2);
-		expect(result.entries).toHaveLength(2);
-	});
+		expect( apiFetch ).toHaveBeenCalledTimes( 2 );
+		expect( result.entries ).toHaveLength( 2 );
+	} );
 
-	it('explains that an Open Library work ID is not an edition', async () => {
-		const result = await parsePastedInput('OL2848897W', 'apa');
+	it( 'explains that an Open Library work ID is not an edition', async () => {
+		const result = await parsePastedInput( 'OL2848897W', 'apa' );
 
-		expect(apiFetch).not.toHaveBeenCalled();
-		expect(result.entries).toHaveLength(0);
-		expect(result.errors).toEqual([
+		expect( apiFetch ).not.toHaveBeenCalled();
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toEqual( [
 			'That is an Open Library work ID, which covers every edition. Paste the edition ID (OL…M) or the book’s ISBN instead.',
-		]);
-	});
+		] );
+	} );
 
-	it('returns a catalog error when resolution fails', async () => {
-		apiFetch.mockRejectedValue(new Error('Not found'));
+	it( 'returns a catalog error when resolution fails', async () => {
+		apiFetch.mockRejectedValue( new Error( 'Not found' ) );
 
-		const result = await parsePastedInput('OCLC 2121853', 'apa');
+		const result = await parsePastedInput( 'OCLC 2121853', 'apa' );
 
-		expect(result.errors).toEqual([
+		expect( result.errors ).toEqual( [
 			'Open Library has no record for that catalog number. Check it, or paste the book’s ISBN instead.',
-		]);
-	});
-});
+		] );
+	} );
+} );
 
-describe('Internet Archive items', () => {
+describe( 'Internet Archive items', () => {
 	const ITEM_CSL = {
 		type: 'book',
 		title: 'Limits to medicine: medical nemesis: the expropriation of health',
-		author: [{ family: 'Illich', given: 'Ivan' }],
+		author: [ { family: 'Illich', given: 'Ivan' } ],
 		URL: 'https://archive.org/details/limitstomedicine00illi',
 	};
 
-	beforeEach(() => {
+	beforeEach( () => {
 		jest.clearAllMocks();
-		apiFetch.mockResolvedValue(ITEM_CSL);
-	});
+		apiFetch.mockResolvedValue( ITEM_CSL );
+	} );
 
-	it.each([
+	it.each( [
 		[
 			'https://archive.org/details/limitstomedicine00illi',
 			'limitstomedicine00illi',
@@ -2599,74 +2644,74 @@ describe('Internet Archive items', () => {
 			'https://archive.org/download/limitstomedicine00illi/limitstomedicine00illi_archive_marc.xml',
 			'limitstomedicine00illi',
 		],
-		['ia:limitstomedicine00illi', 'limitstomedicine00illi'],
-		['ark:/13960/t6k09s648', 'ark:/13960/t6k09s648'],
-		['https://n2t.net/ark:/13960/t6k09s648', 'ark:/13960/t6k09s648'],
+		[ 'ia:limitstomedicine00illi', 'limitstomedicine00illi' ],
+		[ 'ark:/13960/t6k09s648', 'ark:/13960/t6k09s648' ],
+		[ 'https://n2t.net/ark:/13960/t6k09s648', 'ark:/13960/t6k09s648' ],
 		[
 			'https://archive.org/details/ark:/13960/T6K09S648',
 			'ark:/13960/t6k09s648',
 		],
-	])('reads %p as %p', (input, id) => {
-		expect(getArchiveId(input)).toBe(id);
-	});
+	] )( 'reads %p as %p', ( input, id ) => {
+		expect( getArchiveId( input ) ).toBe( id );
+	} );
 
-	it.each([
+	it.each( [
 		'limitstomedicine00illi',
 		'https://web.archive.org/web/2020/https://example.com/',
 		'https://archive.org/details/@lotu_tii',
 		'https://notarchive.org/details/limitstomedicine00illi',
 		'ark:/12345/t6k09s648',
-	])('does not read %p as an Internet Archive item', (input) => {
-		expect(getArchiveId(input)).toBeNull();
-	});
+	] )( 'does not read %p as an Internet Archive item', ( input ) => {
+		expect( getArchiveId( input ) ).toBeNull();
+	} );
 
-	it('routes an archive.org link to the Internet Archive proxy', async () => {
+	it( 'routes an archive.org link to the Internet Archive proxy', async () => {
 		const result = await parsePastedInput(
 			'https://archive.org/details/limitstomedicine00illi',
 			'chicago-notes-bibliography'
 		);
 
-		expect(apiFetch).toHaveBeenCalledWith({
+		expect( apiFetch ).toHaveBeenCalledWith( {
 			path: '/bibliography/v1/archive?id=limitstomedicine00illi',
-		});
-		expect(result.errors).toEqual([]);
-		expect(result.entries[0]).toMatchObject({
+		} );
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'archive',
 			csl: { URL: 'https://archive.org/details/limitstomedicine00illi' },
-		});
-	});
+		} );
+	} );
 
-	it('sends an ARK to the proxy encoded', async () => {
-		await parsePastedInput('ark:/13960/t6k09s648', 'apa');
+	it( 'sends an ARK to the proxy encoded', async () => {
+		await parsePastedInput( 'ark:/13960/t6k09s648', 'apa' );
 
-		expect(apiFetch).toHaveBeenCalledWith({
+		expect( apiFetch ).toHaveBeenCalledWith( {
 			path: '/bibliography/v1/archive?id=ark%3A%2F13960%2Ft6k09s648',
-		});
-	});
+		} );
+	} );
 
-	it('leaves a full citation with an archive.org link to the free-text parser', async () => {
+	it( 'leaves a full citation with an archive.org link to the free-text parser', async () => {
 		const result = await parsePastedInput(
 			'Illich, Ivan. Limits to Medicine. London: Boyars, 1976. https://archive.org/details/limitstomedicine00illi',
 			'chicago-notes-bibliography'
 		);
 
-		expect(apiFetch).not.toHaveBeenCalled();
-		expect(result.entries[0]).toMatchObject({
+		expect( apiFetch ).not.toHaveBeenCalled();
+		expect( result.entries[ 0 ] ).toMatchObject( {
 			inputFormat: 'freetext',
 			csl: { 'publisher-place': 'London', publisher: 'Boyars' },
-		});
-	});
+		} );
+	} );
 
-	it('returns an Internet Archive error when resolution fails', async () => {
-		apiFetch.mockRejectedValue(new Error('Not found'));
+	it( 'returns an Internet Archive error when resolution fails', async () => {
+		apiFetch.mockRejectedValue( new Error( 'Not found' ) );
 
 		const result = await parsePastedInput(
 			'https://archive.org/details/no-such-item-here',
 			'apa'
 		);
 
-		expect(result.errors).toEqual([
+		expect( result.errors ).toEqual( [
 			"Couldn't resolve the Internet Archive item. Check the link and try again.",
-		]);
-	});
-});
+		] );
+	} );
+} );

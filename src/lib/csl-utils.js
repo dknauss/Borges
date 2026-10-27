@@ -12,9 +12,9 @@
  * @param {unknown} value CSL-JSON identifier field value.
  * @return {string} Primary identifier string, or an empty string.
  */
-export function getPrimaryIdentifierValue(value) {
-	if (Array.isArray(value)) {
-		return value.find((item) => typeof item === 'string' && item) || '';
+export function getPrimaryIdentifierValue( value ) {
+	if ( Array.isArray( value ) ) {
+		return value.find( ( item ) => typeof item === 'string' && item ) || '';
 	}
 
 	return typeof value === 'string' ? value : '';

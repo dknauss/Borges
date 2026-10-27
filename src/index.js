@@ -10,7 +10,7 @@ import {
 	getDefaultHeadingText,
 } from './lib/formatting';
 
-registerBlockType(metadata.name, {
+registerBlockType( metadata.name, {
 	edit: Edit,
 	deprecated,
 	save,
@@ -20,8 +20,8 @@ registerBlockType(metadata.name, {
 			isDefault: true,
 			attributes: {
 				citationStyle: DEFAULT_CITATION_STYLE,
-				headingText: getDefaultHeadingText(DEFAULT_CITATION_STYLE),
+				headingText: getDefaultHeadingText( DEFAULT_CITATION_STYLE ),
 			},
 		},
 	],
-});
+} );

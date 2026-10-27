@@ -10,10 +10,10 @@ const EXCLUDED_STYLE_KEYS = {
 	oscola: 'OSCOLA grouped bibliography is deferred to Epic-OSCOLA and is out of current conformance scope.',
 };
 
-const CONFORMANCE_STYLE_KEYS = Object.values(STYLE_DEFINITIONS)
-	.filter((definition) => definition.enabled)
-	.map((definition) => definition.key)
-	.filter((styleKey) => !(styleKey in EXCLUDED_STYLE_KEYS));
+const CONFORMANCE_STYLE_KEYS = Object.values( STYLE_DEFINITIONS )
+	.filter( ( definition ) => definition.enabled )
+	.map( ( definition ) => definition.key )
+	.filter( ( styleKey ) => ! ( styleKey in EXCLUDED_STYLE_KEYS ) );
 
 // The bundled CSL styles sort on the raw title, so citeproc-js files "An
 // Aardvark Study" under "An" and "A Theory of Sorting" under "A". Borges skips
@@ -27,55 +27,55 @@ const EXCLUDED_FIXTURE_IDS = {
 		'Borges skips the leading article; the bundled styles sort on the raw title.',
 };
 
-function hasConformanceSortableMetadata(citation) {
+function hasConformanceSortableMetadata( citation ) {
 	const csl = citation.csl || {};
 	const hasContributor =
-		(csl.author && csl.author.length > 0) ||
-		(csl.editor && csl.editor.length > 0);
+		( csl.author && csl.author.length > 0 ) ||
+		( csl.editor && csl.editor.length > 0 );
 	const hasTitle = typeof csl.title === 'string' && csl.title.trim() !== '';
-	const hasYear = Boolean(csl.issued?.['date-parts']?.[0]?.[0]);
+	const hasYear = Boolean( csl.issued?.[ 'date-parts' ]?.[ 0 ]?.[ 0 ] );
 
 	return hasContributor && hasTitle && hasYear;
 }
 
 const CONFORMANCE_FIXTURES = SORT_BASELINE_FIXTURES.filter(
 	hasConformanceSortableMetadata
-).filter((citation) => !(citation.id in EXCLUDED_FIXTURE_IDS));
+).filter( ( citation ) => ! ( citation.id in EXCLUDED_FIXTURE_IDS ) );
 
-describe('sort conformance against citeproc-js', () => {
-	it('documents and enforces explicit exclusions for non-conformance scope styles', () => {
-		expect(Object.keys(EXCLUDED_STYLE_KEYS).sort()).toEqual([
+describe( 'sort conformance against citeproc-js', () => {
+	it( 'documents and enforces explicit exclusions for non-conformance scope styles', () => {
+		expect( Object.keys( EXCLUDED_STYLE_KEYS ).sort() ).toEqual( [
 			'ieee',
 			'oscola',
 			'vancouver',
-		]);
-	});
+		] );
+	} );
 
-	it('documents fixture exclusions that currently diverge from citeproc sort semantics', () => {
-		expect(Object.keys(EXCLUDED_FIXTURE_IDS).sort()).toEqual([
+	it( 'documents fixture exclusions that currently diverge from citeproc sort semantics', () => {
+		expect( Object.keys( EXCLUDED_FIXTURE_IDS ).sort() ).toEqual( [
 			'jones-aardvark-2020',
 			'miller-a-theory-2021',
-		]);
-	});
+		] );
+	} );
 
-	it.each(CONFORMANCE_STYLE_KEYS)(
+	it.each( CONFORMANCE_STYLE_KEYS )(
 		'matches citeproc-js bibliography order for %s',
-		(styleKey) => {
-			const styleDefinition = STYLE_DEFINITIONS[styleKey];
-			const cslItems = CONFORMANCE_FIXTURES.map((citation) => ({
+		( styleKey ) => {
+			const styleDefinition = STYLE_DEFINITIONS[ styleKey ];
+			const cslItems = CONFORMANCE_FIXTURES.map( ( citation ) => ( {
 				...citation.csl,
-			}));
+			} ) );
 			const borgesOrder = sortCitations(
 				CONFORMANCE_FIXTURES,
 				styleKey
-			).map((citation) => citation.id);
-			const referenceOrder = runCiteprocBibliographyOrder({
+			).map( ( citation ) => citation.id );
+			const referenceOrder = runCiteprocBibliographyOrder( {
 				styleKey,
 				cslItems,
 				locale: styleDefinition.locale,
-			});
+			} );
 
-			expect(referenceOrder).toEqual(borgesOrder);
+			expect( referenceOrder ).toEqual( borgesOrder );
 		}
 	);
-});
+} );

@@ -11,7 +11,7 @@ import { getDisplaySegments } from '../lib/formatting';
 import { StructuredCitationEditor } from './structured-citation-editor';
 import { CitationReorderControls } from './citation-reorder-controls';
 
-export function CitationEntryBody({
+export function CitationEntryBody( {
 	citation,
 	citationWarnings,
 	editText,
@@ -37,41 +37,43 @@ export function CitationEntryBody({
 	canMoveUp = false,
 	structuredEditingId,
 	structuredFields,
-}) {
-	if (structuredEditingId === citation.id) {
+} ) {
+	if ( structuredEditingId === citation.id ) {
 		return (
 			<StructuredCitationEditor
-				citation={citation}
-				fields={structuredFields}
-				getStructuredFieldId={getStructuredFieldId}
-				onFieldChange={handleStructuredFieldChange}
-				onSave={handleStructuredEditSave}
-				onCancel={handleStructuredEditCancel}
+				citation={ citation }
+				fields={ structuredFields }
+				getStructuredFieldId={ getStructuredFieldId }
+				onFieldChange={ handleStructuredFieldChange }
+				onSave={ handleStructuredEditSave }
+				onCancel={ handleStructuredEditCancel }
 			/>
 		);
 	}
 
-	if (editingId === citation.id) {
+	if ( editingId === citation.id ) {
 		return (
 			<>
 				<label
-					htmlFor={`bibliography-builder-edit-${citation.id}`}
+					htmlFor={ `bibliography-builder-edit-${ citation.id }` }
 					className="bibliography-builder-edit-label"
 				>
-					{sprintf(
+					{ sprintf(
 						/* translators: %s: citation label. */
-						__('Editing: %s', 'borges-bibliography-builder'),
-						getEntryLabel(citation)
-					)}
+						__( 'Editing: %s', 'borges-bibliography-builder' ),
+						getEntryLabel( citation )
+					) }
 				</label>
 				<input
-					id={`bibliography-builder-edit-${citation.id}`}
+					id={ `bibliography-builder-edit-${ citation.id }` }
 					type="text"
 					className="bibliography-builder-edit-input"
-					value={editText}
-					onChange={(event) => onEditTextChange(event.target.value)}
-					onKeyDown={handleEditKeyDown}
-					onBlur={handleEditConfirm}
+					value={ editText }
+					onChange={ ( event ) =>
+						onEditTextChange( event.target.value )
+					}
+					onKeyDown={ handleEditKeyDown }
+					onBlur={ handleEditConfirm }
 					autoFocus // eslint-disable-line jsx-a11y/no-autofocus
 				/>
 			</>
@@ -83,123 +85,135 @@ export function CitationEntryBody({
 			<button
 				type="button"
 				className="bibliography-builder-entry-trigger"
-				onClick={handleEntryActivate}
-				aria-label={sprintf(
+				onClick={ handleEntryActivate }
+				aria-label={ sprintf(
 					/* translators: %s: citation label. */
-					__('Edit fields: %s', 'borges-bibliography-builder'),
-					getEntryLabel(citation)
-				)}
+					__( 'Edit fields: %s', 'borges-bibliography-builder' ),
+					getEntryLabel( citation )
+				) }
 			>
 				<span className="bibliography-builder-entry-main">
 					<span className="bibliography-builder-entry-text">
-						{getDisplaySegments(citation, {
+						{ getDisplaySegments( citation, {
 							inlineMarkup: true,
 							quoteAwareItalics: true,
 							urlAwareItalics: true,
 							quoteFoldedItalics: true,
-						}).map((segment, index) =>
+						} ).map( ( segment, index ) =>
 							segment.italic ? (
-								<i key={`${citation.id}-${index}`}>
-									{segment.text}
+								<i key={ `${ citation.id }-${ index }` }>
+									{ segment.text }
 								</i>
 							) : (
 								segment.text
 							)
-						)}
+						) }
 					</span>
-					{citationWarnings.map((warningMessage) => (
+					{ citationWarnings.map( ( warningMessage ) => (
 						<span
-							key={`${citation.id}-${warningMessage}`}
+							key={ `${ citation.id }-${ warningMessage }` }
 							className="bibliography-builder-entry-warning"
 						>
-							{warningMessage}
+							{ warningMessage }
 						</span>
-					))}
+					) ) }
 				</span>
 			</button>
 			<span className="bibliography-builder-actions">
-				{isNumericFamily && (
+				{ isNumericFamily && (
 					<CitationReorderControls
-						label={getEntryLabel(citation)}
-						canMoveUp={canMoveUp}
-						canMoveDown={canMoveDown}
-						onMoveUp={onMoveUp}
-						onMoveDown={onMoveDown}
+						label={ getEntryLabel( citation ) }
+						canMoveUp={ canMoveUp }
+						canMoveDown={ canMoveDown }
+						onMoveUp={ onMoveUp }
+						onMoveDown={ onMoveDown }
 					/>
-				)}
+				) }
 				<Button
-					label={sprintf(
+					label={ sprintf(
 						/* translators: %s: citation label. */
-						__('Edit fields for %s', 'borges-bibliography-builder'),
-						getEntryLabel(citation)
-					)}
+						__(
+							'Edit fields for %s',
+							'borges-bibliography-builder'
+						),
+						getEntryLabel( citation )
+					) }
 					showTooltip
 					className="bibliography-builder-action-button"
-					onClick={(event) => {
+					onClick={ ( event ) => {
 						event.stopPropagation();
-						handleStructuredEditStart(citation.id);
-					}}
+						handleStructuredEditStart( citation.id );
+					} }
 				>
 					<StructuredEditIcon className="bibliography-builder-action-icon" />
 				</Button>
 				<Button
-					label={sprintf(
+					label={ sprintf(
 						/* translators: %s: citation label. */
-						__('Copy citation: %s', 'borges-bibliography-builder'),
-						getEntryLabel(citation)
-					)}
+						__(
+							'Copy citation: %s',
+							'borges-bibliography-builder'
+						),
+						getEntryLabel( citation )
+					) }
 					showTooltip
 					className="bibliography-builder-action-button"
-					onClick={(event) => {
+					onClick={ ( event ) => {
 						event.stopPropagation();
-						handleCopyCitation(citation);
-					}}
+						handleCopyCitation( citation );
+					} }
 				>
 					<CopyIcon className="bibliography-builder-action-icon" />
 				</Button>
 				<Button
-					label={sprintf(
+					label={ sprintf(
 						/* translators: %s: citation label. */
-						__('Edit citation: %s', 'borges-bibliography-builder'),
-						getEntryLabel(citation)
-					)}
+						__(
+							'Edit citation: %s',
+							'borges-bibliography-builder'
+						),
+						getEntryLabel( citation )
+					) }
 					showTooltip
 					className="bibliography-builder-action-button"
-					onClick={(event) => {
+					onClick={ ( event ) => {
 						event.stopPropagation();
-						handleEditStart(citation.id);
-					}}
+						handleEditStart( citation.id );
+					} }
 				>
 					<EditIcon className="bibliography-builder-action-icon" />
 				</Button>
-				{citation.displayOverride && (
+				{ citation.displayOverride && (
 					<Button
-						label={__('Reset edits', 'borges-bibliography-builder')}
+						label={ __(
+							'Reset edits',
+							'borges-bibliography-builder'
+						) }
 						showTooltip
 						className="bibliography-builder-action-button"
-						onClick={(event) => {
+						onClick={ ( event ) => {
 							event.stopPropagation();
-							handleResetAutoFormat(citation.id);
-						}}
+							handleResetAutoFormat( citation.id );
+						} }
 					>
 						<ResetIcon className="bibliography-builder-action-icon" />
 					</Button>
-				)}
+				) }
 				<Button
-					label={sprintf(
+					label={ sprintf(
 						/* translators: %s: citation label. */
 						__(
 							'Delete citation: %s',
 							'borges-bibliography-builder'
 						),
-						getEntryLabel(citation)
-					)}
+						getEntryLabel( citation )
+					) }
 					showTooltip
 					className="bibliography-builder-action-button bibliography-builder-action-button-delete"
-					onClick={(event) => {
+					onClick={ ( event ) => {
 						event.stopPropagation();
-						handleDelete(citation.id);
-					}}
+						handleDelete( citation.id );
+					} }
 				>
 					<DeleteIcon className="bibliography-builder-action-icon" />
 				</Button>

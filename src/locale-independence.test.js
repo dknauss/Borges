@@ -26,43 +26,46 @@ import save from './save';
 import { deprecated } from './deprecated';
 import { renderBibliographySave } from './save-markup';
 
-jest.mock('@wordpress/block-editor', () => ({
+jest.mock( '@wordpress/block-editor', () => ( {
 	useBlockProps: {
-		save: () => ({
+		save: () => ( {
 			className: 'wp-block-bibliography-builder-bibliography',
-		}),
+		} ),
 	},
-}));
+} ) );
 
 const DOMAIN = 'borges-bibliography-builder';
 
 const LOCALES = {
 	fr: {
-		'Cite / Export': ['Citer / Exporter'],
-		'Copy citation': ['Copier la citation'],
-		Copied: ['Copié'],
-		RIS: ['RIS (fr)'],
-		'CSL-JSON': ['CSL-JSON (fr)'],
-		BibTeX: ['BibTeX (fr)'],
-		BibLaTeX: ['BibLaTeX (fr)'],
-		'Link to publication': ['Lien vers la publication'],
+		'Cite / Export': [ 'Citer / Exporter' ],
+		'Copy citation': [ 'Copier la citation' ],
+		Copied: [ 'Copié' ],
+		RIS: [ 'RIS (fr)' ],
+		'CSL-JSON': [ 'CSL-JSON (fr)' ],
+		BibTeX: [ 'BibTeX (fr)' ],
+		BibLaTeX: [ 'BibLaTeX (fr)' ],
+		'Link to publication': [ 'Lien vers la publication' ],
 	},
 	de: {
-		'Cite / Export': ['Zitieren / Exportieren'],
-		'Copy citation': ['Zitat kopieren'],
-		Copied: ['Kopiert'],
-		RIS: ['RIS (de)'],
-		'CSL-JSON': ['CSL-JSON (de)'],
-		BibTeX: ['BibTeX (de)'],
-		BibLaTeX: ['BibLaTeX (de)'],
-		'Link to publication': ['Link zur Publikation'],
+		'Cite / Export': [ 'Zitieren / Exportieren' ],
+		'Copy citation': [ 'Zitat kopieren' ],
+		Copied: [ 'Kopiert' ],
+		RIS: [ 'RIS (de)' ],
+		'CSL-JSON': [ 'CSL-JSON (de)' ],
+		BibTeX: [ 'BibTeX (de)' ],
+		BibLaTeX: [ 'BibLaTeX (de)' ],
+		'Link to publication': [ 'Link zur Publikation' ],
 	},
 };
 
-function activateLocale(locale) {
-	resetLocaleData(undefined, DOMAIN);
-	if (locale) {
-		setLocaleData({ '': { domain: DOMAIN }, ...LOCALES[locale] }, DOMAIN);
+function activateLocale( locale ) {
+	resetLocaleData( undefined, DOMAIN );
+	if ( locale ) {
+		setLocaleData(
+			{ '': { domain: DOMAIN }, ...LOCALES[ locale ] },
+			DOMAIN
+		);
 	}
 }
 
@@ -77,7 +80,7 @@ const ATTRIBUTES = {
 				id: 'titled',
 				type: 'book',
 				title: 'A Titled Work',
-				author: [{ family: 'Alpha', given: 'Ada' }],
+				author: [ { family: 'Alpha', given: 'Ada' } ],
 			},
 			formattedText:
 				'Alpha, Ada. A Titled Work. https://example.com/titled.',
@@ -89,40 +92,40 @@ const ATTRIBUTES = {
 			csl: {
 				id: 'untitled',
 				type: 'webpage',
-				author: [{ family: 'Beta', given: 'Bea' }],
+				author: [ { family: 'Beta', given: 'Bea' } ],
 			},
 			formattedText: 'Beta, Bea. https://example.com/a?b=1&c=2.',
 		},
 	],
 };
 
-function withBlock(saveImplementation, deprecations, fn) {
+function withBlock( saveImplementation, deprecations, fn ) {
 	const name = metadata.name;
-	if (getBlockTypes().some((type) => type.name === name)) {
-		unregisterBlockType(name);
+	if ( getBlockTypes().some( ( type ) => type.name === name ) ) {
+		unregisterBlockType( name );
 	}
-	registerBlockType(name, {
+	registerBlockType( name, {
 		...metadata,
 		save: saveImplementation,
 		deprecated: deprecations,
-	});
+	} );
 	try {
-		return fn(name);
+		return fn( name );
 	} finally {
-		unregisterBlockType(name);
+		unregisterBlockType( name );
 	}
 }
 
-function serializeUnder(locale, saveImplementation) {
-	activateLocale(locale);
-	return withBlock(saveImplementation, [], (name) =>
-		serialize(createBlock(name, ATTRIBUTES))
+function serializeUnder( locale, saveImplementation ) {
+	activateLocale( locale );
+	return withBlock( saveImplementation, [], ( name ) =>
+		serialize( createBlock( name, ATTRIBUTES ) )
 	);
 }
 
 /* eslint-disable no-console -- walking the deprecation chain logs diffs. */
-function parseUnder(locale, markup) {
-	activateLocale(locale);
+function parseUnder( locale, markup ) {
+	activateLocale( locale );
 	const saved = {
 		error: console.error,
 		warn: console.warn,
@@ -132,86 +135,86 @@ function parseUnder(locale, markup) {
 	console.warn = () => {};
 	console.info = () => {};
 	try {
-		return withBlock(save, deprecated, () => parse(markup));
+		return withBlock( save, deprecated, () => parse( markup ) );
 	} finally {
-		Object.assign(console, saved);
+		Object.assign( console, saved );
 	}
 }
 /* eslint-enable no-console */
 
 // The save() shape that shipped before labels were made locale-independent:
 // every label passed through __() at save time.
-function localizedLegacySave({ attributes }) {
-	return renderBibliographySave(attributes, {
+function localizedLegacySave( { attributes } ) {
+	return renderBibliographySave( attributes, {
 		sortEntries: true,
 		headingTag: 'p',
 		entryTag: 'cite',
 		includeCiteExport: attributes.outputCiteExport ?? false,
-	});
+	} );
 }
 
-afterEach(() => {
-	activateLocale(null);
-});
+afterEach( () => {
+	activateLocale( null );
+} );
 
-describe('locale-independent saved markup', () => {
-	it('serializes identically whatever the editor locale', () => {
-		const english = serializeUnder(null, save);
+describe( 'locale-independent saved markup', () => {
+	it( 'serializes identically whatever the editor locale', () => {
+		const english = serializeUnder( null, save );
 
-		expect(serializeUnder('fr', save)).toBe(english);
-		expect(serializeUnder('de', save)).toBe(english);
-	});
+		expect( serializeUnder( 'fr', save ) ).toBe( english );
+		expect( serializeUnder( 'de', save ) ).toBe( english );
+	} );
 
-	it('bakes no translated label into the markup', () => {
-		const markup = serializeUnder('fr', save);
+	it( 'bakes no translated label into the markup', () => {
+		const markup = serializeUnder( 'fr', save );
 
 		// The panel is built by view.js; the markup carries only its data.
-		expect(markup).toContain('data-cite-ris=');
-		expect(markup).not.toContain('Cite / Export');
-		expect(markup).not.toContain('Copy citation');
-		expect(markup).not.toContain('data-copied-label');
-		expect(markup).not.toContain('Link to publication');
-		expect(markup).not.toContain('(fr)');
-	});
+		expect( markup ).toContain( 'data-cite-ris=' );
+		expect( markup ).not.toContain( 'Cite / Export' );
+		expect( markup ).not.toContain( 'Copy citation' );
+		expect( markup ).not.toContain( 'data-copied-label' );
+		expect( markup ).not.toContain( 'Link to publication' );
+		expect( markup ).not.toContain( '(fr)' );
+	} );
 
-	it('validates a block saved in one locale when opened in another', () => {
-		const markup = serializeUnder('fr', save);
-		const [block] = parseUnder('de', markup);
+	it( 'validates a block saved in one locale when opened in another', () => {
+		const markup = serializeUnder( 'fr', save );
+		const [ block ] = parseUnder( 'de', markup );
 
-		expect(block.name).toBe(metadata.name);
-		expect(block.isValid).toBe(true);
-	});
-});
+		expect( block.name ).toBe( metadata.name );
+		expect( block.isValid ).toBe( true );
+	} );
+} );
 
-describe('legacy localized markup', () => {
-	it.each([
-		['fr', 'de'],
-		['fr', null],
-		[null, 'de'],
-		['de', 'de'],
-	])(
+describe( 'legacy localized markup', () => {
+	it.each( [
+		[ 'fr', 'de' ],
+		[ 'fr', null ],
+		[ null, 'de' ],
+		[ 'de', 'de' ],
+	] )(
 		'saved under %s still validates when opened under %s',
-		(savedLocale, openedLocale) => {
-			const markup = serializeUnder(savedLocale, localizedLegacySave);
-			const [block] = parseUnder(openedLocale, markup);
+		( savedLocale, openedLocale ) => {
+			const markup = serializeUnder( savedLocale, localizedLegacySave );
+			const [ block ] = parseUnder( openedLocale, markup );
 
-			expect(block.name).toBe(metadata.name);
-			expect(block.isValid).toBe(true);
-			expect(block.attributes.citations).toHaveLength(2);
+			expect( block.name ).toBe( metadata.name );
+			expect( block.isValid ).toBe( true );
+			expect( block.attributes.citations ).toHaveLength( 2 );
 		}
 	);
 
-	it('drops the sourced legacy labels when migrating', () => {
-		const markup = serializeUnder('fr', localizedLegacySave);
-		const [block] = parseUnder('de', markup);
+	it( 'drops the sourced legacy labels when migrating', () => {
+		const markup = serializeUnder( 'fr', localizedLegacySave );
+		const [ block ] = parseUnder( 'de', markup );
 
-		Object.keys(block.attributes).forEach((key) => {
-			expect(key.startsWith('legacy')).toBe(false);
-		});
-	});
-});
+		Object.keys( block.attributes ).forEach( ( key ) => {
+			expect( key.startsWith( 'legacy' ) ).toBe( false );
+		} );
+	} );
+} );
 
-describe('frozen legacy markup saved in French by an earlier release', () => {
+describe( 'frozen legacy markup saved in French by an earlier release', () => {
 	// Generated by the real pre-change save(), not by this code; see
 	// tests/fixtures/legacy-localized/README.md.
 	const legacyFrench = readFileSync(
@@ -226,25 +229,25 @@ describe('frozen legacy markup saved in French by an earlier release', () => {
 		'utf8'
 	);
 
-	it.each([['de'], [null], ['fr']])(
+	it.each( [ [ 'de' ], [ null ], [ 'fr' ] ] )(
 		'validates when opened under %s and migrates to label-free markup',
-		(openedLocale) => {
-			const [block] = parseUnder(openedLocale, legacyFrench);
+		( openedLocale ) => {
+			const [ block ] = parseUnder( openedLocale, legacyFrench );
 
-			expect(block.name).toBe(metadata.name);
-			expect(block.isValid).toBe(true);
-			expect(block.attributes.citations).toHaveLength(2);
-			Object.keys(block.attributes).forEach((key) => {
-				expect(key.startsWith('legacy')).toBe(false);
-			});
+			expect( block.name ).toBe( metadata.name );
+			expect( block.isValid ).toBe( true );
+			expect( block.attributes.citations ).toHaveLength( 2 );
+			Object.keys( block.attributes ).forEach( ( key ) => {
+				expect( key.startsWith( 'legacy' ) ).toBe( false );
+			} );
 
-			activateLocale(openedLocale);
-			const resaved = withBlock(save, deprecated, (name) =>
-				getSaveContent(name, block.attributes)
+			activateLocale( openedLocale );
+			const resaved = withBlock( save, deprecated, ( name ) =>
+				getSaveContent( name, block.attributes )
 			);
-			expect(resaved).toContain('data-cite-ris=');
-			expect(resaved).not.toContain('Cite / Export');
-			expect(resaved).not.toMatch(/Citer|Copier|Copié|Lien vers/);
+			expect( resaved ).toContain( 'data-cite-ris=' );
+			expect( resaved ).not.toContain( 'Cite / Export' );
+			expect( resaved ).not.toMatch( /Citer|Copier|Copié|Lien vers/ );
 		}
 	);
-});
+} );

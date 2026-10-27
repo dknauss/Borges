@@ -19,7 +19,7 @@
 				{ "family": "van der Walt", "given": "Stéfan J." },
 				{ "family": "Gommers", "given": "Ralf" }
 			],
-			"issued": { "date-parts": [[2020, 9, 16]] }
+			"issued": { "date-parts": [ [ 2020, 9, 16 ] ] }
 		},
 		{
 			"id": "lecun2015",
@@ -35,7 +35,7 @@
 				{ "family": "Bengio", "given": "Yoshua" },
 				{ "family": "Hinton", "given": "Geoffrey" }
 			],
-			"issued": { "date-parts": [[2015, 5, 28]] }
+			"issued": { "date-parts": [ [ 2015, 5, 28 ] ] }
 		},
 		{
 			"id": "wilkinson2016",
@@ -53,7 +53,7 @@
 				{ "family": "Aalbersberg", "given": "IJsbrand Jan" },
 				{ "family": "Appleton", "given": "Gabrielle" }
 			],
-			"issued": { "date-parts": [[2016, 3, 15]] }
+			"issued": { "date-parts": [ [ 2016, 3, 15 ] ] }
 		},
 		{
 			"id": "knuth1984",
@@ -64,8 +64,8 @@
 			"issue": "2",
 			"page": "97-111",
 			"DOI": "10.1093/comjnl/27.2.97",
-			"author": [{ "family": "Knuth", "given": "Donald E." }],
-			"issued": { "date-parts": [[1984]] }
+			"author": [ { "family": "Knuth", "given": "Donald E." } ],
+			"issued": { "date-parts": [ [ 1984 ] ] }
 		},
 		{
 			"id": "bernerslee2001",
@@ -81,7 +81,7 @@
 				{ "family": "Hendler", "given": "James" },
 				{ "family": "Lassila", "given": "Ora" }
 			],
-			"issued": { "date-parts": [[2001, 5]] }
+			"issued": { "date-parts": [ [ 2001, 5 ] ] }
 		},
 		{
 			"id": "maldacena1998",
@@ -92,8 +92,8 @@
 			"issue": "2",
 			"page": "231-252",
 			"DOI": "10.4310/ATMP.1998.v2.n2.a1",
-			"author": [{ "family": "Maldacena", "given": "Juan" }],
-			"issued": { "date-parts": [[1998]] }
+			"author": [ { "family": "Maldacena", "given": "Juan" } ],
+			"issued": { "date-parts": [ [ 1998 ] ] }
 		},
 		{
 			"id": "vaswani2017",
@@ -109,7 +109,7 @@
 				{ "family": "Parmar", "given": "Niki" },
 				{ "family": "Uszkoreit", "given": "Jakob" }
 			],
-			"issued": { "date-parts": [[2017, 6, 12]] }
+			"issued": { "date-parts": [ [ 2017, 6, 12 ] ] }
 		},
 		{
 			"id": "devlin2019",
@@ -125,7 +125,7 @@
 				{ "family": "Lee", "given": "Kenton" },
 				{ "family": "Toutanova", "given": "Kristina" }
 			],
-			"issued": { "date-parts": [[2019]] }
+			"issued": { "date-parts": [ [ 2019 ] ] }
 		},
 		{
 			"id": "cormen2009",
@@ -141,7 +141,7 @@
 				{ "family": "Rivest", "given": "Ronald L." },
 				{ "family": "Stein", "given": "Clifford" }
 			],
-			"issued": { "date-parts": [[2009]] }
+			"issued": { "date-parts": [ [ 2009 ] ] }
 		},
 		{
 			"id": "borges1962",
@@ -150,12 +150,12 @@
 			"publisher": "New Directions",
 			"publisher-place": "New York",
 			"ISBN": "9780811200127",
-			"author": [{ "family": "Borges", "given": "Jorge Luis" }],
+			"author": [ { "family": "Borges", "given": "Jorge Luis" } ],
 			"editor": [
 				{ "family": "Yates", "given": "Donald A." },
 				{ "family": "Irby", "given": "James E." }
 			],
-			"issued": { "date-parts": [[1962]] }
+			"issued": { "date-parts": [ [ 1962 ] ] }
 		},
 		{
 			"id": "borges1962babel",
@@ -165,13 +165,13 @@
 			"publisher": "New Directions",
 			"publisher-place": "New York",
 			"page": "51-58",
-			"author": [{ "family": "Borges", "given": "Jorge Luis" }],
-			"translator": [{ "family": "Irby", "given": "James E." }],
+			"author": [ { "family": "Borges", "given": "Jorge Luis" } ],
+			"translator": [ { "family": "Irby", "given": "James E." } ],
 			"editor": [
 				{ "family": "Yates", "given": "Donald A." },
 				{ "family": "Irby", "given": "James E." }
 			],
-			"issued": { "date-parts": [[1962]] }
+			"issued": { "date-parts": [ [ 1962 ] ] }
 		},
 		{
 			"id": "wporg-handbook",
@@ -179,8 +179,8 @@
 			"title": "Block Editor Handbook",
 			"container-title": "WordPress Developer Resources",
 			"URL": "https://developer.wordpress.org/block-editor/",
-			"author": [{ "literal": "WordPress.org" }],
-			"accessed": { "date-parts": [[2026, 10, 27]] }
+			"author": [ { "literal": "WordPress.org" } ],
+			"accessed": { "date-parts": [ [ 2026, 10, 27 ] ] }
 		}
 	]
 }

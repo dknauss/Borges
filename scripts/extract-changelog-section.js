@@ -10,10 +10,10 @@
  * is published.
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require( 'fs' );
+const path = require( 'path' );
 
-const CHANGELOG = path.resolve(__dirname, '..', 'CHANGELOG.md');
+const CHANGELOG = path.resolve( __dirname, '..', 'CHANGELOG.md' );
 
 /**
  * The body of the `## [version]` section: everything after its heading up to
@@ -24,23 +24,23 @@ const CHANGELOG = path.resolve(__dirname, '..', 'CHANGELOG.md');
  * @param {string} version   Version, with or without a leading "v".
  * @return {string|null} Section body, or null when there is none.
  */
-function extractChangelogSection(changelog, version) {
-	const wanted = version.replace(/^v/, '');
-	const lines = changelog.split(/\r?\n/);
-	const start = lines.findIndex((line) => {
-		const match = line.match(/^## \[([^\]]+)\]/);
-		return match && match[1] === wanted;
-	});
+function extractChangelogSection( changelog, version ) {
+	const wanted = version.replace( /^v/, '' );
+	const lines = changelog.split( /\r?\n/ );
+	const start = lines.findIndex( ( line ) => {
+		const match = line.match( /^## \[([^\]]+)\]/ );
+		return match && match[ 1 ] === wanted;
+	} );
 
-	if (start === -1) {
+	if ( start === -1 ) {
 		return null;
 	}
 
-	const rest = lines.slice(start + 1);
-	const end = rest.findIndex((line) => line.startsWith('## '));
-	const body = (end === -1 ? rest : rest.slice(0, end))
-		.join('\n')
-		.replace(/\n{3,}/g, '\n\n')
+	const rest = lines.slice( start + 1 );
+	const end = rest.findIndex( ( line ) => line.startsWith( '## ' ) );
+	const body = ( end === -1 ? rest : rest.slice( 0, end ) )
+		.join( '\n' )
+		.replace( /\n{3,}/g, '\n\n' )
 		.trim();
 
 	return body || null;
@@ -48,23 +48,23 @@ function extractChangelogSection(changelog, version) {
 
 module.exports = { extractChangelogSection };
 
-if (require.main === module) {
-	const version = process.argv[2];
+if ( require.main === module ) {
+	const version = process.argv[ 2 ];
 
-	if (!version) {
-		console.error('Usage: extract-changelog-section.js <version>');
-		process.exit(2);
+	if ( ! version ) {
+		console.error( 'Usage: extract-changelog-section.js <version>' );
+		process.exit( 2 );
 	}
 
 	const section = extractChangelogSection(
-		fs.readFileSync(CHANGELOG, 'utf8'),
+		fs.readFileSync( CHANGELOG, 'utf8' ),
 		version
 	);
 
-	if (!section) {
-		console.error(`CHANGELOG.md has no entries for ${version}.`);
-		process.exit(1);
+	if ( ! section ) {
+		console.error( `CHANGELOG.md has no entries for ${ version }.` );
+		process.exit( 1 );
 	}
 
-	process.stdout.write(`${section}\n`);
+	process.stdout.write( `${ section }\n` );
 }

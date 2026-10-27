@@ -19,21 +19,23 @@ import {
  * @param {Object}                       params.attributes    Block attributes.
  * @param {(attributes: Object) => void} params.setAttributes Block attribute setter.
  */
-export function useOutputDefaults({ attributes, setAttributes }) {
+export function useOutputDefaults( { attributes, setAttributes } ) {
 	const registry = useRegistry();
 
-	useEffect(() => {
-		const settings = registry?.select?.(blockEditorStore)?.getSettings?.();
+	useEffect( () => {
+		const settings = registry
+			?.select?.( blockEditorStore )
+			?.getSettings?.();
 		const changes = getOutputDefaultChanges(
 			attributes,
-			settings?.[OUTPUT_DEFAULTS_SETTING]
+			settings?.[ OUTPUT_DEFAULTS_SETTING ]
 		);
 
-		if (!changes) {
+		if ( ! changes ) {
 			return;
 		}
 
-		const dispatch = registry?.dispatch?.(blockEditorStore);
+		const dispatch = registry?.dispatch?.( blockEditorStore );
 
 		if (
 			typeof dispatch?.__unstableMarkNextChangeAsNotPersistent ===
@@ -42,8 +44,8 @@ export function useOutputDefaults({ attributes, setAttributes }) {
 			dispatch.__unstableMarkNextChangeAsNotPersistent();
 		}
 
-		setAttributes(changes);
+		setAttributes( changes );
 		// Mount-only by design; see the docblock.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [] );
 }

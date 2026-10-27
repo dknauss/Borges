@@ -21,15 +21,15 @@ import { normalizeDoiValueForLookup } from './parser-identifiers';
  * @param {string} input Pasted text.
  * @return {Object|Array|null} The parsed object or array.
  */
-export function parseJsonDocument(input) {
+export function parseJsonDocument( input ) {
 	const trimmed = input.trim();
 
-	if (!/^[[{]/u.test(trimmed)) {
+	if ( ! /^[[{]/u.test( trimmed ) ) {
 		return null;
 	}
 
 	try {
-		const parsed = JSON.parse(trimmed);
+		const parsed = JSON.parse( trimmed );
 
 		return typeof parsed === 'object' && parsed !== null ? parsed : null;
 	} catch {
@@ -44,14 +44,14 @@ function formatNotCslJsonError() {
 	);
 }
 
-function formatInvalidCslJsonItemsError(positions) {
+function formatInvalidCslJsonItemsError( positions ) {
 	return sprintf(
 		/* translators: %s: comma-separated positions of the skipped items, such as "2, 5". */
 		__(
 			'Skipped CSL-JSON items that are not valid citations (item %s).',
 			'borges-bibliography-builder'
 		),
-		positions.join(', ')
+		positions.join( ', ' )
 	);
 }
 
@@ -73,46 +73,46 @@ function formatInvalidCslJsonItemsError(positions) {
  *                                      it is CSL-JSON.
  * @return {Object} parsePastedInput() result.
  */
-export function readCslJsonDocument(document, existingDoiSet, input) {
-	const items = Array.isArray(document) ? document : [document];
+export function readCslJsonDocument( document, existingDoiSet, input ) {
+	const items = Array.isArray( document ) ? document : [ document ];
 	const entries = [];
 	const invalidPositions = [];
-	const remainingItems = items.slice(MAX_ENTRIES_PER_PASTE);
+	const remainingItems = items.slice( MAX_ENTRIES_PER_PASTE );
 	let skippedDuplicateCount = 0;
 
-	items.slice(0, MAX_ENTRIES_PER_PASTE).forEach((item, index) => {
+	items.slice( 0, MAX_ENTRIES_PER_PASTE ).forEach( ( item, index ) => {
 		let csl;
 
 		try {
-			csl = validateAndSanitizeCsl(item);
+			csl = validateAndSanitizeCsl( item );
 		} catch {
-			invalidPositions.push(index + 1);
-			remainingItems.splice(invalidPositions.length - 1, 0, item);
+			invalidPositions.push( index + 1 );
+			remainingItems.splice( invalidPositions.length - 1, 0, item );
 			return;
 		}
 
 		if (
 			typeof csl.DOI === 'string' &&
-			existingDoiSet.has(normalizeDoiValueForLookup(csl.DOI))
+			existingDoiSet.has( normalizeDoiValueForLookup( csl.DOI ) )
 		) {
 			skippedDuplicateCount += 1;
 			return;
 		}
 
-		entries.push({
+		entries.push( {
 			id: createCitationId(),
 			csl,
 			formattedText: null,
 			displayOverride: null,
 			inputFormat: 'csl-json',
 			parseWarnings: [],
-		});
-	});
+		} );
+	} );
 
-	if (!entries.length && !skippedDuplicateCount) {
+	if ( ! entries.length && ! skippedDuplicateCount ) {
 		return {
 			entries,
-			errors: [formatNotCslJsonError()],
+			errors: [ formatNotCslJsonError() ],
 			truncated: false,
 			remainingInput: input.trim(),
 			skippedDuplicateCount,
@@ -122,11 +122,11 @@ export function readCslJsonDocument(document, existingDoiSet, input) {
 	return {
 		entries,
 		errors: invalidPositions.length
-			? [formatInvalidCslJsonItemsError(invalidPositions)]
+			? [ formatInvalidCslJsonItemsError( invalidPositions ) ]
 			: [],
 		truncated: items.length > MAX_ENTRIES_PER_PASTE,
 		remainingInput: remainingItems.length
-			? JSON.stringify(remainingItems, null, 2)
+			? JSON.stringify( remainingItems, null, 2 )
 			: '',
 		skippedDuplicateCount,
 	};

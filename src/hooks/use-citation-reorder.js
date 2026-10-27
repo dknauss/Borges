@@ -1,51 +1,54 @@
 import { useCallback } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
-function swapEntries(items, fromIndex, toIndex) {
-	const next = [...items];
-	[next[fromIndex], next[toIndex]] = [next[toIndex], next[fromIndex]];
+function swapEntries( items, fromIndex, toIndex ) {
+	const next = [ ...items ];
+	[ next[ fromIndex ], next[ toIndex ] ] = [
+		next[ toIndex ],
+		next[ fromIndex ],
+	];
 	return next;
 }
 
-function getCitationLabel(citation) {
-	const author = citation?.csl?.author?.[0];
+function getCitationLabel( citation ) {
+	const author = citation?.csl?.author?.[ 0 ];
 	const name =
 		author?.family ||
 		author?.literal ||
-		__('Unknown', 'borges-bibliography-builder');
-	const year = citation?.csl?.issued?.['date-parts']?.[0]?.[0] || '';
+		__( 'Unknown', 'borges-bibliography-builder' );
+	const year = citation?.csl?.issued?.[ 'date-parts' ]?.[ 0 ]?.[ 0 ] || '';
 
-	return `${name} ${year}`.trim();
+	return `${ name } ${ year }`.trim();
 }
 
-export function useCitationReorder({
+export function useCitationReorder( {
 	announce,
 	citationsRef,
 	queueFocus,
 	setAttributes,
-}) {
+} ) {
 	const moveCitation = useCallback(
-		(id, delta, explicitLabel) => {
+		( id, delta, explicitLabel ) => {
 			const current = citationsRef.current || [];
 			const fromIndex = current.findIndex(
-				(citation) => citation.id === id
+				( citation ) => citation.id === id
 			);
 
-			if (fromIndex === -1) {
+			if ( fromIndex === -1 ) {
 				return false;
 			}
 
 			const toIndex = fromIndex + delta;
-			if (toIndex < 0 || toIndex >= current.length) {
+			if ( toIndex < 0 || toIndex >= current.length ) {
 				return false;
 			}
 
-			const updated = swapEntries(current, fromIndex, toIndex);
-			const movedCitation = updated[toIndex];
-			const label = explicitLabel || getCitationLabel(movedCitation);
+			const updated = swapEntries( current, fromIndex, toIndex );
+			const movedCitation = updated[ toIndex ];
+			const label = explicitLabel || getCitationLabel( movedCitation );
 
 			citationsRef.current = updated;
-			setAttributes({ citations: updated });
+			setAttributes( { citations: updated } );
 			announce(
 				'success',
 				sprintf(
@@ -60,21 +63,21 @@ export function useCitationReorder({
 				),
 				{ type: 'snackbar' }
 			);
-			queueFocus({ type: 'entry', id });
+			queueFocus( { type: 'entry', id } );
 
 			return true;
 		},
-		[announce, citationsRef, queueFocus, setAttributes]
+		[ announce, citationsRef, queueFocus, setAttributes ]
 	);
 
 	const moveCitationUp = useCallback(
-		(id, label) => moveCitation(id, -1, label),
-		[moveCitation]
+		( id, label ) => moveCitation( id, -1, label ),
+		[ moveCitation ]
 	);
 
 	const moveCitationDown = useCallback(
-		(id, label) => moveCitation(id, 1, label),
-		[moveCitation]
+		( id, label ) => moveCitation( id, 1, label ),
+		[ moveCitation ]
 	);
 
 	return {

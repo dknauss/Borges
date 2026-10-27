@@ -22,7 +22,7 @@ import {
 	RIS_EXPORT_MIME_TYPE,
 } from './export';
 
-describe('export helpers', () => {
+describe( 'export helpers', () => {
 	function createMatrixCitations() {
 		return [
 			{
@@ -31,8 +31,8 @@ describe('export helpers', () => {
 				csl: {
 					type: 'book',
 					title: 'Zulu Book',
-					author: [{ family: 'Zulu', given: 'Zoe' }],
-					issued: { 'date-parts': [[2024]] },
+					author: [ { family: 'Zulu', given: 'Zoe' } ],
+					issued: { 'date-parts': [ [ 2024 ] ] },
 				},
 			},
 			{
@@ -41,29 +41,29 @@ describe('export helpers', () => {
 				csl: {
 					type: 'book',
 					title: 'Alpha Book',
-					author: [{ family: 'Alpha', given: 'Ada' }],
-					issued: { 'date-parts': [[2020]] },
+					author: [ { family: 'Alpha', given: 'Ada' } ],
+					issued: { 'date-parts': [ [ 2020 ] ] },
 				},
 			},
 		];
 	}
 
-	function createOrderingCiteCtor(expectedFormat) {
-		return jest.fn().mockImplementation((data) => ({
-			format: jest.fn((format) => {
-				expect(format).toBe(expectedFormat);
-				return data.map((csl) => csl.title).join('\n');
-			}),
-		}));
+	function createOrderingCiteCtor( expectedFormat ) {
+		return jest.fn().mockImplementation( ( data ) => ( {
+			format: jest.fn( ( format ) => {
+				expect( format ).toBe( expectedFormat );
+				return data.map( ( csl ) => csl.title ).join( '\n' );
+			} ),
+		} ) );
 	}
 
-	function getRisTitles(content) {
-		return [...content.matchAll(/^TI  - (.+)$/gmu)].map(
-			(match) => match[1]
+	function getRisTitles( content ) {
+		return [ ...content.matchAll( /^TI  - (.+)$/gmu ) ].map(
+			( match ) => match[ 1 ]
 		);
 	}
 
-	it('builds a sorted plain-text bibliography payload', () => {
+	it( 'builds a sorted plain-text bibliography payload', () => {
 		const content = buildPlainTextBibliographyContent(
 			[
 				{
@@ -72,8 +72,8 @@ describe('export helpers', () => {
 					csl: {
 						type: 'book',
 						title: 'Zeta Book',
-						author: [{ family: 'Zulu', given: 'Zoe' }],
-						issued: { 'date-parts': [[2024]] },
+						author: [ { family: 'Zulu', given: 'Zoe' } ],
+						issued: { 'date-parts': [ [ 2024 ] ] },
 					},
 				},
 				{
@@ -83,18 +83,18 @@ describe('export helpers', () => {
 					csl: {
 						type: 'book',
 						title: 'Alpha Book',
-						author: [{ family: 'Alpha', given: 'Ada' }],
-						issued: { 'date-parts': [[2020]] },
+						author: [ { family: 'Alpha', given: 'Ada' } ],
+						issued: { 'date-parts': [ [ 2020 ] ] },
 					},
 				},
 			],
 			'chicago-author-date'
 		);
 
-		expect(content).toBe('Alpha override\nZulu citation\n');
-	});
+		expect( content ).toBe( 'Alpha override\nZulu citation\n' );
+	} );
 
-	it('builds a sorted CSL-JSON export payload', () => {
+	it( 'builds a sorted CSL-JSON export payload', () => {
 		const content = buildCslJsonExportContent(
 			[
 				{
@@ -102,8 +102,8 @@ describe('export helpers', () => {
 					csl: {
 						type: 'book',
 						title: 'Zeta Book',
-						author: [{ family: 'Zulu', given: 'Zoe' }],
-						issued: { 'date-parts': [[2024]] },
+						author: [ { family: 'Zulu', given: 'Zoe' } ],
+						issued: { 'date-parts': [ [ 2024 ] ] },
 					},
 				},
 				{
@@ -111,85 +111,85 @@ describe('export helpers', () => {
 					csl: {
 						type: 'book',
 						title: 'Alpha Book',
-						author: [{ family: 'Alpha', given: 'Ada' }],
-						issued: { 'date-parts': [[2020]] },
+						author: [ { family: 'Alpha', given: 'Ada' } ],
+						issued: { 'date-parts': [ [ 2020 ] ] },
 					},
 				},
 			],
 			'chicago-author-date'
 		);
 
-		const parsed = JSON.parse(content);
+		const parsed = JSON.parse( content );
 
-		expect(parsed).toHaveLength(2);
-		expect(parsed[0].title).toBe('Alpha Book');
-		expect(parsed[1].title).toBe('Zeta Book');
-		expect(content.endsWith('\n')).toBe(true);
-	});
+		expect( parsed ).toHaveLength( 2 );
+		expect( parsed[ 0 ].title ).toBe( 'Alpha Book' );
+		expect( parsed[ 1 ].title ).toBe( 'Zeta Book' );
+		expect( content.endsWith( '\n' ) ).toBe( true );
+	} );
 
-	it.each([
+	it.each( [
 		{
 			style: 'chicago-author-date',
-			expectedTitles: ['Alpha Book', 'Zulu Book'],
+			expectedTitles: [ 'Alpha Book', 'Zulu Book' ],
 			expectedText: 'Alpha formatted citation\nZulu formatted citation\n',
 		},
 		{
 			style: 'ieee',
-			expectedTitles: ['Zulu Book', 'Alpha Book'],
+			expectedTitles: [ 'Zulu Book', 'Alpha Book' ],
 			expectedText: 'Zulu formatted citation\nAlpha formatted citation\n',
 		},
-	])(
+	] )(
 		'sorts every export format correctly for $style',
-		async ({ style, expectedTitles, expectedText }) => {
+		async ( { style, expectedTitles, expectedText } ) => {
 			const citations = createMatrixCitations();
 
-			expect(buildPlainTextBibliographyContent(citations, style)).toBe(
-				expectedText
-			);
+			expect(
+				buildPlainTextBibliographyContent( citations, style )
+			).toBe( expectedText );
 
 			expect(
-				JSON.parse(buildCslJsonExportContent(citations, style)).map(
-					(csl) => csl.title
+				JSON.parse( buildCslJsonExportContent( citations, style ) ).map(
+					( csl ) => csl.title
 				)
-			).toEqual(expectedTitles);
+			).toEqual( expectedTitles );
 
 			expect(
-				await buildBibtexExportContent(citations, style, {
-					CiteCtor: createOrderingCiteCtor('bibtex'),
-				})
-			).toBe(`${expectedTitles.join('\n')}\n`);
+				await buildBibtexExportContent( citations, style, {
+					CiteCtor: createOrderingCiteCtor( 'bibtex' ),
+				} )
+			).toBe( `${ expectedTitles.join( '\n' ) }\n` );
 
 			expect(
-				await buildBiblatexExportContent(citations, style, {
-					CiteCtor: createOrderingCiteCtor('biblatex'),
-				})
-			).toBe(`${expectedTitles.join('\n')}\n`);
+				await buildBiblatexExportContent( citations, style, {
+					CiteCtor: createOrderingCiteCtor( 'biblatex' ),
+				} )
+			).toBe( `${ expectedTitles.join( '\n' ) }\n` );
 
 			expect(
-				getRisTitles(buildRisExportContent(citations, style))
-			).toEqual(expectedTitles);
+				getRisTitles( buildRisExportContent( citations, style ) )
+			).toEqual( expectedTitles );
 		}
 	);
 
-	it('downloads text content as a file', () => {
+	it( 'downloads text content as a file', () => {
 		const click = jest.fn();
 		const remove = jest.fn();
 		const appendChild = jest.fn();
-		const createObjectURL = jest.fn(() => 'blob:download');
+		const createObjectURL = jest.fn( () => 'blob:download' );
 		const revokeObjectURL = jest.fn();
 		const documentRef = {
-			createElement: jest.fn(() => ({
+			createElement: jest.fn( () => ( {
 				click,
 				remove,
-			})),
+			} ) ),
 			body: {
 				appendChild,
 			},
 		};
-		const BlobCtor = jest.fn(function MockBlob(parts, options) {
+		const BlobCtor = jest.fn( function MockBlob( parts, options ) {
 			this.parts = parts;
 			this.options = options;
-		});
+		} );
 
 		expect(
 			downloadTextExport(
@@ -206,17 +206,17 @@ describe('export helpers', () => {
 			)
 		).toBeUndefined();
 
-		expect(BlobCtor).toHaveBeenCalledWith(['{"ok":true}'], {
+		expect( BlobCtor ).toHaveBeenCalledWith( [ '{"ok":true}' ], {
 			type: 'application/json',
-		});
-		expect(appendChild).toHaveBeenCalled();
-		expect(click).toHaveBeenCalled();
-		expect(remove).toHaveBeenCalled();
-		expect(revokeObjectURL).toHaveBeenCalledWith('blob:download');
-	});
+		} );
+		expect( appendChild ).toHaveBeenCalled();
+		expect( click ).toHaveBeenCalled();
+		expect( remove ).toHaveBeenCalled();
+		expect( revokeObjectURL ).toHaveBeenCalledWith( 'blob:download' );
+	} );
 
-	it('throws clearly when browser download APIs are unavailable', () => {
-		expect(() =>
+	it( 'throws clearly when browser download APIs are unavailable', () => {
+		expect( () =>
 			downloadTextExport(
 				{
 					content: 'citation data',
@@ -234,28 +234,28 @@ describe('export helpers', () => {
 					BlobCtor: Blob,
 				}
 			)
-		).toThrow('Download API unavailable');
-	});
+		).toThrow( 'Download API unavailable' );
+	} );
 
-	it('downloads CSL-JSON with the expected filename and MIME type', () => {
+	it( 'downloads CSL-JSON with the expected filename and MIME type', () => {
 		const click = jest.fn();
 		const remove = jest.fn();
 		const appendChild = jest.fn();
-		const createObjectURL = jest.fn(() => 'blob:csl');
+		const createObjectURL = jest.fn( () => 'blob:csl' );
 		const revokeObjectURL = jest.fn();
 		const documentRef = {
-			createElement: jest.fn(() => ({
+			createElement: jest.fn( () => ( {
 				click,
 				remove,
-			})),
+			} ) ),
 			body: {
 				appendChild,
 			},
 		};
-		const BlobCtor = jest.fn(function MockBlob(parts, options) {
+		const BlobCtor = jest.fn( function MockBlob( parts, options ) {
 			this.parts = parts;
 			this.options = options;
-		});
+		} );
 
 		downloadCslJsonExport(
 			[
@@ -275,26 +275,26 @@ describe('export helpers', () => {
 			}
 		);
 
-		expect(documentRef.createElement).toHaveBeenCalledWith('a');
-		expect(BlobCtor).toHaveBeenCalledWith(
-			[expect.stringContaining('"Responses API"')],
+		expect( documentRef.createElement ).toHaveBeenCalledWith( 'a' );
+		expect( BlobCtor ).toHaveBeenCalledWith(
+			[ expect.stringContaining( '"Responses API"' ) ],
 			{
 				type: CSL_JSON_EXPORT_MIME_TYPE,
 			}
 		);
-		expect(documentRef.createElement.mock.results[0].value.download).toBe(
-			CSL_JSON_EXPORT_FILENAME
-		);
-	});
+		expect(
+			documentRef.createElement.mock.results[ 0 ].value.download
+		).toBe( CSL_JSON_EXPORT_FILENAME );
+	} );
 
-	it('builds a sorted BibTeX export payload', async () => {
-		const CiteCtor = jest.fn().mockImplementation((data) => ({
-			format: jest.fn(() => {
-				expect(data[0].title).toBe('Alpha Book');
-				expect(data[1].title).toBe('Zeta Book');
+	it( 'builds a sorted BibTeX export payload', async () => {
+		const CiteCtor = jest.fn().mockImplementation( ( data ) => ( {
+			format: jest.fn( () => {
+				expect( data[ 0 ].title ).toBe( 'Alpha Book' );
+				expect( data[ 1 ].title ).toBe( 'Zeta Book' );
 				return '@book{Alpha2020Alpha,...}';
-			}),
-		}));
+			} ),
+		} ) );
 
 		const content = await buildBibtexExportContent(
 			[
@@ -303,8 +303,8 @@ describe('export helpers', () => {
 					csl: {
 						type: 'book',
 						title: 'Zeta Book',
-						author: [{ family: 'Zulu', given: 'Zoe' }],
-						issued: { 'date-parts': [[2024]] },
+						author: [ { family: 'Zulu', given: 'Zoe' } ],
+						issued: { 'date-parts': [ [ 2024 ] ] },
 					},
 				},
 				{
@@ -312,8 +312,8 @@ describe('export helpers', () => {
 					csl: {
 						type: 'book',
 						title: 'Alpha Book',
-						author: [{ family: 'Alpha', given: 'Ada' }],
-						issued: { 'date-parts': [[2020]] },
+						author: [ { family: 'Alpha', given: 'Ada' } ],
+						issued: { 'date-parts': [ [ 2020 ] ] },
 					},
 				},
 			],
@@ -321,20 +321,20 @@ describe('export helpers', () => {
 			{ CiteCtor }
 		);
 
-		expect(CiteCtor).toHaveBeenCalled();
-		expect(content).toContain('@book{Alpha2020Alpha');
-		expect(content.endsWith('\n')).toBe(true);
-	});
+		expect( CiteCtor ).toHaveBeenCalled();
+		expect( content ).toContain( '@book{Alpha2020Alpha' );
+		expect( content.endsWith( '\n' ) ).toBe( true );
+	} );
 
-	it('normalizes citation-js TeX quote ligatures in BibTeX exports to UTF-8 quotes', async () => {
-		const CiteCtor = jest.fn().mockImplementation(() => ({
+	it( 'normalizes citation-js TeX quote ligatures in BibTeX exports to UTF-8 quotes', async () => {
+		const CiteCtor = jest.fn().mockImplementation( () => ( {
 			format: jest.fn(
 				() =>
 					'@article{Mallory2015Contagious,\n' +
 					"\ttitle = {``{Contagious} {Air}[s]'': Wordsworth's {Poetics} and {Politics} of {Immunity}},\n" +
 					'}'
 			),
-		}));
+		} ) );
 
 		const content = await buildBibtexExportContent(
 			[
@@ -343,8 +343,8 @@ describe('export helpers', () => {
 					csl: {
 						type: 'article-journal',
 						title: '“Contagious Air[s]”: Wordsworth’s Poetics and Politics of Immunity',
-						author: [{ family: 'Mallory-Kani', given: 'Amy' }],
-						issued: { 'date-parts': [[2015]] },
+						author: [ { family: 'Mallory-Kani', given: 'Amy' } ],
+						issued: { 'date-parts': [ [ 2015 ] ] },
 					},
 				},
 			],
@@ -352,14 +352,14 @@ describe('export helpers', () => {
 			{ CiteCtor }
 		);
 
-		expect(content).toContain(
+		expect( content ).toContain(
 			"title = {“{Contagious} {Air}[s]”: Wordsworth's {Poetics}"
 		);
-		expect(content).not.toContain('``');
-		expect(content).not.toContain("''");
-	});
+		expect( content ).not.toContain( '``' );
+		expect( content ).not.toContain( "''" );
+	} );
 
-	it('exports real citation-js BibTeX with Unicode opening quotes for citation managers', async () => {
+	it( 'exports real citation-js BibTeX with Unicode opening quotes for citation managers', async () => {
 		const content = await buildBibtexExportContent(
 			[
 				{
@@ -367,9 +367,9 @@ describe('export helpers', () => {
 					csl: {
 						type: 'article-journal',
 						title: "“Contagious Air[s]”: Wordsworth's Poetics and Politics of Immunity",
-						author: [{ family: 'Mallory-Kani', given: 'Amy' }],
+						author: [ { family: 'Mallory-Kani', given: 'Amy' } ],
 						'container-title': 'European Romantic Review',
-						issued: { 'date-parts': [[2015, 11]] },
+						issued: { 'date-parts': [ [ 2015, 11 ] ] },
 						volume: '26',
 						issue: '6',
 						page: '699-717',
@@ -380,40 +380,40 @@ describe('export helpers', () => {
 			'chicago-author-date'
 		);
 
-		expect(content).toContain(
+		expect( content ).toContain(
 			"title = {“{Contagious} {Air}[s]”: Wordsworth's {Poetics}"
 		);
-		expect(content).not.toContain('``{Contagious}');
-		expect(content).not.toContain("{Air}[s]''");
-	});
+		expect( content ).not.toContain( '``{Contagious}' );
+		expect( content ).not.toContain( "{Air}[s]''" );
+	} );
 
-	it('normalizes citation-js TeX single quote commands in BibTeX exports', () => {
+	it( 'normalizes citation-js TeX single quote commands in BibTeX exports', () => {
 		expect(
 			normalizeBibtexUnicodeQuotes(
 				'title = {\\textquoteleft{}{No}.\\textquoteright{} O\\textquoteright{}{Connor}}'
 			)
-		).toBe('title = {‘{No}.’ O’{Connor}}');
-	});
+		).toBe( 'title = {‘{No}.’ O’{Connor}}' );
+	} );
 
-	it('downloads BibTeX with the expected filename and MIME type', async () => {
+	it( 'downloads BibTeX with the expected filename and MIME type', async () => {
 		const click = jest.fn();
 		const remove = jest.fn();
 		const appendChild = jest.fn();
-		const createObjectURL = jest.fn(() => 'blob:bib');
+		const createObjectURL = jest.fn( () => 'blob:bib' );
 		const revokeObjectURL = jest.fn();
 		const documentRef = {
-			createElement: jest.fn(() => ({
+			createElement: jest.fn( () => ( {
 				click,
 				remove,
-			})),
+			} ) ),
 			body: {
 				appendChild,
 			},
 		};
-		const BlobCtor = jest.fn(function MockBlob(parts, options) {
+		const BlobCtor = jest.fn( function MockBlob( parts, options ) {
 			this.parts = parts;
 			this.options = options;
-		});
+		} );
 
 		await downloadBibtexExport(
 			[
@@ -430,22 +430,22 @@ describe('export helpers', () => {
 				documentRef,
 				urlRef: { createObjectURL, revokeObjectURL },
 				BlobCtor,
-				CiteCtor: jest.fn().mockImplementation(() => ({
+				CiteCtor: jest.fn().mockImplementation( () => ( {
 					format: () => '@book{TestBook,...}',
-				})),
+				} ) ),
 			}
 		);
 
-		expect(documentRef.createElement).toHaveBeenCalledWith('a');
-		expect(BlobCtor).toHaveBeenCalledWith(['@book{TestBook,...}\n'], {
+		expect( documentRef.createElement ).toHaveBeenCalledWith( 'a' );
+		expect( BlobCtor ).toHaveBeenCalledWith( [ '@book{TestBook,...}\n' ], {
 			type: BIBTEX_EXPORT_MIME_TYPE,
-		});
-		expect(documentRef.createElement.mock.results[0].value.download).toBe(
-			BIBTEX_EXPORT_FILENAME
-		);
-	});
+		} );
+		expect(
+			documentRef.createElement.mock.results[ 0 ].value.download
+		).toBe( BIBTEX_EXPORT_FILENAME );
+	} );
 
-	it('builds RIS output with practical core fields', () => {
+	it( 'builds RIS output with practical core fields', () => {
 		const content = buildRisExportContent(
 			[
 				{
@@ -455,30 +455,30 @@ describe('export helpers', () => {
 						title: 'A Chapter',
 						'container-title': 'Collected Volume',
 						publisher: 'Example Press',
-						editor: [{ family: 'Reyes', given: 'Carla' }],
+						editor: [ { family: 'Reyes', given: 'Carla' } ],
 						ISBN: '9780226819909',
 						page: '117-134',
-						author: [{ family: 'Alpha', given: 'Ada' }],
-						issued: { 'date-parts': [[2024]] },
+						author: [ { family: 'Alpha', given: 'Ada' } ],
+						issued: { 'date-parts': [ [ 2024 ] ] },
 					},
 				},
 			],
 			'apa-7'
 		);
 
-		expect(content).toContain('TY  - CHAP');
-		expect(content).toContain('AU  - Alpha, Ada');
-		expect(content).toContain('TI  - A Chapter');
-		expect(content).toContain('T2  - Collected Volume');
-		expect(content).toContain('A2  - Reyes, Carla');
-		expect(content).toContain('PB  - Example Press');
-		expect(content).toContain('SN  - 9780226819909');
-		expect(content).toContain('SP  - 117');
-		expect(content).toContain('EP  - 134');
-		expect(content).toContain('ER  - ');
-	});
+		expect( content ).toContain( 'TY  - CHAP' );
+		expect( content ).toContain( 'AU  - Alpha, Ada' );
+		expect( content ).toContain( 'TI  - A Chapter' );
+		expect( content ).toContain( 'T2  - Collected Volume' );
+		expect( content ).toContain( 'A2  - Reyes, Carla' );
+		expect( content ).toContain( 'PB  - Example Press' );
+		expect( content ).toContain( 'SN  - 9780226819909' );
+		expect( content ).toContain( 'SP  - 117' );
+		expect( content ).toContain( 'EP  - 134' );
+		expect( content ).toContain( 'ER  - ' );
+	} );
 
-	it('builds RIS authors from literal and partial personal names', () => {
+	it( 'builds RIS authors from literal and partial personal names', () => {
 		const content = buildRisExportContent(
 			[
 				{
@@ -496,29 +496,29 @@ describe('export helpers', () => {
 			'apa-7'
 		);
 
-		expect(content).toContain('AU  - World Health Organization');
-		expect(content).toContain('AU  - Alex');
-	});
+		expect( content ).toContain( 'AU  - World Health Organization' );
+		expect( content ).toContain( 'AU  - Alex' );
+	} );
 
-	it('downloads RIS with the expected filename and MIME type', () => {
+	it( 'downloads RIS with the expected filename and MIME type', () => {
 		const click = jest.fn();
 		const remove = jest.fn();
 		const appendChild = jest.fn();
-		const createObjectURL = jest.fn(() => 'blob:ris');
+		const createObjectURL = jest.fn( () => 'blob:ris' );
 		const revokeObjectURL = jest.fn();
 		const documentRef = {
-			createElement: jest.fn(() => ({
+			createElement: jest.fn( () => ( {
 				click,
 				remove,
-			})),
+			} ) ),
 			body: {
 				appendChild,
 			},
 		};
-		const BlobCtor = jest.fn(function MockBlob(parts, options) {
+		const BlobCtor = jest.fn( function MockBlob( parts, options ) {
 			this.parts = parts;
 			this.options = options;
-		});
+		} );
 
 		downloadRisExport(
 			[
@@ -538,26 +538,26 @@ describe('export helpers', () => {
 			}
 		);
 
-		expect(BlobCtor).toHaveBeenCalledWith(
-			[expect.stringContaining('TY  - ELEC')],
+		expect( BlobCtor ).toHaveBeenCalledWith(
+			[ expect.stringContaining( 'TY  - ELEC' ) ],
 			{
 				type: RIS_EXPORT_MIME_TYPE,
 			}
 		);
-		expect(documentRef.createElement.mock.results[0].value.download).toBe(
-			RIS_EXPORT_FILENAME
-		);
-	});
+		expect(
+			documentRef.createElement.mock.results[ 0 ].value.download
+		).toBe( RIS_EXPORT_FILENAME );
+	} );
 
-	it('buildBiblatexExportContent sorts citations and calls cite.format("biblatex")', async () => {
-		const CiteCtor = jest.fn().mockImplementation((data) => ({
-			format: jest.fn((fmt) => {
-				expect(fmt).toBe('biblatex');
-				expect(data[0].title).toBe('Alpha Book');
-				expect(data[1].title).toBe('Zeta Book');
+	it( 'buildBiblatexExportContent sorts citations and calls cite.format("biblatex")', async () => {
+		const CiteCtor = jest.fn().mockImplementation( ( data ) => ( {
+			format: jest.fn( ( fmt ) => {
+				expect( fmt ).toBe( 'biblatex' );
+				expect( data[ 0 ].title ).toBe( 'Alpha Book' );
+				expect( data[ 1 ].title ).toBe( 'Zeta Book' );
 				return '@book{Alpha2020Alpha,\n\tdate = {2020},\n}';
-			}),
-		}));
+			} ),
+		} ) );
 
 		const content = await buildBiblatexExportContent(
 			[
@@ -566,8 +566,8 @@ describe('export helpers', () => {
 					csl: {
 						type: 'book',
 						title: 'Zeta Book',
-						author: [{ family: 'Zulu', given: 'Zoe' }],
-						issued: { 'date-parts': [[2024]] },
+						author: [ { family: 'Zulu', given: 'Zoe' } ],
+						issued: { 'date-parts': [ [ 2024 ] ] },
 					},
 				},
 				{
@@ -575,8 +575,8 @@ describe('export helpers', () => {
 					csl: {
 						type: 'book',
 						title: 'Alpha Book',
-						author: [{ family: 'Alpha', given: 'Ada' }],
-						issued: { 'date-parts': [[2020]] },
+						author: [ { family: 'Alpha', given: 'Ada' } ],
+						issued: { 'date-parts': [ [ 2020 ] ] },
 					},
 				},
 			],
@@ -584,13 +584,13 @@ describe('export helpers', () => {
 			{ CiteCtor }
 		);
 
-		expect(CiteCtor).toHaveBeenCalled();
-		expect(content).toContain('@book{Alpha2020Alpha');
-		expect(content).toContain('date = {2020}');
-		expect(content.endsWith('\n')).toBe(true);
-	});
+		expect( CiteCtor ).toHaveBeenCalled();
+		expect( content ).toContain( '@book{Alpha2020Alpha' );
+		expect( content ).toContain( 'date = {2020}' );
+		expect( content.endsWith( '\n' ) ).toBe( true );
+	} );
 
-	it('buildBiblatexExportContent uses date field instead of year field', async () => {
+	it( 'buildBiblatexExportContent uses date field instead of year field', async () => {
 		const content = await buildBiblatexExportContent(
 			[
 				{
@@ -598,19 +598,19 @@ describe('export helpers', () => {
 					csl: {
 						type: 'book',
 						title: 'Test Book',
-						author: [{ family: 'Smith', given: 'A' }],
-						issued: { 'date-parts': [[2021]] },
+						author: [ { family: 'Smith', given: 'A' } ],
+						issued: { 'date-parts': [ [ 2021 ] ] },
 					},
 				},
 			],
 			'chicago-author-date'
 		);
 
-		expect(content).toContain('date = {2021}');
-		expect(content).not.toContain('year = {2021}');
-	});
+		expect( content ).toContain( 'date = {2021}' );
+		expect( content ).not.toContain( 'year = {2021}' );
+	} );
 
-	it('buildBiblatexExportContent uses journaltitle instead of journal for articles', async () => {
+	it( 'buildBiblatexExportContent uses journaltitle instead of journal for articles', async () => {
 		const content = await buildBiblatexExportContent(
 			[
 				{
@@ -618,35 +618,35 @@ describe('export helpers', () => {
 					csl: {
 						type: 'article-journal',
 						title: 'My Article',
-						author: [{ family: 'Smith', given: 'A' }],
+						author: [ { family: 'Smith', given: 'A' } ],
 						'container-title': 'Journal of Things',
-						issued: { 'date-parts': [[2021]] },
+						issued: { 'date-parts': [ [ 2021 ] ] },
 					},
 				},
 			],
 			'chicago-author-date'
 		);
 
-		expect(content).toContain('journaltitle = {Journal of Things}');
-		expect(content).not.toContain('\tjournal = ');
-	});
+		expect( content ).toContain( 'journaltitle = {Journal of Things}' );
+		expect( content ).not.toContain( '\tjournal = ' );
+	} );
 
-	it('BIBLATEX_EXPORT_FILENAME and BIBLATEX_EXPORT_MIME_TYPE are defined', () => {
-		expect(BIBLATEX_EXPORT_FILENAME).toBe('bibliography.biblatex.bib');
-		expect(BIBLATEX_EXPORT_MIME_TYPE).toContain('text/x-bibtex');
-	});
+	it( 'BIBLATEX_EXPORT_FILENAME and BIBLATEX_EXPORT_MIME_TYPE are defined', () => {
+		expect( BIBLATEX_EXPORT_FILENAME ).toBe( 'bibliography.biblatex.bib' );
+		expect( BIBLATEX_EXPORT_MIME_TYPE ).toContain( 'text/x-bibtex' );
+	} );
 
-	it('downloadBiblatexExport triggers download with correct filename and MIME type', async () => {
+	it( 'downloadBiblatexExport triggers download with correct filename and MIME type', async () => {
 		const click = jest.fn();
 		const remove = jest.fn();
-		const createObjectURL = jest.fn(() => 'blob:test-biblatex');
+		const createObjectURL = jest.fn( () => 'blob:test-biblatex' );
 		const revokeObjectURL = jest.fn();
-		const BlobCtor = jest.fn(function MockBlob(parts, options) {
+		const BlobCtor = jest.fn( function MockBlob( parts, options ) {
 			this.parts = parts;
 			this.options = options;
-		});
+		} );
 		const documentRef = {
-			createElement: jest.fn(() => ({ click, remove })),
+			createElement: jest.fn( () => ( { click, remove } ) ),
 			body: { appendChild: jest.fn() },
 		};
 
@@ -657,8 +657,8 @@ describe('export helpers', () => {
 					csl: {
 						type: 'book',
 						title: 'A Book',
-						author: [{ family: 'Author', given: 'A' }],
-						issued: { 'date-parts': [[2020]] },
+						author: [ { family: 'Author', given: 'A' } ],
+						issued: { 'date-parts': [ [ 2020 ] ] },
 					},
 				},
 			],
@@ -667,90 +667,90 @@ describe('export helpers', () => {
 				BlobCtor,
 				urlRef: { createObjectURL, revokeObjectURL },
 				documentRef,
-				CiteCtor: jest.fn().mockImplementation(() => ({
+				CiteCtor: jest.fn().mockImplementation( () => ( {
 					format: () => '@book{Author2020A,...}',
-				})),
+				} ) ),
 			}
 		);
 
-		expect(BlobCtor).toHaveBeenCalledWith(
-			[expect.stringContaining('@book{')],
+		expect( BlobCtor ).toHaveBeenCalledWith(
+			[ expect.stringContaining( '@book{' ) ],
 			{ type: BIBLATEX_EXPORT_MIME_TYPE }
 		);
-		expect(documentRef.createElement.mock.results[0].value.download).toBe(
-			BIBLATEX_EXPORT_FILENAME
-		);
-	});
-});
-
-describe('getCitationExportBasename (human-meaningful download filenames)', () => {
-	it('prefers the BibTeX citation-key', () => {
 		expect(
-			getCitationExportBasename({
+			documentRef.createElement.mock.results[ 0 ].value.download
+		).toBe( BIBLATEX_EXPORT_FILENAME );
+	} );
+} );
+
+describe( 'getCitationExportBasename (human-meaningful download filenames)', () => {
+	it( 'prefers the BibTeX citation-key', () => {
+		expect(
+			getCitationExportBasename( {
 				'citation-key': 'watson1953',
-				author: [{ family: 'Watson' }],
-			})
-		).toBe('watson1953');
-	});
+				author: [ { family: 'Watson' } ],
+			} )
+		).toBe( 'watson1953' );
+	} );
 
-	it('falls back to first-author family + year', () => {
+	it( 'falls back to first-author family + year', () => {
 		expect(
-			getCitationExportBasename({
-				author: [{ family: 'Kuhn', given: 'Thomas' }],
-				issued: { 'date-parts': [[1962]] },
-			})
-		).toBe('Kuhn-1962');
-	});
+			getCitationExportBasename( {
+				author: [ { family: 'Kuhn', given: 'Thomas' } ],
+				issued: { 'date-parts': [ [ 1962 ] ] },
+			} )
+		).toBe( 'Kuhn-1962' );
+	} );
 
-	it('strips diacritics and unsafe characters', () => {
+	it( 'strips diacritics and unsafe characters', () => {
 		expect(
-			getCitationExportBasename({
-				author: [{ family: 'Müller' }],
-				issued: { 'date-parts': [[2001]] },
-			})
-		).toBe('Muller-2001');
-	});
+			getCitationExportBasename( {
+				author: [ { family: 'Müller' } ],
+				issued: { 'date-parts': [ [ 2001 ] ] },
+			} )
+		).toBe( 'Muller-2001' );
+	} );
 
-	it('uses a literal (corporate) author name when present', () => {
+	it( 'uses a literal (corporate) author name when present', () => {
 		expect(
-			getCitationExportBasename({
-				author: [{ literal: 'World Health Organization' }],
-				issued: { 'date-parts': [[2020]] },
-			})
-		).toBe('World-Health-Organization-2020');
-	});
+			getCitationExportBasename( {
+				author: [ { literal: 'World Health Organization' } ],
+				issued: { 'date-parts': [ [ 2020 ] ] },
+			} )
+		).toBe( 'World-Health-Organization-2020' );
+	} );
 
-	it('falls back to a title slug, then to "citation"', () => {
+	it( 'falls back to a title slug, then to "citation"', () => {
 		expect(
-			getCitationExportBasename({ title: 'A Mathematical Theory' })
-		).toBe('A-Mathematical-Theory');
-		expect(getCitationExportBasename({})).toBe('citation');
-		expect(getCitationExportBasename(null)).toBe('citation');
-	});
-});
+			getCitationExportBasename( { title: 'A Mathematical Theory' } )
+		).toBe( 'A-Mathematical-Theory' );
+		expect( getCitationExportBasename( {} ) ).toBe( 'citation' );
+		expect( getCitationExportBasename( null ) ).toBe( 'citation' );
+	} );
+} );
 
-describe('cslToRisEntry (per-entry RIS for save() cite/export)', () => {
-	it('is importable as a named export and returns a string', () => {
-		const ris = cslToRisEntry({ type: 'article-journal', title: 'X' });
-		expect(typeof ris).toBe('string');
-	});
+describe( 'cslToRisEntry (per-entry RIS for save() cite/export)', () => {
+	it( 'is importable as a named export and returns a string', () => {
+		const ris = cslToRisEntry( { type: 'article-journal', title: 'X' } );
+		expect( typeof ris ).toBe( 'string' );
+	} );
 
-	it('opens with the mapped RIS type and closes with the ER terminator', () => {
-		const ris = cslToRisEntry({
+	it( 'opens with the mapped RIS type and closes with the ER terminator', () => {
+		const ris = cslToRisEntry( {
 			type: 'article-journal',
 			title: 'A Study',
-			issued: { 'date-parts': [[2023]] },
-		});
-		expect(ris.startsWith('TY  - JOUR')).toBe(true);
-		expect(ris.endsWith('ER  - ')).toBe(true);
-	});
+			issued: { 'date-parts': [ [ 2023 ] ] },
+		} );
+		expect( ris.startsWith( 'TY  - JOUR' ) ).toBe( true );
+		expect( ris.endsWith( 'ER  - ' ) ).toBe( true );
+	} );
 
-	it('includes an AU line for a named author', () => {
-		const ris = cslToRisEntry({
+	it( 'includes an AU line for a named author', () => {
+		const ris = cslToRisEntry( {
 			type: 'article-journal',
 			title: 'A Study',
-			author: [{ family: 'Doe', given: 'Jane' }],
-		});
-		expect(ris).toContain('AU  - Doe, Jane');
-	});
-});
+			author: [ { family: 'Doe', given: 'Jane' } ],
+		} );
+		expect( ris ).toContain( 'AU  - Doe, Jane' );
+	} );
+} );

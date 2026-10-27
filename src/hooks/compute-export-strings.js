@@ -20,18 +20,18 @@ import {
  * @return {Promise<Array<{exportBibtex: string, exportBiblatex: string}>>}
  *         Results indexed to match `cslObjects`.
  */
-export async function computeExportStrings(cslObjects, citationStyle) {
+export async function computeExportStrings( cslObjects, citationStyle ) {
 	return Promise.all(
-		(cslObjects || []).map(async (csl) => {
+		( cslObjects || [] ).map( async ( csl ) => {
 			try {
-				const [exportBibtex, exportBiblatex] = await Promise.all([
-					buildBibtexExportContent([{ csl }], citationStyle),
-					buildBiblatexExportContent([{ csl }], citationStyle),
-				]);
+				const [ exportBibtex, exportBiblatex ] = await Promise.all( [
+					buildBibtexExportContent( [ { csl } ], citationStyle ),
+					buildBiblatexExportContent( [ { csl } ], citationStyle ),
+				] );
 				return { exportBibtex, exportBiblatex };
 			} catch {
 				return { exportBibtex: '', exportBiblatex: '' };
 			}
-		})
+		} )
 	);
 }

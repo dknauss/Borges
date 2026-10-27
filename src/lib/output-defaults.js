@@ -28,11 +28,11 @@ export const OUTPUT_TOGGLE_KEYS = [
  * @param {Object} attributes Block attributes.
  * @return {boolean} Whether the block is new.
  */
-export function isNewBibliographyBlock(attributes) {
+export function isNewBibliographyBlock( attributes ) {
 	return (
-		!attributes?.bibliographyId &&
-		(!Array.isArray(attributes?.citations) ||
-			attributes.citations.length === 0)
+		! attributes?.bibliographyId &&
+		( ! Array.isArray( attributes?.citations ) ||
+			attributes.citations.length === 0 )
 	);
 }
 
@@ -43,25 +43,25 @@ export function isNewBibliographyBlock(attributes) {
  * @param {Object} siteDefaults Site defaults from the editor settings.
  * @return {Object|null} Attribute changes, or null when there are none.
  */
-export function getOutputDefaultChanges(attributes, siteDefaults) {
+export function getOutputDefaultChanges( attributes, siteDefaults ) {
 	if (
-		!siteDefaults ||
+		! siteDefaults ||
 		typeof siteDefaults !== 'object' ||
-		!isNewBibliographyBlock(attributes)
+		! isNewBibliographyBlock( attributes )
 	) {
 		return null;
 	}
 
 	const changes = {};
 
-	OUTPUT_TOGGLE_KEYS.forEach((key) => {
+	OUTPUT_TOGGLE_KEYS.forEach( ( key ) => {
 		if (
-			typeof siteDefaults[key] === 'boolean' &&
-			siteDefaults[key] !== attributes[key]
+			typeof siteDefaults[ key ] === 'boolean' &&
+			siteDefaults[ key ] !== attributes[ key ]
 		) {
-			changes[key] = siteDefaults[key];
+			changes[ key ] = siteDefaults[ key ];
 		}
-	});
+	} );
 
-	return Object.keys(changes).length > 0 ? changes : null;
+	return Object.keys( changes ).length > 0 ? changes : null;
 }

@@ -4,27 +4,27 @@ import { createCitationId } from './citation-id';
 
 export const MANUAL_ENTRY_TYPE_OPTIONS = [
 	{
-		label: __('Book', 'borges-bibliography-builder'),
+		label: __( 'Book', 'borges-bibliography-builder' ),
 		value: 'book',
 	},
 	{
-		label: __('Journal article', 'borges-bibliography-builder'),
+		label: __( 'Journal article', 'borges-bibliography-builder' ),
 		value: 'article-journal',
 	},
 	{
-		label: __('Chapter', 'borges-bibliography-builder'),
+		label: __( 'Chapter', 'borges-bibliography-builder' ),
 		value: 'chapter',
 	},
 	{
-		label: __('Edited collection', 'borges-bibliography-builder'),
+		label: __( 'Edited collection', 'borges-bibliography-builder' ),
 		value: 'collection',
 	},
 	{
-		label: __('Thesis / dissertation', 'borges-bibliography-builder'),
+		label: __( 'Thesis / dissertation', 'borges-bibliography-builder' ),
 		value: 'thesis',
 	},
 	{
-		label: __('Webpage', 'borges-bibliography-builder'),
+		label: __( 'Webpage', 'borges-bibliography-builder' ),
 		value: 'webpage',
 	},
 ];
@@ -42,36 +42,36 @@ export const DEFAULT_MANUAL_ENTRY_FIELDS = {
 	url: '',
 };
 
-function normalizeFieldValue(value) {
+function normalizeFieldValue( value ) {
 	return typeof value === 'string' ? value.trim() : '';
 }
 
-export function normalizeDoiValue(value) {
-	const normalized = normalizeFieldValue(value)
-		.replace(/[).,;:\s]+$/u, '')
-		.replace(/^(?:https?:\/\/)?doi:/iu, '');
+export function normalizeDoiValue( value ) {
+	const normalized = normalizeFieldValue( value )
+		.replace( /[).,;:\s]+$/u, '' )
+		.replace( /^(?:https?:\/\/)?doi:/iu, '' );
 
-	if (!normalized) {
+	if ( ! normalized ) {
 		return '';
 	}
 
-	return /^10\.\d{4,}\/[^\s]+$/iu.test(normalized) ? normalized : null;
+	return /^10\.\d{4,}\/[^\s]+$/iu.test( normalized ) ? normalized : null;
 }
 
-export function normalizeUrlValue(value) {
-	const normalized = normalizeFieldValue(value).replace(/[).,;]+$/u, '');
+export function normalizeUrlValue( value ) {
+	const normalized = normalizeFieldValue( value ).replace( /[).,;]+$/u, '' );
 
-	if (!normalized) {
+	if ( ! normalized ) {
 		return '';
 	}
 
-	return /^https?:\/\/\S+$/iu.test(normalized) ? normalized : null;
+	return /^https?:\/\/\S+$/iu.test( normalized ) ? normalized : null;
 }
 
-export function validateIdentifierFields(fields) {
+export function validateIdentifierFields( fields ) {
 	if (
-		normalizeFieldValue(fields.doi) &&
-		normalizeDoiValue(fields.doi) === null
+		normalizeFieldValue( fields.doi ) &&
+		normalizeDoiValue( fields.doi ) === null
 	) {
 		return __(
 			'Enter a valid DOI before adding.',
@@ -80,8 +80,8 @@ export function validateIdentifierFields(fields) {
 	}
 
 	if (
-		normalizeFieldValue(fields.url) &&
-		normalizeUrlValue(fields.url) === null
+		normalizeFieldValue( fields.url ) &&
+		normalizeUrlValue( fields.url ) === null
 	) {
 		return __(
 			'Enter a valid URL beginning with http:// or https:// before adding.',
@@ -92,17 +92,17 @@ export function validateIdentifierFields(fields) {
 	return null;
 }
 
-function parseAuthorFieldEntry(value) {
-	const normalized = value.trim().replace(/[.;]\s*$/u, '');
+function parseAuthorFieldEntry( value ) {
+	const normalized = value.trim().replace( /[.;]\s*$/u, '' );
 
-	if (!normalized) {
+	if ( ! normalized ) {
 		return null;
 	}
 
-	if (normalized.includes(',')) {
-		const [family, given] = normalized.split(/\s*,\s*/, 2);
+	if ( normalized.includes( ',' ) ) {
+		const [ family, given ] = normalized.split( /\s*,\s*/, 2 );
 
-		if (!family || !given) {
+		if ( ! family || ! given ) {
 			return {
 				literal: normalized,
 			};
@@ -114,118 +114,122 @@ function parseAuthorFieldEntry(value) {
 		};
 	}
 
-	const parts = normalized.split(/\s+/u);
+	const parts = normalized.split( /\s+/u );
 
-	if (parts.length === 1) {
+	if ( parts.length === 1 ) {
 		return {
 			literal: normalized,
 		};
 	}
 
 	return {
-		given: parts.slice(0, -1).join(' '),
-		family: parts.at(-1),
+		given: parts.slice( 0, -1 ).join( ' ' ),
+		family: parts.at( -1 ),
 	};
 }
 
-function parseAuthorFieldList(value) {
+function parseAuthorFieldList( value ) {
 	return value
-		.split(/\s*;\s*/u)
-		.map(parseAuthorFieldEntry)
-		.filter(Boolean);
+		.split( /\s*;\s*/u )
+		.map( parseAuthorFieldEntry )
+		.filter( Boolean );
 }
 
-export function createEmptyManualEntryFields(preservedType = '') {
+export function createEmptyManualEntryFields( preservedType = '' ) {
 	return {
 		...DEFAULT_MANUAL_ENTRY_FIELDS,
 		type: preservedType,
 	};
 }
 
-export function validateManualEntry(fields) {
-	if (!normalizeFieldValue(fields.type)) {
+export function validateManualEntry( fields ) {
+	if ( ! normalizeFieldValue( fields.type ) ) {
 		return __(
 			'Choose a publication type before adding.',
 			'borges-bibliography-builder'
 		);
 	}
 
-	if (!normalizeFieldValue(fields.title)) {
+	if ( ! normalizeFieldValue( fields.title ) ) {
 		return __(
 			'Enter a title before adding.',
 			'borges-bibliography-builder'
 		);
 	}
 
-	return validateIdentifierFields(fields);
+	return validateIdentifierFields( fields );
 }
 
-export function buildManualCsl(fields) {
-	const type = normalizeFieldValue(fields.type);
-	const title = normalizeFieldValue(fields.title);
+export function buildManualCsl( fields ) {
+	const type = normalizeFieldValue( fields.type );
+	const title = normalizeFieldValue( fields.title );
 	const contributors = parseAuthorFieldList(
-		normalizeFieldValue(fields.authors)
+		normalizeFieldValue( fields.authors )
 	);
 	const csl = {
 		type,
 		title,
 	};
 
-	if (contributors.length > 0) {
-		if (type === 'collection') {
+	if ( contributors.length > 0 ) {
+		if ( type === 'collection' ) {
 			csl.editor = contributors;
 		} else {
 			csl.author = contributors;
 		}
 	}
 
-	if (normalizeFieldValue(fields.containerTitle)) {
-		csl['container-title'] = normalizeFieldValue(fields.containerTitle);
+	if ( normalizeFieldValue( fields.containerTitle ) ) {
+		csl[ 'container-title' ] = normalizeFieldValue( fields.containerTitle );
 	}
 
-	if (normalizeFieldValue(fields.publisher)) {
-		csl.publisher = normalizeFieldValue(fields.publisher);
+	if ( normalizeFieldValue( fields.publisher ) ) {
+		csl.publisher = normalizeFieldValue( fields.publisher );
 	}
 
-	if (normalizeFieldValue(fields.page)) {
-		csl.page = normalizeFieldValue(fields.page);
+	if ( normalizeFieldValue( fields.page ) ) {
+		csl.page = normalizeFieldValue( fields.page );
 	}
 
 	if (
 		type === 'article-journal' &&
-		normalizeFieldValue(fields.articleNumber)
+		normalizeFieldValue( fields.articleNumber )
 	) {
-		csl.number = normalizeFieldValue(fields.articleNumber);
+		csl.number = normalizeFieldValue( fields.articleNumber );
 	}
 
-	const normalizedDoi = normalizeDoiValue(fields.doi);
-	if (normalizedDoi) {
+	const normalizedDoi = normalizeDoiValue( fields.doi );
+	if ( normalizedDoi ) {
 		csl.DOI = normalizedDoi;
 	}
 
-	const normalizedUrl = normalizeUrlValue(fields.url);
-	if (normalizedUrl) {
+	const normalizedUrl = normalizeUrlValue( fields.url );
+	if ( normalizedUrl ) {
 		csl.URL = normalizedUrl;
 	}
 
-	if (/^\d{4}$/u.test(normalizeFieldValue(fields.year))) {
+	if ( /^\d{4}$/u.test( normalizeFieldValue( fields.year ) ) ) {
 		csl.issued = {
-			'date-parts': [[Number(normalizeFieldValue(fields.year))]],
+			'date-parts': [ [ Number( normalizeFieldValue( fields.year ) ) ] ],
 		};
 	}
 
-	return validateAndSanitizeCsl(csl);
+	return validateAndSanitizeCsl( csl );
 }
 
-export async function createManualCitationFromCsl(csl, styleKey, options = {}) {
+export async function createManualCitationFromCsl(
+	csl,
+	styleKey,
+	options = {}
+) {
 	let formattedText = null;
 
-	if (!options.deferFormatting) {
-		const { formatBibliographyEntry } = await import('./formatting/csl');
+	if ( ! options.deferFormatting ) {
+		const { formatBibliographyEntry } = await import( './formatting/csl' );
 
-		formattedText = await formatBibliographyEntry(csl, styleKey, {
+		formattedText = await formatBibliographyEntry( csl, styleKey, {
 			onFallback: options.onFormatFallback,
-		});
+		} );
 	}
 
 	return {
@@ -238,9 +242,9 @@ export async function createManualCitationFromCsl(csl, styleKey, options = {}) {
 	};
 }
 
-export async function createManualCitation(fields, styleKey, options = {}) {
+export async function createManualCitation( fields, styleKey, options = {} ) {
 	return createManualCitationFromCsl(
-		buildManualCsl(fields),
+		buildManualCsl( fields ),
 		styleKey,
 		options
 	);

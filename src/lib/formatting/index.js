@@ -13,7 +13,7 @@ export {
  * brackets. "a < b" and "<3" are not tags. Mirrored in includes/save-markup.php.
  */
 const INLINE_TAG_PATTERN = /<\/?([A-Za-z][A-Za-z0-9]*)\b[^<>]*>/g;
-const ITALIC_TAGS = new Set(['i', 'em']);
+const ITALIC_TAGS = new Set( [ 'i', 'em' ] );
 
 /**
  * Split text that may carry inline HTML into plain text and italic ranges.
@@ -30,32 +30,32 @@ const ITALIC_TAGS = new Set(['i', 'em']);
  *
  * @since 1.8.1
  */
-export function parseInlineMarkup(text) {
-	const value = String(text ?? '');
+export function parseInlineMarkup( text ) {
+	const value = String( text ?? '' );
 	const ranges = [];
 	let plain = '';
 	let cursor = 0;
 	let depth = 0;
 	let start = 0;
 
-	for (const match of value.matchAll(INLINE_TAG_PATTERN)) {
-		plain += value.slice(cursor, match.index);
-		cursor = match.index + match[0].length;
+	for ( const match of value.matchAll( INLINE_TAG_PATTERN ) ) {
+		plain += value.slice( cursor, match.index );
+		cursor = match.index + match[ 0 ].length;
 
-		if (!ITALIC_TAGS.has(match[1].toLowerCase())) {
+		if ( ! ITALIC_TAGS.has( match[ 1 ].toLowerCase() ) ) {
 			continue;
 		}
 
-		if (match[0][1] === '/') {
-			if (depth > 0) {
+		if ( match[ 0 ][ 1 ] === '/' ) {
+			if ( depth > 0 ) {
 				depth -= 1;
 
-				if (depth === 0 && plain.length > start) {
-					ranges.push({ start, end: plain.length });
+				if ( depth === 0 && plain.length > start ) {
+					ranges.push( { start, end: plain.length } );
 				}
 			}
-		} else if (!match[0].endsWith('/>')) {
-			if (depth === 0) {
+		} else if ( ! match[ 0 ].endsWith( '/>' ) ) {
+			if ( depth === 0 ) {
 				start = plain.length;
 			}
 
@@ -63,11 +63,11 @@ export function parseInlineMarkup(text) {
 		}
 	}
 
-	plain += value.slice(cursor);
+	plain += value.slice( cursor );
 
 	// An unclosed <i> runs to the end, as it would in a browser.
-	if (depth > 0 && plain.length > start) {
-		ranges.push({ start, end: plain.length });
+	if ( depth > 0 && plain.length > start ) {
+		ranges.push( { start, end: plain.length } );
 	}
 
 	return { text: plain, ranges };
@@ -81,8 +81,8 @@ export function parseInlineMarkup(text) {
  *
  * @since 1.8.1
  */
-export function stripInlineMarkup(text) {
-	return parseInlineMarkup(text).text;
+export function stripInlineMarkup( text ) {
+	return parseInlineMarkup( text ).text;
 }
 
 /**
@@ -93,11 +93,11 @@ export function stripInlineMarkup(text) {
  *
  * @since 1.8.1
  */
-export function getPlainDisplayText(citation) {
-	return stripInlineMarkup(getDisplayText(citation));
+export function getPlainDisplayText( citation ) {
+	return stripInlineMarkup( getDisplayText( citation ) );
 }
 
-export function getAutoFormattedText(citation) {
+export function getAutoFormattedText( citation ) {
 	return citation.formattedText || citation.csl.title || '';
 }
 
@@ -109,8 +109,8 @@ export function getAutoFormattedText(citation) {
  *
  * @since 0.1.0
  */
-export function getDisplayText(citation) {
-	return citation.displayOverride || getAutoFormattedText(citation);
+export function getDisplayText( citation ) {
+	return citation.displayOverride || getAutoFormattedText( citation );
 }
 
 const URL_PATTERN = /https?:\/\/\S+/gu;
@@ -126,7 +126,7 @@ const URL_PATTERN = /https?:\/\/\S+/gu;
  * later (to catch bare `www.`, `doi:`, or protocol-relative `//`) cannot
  * silently turn this into a scheme-injection sink.
  */
-const ALLOWED_LINK_SCHEMES = ['http:', 'https:'];
+const ALLOWED_LINK_SCHEMES = [ 'http:', 'https:' ];
 
 /**
  * Whether a candidate URL may be emitted as a link.
@@ -134,34 +134,34 @@ const ALLOWED_LINK_SCHEMES = ['http:', 'https:'];
  * @param {string} candidate Detected URL text.
  * @return {boolean} True when the scheme is allowed.
  */
-function isLinkableUrl(candidate) {
+function isLinkableUrl( candidate ) {
 	try {
-		return ALLOWED_LINK_SCHEMES.includes(new URL(candidate).protocol);
+		return ALLOWED_LINK_SCHEMES.includes( new URL( candidate ).protocol );
 	} catch {
 		return false;
 	}
 }
 
-function splitTrailingUrlPunctuation(url) {
+function splitTrailingUrlPunctuation( url ) {
 	let href = url;
 	let trailing = '';
 
-	while (href.length) {
-		const lastCharacter = href[href.length - 1];
+	while ( href.length ) {
+		const lastCharacter = href[ href.length - 1 ];
 
-		if (/[.,;:!?]/u.test(lastCharacter)) {
+		if ( /[.,;:!?]/u.test( lastCharacter ) ) {
 			trailing = lastCharacter + trailing;
-			href = href.slice(0, -1);
+			href = href.slice( 0, -1 );
 			continue;
 		}
 
-		if (lastCharacter === ')') {
-			const openingCount = (href.match(/\(/gu) || []).length;
-			const closingCount = (href.match(/\)/gu) || []).length;
+		if ( lastCharacter === ')' ) {
+			const openingCount = ( href.match( /\(/gu ) || [] ).length;
+			const closingCount = ( href.match( /\)/gu ) || [] ).length;
 
-			if (closingCount > openingCount) {
+			if ( closingCount > openingCount ) {
 				trailing = lastCharacter + trailing;
-				href = href.slice(0, -1);
+				href = href.slice( 0, -1 );
 				continue;
 			}
 		}
@@ -182,71 +182,71 @@ function splitTrailingUrlPunctuation(url) {
  *
  * @since 0.1.0
  */
-export function splitTextIntoLinkParts(text, options = {}) {
-	if (!text) {
-		return [{ text: '', link: false }];
+export function splitTextIntoLinkParts( text, options = {} ) {
+	if ( ! text ) {
+		return [ { text: '', link: false } ];
 	}
 
 	const { linkLabel } = options;
 	const parts = [];
 	let cursor = 0;
 
-	for (const match of text.matchAll(URL_PATTERN)) {
-		const matchedUrl = match[0];
+	for ( const match of text.matchAll( URL_PATTERN ) ) {
+		const matchedUrl = match[ 0 ];
 		const start = match.index;
 
-		if (start > cursor) {
-			parts.push({
-				text: text.slice(cursor, start),
+		if ( start > cursor ) {
+			parts.push( {
+				text: text.slice( cursor, start ),
 				link: false,
-			});
+			} );
 		}
 
-		const { href, trailing } = splitTrailingUrlPunctuation(matchedUrl);
+		const { href, trailing } = splitTrailingUrlPunctuation( matchedUrl );
 
-		if (!isLinkableUrl(href)) {
+		if ( ! isLinkableUrl( href ) ) {
 			// Emit as plain text rather than dropping it: the reader still sees
 			// what the citation says, but it never becomes a clickable href.
-			parts.push({
+			parts.push( {
 				text: matchedUrl,
 				link: false,
-			});
+			} );
 			cursor = start + matchedUrl.length;
 			continue;
 		}
 
-		parts.push({
+		parts.push( {
 			text: href,
 			href,
 			link: true,
-			...(linkLabel !== undefined ? { label: linkLabel } : {}),
-		});
+			...( linkLabel !== undefined ? { label: linkLabel } : {} ),
+		} );
 
-		if (trailing) {
-			parts.push({
+		if ( trailing ) {
+			parts.push( {
 				text: trailing,
 				link: false,
-			});
+			} );
 		}
 
 		cursor = start + matchedUrl.length;
 	}
 
-	if (cursor < text.length) {
-		parts.push({
-			text: text.slice(cursor),
+	if ( cursor < text.length ) {
+		parts.push( {
+			text: text.slice( cursor ),
 			link: false,
-		});
+		} );
 	}
 
 	return parts;
 }
 
-function isOpeningQuote(character) {
+function isOpeningQuote( character ) {
 	return character === '"' || character === '“';
 }
 
-function isClosingQuote(character) {
+function isClosingQuote( character ) {
 	return character === '"' || character === '”';
 }
 
@@ -269,16 +269,18 @@ const PUNCTUATION_INSIDE_QUOTES = /^[.,;:!?]+/u;
  *                                          check save() made before 1.9.1.
  * @return {boolean} True when the occurrence is quoted.
  */
-function isQuotedAt(text, start, end, punctuationInsideQuotes = false) {
-	const before = text[start - 1];
+function isQuotedAt( text, start, end, punctuationInsideQuotes = false ) {
+	const before = text[ start - 1 ];
 	let closeAt = end;
 
-	if (punctuationInsideQuotes) {
-		const punctuation = text.slice(end).match(PUNCTUATION_INSIDE_QUOTES);
-		closeAt += punctuation ? punctuation[0].length : 0;
+	if ( punctuationInsideQuotes ) {
+		const punctuation = text
+			.slice( end )
+			.match( PUNCTUATION_INSIDE_QUOTES );
+		closeAt += punctuation ? punctuation[ 0 ].length : 0;
 	}
 
-	return isOpeningQuote(before) && isClosingQuote(text[closeAt]);
+	return isOpeningQuote( before ) && isClosingQuote( text[ closeAt ] );
 }
 
 /**
@@ -289,15 +291,15 @@ function isQuotedAt(text, start, end, punctuationInsideQuotes = false) {
  * @param {string} text Display text.
  * @return {Array<{start: number, end: number}>} URL ranges.
  */
-function getUrlRanges(text) {
-	return [...text.matchAll(URL_PATTERN)].map((match) => ({
+function getUrlRanges( text ) {
+	return [ ...text.matchAll( URL_PATTERN ) ].map( ( match ) => ( {
 		start: match.index,
-		end: match.index + match[0].length,
-	}));
+		end: match.index + match[ 0 ].length,
+	} ) );
 }
 
-function overlapsAny(ranges, start, end) {
-	return ranges.some((range) => start < range.end && end > range.start);
+function overlapsAny( ranges, start, end ) {
+	return ranges.some( ( range ) => start < range.end && end > range.start );
 }
 
 /**
@@ -319,8 +321,8 @@ const FOLDED_QUOTES = {
  * @param {string} text Text.
  * @return {string} Text with ‘ ’ as ' and “ ” as ".
  */
-function foldQuotes(text) {
-	return text.replace(/[‘’“”]/gu, (mark) => FOLDED_QUOTES[mark]);
+function foldQuotes( text ) {
+	return text.replace( /[‘’“”]/gu, ( mark ) => FOLDED_QUOTES[ mark ] );
 }
 
 function findLastRange(
@@ -331,20 +333,20 @@ function findLastRange(
 	urlRanges = [],
 	searchText = text
 ) {
-	let start = searchText.lastIndexOf(value);
+	let start = searchText.lastIndexOf( value );
 
-	while (start !== -1) {
+	while ( start !== -1 ) {
 		const end = start + value.length;
 
 		if (
-			!isQuotedAt(text, start, end, punctuationInsideQuotes) &&
-			!overlapsAny(ranges, start, end) &&
-			!overlapsAny(urlRanges, start, end)
+			! isQuotedAt( text, start, end, punctuationInsideQuotes ) &&
+			! overlapsAny( ranges, start, end ) &&
+			! overlapsAny( urlRanges, start, end )
 		) {
 			return { start, end };
 		}
 
-		start = searchText.lastIndexOf(value, start - 1);
+		start = searchText.lastIndexOf( value, start - 1 );
 	}
 
 	return null;
@@ -358,28 +360,28 @@ function addRange(
 	urlRanges = [],
 	searchText = null
 ) {
-	if (!value) {
+	if ( ! value ) {
 		return;
 	}
 
 	// A folded search text means the value is folded too (quoteFoldedItalics).
 	const range = findLastRange(
 		text,
-		searchText ? foldQuotes(String(value)) : value,
+		searchText ? foldQuotes( String( value ) ) : value,
 		ranges,
 		punctuationInsideQuotes,
 		urlRanges,
 		searchText ?? text
 	);
 
-	if (!range) {
+	if ( ! range ) {
 		return;
 	}
 
-	ranges.push(range);
+	ranges.push( range );
 }
 
-function getItalicizedFields(citation) {
+function getItalicizedFields( citation ) {
 	const type = citation.csl.type;
 
 	if (
@@ -411,9 +413,9 @@ function getItalicizedFields(citation) {
 			'thesis',
 			'treaty',
 			'webpage',
-		].includes(type)
+		].includes( type )
 	) {
-		return [citation.csl.title];
+		return [ citation.csl.title ];
 	}
 
 	if (
@@ -428,9 +430,9 @@ function getItalicizedFields(citation) {
 			'post-weblog',
 			'review',
 			'review-book',
-		].includes(type)
+		].includes( type )
 	) {
-		return [citation.csl['container-title']];
+		return [ citation.csl[ 'container-title' ] ];
 	}
 
 	return [];
@@ -485,39 +487,39 @@ export function getDisplaySegments(
 		quoteFoldedItalics = false,
 	} = {}
 ) {
-	const rawText = getDisplayText(citation);
+	const rawText = getDisplayText( citation );
 	const { text: displayText, ranges: markupRanges } = inlineMarkup
-		? parseInlineMarkup(rawText)
+		? parseInlineMarkup( rawText )
 		: { text: rawText, ranges: [] };
 
-	if (!displayText || citation.displayOverride) {
+	if ( ! displayText || citation.displayOverride ) {
 		return markupRanges.length
-			? buildSegments(displayText, markupRanges)
-			: [{ text: displayText || '', italic: false }];
+			? buildSegments( displayText, markupRanges )
+			: [ { text: displayText || '', italic: false } ];
 	}
 
 	const titleRanges = [];
-	const urlRanges = urlAwareItalics ? getUrlRanges(displayText) : [];
-	const searchText = quoteFoldedItalics ? foldQuotes(displayText) : null;
+	const urlRanges = urlAwareItalics ? getUrlRanges( displayText ) : [];
+	const searchText = quoteFoldedItalics ? foldQuotes( displayText ) : null;
 
-	for (const value of getItalicizedFields(citation)) {
+	for ( const value of getItalicizedFields( citation ) ) {
 		addRange(
 			titleRanges,
 			displayText,
-			inlineMarkup && value ? stripInlineMarkup(value) : value,
+			inlineMarkup && value ? stripInlineMarkup( value ) : value,
 			quoteAwareItalics,
 			urlRanges,
 			searchText
 		);
 	}
 
-	const italicRanges = mergeRanges([...titleRanges, ...markupRanges]);
+	const italicRanges = mergeRanges( [ ...titleRanges, ...markupRanges ] );
 
-	if (!italicRanges.length) {
-		return [{ text: displayText, italic: false }];
+	if ( ! italicRanges.length ) {
+		return [ { text: displayText, italic: false } ];
 	}
 
-	return buildSegments(displayText, italicRanges);
+	return buildSegments( displayText, italicRanges );
 }
 
 /**
@@ -527,18 +529,18 @@ export function getDisplaySegments(
  * @param {Array<{start: number, end: number}>} ranges Ranges.
  * @return {Array<{start: number, end: number}>} Sorted, non-overlapping ranges.
  */
-function mergeRanges(ranges) {
+function mergeRanges( ranges ) {
 	const merged = [];
 
-	for (const range of [...ranges].sort(
-		(left, right) => left.start - right.start
-	)) {
-		const last = merged[merged.length - 1];
+	for ( const range of [ ...ranges ].sort(
+		( left, right ) => left.start - right.start
+	) ) {
+		const last = merged[ merged.length - 1 ];
 
-		if (last && range.start < last.end) {
-			last.end = Math.max(last.end, range.end);
+		if ( last && range.start < last.end ) {
+			last.end = Math.max( last.end, range.end );
 		} else {
-			merged.push({ ...range });
+			merged.push( { ...range } );
 		}
 	}
 
@@ -550,30 +552,30 @@ function mergeRanges(ranges) {
  * @param {Array<{start: number, end: number}>} italicRanges Sorted ranges.
  * @return {DisplaySegment[]} Segments.
  */
-function buildSegments(displayText, italicRanges) {
+function buildSegments( displayText, italicRanges ) {
 	const segments = [];
 	let cursor = 0;
 
-	for (const range of italicRanges) {
-		if (range.start > cursor) {
-			segments.push({
-				text: displayText.slice(cursor, range.start),
+	for ( const range of italicRanges ) {
+		if ( range.start > cursor ) {
+			segments.push( {
+				text: displayText.slice( cursor, range.start ),
 				italic: false,
-			});
+			} );
 		}
 
-		segments.push({
-			text: displayText.slice(range.start, range.end),
+		segments.push( {
+			text: displayText.slice( range.start, range.end ),
 			italic: true,
-		});
+		} );
 		cursor = range.end;
 	}
 
-	if (cursor < displayText.length) {
-		segments.push({
-			text: displayText.slice(cursor),
+	if ( cursor < displayText.length ) {
+		segments.push( {
+			text: displayText.slice( cursor ),
 			italic: false,
-		});
+		} );
 	}
 
 	return segments;

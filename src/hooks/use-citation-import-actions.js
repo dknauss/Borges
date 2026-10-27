@@ -16,7 +16,7 @@ const FORMATTER_FALLBACK_MESSAGE = __(
 	'borges-bibliography-builder'
 );
 
-function buildParseResultMessage({
+function buildParseResultMessage( {
 	addedCount,
 	duplicateCount,
 	errorCount,
@@ -24,10 +24,10 @@ function buildParseResultMessage({
 	truncated,
 	retainedUnparsedItems,
 	formatterFallback,
-}) {
+} ) {
 	const parts = [];
 
-	if (addedCount > 0) {
+	if ( addedCount > 0 ) {
 		parts.push(
 			sprintf(
 				/* translators: %d: citation count. */
@@ -40,13 +40,13 @@ function buildParseResultMessage({
 				addedCount
 			)
 		);
-	} else if (duplicateCount > 0 || errorCount > 0 || truncated) {
+	} else if ( duplicateCount > 0 || errorCount > 0 || truncated ) {
 		parts.push(
-			__('No new citations added.', 'borges-bibliography-builder')
+			__( 'No new citations added.', 'borges-bibliography-builder' )
 		);
 	}
 
-	if (duplicateCount > 0) {
+	if ( duplicateCount > 0 ) {
 		parts.push(
 			sprintf(
 				/* translators: %d: duplicate citation count. */
@@ -61,7 +61,7 @@ function buildParseResultMessage({
 		);
 	}
 
-	if (errorCount > 0) {
+	if ( errorCount > 0 ) {
 		parts.push(
 			sprintf(
 				/* translators: %d: unparseable item count. */
@@ -76,7 +76,7 @@ function buildParseResultMessage({
 		);
 	}
 
-	if (truncated) {
+	if ( truncated ) {
 		parts.push(
 			__(
 				'Only the first 50 items were processed.',
@@ -85,7 +85,7 @@ function buildParseResultMessage({
 		);
 	}
 
-	if (reviewWarningCount > 0) {
+	if ( reviewWarningCount > 0 ) {
 		parts.push(
 			sprintf(
 				/* translators: %d: imported record count. */
@@ -100,7 +100,7 @@ function buildParseResultMessage({
 		);
 	}
 
-	if (retainedUnparsedItems) {
+	if ( retainedUnparsedItems ) {
 		parts.push(
 			__(
 				'Unparsed items remain in the form.',
@@ -109,20 +109,20 @@ function buildParseResultMessage({
 		);
 	}
 
-	if (formatterFallback) {
-		parts.push(FORMATTER_FALLBACK_MESSAGE);
+	if ( formatterFallback ) {
+		parts.push( FORMATTER_FALLBACK_MESSAGE );
 	}
 
-	return parts.join(' ');
+	return parts.join( ' ' );
 }
 
-function shouldWarnParseResult({
+function shouldWarnParseResult( {
 	duplicateCount,
 	errorCount,
 	formatterFallback,
 	reviewWarningCount,
 	truncated,
-}) {
+} ) {
 	return (
 		reviewWarningCount > 0 ||
 		duplicateCount > 0 ||
@@ -153,7 +153,7 @@ function shouldWarnParseResult({
  * @param {(value: string, options?: {syncDom?: boolean}) => void}      options.updatePasteInput        Paste input updater.
  * @return {Object} Paste/import action handlers.
  */
-export function useCitationImportActions({
+export function useCitationImportActions( {
 	announce,
 	beginAsyncOperation,
 	citationStyle,
@@ -166,45 +166,45 @@ export function useCitationImportActions({
 	setAttributes,
 	setIsLoading,
 	updatePasteInput,
-}) {
-	const handleParse = useCallback(async () => {
-		if (!inputValue.trim()) {
+} ) {
+	const handleParse = useCallback( async () => {
+		if ( ! inputValue.trim() ) {
 			return;
 		}
 
-		if (citationsRef.current.length >= MAX_CITATIONS_PER_BIBLIOGRAPHY) {
-			announce('warning', getBibliographyLimitReachedMessage());
-			queueFocus({ type: 'notice' });
+		if ( citationsRef.current.length >= MAX_CITATIONS_PER_BIBLIOGRAPHY ) {
+			announce( 'warning', getBibliographyLimitReachedMessage() );
+			queueFocus( { type: 'notice' } );
 			return;
 		}
 
 		const operationId = beginAsyncOperation();
-		setIsLoading(true);
+		setIsLoading( true );
 		clearNotice();
 
 		try {
-			const { parsePastedInput } = await import('../lib/parser');
+			const { parsePastedInput } = await import( '../lib/parser' );
 			const {
 				entries,
 				errors,
 				truncated,
 				remainingInput = '',
 				skippedDuplicateCount = 0,
-			} = await parsePastedInput(inputValue, citationStyle, {
+			} = await parsePastedInput( inputValue, citationStyle, {
 				deferFormatting: true,
 				existingDoiValues: citationsRef.current
-					.map((citation) => citation.csl?.DOI)
-					.filter(Boolean),
-			});
-			if (!isCurrentAsyncOperation(operationId)) {
+					.map( ( citation ) => citation.csl?.DOI )
+					.filter( Boolean ),
+			} );
+			if ( ! isCurrentAsyncOperation( operationId ) ) {
 				return;
 			}
 
 			const { uniqueEntries, duplicateEntries } =
-				partitionDuplicateCitations(entries, citationsRef.current);
+				partitionDuplicateCitations( entries, citationsRef.current );
 			const duplicateCount =
 				duplicateEntries.length + skippedDuplicateCount;
-			const retainedUnparsedItems = Boolean(remainingInput.trim());
+			const retainedUnparsedItems = Boolean( remainingInput.trim() );
 
 			if (
 				uniqueEntries.length >
@@ -217,18 +217,17 @@ export function useCitationImportActions({
 						citationsRef.current.length
 					)
 				);
-				queueFocus({ type: 'notice' });
-			} else if (uniqueEntries.length > 0) {
-				const { formatBibliographyEntries } = await import(
-					'../lib/formatting/csl'
-				);
+				queueFocus( { type: 'notice' } );
+			} else if ( uniqueEntries.length > 0 ) {
+				const { formatBibliographyEntries } =
+					await import( '../lib/formatting/csl' );
 				const mergedEntries = [
 					...citationsRef.current,
 					...uniqueEntries,
 				];
 				let formatterFallback = false;
 				const formattedTexts = await formatBibliographyEntries(
-					mergedEntries.map((citation) => citation.csl),
+					mergedEntries.map( ( citation ) => citation.csl ),
 					citationStyle,
 					{
 						onFallback: () => {
@@ -236,41 +235,41 @@ export function useCitationImportActions({
 						},
 					}
 				);
-				if (!isCurrentAsyncOperation(operationId)) {
+				if ( ! isCurrentAsyncOperation( operationId ) ) {
 					return;
 				}
 
 				// Pre-compute async BibTeX/BibLaTeX strings only when the
 				// Cite/Export feature is enabled (RIS/CSL-JSON build in save()).
 				let exportStrings = null;
-				if (outputCiteExport) {
+				if ( outputCiteExport ) {
 					exportStrings = await computeExportStrings(
-						mergedEntries.map((entry) => entry.csl),
+						mergedEntries.map( ( entry ) => entry.csl ),
 						citationStyle
 					);
-					if (!isCurrentAsyncOperation(operationId)) {
+					if ( ! isCurrentAsyncOperation( operationId ) ) {
 						return;
 					}
 				}
 
 				const formattedMergedEntries = mergedEntries.map(
-					(entry, index) => ({
+					( entry, index ) => ( {
 						...entry,
 						id: entry.id || createCitationId(),
-						formattedText: formattedTexts[index],
-						...(exportStrings
+						formattedText: formattedTexts[ index ],
+						...( exportStrings
 							? {
 									exportBibtex:
-										exportStrings[index]?.exportBibtex ??
+										exportStrings[ index ]?.exportBibtex ??
 										'',
 									exportBiblatex:
-										exportStrings[index]?.exportBiblatex ??
-										'',
-							  }
-							: {}),
-					})
+										exportStrings[ index ]
+											?.exportBiblatex ?? '',
+								}
+							: {} ),
+					} )
 				);
-				if (!isCurrentAsyncOperation(operationId)) {
+				if ( ! isCurrentAsyncOperation( operationId ) ) {
 					return;
 				}
 
@@ -279,23 +278,23 @@ export function useCitationImportActions({
 					citationStyle
 				);
 				const reviewWarningCount = uniqueEntries.filter(
-					(entry) => (entry.parseWarnings || []).length > 0
+					( entry ) => ( entry.parseWarnings || [] ).length > 0
 				).length;
-				const firstNewEntry = updated.find((citation) =>
-					uniqueEntries.some((entry) => entry.id === citation.id)
+				const firstNewEntry = updated.find( ( citation ) =>
+					uniqueEntries.some( ( entry ) => entry.id === citation.id )
 				);
 
 				citationsRef.current = updated;
-				setAttributes({ citations: updated });
+				setAttributes( { citations: updated } );
 
-				const warningResult = shouldWarnParseResult({
+				const warningResult = shouldWarnParseResult( {
 					duplicateCount,
 					errorCount: errors.length,
 					formatterFallback,
 					reviewWarningCount,
 					truncated,
-				});
-				const message = buildParseResultMessage({
+				} );
+				const message = buildParseResultMessage( {
 					addedCount: uniqueEntries.length,
 					duplicateCount,
 					errorCount: errors.length,
@@ -303,40 +302,40 @@ export function useCitationImportActions({
 					truncated,
 					retainedUnparsedItems,
 					formatterFallback,
-				});
+				} );
 				announce(
 					warningResult ? 'warning' : 'success',
 					message,
 					warningResult ? {} : { type: 'snackbar' }
 				);
 
-				if (warningResult) {
-					queueFocus({ type: 'notice' });
-				} else if (firstNewEntry) {
-					queueFocus({ type: 'entry', id: firstNewEntry.id });
+				if ( warningResult ) {
+					queueFocus( { type: 'notice' } );
+				} else if ( firstNewEntry ) {
+					queueFocus( { type: 'entry', id: firstNewEntry.id } );
 				}
-			} else if (duplicateCount > 0) {
+			} else if ( duplicateCount > 0 ) {
 				announce(
 					'warning',
-					buildParseResultMessage({
+					buildParseResultMessage( {
 						addedCount: 0,
 						duplicateCount,
 						errorCount: errors.length,
 						reviewWarningCount: 0,
 						truncated,
 						retainedUnparsedItems,
-					})
+					} )
 				);
-				queueFocus({ type: 'notice' });
-			} else if (errors.length > 0) {
-				announce('warning', errors[0]);
-				queueFocus({ type: 'notice' });
+				queueFocus( { type: 'notice' } );
+			} else if ( errors.length > 0 ) {
+				announce( 'warning', errors[ 0 ] );
+				queueFocus( { type: 'notice' } );
 			} else {
-				announce('warning', SUPPORTED_INPUT_MESSAGE);
-				queueFocus({ type: 'notice' });
+				announce( 'warning', SUPPORTED_INPUT_MESSAGE );
+				queueFocus( { type: 'notice' } );
 			}
 
-			updatePasteInput(remainingInput, { syncDom: true });
+			updatePasteInput( remainingInput, { syncDom: true } );
 		} catch {
 			announce(
 				'error',
@@ -345,10 +344,10 @@ export function useCitationImportActions({
 					'borges-bibliography-builder'
 				)
 			);
-			queueFocus({ type: 'notice' });
+			queueFocus( { type: 'notice' } );
 		} finally {
-			if (isCurrentAsyncOperation(operationId)) {
-				setIsLoading(false);
+			if ( isCurrentAsyncOperation( operationId ) ) {
+				setIsLoading( false );
 			}
 		}
 	}, [
@@ -364,7 +363,7 @@ export function useCitationImportActions({
 		setAttributes,
 		setIsLoading,
 		updatePasteInput,
-	]);
+	] );
 
 	return { handleParse };
 }

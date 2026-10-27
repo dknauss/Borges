@@ -23,17 +23,17 @@ import { store as noticesStore } from '@wordpress/notices';
 export const NOTICE_CONTEXT = 'bibliography/editor';
 const AUTO_DISMISS_MS = 5000;
 
-function getNoticeId(notice) {
+function getNoticeId( notice ) {
 	return notice?.id || notice?.ID || null;
 }
 
-function normalizeNotice(notice) {
-	if (!notice) {
+function normalizeNotice( notice ) {
+	if ( ! notice ) {
 		return null;
 	}
 
 	return {
-		id: getNoticeId(notice),
+		id: getNoticeId( notice ),
 		status: notice.status,
 		message: notice.content || notice.message || '',
 		type: notice.type || 'default',
@@ -41,65 +41,65 @@ function normalizeNotice(notice) {
 }
 
 export function useBlockNotices() {
-	const nextNoticeIdRef = useRef(0);
+	const nextNoticeIdRef = useRef( 0 );
 	const { createNotice, removeAllNotices, removeNotice } =
-		useDispatch(noticesStore);
+		useDispatch( noticesStore );
 	const notices = useSelect(
-		(select) => select(noticesStore).getNotices(NOTICE_CONTEXT) || [],
+		( select ) => select( noticesStore ).getNotices( NOTICE_CONTEXT ) || [],
 		[]
 	);
 	const currentNotice = useMemo(
-		() => normalizeNotice(notices.at(-1)),
-		[notices]
+		() => normalizeNotice( notices.at( -1 ) ),
+		[ notices ]
 	);
 	const noticeVersion = useMemo(
 		() =>
 			notices
-				.map((notice) => getNoticeId(notice))
-				.filter(Boolean)
-				.join('|'),
-		[notices]
+				.map( ( notice ) => getNoticeId( notice ) )
+				.filter( Boolean )
+				.join( '|' ),
+		[ notices ]
 	);
 
 	const announce = useCallback(
-		(status, message, options = {}) => {
+		( status, message, options = {} ) => {
 			nextNoticeIdRef.current += 1;
 
-			removeAllNotices('default', NOTICE_CONTEXT);
-			removeAllNotices('snackbar', NOTICE_CONTEXT);
-			createNotice(status, message, {
+			removeAllNotices( 'default', NOTICE_CONTEXT );
+			removeAllNotices( 'snackbar', NOTICE_CONTEXT );
+			createNotice( status, message, {
 				id:
 					options.id ||
-					`${NOTICE_CONTEXT}-${nextNoticeIdRef.current}`,
+					`${ NOTICE_CONTEXT }-${ nextNoticeIdRef.current }`,
 				context: NOTICE_CONTEXT,
 				type: options.type || 'default',
 				isDismissible:
 					options.isDismissible ?? options.type !== 'snackbar',
 				explicitDismiss: options.explicitDismiss,
-			});
+			} );
 		},
-		[createNotice, removeAllNotices]
+		[ createNotice, removeAllNotices ]
 	);
 
-	const clearNotice = useCallback(() => {
-		if (!currentNotice?.id) {
+	const clearNotice = useCallback( () => {
+		if ( ! currentNotice?.id ) {
 			return;
 		}
 
-		removeNotice(currentNotice.id, NOTICE_CONTEXT);
-	}, [currentNotice, removeNotice]);
+		removeNotice( currentNotice.id, NOTICE_CONTEXT );
+	}, [ currentNotice, removeNotice ] );
 
-	useEffect(() => {
-		if (!currentNotice || currentNotice.type !== 'snackbar') {
+	useEffect( () => {
+		if ( ! currentNotice || currentNotice.type !== 'snackbar' ) {
 			return undefined;
 		}
 
-		const timeoutId = setTimeout(() => {
-			removeNotice(currentNotice.id, NOTICE_CONTEXT);
-		}, AUTO_DISMISS_MS);
+		const timeoutId = setTimeout( () => {
+			removeNotice( currentNotice.id, NOTICE_CONTEXT );
+		}, AUTO_DISMISS_MS );
 
-		return () => clearTimeout(timeoutId);
-	}, [currentNotice, removeNotice]);
+		return () => clearTimeout( timeoutId );
+	}, [ currentNotice, removeNotice ] );
 
 	return {
 		announce,

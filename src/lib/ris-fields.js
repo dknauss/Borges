@@ -25,12 +25,14 @@ const RIS_DATE_REGEX = /^(\d{4})(?:[/-](\d{1,2})?(?:[/-](\d{1,2})?)?)?/u;
  * @param {string} tag    Two-character RIS tag, such as `Y2`.
  * @return {string[]} Trimmed, non-empty values in record order.
  */
-export function getRisTagValues(record, tag) {
+export function getRisTagValues( record, tag ) {
 	return record
-		.split(/\r?\n/u)
-		.map((line) => line.match(RIS_LINE_REGEX))
-		.filter((match) => match && match[1] === tag && match[2]?.trim())
-		.map((match) => match[2].trim());
+		.split( /\r?\n/u )
+		.map( ( line ) => line.match( RIS_LINE_REGEX ) )
+		.filter(
+			( match ) => match && match[ 1 ] === tag && match[ 2 ]?.trim()
+		)
+		.map( ( match ) => match[ 2 ].trim() );
 }
 
 /**
@@ -42,26 +44,26 @@ export function getRisTagValues(record, tag) {
  * @param {string} value Raw tag value, such as `2024/03/12/`.
  * @return {Object|undefined} CSL date with `date-parts`, or undefined.
  */
-export function parseRisDate(value) {
-	const match = value.trim().match(RIS_DATE_REGEX);
+export function parseRisDate( value ) {
+	const match = value.trim().match( RIS_DATE_REGEX );
 
-	if (!match) {
+	if ( ! match ) {
 		return undefined;
 	}
 
-	const parts = [Number(match[1])];
-	const month = Number(match[2]);
-	const day = Number(match[3]);
+	const parts = [ Number( match[ 1 ] ) ];
+	const month = Number( match[ 2 ] );
+	const day = Number( match[ 3 ] );
 
-	if (month >= 1 && month <= 12) {
-		parts.push(month);
+	if ( month >= 1 && month <= 12 ) {
+		parts.push( month );
 
-		if (day >= 1 && day <= 31) {
-			parts.push(day);
+		if ( day >= 1 && day <= 31 ) {
+			parts.push( day );
 		}
 	}
 
-	return { 'date-parts': [parts] };
+	return { 'date-parts': [ parts ] };
 }
 
 /**
@@ -73,21 +75,21 @@ export function parseRisDate(value) {
  *
  * @since 1.16.0
  */
-export function normalizeRisCsl(csl, record) {
+export function normalizeRisCsl( csl, record ) {
 	const normalized = { ...csl };
 
 	if (
 		typeof normalized.id === 'string' &&
-		normalized.id.startsWith(RIS_TEMP_ID_PREFIX)
+		normalized.id.startsWith( RIS_TEMP_ID_PREFIX )
 	) {
 		delete normalized.id;
 	}
 
-	if (normalized.type === 'webpage' && !normalized.accessed) {
-		const [accessed] = getRisTagValues(record, 'Y2');
-		const date = accessed ? parseRisDate(accessed) : undefined;
+	if ( normalized.type === 'webpage' && ! normalized.accessed ) {
+		const [ accessed ] = getRisTagValues( record, 'Y2' );
+		const date = accessed ? parseRisDate( accessed ) : undefined;
 
-		if (date) {
+		if ( date ) {
 			normalized.accessed = date;
 		}
 	}

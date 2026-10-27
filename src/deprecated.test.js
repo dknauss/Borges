@@ -3,237 +3,241 @@ import metadata from '../block.json';
 import { deprecated } from './deprecated';
 import save from './save';
 
-jest.mock('@wordpress/block-editor', () => ({
+jest.mock( '@wordpress/block-editor', () => ( {
 	useBlockProps: {
-		save: () => ({
+		save: () => ( {
 			className: 'wp-block-bibliography-builder-bibliography',
-		}),
+		} ),
 	},
-}));
+} ) );
 
-function createCitation({ id, family, title }) {
+function createCitation( { id, family, title } ) {
 	return {
 		id,
 		csl: {
 			type: 'book',
 			title,
-			author: [{ family }],
+			author: [ { family } ],
 		},
-		formattedText: `${family} citation`,
+		formattedText: `${ family } citation`,
 		displayOverride: null,
 	};
 }
 
-describe('deprecated block versions', () => {
-	it('pins the current attribute schema on every deprecated definition', () => {
-		expect(deprecated).toEqual(
-			expect.arrayContaining([
-				expect.objectContaining({
+describe( 'deprecated block versions', () => {
+	it( 'pins the current attribute schema on every deprecated definition', () => {
+		expect( deprecated ).toEqual(
+			expect.arrayContaining( [
+				expect.objectContaining( {
 					attributes: metadata.attributes,
-				}),
-			])
+				} ),
+			] )
 		);
-	});
+	} );
 
-	it('freezes the current pre-Phase-4 save shape: <li> with no <details>', () => {
+	it( 'freezes the current pre-Phase-4 save shape: <li> with no <details>', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[9].save({
+			deprecated[ 9 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
 					citations: [
-						createCitation({
+						createCitation( {
 							id: 'smith',
 							family: 'Smith',
 							title: 'Example Resource',
-						}),
+						} ),
 					],
 				},
-			})
+			} )
 		);
 
-		expect(markup).toContain('<li');
-		expect(markup).not.toContain('<details');
-	});
+		expect( markup ).toContain( '<li' );
+		expect( markup ).not.toContain( '<details' );
+	} );
 
-	it('supports the immediate prior save markup with deprecated entry roles', () => {
+	it( 'supports the immediate prior save markup with deprecated entry roles', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[10].save({
+			deprecated[ 10 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
 					citations: [
 						{
-							...createCitation({
+							...createCitation( {
 								id: 'url-entry',
 								family: 'Smith',
 								title: 'Example Resource',
-							}),
+							} ),
 							csl: {
 								type: 'webpage',
 								title: 'Example Resource',
 								URL: 'https://example.com/resource',
-								author: [{ family: 'Smith' }],
+								author: [ { family: 'Smith' } ],
 							},
 							formattedText:
 								'Smith. Example Resource. https://example.com/resource.',
 						},
 					],
 				},
-			})
+			} )
 		);
 
 		// This deprecated version matches the immediate previous save markup:
 		// linked URLs, heading-derived aria-label, and deprecated
 		// doc-biblioentry roles for existing saved posts.
-		expect(markup).toContain('<a href=');
-		expect(markup).toContain('aria-label="References"');
-		expect(markup).toContain('role="doc-biblioentry"');
-	});
+		expect( markup ).toContain( '<a href=' );
+		expect( markup ).toContain( 'aria-label="References"' );
+		expect( markup ).toContain( 'role="doc-biblioentry"' );
+	} );
 
-	it('supports the prior save markup with linked URLs and static aria-label', () => {
+	it( 'supports the prior save markup with linked URLs and static aria-label', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[11].save({
+			deprecated[ 11 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
 					citations: [
 						{
-							...createCitation({
+							...createCitation( {
 								id: 'url-entry',
 								family: 'Smith',
 								title: 'Example Resource',
-							}),
+							} ),
 							csl: {
 								type: 'webpage',
 								title: 'Example Resource',
 								URL: 'https://example.com/resource',
-								author: [{ family: 'Smith' }],
+								author: [ { family: 'Smith' } ],
 							},
 							formattedText:
 								'Smith. Example Resource. https://example.com/resource.',
 						},
 					],
 				},
-			})
+			} )
 		);
 
 		// This deprecated version links URLs but always uses aria-label="Bibliography".
-		expect(markup).toContain('<a href=');
-		expect(markup).toContain('aria-label="Bibliography"');
-		expect(markup).not.toContain('aria-label="References"');
-	});
+		expect( markup ).toContain( '<a href=' );
+		expect( markup ).toContain( 'aria-label="Bibliography"' );
+		expect( markup ).not.toContain( 'aria-label="References"' );
+	} );
 
-	it('supports the prior save markup variant without linked visible URLs', () => {
+	it( 'supports the prior save markup variant without linked visible URLs', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[12].save({
+			deprecated[ 12 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
 						{
-							...createCitation({
+							...createCitation( {
 								id: 'url-entry',
 								family: 'Smith',
 								title: 'Example Resource',
-							}),
+							} ),
 							csl: {
 								type: 'webpage',
 								title: 'Example Resource',
 								URL: 'https://example.com/resource',
-								author: [{ family: 'Smith' }],
+								author: [ { family: 'Smith' } ],
 							},
 							formattedText:
 								'Smith. Example Resource. https://example.com/resource.',
 						},
 					],
 				},
-			})
+			} )
 		);
 
-		expect(markup).toContain('https://example.com/resource.');
-		expect(markup).not.toContain('<a href=');
-	});
+		expect( markup ).toContain( 'https://example.com/resource.' );
+		expect( markup ).not.toContain( '<a href=' );
+	} );
 
-	it('migrate re-sorts citations into style order', () => {
-		const migrated = deprecated[13].migrate({
+	it( 'migrate re-sorts citations into style order', () => {
+		const migrated = deprecated[ 13 ].migrate( {
 			citationStyle: 'chicago-author-date',
 			citations: [
-				createCitation({ id: 'z', family: 'Zulu', title: 'Zeta Book' }),
-				createCitation({
+				createCitation( {
+					id: 'z',
+					family: 'Zulu',
+					title: 'Zeta Book',
+				} ),
+				createCitation( {
 					id: 'a',
 					family: 'Alpha',
 					title: 'Alpha Book',
-				}),
+				} ),
 			],
-		});
+		} );
 
-		expect(migrated.citations[0].id).toBe('a');
-		expect(migrated.citations[1].id).toBe('z');
-	});
+		expect( migrated.citations[ 0 ].id ).toBe( 'a' );
+		expect( migrated.citations[ 1 ].id ).toBe( 'z' );
+	} );
 
-	it('migrate handles missing citations attribute with empty array fallback', () => {
-		const migrated = deprecated[13].migrate({ citationStyle: 'apa-7' });
+	it( 'migrate handles missing citations attribute with empty array fallback', () => {
+		const migrated = deprecated[ 13 ].migrate( { citationStyle: 'apa-7' } );
 
-		expect(migrated.citations).toEqual([]);
-	});
+		expect( migrated.citations ).toEqual( [] );
+	} );
 
-	it('supports the prior unsorted save markup variant', () => {
+	it( 'supports the prior unsorted save markup variant', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[13].save({
+			deprecated[ 13 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
-						createCitation({
+						createCitation( {
 							id: 'marks',
 							family: 'Marks',
 							title: 'The Book by Design',
-						}),
-						createCitation({
+						} ),
+						createCitation( {
 							id: 'borel',
 							family: 'Borel',
 							title: 'The Chicago Guide to Fact-Checking',
-						}),
+						} ),
 					],
 				},
-			})
+			} )
 		);
 
-		expect(markup.indexOf('Marks citation')).toBeLessThan(
-			markup.indexOf('Borel citation')
+		expect( markup.indexOf( 'Marks citation' ) ).toBeLessThan(
+			markup.indexOf( 'Borel citation' )
 		);
-	});
-});
+	} );
+} );
 
-describe('locale-independence deprecation (deprecated[8])', () => {
+describe( 'locale-independence deprecation (deprecated[8])', () => {
 	const untitled = {
 		id: 'untitled',
-		csl: { type: 'webpage', author: [{ family: 'Beta' }] },
+		csl: { type: 'webpage', author: [ { family: 'Beta' } ] },
 		formattedText: 'Beta. https://example.com/x.',
 	};
 
-	it('falls back to the current translations when the markup gave no labels', () => {
+	it( 'falls back to the current translations when the markup gave no labels', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[8].save({
+			deprecated[ 8 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
-					citations: [untitled],
+					citations: [ untitled ],
 				},
-			})
+			} )
 		);
 
 		// outputCiteExport unset: no panel, and no legacy labels were sourced.
-		expect(markup).not.toContain('<details');
-		expect(markup).toContain(
+		expect( markup ).not.toContain( '<details' );
+		expect( markup ).toContain(
 			'aria-label="Link to publication — https://example.com/x"'
 		);
-	});
+	} );
 
-	it('reads the fallback label from a matching link and skips one that does not match', () => {
+	it( 'reads the fallback label from a matching link and skips one that does not match', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[8].save({
+			deprecated[ 8 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
-					citations: [untitled],
+					citations: [ untitled ],
 					legacyEntryLinks: [
 						// aria-label for a different href: not a fallback label.
 						{
@@ -247,51 +251,53 @@ describe('locale-independence deprecation (deprecated[8])', () => {
 						},
 					],
 				},
-			})
+			} )
 		);
 
-		expect(markup).toContain(
+		expect( markup ).toContain(
 			'aria-label="Lien vers la publication — https://example.com/x"'
 		);
-	});
+	} );
 
-	it('renders nothing when the block has no citations', () => {
+	it( 'renders nothing when the block has no citations', () => {
 		expect(
-			deprecated[8].save({
+			deprecated[ 8 ].save( {
 				attributes: { citationStyle: 'chicago-notes-bibliography' },
-			})
+			} )
 		).toBeNull();
-	});
-});
+	} );
+} );
 
-describe('pre-repeated-author deprecation (deprecated[7])', () => {
-	const borges = (id, title) => ({
+describe( 'pre-repeated-author deprecation (deprecated[7])', () => {
+	const borges = ( id, title ) => ( {
 		id,
 		csl: {
 			type: 'book',
 			title,
-			author: [{ family: 'Borges', given: 'Jorge Luis' }],
+			author: [ { family: 'Borges', given: 'Jorge Luis' } ],
 		},
-		formattedText: `Borges, Jorge Luis. ${title}. Sur, 1944.`,
+		formattedText: `Borges, Jorge Luis. ${ title }. Sur, 1944.`,
 		displayOverride: null,
-	});
+	} );
 	const attributes = {
 		citationStyle: 'mla-9',
-		citations: [borges('b1', 'Ficciones'), borges('b2', 'El Aleph')],
+		citations: [ borges( 'b1', 'Ficciones' ), borges( 'b2', 'El Aleph' ) ],
 	};
 
-	it('writes repeated MLA authors in full, as save() did before', () => {
-		const old = renderToStaticMarkup(deprecated[7].save({ attributes }));
-		const current = renderToStaticMarkup(save({ attributes }));
+	it( 'writes repeated MLA authors in full, as save() did before', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 7 ].save( { attributes } )
+		);
+		const current = renderToStaticMarkup( save( { attributes } ) );
 
-		expect(old).not.toContain('bibliography-builder-repeated-author');
-		expect(old).toContain('Borges, Jorge Luis. <i>El Aleph</i>');
-		expect(current).toContain('bibliography-builder-repeated-author');
-		expect(current).not.toBe(old);
-	});
-});
+		expect( old ).not.toContain( 'bibliography-builder-repeated-author' );
+		expect( old ).toContain( 'Borges, Jorge Luis. <i>El Aleph</i>' );
+		expect( current ).toContain( 'bibliography-builder-repeated-author' );
+		expect( current ).not.toBe( old );
+	} );
+} );
 
-describe('pre-inline-markup deprecation (deprecated[6])', () => {
+describe( 'pre-inline-markup deprecation (deprecated[6])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -305,25 +311,27 @@ describe('pre-inline-markup deprecation (deprecated[6])', () => {
 		],
 	};
 
-	it('showed tags in stored text as text; save() now reads them', () => {
-		const old = renderToStaticMarkup(deprecated[6].save({ attributes }));
-		const current = renderToStaticMarkup(save({ attributes }));
+	it( 'showed tags in stored text as text; save() now reads them', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 6 ].save( { attributes } )
+		);
+		const current = renderToStaticMarkup( save( { attributes } ) );
 
-		expect(old).toContain(
+		expect( old ).toContain(
 			'&lt;i&gt;<i>Governing the Commons</i>&lt;/i&gt;'
 		);
-		expect(current).toContain(
+		expect( current ).toContain(
 			'Ostrom, Elinor. <i>Governing the Commons</i>. Cambridge'
 		);
-		expect(current).not.toContain('&lt;i');
-	});
+		expect( current ).not.toContain( '&lt;i' );
+	} );
 
-	it('matches save() for text without tags', () => {
+	it( 'matches save() for text without tags', () => {
 		const plain = {
 			...attributes,
 			citations: [
 				{
-					...attributes.citations[0],
+					...attributes.citations[ 0 ],
 					formattedText:
 						'Ostrom, Elinor. Governing the Commons. Cambridge University Press, 1990.',
 				},
@@ -333,12 +341,18 @@ describe('pre-inline-markup deprecation (deprecated[6])', () => {
 		// Compared with save() as of 1.10.x (deprecated[3]): 1.11.0 changed only
 		// the JSON-LD shape, which this deprecation predates.
 		expect(
-			renderToStaticMarkup(deprecated[6].save({ attributes: plain }))
-		).toBe(renderToStaticMarkup(deprecated[3].save({ attributes: plain })));
-	});
-});
+			renderToStaticMarkup(
+				deprecated[ 6 ].save( { attributes: plain } )
+			)
+		).toBe(
+			renderToStaticMarkup(
+				deprecated[ 3 ].save( { attributes: plain } )
+			)
+		);
+	} );
+} );
 
-describe('pre-1.9.1 deprecation (deprecated[5])', () => {
+describe( 'pre-1.9.1 deprecation (deprecated[5])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -365,19 +379,23 @@ describe('pre-1.9.1 deprecation (deprecated[5])', () => {
 		],
 	};
 
-	it('italicized a quoted title and encoded the DOI slash; save() does neither', () => {
-		const old = renderToStaticMarkup(deprecated[5].save({ attributes }));
-		const current = renderToStaticMarkup(save({ attributes }));
+	it( 'italicized a quoted title and encoded the DOI slash; save() does neither', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 5 ].save( { attributes } )
+		);
+		const current = renderToStaticMarkup( save( { attributes } ) );
 
-		expect(old).toContain('“<i>Usage Statistics for Drupal Core</i>.”');
-		expect(old).toContain('https://doi.org/10.14722%2Fndss.2019.23386');
-		expect(current).toContain('“Usage Statistics for Drupal Core.”');
-		expect(current).not.toContain('<i>Usage Statistics');
-		expect(current).toContain('https://doi.org/10.14722/ndss.2019.23386');
-	});
-});
+		expect( old ).toContain( '“<i>Usage Statistics for Drupal Core</i>.”' );
+		expect( old ).toContain( 'https://doi.org/10.14722%2Fndss.2019.23386' );
+		expect( current ).toContain( '“Usage Statistics for Drupal Core.”' );
+		expect( current ).not.toContain( '<i>Usage Statistics' );
+		expect( current ).toContain(
+			'https://doi.org/10.14722/ndss.2019.23386'
+		);
+	} );
+} );
 
-describe('pre-1.10.0 deprecation (deprecated[4])', () => {
+describe( 'pre-1.10.0 deprecation (deprecated[4])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -396,19 +414,23 @@ describe('pre-1.10.0 deprecation (deprecated[4])', () => {
 		],
 	};
 
-	it('split the eLife DOI link with an italic journal name; save() keeps it whole', () => {
-		const old = renderToStaticMarkup(deprecated[4].save({ attributes }));
-		const current = renderToStaticMarkup(save({ attributes }));
+	it( 'split the eLife DOI link with an italic journal name; save() keeps it whole', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 4 ].save( { attributes } )
+		);
+		const current = renderToStaticMarkup( save( { attributes } ) );
 
-		expect(old).toContain('href="https://doi.org/10.7554/"');
-		expect(old).toContain('<i>eLife</i>.83254.');
-		expect(current).toContain('href="https://doi.org/10.7554/eLife.83254"');
-		expect(current).toContain('” <i>eLife</i> 12 (2023)');
-		expect(current).not.toContain('<i>eLife</i>.83254');
-	});
-});
+		expect( old ).toContain( 'href="https://doi.org/10.7554/"' );
+		expect( old ).toContain( '<i>eLife</i>.83254.' );
+		expect( current ).toContain(
+			'href="https://doi.org/10.7554/eLife.83254"'
+		);
+		expect( current ).toContain( '” <i>eLife</i> 12 (2023)' );
+		expect( current ).not.toContain( '<i>eLife</i>.83254' );
+	} );
+} );
 
-describe('pre-1.11.0 deprecation (deprecated[3])', () => {
+describe( 'pre-1.11.0 deprecation (deprecated[3])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		outputJsonLd: true,
@@ -418,7 +440,7 @@ describe('pre-1.11.0 deprecation (deprecated[3])', () => {
 				csl: {
 					type: 'webpage',
 					title: 'Nemesis (Das große Glück)',
-					author: [{ literal: 'Albertina' }],
+					author: [ { literal: 'Albertina' } ],
 					URL: 'https://sammlungenonline.albertina.at/objects/100442/nemesis-das-groe-gluck',
 				},
 				formattedText:
@@ -428,27 +450,29 @@ describe('pre-1.11.0 deprecation (deprecated[3])', () => {
 		],
 	};
 
-	function jsonLd(markup) {
+	function jsonLd( markup ) {
 		const match = markup.match(
 			/<script type="application\/ld\+json">(.*?)<\/script>/s
 		);
-		return JSON.parse(match[1]);
+		return JSON.parse( match[ 1 ] );
 	}
 
-	it('wrote cited works as top-level JSON-LD; 1.11.0 nested them in an ItemList', () => {
-		const old = renderToStaticMarkup(deprecated[3].save({ attributes }));
+	it( 'wrote cited works as top-level JSON-LD; 1.11.0 nested them in an ItemList', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 3 ].save( { attributes } )
+		);
 		// Compared with 1.11.0 (deprecated[2]), which changed only the JSON-LD.
 		const current = renderToStaticMarkup(
-			deprecated[2].save({ attributes })
+			deprecated[ 2 ].save( { attributes } )
 		);
 
-		expect(jsonLd(old)).toEqual([
-			expect.objectContaining({
+		expect( jsonLd( old ) ).toEqual( [
+			expect.objectContaining( {
 				'@context': 'https://schema.org',
 				'@type': 'WebPage',
-			}),
-		]);
-		expect(jsonLd(current)).toMatchObject({
+			} ),
+		] );
+		expect( jsonLd( current ) ).toMatchObject( {
 			'@type': 'ItemList',
 			itemListElement: [
 				{
@@ -460,18 +484,18 @@ describe('pre-1.11.0 deprecation (deprecated[3])', () => {
 					},
 				},
 			],
-		});
+		} );
 		// Everything outside the JSON-LD script is unchanged.
-		const strip = (markup) =>
+		const strip = ( markup ) =>
 			markup.replace(
 				/<script type="application\/ld\+json">.*?<\/script>/s,
 				''
 			);
-		expect(strip(old)).toBe(strip(current));
-	});
-});
+		expect( strip( old ) ).toBe( strip( current ) );
+	} );
+} );
 
-describe('1.11.0 deprecation (deprecated[2])', () => {
+describe( '1.11.0 deprecation (deprecated[2])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -480,7 +504,7 @@ describe('1.11.0 deprecation (deprecated[2])', () => {
 				csl: {
 					type: 'book',
 					title: 'A Later Book',
-					author: [{ family: 'Edwards', given: 'Ann' }],
+					author: [ { family: 'Edwards', given: 'Ann' } ],
 				},
 				formattedText: 'Edwards, Ann. A Later Book.',
 				displayOverride: null,
@@ -490,7 +514,7 @@ describe('1.11.0 deprecation (deprecated[2])', () => {
 				csl: {
 					type: 'book',
 					title: 'An Earlier Book',
-					author: [{ family: 'van Duijnhoven', given: 'Elza' }],
+					author: [ { family: 'van Duijnhoven', given: 'Elza' } ],
 				},
 				formattedText: 'Duijnhoven, Elza van. An Earlier Book.',
 				displayOverride: null,
@@ -498,34 +522,38 @@ describe('1.11.0 deprecation (deprecated[2])', () => {
 		],
 	};
 
-	it('filed a particle name under the particle; save() files it under the surname in Chicago', () => {
-		const old = renderToStaticMarkup(deprecated[2].save({ attributes }));
-		const current = renderToStaticMarkup(save({ attributes }));
-
-		expect(old.indexOf('Edwards, Ann')).toBeLessThan(
-			old.indexOf('Duijnhoven, Elza van')
+	it( 'filed a particle name under the particle; save() files it under the surname in Chicago', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 2 ].save( { attributes } )
 		);
-		expect(current.indexOf('Duijnhoven, Elza van')).toBeLessThan(
-			current.indexOf('Edwards, Ann')
-		);
-	});
-});
+		const current = renderToStaticMarkup( save( { attributes } ) );
 
-describe('1.11.0 deprecation JSON-LD', () => {
-	it('kept the ItemList JSON-LD that 1.11.0 introduced', () => {
+		expect( old.indexOf( 'Edwards, Ann' ) ).toBeLessThan(
+			old.indexOf( 'Duijnhoven, Elza van' )
+		);
+		expect( current.indexOf( 'Duijnhoven, Elza van' ) ).toBeLessThan(
+			current.indexOf( 'Edwards, Ann' )
+		);
+	} );
+} );
+
+describe( '1.11.0 deprecation JSON-LD', () => {
+	it( 'kept the ItemList JSON-LD that 1.11.0 introduced', () => {
 		const attributes = {
 			citationStyle: 'apa-7',
 			citations: [
-				createCitation({ id: 'a', family: 'Alpha', title: 'A Book' }),
+				createCitation( { id: 'a', family: 'Alpha', title: 'A Book' } ),
 			],
 		};
-		const old = renderToStaticMarkup(deprecated[2].save({ attributes }));
+		const old = renderToStaticMarkup(
+			deprecated[ 2 ].save( { attributes } )
+		);
 
-		expect(old).toContain('"@type":"ItemList"');
-	});
-});
+		expect( old ).toContain( '"@type":"ItemList"' );
+	} );
+} );
 
-describe('email-safe markup deprecation (deprecated[1])', () => {
+describe( 'email-safe markup deprecation (deprecated[1])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		outputCiteExport: true,
@@ -535,7 +563,7 @@ describe('email-safe markup deprecation (deprecated[1])', () => {
 				csl: {
 					type: 'book',
 					title: 'A Book',
-					author: [{ family: 'Alpha', given: 'Ada' }],
+					author: [ { family: 'Alpha', given: 'Ada' } ],
 				},
 				formattedText: 'Alpha, Ada. <i>A Book</i>.',
 				displayOverride: null,
@@ -544,44 +572,48 @@ describe('email-safe markup deprecation (deprecated[1])', () => {
 		],
 	};
 
-	it('saved entries in <cite> and the Cite / Export panel in the post', () => {
-		const old = renderToStaticMarkup(deprecated[1].save({ attributes }));
+	it( 'saved entries in <cite> and the Cite / Export panel in the post', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 1 ].save( { attributes } )
+		);
 
-		expect(old).toContain('<cite class="bibliography-builder-entry-text">');
-		expect(old).toContain(
+		expect( old ).toContain(
+			'<cite class="bibliography-builder-entry-text">'
+		);
+		expect( old ).toContain(
 			'<details class="bibliography-builder-cite-export">'
 		);
-		expect(old).toContain('href="data:');
-	});
+		expect( old ).toContain( 'href="data:' );
+	} );
 
-	it('save() writes plain spans and Cite / Export data for the view script instead', () => {
-		const current = renderToStaticMarkup(save({ attributes }));
+	it( 'save() writes plain spans and Cite / Export data for the view script instead', () => {
+		const current = renderToStaticMarkup( save( { attributes } ) );
 
-		expect(current).toContain(
+		expect( current ).toContain(
 			'<span class="bibliography-builder-entry-text">Alpha, Ada. <i>A Book</i>.</span>'
 		);
-		expect(current).not.toContain('<cite');
-		expect(current).not.toContain('<details');
-		expect(current).not.toContain('<button');
-		expect(current).not.toContain('href="data:');
-		expect(current).toContain('data-cite-text="Alpha, Ada. A Book."');
-		expect(current).toContain('data-cite-filename="Alpha"');
-		expect(current).toContain('data-cite-ris="TY  - BOOK');
-		expect(current).toContain('data-cite-csl-json="{');
-		expect(current).toContain('data-cite-bibtex="@book{alpha');
-		expect(current).not.toContain('data-cite-biblatex');
-	});
+		expect( current ).not.toContain( '<cite' );
+		expect( current ).not.toContain( '<details' );
+		expect( current ).not.toContain( '<button' );
+		expect( current ).not.toContain( 'href="data:' );
+		expect( current ).toContain( 'data-cite-text="Alpha, Ada. A Book."' );
+		expect( current ).toContain( 'data-cite-filename="Alpha"' );
+		expect( current ).toContain( 'data-cite-ris="TY  - BOOK' );
+		expect( current ).toContain( 'data-cite-csl-json="{' );
+		expect( current ).toContain( 'data-cite-bibtex="@book{alpha' );
+		expect( current ).not.toContain( 'data-cite-biblatex' );
+	} );
 
-	it('saves no Cite / Export data when the panel is off', () => {
+	it( 'saves no Cite / Export data when the panel is off', () => {
 		const current = renderToStaticMarkup(
-			save({ attributes: { ...attributes, outputCiteExport: false } })
+			save( { attributes: { ...attributes, outputCiteExport: false } } )
 		);
 
-		expect(current).not.toContain('data-cite-');
-	});
-});
+		expect( current ).not.toContain( 'data-cite-' );
+	} );
+} );
 
-describe('1.15.0 deprecation italics (deprecated[0])', () => {
+describe( '1.15.0 deprecation italics (deprecated[0])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -590,7 +622,7 @@ describe('1.15.0 deprecation italics (deprecated[0])', () => {
 				csl: {
 					type: 'book',
 					title: "Ted Nelson's Computer Paradigm, Expressed as One-Liners",
-					author: [{ family: 'Nelson', given: 'Ted' }],
+					author: [ { family: 'Nelson', given: 'Ted' } ],
 				},
 				formattedText:
 					'Nelson, Ted. Ted Nelson’s Computer Paradigm, Expressed as One-Liners. Mindful Press, 1999.',
@@ -599,18 +631,20 @@ describe('1.15.0 deprecation italics (deprecated[0])', () => {
 		],
 	};
 
-	it('left a title with a straight apostrophe roman; save() italicizes it', () => {
-		const old = renderToStaticMarkup(deprecated[0].save({ attributes }));
-		const current = renderToStaticMarkup(save({ attributes }));
+	it( 'left a title with a straight apostrophe roman; save() italicizes it', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 0 ].save( { attributes } )
+		);
+		const current = renderToStaticMarkup( save( { attributes } ) );
 
-		expect(old).not.toContain('<i>');
-		expect(current).toContain(
+		expect( old ).not.toContain( '<i>' );
+		expect( current ).toContain(
 			'Nelson, Ted. <i>Ted Nelson’s Computer Paradigm, Expressed as One-Liners</i>. Mindful Press, 1999.'
 		);
-	});
-});
+	} );
+} );
 
-describe('1.15.0 deprecation notes order (deprecated[0])', () => {
+describe( '1.15.0 deprecation notes order (deprecated[0])', () => {
 	const gessner = { family: 'Gessner', given: 'Conrad' };
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
@@ -620,7 +654,7 @@ describe('1.15.0 deprecation notes order (deprecated[0])', () => {
 				csl: {
 					type: 'book',
 					title: 'Bibliotheca',
-					author: [gessner, { family: 'Simler', given: 'Josias' }],
+					author: [ gessner, { family: 'Simler', given: 'Josias' } ],
 				},
 				formattedText:
 					'Gessner, Conrad, and Josias Simler. Bibliotheca. Christoph Froschauer, 1574.',
@@ -631,7 +665,7 @@ describe('1.15.0 deprecation notes order (deprecated[0])', () => {
 				csl: {
 					type: 'book',
 					title: 'Bibliotheca universalis',
-					author: [gessner],
+					author: [ gessner ],
 				},
 				formattedText:
 					'Gessner, Conrad. Bibliotheca universalis. Christoph Froschauer, 1545.',
@@ -639,14 +673,18 @@ describe('1.15.0 deprecation notes order (deprecated[0])', () => {
 			},
 		],
 	};
-	const order = (markup) =>
-		[...markup.matchAll(/id="ref-([^"]+)"/g)].map((match) => match[1]);
+	const order = ( markup ) =>
+		[ ...markup.matchAll( /id="ref-([^"]+)"/g ) ].map(
+			( match ) => match[ 1 ]
+		);
 
-	it('sorted by first surname then title; save() puts the single author first (#212)', () => {
-		const old = renderToStaticMarkup(deprecated[0].save({ attributes }));
-		const current = renderToStaticMarkup(save({ attributes }));
+	it( 'sorted by first surname then title; save() puts the single author first (#212)', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 0 ].save( { attributes } )
+		);
+		const current = renderToStaticMarkup( save( { attributes } ) );
 
-		expect(order(old)).toEqual(['gessner-simler', 'gessner']);
-		expect(order(current)).toEqual(['gessner', 'gessner-simler']);
-	});
-});
+		expect( order( old ) ).toEqual( [ 'gessner-simler', 'gessner' ] );
+		expect( order( current ) ).toEqual( [ 'gessner', 'gessner-simler' ] );
+	} );
+} );

@@ -19,38 +19,40 @@
  *
  * `ref` is a block's bibliographyId or its zero-based index.
  */
-(function () {
+( function () {
 	const postId = () =>
-		window.wp.data.select('core/editor').getCurrentPostId();
-	const bibliography = (ref) =>
-		`/bibliography/v1/posts/${postId()}/bibliographies/${encodeURIComponent(
+		window.wp.data.select( 'core/editor' ).getCurrentPostId();
+	const bibliography = ( ref ) =>
+		`/bibliography/v1/posts/${ postId() }/bibliographies/${ encodeURIComponent(
 			ref
-		)}`;
-	const citations = (ref) => `${bibliography(ref)}/citations`;
+		) }`;
+	const citations = ( ref ) => `${ bibliography( ref ) }/citations`;
 
-	async function send(path, method, data, etag) {
+	async function send( path, method, data, etag ) {
 		const response = await window.wp
-			.apiFetch({
+			.apiFetch( {
 				path,
 				method,
 				data,
 				headers: etag ? { 'If-Match': etag } : {},
 				parse: false,
-			})
-			.catch((error) => error);
+			} )
+			.catch( ( error ) => error );
 		const body = await response.json();
 
-		if (!response.ok) {
+		if ( ! response.ok ) {
 			// eslint-disable-next-line no-console
-			console.error(`${response.status} ${body.code}: ${body.message}`);
+			console.error(
+				`${ response.status } ${ body.code }: ${ body.message }`
+			);
 			throw body;
 		}
 
-		return { body, etag: response.headers.get('ETag') };
+		return { body, etag: response.headers.get( 'ETag' ) };
 	}
 
-	async function write(path, method, data, { commit = false } = {}) {
-		const preview = await send(path, method, data);
+	async function write( path, method, data, { commit = false } = {} ) {
+		const preview = await send( path, method, data );
 		// eslint-disable-next-line no-console
 		console.log(
 			'Dry run:',
@@ -58,13 +60,13 @@
 			preview.body.bibliography
 		);
 
-		if (!commit) {
+		if ( ! commit ) {
 			return preview.body;
 		}
 
-		const separator = path.includes('?') ? '&' : '?';
+		const separator = path.includes( '?' ) ? '&' : '?';
 		const saved = await send(
-			`${path}${separator}dry_run=false`,
+			`${ path }${ separator }dry_run=false`,
 			method,
 			data,
 			preview.etag
@@ -75,7 +77,7 @@
 			saved.etag,
 			'— reloading the editor.'
 		);
-		window.setTimeout(() => window.location.reload(), 1500);
+		window.setTimeout( () => window.location.reload(), 1500 );
 
 		return saved.body;
 	}
@@ -83,41 +85,46 @@
 	window.borgesWrite = {
 		async list() {
 			const { body } = await send(
-				`/bibliography/v1/posts/${postId()}/bibliographies`,
+				`/bibliography/v1/posts/${ postId() }/bibliographies`,
 				'GET'
 			);
 			// eslint-disable-next-line no-console
 			console.table(
-				body.bibliographies.map((b) => ({
+				body.bibliographies.map( ( b ) => ( {
 					index: b.index,
 					bibliographyId: b.bibliographyId,
 					style: b.citationStyle,
-					citations: b.citations.map((c) => c.id).join(', '),
-				}))
+					citations: b.citations.map( ( c ) => c.id ).join( ', ' ),
+				} ) )
 			);
 			return body;
 		},
-		add: (ref, items, options) =>
-			write(citations(ref), 'POST', { items }, options),
-		update: (ref, id, patch, options) =>
+		add: ( ref, items, options ) =>
+			write( citations( ref ), 'POST', { items }, options ),
+		update: ( ref, id, patch, options ) =>
 			write(
-				`${citations(ref)}/${encodeURIComponent(id)}`,
+				`${ citations( ref ) }/${ encodeURIComponent( id ) }`,
 				'PATCH',
 				patch,
 				options
 			),
-		remove: (ref, id, options) =>
+		remove: ( ref, id, options ) =>
 			write(
-				`${citations(ref)}/${encodeURIComponent(id)}`,
+				`${ citations( ref ) }/${ encodeURIComponent( id ) }`,
 				'DELETE',
 				undefined,
 				options
 			),
-		reorder: (ref, ids, options) =>
-			write(`${citations(ref)}/order`, 'PUT', { ids }, options),
-		settings: (ref, settings, options) =>
-			write(bibliography(ref), 'PATCH', settings, options),
-		reformat: (ref, style, options) =>
-			write(`${bibliography(ref)}/reformat`, 'POST', { style }, options),
+		reorder: ( ref, ids, options ) =>
+			write( `${ citations( ref ) }/order`, 'PUT', { ids }, options ),
+		settings: ( ref, settings, options ) =>
+			write( bibliography( ref ), 'PATCH', settings, options ),
+		reformat: ( ref, style, options ) =>
+			write(
+				`${ bibliography( ref ) }/reformat`,
+				'POST',
+				{ style },
+				options
+			),
 	};
-})();
+} )();
