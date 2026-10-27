@@ -23,10 +23,16 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { JSDOM } from 'jsdom';
+/*
+ * These come from this folder's own package.json, which the plugin's CI does
+ * not install, so the root lint cannot resolve them.
+ */
+/* eslint-disable import/no-unresolved */
 import { Readability } from '@mozilla/readability';
 import TurndownService from 'turndown';
 import WebAutoExtractor from '@marbec/web-auto-extractor';
 import Validator from '@adobe/structured-data-validator';
+/* eslint-enable import/no-unresolved */
 import {
 	OUT_DIR,
 	VARIANTS,
