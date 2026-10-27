@@ -278,6 +278,7 @@ final class CoinsEnrichmentTest extends TestCase {
 			'one-part name first'             => array( array( $plato, $ben ), array( 'Plato', 'Beta, Ben' ) ),
 			'given name only first'           => array( array( array( 'given' => 'Homer' ), $ben ), array( 'Homer', 'Beta, Ben' ) ),
 			'one-part names later'            => array( array( $ada, $plato, array( 'given' => 'Homer' ) ), array( 'Alpha, Ada', 'Plato', 'Homer' ) ),
+			'compound one-part names later'   => array( array( array( 'family' => 'Waals' ), array( 'family' => 'van der Waals' ), array( 'given' => 'Ali ibn Musa' ) ), array( 'Waals', 'van der Waals', 'Ali ibn Musa' ) ),
 			'shared last name, initials'      => array( array( array( 'family' => 'Kim', 'given' => 'J.' ), array( 'family' => 'Kim', 'given' => 'J.-H.' ) ), array( 'Kim, J.', 'Kim, J.-H.' ) ),
 			'shared last name, one-part name' => array( array( $plato, array( 'family' => 'Plato', 'given' => 'Jane' ), $org ), array( 'Plato', 'Plato, Jane', 'World Health Organization' ) ),
 			'one author'                      => array( array( $ada ), array( 'Alpha, Ada' ) ),

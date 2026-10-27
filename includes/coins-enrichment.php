@@ -45,7 +45,7 @@ function bibliography_builder_coins_author( $author ) {
 
 	if ( '' === $family && '' !== $literal ) {
 		// The trailing comma marks the name as inverted with no first name,
-		// so Zotero files all of it as one last name instead of splitting it
+		// so readers file all of it as one last name instead of splitting it
 		// at its last space ("Organization", first name "World Health").
 		return array(
 			'corporate' => true,
@@ -58,12 +58,13 @@ function bibliography_builder_coins_author( $author ) {
 		return null;
 	}
 
-	// A one-part name ("Plato", "Homer") is written bare, which readers file
-	// as a last name, the same way save() writes it into `rft.aulast`.
+	// A one-part name ("Plato", "van der Waals") gets the same trailing comma
+	// as an organization, so it is filed whole as a last name, the way save()
+	// writes it into `rft.aulast`, and not split at its last space.
 	return array(
 		'corporate' => false,
 		'last'      => '' !== $family ? $family : $given,
-		'au'        => '' !== $family && '' !== $given ? $family . ', ' . $given : $family . $given,
+		'au'        => '' !== $family && '' !== $given ? $family . ', ' . $given : $family . $given . ',',
 	);
 }
 
@@ -72,8 +73,8 @@ function bibliography_builder_coins_author( $author ) {
  *
  * The save() function writes the first author as `rft.aulast` and
  * `rft.aufirst`. Every later author is added after it, in order, as an
- * `rft.au`, which Z39.88-2004 lets repeat: "Family, Given" for a person, the
- * name and a comma for an organization. Organizations are not written as
+ * `rft.au`, which Z39.88-2004 lets repeat: "Family, Given" for a person, and
+ * the name and a comma for an organization or a one-part name. Organizations are not written as
  * `rft.aucorp`: Zotero's OpenURL reader puts every `aucorp` name ahead of
  * all the others, so a corporate coauthor would move to the front.
  *
