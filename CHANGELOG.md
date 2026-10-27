@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **ABNT sorts titles without Portuguese leading articles.** A reference that opens with its title now files under the first word after O, A, Os, As, Um, Uma, Uns, or Umas, so "O Guarani" sorts under G, as ABNT's alphabetical-order standard NBR 6033 (§3.4, "Artigos iniciais") asks; English A, An, and The were already skipped, in every style. Same-author works with the same year are lettered in that order. Other styles are unchanged. A saved ABNT bibliography stays valid and takes the new order the next time it is edited.
+
 - **Comments in JabRef files.** Pasting a whole `.bib` file that holds `@string`, `@comment`, or `@preamble` blocks no longer reports the plain-text comments between its entries as citations Borges couldn't read, or leaves them in the paste box. BibTeX ignores text outside entries, and JabRef keeps such comments in the files it saves. Pastes without those blocks still read text between entries as citations.
 
 ### Testing
