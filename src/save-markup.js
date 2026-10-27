@@ -102,6 +102,7 @@ export function renderBibliographySave(
 		inlineMarkup = false,
 		quoteAwareItalics = false,
 		urlAwareItalics = false,
+		quoteFoldedItalics = false,
 		particleAwareSort = false,
 		localeArticles = false,
 		citeExportData = false,
@@ -164,6 +165,7 @@ export function renderBibliographySave(
 						inlineMarkup,
 						quoteAwareItalics,
 						urlAwareItalics,
+						quoteFoldedItalics,
 					});
 					const repeatedPrefix =
 						repeatedAuthorPrefixes[citationIndex] || null;

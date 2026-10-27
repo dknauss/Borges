@@ -255,10 +255,39 @@ function bibliography_builder_save_url_ranges( $text ) {
 }
 
 /**
- * `findLastRange()`: the last occurrence of a value that is neither quoted,
- * inside a URL, nor overlapping a range already found. Offsets are bytes;
- * UTF-8 substring search finds the same occurrences as JavaScript's UTF-16
- * search.
+ * The pattern `foldQuotes()` matches a value with: the value as literal text,
+ * except that each of ' ‘ ’ matches any of the three, and each of " “ ” any of
+ * those. citeproc prints a stored straight apostrophe as ’, so the title the
+ * CSL stores is otherwise not in the text. In UTF-8 a straight mark is one
+ * byte and a curly one three, so where JS folds both strings and keeps its
+ * offsets, PHP matches the original text and keeps each match's own length.
+ *
+ * @param string $value Field value.
+ * @return string Pattern body, without delimiters.
+ */
+function bibliography_builder_save_quote_folded_pattern( $value ) {
+	$single = "(?:'|\u{2018}|\u{2019})";
+	$double = "(?:\"|\u{201C}|\u{201D})";
+
+	return strtr(
+		preg_quote( $value, '/' ),
+		array(
+			"'"        => $single,
+			"\u{2018}" => $single,
+			"\u{2019}" => $single,
+			'"'        => $double,
+			"\u{201C}" => $double,
+			"\u{201D}" => $double,
+		)
+	);
+}
+
+/**
+ * `findLastRange()` with `quoteFoldedItalics`: the last occurrence of a value
+ * that is neither quoted, inside a URL, nor overlapping a range already
+ * found, with quotation marks folded. Offsets are bytes; every start offset
+ * where the value matches is tried, last first, as JavaScript's repeated
+ * `lastIndexOf()` tries them.
  *
  * @param string $text       Display text.
  * @param string $value      Field value.
@@ -267,10 +296,18 @@ function bibliography_builder_save_url_ranges( $text ) {
  * @return array|null
  */
 function bibliography_builder_save_find_last_range( $text, $value, $ranges, $url_ranges = array() ) {
-	$start = strrpos( $text, $value );
+	// A lookahead matches without consuming, so overlapping occurrences are
+	// all found, as lastIndexOf() finds them.
+	preg_match_all(
+		'/(?=(' . bibliography_builder_save_quote_folded_pattern( $value ) . '))/u',
+		$text,
+		$matches,
+		PREG_OFFSET_CAPTURE
+	);
 
-	while ( false !== $start ) {
-		$end      = $start + strlen( $value );
+	foreach ( array_reverse( $matches[1] ) as $match ) {
+		$start    = $match[1];
+		$end      = $start + strlen( $match[0] );
 		$overlaps = false;
 
 		foreach ( array_merge( $ranges, $url_ranges ) as $range ) {
@@ -283,13 +320,6 @@ function bibliography_builder_save_find_last_range( $text, $value, $ranges, $url
 				'end'   => $end,
 			);
 		}
-
-		if ( 0 === $start ) {
-			return null;
-		}
-
-		// lastIndexOf( value, start - 1 ): the last match starting before $start.
-		$start = strrpos( substr( $text, 0, $start - 1 + strlen( $value ) ), $value );
 	}
 
 	return null;
