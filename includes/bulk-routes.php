@@ -33,8 +33,9 @@
  *
  * Deduplicate takes the same body without `style`. Each bibliography keeps
  * the first copy of a work and drops later ones, by the editor's duplicate
- * rules; each changed block's `changes.removed` lists what went and which
- * citation it duplicated. Duplicates across two blocks of one post are only
+ * rules; each changed block's `changes.removed` lists what went, which
+ * citation it duplicated, and the `mergedFields` copied from it into that
+ * citation because the kept copy lacked them (a DOI, say). Duplicates across two blocks of one post are only
  * reported, in the post's `crossBlockDuplicates`.
  *
  * A post's status is `preview` (dry run), `changed`, `unchanged` (nothing to
@@ -354,6 +355,69 @@ function bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $e
 }
 
 /**
+ * Whether a CSL value counts as present: not null, '', or an empty list.
+ *
+ * @param mixed $value CSL value.
+ * @return bool
+ */
+function bibliography_builder_bulk_has_value( $value ) {
+	return null !== $value && '' !== $value && array() !== $value;
+}
+
+/**
+ * The CSL fields a later copy of a work has and the kept copy lacks.
+ *
+ * Only whole top-level fields move, and only into gaps: a field the kept
+ * copy has, even with a different value, is never overwritten, so the kept
+ * copy stays the record of truth. `id` never moves.
+ *
+ * @param array $kept  The kept copy's CSL-JSON.
+ * @param array $later The later copy's CSL-JSON.
+ * @return array Fields to add to the kept copy, by name.
+ */
+function bibliography_builder_bulk_missing_fields( $kept, $later ) {
+	return array_diff_key(
+		array_filter( $later, 'bibliography_builder_bulk_has_value' ),
+		array_filter( $kept, 'bibliography_builder_bulk_has_value' ),
+		array( 'id' => true )
+	);
+}
+
+/**
+ * Fold a later copy of a work into a kept copy, for the split.
+ *
+ * Copies the fields the kept copy lacks (bibliography_builder_bulk_missing_fields())
+ * and records the later copy as removed, pointing at the kept one.
+ *
+ * @param array $state    Split state: `kept` (records of `citation`, `index`,
+ *                        `original`, `before`) and `removed`.
+ * @param int   $position The kept copy's position in `kept`.
+ * @param array $later    The later copy's record.
+ * @param array $pair     `{ id, reason }`: the kept copy's ID and why they match.
+ * @return bool Whether the kept copy gained fields.
+ */
+function bibliography_builder_bulk_absorb_duplicate( &$state, $position, $later, $pair ) {
+	$csl  = bibliography_builder_citation_csl( $state['kept'][ $position ]['citation'] );
+	$fill = bibliography_builder_bulk_missing_fields( $csl, bibliography_builder_citation_csl( $later['citation'] ) );
+
+	if ( array() !== $fill ) {
+		$state['kept'][ $position ]['before']        ??= $csl;
+		$state['kept'][ $position ]['citation']['csl'] = array_replace( $csl, $fill );
+	}
+
+	$state['removed'][] = array(
+		'index'        => $later['index'],
+		'id'           => bibliography_builder_get_citation_id( $later['original'] ),
+		'duplicateOf'  => $pair['id'],
+		'reason'       => $pair['reason'],
+		'mergedFields' => array_keys( $fill ),
+		'citation'     => $later['original'],
+	);
+
+	return array() !== $fill;
+}
+
+/**
  * Split citations into the ones to keep and later copies of them.
  *
  * Walks the list in order and keeps a citation unless it matches one already
@@ -362,36 +426,155 @@ function bibliography_builder_bulk_reformat_post( $post_id, $style, $dry_run, $e
  * So the first copy of a work always stays, with its display text and export
  * strings, and the editor's own paste check would have made the same calls.
  *
+ * A later copy's fields that the kept copy lacks, such as a DOI, are copied
+ * into the kept copy first (bibliography_builder_bulk_missing_fields()), so
+ * removing a copy never loses data. The kept copy's CSL changes, but not its
+ * `formattedText`: the caller formats it again (see `merged`).
+ *
+ * A gained field can make the kept copy match another kept citation (an
+ * author fills in, and now title and author agree), so after each fill the
+ * kept copy is checked again until nothing matches: the later of the two in
+ * stored order folds into the earlier, which may gain fields in turn. Every
+ * fold removes one citation, so this ends, and one run leaves nothing for a
+ * second run to remove.
+ *
  * @param array $citations Citation records, in stored order.
- * @return array{kept: array, removed: array} `removed` entries are
- *         `{ index, id, duplicateOf, reason, citation }`, where `index` is the
- *         position in `$citations` and `duplicateOf` the kept copy's ID.
+ * @return array{kept: array, removed: array, merged: array} `removed` entries,
+ *         in stored order, are `{ index, id, duplicateOf, reason,
+ *         mergedFields, citation }`, where `index` is the position in
+ *         `$citations`, `duplicateOf` the kept copy's ID, `mergedFields` the
+ *         field names copied into it, and `citation` the record as stored.
+ *         `merged` maps each position in `kept` that gained fields to its CSL
+ *         before the first fill.
  */
 function bibliography_builder_bulk_split_duplicates( $citations ) {
-	$kept    = array();
-	$removed = array();
+	$state = array(
+		'kept'    => array(),
+		'removed' => array(),
+	);
 
 	foreach ( array_values( $citations ) as $index => $citation ) {
-		$duplicate = bibliography_builder_find_duplicate_citation( $citation, $kept );
+		$record = array(
+			'citation' => $citation,
+			'index'    => $index,
+			'original' => $citation,
+			'before'   => null,
+		);
+		$match  = bibliography_builder_find_duplicate_citation(
+			$citation,
+			array_column( $state['kept'], 'citation' )
+		);
 
-		if ( null === $duplicate ) {
-			$kept[] = $citation;
+		if ( null === $match ) {
+			$state['kept'][] = $record;
 			continue;
 		}
 
-		$removed[] = array(
-			'index'       => $index,
-			'id'          => bibliography_builder_get_citation_id( $citation ),
-			'duplicateOf' => $duplicate['id'],
-			'reason'      => $duplicate['reason'],
-			'citation'    => $citation,
-		);
+		$position = (int) $match['index'];
+
+		if ( ! bibliography_builder_bulk_absorb_duplicate( $state, $position, $record, $match ) ) {
+			continue;
+		}
+
+		// The kept copy changed: fold any kept citation it now matches.
+		do {
+			$match = bibliography_builder_find_duplicate_citation(
+				$state['kept'][ $position ]['citation'],
+				array_diff_key( array_column( $state['kept'], 'citation' ), array( $position => true ) )
+			);
+
+			if ( null === $match ) {
+				break;
+			}
+
+			$other = (int) $match['index'];
+			$first = min( $position, $other );
+			$last  = max( $position, $other );
+			$later = $state['kept'][ $last ];
+			$id    = bibliography_builder_get_citation_id( $state['kept'][ $first ]['citation'] );
+			$gone  = bibliography_builder_get_citation_id( $later['citation'] );
+
+			array_splice( $state['kept'], $last, 1 );
+
+			// Copies already folded into the one going now point at its keeper.
+			foreach ( $state['removed'] as &$removed ) {
+				if ( null !== $gone && $gone === $removed['duplicateOf'] ) {
+					$removed['duplicateOf'] = $id;
+				}
+			}
+			unset( $removed );
+
+			bibliography_builder_bulk_absorb_duplicate(
+				$state,
+				$first,
+				$later,
+				array(
+					'id'     => $id,
+					'reason' => $match['reason'],
+				)
+			);
+			$position = $first;
+		} while ( true );
+	}
+
+	usort(
+		$state['removed'],
+		static function ( array $a, array $b ): int {
+			return $a['index'] <=> $b['index'];
+		}
+	);
+
+	$merged = array();
+
+	foreach ( $state['kept'] as $position => $record ) {
+		if ( null !== $record['before'] ) {
+			$merged[ $position ] = $record['before'];
+		}
 	}
 
 	return array(
-		'kept'    => $kept,
-		'removed' => $removed,
+		'kept'    => array_column( $state['kept'], 'citation' ),
+		'removed' => $state['removed'],
+		'merged'  => $merged,
 	);
+}
+
+/**
+ * Format the kept copies that gained fields from a removed copy.
+ *
+ * Each is sanitized and formatted again, as an edit through PATCH
+ * …/citations/{id} is, and loses the parse warnings and BibTeX/BibLaTeX
+ * export strings that described the old record; a display override, the
+ * person's own text, stays.
+ *
+ * @param array  $kept   Kept citations, from bibliography_builder_bulk_split_duplicates().
+ * @param array  $merged Its `merged` map: position in `$kept` => CSL before the merge.
+ * @param string $style  Citation style.
+ * @return array|WP_Error Kept citations with fresh `csl` and `formattedText`.
+ */
+function bibliography_builder_bulk_format_merged( $kept, $merged, $style ) {
+	$positions = array_keys( $merged );
+	$entries   = bibliography_builder_write_prepare_entries(
+		array_map(
+			static function ( $position ) use ( $kept ) {
+				return bibliography_builder_citation_csl( $kept[ $position ] );
+			},
+			$positions
+		),
+		$style
+	);
+
+	if ( is_wp_error( $entries ) ) {
+		return $entries;
+	}
+
+	foreach ( $positions as $offset => $position ) {
+		$citation = $kept[ $position ];
+		unset( $citation['parseWarnings'], $citation['exportBibtex'], $citation['exportBiblatex'] );
+		$kept[ $position ] = array_merge( $citation, $entries[ $offset ] );
+	}
+
+	return $kept;
 }
 
 /**
@@ -450,9 +633,10 @@ function bibliography_builder_bulk_cross_block_duplicates( $blocks ) {
  * Remove repeated citations from every bibliography in one post, and save it
  * unless dry running.
  *
- * Each block keeps the first copy of a work and drops later copies, then
- * refreshes the year suffixes the removal touched, as DELETE …/citations
- * does. Duplicates across two blocks in the post are left in place and
+ * Each block keeps the first copy of a work and drops later copies, after
+ * copying any fields the kept copy lacks from them (formatting it again, and
+ * sorting the block when that happened), then refreshes the year suffixes the
+ * change touched, as DELETE …/citations does. Duplicates across two blocks in the post are left in place and
  * listed in `crossBlockDuplicates`. A post with nothing to remove comes back
  * `unchanged`, and its `bibliographies` list only the blocks that changed.
  *
@@ -489,22 +673,38 @@ function bibliography_builder_bulk_deduplicate_post( $post_id, $dry_run, $etag =
 				return null;
 			}
 
-			$citations = bibliography_builder_write_refresh_year_suffixes(
-				$split['kept'],
-				bibliography_builder_write_style( $attrs ),
-				array_map(
-					static function ( $removed ) {
-						return bibliography_builder_citation_csl( $removed['citation'] );
-					},
-					$split['removed']
-				)
+			$style     = bibliography_builder_write_style( $attrs );
+			$citations = $split['kept'];
+			$touched   = array_map(
+				static function ( $removed ) {
+					return bibliography_builder_citation_csl( $removed['citation'] );
+				},
+				$split['removed']
 			);
+
+			if ( array() !== $split['merged'] ) {
+				$citations = bibliography_builder_bulk_format_merged( $citations, $split['merged'], $style );
+
+				if ( is_wp_error( $citations ) ) {
+					return $citations;
+				}
+
+				// A gained author or date can move an entry and its year-suffix group.
+				foreach ( $split['merged'] as $position => $before ) {
+					$touched[] = $before;
+					$touched[] = bibliography_builder_citation_csl( $citations[ $position ] );
+				}
+			}
+
+			$citations = bibliography_builder_write_refresh_year_suffixes( $citations, $style, $touched );
 
 			if ( is_wp_error( $citations ) ) {
 				return $citations;
 			}
 
-			$attrs['citations'] = $citations;
+			$attrs['citations'] = array() === $split['merged']
+				? $citations
+				: bibliography_builder_sort_citations_for_save( $citations, $style );
 
 			return array(
 				'attrs'   => $attrs,

@@ -24,6 +24,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *     # Check every bibliography in a post; exits 1 when any entry has an error.
  *     $ wp borges validate 42
  *
+ *     # Find repeated citations across the whole site, without changing anything.
+ *     $ wp borges duplicates
+ *
  *     # Preview switching three posts to MLA, then save it.
  *     $ wp borges reformat 42 43 44 --style=mla-9 --user=editor
  *     $ wp borges reformat 42 43 44 --style=mla-9 --user=editor --commit
@@ -38,8 +41,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Without --user, the commands read any post, as core's commands do. With
  * --user, they apply that user's capabilities as the REST routes do: list and
- * export need a published public post or edit_post, and validate needs
- * edit_post.
+ * export need a published public post or edit_post, validate needs
+ * edit_post, and duplicates skips posts without it.
  *
  * reformat and deduplicate write, so they always need --user, the
  * write-routes filter, edit_others_posts, and edit_post on each post.
@@ -231,6 +234,88 @@ final class Bibliography_Builder_CLI_Command {
 
 		if ( 0 < $errors ) {
 			WP_CLI::halt( 1 );
+		}
+	}
+
+	/**
+	 * Reports repeated citations, across the site or in the given posts.
+	 *
+	 * Read-only: it never changes a post. A row with scope `bibliography` is a
+	 * later copy of a work in the same block, which `wp borges deduplicate`
+	 * would remove, keeping `first`; a row with scope `post` is a work listed
+	 * in two bibliographies of one post, which is left alone, since a post
+	 * with one bibliography per chapter means to repeat it. Each side is
+	 * `<block index>:<citation ID>`. Matching follows the editor's duplicate
+	 * rules: the same DOI, or the same title with the same year or first
+	 * author. Works repeated across different posts are not duplicates.
+	 *
+	 * With --user, posts that user may not edit are skipped and counted.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [<post-id>...]
+	 * : Post IDs to check. Without them, every post with a bibliography is
+	 * checked, in any status but auto-draft and trash.
+	 *
+	 * [--format=<format>]
+	 * : Output format.
+	 * ---
+	 * default: table
+	 * options:
+	 *   - table
+	 *   - json
+	 *   - csv
+	 *   - yaml
+	 *   - count
+	 * ---
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     $ wp borges duplicates
+	 *     $ wp borges duplicates 42 43 --format=csv > duplicates.csv
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Options.
+	 * @return void
+	 */
+	public function duplicates( $args, $assoc_args ) {
+		$post_ids = array() === $args ? bibliography_builder_cli_bibliography_post_ids() : self::post_ids( $args );
+		$rows     = array();
+		$checked  = 0;
+		$skipped  = 0;
+
+		foreach ( $post_ids as $post_id ) {
+			$post = bibliography_builder_cli_get_post( $post_id, 'review' );
+
+			if ( is_wp_error( $post ) ) {
+				++$skipped;
+
+				if ( array() !== $args ) {
+					WP_CLI::warning( $post->get_error_message() );
+				}
+
+				continue;
+			}
+
+			++$checked;
+			$rows = array_merge( $rows, bibliography_builder_cli_duplicate_rows( $post ) );
+		}
+
+		$format = isset( $assoc_args['format'] ) ? (string) $assoc_args['format'] : 'table';
+		WP_CLI\Utils\format_items( $format, $rows, BIBLIOGRAPHY_BUILDER_CLI_DUPLICATES_FIELDS );
+
+		// Only under a table, so csv, json, yaml, and count output stay clean to pipe.
+		if ( 'table' === $format ) {
+			$scopes = array_count_values( array_column( $rows, 'scope' ) );
+			/* translators: 1: copies in one block, 2: repeats across blocks, 3: posts checked, 4: posts skipped. */
+			$summary = __(
+				'Within a bibliography: %1$d. Across bibliographies: %2$d. Posts checked: %3$d. Skipped: %4$d.',
+				'borges-bibliography-builder'
+			);
+
+			WP_CLI::success(
+				sprintf( $summary, $scopes['bibliography'] ?? 0, $scopes['post'] ?? 0, $checked, $skipped )
+			);
 		}
 	}
 

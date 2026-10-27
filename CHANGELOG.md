@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`wp borges duplicates`.** A read-only report of repeated citations across the whole site, or in the posts you name: one row per later copy of a work in the same bibliography (what `wp borges deduplicate` would remove) and per work listed in two bibliographies of one post (which deduplicate leaves alone). It changes nothing, and follows the read commands' rules: no `--user` checks no capabilities, and `--user` skips posts that user cannot edit. See `docs/wp-cli.md`.
+
+### Changed
+
+- **Bulk deduplicate keeps every field.** Before it drops a later copy of a work, it copies any field the kept copy lacks, such as a DOI, pages, or a volume, into it, and formats that entry again. A field the kept copy has is never overwritten. Each removed entry lists what it gave in `mergedFields`, and `wp borges deduplicate` gains a `merged` column.
+
 ### Fixed
 
 - **Comments in JabRef files.** Pasting a whole `.bib` file that holds `@string`, `@comment`, or `@preamble` blocks no longer reports the plain-text comments between its entries as citations Borges couldn't read, or leaves them in the paste box. BibTeX ignores text outside entries, and JabRef keeps such comments in the files it saves. Pastes without those blocks still read text between entries as citations.
