@@ -1,7 +1,29 @@
+import styleData from '../../includes/styles.json';
 import { getStyleDefinition } from './formatting';
 import { demotesParticleForSort, getSortFamily } from './name-particles';
 
-const LEADING_ARTICLES = /^(a|an|the)\s+/i;
+const ENGLISH_ARTICLES = /^(a|an|the)\s+/i;
+
+/**
+ * The leading articles a style's titles sort without.
+ *
+ * English articles always, plus those of the style's locale language listed
+ * in `leadingArticles` in includes/styles.json, as ABNT NBR 6033:1989 §3.4
+ * ("Artigos iniciais") asks: an article that opens an entry is not counted
+ * in alphabetical order. So ABNT (pt-BR) files "O Guarani" under G.
+ *
+ * @param {string} locale Style locale, such as pt-BR.
+ * @return {RegExp} Pattern for one leading article and the space after it.
+ */
+export function getLeadingArticlesPattern(locale = 'en-US') {
+	const language = locale.split('-')[0].toLowerCase();
+	const articles = new Set([
+		...styleData.leadingArticles.en,
+		...(styleData.leadingArticles[language] || []),
+	]);
+
+	return new RegExp(`^(${[...articles].join('|')})\\s+`, 'i');
+}
 
 function getPrimaryContributors(csl = {}) {
 	return (
@@ -14,11 +36,12 @@ function getPrimaryContributors(csl = {}) {
 /**
  * Strip leading articles from a title for sort purposes.
  *
- * @param {string} title The title string.
+ * @param {string} title    The title string.
+ * @param {RegExp} articles Leading-article pattern (getLeadingArticlesPattern()).
  * @return {string} Title without leading article.
  */
-function stripArticles(title) {
-	return (title || '').replace(LEADING_ARTICLES, '');
+function stripArticles(title, articles = ENGLISH_ARTICLES) {
+	return (title || '').replace(articles, '');
 }
 
 /**
@@ -42,13 +65,20 @@ function getContributorFamily(contributor = {}, particles = null) {
  *
  * @param {Object}      csl       CSL-JSON object.
  * @param {Object|null} particles Particle sort rule (see getContributorFamily).
+ * @param {RegExp}      articles  Leading-article pattern for a title entry.
  * @return {string} Lowercase author string for sorting.
  */
-function getAuthorSort(csl = {}, particles = null) {
+function getAuthorSort(
+	csl = {},
+	particles = null,
+	articles = ENGLISH_ARTICLES
+) {
 	const primaryContributors = getPrimaryContributors(csl);
 
 	if (!primaryContributors) {
-		return csl.title ? stripArticles(csl.title).toLowerCase() : '\uffff';
+		return csl.title
+			? stripArticles(csl.title, articles).toLowerCase()
+			: '\uffff';
 	}
 
 	const first = primaryContributors[0];
@@ -82,25 +112,26 @@ function getSortableYear(csl = {}) {
 /**
  * Get the sortable title string from a CSL-JSON object.
  *
- * @param {Object} csl CSL-JSON object.
+ * @param {Object} csl      CSL-JSON object.
+ * @param {RegExp} articles Leading-article pattern.
  * @return {string} Lowercase title without leading articles.
  */
-function getTitleSort(csl = {}) {
-	return stripArticles(csl.title || '').toLowerCase();
+function getTitleSort(csl = {}, articles = ENGLISH_ARTICLES) {
+	return stripArticles(csl.title || '', articles).toLowerCase();
 }
 
-function compareAuthors(a, b, locale, particles) {
-	const authorA = getAuthorSort(a.csl, particles);
-	const authorB = getAuthorSort(b.csl, particles);
+function compareAuthors(a, b, locale, { particles, articles }) {
+	const authorA = getAuthorSort(a.csl, particles, articles);
+	const authorB = getAuthorSort(b.csl, particles, articles);
 
 	return authorA.localeCompare(authorB, locale, {
 		sensitivity: 'base',
 	});
 }
 
-function compareTitles(a, b, locale) {
-	const titleA = getTitleSort(a.csl);
-	const titleB = getTitleSort(b.csl);
+function compareTitles(a, b, locale, { articles }) {
+	const titleA = getTitleSort(a.csl, articles);
+	const titleB = getTitleSort(b.csl, articles);
 
 	return titleA.localeCompare(titleB, locale, {
 		sensitivity: 'base',
@@ -165,13 +196,13 @@ function compareAuthorChains(chainA, chainB, locale) {
 	return chainA.length - chainB.length;
 }
 
-function compareNotes(a, b, locale, particles) {
-	const authorCmp = compareAuthors(a, b, locale, particles);
+function compareNotes(a, b, locale, rule) {
+	const authorCmp = compareAuthors(a, b, locale, rule);
 	if (authorCmp !== 0) {
 		return authorCmp;
 	}
 
-	const titleCmp = compareTitles(a, b, locale);
+	const titleCmp = compareTitles(a, b, locale, rule);
 	if (titleCmp !== 0) {
 		return titleCmp;
 	}
@@ -179,9 +210,9 @@ function compareNotes(a, b, locale, particles) {
 	return compareYears(a, b);
 }
 
-function compareAuthorDate(a, b, locale, particles) {
-	const chainA = getAuthorChain(a.csl, particles);
-	const chainB = getAuthorChain(b.csl, particles);
+function compareAuthorDate(a, b, locale, rule) {
+	const chainA = getAuthorChain(a.csl, rule.particles);
+	const chainB = getAuthorChain(b.csl, rule.particles);
 
 	if (chainA.length && chainB.length) {
 		const chainCmp = compareAuthorChains(chainA, chainB, locale);
@@ -189,13 +220,13 @@ function compareAuthorDate(a, b, locale, particles) {
 			return chainCmp;
 		}
 	} else {
-		const authorCmp = compareAuthors(a, b, locale, particles);
+		const authorCmp = compareAuthors(a, b, locale, rule);
 		if (authorCmp !== 0) {
 			return authorCmp;
 		}
 	}
 
-	const authorCmp = compareAuthors(a, b, locale, particles);
+	const authorCmp = compareAuthors(a, b, locale, rule);
 	if (authorCmp !== 0) {
 		return authorCmp;
 	}
@@ -205,19 +236,19 @@ function compareAuthorDate(a, b, locale, particles) {
 		return yearCmp;
 	}
 
-	return compareTitles(a, b, locale);
+	return compareTitles(a, b, locale, rule);
 }
 
-function getComparatorForFamily(family, locale, particles) {
+function getComparatorForFamily(family, locale, rule) {
 	switch (family) {
 		case 'notes':
-			return (a, b) => compareNotes(a, b, locale, particles);
+			return (a, b) => compareNotes(a, b, locale, rule);
 		case 'author-date':
-			return (a, b) => compareAuthorDate(a, b, locale, particles);
+			return (a, b) => compareAuthorDate(a, b, locale, rule);
 		case 'numeric':
 			return null;
 		default:
-			return (a, b) => compareAuthorDate(a, b, locale, particles);
+			return (a, b) => compareAuthorDate(a, b, locale, rule);
 	}
 }
 
@@ -229,11 +260,19 @@ function getComparatorForFamily(family, locale, particles) {
  * under the particle for APA and MLA. `particleAwareSort: false` sorts by the
  * stored family as written, the order save() produced before 1.12.0.
  *
+ * Titles sort without a leading article: English ones always, and the style
+ * locale's own (getLeadingArticlesPattern()), so ABNT skips "O" and "Uma".
+ * `localeArticles: false` skips only the English ones, the order save()
+ * produced before 1.16.0.
+ *
  * @param {Array}   citations                   Array of citation objects.
  * @param {string}  styleKey                    Citation style key.
  * @param {Object}  [options]                   Options.
  * @param {boolean} [options.particleAwareSort] Follow the style's particle
  *                                              rule (default true).
+ * @param {boolean} [options.localeArticles]    Skip the style locale's
+ *                                              leading articles too
+ *                                              (default true).
  * @return {Array} Sorted citation array.
  *
  * @since 0.1.0
@@ -241,19 +280,23 @@ function getComparatorForFamily(family, locale, particles) {
 export function sortCitations(
 	citations,
 	styleKey,
-	{ particleAwareSort = true } = {}
+	{ particleAwareSort = true, localeArticles = true } = {}
 ) {
 	const style = getStyleDefinition(styleKey);
-	const particles = particleAwareSort
-		? {
-				demote: demotesParticleForSort(style.demoteNonDroppingParticle),
-		  }
-		: null;
-	const comparator = getComparatorForFamily(
-		style.family,
-		style.locale || 'en-US',
-		particles
-	);
+	const locale = style.locale || 'en-US';
+	const rule = {
+		particles: particleAwareSort
+			? {
+					demote: demotesParticleForSort(
+						style.demoteNonDroppingParticle
+					),
+			  }
+			: null,
+		articles: localeArticles
+			? getLeadingArticlesPattern(locale)
+			: ENGLISH_ARTICLES,
+	};
+	const comparator = getComparatorForFamily(style.family, locale, rule);
 
 	if (comparator === null) {
 		return [...citations];

@@ -5,7 +5,8 @@
  * `styles.json` beside this file is the one source for each style's CSL
  * template, locale, family, list type, particle rule, and default heading,
  * and for the lowercase name particles ("van", "de la") that sorting and the
- * formatter split from a family name. `src/lib/formatting/style-registry.js`
+ * formatter split from a family name, and the leading articles ("the", "o")
+ * titles sort without, by language. `src/lib/formatting/style-registry.js`
  * and `src/lib/name-particles.js` import the same file, and the formatter,
  * the save() port, and the write routes read it through here.
  *
@@ -19,7 +20,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Read `styles.json`, once per request.
  *
- * @return array{defaultStyle: string, nameParticles: string[], styles: array<string, array<string, mixed>>}
+ * @return array{
+ *     defaultStyle: string,
+ *     nameParticles: string[],
+ *     leadingArticles: array<string, string[]>,
+ *     styles: array<string, array<string, mixed>>
+ * }
  */
 function bibliography_builder_get_style_data() {
 	static $data = null;
@@ -30,11 +36,17 @@ function bibliography_builder_get_style_data() {
 		$decoded = is_string( $json ) ? json_decode( $json, true ) : null;
 		$decoded = is_array( $decoded ) ? $decoded : array();
 		$data    = array(
-			'defaultStyle'  => isset( $decoded['defaultStyle'] ) ? (string) $decoded['defaultStyle'] : '',
-			'nameParticles' => isset( $decoded['nameParticles'] ) && is_array( $decoded['nameParticles'] )
+			'defaultStyle'    => isset( $decoded['defaultStyle'] ) ? (string) $decoded['defaultStyle'] : '',
+			'nameParticles'   => isset( $decoded['nameParticles'] ) && is_array( $decoded['nameParticles'] )
 				? array_values( array_map( 'strval', $decoded['nameParticles'] ) )
 				: array(),
-			'styles'        => isset( $decoded['styles'] ) && is_array( $decoded['styles'] )
+			'leadingArticles' => isset( $decoded['leadingArticles'] ) && is_array( $decoded['leadingArticles'] )
+				? array_map(
+					static fn( $articles ): array => array_values( array_map( 'strval', (array) $articles ) ),
+					$decoded['leadingArticles']
+				)
+				: array(),
+			'styles'          => isset( $decoded['styles'] ) && is_array( $decoded['styles'] )
 				? $decoded['styles']
 				: array(),
 		);

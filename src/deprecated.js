@@ -123,6 +123,28 @@ function migrateSortedAttributes(attributes) {
 
 export const deprecated = [
 	{
+		// Freezes the save() shape of 1.15.0: titles sorted without an
+		// English leading article only, so ABNT filed "O Guarani" under O,
+		// where NBR 6033 §3.4 files it under G.
+		attributes: deprecatedAttributes,
+		save: ({ attributes }) =>
+			renderBibliographySave(attributes, {
+				sortEntries: true,
+				headingTag: getHeadingTag(attributes.headingLevel),
+				entryTag: 'span',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				inlineMarkup: true,
+				quoteAwareItalics: true,
+				urlAwareItalics: true,
+				particleAwareSort: true,
+				citeExportData: true,
+				canonicalDoiUrl: true,
+				jsonLdItemList: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			}),
+	},
+	{
 		// Freezes the save() shape that `main` wrote after the particle-aware
 		// sort and before the email-safe markup, never released: each entry in
 		// a `<cite>` (italic wherever the block's stylesheet is missing, as in

@@ -121,15 +121,32 @@ function bibliography_builder_sort_primary_contributors( $csl ) {
 }
 
 /**
+ * `getLeadingArticlesPattern()`: the leading articles a style's titles sort
+ * without. English ones always, plus those of the locale's language from
+ * `leadingArticles` in `styles.json`, per ABNT NBR 6033:1989 §3.4.
+ *
+ * @param string $locale Style locale, such as pt-BR.
+ * @return string[] Lowercase articles.
+ */
+function bibliography_builder_sort_leading_articles( $locale ) {
+	$articles = bibliography_builder_get_style_data()['leadingArticles'];
+	$language = strtolower( explode( '-', $locale )[0] );
+
+	return array_values( array_unique( array_merge( $articles['en'] ?? array(), $articles[ $language ] ?? array() ) ) );
+}
+
+/**
  * `stripArticles()`.
  *
- * @param mixed $title Title.
+ * @param mixed    $title    Title.
+ * @param string[] $articles Leading articles; English ones when omitted.
  * @return string
  */
-function bibliography_builder_sort_strip_articles( $title ) {
-	$title = bibliography_builder_js_truthy( $title ) ? bibliography_builder_js_string( $title ) : '';
+function bibliography_builder_sort_strip_articles( $title, $articles = array( 'a', 'an', 'the' ) ) {
+	$title   = bibliography_builder_js_truthy( $title ) ? bibliography_builder_js_string( $title ) : '';
+	$pattern = implode( '|', array_map( 'preg_quote', $articles ) );
 
-	return (string) preg_replace( '/^(a|an|the)[' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ']+/iu', '', $title );
+	return (string) preg_replace( '/^(' . $pattern . ')[' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ']+/iu', '', $title );
 }
 
 /**
@@ -264,18 +281,19 @@ function bibliography_builder_demotes_particle_for_sort( $demote ) {
 /**
  * `getAuthorSort()` with particle-aware sorting.
  *
- * @param array $csl    CSL-JSON item.
- * @param bool  $demote Whether the style demotes particles for sorting.
+ * @param array    $csl      CSL-JSON item.
+ * @param bool     $demote   Whether the style demotes particles for sorting.
+ * @param string[] $articles Leading articles a title entry sorts without.
  * @return string
  */
-function bibliography_builder_sort_author_key( $csl, $demote = false ) {
+function bibliography_builder_sort_author_key( $csl, $demote = false, $articles = array( 'a', 'an', 'the' ) ) {
 	$contributors = bibliography_builder_sort_primary_contributors( $csl );
 
 	if ( null === $contributors ) {
 		$title = bibliography_builder_csl_field( $csl, 'title' );
 
 		return bibliography_builder_js_truthy( $title )
-			? bibliography_builder_js_lower( bibliography_builder_sort_strip_articles( $title ) )
+			? bibliography_builder_js_lower( bibliography_builder_sort_strip_articles( $title, $articles ) )
 			: "\u{FFFF}";
 	}
 
@@ -305,12 +323,13 @@ function bibliography_builder_sort_year( $csl ) {
 /**
  * `getTitleSort()`.
  *
- * @param array $csl CSL-JSON item.
+ * @param array    $csl      CSL-JSON item.
+ * @param string[] $articles Leading articles to sort without.
  * @return string
  */
-function bibliography_builder_sort_title_key( $csl ) {
+function bibliography_builder_sort_title_key( $csl, $articles = array( 'a', 'an', 'the' ) ) {
 	return bibliography_builder_js_lower(
-		bibliography_builder_sort_strip_articles( bibliography_builder_csl_field( $csl, 'title' ) )
+		bibliography_builder_sort_strip_articles( bibliography_builder_csl_field( $csl, 'title' ), $articles )
 	);
 }
 
@@ -411,19 +430,27 @@ function bibliography_builder_sort_compare_chains( $collator, $chain_a, $chain_b
  * @param array    $a        CSL-JSON item.
  * @param array    $b        CSL-JSON item.
  * @param bool     $demote   Whether the style demotes particles for sorting.
+ * @param string[] $articles Leading articles titles sort without.
  * @return int
  */
-function bibliography_builder_sort_compare( $family, $collator, $a, $b, $demote = false ) {
+function bibliography_builder_sort_compare(
+	$family,
+	$collator,
+	$a,
+	$b,
+	$demote = false,
+	$articles = array( 'a', 'an', 'the' )
+) {
 	$authors = bibliography_builder_locale_compare(
 		$collator,
-		bibliography_builder_sort_author_key( $a, $demote ),
-		bibliography_builder_sort_author_key( $b, $demote )
+		bibliography_builder_sort_author_key( $a, $demote, $articles ),
+		bibliography_builder_sort_author_key( $b, $demote, $articles )
 	);
-	$titles  = static function () use ( $collator, $a, $b ): int {
+	$titles  = static function () use ( $collator, $a, $b, $articles ): int {
 		return bibliography_builder_locale_compare(
 			$collator,
-			bibliography_builder_sort_title_key( $a ),
-			bibliography_builder_sort_title_key( $b )
+			bibliography_builder_sort_title_key( $a, $articles ),
+			bibliography_builder_sort_title_key( $b, $articles )
 		);
 	};
 
@@ -484,7 +511,8 @@ function bibliography_builder_sort_citations_for_save( $citations, $style_key ) 
 
 	$collator = new Collator( str_replace( '-', '_', $style['locale'] ) );
 	$collator->setStrength( Collator::PRIMARY );
-	$demote = bibliography_builder_demotes_particle_for_sort( $style['demoteNonDroppingParticle'] );
+	$demote   = bibliography_builder_demotes_particle_for_sort( $style['demoteNonDroppingParticle'] );
+	$articles = bibliography_builder_sort_leading_articles( $style['locale'] );
 
 	$indexed = array();
 
@@ -494,13 +522,14 @@ function bibliography_builder_sort_citations_for_save( $citations, $style_key ) 
 
 	usort(
 		$indexed,
-		static function ( $left, $right ) use ( $style, $collator, $demote ) {
+		static function ( $left, $right ) use ( $style, $collator, $demote, $articles ) {
 			$comparison = bibliography_builder_sort_compare(
 				$style['family'],
 				$collator,
 				bibliography_builder_citation_csl( $left[1] ),
 				bibliography_builder_citation_csl( $right[1] ),
-				$demote
+				$demote,
+				$articles
 			);
 
 			return 0 !== $comparison ? $comparison : $left[0] - $right[0];

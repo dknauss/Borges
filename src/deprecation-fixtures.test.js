@@ -134,6 +134,43 @@ const FIXTURE_ATTRIBUTES = {
  * so its fixture is one; under FIXTURE_ATTRIBUTES it would match v00 exactly.
  */
 const FIXTURE_ATTRIBUTES_BY_VERSION = {
+	// v15 froze save() from before ABNT skipped Portuguese leading articles
+	// (NBR 6033 §3.4). Only a title entry opening with one sorts differently,
+	// so its fixture is an ABNT list of two; under FIXTURE_ATTRIBUTES it would
+	// match v00 exactly.
+	15: {
+		...FIXTURE_ATTRIBUTES,
+		citationStyle: 'abnt',
+		headingText: 'Referências',
+		citations: [
+			{
+				id: 'guarani',
+				csl: {
+					id: 'guarani',
+					type: 'book',
+					title: 'O Guarani',
+					publisher: 'Empresa Nacional do Diário',
+					issued: { 'date-parts': [[1857]] },
+				},
+				formattedText:
+					'O GUARANI. Rio de Janeiro: Empresa Nacional do Diário, 1857.',
+				displayOverride: null,
+			},
+			{
+				id: 'iracema',
+				csl: {
+					id: 'iracema',
+					type: 'book',
+					title: 'Iracema',
+					publisher: 'Typ. de Viana & Filhos',
+					issued: { 'date-parts': [[1865]] },
+				},
+				formattedText:
+					'IRACEMA. Rio de Janeiro: Typ. de Viana & Filhos, 1865.',
+				displayOverride: null,
+			},
+		],
+	},
 	8: {
 		...FIXTURE_ATTRIBUTES,
 		citationStyle: 'mla-9',

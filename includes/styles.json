@@ -26,6 +26,10 @@
 		"ten",
 		"op"
 	],
+	"leadingArticles": {
+		"en": ["a", "an", "the"],
+		"pt": ["o", "a", "os", "as", "um", "uma", "uns", "umas"]
+	},
 	"styles": {
 		"chicago-notes-bibliography": {
 			"label": "Chicago Notes-Bibliography",

@@ -37,7 +37,7 @@ describe('deprecated block versions', () => {
 
 	it('freezes the current pre-Phase-4 save shape: <li> with no <details>', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[8].save({
+			deprecated[9].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -58,7 +58,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the immediate prior save markup with deprecated entry roles', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[9].save({
+			deprecated[10].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -93,7 +93,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the prior save markup with linked URLs and static aria-label', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[10].save({
+			deprecated[11].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -126,7 +126,7 @@ describe('deprecated block versions', () => {
 
 	it('supports the prior save markup variant without linked visible URLs', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[11].save({
+			deprecated[12].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
@@ -155,7 +155,7 @@ describe('deprecated block versions', () => {
 	});
 
 	it('migrate re-sorts citations into style order', () => {
-		const migrated = deprecated[12].migrate({
+		const migrated = deprecated[13].migrate({
 			citationStyle: 'chicago-author-date',
 			citations: [
 				createCitation({ id: 'z', family: 'Zulu', title: 'Zeta Book' }),
@@ -172,14 +172,14 @@ describe('deprecated block versions', () => {
 	});
 
 	it('migrate handles missing citations attribute with empty array fallback', () => {
-		const migrated = deprecated[12].migrate({ citationStyle: 'apa-7' });
+		const migrated = deprecated[13].migrate({ citationStyle: 'apa-7' });
 
 		expect(migrated.citations).toEqual([]);
 	});
 
 	it('supports the prior unsorted save markup variant', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[12].save({
+			deprecated[13].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
@@ -204,7 +204,7 @@ describe('deprecated block versions', () => {
 	});
 });
 
-describe('locale-independence deprecation (deprecated[7])', () => {
+describe('locale-independence deprecation (deprecated[8])', () => {
 	const untitled = {
 		id: 'untitled',
 		csl: { type: 'webpage', author: [{ family: 'Beta' }] },
@@ -213,7 +213,7 @@ describe('locale-independence deprecation (deprecated[7])', () => {
 
 	it('falls back to the current translations when the markup gave no labels', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[7].save({
+			deprecated[8].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [untitled],
@@ -230,7 +230,7 @@ describe('locale-independence deprecation (deprecated[7])', () => {
 
 	it('reads the fallback label from a matching link and skips one that does not match', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[7].save({
+			deprecated[8].save({
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [untitled],
@@ -257,14 +257,14 @@ describe('locale-independence deprecation (deprecated[7])', () => {
 
 	it('renders nothing when the block has no citations', () => {
 		expect(
-			deprecated[7].save({
+			deprecated[8].save({
 				attributes: { citationStyle: 'chicago-notes-bibliography' },
 			})
 		).toBeNull();
 	});
 });
 
-describe('pre-repeated-author deprecation (deprecated[6])', () => {
+describe('pre-repeated-author deprecation (deprecated[7])', () => {
 	const borges = (id, title) => ({
 		id,
 		csl: {
@@ -281,7 +281,7 @@ describe('pre-repeated-author deprecation (deprecated[6])', () => {
 	};
 
 	it('writes repeated MLA authors in full, as save() did before', () => {
-		const old = renderToStaticMarkup(deprecated[6].save({ attributes }));
+		const old = renderToStaticMarkup(deprecated[7].save({ attributes }));
 		const current = renderToStaticMarkup(save({ attributes }));
 
 		expect(old).not.toContain('bibliography-builder-repeated-author');
@@ -291,7 +291,7 @@ describe('pre-repeated-author deprecation (deprecated[6])', () => {
 	});
 });
 
-describe('pre-inline-markup deprecation (deprecated[5])', () => {
+describe('pre-inline-markup deprecation (deprecated[6])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -306,7 +306,7 @@ describe('pre-inline-markup deprecation (deprecated[5])', () => {
 	};
 
 	it('showed tags in stored text as text; save() now reads them', () => {
-		const old = renderToStaticMarkup(deprecated[5].save({ attributes }));
+		const old = renderToStaticMarkup(deprecated[6].save({ attributes }));
 		const current = renderToStaticMarkup(save({ attributes }));
 
 		expect(old).toContain(
@@ -330,15 +330,15 @@ describe('pre-inline-markup deprecation (deprecated[5])', () => {
 			],
 		};
 
-		// Compared with save() as of 1.10.x (deprecated[2]): 1.11.0 changed only
+		// Compared with save() as of 1.10.x (deprecated[3]): 1.11.0 changed only
 		// the JSON-LD shape, which this deprecation predates.
 		expect(
-			renderToStaticMarkup(deprecated[5].save({ attributes: plain }))
-		).toBe(renderToStaticMarkup(deprecated[2].save({ attributes: plain })));
+			renderToStaticMarkup(deprecated[6].save({ attributes: plain }))
+		).toBe(renderToStaticMarkup(deprecated[3].save({ attributes: plain })));
 	});
 });
 
-describe('pre-1.9.1 deprecation (deprecated[4])', () => {
+describe('pre-1.9.1 deprecation (deprecated[5])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -366,7 +366,7 @@ describe('pre-1.9.1 deprecation (deprecated[4])', () => {
 	};
 
 	it('italicized a quoted title and encoded the DOI slash; save() does neither', () => {
-		const old = renderToStaticMarkup(deprecated[4].save({ attributes }));
+		const old = renderToStaticMarkup(deprecated[5].save({ attributes }));
 		const current = renderToStaticMarkup(save({ attributes }));
 
 		expect(old).toContain('“<i>Usage Statistics for Drupal Core</i>.”');
@@ -377,7 +377,7 @@ describe('pre-1.9.1 deprecation (deprecated[4])', () => {
 	});
 });
 
-describe('pre-1.10.0 deprecation (deprecated[3])', () => {
+describe('pre-1.10.0 deprecation (deprecated[4])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -397,7 +397,7 @@ describe('pre-1.10.0 deprecation (deprecated[3])', () => {
 	};
 
 	it('split the eLife DOI link with an italic journal name; save() keeps it whole', () => {
-		const old = renderToStaticMarkup(deprecated[3].save({ attributes }));
+		const old = renderToStaticMarkup(deprecated[4].save({ attributes }));
 		const current = renderToStaticMarkup(save({ attributes }));
 
 		expect(old).toContain('href="https://doi.org/10.7554/"');
@@ -408,7 +408,7 @@ describe('pre-1.10.0 deprecation (deprecated[3])', () => {
 	});
 });
 
-describe('pre-1.11.0 deprecation (deprecated[2])', () => {
+describe('pre-1.11.0 deprecation (deprecated[3])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		outputJsonLd: true,
@@ -436,10 +436,10 @@ describe('pre-1.11.0 deprecation (deprecated[2])', () => {
 	}
 
 	it('wrote cited works as top-level JSON-LD; 1.11.0 nested them in an ItemList', () => {
-		const old = renderToStaticMarkup(deprecated[2].save({ attributes }));
-		// Compared with 1.11.0 (deprecated[1]), which changed only the JSON-LD.
+		const old = renderToStaticMarkup(deprecated[3].save({ attributes }));
+		// Compared with 1.11.0 (deprecated[2]), which changed only the JSON-LD.
 		const current = renderToStaticMarkup(
-			deprecated[1].save({ attributes })
+			deprecated[2].save({ attributes })
 		);
 
 		expect(jsonLd(old)).toEqual([
@@ -471,7 +471,7 @@ describe('pre-1.11.0 deprecation (deprecated[2])', () => {
 	});
 });
 
-describe('1.11.0 deprecation (deprecated[1])', () => {
+describe('1.11.0 deprecation (deprecated[2])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -499,7 +499,7 @@ describe('1.11.0 deprecation (deprecated[1])', () => {
 	};
 
 	it('filed a particle name under the particle; save() files it under the surname in Chicago', () => {
-		const old = renderToStaticMarkup(deprecated[1].save({ attributes }));
+		const old = renderToStaticMarkup(deprecated[2].save({ attributes }));
 		const current = renderToStaticMarkup(save({ attributes }));
 
 		expect(old.indexOf('Edwards, Ann')).toBeLessThan(
@@ -519,13 +519,13 @@ describe('1.11.0 deprecation JSON-LD', () => {
 				createCitation({ id: 'a', family: 'Alpha', title: 'A Book' }),
 			],
 		};
-		const old = renderToStaticMarkup(deprecated[1].save({ attributes }));
+		const old = renderToStaticMarkup(deprecated[2].save({ attributes }));
 
 		expect(old).toContain('"@type":"ItemList"');
 	});
 });
 
-describe('email-safe markup deprecation (deprecated[0])', () => {
+describe('email-safe markup deprecation (deprecated[1])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		outputCiteExport: true,
@@ -545,7 +545,7 @@ describe('email-safe markup deprecation (deprecated[0])', () => {
 	};
 
 	it('saved entries in <cite> and the Cite / Export panel in the post', () => {
-		const old = renderToStaticMarkup(deprecated[0].save({ attributes }));
+		const old = renderToStaticMarkup(deprecated[1].save({ attributes }));
 
 		expect(old).toContain('<cite class="bibliography-builder-entry-text">');
 		expect(old).toContain(

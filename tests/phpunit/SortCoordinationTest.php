@@ -81,6 +81,7 @@ final class SortCoordinationTest extends TestCase {
 		return array(
 			'case-13-s4-leading-article-strip',
 			'case-18-unicode-normalization',
+			'case-abnt-leading-articles',
 		);
 	}
 
