@@ -6,7 +6,7 @@
  * and resolves them to CSL-JSON via citation-js.
  */
 
-import { normalizeBibtexCsl } from './bibtex-fields';
+import { normalizeBibtexCsl, renameBibtexCityField } from './bibtex-fields';
 import { createCitationId } from './citation-id';
 import { MAX_ENTRIES_PER_PASTE } from './citation-limits';
 import { validateAndSanitizeCsl } from './csl-sanitize';
@@ -186,7 +186,9 @@ const PARSER_BACKENDS = {
 		};
 	},
 	bibtex: async (value) => {
-		const cite = await Cite.async(normalizeBibtexInput(value));
+		const cite = await Cite.async(
+			renameBibtexCityField(normalizeBibtexInput(value))
+		);
 		const cslItems = cite.get({ type: 'json' });
 		// Raw-field recovery (arXiv eprints) is only unambiguous when the
 		// segment produced exactly one item.

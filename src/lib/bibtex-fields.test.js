@@ -1,6 +1,7 @@
 import {
 	getArxivUrlFromRawEntry,
 	normalizeBibtexCsl,
+	renameBibtexCityField,
 	normalizeBibtexLanguage,
 } from './bibtex-fields';
 
@@ -164,22 +165,28 @@ describe('normalizeBibtexCsl', () => {
 			).genre
 		).toBe('Doctoral dissertation');
 	});
+});
 
-	it("reads Mendeley's city field as the place of publication", () => {
+describe('renameBibtexCityField', () => {
+	it("reads Mendeley's city field as address", () => {
 		expect(
-			normalizeBibtexCsl(
-				{ type: 'book', title: 'T' },
+			renameBibtexCityField(
 				'@book{a,\n   city = {Chicago},\n   title = {T}\n}'
-			)['publisher-place']
-		).toBe('Chicago');
+			)
+		).toBe('@book{a,\n   address = {Chicago},\n   title = {T}\n}');
 	});
 
-	it('keeps a place citation-js already mapped over city', () => {
+	it('keeps an entry that already has address or location', () => {
+		const entry = '@book{a, location = {Paris}, city = {Lyon}}';
+
+		expect(renameBibtexCityField(entry)).toBe(entry);
+	});
+
+	it('leaves @string macros before the entry alone', () => {
 		expect(
-			normalizeBibtexCsl(
-				{ type: 'book', title: 'T', 'publisher-place': 'Paris' },
-				'@book{a, address = {Paris}, city = {Lyon}}'
-			)['publisher-place']
-		).toBe('Paris');
+			renameBibtexCityField(
+				'@string{city = {Chicago}}\n@book{a, city = city}'
+			)
+		).toBe('@string{city = {Chicago}}\n@book{a, address = city}');
 	});
 });

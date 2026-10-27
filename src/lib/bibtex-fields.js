@@ -14,7 +14,9 @@
  * - `type` in EndNote's BibTeX export holds EndNote's reference-type name
  *   ("Journal Article"), which would otherwise surface as CSL `genre`.
  * - `city` is where Mendeley's BibTeX export writes the place of publication,
- *   instead of `address` or `location`, so citation-js drops it.
+ *   instead of `address` or `location`, so citation-js drops it. It is renamed
+ *   before parsing (`renameBibtexCityField()`), so citation-js decodes it
+ *   like any other field.
  */
 
 // Babel and polyglossia language names, lowercased, mapped to BCP 47 tags.
@@ -265,17 +267,6 @@ export function normalizeBibtexCsl(csl, rawEntry) {
 		}
 	}
 
-	if (!normalized['publisher-place']) {
-		const city =
-			typeof rawEntry === 'string'
-				? readRawField(rawEntry, 'city')
-				: undefined;
-
-		if (city) {
-			normalized['publisher-place'] = city;
-		}
-	}
-
 	if (!normalized.URL) {
 		const arxivUrl = getArxivUrlFromRawEntry(rawEntry);
 
@@ -285,4 +276,38 @@ export function normalizeBibtexCsl(csl, rawEntry) {
 	}
 
 	return normalized;
+}
+
+const BIBTEX_PLACE_FIELD_REGEX = /[,{\s](?:address|location)\s*=/iu;
+const BIBTEX_CITY_FIELD_REGEX = /([,{\s])city(\s*=)/iu;
+const BIBTEX_LAST_ENTRY_REGEX =
+	/@\s*(?!(?:string|comment|preamble)\b)[a-z][\w-]*\s*\{(?![^]*@\s*[a-z][\w-]*\s*\{)/iu;
+
+/**
+ * Rename Mendeley's `city` field to `address` in a segment's entry.
+ *
+ * A segment is one entry, after any `@string` macros, so only the text from
+ * the last entry on is changed; an entry that already has `address` or
+ * `location` is left alone.
+ *
+ * @param {string} value BibTeX segment text.
+ * @return {string} The segment with `city` read as `address`.
+ */
+export function renameBibtexCityField(value) {
+	const start = value.search(BIBTEX_LAST_ENTRY_REGEX);
+
+	if (start === -1) {
+		return value;
+	}
+
+	const entry = value.slice(start);
+
+	if (BIBTEX_PLACE_FIELD_REGEX.test(entry)) {
+		return value;
+	}
+
+	return (
+		value.slice(0, start) +
+		entry.replace(BIBTEX_CITY_FIELD_REGEX, '$1address$2')
+	);
 }

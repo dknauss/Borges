@@ -323,6 +323,18 @@ not a citation at all`);
 		});
 	});
 
+	it("decodes LaTeX in Mendeley's city field", async () => {
+		const result = await parsePastedInput(`@book{a,
+   city = {M{\\"u}nchen},
+   publisher = {P},
+   title = {T},
+   year = {2001}
+}`);
+
+		expect(result.errors).toEqual([]);
+		expect(result.entries[0].csl['publisher-place']).toBe('München');
+	});
+
 	it('leaves @string macros alone when adding a missing key', async () => {
 		const result = await parsePastedInput(`@string{cell = {Cell}}
 @article{
