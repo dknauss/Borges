@@ -29,7 +29,8 @@ These are the most reliable import paths and should be treated as primary suppor
 | ISBN                                     | Supported | `ISBN 978-0-14-032872-1`, `ISBN-10: 0140328726`, bare 978/979 ISBN-13; checksum required |
 | BibTeX/BibLaTeX language fields          | Normalized | Babel names (`ngerman`, `british`) → BCP 47 (`de`, `en-GB`); others dropped |
 | BibTeX/BibLaTeX arXiv eprints            | Normalized | `eprint` + `eprinttype`/`archiveprefix = arxiv` → arXiv abstract URL     |
-| Reference-manager `.bib` exports (whole file) | Supported | Zotero (BibTeX, BibLaTeX), Mendeley, EndNote, JabRef. Entries stay whole across blank lines inside fields; `@string` macros resolve; `@comment`, `@preamble`, and `%` lines outside entries are ignored. Corpus: `src/lib/__fixtures__/reference-manager-exports/` |
+| Reference-manager `.bib` exports (whole file) | Supported | Zotero (BibTeX, BibLaTeX), Mendeley, EndNote, JabRef. Entries stay whole across blank lines inside fields; `@string` macros resolve; `@comment`, `@preamble`, and `%` lines outside entries are ignored, and in a file with any `@string`, `@comment`, or `@preamble` block all other text between entries is ignored too, as BibTeX does. Corpus: `src/lib/__fixtures__/reference-manager-exports/`, hand-authored files plus real Better BibTeX and JabRef output |
+| CSL-JSON (array or single item)          | Supported | A reference manager's CSL JSON export, or Borges's own CSL-JSON download; invalid items are skipped by position |
 | EndNote `type` field                     | Normalized | EndNote reference-type names (`Journal Article`, `Book Section`, …) are dropped instead of becoming CSL `genre` |
 | Multiple DOI / BibTeX entries in one add | Supported | Up to 50 entries per add                                                 |
 
@@ -69,7 +70,7 @@ These should fail closed with a notice rather than being treated as supported in
 | Arbitrary random prose                       | Unsupported                    | Not all text that looks citation-adjacent is parseable            |
 | Broad multimedia / audiovisual raw citations | Limited / mostly unsupported   | Some may parse incidentally, but not yet a declared support class |
 | Broad multilingual BibTeX dialects           | Unsupported as a general claim | Only a small tested alias allowlist exists                        |
-| CSL-JSON / other JSON documents              | Unsupported as import          | Rejected with the unsupported-input notice; CSL-JSON is an export format |
+| JSON that is not CSL-JSON                    | Unsupported as import          | Rejected with its own notice; CSL-JSON arrays and single items import (see section 1) |
 | RIS                                          | Unsupported as import          | RIS is an export format only                                      |
 
 ## Non-English BibTeX normalization policy

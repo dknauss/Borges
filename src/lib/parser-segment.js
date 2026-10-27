@@ -209,7 +209,10 @@ function findBibtexEntryEnd(input, openIndex) {
  * `@comment` and `@preamble` blocks are dropped, `@string` macros are
  * prepended to every entry so `journal = nature` resolves, and `%` comment
  * lines outside entries (JabRef's `% Encoding:` header) are removed, as
- * BibTeX itself ignores them.
+ * BibTeX itself ignores them. When the paste holds any of those file-level
+ * blocks, it is a whole `.bib` file rather than a hand-assembled mix, so all
+ * other text between entries is dropped too: BibTeX treats it as a comment,
+ * and JabRef keeps such comments in the files it saves.
  *
  * @param {string} input Pasted text.
  * @return {Array<{bibtex: boolean, value: string, raw?: string}>} Segments in paste order.
@@ -218,6 +221,7 @@ export function segmentPastedInput(input) {
 	const segments = [];
 	const macros = [];
 	let hasBibtex = false;
+	let hasFileLevelBlock = false;
 	let cursor = 0;
 
 	for (const match of input.matchAll(BIBTEX_ENTRY_START_REGEX)) {
@@ -241,7 +245,10 @@ export function segmentPastedInput(input) {
 
 		if (entryType === 'string') {
 			macros.push(entry);
-		} else if (!BIBTEX_IGNORED_ENTRY_TYPES.has(entryType)) {
+			hasFileLevelBlock = true;
+		} else if (BIBTEX_IGNORED_ENTRY_TYPES.has(entryType)) {
+			hasFileLevelBlock = true;
+		} else {
 			segments.push({ bibtex: true, value: entry, raw: entry });
 		}
 	}
@@ -259,6 +266,10 @@ export function segmentPastedInput(input) {
 							)}\n${normalizeBibtexInput(segment.value)}`,
 					  }
 					: segment;
+			}
+
+			if (hasFileLevelBlock) {
+				return { ...segment, value: '' };
 			}
 
 			return hasBibtex
