@@ -21,8 +21,8 @@ reference list, so any difference comes from the list markup alone.
 | `borges-full.html` | The Borges block with every output layer on. |
 
 The citations are formatted by the plugin's own citeproc formatter and saved
-by its PHP port of `save()`. The render-time JSON-LD enrichment runs as it does
-on a live site. Every page carries the same `Article` JSON-LD an SEO plugin
+by its PHP port of `save()`. The render-time JSON-LD and COinS enrichment run
+as they do on a live site. Every page carries the same `Article` JSON-LD an SEO plugin
 prints; on the Borges pages it gains the cited works as `citation`, through the
 Yoast SEO integration.
 

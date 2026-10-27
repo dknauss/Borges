@@ -13,8 +13,9 @@
  *   `@id` on the page.
  * - Fields the baseline leaves out: `sameAs` links and an `identifier` for
  *   every DOI, PMID, PMCID, arXiv ID, and ISBN; the periodical, volume, and
- *   issue chain; pages; editors and translators; edition, page count,
- *   language, and publisher place; and a schema.org type for CSL types the
+ *   issue chain; containers for magazine, newspaper, and web citations, and
+ *   the proceedings and conference of a conference paper; pages; editors and
+ *   translators; edition, page count, language, and publisher place; and a schema.org type for CSL types the
  *   baseline maps to plain CreativeWork.
  *
  * The cited works also need an edge from the page that cites them. Yoast SEO
@@ -282,6 +283,84 @@ function bibliography_builder_json_ld_work_id( $csl, $citation_id, $page_url ) {
 }
 
 /**
+ * Give a cited work the container save() leaves out or types wrongly.
+ *
+ * The save() function writes `isPartOf` only for journal articles, chapters,
+ * and conference papers. This adds the rest and corrects the conference case:
+ *
+ * - Magazine and newspaper articles are part of a `Periodical`, carrying the
+ *   first ISSN as journals do, so the volume and issue chain applies to them.
+ * - Web pages and blog posts are part of a `WebSite`.
+ * - A conference paper's `container-title` names the proceedings, a book, but
+ *   save() types it as an `Event`, which `isPartOf` does not accept. It
+ *   becomes a `Book`. The conference itself, from CSL `event-title` (or the
+ *   older `event`), is linked through `recordedAt`, whose range is `Event`.
+ *
+ * A container save() wrote with another type is never replaced.
+ *
+ * @since 1.16.0
+ *
+ * @param array  $work The work as save() wrote it.
+ * @param array  $csl  The citation's CSL-JSON.
+ * @param string $type The CSL type.
+ * @return array
+ */
+function bibliography_builder_json_ld_container( $work, $csl, $type ) {
+	$container = bibliography_builder_json_ld_csl_string( $csl, 'container-title' );
+	$saved     = isset( $work['isPartOf'] ) && is_array( $work['isPartOf'] ) ? $work['isPartOf'] : null;
+
+	if ( null === $saved && '' !== $container ) {
+		if ( 'article-magazine' === $type || 'article-newspaper' === $type ) {
+			$periodical = array(
+				'@type' => 'Periodical',
+				'name'  => $container,
+			);
+			$issn       = bibliography_builder_json_ld_csl_string( $csl, 'ISSN' );
+			if ( '' !== $issn ) {
+				$periodical['issn'] = $issn;
+			}
+			$work['isPartOf'] = $periodical;
+		} elseif ( 'webpage' === $type || 'post-weblog' === $type ) {
+			$work['isPartOf'] = array(
+				'@type' => 'WebSite',
+				'name'  => $container,
+			);
+		}
+	}
+
+	if ( 'paper-conference' !== $type ) {
+		return $work;
+	}
+
+	if ( null !== $saved && isset( $saved['@type'] ) && 'Event' === $saved['@type'] ) {
+		$saved['@type']   = 'Book';
+		$work['isPartOf'] = $saved;
+	}
+
+	$event_name = bibliography_builder_json_ld_csl_string( $csl, 'event-title' );
+	if ( '' === $event_name ) {
+		$event_name = bibliography_builder_json_ld_csl_string( $csl, 'event' );
+	}
+
+	if ( '' !== $event_name ) {
+		$event = array(
+			'@type' => 'Event',
+			'name'  => $event_name,
+		);
+		$place = bibliography_builder_json_ld_csl_string( $csl, 'event-place' );
+		if ( '' !== $place ) {
+			$event['location'] = array(
+				'@type' => 'Place',
+				'name'  => $place,
+			);
+		}
+		$work['recordedAt'] = $event;
+	}
+
+	return $work;
+}
+
+/**
  * Add what save() leaves out to one cited work.
  *
  * @since 1.13.0
@@ -346,6 +425,8 @@ function bibliography_builder_enrich_json_ld_work( $work, $csl, $citation_id, $p
 			$work['sameAs'] = 1 === count( $links ) ? $links[0] : $links;
 		}
 	}
+
+	$work = bibliography_builder_json_ld_container( $work, $csl, $type );
 
 	$volume = bibliography_builder_json_ld_csl_string( $csl, 'volume' );
 	$issue  = bibliography_builder_json_ld_csl_string( $csl, 'issue' );
@@ -413,6 +494,53 @@ function bibliography_builder_enrich_json_ld_work( $work, $csl, $citation_id, $p
 }
 
 /**
+ * The block's citations' CSL-JSON, keyed by citation ID.
+ *
+ * @since 1.16.0
+ *
+ * @param array $parsed_block Parsed block, with its attributes.
+ * @return array<string, array>
+ */
+function bibliography_builder_rendered_citation_csl( $parsed_block ) {
+	$citations = array();
+	$stored    = isset( $parsed_block['attrs']['citations'] ) && is_array( $parsed_block['attrs']['citations'] )
+		? $parsed_block['attrs']['citations']
+		: array();
+
+	foreach ( $stored as $citation ) {
+		if (
+			is_array( $citation )
+			&& isset( $citation['id'], $citation['csl'] )
+			&& is_string( $citation['id'] )
+			&& is_array( $citation['csl'] )
+		) {
+			$citations[ $citation['id'] ] = $citation['csl'];
+		}
+	}
+
+	return $citations;
+}
+
+/**
+ * The citation IDs of a rendered block's `<li id="ref-…">` entries, in order.
+ *
+ * @since 1.16.0
+ *
+ * @param string $block_content Rendered block HTML.
+ * @return string[]
+ */
+function bibliography_builder_rendered_anchor_ids( $block_content ) {
+	preg_match_all( '#<li\b[^>]*?\sid="ref-([^"]+)"#', $block_content, $anchors );
+
+	return array_map(
+		static function ( $id ) {
+			return html_entity_decode( $id, ENT_QUOTES, 'UTF-8' );
+		},
+		$anchors[1]
+	);
+}
+
+/**
  * Enrich the ItemList in one rendered bibliography block.
  *
  * Entries are matched to citations through the visible `<li id="ref-…">`
@@ -443,30 +571,11 @@ function bibliography_builder_enrich_rendered_json_ld( $block_content, $parsed_b
 		return $block_content;
 	}
 
-	$attrs     = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] )
+	$attrs      = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] )
 		? $parsed_block['attrs']
 		: array();
-	$citations = array();
-	$stored    = isset( $attrs['citations'] ) && is_array( $attrs['citations'] ) ? $attrs['citations'] : array();
-
-	foreach ( $stored as $citation ) {
-		if (
-			is_array( $citation )
-			&& isset( $citation['id'], $citation['csl'] )
-			&& is_string( $citation['id'] )
-			&& is_array( $citation['csl'] )
-		) {
-			$citations[ $citation['id'] ] = $citation['csl'];
-		}
-	}
-
-	preg_match_all( '#<li\b[^>]*?\sid="ref-([^"]+)"#', $block_content, $anchors );
-	$anchor_ids = array_map(
-		static function ( $id ) {
-			return html_entity_decode( $id, ENT_QUOTES, 'UTF-8' );
-		},
-		$anchors[1]
-	);
+	$citations  = bibliography_builder_rendered_citation_csl( $parsed_block );
+	$anchor_ids = bibliography_builder_rendered_anchor_ids( $block_content );
 
 	$page_url = bibliography_builder_json_ld_page_url();
 	$list_id  = '';

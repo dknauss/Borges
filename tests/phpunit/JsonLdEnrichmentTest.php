@@ -213,4 +213,144 @@ final class JsonLdEnrichmentTest extends TestCase {
 		$data = array( 'richSnippet' => array( '@type' => 'BlogPosting' ) );
 		$this->assertSame( $data, bibliography_builder_rank_math_json_ld( $data ) );
 	}
+
+	private function enrich( array $csl ): array {
+		return bibliography_builder_enrich_json_ld_work( bibliography_builder_save_csl_to_json_ld( $csl ), $csl, 'x', '' );
+	}
+
+	public function test_magazine_and_newspaper_articles_join_the_periodical_chain(): void {
+		$magazine = $this->enrich(
+			array(
+				'type'            => 'article-magazine',
+				'title'           => 'The Semantic Web',
+				'container-title' => 'Scientific American',
+				'ISSN'            => array( '0036-8733', '1946-7087' ),
+				'volume'          => '284',
+				'issue'           => '5',
+			)
+		);
+
+		$this->assertSame( 'Article', $magazine['@type'] );
+		$this->assertSame( 'PublicationIssue', $magazine['isPartOf']['@type'] );
+		$this->assertSame( 'PublicationVolume', $magazine['isPartOf']['isPartOf']['@type'] );
+		$this->assertSame(
+			array(
+				'@type' => 'Periodical',
+				'name'  => 'Scientific American',
+				'issn'  => '0036-8733',
+			),
+			$magazine['isPartOf']['isPartOf']['isPartOf']
+		);
+
+		$newspaper = $this->enrich(
+			array(
+				'type'            => 'article-newspaper',
+				'title'           => 'A story',
+				'container-title' => 'The Daily',
+			)
+		);
+
+		$this->assertSame( 'NewsArticle', $newspaper['@type'] );
+		$this->assertSame(
+			array(
+				'@type' => 'Periodical',
+				'name'  => 'The Daily',
+			),
+			$newspaper['isPartOf']
+		);
+	}
+
+	public function test_web_pages_and_blog_posts_are_part_of_a_website(): void {
+		foreach ( array( 'webpage', 'post-weblog' ) as $type ) {
+			$work = $this->enrich(
+				array(
+					'type'            => $type,
+					'title'           => 'Block Editor Handbook',
+					'container-title' => 'WordPress Developer Resources',
+				)
+			);
+
+			$this->assertSame(
+				array(
+					'@type' => 'WebSite',
+					'name'  => 'WordPress Developer Resources',
+				),
+				$work['isPartOf'],
+				$type
+			);
+		}
+
+		// No container title, no container.
+		$this->assertArrayNotHasKey(
+			'isPartOf',
+			$this->enrich(
+				array(
+					'type'  => 'webpage',
+					'title' => 'A page',
+				)
+			)
+		);
+	}
+
+	public function test_conference_papers_are_part_of_their_proceedings(): void {
+		$paper = $this->enrich(
+			array(
+				'type'            => 'paper-conference',
+				'title'           => 'BERT',
+				'container-title' => 'Proceedings of NAACL-HLT 2019',
+				'event-title'     => 'NAACL-HLT 2019',
+				'event-place'     => 'Minneapolis, Minnesota',
+			)
+		);
+
+		$this->assertSame(
+			array(
+				'@type' => 'Book',
+				'name'  => 'Proceedings of NAACL-HLT 2019',
+			),
+			$paper['isPartOf']
+		);
+		$this->assertSame(
+			array(
+				'@type'    => 'Event',
+				'name'     => 'NAACL-HLT 2019',
+				'location' => array(
+					'@type' => 'Place',
+					'name'  => 'Minneapolis, Minnesota',
+				),
+			),
+			$paper['recordedAt']
+		);
+
+		// RIS conference papers often carry only the event, under its CSL 1.0.1 name too.
+		$event_only = $this->enrich(
+			array(
+				'type'  => 'paper-conference',
+				'title' => 'A talk',
+				'event' => 'WordCamp US',
+			)
+		);
+
+		$this->assertArrayNotHasKey( 'isPartOf', $event_only );
+		$this->assertSame(
+			array(
+				'@type' => 'Event',
+				'name'  => 'WordCamp US',
+			),
+			$event_only['recordedAt']
+		);
+	}
+
+	public function test_a_container_save_already_typed_is_kept(): void {
+		$chapter = $this->enrich(
+			array(
+				'type'            => 'chapter',
+				'title'           => 'A chapter',
+				'container-title' => 'An edited book',
+			)
+		);
+
+		$this->assertSame( 'Book', $chapter['isPartOf']['@type'] );
+		$this->assertArrayNotHasKey( 'recordedAt', $chapter );
+	}
 }

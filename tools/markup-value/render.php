@@ -14,8 +14,8 @@
  * - borges-full.html    The Borges block with every output layer on.
  *
  * Citations are formatted by the plugin's own citeproc formatter and saved
- * by its PHP port of save(), the render-time JSON-LD enrichment runs as it
- * does on a live site, and every page carries the same Article JSON-LD an SEO
+ * by its PHP port of save(), the render-time JSON-LD and COinS enrichment
+ * run as they do on a live site, and every page carries the same Article JSON-LD an SEO
  * plugin would print. On the Borges pages that Article gains the cited works
  * as schema.org `citation`, through the Yoast SEO integration.
  *
@@ -246,6 +246,7 @@ foreach ( $variants as $name => $overrides ) {
 		// The render_block filters a live site runs, in priority order.
 		$body = bibliography_builder_nest_rendered_json_ld( $html );
 		$body = bibliography_builder_enrich_rendered_json_ld( $body, $parsed );
+		$body = bibliography_builder_enrich_rendered_coins( $body, $parsed );
 
 		// What Yoast SEO's Article piece becomes with Borges active. The
 		// bootstrap's parse_blocks() stub only returns what it was given.
