@@ -1,0 +1,186 @@
+{
+	"$comment": "Sample bibliography for the markup-value measurement (tools/markup-value/README.md). Twelve real works of common kinds, entered by hand as CSL-JSON from their publishers' records. Each item doubles as the ground truth that measure.mjs scores extraction against.",
+	"title": "What a bibliography tells machines",
+	"description": "A short essay with a reference list, used to compare Borges output with a plain HTML list of the same citations.",
+	"citationStyle": "apa-7",
+	"items": [
+		{
+			"id": "harris2020",
+			"type": "article-journal",
+			"title": "Array programming with NumPy",
+			"container-title": "Nature",
+			"volume": "585",
+			"issue": "7825",
+			"page": "357-362",
+			"DOI": "10.1038/s41586-020-2649-2",
+			"author": [
+				{ "family": "Harris", "given": "Charles R." },
+				{ "family": "Millman", "given": "K. Jarrod" },
+				{ "family": "van der Walt", "given": "Stéfan J." },
+				{ "family": "Gommers", "given": "Ralf" }
+			],
+			"issued": { "date-parts": [[2020, 9, 16]] }
+		},
+		{
+			"id": "lecun2015",
+			"type": "article-journal",
+			"title": "Deep learning",
+			"container-title": "Nature",
+			"volume": "521",
+			"issue": "7553",
+			"page": "436-444",
+			"DOI": "10.1038/nature14539",
+			"author": [
+				{ "family": "LeCun", "given": "Yann" },
+				{ "family": "Bengio", "given": "Yoshua" },
+				{ "family": "Hinton", "given": "Geoffrey" }
+			],
+			"issued": { "date-parts": [[2015, 5, 28]] }
+		},
+		{
+			"id": "wilkinson2016",
+			"type": "article-journal",
+			"title": "The FAIR Guiding Principles for scientific data management and stewardship",
+			"container-title": "Scientific Data",
+			"volume": "3",
+			"page": "160018",
+			"DOI": "10.1038/sdata.2016.18",
+			"PMID": "26978244",
+			"PMCID": "PMC4792175",
+			"author": [
+				{ "family": "Wilkinson", "given": "Mark D." },
+				{ "family": "Dumontier", "given": "Michel" },
+				{ "family": "Aalbersberg", "given": "IJsbrand Jan" },
+				{ "family": "Appleton", "given": "Gabrielle" }
+			],
+			"issued": { "date-parts": [[2016, 3, 15]] }
+		},
+		{
+			"id": "knuth1984",
+			"type": "article-journal",
+			"title": "Literate programming",
+			"container-title": "The Computer Journal",
+			"volume": "27",
+			"issue": "2",
+			"page": "97-111",
+			"DOI": "10.1093/comjnl/27.2.97",
+			"author": [{ "family": "Knuth", "given": "Donald E." }],
+			"issued": { "date-parts": [[1984]] }
+		},
+		{
+			"id": "bernerslee2001",
+			"type": "article-magazine",
+			"title": "The Semantic Web",
+			"container-title": "Scientific American",
+			"volume": "284",
+			"issue": "5",
+			"page": "34-43",
+			"DOI": "10.1038/scientificamerican0501-34",
+			"author": [
+				{ "family": "Berners-Lee", "given": "Tim" },
+				{ "family": "Hendler", "given": "James" },
+				{ "family": "Lassila", "given": "Ora" }
+			],
+			"issued": { "date-parts": [[2001, 5]] }
+		},
+		{
+			"id": "maldacena1998",
+			"type": "article-journal",
+			"title": "The large N limit of superconformal field theories and supergravity",
+			"container-title": "Advances in Theoretical and Mathematical Physics",
+			"volume": "2",
+			"issue": "2",
+			"page": "231-252",
+			"DOI": "10.4310/ATMP.1998.v2.n2.a1",
+			"author": [{ "family": "Maldacena", "given": "Juan" }],
+			"issued": { "date-parts": [[1998]] }
+		},
+		{
+			"id": "vaswani2017",
+			"type": "article",
+			"title": "Attention is all you need",
+			"publisher": "arXiv",
+			"number": "arXiv:1706.03762",
+			"DOI": "10.48550/arXiv.1706.03762",
+			"URL": "https://arxiv.org/abs/1706.03762",
+			"author": [
+				{ "family": "Vaswani", "given": "Ashish" },
+				{ "family": "Shazeer", "given": "Noam" },
+				{ "family": "Parmar", "given": "Niki" },
+				{ "family": "Uszkoreit", "given": "Jakob" }
+			],
+			"issued": { "date-parts": [[2017, 6, 12]] }
+		},
+		{
+			"id": "devlin2019",
+			"type": "paper-conference",
+			"title": "BERT: Pre-training of deep bidirectional transformers for language understanding",
+			"container-title": "Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+			"publisher": "Association for Computational Linguistics",
+			"page": "4171-4186",
+			"DOI": "10.18653/v1/N19-1423",
+			"author": [
+				{ "family": "Devlin", "given": "Jacob" },
+				{ "family": "Chang", "given": "Ming-Wei" },
+				{ "family": "Lee", "given": "Kenton" },
+				{ "family": "Toutanova", "given": "Kristina" }
+			],
+			"issued": { "date-parts": [[2019]] }
+		},
+		{
+			"id": "cormen2009",
+			"type": "book",
+			"title": "Introduction to algorithms",
+			"edition": "3",
+			"publisher": "MIT Press",
+			"publisher-place": "Cambridge, MA",
+			"ISBN": "9780262033848",
+			"author": [
+				{ "family": "Cormen", "given": "Thomas H." },
+				{ "family": "Leiserson", "given": "Charles E." },
+				{ "family": "Rivest", "given": "Ronald L." },
+				{ "family": "Stein", "given": "Clifford" }
+			],
+			"issued": { "date-parts": [[2009]] }
+		},
+		{
+			"id": "borges1962",
+			"type": "book",
+			"title": "Labyrinths: Selected stories and other writings",
+			"publisher": "New Directions",
+			"publisher-place": "New York",
+			"ISBN": "9780811200127",
+			"author": [{ "family": "Borges", "given": "Jorge Luis" }],
+			"editor": [
+				{ "family": "Yates", "given": "Donald A." },
+				{ "family": "Irby", "given": "James E." }
+			],
+			"issued": { "date-parts": [[1962]] }
+		},
+		{
+			"id": "borges1962babel",
+			"type": "chapter",
+			"title": "The library of Babel",
+			"container-title": "Labyrinths: Selected stories and other writings",
+			"publisher": "New Directions",
+			"publisher-place": "New York",
+			"page": "51-58",
+			"author": [{ "family": "Borges", "given": "Jorge Luis" }],
+			"translator": [{ "family": "Irby", "given": "James E." }],
+			"editor": [
+				{ "family": "Yates", "given": "Donald A." },
+				{ "family": "Irby", "given": "James E." }
+			],
+			"issued": { "date-parts": [[1962]] }
+		},
+		{
+			"id": "wporg-handbook",
+			"type": "webpage",
+			"title": "Block Editor Handbook",
+			"container-title": "WordPress Developer Resources",
+			"URL": "https://developer.wordpress.org/block-editor/",
+			"author": [{ "literal": "WordPress.org" }],
+			"accessed": { "date-parts": [[2026, 10, 27]] }
+		}
+	]
+}
