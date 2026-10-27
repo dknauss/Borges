@@ -7,10 +7,11 @@
  * read COinS, such as Zotero's browser connector, then import every other
  * author as missing. This adds, as the block renders, what save() leaves out:
  *
- * - an `rft.au` ("Family, Given") for every person who wrote the work, or an
- *   `rft.aucorp` for an organization, both of which Z39.88-2004 lets repeat.
- *   The first author keeps its `rft.aulast` and `rft.aufirst`, so readers
- *   that know only those see what they did before; Zotero merges the two.
+ * - every author after the first, in order: an `rft.au` ("Family, Given")
+ *   for a person, an `rft.aucorp` for an organization. The first author keeps
+ *   its `rft.aulast` and `rft.aufirst`, so readers that know only those see
+ *   what they did before. See bibliography_builder_coins_enrich_title() for
+ *   how this keeps Zotero from listing an author twice or out of order.
  * - an `rft_id` of `info:pmid/…` for a PubMed ID, beside the DOI's.
  *
  * The stored content is untouched, so no block deprecation is needed, and
@@ -26,56 +27,142 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * The COinS key-value pairs save() leaves out of one entry's span.
+ * One CSL author as the COinS reader sees it, or null for an empty name.
+ *
+ * @since 1.16.0
+ *
+ * @param mixed $author A CSL name object.
+ * @return array{corporate: bool, last: string, au: string}|null `last` is
+ *     the name a reader files the author under; `au` is the `rft.au` or
+ *     `rft.aucorp` value.
+ */
+function bibliography_builder_coins_author( $author ) {
+	if ( ! is_array( $author ) ) {
+		return null;
+	}
+
+	$literal = isset( $author['literal'] ) && is_string( $author['literal'] ) ? trim( $author['literal'] ) : '';
+	$family  = isset( $author['family'] ) && is_string( $author['family'] ) ? trim( $author['family'] ) : '';
+	$given   = isset( $author['given'] ) && is_string( $author['given'] ) ? trim( $author['given'] ) : '';
+
+	if ( '' === $family && '' !== $literal ) {
+		return array(
+			'corporate' => true,
+			'last'      => $literal,
+			'au'        => $literal,
+		);
+	}
+
+	if ( '' === $family && '' === $given ) {
+		return null;
+	}
+
+	// A one-part name ("Plato", "Homer") is written bare, which readers file
+	// as a last name, the same way save() writes it into `rft.aulast`.
+	return array(
+		'corporate' => false,
+		'last'      => '' !== $family ? $family : $given,
+		'au'        => '' !== $family && '' !== $given ? $family . ', ' . $given : $family . $given,
+	);
+}
+
+/**
+ * One entry's COinS `title` with what save() leaves out.
+ *
+ * The save() function writes the first author as `rft.aulast` and
+ * `rft.aufirst`. Every later author is added after it, in order: a person
+ * as `rft.au` ("Family, Given"), an organization as `rft.aucorp`. Z39.88-2004
+ * lets both repeat.
+ *
+ * The first author is not repeated as `rft.au`. Zotero's OpenURL reader puts
+ * `aulast`/`aufirst` and `aucorp` names back in their place among the `au`
+ * names, and drops one only when an `au` name looks like the same person.
+ * That test misses normalized initials and one-part names, so repeating the
+ * first author listed it twice. The same test can also drop a first author
+ * whose last name a later author shares, or throw when that first author
+ * has no first name. So when a later author shares the first author's last
+ * name, the saved `aulast`/`aufirst` are replaced by an `rft.au` for every
+ * author.
+ *
+ * A PubMed ID is added as an `rft_id` of `info:pmid/…`. Fields the saved
+ * span already has are left alone.
  *
  * @since 1.16.0
  *
  * @param array  $csl   The citation's CSL-JSON.
  * @param string $title The span's `title` as saved, attribute-escaped.
- * @return string[] Encoded `key=value` pairs, in the order to append them.
+ * @return string The `title`, attribute-escaped; unchanged when nothing is added.
  */
-function bibliography_builder_coins_missing_params( $csl, $title ) {
-	$params = array();
-	$add    =
+function bibliography_builder_coins_enrich_title( $csl, $title ) {
+	// Encoded values hold no `&`, so the escaped separator is the only one.
+	$pairs  = explode( '&', str_replace( '&amp;', '&', $title ) );
+	$added  = array();
+	$listed = false;
+	$saved  = '';
+
+	// Readers compare last names with surrounding punctuation trimmed; a
+	// looser match here only means the safe all-`rft.au` form is used.
+	$key =
 		/**
-		 * Append one encoded pair.
+		 * A last name as compared for a shared-name check.
 		 *
-		 * @param string $key   COinS key.
-		 * @param string $value Unencoded value.
-		 * @return void
+		 * @param string $name Last name.
+		 * @return string
 		 */
-		static function ( $key, $value ) use ( &$params ): void {
-			$params[] = $key . '=' . bibliography_builder_encode_uri_component( $value );
+		static function ( string $name ): string {
+			return strtolower( trim( $name, " \t\n.,/[]:" ) );
 		};
 
-	$authors = bibliography_builder_csl_field( $csl, 'author' );
-	$listed  = false !== strpos( $title, 'rft.au=' ) || false !== strpos( $title, 'rft.aucorp=' );
+	foreach ( $pairs as $pair ) {
+		if ( 0 === strpos( $pair, 'rft.au=' ) || 0 === strpos( $pair, 'rft.aucorp=' ) ) {
+			$listed = true;
+		} elseif ( 0 === strpos( $pair, 'rft.aulast=' ) ) {
+			$saved = $key( rawurldecode( substr( $pair, strlen( 'rft.aulast=' ) ) ) );
+		}
+	}
 
-	if ( ! $listed && is_array( $authors ) ) {
-		foreach ( $authors as $author ) {
-			if ( ! is_array( $author ) ) {
-				continue;
+	// Empty names stay in place: save() writes the first entry of the list,
+	// even one it can write nothing for.
+	$raw     = bibliography_builder_csl_field( $csl, 'author' );
+	$authors = array_map( 'bibliography_builder_coins_author', is_array( $raw ) ? array_values( $raw ) : array() );
+
+	if ( ! $listed && count( $authors ) > 1 ) {
+		$from = 1;
+
+		foreach ( array_slice( $authors, 1 ) as $author ) {
+			if ( null !== $author && '' !== $saved && $key( $author['last'] ) === $saved ) {
+				$from  = 0;
+				$pairs = array_values(
+					array_filter(
+						$pairs,
+						static function ( $pair ) {
+							return 0 !== strpos( $pair, 'rft.aulast=' ) && 0 !== strpos( $pair, 'rft.aufirst=' );
+						}
+					)
+				);
+				break;
 			}
+		}
 
-			$literal = isset( $author['literal'] ) && is_string( $author['literal'] ) ? trim( $author['literal'] ) : '';
-			$family  = isset( $author['family'] ) && is_string( $author['family'] ) ? trim( $author['family'] ) : '';
-			$given   = isset( $author['given'] ) && is_string( $author['given'] ) ? trim( $author['given'] ) : '';
-
-			if ( '' === $family && '' !== $literal ) {
-				$add( 'rft.aucorp', $literal );
-			} elseif ( '' !== $family || '' !== $given ) {
-				$add( 'rft.au', '' !== $family && '' !== $given ? $family . ', ' . $given : $family . $given );
-			}
+		foreach ( array_filter( array_slice( $authors, $from ) ) as $author ) {
+			$added[] = ( $author['corporate'] ? 'rft.aucorp=' : 'rft.au=' )
+				. bibliography_builder_encode_uri_component( $author['au'] );
 		}
 	}
 
 	$pmid = bibliography_builder_json_ld_csl_string( $csl, 'PMID' );
 
 	if ( preg_match( '/^\d+$/', $pmid ) && false === strpos( $title, 'info%3Apmid' ) ) {
-		$add( 'rft_id', 'info:pmid/' . $pmid );
+		$added[] = 'rft_id=' . bibliography_builder_encode_uri_component( 'info:pmid/' . $pmid );
 	}
 
-	return $params;
+	if ( array() === $added ) {
+		return $title;
+	}
+
+	// Encoded pairs hold no characters that need attribute escaping besides
+	// the `&` that joins them.
+	return implode( '&amp;', array_merge( $pairs, $added ) );
 }
 
 /**
@@ -127,15 +214,9 @@ function bibliography_builder_enrich_rendered_coins( $block_content, $parsed_blo
 				return $matches[0];
 			}
 
-			$params = bibliography_builder_coins_missing_params( $citations[ $citation_id ], $matches[2] );
-
-			if ( array() === $params ) {
-				return $matches[0];
-			}
-
-			// Encoded pairs hold no characters that need attribute escaping
-			// besides the `&` that joins them.
-			return $matches[1] . $matches[2] . '&amp;' . implode( '&amp;', $params ) . $matches[3];
+			return $matches[1]
+				. bibliography_builder_coins_enrich_title( $citations[ $citation_id ], $matches[2] )
+				. $matches[3];
 		},
 		$block_content
 	);

@@ -5,6 +5,7 @@
  * @package BibliographyBuilder
  */
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class CoinsEnrichmentTest extends TestCase {
@@ -76,16 +77,16 @@ final class CoinsEnrichmentTest extends TestCase {
 		return bibliography_builder_enrich_rendered_coins( $block['innerHTML'], $block );
 	}
 
-	public function test_every_author_and_the_pmid_are_added(): void {
+	public function test_later_authors_and_the_pmid_are_added(): void {
 		$coins = $this->coins( $this->render( $this->fixture() ) );
 
-		// The first author keeps rft.aulast and rft.aufirst, then every author follows.
+		// The first author stays in rft.aulast and rft.aufirst only.
 		$this->assertContains( array( 'rft.aulast', 'Alpha' ), $coins[0] );
-		$this->assertContains( array( 'rft.au', 'Alpha, Ada' ), $coins[0] );
+		$this->assertNotContains( array( 'rft.au', 'Alpha, Ada' ), $coins[0] );
 		$this->assertContains( array( 'rft.aucorp', 'Test & Co.' ), $coins[0] );
 		$this->assertNotContains( array( 'rft_id', 'info:pmid/31452104' ), $coins[0] );
 
-		$this->assertContains( array( 'rft.au', 'Zeta, Zoe' ), $coins[1] );
+		$this->assertNotContains( array( 'rft.au', 'Zeta, Zoe' ), $coins[1] );
 		$this->assertContains( array( 'rft.au', 'Ypsilon, Yves' ), $coins[1] );
 		$this->assertContains( array( 'rft_id', 'info:pmid/31452104' ), $coins[1] );
 	}
@@ -133,19 +134,193 @@ final class CoinsEnrichmentTest extends TestCase {
 		$this->assertNull( bibliography_builder_enrich_rendered_coins( null, array() ) );
 	}
 
-	public function test_names_without_a_family_name(): void {
-		$params = bibliography_builder_coins_missing_params(
+	/**
+	 * The author list a COinS reader builds from one span, in order.
+	 *
+	 * A model of how Zotero's OpenURL reader (zotero/utilities, openurl.js)
+	 * reads authors, the reader Zotero's browser connector uses for COinS:
+	 *
+	 * - `rft.au` names are listed in the order they come, split at the comma
+	 *   into last and first name, or at the last space without one.
+	 * - `rft.aulast`, `rft.aufirst`, and `rft.aucorp` build a second list:
+	 *   `aulast` and `aufirst` fill in the latest name there when it lacks
+	 *   that part, and otherwise start a new one. Each remembers how many
+	 *   `rft.au` names came before it and is put back at that place.
+	 * - A name from the second list is dropped when an `rft.au` name has its
+	 *   last name and a non-empty first name that starts with its first name.
+	 *   A dropped-name check against a name with no first name throws.
+	 *
+	 * @return string[] "Last, First", "Last", or "[org] Name".
+	 */
+	private static function read_authors( string $kev ): array {
+		$plain   = array();
+		$complex = array();
+
+		foreach ( explode( '&', $kev ) as $pair ) {
+			list( $key, $value ) = array_pad( explode( '=', $pair, 2 ), 2, '' );
+			$value               = rawurldecode( $value );
+			$last                = end( $complex );
+
+			if ( '' === $value ) {
+				continue;
+			}
+
+			if ( 'rft.au' === $key ) {
+				if ( false !== strpos( $value, ',' ) ) {
+					list( $family, $given ) = array_map( 'trim', explode( ',', $value, 2 ) );
+				} else {
+					$space  = strrpos( $value, ' ' );
+					$family = false === $space ? $value : substr( $value, $space + 1 );
+					$given  = false === $space ? '' : substr( $value, 0, $space );
+				}
+				$plain[] = array(
+					'last'  => $family,
+					'first' => $given,
+				);
+			} elseif ( 'rft.aulast' === $key && $last && ! isset( $last['last'] ) ) {
+				$complex[ count( $complex ) - 1 ]['last'] = $value;
+			} elseif ( 'rft.aufirst' === $key && $last && ! isset( $last['first'] ) ) {
+				$complex[ count( $complex ) - 1 ]['first'] = $value;
+			} elseif ( in_array( $key, array( 'rft.aulast', 'rft.aufirst', 'rft.aucorp' ), true ) ) {
+				$complex[] = array(
+					( 'rft.aufirst' === $key ? 'first' : 'last' ) => $value,
+					'org'                                          => 'rft.aucorp' === $key,
+					'offset'                                       => count( $plain ),
+				);
+			}
+		}
+
+		$names    = $plain;
+		$inserted = 0;
+
+		foreach ( $complex as $name ) {
+			foreach ( $plain as $other ) {
+				if ( isset( $name['last'] ) && $other['last'] === $name['last'] && '' !== $other['first'] ) {
+					if ( ! isset( $name['first'] ) ) {
+						throw new RuntimeException( 'Reader fails on ' . $name['last'] );
+					}
+					if ( 0 === strpos( $other['first'], $name['first'] ) ) {
+						continue 2;
+					}
+				}
+			}
+			array_splice( $names, $name['offset'] + $inserted, 0, array( $name ) );
+			++$inserted;
+		}
+
+		return array_map(
+			static function ( $name ) {
+				$parts = array_filter( array( $name['last'] ?? '', $name['first'] ?? '' ), 'strlen' );
+				return ( ! empty( $name['org'] ) ? '[org] ' : '' ) . implode( ', ', $parts );
+			},
+			$names
+		);
+	}
+
+	/**
+	 * One span saved for the given authors, then enriched, as a decoded KEV string.
+	 */
+	private static function enriched_kev( array $authors ): string {
+		$csl   = array(
+			'id'     => 'c',
+			'type'   => 'article-journal',
+			'title'  => 'T',
+			'author' => $authors,
+		);
+		$saved = bibliography_builder_escape_save_attribute( bibliography_builder_save_build_coins( $csl ) );
+		$html  = bibliography_builder_enrich_rendered_coins(
+			'<ul><li id="ref-c"><span class="Z3988" aria-hidden="true" title="' . $saved . '"></span></li></ul>',
 			array(
-				'author' => array(
-					array( 'given' => 'Plato' ),
-					array(),
-					'not a name',
+				'attrs' => array(
+					'citations' => array(
+						array(
+							'id'  => 'c',
+							'csl' => $csl,
+						),
+					),
 				),
-				'PMID'   => 'PMC123',
-			),
-			'ctx_ver=Z39.88-2004'
+			)
+		);
+		preg_match( '#title="([^"]*)"#', $html, $match );
+
+		return html_entity_decode( $match[1], ENT_QUOTES, 'UTF-8' );
+	}
+
+	/**
+	 * @return array<string, array{0: array, 1: string[]}>
+	 */
+	public static function author_lists(): array {
+		$ada   = array(
+			'family' => 'Alpha',
+			'given'  => 'Ada',
+		);
+		$ben   = array(
+			'family' => 'Beta',
+			'given'  => 'Ben',
+		);
+		$org   = array( 'literal' => 'World Health Organization' );
+		$plato = array( 'family' => 'Plato' );
+
+		return array(
+			'people'                          => array( array( $ada, $ben, array( 'family' => 'Gamma', 'given' => 'G.A.' ) ), array( 'Alpha, Ada', 'Beta, Ben', 'Gamma, G.A.' ) ),
+			'organization first'              => array( array( $org, $ben ), array( 'World Health Organization', 'Beta, Ben' ) ),
+			'organization among people'       => array( array( $ada, $org, $ben ), array( 'Alpha, Ada', '[org] World Health Organization', 'Beta, Ben' ) ),
+			'one-part name first'             => array( array( $plato, $ben ), array( 'Plato', 'Beta, Ben' ) ),
+			'given name only first'           => array( array( array( 'given' => 'Homer' ), $ben ), array( 'Homer', 'Beta, Ben' ) ),
+			'one-part names later'            => array( array( $ada, $plato, array( 'given' => 'Homer' ) ), array( 'Alpha, Ada', 'Plato', 'Homer' ) ),
+			'shared last name, initials'      => array( array( array( 'family' => 'Kim', 'given' => 'J.' ), array( 'family' => 'Kim', 'given' => 'J.-H.' ) ), array( 'Kim, J.', 'Kim, J.-H.' ) ),
+			'shared last name, one-part name' => array( array( $plato, array( 'family' => 'Plato', 'given' => 'Jane' ), $org ), array( 'Plato', 'Plato, Jane', '[org] World Health Organization' ) ),
+			'one author'                      => array( array( $ada ), array( 'Alpha, Ada' ) ),
+			'empty first name entry'          => array( array( array(), $ada, $ben ), array( 'Alpha, Ada', 'Beta, Ben' ) ),
+		);
+	}
+
+	#[DataProvider( 'author_lists' )]
+	public function test_reader_gets_every_author_once_in_order( array $authors, array $expected ): void {
+		$this->assertSame( $expected, self::read_authors( self::enriched_kev( $authors ) ) );
+	}
+
+	public function test_reader_model_shows_the_old_duplicates(): void {
+		// What listing every author as rft.au gave, which this filter no longer writes.
+		$this->assertSame(
+			array( 'Plato', 'Plato', 'Beta, Ben' ),
+			self::read_authors( 'rft.aulast=Plato&rft.au=Plato&rft.au=Beta%2C%20Ben' )
+		);
+		$this->assertSame(
+			array( 'World Health Organization', '[org] World Health Organization', 'Beta, Ben' ),
+			self::read_authors( 'rft.aulast=World%20Health%20Organization&rft.aucorp=World%20Health%20Organization&rft.au=Beta%2C%20Ben' )
+		);
+	}
+
+	public function test_one_author_leaves_the_span_as_saved(): void {
+		$kev = self::enriched_kev(
+			array(
+				array(
+					'family' => 'Alpha',
+					'given'  => 'Ada',
+				),
+			)
 		);
 
-		$this->assertSame( array( 'rft.au=Plato' ), $params );
+		$this->assertStringNotContainsString( 'rft.au=', $kev );
+		$this->assertStringContainsString( 'rft.aulast=Alpha&rft.aufirst=Ada', $kev );
+	}
+
+	public function test_shared_last_name_lists_everyone_as_au(): void {
+		$kev = self::enriched_kev(
+			array(
+				array(
+					'family' => 'Kim',
+					'given'  => 'J.',
+				),
+				array(
+					'family' => 'Kim',
+					'given'  => 'J.-H.',
+				),
+			)
+		);
+
+		$this->assertStringNotContainsString( 'rft.aulast=', $kev );
+		$this->assertStringContainsString( 'rft.au=Kim%2C%20J.&rft.au=Kim%2C%20J.-H.', $kev );
 	}
 }

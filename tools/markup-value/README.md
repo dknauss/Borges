@@ -67,7 +67,11 @@ the best a machine reader gets:
   journal, and the answer depends on the citation style.
 - **missing**: not on the page at all (APA prints no ISBN, for instance).
 
-`perLayer` scores each layer on its own.
+`perLayer` scores each layer on its own. Authors count as correct only when a
+layer gives every last name once, in order. COinS spans are read the way
+Zotero's OpenURL reader orders and merges `rft.au`, `rft.aulast`/`rft.aufirst`,
+and `rft.aucorp` names, so an author it would list twice or out of place
+counts as wrong.
 
 **Reader mode** (`readerMode`). Mozilla Readability then Turndown, the
 HTML-to-Markdown step many LLM ingestion pipelines use: what survives, and its

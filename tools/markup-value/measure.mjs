@@ -99,8 +99,13 @@ function matches(field, expected, actual) {
 		return false;
 	}
 	if (field === 'authors') {
-		const got = new Set((actual || []).map(norm));
-		return expected.every((name) => got.has(name));
+		// Every author, once each, in order: a reader that drops, repeats,
+		// or reorders a name gets the author list wrong.
+		const got = (actual || []).map(norm);
+		return (
+			got.length === expected.length &&
+			expected.every((name, index) => got[index] === name)
+		);
 	}
 	if (field === 'isbn') {
 		return isbnDigits(expected) === isbnDigits(actual);
@@ -157,6 +162,85 @@ function fromJsonLd(work) {
 }
 
 /**
+ * The last names of a COinS span's authors, in the order Zotero's OpenURL
+ * reader (zotero/utilities, openurl.js) lists them:
+ *
+ * - `rft.au` names in the order they come, the last name before the comma,
+ *   or after the last space without one.
+ * - `rft.aulast`, `rft.aufirst`, and `rft.aucorp` in a second list, where
+ *   `aulast` and `aufirst` fill in the latest name when it lacks that part
+ *   and otherwise start a new one. Each goes back in at its place among the
+ *   `au` names, unless an `au` name has its last name and a non-empty first
+ *   name starting with its first name.
+ *
+ * @param {URLSearchParams} kev The span's key-value pairs.
+ * @return {string[]} Last names; a reader failure gives [].
+ */
+function coinsAuthors(kev) {
+	const plain = [];
+	const complex = [];
+
+	for (const [key, value] of kev) {
+		const latest = complex[complex.length - 1];
+		if (!value) {
+			continue;
+		}
+		if (key === 'rft.au') {
+			const comma = value.indexOf(',');
+			const space = value.lastIndexOf(' ');
+			const name = { last: value, first: '' };
+			if (comma >= 0) {
+				name.last = value.slice(0, comma).trim();
+				name.first = value.slice(comma + 1).trim();
+			} else if (space >= 0) {
+				// Without a comma, the last name follows the last space.
+				name.last = value.slice(space + 1);
+				name.first = value.slice(0, space);
+			}
+			plain.push(name);
+		} else if (
+			key === 'rft.aulast' &&
+			latest &&
+			latest.last === undefined
+		) {
+			latest.last = value;
+		} else if (
+			key === 'rft.aufirst' &&
+			latest &&
+			latest.first === undefined
+		) {
+			latest.first = value;
+		} else if (['rft.aulast', 'rft.aufirst', 'rft.aucorp'].includes(key)) {
+			complex.push({
+				[key === 'rft.aufirst' ? 'first' : 'last']: value,
+				offset: plain.length,
+			});
+		}
+	}
+
+	const names = [...plain];
+	let inserted = 0;
+	for (const name of complex) {
+		const same = plain.find(
+			(other) =>
+				name.last !== undefined &&
+				other.last === name.last &&
+				other.first
+		);
+		if (same && name.first === undefined) {
+			return []; // Zotero's reader throws here.
+		}
+		if (same && same.first.startsWith(name.first)) {
+			continue;
+		}
+		names.splice(name.offset + inserted, 0, name);
+		inserted++;
+	}
+
+	return names.map((name) => name.last || name.first || '');
+}
+
+/**
  * OpenURL ContextObject in a COinS span to fields, using the KEV keys
  * Zotero's COinS translator reads (Z39.88-2004 journal, book, and
  * dissertation formats).
@@ -168,10 +252,7 @@ function fromCoins(title) {
 	const get = (key) => kev.get(key) || undefined;
 	const ids = kev.getAll('rft_id');
 	const doi = ids.find((id) => id.startsWith('info:doi/'));
-	const authors = [...kev.getAll('rft.aulast'), ...kev.getAll('rft.aucorp')];
-	for (const au of kev.getAll('rft.au')) {
-		authors.push(au.includes(',') ? au.split(',')[0] : au.split(' ').pop());
-	}
+	const authors = coinsAuthors(kev);
 	const pages =
 		get('rft.pages') ||
 		(get('rft.spage') && get('rft.epage')
