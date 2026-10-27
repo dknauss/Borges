@@ -63,7 +63,7 @@ The formatter (`bibliography_builder_format_csl_items()`) also adapts input and 
 - **`bibliography_builder_prepare_csl_for_formatter()`**:
   - maps `{ "literal": … }` names to family-only names, because citeproc-php drops names without a family part;
   - derives `page-first`, for OSCOLA.
-  - turns a date with a year below 1000 into a year-only literal ("334 BC", "731"), because citeproc-php renders none of them (`bibliography_builder_early_date_literal()`).
+  - turns a date with a year below 1000 into a year-only literal ("334 BCE", "731"), because citeproc-php renders none of them (`bibliography_builder_early_date_literal()`).
 - **`bibliography_builder_normalize_formatted_text()`**:
   - removes the space citeproc-php puts before a label's comma;
   - fully initializes hyphenated given names ("J.-W.", not "J.- woo");

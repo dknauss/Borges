@@ -207,22 +207,22 @@ final class FormatterAdaptationTest extends TestCase {
 	}
 
 	public function test_early_dates_become_year_only_literals() {
-		$this->assertSame( '334 BC', bibliography_builder_early_date_literal( array( 'date-parts' => array( array( -334 ) ) ), 'en-US' ) );
-		$this->assertSame( '334 a.C.', bibliography_builder_early_date_literal( array( 'date-parts' => array( array( -334, 5, 1 ) ) ), 'pt-BR' ) );
+		$this->assertSame( '334 BCE', bibliography_builder_early_date_literal( array( 'date-parts' => array( array( -334 ) ) ), 'en-US' ) );
+		$this->assertSame( '334 AEC', bibliography_builder_early_date_literal( array( 'date-parts' => array( array( -334, 5, 1 ) ) ), 'pt-BR' ) );
 		$this->assertSame( '731', bibliography_builder_early_date_literal( array( 'date-parts' => array( array( 731 ) ) ), 'en-US' ) );
 		$this->assertSame(
-			"100\u{2013}44 BC",
+			"100\u{2013}44 BCE",
 			bibliography_builder_early_date_literal( array( 'date-parts' => array( array( '-100', 7, 12 ), array( '-44', 3, 15 ) ) ), 'en-GB' )
 		);
 		$this->assertSame(
-			"4 BC\u{2013}30",
+			"4 BCE\u{2013}30 CE",
 			bibliography_builder_early_date_literal( array( 'date-parts' => array( array( -4 ), array( 30 ) ) ), 'en-US' )
 		);
 		$this->assertSame(
 			"950\u{2013}1050",
 			bibliography_builder_early_date_literal( array( 'date-parts' => array( array( 950 ), array( 1050 ) ) ), 'en-US' )
 		);
-		$this->assertSame( '44 BC', bibliography_builder_early_date_literal( array( 'date-parts' => array( array( -44 ), array( -44 ) ) ), 'en-US' ) );
+		$this->assertSame( '44 BCE', bibliography_builder_early_date_literal( array( 'date-parts' => array( array( -44 ), array( -44 ) ) ), 'en-US' ) );
 
 		// Dates citeproc-php renders, and dates without parts, are left alone.
 		$this->assertNull( bibliography_builder_early_date_literal( array( 'date-parts' => array( array( 1000 ) ) ), 'en-US' ) );
@@ -241,20 +241,20 @@ final class FormatterAdaptationTest extends TestCase {
 			'en-US'
 		);
 
-		$this->assertSame( array( 'literal' => '334 BC' ), $item['issued'] );
-		$this->assertSame( array( 'literal' => '1 BC' ), $item['original-date'] );
+		$this->assertSame( array( 'literal' => '334 BCE' ), $item['issued'] );
+		$this->assertSame( array( 'literal' => '1 BCE' ), $item['original-date'] );
 		$this->assertSame( array( 'date-parts' => array( array( 2026, 6, 20 ) ) ), $item['accessed'] );
 	}
 
 	/**
-	 * Every bundled style prints a BC year and an AD year below 1000, which
+	 * Every bundled style prints a BCE year and a CE year below 1000, which
 	 * citeproc-php alone renders as nothing.
 	 */
 	public function test_every_style_renders_early_years() {
 		$styles = json_decode( (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/styles.json' ), true );
 
 		foreach ( array_keys( $styles['styles'] ) as $style_key ) {
-			$bc        = 'abnt' === $style_key ? 'a.C.' : 'BC';
+			$bce       = 'abnt' === $style_key ? 'AEC' : 'BCE';
 			$formatted = bibliography_builder_format_csl_items(
 				array(
 					array(
@@ -275,7 +275,7 @@ final class FormatterAdaptationTest extends TestCase {
 			);
 
 			$this->assertIsArray( $formatted, $style_key );
-			$this->assertStringContainsString( '334 ' . $bc, wp_strip_all_tags( $formatted[0] ), $style_key );
+			$this->assertStringContainsString( '334 ' . $bce, wp_strip_all_tags( $formatted[0] ), $style_key );
 			$this->assertStringContainsString( '731', wp_strip_all_tags( $formatted[1] ), $style_key );
 			$this->assertStringNotContainsString( "\u{2013}", wp_strip_all_tags( $formatted[1] ), $style_key );
 		}
@@ -302,7 +302,7 @@ final class FormatterAdaptationTest extends TestCase {
 
 		$formatted = array_map( 'wp_strip_all_tags', bibliography_builder_format_csl_items( $items, 'apa-7' ) );
 
-		$this->assertStringContainsString( '(334 BC)', $formatted[0] );
-		$this->assertStringContainsString( "(100\u{2013}44 BC)", $formatted[1] );
+		$this->assertStringContainsString( '(334 BCE)', $formatted[0] );
+		$this->assertStringContainsString( "(100\u{2013}44 BCE)", $formatted[1] );
 	}
 }

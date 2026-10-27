@@ -465,13 +465,13 @@ function bibliography_builder_extract_citeproc_entries( $html, $style ) {
  *   so citeproc-php prints "Duijnhoven, Elza van". Other styles print the name
  *   as stored, so their output is unchanged; splitting there would also make
  *   citeproc-php print an elided particle with a space ("d’ Alembert").
- * - Years before 1000, BC years among them: citeproc-php renders none of
+ * - Years before 1000, BCE years among them: citeproc-php renders none of
  *   them, so such a date becomes a year-only literal. See
  *   bibliography_builder_early_date_literal().
  *
  * @param array  $item                    CSL-JSON item.
  * @param bool   $demote_particle_display Whether the style demotes particles in display.
- * @param string $locale                  The style's locale, for the BC label.
+ * @param string $locale                  The style's locale, for the era labels.
  * @return array
  */
 function bibliography_builder_prepare_csl_for_formatter( $item, $demote_particle_display = false, $locale = 'en-US' ) {
@@ -561,9 +561,10 @@ function bibliography_builder_csl_date_variables() {
  * cites a full date (MLA) would place them around the year in its own order,
  * which a literal cannot follow, and early works are cited by year.
  *
- * CSL-JSON writes a BC year as a negative number, so -334 reads "334 BC"
- * ("334 a.C." in Portuguese, after NBR 6023); AD years print bare. A range
- * reads "100–44 BC" when both ends are BC, else "4 BC–30".
+ * CSL-JSON writes a BC year as a negative number, so -334 reads "334 BCE"
+ * ("334 AEC", antes da Era Comum, in Portuguese). A CE year prints bare
+ * unless it ends a range that starts BCE. A range reads "100–44 BCE" when
+ * both ends are BCE, else "4 BCE–30 CE".
  *
  * @param mixed  $date   CSL date value, as sanitized.
  * @param string $locale Style locale, such as en-US or pt-BR.
@@ -592,20 +593,28 @@ function bibliography_builder_early_date_literal( $date, $locale ) {
 		return null;
 	}
 
-	$bc = 0 === strpos( strtolower( $locale ), 'pt' ) ? 'a.C.' : 'BC';
+	$is_pt = 0 === strpos( strtolower( $locale ), 'pt' );
+	$bce   = $is_pt ? 'AEC' : 'BCE';
+	$ce    = $is_pt ? 'EC' : 'CE';
 
 	if ( 2 === count( $years ) && $years[0] === $years[1] ) {
 		$years = array( $years[0] );
 	}
 
 	if ( 2 === count( $years ) && $years[0] < 0 && $years[1] < 0 ) {
-		return abs( $years[0] ) . "\u{2013}" . abs( $years[1] ) . ' ' . $bc;
+		return abs( $years[0] ) . "\u{2013}" . abs( $years[1] ) . ' ' . $bce;
 	}
 
+	// A CE year is labeled only beside a BCE one, as the end of a range.
+	$mixed  = min( $years ) < 0;
 	$labels = array();
 
 	foreach ( $years as $year ) {
-		$labels[] = $year < 0 ? abs( $year ) . ' ' . $bc : (string) $year;
+		if ( $year < 0 ) {
+			$labels[] = abs( $year ) . ' ' . $bce;
+		} else {
+			$labels[] = $mixed ? $year . ' ' . $ce : (string) $year;
+		}
 	}
 
 	return implode( "\u{2013}", $labels );
