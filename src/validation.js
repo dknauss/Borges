@@ -22,22 +22,22 @@ const NAMESPACE = 'borges-bibliography-builder/bac-validation';
 
 const RAW_URL_RE = /^https?:\/\/\S+$|^10\.\d{4,}\/\S+$/i;
 
-function isRawUrlText(text) {
-	return typeof text === 'string' && RAW_URL_RE.test(text.trim());
+function isRawUrlText( text ) {
+	return typeof text === 'string' && RAW_URL_RE.test( text.trim() );
 }
 
-function hasRawUrlLinks(citations) {
-	if (!Array.isArray(citations)) {
+function hasRawUrlLinks( citations ) {
+	if ( ! Array.isArray( citations ) ) {
 		return false;
 	}
-	return citations.some((csl) => {
+	return citations.some( ( csl ) => {
 		const url = csl?.URL || csl?.DOI;
 		const title = csl?.title;
-		if (!url) {
+		if ( ! url ) {
 			return false;
 		}
-		return !title || isRawUrlText(title);
-	});
+		return ! title || isRawUrlText( title );
+	} );
 }
 
 /**
@@ -47,31 +47,31 @@ function hasRawUrlLinks(citations) {
  * @param {string} checkName  BAC check identifier.
  * @return {boolean} True if the check passes; false if it fails.
  */
-export function validateBibliographyBlock(attributes, checkName) {
-	if (checkName === 'empty_bibliography') {
+export function validateBibliographyBlock( attributes, checkName ) {
+	if ( checkName === 'empty_bibliography' ) {
 		return (
-			Array.isArray(attributes.citations) &&
+			Array.isArray( attributes.citations ) &&
 			attributes.citations.length > 0
 		);
 	}
 
-	if (checkName === 'heading_missing') {
+	if ( checkName === 'heading_missing' ) {
 		const hasCitations =
-			Array.isArray(attributes.citations) &&
+			Array.isArray( attributes.citations ) &&
 			attributes.citations.length > 0;
 		const hasHeading =
 			typeof attributes.headingText === 'string' &&
 			attributes.headingText.trim().length > 0;
-		return !hasCitations || hasHeading;
+		return ! hasCitations || hasHeading;
 	}
 
-	if (checkName === 'raw_url_link_text') {
-		return !hasRawUrlLinks(attributes.citations);
+	if ( checkName === 'raw_url_link_text' ) {
+		return ! hasRawUrlLinks( attributes.citations );
 	}
 
-	if (checkName === 'all_metadata_disabled') {
+	if ( checkName === 'all_metadata_disabled' ) {
 		const { outputJsonLd, outputCoins, outputCslJson } = attributes;
-		return !!(outputJsonLd || outputCoins || outputCslJson);
+		return !! ( outputJsonLd || outputCoins || outputCslJson );
 	}
 
 	// Unknown checks pass through unchanged.
@@ -87,16 +87,16 @@ export function validateBibliographyBlock(attributes, checkName) {
  * @param {string}  checkName  BAC check identifier.
  * @return {boolean} Validity result.
  */
-export function bacValidateBlock(isValid, blockType, attributes, checkName) {
-	if (blockType !== BLOCK_TYPE) {
+export function bacValidateBlock( isValid, blockType, attributes, checkName ) {
+	if ( blockType !== BLOCK_TYPE ) {
 		return isValid;
 	}
 
-	if (isValid === false) {
+	if ( isValid === false ) {
 		return false;
 	}
 
-	return validateBibliographyBlock(attributes, checkName);
+	return validateBibliographyBlock( attributes, checkName );
 }
 
-addFilter('ba11yc.validateBlock', NAMESPACE, bacValidateBlock);
+addFilter( 'ba11yc.validateBlock', NAMESPACE, bacValidateBlock );

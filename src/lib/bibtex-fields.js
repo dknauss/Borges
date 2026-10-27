@@ -108,18 +108,18 @@ const ARXIV_ID_PATTERN =
  * @param {unknown} value CSL `language` value produced by citation-js.
  * @return {string|undefined} A BCP 47 tag, or undefined when none applies.
  */
-export function normalizeBibtexLanguage(value) {
-	if (typeof value !== 'string') {
+export function normalizeBibtexLanguage( value ) {
+	if ( typeof value !== 'string' ) {
 		return undefined;
 	}
 
 	const trimmed = value.trim();
 
-	if (BCP47_TAG_PATTERN.test(trimmed)) {
+	if ( BCP47_TAG_PATTERN.test( trimmed ) ) {
 		return trimmed;
 	}
 
-	return BABEL_LANGUAGE_TAGS[trimmed.toLowerCase()];
+	return BABEL_LANGUAGE_TAGS[ trimmed.toLowerCase() ];
 }
 
 /**
@@ -132,19 +132,19 @@ export function normalizeBibtexLanguage(value) {
  * @param {string} fieldName Field name, matched case-insensitively.
  * @return {string|undefined} The field value, or undefined when absent.
  */
-function readRawField(rawEntry, fieldName) {
+function readRawField( rawEntry, fieldName ) {
 	const match = rawEntry.match(
 		new RegExp(
-			`[,{\\s]${fieldName}\\s*=\\s*(?:\\{([^{}]*)\\}|"([^"]*)"|([^,}\\s]+))`,
+			`[,{\\s]${ fieldName }\\s*=\\s*(?:\\{([^{}]*)\\}|"([^"]*)"|([^,}\\s]+))`,
 			'iu'
 		)
 	);
 
-	if (!match) {
+	if ( ! match ) {
 		return undefined;
 	}
 
-	const value = (match[1] ?? match[2] ?? match[3]).trim();
+	const value = ( match[ 1 ] ?? match[ 2 ] ?? match[ 3 ] ).trim();
 	return value || undefined;
 }
 
@@ -154,26 +154,29 @@ function readRawField(rawEntry, fieldName) {
  * @param {string} rawEntry Raw entry text.
  * @return {string|undefined} The arXiv URL, or undefined when not applicable.
  */
-export function getArxivUrlFromRawEntry(rawEntry) {
-	if (typeof rawEntry !== 'string') {
+export function getArxivUrlFromRawEntry( rawEntry ) {
+	if ( typeof rawEntry !== 'string' ) {
 		return undefined;
 	}
 
 	const archive =
-		readRawField(rawEntry, 'eprinttype') ||
-		readRawField(rawEntry, 'archiveprefix');
+		readRawField( rawEntry, 'eprinttype' ) ||
+		readRawField( rawEntry, 'archiveprefix' );
 
-	if (!archive || archive.toLowerCase() !== 'arxiv') {
+	if ( ! archive || archive.toLowerCase() !== 'arxiv' ) {
 		return undefined;
 	}
 
-	const eprint = readRawField(rawEntry, 'eprint')?.replace(/^arxiv:/iu, '');
+	const eprint = readRawField( rawEntry, 'eprint' )?.replace(
+		/^arxiv:/iu,
+		''
+	);
 
-	if (!eprint || !ARXIV_ID_PATTERN.test(eprint)) {
+	if ( ! eprint || ! ARXIV_ID_PATTERN.test( eprint ) ) {
 		return undefined;
 	}
 
-	return `https://arxiv.org/abs/${eprint}`;
+	return `https://arxiv.org/abs/${ eprint }`;
 }
 
 // EndNote's BibTeX export writes its own reference-type name into `type`
@@ -181,7 +184,7 @@ export function getArxivUrlFromRawEntry(rawEntry) {
 // that print genre would then show "Book Section" or "Conference Proceedings"
 // in the citation. Only names that are EndNote reference types and never a
 // real genre are listed; "Thesis" and "Report" can be genuine, so they stay.
-const ENDNOTE_REFERENCE_TYPES = new Set([
+const ENDNOTE_REFERENCE_TYPES = new Set( [
 	'book',
 	'book section',
 	'conference paper',
@@ -195,7 +198,7 @@ const ENDNOTE_REFERENCE_TYPES = new Set([
 	'magazine article',
 	'newspaper article',
 	'web page',
-]);
+] );
 
 // citation-js turns `@mastersthesis`, `@phdthesis`, and `@techreport`, and a
 // BibLaTeX `type` field holding one of the standard type keys (`mathesis`,
@@ -234,17 +237,17 @@ const BIBLATEX_TYPE_KEY_LABELS = {
  * @param {string} rawEntry The single raw entry it was parsed from.
  * @return {Object} A new CSL item with normalized fields.
  */
-export function normalizeBibtexCsl(csl, rawEntry) {
+export function normalizeBibtexCsl( csl, rawEntry ) {
 	const normalized = { ...csl };
 
 	if (
 		typeof normalized.genre === 'string' &&
-		ENDNOTE_REFERENCE_TYPES.has(normalized.genre.trim().toLowerCase())
+		ENDNOTE_REFERENCE_TYPES.has( normalized.genre.trim().toLowerCase() )
 	) {
 		delete normalized.genre;
 	}
 
-	if (typeof normalized.genre === 'string') {
+	if ( typeof normalized.genre === 'string' ) {
 		const typeKey = normalized.genre.trim().toLowerCase();
 
 		if (
@@ -253,24 +256,24 @@ export function normalizeBibtexCsl(csl, rawEntry) {
 				typeKey
 			)
 		) {
-			normalized.genre = BIBLATEX_TYPE_KEY_LABELS[typeKey];
+			normalized.genre = BIBLATEX_TYPE_KEY_LABELS[ typeKey ];
 		}
 	}
 
-	if ('language' in normalized) {
-		const language = normalizeBibtexLanguage(normalized.language);
+	if ( 'language' in normalized ) {
+		const language = normalizeBibtexLanguage( normalized.language );
 
-		if (language) {
+		if ( language ) {
 			normalized.language = language;
 		} else {
 			delete normalized.language;
 		}
 	}
 
-	if (!normalized.URL) {
-		const arxivUrl = getArxivUrlFromRawEntry(rawEntry);
+	if ( ! normalized.URL ) {
+		const arxivUrl = getArxivUrlFromRawEntry( rawEntry );
 
-		if (arxivUrl) {
+		if ( arxivUrl ) {
 			normalized.URL = arxivUrl;
 		}
 	}
@@ -278,7 +281,7 @@ export function normalizeBibtexCsl(csl, rawEntry) {
 	return normalized;
 }
 
-const BIBTEX_MACRO_TYPES = new Set(['string', 'comment', 'preamble']);
+const BIBTEX_MACRO_TYPES = new Set( [ 'string', 'comment', 'preamble' ] );
 const BIBTEX_BLOCK_START_REGEX = /@\s*([a-z][\w-]*)\s*\{/iuy;
 const BIBTEX_FIELD_NAME_REGEX = /\s*([a-z][\w:.+-]*)\s*=/iuy;
 
@@ -290,16 +293,16 @@ const BIBTEX_FIELD_NAME_REGEX = /\s*([a-z][\w:.+-]*)\s*=/iuy;
  * @return {number} Index after the closing brace, or the text length when
  *                  the block is never closed.
  */
-function findBibtexBlockEnd(value, open) {
+function findBibtexBlockEnd( value, open ) {
 	let depth = 0;
 
-	for (let index = open; index < value.length; index++) {
-		if (value[index] === '{') {
+	for ( let index = open; index < value.length; index++ ) {
+		if ( value[ index ] === '{' ) {
 			depth++;
-		} else if (value[index] === '}') {
+		} else if ( value[ index ] === '}' ) {
 			depth--;
 
-			if (depth === 0) {
+			if ( depth === 0 ) {
 				return index + 1;
 			}
 		}
@@ -317,31 +320,31 @@ function findBibtexBlockEnd(value, open) {
  * @param {string} value BibTeX segment text.
  * @return {number} Index of the entry's opening brace, or -1.
  */
-function findBibtexEntryOpenBrace(value) {
+function findBibtexEntryOpenBrace( value ) {
 	let index = 0;
 
-	while (index < value.length) {
-		const at = value.indexOf('@', index);
+	while ( index < value.length ) {
+		const at = value.indexOf( '@', index );
 
-		if (at === -1) {
+		if ( at === -1 ) {
 			return -1;
 		}
 
 		BIBTEX_BLOCK_START_REGEX.lastIndex = at;
-		const match = BIBTEX_BLOCK_START_REGEX.exec(value);
+		const match = BIBTEX_BLOCK_START_REGEX.exec( value );
 
-		if (!match) {
+		if ( ! match ) {
 			index = at + 1;
 			continue;
 		}
 
-		const open = at + match[0].length - 1;
+		const open = at + match[ 0 ].length - 1;
 
-		if (!BIBTEX_MACRO_TYPES.has(match[1].toLowerCase())) {
+		if ( ! BIBTEX_MACRO_TYPES.has( match[ 1 ].toLowerCase() ) ) {
 			return open;
 		}
 
-		index = findBibtexBlockEnd(value, open);
+		index = findBibtexBlockEnd( value, open );
 	}
 
 	return -1;
@@ -360,43 +363,43 @@ function findBibtexEntryOpenBrace(value) {
  * @return {Array<{name: string, index: number}>} Lowercased names, in order,
  *         with the index of each name's first character.
  */
-function getBibtexFieldNames(value, open) {
+function getBibtexFieldNames( value, open ) {
 	const fields = [];
 	let depth = 0;
 	let inQuotes = false;
 
-	for (let index = open; index < value.length; index++) {
-		const char = value[index];
+	for ( let index = open; index < value.length; index++ ) {
+		const char = value[ index ];
 
-		if (char === '{') {
+		if ( char === '{' ) {
 			depth++;
-		} else if (char === '}') {
+		} else if ( char === '}' ) {
 			depth--;
 
-			if (depth === 0) {
+			if ( depth === 0 ) {
 				break;
 			}
-		} else if (char === '"' && depth === 1) {
-			inQuotes = !inQuotes;
+		} else if ( char === '"' && depth === 1 ) {
+			inQuotes = ! inQuotes;
 		}
 
 		const startsField =
 			depth === 1 &&
-			!inQuotes &&
-			((char === '{' && index === open) || char === ',');
+			! inQuotes &&
+			( ( char === '{' && index === open ) || char === ',' );
 
-		if (!startsField) {
+		if ( ! startsField ) {
 			continue;
 		}
 
 		BIBTEX_FIELD_NAME_REGEX.lastIndex = index + 1;
-		const match = BIBTEX_FIELD_NAME_REGEX.exec(value);
+		const match = BIBTEX_FIELD_NAME_REGEX.exec( value );
 
-		if (match) {
-			fields.push({
-				name: match[1].toLowerCase(),
-				index: index + 1 + match[0].indexOf(match[1]),
-			});
+		if ( match ) {
+			fields.push( {
+				name: match[ 1 ].toLowerCase(),
+				index: index + 1 + match[ 0 ].indexOf( match[ 1 ] ),
+			} );
 		}
 	}
 
@@ -414,28 +417,30 @@ function getBibtexFieldNames(value, open) {
  * @param {string} value BibTeX segment text.
  * @return {string} The segment with `city` read as `address`.
  */
-export function renameBibtexCityField(value) {
-	const open = findBibtexEntryOpenBrace(value);
+export function renameBibtexCityField( value ) {
+	const open = findBibtexEntryOpenBrace( value );
 
-	if (open === -1) {
+	if ( open === -1 ) {
 		return value;
 	}
 
-	const fields = getBibtexFieldNames(value, open);
+	const fields = getBibtexFieldNames( value, open );
 
-	if (fields.some(({ name }) => name === 'address' || name === 'location')) {
+	if (
+		fields.some( ( { name } ) => name === 'address' || name === 'location' )
+	) {
 		return value;
 	}
 
-	const city = fields.find(({ name }) => name === 'city');
+	const city = fields.find( ( { name } ) => name === 'city' );
 
-	if (!city) {
+	if ( ! city ) {
 		return value;
 	}
 
 	return (
-		value.slice(0, city.index) +
+		value.slice( 0, city.index ) +
 		'address' +
-		value.slice(city.index + 'city'.length)
+		value.slice( city.index + 'city'.length )
 	);
 }

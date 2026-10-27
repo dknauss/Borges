@@ -37,8 +37,8 @@ let DOI_RESOLUTION_QUEUE = Promise.resolve();
 const SERIAL_QUEUES = new Map();
 
 function getDefaultFetchFn() {
-	if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
-		return window.fetch.bind(window);
+	if ( typeof window !== 'undefined' && typeof window.fetch === 'function' ) {
+		return window.fetch.bind( window );
 	}
 
 	return undefined;
@@ -47,23 +47,25 @@ function getDefaultFetchFn() {
 const NCBI_SOURCES = {
 	pmid: {
 		label: 'PMID',
-		fetchUrl: (id) => `${NCBI_CSL_API}${id}`,
-		restPath: (id) => `${PMID_REST_ENDPOINT}${encodeURIComponent(id)}`,
+		fetchUrl: ( id ) => `${ NCBI_CSL_API }${ id }`,
+		restPath: ( id ) =>
+			`${ PMID_REST_ENDPOINT }${ encodeURIComponent( id ) }`,
 	},
 	pmcid: {
 		label: 'PMCID',
 		// The PMC exporter rejects `id=PMC…` with HTTP 400; it takes digits.
-		fetchUrl: (id) => `${NCBI_PMC_CSL_API}${id}`,
-		restPath: (id) => `${PMCID_REST_ENDPOINT}PMC${encodeURIComponent(id)}`,
+		fetchUrl: ( id ) => `${ NCBI_PMC_CSL_API }${ id }`,
+		restPath: ( id ) =>
+			`${ PMCID_REST_ENDPOINT }PMC${ encodeURIComponent( id ) }`,
 	},
 };
 
-async function resolveNcbiViaFetch(source, id, fetchFn) {
-	const response = await fetchFn(source.fetchUrl(id));
+async function resolveNcbiViaFetch( source, id, fetchFn ) {
+	const response = await fetchFn( source.fetchUrl( id ) );
 
-	if (!response.ok) {
+	if ( ! response.ok ) {
 		throw new Error(
-			`NCBI API returned ${response.status} for ${source.label} ${id}`
+			`NCBI API returned ${ response.status } for ${ source.label } ${ id }`
 		);
 	}
 
@@ -81,21 +83,21 @@ async function resolveNcbiViaFetch(source, id, fetchFn) {
  * @param {typeof fetch}   [fetchFn] Optional fetch implementation.
  * @return {Promise<Object>} CSL-JSON item.
  */
-export async function resolveNcbiCsl(sourceKey, id, fetchFn) {
-	const source = NCBI_SOURCES[sourceKey];
+export async function resolveNcbiCsl( sourceKey, id, fetchFn ) {
+	const source = NCBI_SOURCES[ sourceKey ];
 
-	if (typeof fetchFn === 'function') {
-		return resolveNcbiViaFetch(source, id, fetchFn);
+	if ( typeof fetchFn === 'function' ) {
+		return resolveNcbiViaFetch( source, id, fetchFn );
 	}
 
-	if (typeof apiFetch === 'function') {
-		return apiFetch({ path: source.restPath(id) });
+	if ( typeof apiFetch === 'function' ) {
+		return apiFetch( { path: source.restPath( id ) } );
 	}
 
 	const defaultFetchFn = getDefaultFetchFn();
 
-	if (typeof defaultFetchFn === 'function') {
-		return resolveNcbiViaFetch(source, id, defaultFetchFn);
+	if ( typeof defaultFetchFn === 'function' ) {
+		return resolveNcbiViaFetch( source, id, defaultFetchFn );
 	}
 
 	throw new Error(
@@ -106,27 +108,27 @@ export async function resolveNcbiCsl(sourceKey, id, fetchFn) {
 	);
 }
 
-async function resolveDoiViaCrossRef(doi, fetchFn) {
+async function resolveDoiViaCrossRef( doi, fetchFn ) {
 	const response = await fetchFn(
-		`${CROSSREF_CSL_API}${encodeURIComponent(
+		`${ CROSSREF_CSL_API }${ encodeURIComponent(
 			doi
-		)}/transform/application/vnd.citationstyles.csl+json`
+		) }/transform/application/vnd.citationstyles.csl+json`
 	);
 
-	if (!response.ok) {
+	if ( ! response.ok ) {
 		throw new Error(
-			`CrossRef API returned ${response.status} for DOI ${doi}`
+			`CrossRef API returned ${ response.status } for DOI ${ doi }`
 		);
 	}
 
-	return normalizeCrossRefCsl(await response.json());
+	return normalizeCrossRefCsl( await response.json() );
 }
 
-function cloneCslItems(cslItems) {
-	return cslItems.map((item) => JSON.parse(JSON.stringify(item)));
+function cloneCslItems( cslItems ) {
+	return cslItems.map( ( item ) => JSON.parse( JSON.stringify( item ) ) );
 }
 
-export function normalizeCrossRefCsl(csl) {
+export function normalizeCrossRefCsl( csl ) {
 	const typeMap = {
 		'journal-article': 'article-journal',
 		'book-chapter': 'chapter',
@@ -142,56 +144,56 @@ export function normalizeCrossRefCsl(csl) {
 		'report-component': 'report',
 	};
 
-	const mappedType = typeMap[csl.type] || csl.type;
+	const mappedType = typeMap[ csl.type ] || csl.type;
 	const articleNumber =
-		typeof csl['article-number'] === 'string'
-			? csl['article-number'].trim()
+		typeof csl[ 'article-number' ] === 'string'
+			? csl[ 'article-number' ].trim()
 			: '';
 
 	return {
 		...csl,
 		// CrossRef sends a journal's article number as `article-number`, which
 		// CSL processors do not read; CSL's own variable for it is `number`.
-		...(mappedType === 'article-journal' && !csl.number && articleNumber
+		...( mappedType === 'article-journal' && ! csl.number && articleNumber
 			? { number: articleNumber, 'article-number': articleNumber }
-			: {}),
+			: {} ),
 		// CrossRef emits types that aren't valid CSL types (e.g. "monograph"
 		// for books). validateAndSanitizeCsl rejects unknown types and aborts
 		// the whole import, so map the common ones above and fall any remaining
 		// unknown type back to the generic "document" — a valid DOI should
 		// never be unimportable just because of an unusual type label.
-		type: KNOWN_CSL_TYPES.has(mappedType) ? mappedType : 'document',
+		type: KNOWN_CSL_TYPES.has( mappedType ) ? mappedType : 'document',
 	};
 }
 
-function getCachedDoiMetadata(cacheKey) {
-	if (!DOI_METADATA_CACHE.has(cacheKey)) {
+function getCachedDoiMetadata( cacheKey ) {
+	if ( ! DOI_METADATA_CACHE.has( cacheKey ) ) {
 		return undefined;
 	}
 
-	const cslItems = DOI_METADATA_CACHE.get(cacheKey);
-	DOI_METADATA_CACHE.delete(cacheKey);
-	DOI_METADATA_CACHE.set(cacheKey, cslItems);
+	const cslItems = DOI_METADATA_CACHE.get( cacheKey );
+	DOI_METADATA_CACHE.delete( cacheKey );
+	DOI_METADATA_CACHE.set( cacheKey, cslItems );
 
-	return cloneCslItems(cslItems);
+	return cloneCslItems( cslItems );
 }
 
-function setCachedDoiMetadata(cacheKey, cslItems) {
-	if (DOI_METADATA_CACHE.has(cacheKey)) {
-		DOI_METADATA_CACHE.delete(cacheKey);
+function setCachedDoiMetadata( cacheKey, cslItems ) {
+	if ( DOI_METADATA_CACHE.has( cacheKey ) ) {
+		DOI_METADATA_CACHE.delete( cacheKey );
 	}
 
-	while (DOI_METADATA_CACHE.size >= MAX_DOI_METADATA_CACHE_ENTRIES) {
+	while ( DOI_METADATA_CACHE.size >= MAX_DOI_METADATA_CACHE_ENTRIES ) {
 		const leastRecentlyUsedKey = DOI_METADATA_CACHE.keys().next().value;
 
-		if (!leastRecentlyUsedKey) {
+		if ( ! leastRecentlyUsedKey ) {
 			break;
 		}
 
-		DOI_METADATA_CACHE.delete(leastRecentlyUsedKey);
+		DOI_METADATA_CACHE.delete( leastRecentlyUsedKey );
 	}
 
-	DOI_METADATA_CACHE.set(cacheKey, cloneCslItems(cslItems));
+	DOI_METADATA_CACHE.set( cacheKey, cloneCslItems( cslItems ) );
 }
 
 export function clearDoiMetadataCache() {
@@ -212,67 +214,74 @@ export function clearDoiMetadataCache() {
  * @param {() => Promise<T>} task      Work to run.
  * @return {Promise<T>} The task's result.
  */
-export function runSerially(queueName, task) {
-	const previous = SERIAL_QUEUES.get(queueName) || Promise.resolve();
-	const run = previous.catch(() => {}).then(task);
+export function runSerially( queueName, task ) {
+	const previous = SERIAL_QUEUES.get( queueName ) || Promise.resolve();
+	const run = previous.catch( () => {} ).then( task );
 	SERIAL_QUEUES.set(
 		queueName,
-		run.catch(() => {})
+		run.catch( () => {} )
 	);
 
 	return run;
 }
 
-export function resolveArxivCsl(arxivId) {
-	if (typeof apiFetch !== 'function') {
+export function resolveArxivCsl( arxivId ) {
+	if ( typeof apiFetch !== 'function' ) {
 		return Promise.reject(
-			new Error('WordPress REST transport unavailable for arXiv')
+			new Error( 'WordPress REST transport unavailable for arXiv' )
 		);
 	}
 
-	return runSerially('arxiv', () =>
-		apiFetch({
-			path: `${ARXIV_REST_ENDPOINT}?id=${encodeURIComponent(arxivId)}`,
-		})
+	return runSerially( 'arxiv', () =>
+		apiFetch( {
+			path: `${ ARXIV_REST_ENDPOINT }?id=${ encodeURIComponent( arxivId ) }`,
+		} )
 	);
 }
 
-function enqueueDoiResolution(resolve) {
-	const queuedResolution = DOI_RESOLUTION_QUEUE.catch(() => {}).then(resolve);
-	DOI_RESOLUTION_QUEUE = queuedResolution.catch(() => {});
+function enqueueDoiResolution( resolve ) {
+	const queuedResolution = DOI_RESOLUTION_QUEUE.catch( () => {} ).then(
+		resolve
+	);
+	DOI_RESOLUTION_QUEUE = queuedResolution.catch( () => {} );
 
 	return queuedResolution;
 }
 
-export async function resolveDoiCslItems(value, fetchFn) {
-	const cacheKey = normalizeDoiValueForLookup(value);
-	const cachedItems = getCachedDoiMetadata(cacheKey);
+export async function resolveDoiCslItems( value, fetchFn ) {
+	const cacheKey = normalizeDoiValueForLookup( value );
+	const cachedItems = getCachedDoiMetadata( cacheKey );
 
-	if (cachedItems) {
+	if ( cachedItems ) {
 		return cachedItems;
 	}
 
-	if (!PENDING_DOI_RESOLUTIONS.has(cacheKey)) {
-		const normalizedDoi = normalizeDoiInput(value);
+	if ( ! PENDING_DOI_RESOLUTIONS.has( cacheKey ) ) {
+		const normalizedDoi = normalizeDoiInput( value );
 		const doiFetchFn =
 			typeof fetchFn === 'function' ? fetchFn : getDefaultFetchFn();
 
 		PENDING_DOI_RESOLUTIONS.set(
 			cacheKey,
-			enqueueDoiResolution(async () => {
+			enqueueDoiResolution( async () => {
 				const cslItems =
 					typeof doiFetchFn === 'function'
-						? [await resolveDoiViaCrossRef(cacheKey, doiFetchFn)]
-						: await Cite.async(normalizedDoi).then((cite) =>
-								cite.get({ type: 'json' })
-						  );
-				setCachedDoiMetadata(cacheKey, cslItems);
+						? [
+								await resolveDoiViaCrossRef(
+									cacheKey,
+									doiFetchFn
+								),
+							]
+						: await Cite.async( normalizedDoi ).then( ( cite ) =>
+								cite.get( { type: 'json' } )
+							);
+				setCachedDoiMetadata( cacheKey, cslItems );
 				return cslItems;
-			}).finally(() => {
-				PENDING_DOI_RESOLUTIONS.delete(cacheKey);
-			})
+			} ).finally( () => {
+				PENDING_DOI_RESOLUTIONS.delete( cacheKey );
+			} )
 		);
 	}
 
-	return cloneCslItems(await PENDING_DOI_RESOLUTIONS.get(cacheKey));
+	return cloneCslItems( await PENDING_DOI_RESOLUTIONS.get( cacheKey ) );
 }

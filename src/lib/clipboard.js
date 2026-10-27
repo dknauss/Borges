@@ -12,17 +12,18 @@ export async function copyTextToClipboard(
 ) {
 	const runtimeNavigator =
 		navigatorRef ??
-		(typeof window !== 'undefined' ? window.navigator : undefined);
+		( typeof window !== 'undefined' ? window.navigator : undefined );
 	const runtimeDocument =
-		documentRef ?? (typeof document !== 'undefined' ? document : undefined);
+		documentRef ??
+		( typeof document !== 'undefined' ? document : undefined );
 
 	let writeTextError;
 
-	if (runtimeNavigator?.clipboard?.writeText) {
+	if ( runtimeNavigator?.clipboard?.writeText ) {
 		try {
-			await runtimeNavigator.clipboard.writeText(text);
+			await runtimeNavigator.clipboard.writeText( text );
 			return true;
-		} catch (error) {
+		} catch ( error ) {
 			// Presence is not permission. The API can be there and still refuse:
 			// permission denied, a document that is not the focused one (common
 			// once a control renders inside the iframed block-editor canvas), or
@@ -40,25 +41,27 @@ export async function copyTextToClipboard(
 		}
 	}
 
-	if (!runtimeDocument?.createElement || !runtimeDocument?.body) {
-		throw new Error('Clipboard API unavailable', { cause: writeTextError });
+	if ( ! runtimeDocument?.createElement || ! runtimeDocument?.body ) {
+		throw new Error( 'Clipboard API unavailable', {
+			cause: writeTextError,
+		} );
 	}
 
-	const textarea = runtimeDocument.createElement('textarea');
+	const textarea = runtimeDocument.createElement( 'textarea' );
 	textarea.value = text;
-	textarea.setAttribute('readonly', '');
+	textarea.setAttribute( 'readonly', '' );
 	textarea.style.position = 'absolute';
 	textarea.style.left = '-9999px';
-	runtimeDocument.body.appendChild(textarea);
+	runtimeDocument.body.appendChild( textarea );
 	textarea.select();
 
 	try {
-		const copied = runtimeDocument.execCommand?.('copy');
+		const copied = runtimeDocument.execCommand?.( 'copy' );
 
-		if (!copied) {
-			throw new Error('Clipboard copy command failed', {
+		if ( ! copied ) {
+			throw new Error( 'Clipboard copy command failed', {
 				cause: writeTextError,
-			});
+			} );
 		}
 
 		return true;

@@ -27,16 +27,16 @@ const ALL_DIGITS = /^\d+$/u;
 // replaced.
 const CITATION_ID_PATTERN = /^\S{1,128}$/u;
 
-export function isStableBlockId(value) {
+export function isStableBlockId( value ) {
 	return (
 		typeof value === 'string' &&
-		BLOCK_ID_PATTERN.test(value) &&
-		!ALL_DIGITS.test(value)
+		BLOCK_ID_PATTERN.test( value ) &&
+		! ALL_DIGITS.test( value )
 	);
 }
 
-export function isStableCitationId(value) {
-	return typeof value === 'string' && CITATION_ID_PATTERN.test(value);
+export function isStableCitationId( value ) {
+	return typeof value === 'string' && CITATION_ID_PATTERN.test( value );
 }
 
 /**
@@ -47,17 +47,17 @@ export function isStableCitationId(value) {
  * @param {Array<{clientId: string, bibliographyId: string}>} orderedBlocks  Bibliography blocks in document order.
  * @return {boolean} True when this block is the later copy.
  */
-export function hasEarlierDuplicate(clientId, bibliographyId, orderedBlocks) {
-	if (!bibliographyId) {
+export function hasEarlierDuplicate( clientId, bibliographyId, orderedBlocks ) {
+	if ( ! bibliographyId ) {
 		return false;
 	}
 
-	for (const block of orderedBlocks) {
-		if (block.clientId === clientId) {
+	for ( const block of orderedBlocks ) {
+		if ( block.clientId === clientId ) {
 			return false;
 		}
 
-		if (block.bibliographyId === bibliographyId) {
+		if ( block.bibliographyId === bibliographyId ) {
 			return true;
 		}
 	}
@@ -72,31 +72,33 @@ export function hasEarlierDuplicate(clientId, bibliographyId, orderedBlocks) {
  * @param {boolean} replaceAll Re-key every citation (duplicated block).
  * @return {{citations: Array, changed: boolean}} Result.
  */
-function normalizeCitationIds(citations, replaceAll) {
+function normalizeCitationIds( citations, replaceAll ) {
 	const seen = new Set();
 	let changed = false;
 
-	const next = (Array.isArray(citations) ? citations : []).map((citation) => {
-		if (!citation || typeof citation !== 'object') {
-			return citation;
+	const next = ( Array.isArray( citations ) ? citations : [] ).map(
+		( citation ) => {
+			if ( ! citation || typeof citation !== 'object' ) {
+				return citation;
+			}
+
+			const keep =
+				! replaceAll &&
+				isStableCitationId( citation.id ) &&
+				! seen.has( citation.id );
+			const id = keep ? citation.id : createCitationId();
+
+			seen.add( id );
+
+			if ( keep ) {
+				return citation;
+			}
+
+			changed = true;
+
+			return { ...citation, id };
 		}
-
-		const keep =
-			!replaceAll &&
-			isStableCitationId(citation.id) &&
-			!seen.has(citation.id);
-		const id = keep ? citation.id : createCitationId();
-
-		seen.add(id);
-
-		if (keep) {
-			return citation;
-		}
-
-		changed = true;
-
-		return { ...citation, id };
-	});
+	);
 
 	return { citations: next, changed };
 }
@@ -117,15 +119,16 @@ export function ensureStableIds(
 	{ bibliographyId, citations = [] },
 	{ isDuplicateBlock = false } = {}
 ) {
-	const replaceBlockId = isDuplicateBlock || !isStableBlockId(bibliographyId);
-	const normalized = normalizeCitationIds(citations, isDuplicateBlock);
+	const replaceBlockId =
+		isDuplicateBlock || ! isStableBlockId( bibliographyId );
+	const normalized = normalizeCitationIds( citations, isDuplicateBlock );
 
-	if (!replaceBlockId && !normalized.changed) {
+	if ( ! replaceBlockId && ! normalized.changed ) {
 		return null;
 	}
 
 	return {
-		...(replaceBlockId ? { bibliographyId: createCitationId() } : {}),
-		...(normalized.changed ? { citations: normalized.citations } : {}),
+		...( replaceBlockId ? { bibliographyId: createCitationId() } : {} ),
+		...( normalized.changed ? { citations: normalized.citations } : {} ),
 	};
 }

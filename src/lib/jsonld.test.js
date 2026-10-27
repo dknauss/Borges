@@ -6,17 +6,17 @@ import {
 	wrapJsonLdItemList,
 } from './jsonld';
 
-describe('cslToJsonLd', () => {
-	it('maps journal articles to ScholarlyArticle with Periodical context and DOI URL', () => {
+describe( 'cslToJsonLd', () => {
+	it( 'maps journal articles to ScholarlyArticle with Periodical context and DOI URL', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'article-journal',
 				title: 'Learning Blocks',
 				'container-title': 'Journal of WordPress Studies',
-				ISSN: ['1234-5678'],
+				ISSN: [ '1234-5678' ],
 				DOI: '10.1234/example-doi',
 				issued: {
-					'date-parts': [[2024, 3, 1]],
+					'date-parts': [ [ 2024, 3, 1 ] ],
 				},
 				author: [
 					{
@@ -24,8 +24,8 @@ describe('cslToJsonLd', () => {
 						family: 'Smith',
 					},
 				],
-			})
-		).toEqual({
+			} )
+		).toEqual( {
 			'@context': 'https://schema.org',
 			'@type': 'ScholarlyArticle',
 			name: 'Learning Blocks',
@@ -49,26 +49,26 @@ describe('cslToJsonLd', () => {
 				value: '10.1234/example-doi',
 			},
 			url: 'https://doi.org/10.1234/example-doi',
-		});
-	});
+		} );
+	} );
 
-	it('keeps year-only dates unchanged when month and day are absent', () => {
+	it( 'keeps year-only dates unchanged when month and day are absent', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'book',
 				title: 'Year Only Example',
 				issued: {
-					'date-parts': [[2024]],
+					'date-parts': [ [ 2024 ] ],
 				},
-			})
-		).toMatchObject({
+			} )
+		).toMatchObject( {
 			datePublished: '2024',
-		});
-	});
+		} );
+	} );
 
-	it('normalizes ORCID values and maps publishers for books', () => {
+	it( 'normalizes ORCID values and maps publishers for books', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'book',
 				title: 'The Channels of Student Activism',
 				publisher: 'University of Chicago Press',
@@ -80,8 +80,8 @@ describe('cslToJsonLd', () => {
 						ORCID: '0000-0001-2345-6789',
 					},
 				],
-			})
-		).toEqual({
+			} )
+		).toEqual( {
 			'@context': 'https://schema.org',
 			'@type': 'Book',
 			name: 'The Channels of Student Activism',
@@ -99,26 +99,26 @@ describe('cslToJsonLd', () => {
 				name: 'University of Chicago Press',
 			},
 			isbn: '9780226819909',
-		});
-	});
+		} );
+	} );
 
-	it('uses the first ISBN string and URL-encodes DOI URLs', () => {
+	it( 'uses the first ISBN string and URL-encodes DOI URLs', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'book',
 				title: 'Encoded DOI Example',
-				ISBN: ['9780226819909', '9780226819916'],
+				ISBN: [ '9780226819909', '9780226819916' ],
 				DOI: '10.1234/example doi/with spaces',
-			})
-		).toMatchObject({
+			} )
+		).toMatchObject( {
 			isbn: '9780226819909',
 			url: 'https://doi.org/10.1234/example%20doi/with%20spaces',
-		});
-	});
+		} );
+	} );
 
-	it('maps conference papers to Event containers and keeps explicit URLs', () => {
+	it( 'maps conference papers to Event containers and keeps explicit URLs', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'paper-conference',
 				title: 'Block Interactivity',
 				'container-title': 'Gutenberg Summit',
@@ -128,8 +128,8 @@ describe('cslToJsonLd', () => {
 						literal: 'OpenAI',
 					},
 				],
-			})
-		).toEqual({
+			} )
+		).toEqual( {
 			'@context': 'https://schema.org',
 			'@type': 'ScholarlyArticle',
 			name: 'Block Interactivity',
@@ -144,12 +144,12 @@ describe('cslToJsonLd', () => {
 				name: 'Gutenberg Summit',
 			},
 			url: 'https://example.com/slides',
-		});
-	});
+		} );
+	} );
 
-	it('maps literal-only corporate authors to Organization instead of Person', () => {
+	it( 'maps literal-only corporate authors to Organization instead of Person', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'webpage',
 				title: 'Privacy Policy',
 				author: [
@@ -157,27 +157,27 @@ describe('cslToJsonLd', () => {
 						literal: 'Google',
 					},
 				],
-			})
-		).toMatchObject({
+			} )
+		).toMatchObject( {
 			author: [
 				{
 					'@type': 'Organization',
 					name: 'Google',
 				},
 			],
-		});
-	});
+		} );
+	} );
 
-	it('maps chapter to Chapter with Book isPartOf when container-title is present', () => {
+	it( 'maps chapter to Chapter with Book isPartOf when container-title is present', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'chapter',
 				title: 'The Block Editor Ecosystem',
 				'container-title': 'The WordPress Handbook',
 				publisher: 'Open Source Press',
-				author: [{ given: 'Ada', family: 'Smith' }],
-			})
-		).toMatchObject({
+				author: [ { given: 'Ada', family: 'Smith' } ],
+			} )
+		).toMatchObject( {
 			'@type': 'Chapter',
 			name: 'The Block Editor Ecosystem',
 			isPartOf: {
@@ -188,25 +188,25 @@ describe('cslToJsonLd', () => {
 				'@type': 'Organization',
 				name: 'Open Source Press',
 			},
-		});
-	});
+		} );
+	} );
 
-	it('maps review-book to Review type', () => {
+	it( 'maps review-book to Review type', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'review-book',
 				title: 'Review of The WordPress Handbook',
-				author: [{ given: 'Grace', family: 'Hopper' }],
-			})
-		).toMatchObject({
+				author: [ { given: 'Grace', family: 'Hopper' } ],
+			} )
+		).toMatchObject( {
 			'@type': 'Review',
 			name: 'Review of The WordPress Handbook',
-		});
-	});
+		} );
+	} );
 
-	it('falls back to CreativeWork for unknown types and omits sameAs when ORCID is absent', () => {
+	it( 'falls back to CreativeWork for unknown types and omits sameAs when ORCID is absent', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'map',
 				title: 'Unknown Type Example',
 				author: [
@@ -215,8 +215,8 @@ describe('cslToJsonLd', () => {
 						family: 'Smith',
 					},
 				],
-			})
-		).toEqual({
+			} )
+		).toEqual( {
 			'@context': 'https://schema.org',
 			'@type': 'CreativeWork',
 			name: 'Unknown Type Example',
@@ -228,24 +228,24 @@ describe('cslToJsonLd', () => {
 					givenName: 'Ada',
 				},
 			],
-		});
-	});
+		} );
+	} );
 
-	it('omits optional properties for sparse records without authors or identifiers', () => {
+	it( 'omits optional properties for sparse records without authors or identifiers', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'thesis',
-			})
-		).toEqual({
+			} )
+		).toEqual( {
 			'@context': 'https://schema.org',
 			'@type': 'Thesis',
 			name: '',
-		});
-	});
+		} );
+	} );
 
-	it('keeps person authors without family, given, or ORCID metadata minimal', () => {
+	it( 'keeps person authors without family, given, or ORCID metadata minimal', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'report',
 				title: 'Literal Person Example',
 				author: [
@@ -255,8 +255,8 @@ describe('cslToJsonLd', () => {
 					},
 					{},
 				],
-			})
-		).toMatchObject({
+			} )
+		).toMatchObject( {
 			author: [
 				{
 					'@type': 'Person',
@@ -268,12 +268,12 @@ describe('cslToJsonLd', () => {
 					name: '',
 				},
 			],
-		});
-	});
+		} );
+	} );
 
-	it('preserves already-normalized ORCID URLs', () => {
+	it( 'preserves already-normalized ORCID URLs', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'book',
 				title: 'ORCID URL Example',
 				author: [
@@ -283,64 +283,64 @@ describe('cslToJsonLd', () => {
 						ORCID: 'https://orcid.org/0000-0001-2345-6789',
 					},
 				],
-			})
-		).toMatchObject({
+			} )
+		).toMatchObject( {
 			author: [
 				{
 					sameAs: 'https://orcid.org/0000-0001-2345-6789',
 				},
 			],
-		});
-	});
+		} );
+	} );
 
-	it('uses scalar ISSN values and ignores unsupported container contexts', () => {
+	it( 'uses scalar ISSN values and ignores unsupported container contexts', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'article-journal',
 				title: 'Scalar ISSN Example',
 				'container-title': 'Journal of Examples',
 				ISSN: '2049-3630',
-			})
-		).toMatchObject({
+			} )
+		).toMatchObject( {
 			isPartOf: {
 				issn: '2049-3630',
 			},
-		});
+		} );
 
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'book',
 				title: 'Book With Series',
 				'container-title': 'Unsupported Series Context',
-			})
-		).not.toHaveProperty('isPartOf');
-	});
+			} )
+		).not.toHaveProperty( 'isPartOf' );
+	} );
 
-	it('does not let explicit URLs override DOI URLs and ignores empty ISBN arrays', () => {
+	it( 'does not let explicit URLs override DOI URLs and ignores empty ISBN arrays', () => {
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'book',
 				title: 'DOI URL Priority',
 				DOI: '10.5555/url-priority',
 				URL: 'https://example.com/landing-page',
-				ISBN: ['', 42, null],
-			})
-		).toMatchObject({
+				ISBN: [ '', 42, null ],
+			} )
+		).toMatchObject( {
 			url: 'https://doi.org/10.5555/url-priority',
-		});
+		} );
 		expect(
-			cslToJsonLd({
+			cslToJsonLd( {
 				type: 'book',
 				title: 'DOI URL Priority',
 				DOI: '10.5555/url-priority',
 				URL: 'https://example.com/landing-page',
-				ISBN: ['', 42, null],
-			})
-		).not.toHaveProperty('isbn');
-	});
+				ISBN: [ '', 42, null ],
+			} )
+		).not.toHaveProperty( 'isbn' );
+	} );
 
-	it('produces valid JSON-LD for multiple authors and quote-heavy titles', () => {
-		const json = buildJsonLdString([
+	it( 'produces valid JSON-LD for multiple authors and quote-heavy titles', () => {
+		const json = buildJsonLdString( [
 			{
 				type: 'report',
 				title: '"Quoted" title',
@@ -349,201 +349,208 @@ describe('cslToJsonLd', () => {
 					{ given: 'Grace', family: 'Hopper' },
 				],
 			},
-		]);
+		] );
 
-		expect(() => JSON.parse(json)).not.toThrow();
-		expect(JSON.parse(json)[0]).toMatchObject({
+		expect( () => JSON.parse( json ) ).not.toThrow();
+		expect( JSON.parse( json )[ 0 ] ).toMatchObject( {
 			'@type': 'Report',
-			author: [{ name: 'Ada Smith' }, { name: 'Grace Hopper' }],
-		});
-	});
-});
+			author: [ { name: 'Ada Smith' }, { name: 'Grace Hopper' } ],
+		} );
+	} );
+} );
 
-describe('buildJsonLdString', () => {
-	it('escapes script breakouts in JSON-LD output', () => {
-		const json = buildJsonLdString([
+describe( 'buildJsonLdString', () => {
+	it( 'escapes script breakouts in JSON-LD output', () => {
+		const json = buildJsonLdString( [
 			{
 				type: 'webpage',
 				title: '</script><script>alert(1)</script>',
 			},
-		]);
+		] );
 
-		expect(json).toContain(
+		expect( json ).toContain(
 			'\\u003c/script>\\u003cscript>alert(1)\\u003c/script>'
 		);
-		expect(json).not.toContain('</script><script>');
-	});
+		expect( json ).not.toContain( '</script><script>' );
+	} );
 
-	it('escapes U+2028 and U+2029 in JSON-LD output', () => {
+	it( 'escapes U+2028 and U+2029 in JSON-LD output', () => {
 		// Built from escapes, never embedded raw: these are line terminators in
 		// JS source, so a literal one in this file would change how the test
 		// itself parses. JSON.stringify leaves them unescaped, which is legal
 		// inside a JSON string and not XSS -- ld+json is never executed -- but a
 		// downstream consumer that evals the block rather than parsing it sees a
 		// broken literal.
-		const LS = String.fromCharCode(0x2028);
-		const PS = String.fromCharCode(0x2029);
-		const json = buildJsonLdString([
-			{ type: 'webpage', title: `a${LS}b${PS}c` },
-		]);
+		const LS = String.fromCharCode( 0x2028 );
+		const PS = String.fromCharCode( 0x2029 );
+		const json = buildJsonLdString( [
+			{ type: 'webpage', title: `a${ LS }b${ PS }c` },
+		] );
 
-		expect(json).not.toContain(LS);
-		expect(json).not.toContain(PS);
+		expect( json ).not.toContain( LS );
+		expect( json ).not.toContain( PS );
 		// Built by concatenation so the expectation is a literal backslash
 		// followed by "u2028", not the character it denotes.
-		expect(json).toContain('\\' + 'u2028');
-		expect(json).toContain('\\' + 'u2029');
-		expect(JSON.parse(json)[0].name).toBe(`a${LS}b${PS}c`);
-	});
+		expect( json ).toContain( '\\' + 'u2028' );
+		expect( json ).toContain( '\\' + 'u2029' );
+		expect( JSON.parse( json )[ 0 ].name ).toBe( `a${ LS }b${ PS }c` );
+	} );
 
-	it('keeps quote-breakout payloads inside the title string instead of creating sibling properties', () => {
-		const json = buildJsonLdString([
+	it( 'keeps quote-breakout payloads inside the title string instead of creating sibling properties', () => {
+		const json = buildJsonLdString( [
 			{
 				type: 'webpage',
 				title: '"}, "malicious": "payload"',
 			},
-		]);
-		const parsed = JSON.parse(json);
+		] );
+		const parsed = JSON.parse( json );
 
-		expect(parsed[0].name).toBe('"}, "malicious": "payload"');
-		expect(parsed[0].malicious).toBeUndefined();
-	});
+		expect( parsed[ 0 ].name ).toBe( '"}, "malicious": "payload"' );
+		expect( parsed[ 0 ].malicious ).toBeUndefined();
+	} );
 
-	it('escapes control characters in JSON-LD without breaking parsing', () => {
-		const json = buildJsonLdString([
+	it( 'escapes control characters in JSON-LD without breaking parsing', () => {
+		const json = buildJsonLdString( [
 			{
 				type: 'webpage',
 				title: 'Control \u0000 value \u0008 test',
 			},
-		]);
+		] );
 
-		expect(json).toContain('\\u0000');
-		expect(json).toContain('\\b');
-		expect(() => JSON.parse(json)).not.toThrow();
-		expect(JSON.parse(json)[0].name).toBe('Control \u0000 value \b test');
-	});
-});
+		expect( json ).toContain( '\\u0000' );
+		expect( json ).toContain( '\\b' );
+		expect( () => JSON.parse( json ) ).not.toThrow();
+		expect( JSON.parse( json )[ 0 ].name ).toBe(
+			'Control \u0000 value \b test'
+		);
+	} );
+} );
 
-describe('buildCslJsonString', () => {
-	it('escapes script breakouts in serialized CSL-JSON output', () => {
-		const json = buildCslJsonString([
+describe( 'buildCslJsonString', () => {
+	it( 'escapes script breakouts in serialized CSL-JSON output', () => {
+		const json = buildCslJsonString( [
 			{
 				type: 'book',
 				title: '</script><script>alert(1)</script>',
 			},
-		]);
+		] );
 
-		expect(json).toContain(
+		expect( json ).toContain(
 			'\\u003c/script>\\u003cscript>alert(1)\\u003c/script>'
 		);
-		expect(json).not.toContain('</script><script>');
-	});
+		expect( json ).not.toContain( '</script><script>' );
+	} );
 
-	it('escapes U+2028 and U+2029 in serialized CSL-JSON output', () => {
+	it( 'escapes U+2028 and U+2029 in serialized CSL-JSON output', () => {
 		// Asserted separately from the JSON-LD serializer rather than assumed:
 		// they are independent functions and have to be verified independently.
-		const LS = String.fromCharCode(0x2028);
-		const PS = String.fromCharCode(0x2029);
-		const json = buildCslJsonString([
-			{ type: 'book', title: `a${LS}b${PS}c` },
-		]);
+		const LS = String.fromCharCode( 0x2028 );
+		const PS = String.fromCharCode( 0x2029 );
+		const json = buildCslJsonString( [
+			{ type: 'book', title: `a${ LS }b${ PS }c` },
+		] );
 
-		expect(json).not.toContain(LS);
-		expect(json).not.toContain(PS);
+		expect( json ).not.toContain( LS );
+		expect( json ).not.toContain( PS );
 		// Built by concatenation so the expectation is a literal backslash
 		// followed by "u2028", not the character it denotes.
-		expect(json).toContain('\\' + 'u2028');
-		expect(json).toContain('\\' + 'u2029');
-		expect(JSON.parse(json)[0].title).toBe(`a${LS}b${PS}c`);
-	});
-});
+		expect( json ).toContain( '\\' + 'u2028' );
+		expect( json ).toContain( '\\' + 'u2029' );
+		expect( JSON.parse( json )[ 0 ].title ).toBe( `a${ LS }b${ PS }c` );
+	} );
+} );
 
-describe('DOI url', () => {
+describe( 'DOI url', () => {
 	const csl = { type: 'paper-conference', DOI: '10.14722/ndss.2019.23386' };
 
-	it('keeps the slash, matching the visible doi.org link', () => {
-		expect(cslToJsonLd(csl).url).toBe(
+	it( 'keeps the slash, matching the visible doi.org link', () => {
+		expect( cslToJsonLd( csl ).url ).toBe(
 			'https://doi.org/10.14722/ndss.2019.23386'
 		);
 		// Other reserved characters in each part are still encoded.
-		expect(cslToJsonLd({ ...csl, DOI: '10.1/a?b#c' }).url).toBe(
+		expect( cslToJsonLd( { ...csl, DOI: '10.1/a?b#c' } ).url ).toBe(
 			'https://doi.org/10.1/a%3Fb%23c'
 		);
-	});
+	} );
 
-	it('encodes the slash only for the pre-1.9.1 save shape', () => {
-		expect(cslToJsonLd(csl, { canonicalDoiUrl: false }).url).toBe(
+	it( 'encodes the slash only for the pre-1.9.1 save shape', () => {
+		expect( cslToJsonLd( csl, { canonicalDoiUrl: false } ).url ).toBe(
 			'https://doi.org/10.14722%2Fndss.2019.23386'
 		);
-	});
-});
+	} );
+} );
 
-describe('buildJsonLdItemListString', () => {
+describe( 'buildJsonLdItemListString', () => {
 	const MUSEUM_PAGE = {
 		type: 'webpage',
 		title: 'Nemesis (Das große Glück)',
-		author: [{ literal: 'Albertina' }],
+		author: [ { literal: 'Albertina' } ],
 		'container-title': 'Albertina Sammlungen Online',
 		URL: 'https://sammlungenonline.albertina.at/objects/100442/nemesis-das-groe-gluck',
 	};
 	const THESIS = {
 		type: 'thesis',
 		title: 'Nemesis: A Concept of Retribution',
-		author: [{ given: 'Wendy', family: 'Backe-Hansen' }],
-		issued: { 'date-parts': [[2016]] },
+		author: [ { given: 'Wendy', family: 'Backe-Hansen' } ],
+		issued: { 'date-parts': [ [ 2016 ] ] },
 	};
 
-	it('nests the cited works in one ItemList, in display order', () => {
+	it( 'nests the cited works in one ItemList, in display order', () => {
 		const parsed = JSON.parse(
-			buildJsonLdItemListString([MUSEUM_PAGE, THESIS])
+			buildJsonLdItemListString( [ MUSEUM_PAGE, THESIS ] )
 		);
 
-		expect(parsed).toEqual(
-			wrapJsonLdItemList([cslToJsonLd(MUSEUM_PAGE), cslToJsonLd(THESIS)])
+		expect( parsed ).toEqual(
+			wrapJsonLdItemList( [
+				cslToJsonLd( MUSEUM_PAGE ),
+				cslToJsonLd( THESIS ),
+			] )
 		);
-		expect(parsed['@context']).toBe('https://schema.org');
-		expect(parsed['@type']).toBe('ItemList');
+		expect( parsed[ '@context' ] ).toBe( 'https://schema.org' );
+		expect( parsed[ '@type' ] ).toBe( 'ItemList' );
 		expect(
-			parsed.itemListElement.map(({ position, item }) => [
+			parsed.itemListElement.map( ( { position, item } ) => [
 				position,
 				item.name,
-			])
-		).toEqual([
-			[1, 'Nemesis (Das große Glück)'],
-			[2, 'Nemesis: A Concept of Retribution'],
-		]);
-		parsed.itemListElement.forEach((element) => {
-			expect(element['@type']).toBe('ListItem');
-			expect(element.item).not.toHaveProperty('@context');
-		});
-	});
+			] )
+		).toEqual( [
+			[ 1, 'Nemesis (Das große Glück)' ],
+			[ 2, 'Nemesis: A Concept of Retribution' ],
+		] );
+		parsed.itemListElement.forEach( ( element ) => {
+			expect( element[ '@type' ] ).toBe( 'ListItem' );
+			expect( element.item ).not.toHaveProperty( '@context' );
+		} );
+	} );
 
-	it('leaves no cited work where a link-card reader looks for the page', () => {
+	it( 'leaves no cited work where a link-card reader looks for the page', () => {
 		// Mirrors Mastodon's LinkDetailsExtractor::StructuredData: the first
 		// top-level object (or array member) whose @type is WebPage or
 		// NewsArticle supplies the card's author. A cited web page must never
 		// be that object, or the card credits its author with the post.
-		const parsed = JSON.parse(buildJsonLdItemListString([MUSEUM_PAGE]));
-		const roots = Array.isArray(parsed) ? parsed : [parsed];
-		const pageLike = roots.find((node) =>
-			['WebPage', 'NewsArticle'].includes(node?.['@type'])
+		const parsed = JSON.parse(
+			buildJsonLdItemListString( [ MUSEUM_PAGE ] )
+		);
+		const roots = Array.isArray( parsed ) ? parsed : [ parsed ];
+		const pageLike = roots.find( ( node ) =>
+			[ 'WebPage', 'NewsArticle' ].includes( node?.[ '@type' ] )
 		);
 
-		expect(pageLike).toBeUndefined();
-		expect(parsed.itemListElement[0].item).toMatchObject({
+		expect( pageLike ).toBeUndefined();
+		expect( parsed.itemListElement[ 0 ].item ).toMatchObject( {
 			'@type': 'WebPage',
-			author: [{ '@type': 'Organization', name: 'Albertina' }],
-		});
-	});
+			author: [ { '@type': 'Organization', name: 'Albertina' } ],
+		} );
+	} );
 
-	it('escapes script breakouts inside nested items', () => {
-		const json = buildJsonLdItemListString([
+	it( 'escapes script breakouts inside nested items', () => {
+		const json = buildJsonLdItemListString( [
 			{ type: 'webpage', title: '</script><script>alert(1)</script>' },
-		]);
+		] );
 
-		expect(json).not.toContain('</script>');
-		expect(JSON.parse(json).itemListElement[0].item.name).toBe(
+		expect( json ).not.toContain( '</script>' );
+		expect( JSON.parse( json ).itemListElement[ 0 ].item.name ).toBe(
 			'</script><script>alert(1)</script>'
 		);
-	});
-});
+	} );
+} );

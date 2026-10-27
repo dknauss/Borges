@@ -10,7 +10,7 @@
  */
 import { __ } from '@wordpress/i18n';
 
-export const CITE_EXPORT_LABELS = Object.freeze({
+export const CITE_EXPORT_LABELS = Object.freeze( {
 	toggle: 'Cite / Export',
 	copy: 'Copy citation',
 	copied: 'Copied',
@@ -18,7 +18,7 @@ export const CITE_EXPORT_LABELS = Object.freeze({
 	cslJson: 'CSL-JSON',
 	bibtex: 'BibTeX',
 	biblatex: 'BibLaTeX',
-});
+} );
 
 /**
  * The Cite / Export labels in the current locale.
@@ -27,13 +27,13 @@ export const CITE_EXPORT_LABELS = Object.freeze({
  */
 export function getTranslatedCiteExportLabels() {
 	return {
-		toggle: __('Cite / Export', 'borges-bibliography-builder'),
-		copy: __('Copy citation', 'borges-bibliography-builder'),
-		copied: __('Copied', 'borges-bibliography-builder'),
-		ris: __('RIS', 'borges-bibliography-builder'),
-		cslJson: __('CSL-JSON', 'borges-bibliography-builder'),
-		bibtex: __('BibTeX', 'borges-bibliography-builder'),
-		biblatex: __('BibLaTeX', 'borges-bibliography-builder'),
+		toggle: __( 'Cite / Export', 'borges-bibliography-builder' ),
+		copy: __( 'Copy citation', 'borges-bibliography-builder' ),
+		copied: __( 'Copied', 'borges-bibliography-builder' ),
+		ris: __( 'RIS', 'borges-bibliography-builder' ),
+		cslJson: __( 'CSL-JSON', 'borges-bibliography-builder' ),
+		bibtex: __( 'BibTeX', 'borges-bibliography-builder' ),
+		biblatex: __( 'BibLaTeX', 'borges-bibliography-builder' ),
 	};
 }
 
@@ -45,5 +45,5 @@ export function getTranslatedCiteExportLabels() {
  * @return {string} Translated label.
  */
 export function getTranslatedLinkFallbackLabel() {
-	return __('Link to publication', 'borges-bibliography-builder');
+	return __( 'Link to publication', 'borges-bibliography-builder' );
 }

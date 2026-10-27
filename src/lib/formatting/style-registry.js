@@ -10,15 +10,15 @@ import styleData from '../../../includes/styles.json';
 export const DEFAULT_CITATION_STYLE = styleData.defaultStyle;
 
 export const STYLE_DEFINITIONS = Object.fromEntries(
-	Object.entries(styleData.styles).map(([key, definition]) => [
+	Object.entries( styleData.styles ).map( ( [ key, definition ] ) => [
 		key,
 		{ key, ...definition },
-	])
+	] )
 );
 
-function emitStyleRegistryWarning(message) {
+function emitStyleRegistryWarning( message ) {
 	// eslint-disable-next-line no-console
-	console?.warn?.(message);
+	console?.warn?.( message );
 }
 
 /**
@@ -29,15 +29,16 @@ function emitStyleRegistryWarning(message) {
  *
  * @since 0.1.0
  */
-export function getStyleDefinition(styleKey = DEFAULT_CITATION_STYLE) {
-	if (styleKey && !STYLE_DEFINITIONS[styleKey]) {
+export function getStyleDefinition( styleKey = DEFAULT_CITATION_STYLE ) {
+	if ( styleKey && ! STYLE_DEFINITIONS[ styleKey ] ) {
 		emitStyleRegistryWarning(
-			`Unknown citation style "${styleKey}". Falling back to ${DEFAULT_CITATION_STYLE}.`
+			`Unknown citation style "${ styleKey }". Falling back to ${ DEFAULT_CITATION_STYLE }.`
 		);
 	}
 
 	return (
-		STYLE_DEFINITIONS[styleKey] || STYLE_DEFINITIONS[DEFAULT_CITATION_STYLE]
+		STYLE_DEFINITIONS[ styleKey ] ||
+		STYLE_DEFINITIONS[ DEFAULT_CITATION_STYLE ]
 	);
 }
 
@@ -49,8 +50,8 @@ export function getStyleDefinition(styleKey = DEFAULT_CITATION_STYLE) {
  *
  * @since 0.1.0
  */
-export function getListSemantics(styleKey = DEFAULT_CITATION_STYLE) {
-	return getStyleDefinition(styleKey).listType;
+export function getListSemantics( styleKey = DEFAULT_CITATION_STYLE ) {
+	return getStyleDefinition( styleKey ).listType;
 }
 
 /**
@@ -61,8 +62,8 @@ export function getListSemantics(styleKey = DEFAULT_CITATION_STYLE) {
  *
  * @since 0.1.0
  */
-export function getHeadingPlaceholder(styleKey = DEFAULT_CITATION_STYLE) {
-	return getStyleDefinition(styleKey).headingPlaceholder || 'Bibliography';
+export function getHeadingPlaceholder( styleKey = DEFAULT_CITATION_STYLE ) {
+	return getStyleDefinition( styleKey ).headingPlaceholder || 'Bibliography';
 }
 
 export const getDefaultHeadingText = getHeadingPlaceholder;
@@ -75,10 +76,10 @@ export const getDefaultHeadingText = getHeadingPlaceholder;
  * @since 0.1.0
  */
 export function getSelectableStyles() {
-	return Object.values(STYLE_DEFINITIONS)
-		.filter((definition) => definition.enabled)
-		.map(({ key, label }) => ({
+	return Object.values( STYLE_DEFINITIONS )
+		.filter( ( definition ) => definition.enabled )
+		.map( ( { key, label } ) => ( {
 			label,
 			value: key,
-		}));
+		} ) );
 }

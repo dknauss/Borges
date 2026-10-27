@@ -14,9 +14,9 @@ import {
  * @param {Object} editor Block editor selectors.
  * @return {Array<{clientId: string, bibliographyId: string}>} Ordered blocks.
  */
-function getOrderedBibliographyBlocks(editor) {
+function getOrderedBibliographyBlocks( editor ) {
 	if (
-		!editor ||
+		! editor ||
 		typeof editor.getClientIdsWithDescendants !== 'function' ||
 		typeof editor.getBlockName !== 'function' ||
 		typeof editor.getBlockAttributes !== 'function'
@@ -26,11 +26,13 @@ function getOrderedBibliographyBlocks(editor) {
 
 	return editor
 		.getClientIdsWithDescendants()
-		.filter((id) => editor.getBlockName(id) === BIBLIOGRAPHY_BLOCK_NAME)
-		.map((id) => ({
+		.filter(
+			( id ) => editor.getBlockName( id ) === BIBLIOGRAPHY_BLOCK_NAME
+		)
+		.map( ( id ) => ( {
 			clientId: id,
-			bibliographyId: editor.getBlockAttributes(id)?.bibliographyId,
-		}));
+			bibliographyId: editor.getBlockAttributes( id )?.bibliographyId,
+		} ) );
 }
 
 /**
@@ -50,23 +52,23 @@ function getOrderedBibliographyBlocks(editor) {
  * @param {Object}                       params.attributes    Block attributes.
  * @param {(attributes: Object) => void} params.setAttributes Block attribute setter.
  */
-export function useStableIds({ clientId, attributes, setAttributes }) {
+export function useStableIds( { clientId, attributes, setAttributes } ) {
 	const registry = useRegistry();
 
-	useEffect(() => {
-		const editor = registry?.select?.(blockEditorStore);
+	useEffect( () => {
+		const editor = registry?.select?.( blockEditorStore );
 		const isDuplicateBlock = hasEarlierDuplicate(
 			clientId,
 			attributes.bibliographyId,
-			getOrderedBibliographyBlocks(editor)
+			getOrderedBibliographyBlocks( editor )
 		);
-		const changes = ensureStableIds(attributes, { isDuplicateBlock });
+		const changes = ensureStableIds( attributes, { isDuplicateBlock } );
 
-		if (!changes) {
+		if ( ! changes ) {
 			return;
 		}
 
-		const dispatch = registry?.dispatch?.(blockEditorStore);
+		const dispatch = registry?.dispatch?.( blockEditorStore );
 
 		if (
 			typeof dispatch?.__unstableMarkNextChangeAsNotPersistent ===
@@ -75,8 +77,8 @@ export function useStableIds({ clientId, attributes, setAttributes }) {
 			dispatch.__unstableMarkNextChangeAsNotPersistent();
 		}
 
-		setAttributes(changes);
+		setAttributes( changes );
 		// Mount-only by design; see the docblock.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [] );
 }

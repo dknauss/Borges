@@ -1,7 +1,7 @@
 {
 	"version": 1,
 	"repository": "borges-bibliography-builder",
-	"scopes": ["."],
+	"scopes": [ "." ],
 	"components": [
 		{
 			"id": "bibliography-builder/bibliography",
@@ -23,7 +23,7 @@
 				},
 				"headingLevel": {
 					"type": "integer",
-					"enum": [0, 2, 3, 4, 5, 6],
+					"enum": [ 0, 2, 3, 4, 5, 6 ],
 					"default": 0
 				},
 				"outputJsonLd": {
@@ -59,8 +59,8 @@
 				"anchor": true,
 				"className": true,
 				"spacing": {
-					"margin": ["top", "bottom"],
-					"padding": ["top", "bottom"]
+					"margin": [ "top", "bottom" ],
+					"padding": [ "top", "bottom" ]
 				},
 				"typography": {
 					"fontSize": true

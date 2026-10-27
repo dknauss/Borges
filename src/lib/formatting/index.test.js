@@ -8,7 +8,7 @@ import {
 	stripInlineMarkup,
 } from './index';
 
-function createCitation(overrides = {}) {
+function createCitation( overrides = {} ) {
 	return {
 		csl: {
 			type: 'article-journal',
@@ -23,33 +23,35 @@ function createCitation(overrides = {}) {
 	};
 }
 
-describe('formatting helpers', () => {
-	it('returns the auto-formatted text when no override is present', () => {
-		const citation = createCitation({
+describe( 'formatting helpers', () => {
+	it( 'returns the auto-formatted text when no override is present', () => {
+		const citation = createCitation( {
 			formattedText: 'Auto formatted citation',
-		});
+		} );
 
-		expect(getAutoFormattedText(citation)).toBe('Auto formatted citation');
-		expect(getDisplayText(citation)).toBe('Auto formatted citation');
-	});
+		expect( getAutoFormattedText( citation ) ).toBe(
+			'Auto formatted citation'
+		);
+		expect( getDisplayText( citation ) ).toBe( 'Auto formatted citation' );
+	} );
 
-	it('returns an empty non-italic segment when no display text exists', () => {
+	it( 'returns an empty non-italic segment when no display text exists', () => {
 		expect(
 			getDisplaySegments(
-				createCitation({
+				createCitation( {
 					formattedText: '',
 					csl: {
 						title: '',
 					},
-				})
+				} )
 			)
-		).toEqual([{ text: '', italic: false }]);
-	});
+		).toEqual( [ { text: '', italic: false } ] );
+	} );
 
-	it('keeps a quoted article title plain and italicizes the journal title', () => {
+	it( 'keeps a quoted article title plain and italicizes the journal title', () => {
 		const citation = createCitation();
 
-		expect(getDisplaySegments(citation)).toEqual([
+		expect( getDisplaySegments( citation ) ).toEqual( [
 			{
 				text: 'Smith, Ada. “Example Article.” ',
 				italic: false,
@@ -62,19 +64,19 @@ describe('formatting helpers', () => {
 				text: ' 12 (3): 117–34.',
 				italic: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it('chooses the last matching title range when the same text appears earlier', () => {
-		const citation = createCitation({
+	it( 'chooses the last matching title range when the same text appears earlier', () => {
+		const citation = createCitation( {
 			csl: {
 				type: 'book',
 				title: 'Data',
 			},
 			formattedText: 'Data Research Group. Data. Press, 2024.',
-		});
+		} );
 
-		expect(getDisplaySegments(citation)).toEqual([
+		expect( getDisplaySegments( citation ) ).toEqual( [
 			{
 				text: 'Data Research Group. ',
 				italic: false,
@@ -87,19 +89,19 @@ describe('formatting helpers', () => {
 				text: '. Press, 2024.',
 				italic: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it('falls back to an earlier unquoted title when the last title match is quoted', () => {
-		const citation = createCitation({
+	it( 'falls back to an earlier unquoted title when the last title match is quoted', () => {
+		const citation = createCitation( {
 			csl: {
 				type: 'book',
 				title: 'Data',
 			},
 			formattedText: 'Data “Data”',
-		});
+		} );
 
-		expect(getDisplaySegments(citation)).toEqual([
+		expect( getDisplaySegments( citation ) ).toEqual( [
 			{
 				text: 'Data',
 				italic: true,
@@ -108,27 +110,27 @@ describe('formatting helpers', () => {
 				text: ' “Data”',
 				italic: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it('treats mixed straight and curly quotes as quoted text', () => {
-		const citation = createCitation({
+	it( 'treats mixed straight and curly quotes as quoted text', () => {
+		const citation = createCitation( {
 			formattedText:
 				'Smith, Ada. “Example Article". Journal of Examples 12 (3): 117–34.',
-		});
+		} );
 
-		expect(getDisplaySegments(citation)[0]).toEqual({
+		expect( getDisplaySegments( citation )[ 0 ] ).toEqual( {
 			text: 'Smith, Ada. “Example Article". ',
 			italic: false,
-		});
-	});
+		} );
+	} );
 
-	it('splits visible URLs into linked parts and leaves trailing punctuation outside the link', () => {
+	it( 'splits visible URLs into linked parts and leaves trailing punctuation outside the link', () => {
 		expect(
 			splitTextIntoLinkParts(
 				'Available at https://example.com/path/to/resource.'
 			)
-		).toEqual([
+		).toEqual( [
 			{
 				text: 'Available at ',
 				link: false,
@@ -142,16 +144,16 @@ describe('formatting helpers', () => {
 				text: '.',
 				link: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it.each([
-		['javascript:alert(1)'],
-		['JavaScript:alert(1)'],
-		['data:text/html,<script>alert(1)</script>'],
-		['vbscript:msgbox(1)'],
-		['file:///etc/passwd'],
-	])('never emits a non-http(s) scheme as an href: %s', (hostile) => {
+	it.each( [
+		[ 'javascript:alert(1)' ],
+		[ 'JavaScript:alert(1)' ],
+		[ 'data:text/html,<script>alert(1)</script>' ],
+		[ 'vbscript:msgbox(1)' ],
+		[ 'file:///etc/passwd' ],
+	] )( 'never emits a non-http(s) scheme as an href: %s', ( hostile ) => {
 		// React does not sanitize href schemes, and this output is baked into
 		// post_content as static HTML. Today the only thing preventing a
 		// javascript: href is URL_PATTERN requiring a literal http(s):// prefix
@@ -159,29 +161,29 @@ describe('formatting helpers', () => {
 		// This asserts the rule directly, so broadening URL_PATTERN later (to
 		// catch bare www., doi:, or protocol-relative //) fails here instead of
 		// silently creating a scheme-injection sink.
-		const parts = splitTextIntoLinkParts(`See ${hostile} end`);
+		const parts = splitTextIntoLinkParts( `See ${ hostile } end` );
 
 		parts
-			.filter((part) => part.link)
-			.forEach((part) => {
-				expect(part.href).toMatch(/^https?:\/\//);
-			});
-	});
+			.filter( ( part ) => part.link )
+			.forEach( ( part ) => {
+				expect( part.href ).toMatch( /^https?:\/\// );
+			} );
+	} );
 
-	it('links only the http(s) URL when a hostile scheme sits beside one', () => {
+	it( 'links only the http(s) URL when a hostile scheme sits beside one', () => {
 		const parts = splitTextIntoLinkParts(
 			'javascript:alert(1) and https://example.com/ok'
 		);
-		const linked = parts.filter((part) => part.link);
+		const linked = parts.filter( ( part ) => part.link );
 
-		expect(linked).toHaveLength(1);
-		expect(linked[0].href).toBe('https://example.com/ok');
-	});
+		expect( linked ).toHaveLength( 1 );
+		expect( linked[ 0 ].href ).toBe( 'https://example.com/ok' );
+	} );
 
-	it('preserves balanced parentheses inside linked URLs', () => {
+	it( 'preserves balanced parentheses inside linked URLs', () => {
 		expect(
-			splitTextIntoLinkParts('See https://example.com/path_(alpha).')
-		).toEqual([
+			splitTextIntoLinkParts( 'See https://example.com/path_(alpha).' )
+		).toEqual( [
 			{
 				text: 'See ',
 				link: false,
@@ -195,13 +197,13 @@ describe('formatting helpers', () => {
 				text: '.',
 				link: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it('leaves an unmatched closing parenthesis outside linked URLs', () => {
+	it( 'leaves an unmatched closing parenthesis outside linked URLs', () => {
 		expect(
-			splitTextIntoLinkParts('See https://example.com/path).')
-		).toEqual([
+			splitTextIntoLinkParts( 'See https://example.com/path).' )
+		).toEqual( [
 			{
 				text: 'See ',
 				link: false,
@@ -215,24 +217,24 @@ describe('formatting helpers', () => {
 				text: ').',
 				link: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it('returns an empty plain segment for empty link text', () => {
-		expect(splitTextIntoLinkParts('')).toEqual([
+	it( 'returns an empty plain segment for empty link text', () => {
+		expect( splitTextIntoLinkParts( '' ) ).toEqual( [
 			{
 				text: '',
 				link: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it('splits multiple visible URLs independently', () => {
+	it( 'splits multiple visible URLs independently', () => {
 		expect(
 			splitTextIntoLinkParts(
 				'See https://example.com/one and https://example.com/two.'
 			)
-		).toEqual([
+		).toEqual( [
 			{ text: 'See ', link: false },
 			{
 				text: 'https://example.com/one',
@@ -246,19 +248,19 @@ describe('formatting helpers', () => {
 				link: true,
 			},
 			{ text: '.', link: false },
-		]);
-	});
+		] );
+	} );
 
-	it('italicizes motion picture titles as monographic works', () => {
-		const citation = createCitation({
+	it( 'italicizes motion picture titles as monographic works', () => {
+		const citation = createCitation( {
 			csl: {
 				type: 'motion_picture',
 				title: 'Example Film',
 			},
 			formattedText: 'Example Film. 2024.',
-		});
+		} );
 
-		expect(getDisplaySegments(citation)).toEqual([
+		expect( getDisplaySegments( citation ) ).toEqual( [
 			{
 				text: 'Example Film',
 				italic: true,
@@ -267,10 +269,10 @@ describe('formatting helpers', () => {
 				text: '. 2024.',
 				italic: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it.each([
+	it.each( [
 		'broadcast',
 		'entry-dictionary',
 		'entry-encyclopedia',
@@ -289,31 +291,31 @@ describe('formatting helpers', () => {
 		'speech',
 		'standard',
 		'treaty',
-	])('italicizes the title for standalone type "%s"', (type) => {
-		const citation = createCitation({
+	] )( 'italicizes the title for standalone type "%s"', ( type ) => {
+		const citation = createCitation( {
 			csl: {
 				type,
 				title: 'Standalone Work',
 			},
 			formattedText: 'Author. Standalone Work. Publisher, 2024.',
-		});
+		} );
 
-		const segments = getDisplaySegments(citation);
-		const italicSegment = segments.find((s) => s.italic);
+		const segments = getDisplaySegments( citation );
+		const italicSegment = segments.find( ( s ) => s.italic );
 
-		expect(italicSegment).toBeDefined();
-		expect(italicSegment.text).toBe('Standalone Work');
-	});
+		expect( italicSegment ).toBeDefined();
+		expect( italicSegment.text ).toBe( 'Standalone Work' );
+	} );
 
-	it.each([
+	it.each( [
 		'entry',
 		'paper-conference',
 		'post',
 		'post-weblog',
 		'review',
 		'review-book',
-	])('italicizes the container-title for type "%s"', (type) => {
-		const citation = createCitation({
+	] )( 'italicizes the container-title for type "%s"', ( type ) => {
+		const citation = createCitation( {
 			csl: {
 				type,
 				title: 'Contained Work',
@@ -321,94 +323,94 @@ describe('formatting helpers', () => {
 			},
 			formattedText:
 				'Author. "Contained Work." Parent Collection. Publisher, 2024.',
-		});
+		} );
 
-		const segments = getDisplaySegments(citation);
-		const italicSegment = segments.find((s) => s.italic);
+		const segments = getDisplaySegments( citation );
+		const italicSegment = segments.find( ( s ) => s.italic );
 
-		expect(italicSegment).toBeDefined();
-		expect(italicSegment.text).toBe('Parent Collection');
-	});
+		expect( italicSegment ).toBeDefined();
+		expect( italicSegment.text ).toBe( 'Parent Collection' );
+	} );
 
-	it('returns no italic segments for an unrecognized CSL type', () => {
-		const citation = createCitation({
+	it( 'returns no italic segments for an unrecognized CSL type', () => {
+		const citation = createCitation( {
 			csl: {
 				type: 'personal_communication',
 				title: 'Private Note',
 			},
 			formattedText: 'Author. Private Note. 2024.',
-		});
+		} );
 
-		const segments = getDisplaySegments(citation);
+		const segments = getDisplaySegments( citation );
 
-		expect(segments.every((s) => !s.italic)).toBe(true);
-	});
+		expect( segments.every( ( s ) => ! s.italic ) ).toBe( true );
+	} );
 
-	it('includes a label field on link segments when linkLabel is provided', () => {
-		const parts = splitTextIntoLinkParts('See https://example.org/foo', {
+	it( 'includes a label field on link segments when linkLabel is provided', () => {
+		const parts = splitTextIntoLinkParts( 'See https://example.org/foo', {
 			linkLabel: 'Some Title',
-		});
-		const linkPart = parts.find((p) => p.link);
-		expect(linkPart).toBeDefined();
-		expect(linkPart.label).toBe('Some Title');
-	});
+		} );
+		const linkPart = parts.find( ( p ) => p.link );
+		expect( linkPart ).toBeDefined();
+		expect( linkPart.label ).toBe( 'Some Title' );
+	} );
 
-	it('omits the label field when no linkLabel option is provided (backward-compatible)', () => {
-		const parts = splitTextIntoLinkParts('See https://example.org/foo');
-		const linkPart = parts.find((p) => p.link);
-		expect(linkPart).toBeDefined();
-		expect(linkPart.label).toBeUndefined();
-	});
+	it( 'omits the label field when no linkLabel option is provided (backward-compatible)', () => {
+		const parts = splitTextIntoLinkParts( 'See https://example.org/foo' );
+		const linkPart = parts.find( ( p ) => p.link );
+		expect( linkPart ).toBeDefined();
+		expect( linkPart.label ).toBeUndefined();
+	} );
 
-	it('does not add label field to non-link segments', () => {
+	it( 'does not add label field to non-link segments', () => {
 		const parts = splitTextIntoLinkParts(
 			'Prefix https://example.org/foo suffix',
 			{ linkLabel: 'My Title' }
 		);
-		const nonLink = parts.filter((p) => !p.link);
-		expect(nonLink.every((p) => !('label' in p))).toBe(true);
-	});
-});
+		const nonLink = parts.filter( ( p ) => ! p.link );
+		expect( nonLink.every( ( p ) => ! ( 'label' in p ) ) ).toBe( true );
+	} );
+} );
 
-describe('inline markup', () => {
-	it('keeps <i> and <em> as italic ranges and drops every other tag', () => {
+describe( 'inline markup', () => {
+	it( 'keeps <i> and <em> as italic ranges and drops every other tag', () => {
 		expect(
 			parseInlineMarkup(
 				'A <i>Book</i>, an <EM class="x">Essay</EM>, <b>bold</b> <img src=x onerror=alert(1)>end'
 			)
-		).toEqual({
+		).toEqual( {
 			text: 'A Book, an Essay, bold end',
 			ranges: [
 				{ start: 2, end: 6 },
 				{ start: 11, end: 16 },
 			],
-		});
-	});
+		} );
+	} );
 
-	it('leaves text that only looks like markup alone', () => {
-		expect(parseInlineMarkup('a < b and b > c, <3')).toEqual({
+	it( 'leaves text that only looks like markup alone', () => {
+		expect( parseInlineMarkup( 'a < b and b > c, <3' ) ).toEqual( {
 			text: 'a < b and b > c, <3',
 			ranges: [],
-		});
-	});
+		} );
+	} );
 
-	it('handles nesting, stray closers, self-closing and unclosed tags', () => {
-		expect(parseInlineMarkup('<i>a <em>b</em> c</i>')).toEqual({
+	it( 'handles nesting, stray closers, self-closing and unclosed tags', () => {
+		expect( parseInlineMarkup( '<i>a <em>b</em> c</i>' ) ).toEqual( {
 			text: 'a b c',
-			ranges: [{ start: 0, end: 5 }],
-		});
-		expect(parseInlineMarkup('a</i> <i/>b')).toEqual({
+			ranges: [ { start: 0, end: 5 } ],
+		} );
+		expect( parseInlineMarkup( 'a</i> <i/>b' ) ).toEqual( {
 			text: 'a b',
 			ranges: [],
-		});
-		expect(parseInlineMarkup('a <i>b c')).toEqual({
+		} );
+		expect( parseInlineMarkup( 'a <i>b c' ) ).toEqual( {
 			text: 'a b c',
-			ranges: [{ start: 2, end: 5 }],
-		});
-		expect(stripInlineMarkup(undefined)).toBe('');
-	});
+			ranges: [ { start: 2, end: 5 } ],
+		} );
+		expect( stripInlineMarkup( undefined ) ).toBe( '' );
+	} );
 
-	it('renders an <i> title as italics instead of showing the tags', () => {
+	it( 'renders an <i> title as italics instead of showing the tags', () => {
 		// The counterfoil.org case: an Ostrom entry whose stored formatted
 		// text and CSL title both carry <i>.
 		const citation = {
@@ -421,23 +423,25 @@ describe('inline markup', () => {
 			displayOverride: null,
 		};
 
-		expect(getDisplaySegments(citation, { inlineMarkup: true })).toEqual([
+		expect(
+			getDisplaySegments( citation, { inlineMarkup: true } )
+		).toEqual( [
 			{ text: 'Ostrom, Elinor. ', italic: false },
 			{ text: 'Governing the Commons', italic: true },
 			{ text: '. Cambridge University Press, 1990.', italic: false },
-		]);
-		expect(getPlainDisplayText(citation)).toBe(
+		] );
+		expect( getPlainDisplayText( citation ) ).toBe(
 			'Ostrom, Elinor. Governing the Commons. Cambridge University Press, 1990.'
 		);
 		// Without the option, the text is used as stored (the deprecated shape).
 		expect(
-			getDisplaySegments(citation)
-				.map((segment) => segment.text)
-				.join('')
-		).toBe(citation.formattedText);
-	});
+			getDisplaySegments( citation )
+				.map( ( segment ) => segment.text )
+				.join( '' )
+		).toBe( citation.formattedText );
+	} );
 
-	it('matches a tagged title against plain formatted text', () => {
+	it( 'matches a tagged title against plain formatted text', () => {
 		const citation = {
 			csl: {
 				type: 'book',
@@ -448,14 +452,16 @@ describe('inline markup', () => {
 			displayOverride: null,
 		};
 
-		expect(getDisplaySegments(citation, { inlineMarkup: true })).toEqual([
+		expect(
+			getDisplaySegments( citation, { inlineMarkup: true } )
+		).toEqual( [
 			{ text: 'Lee, Kim. ', italic: false },
 			{ text: 'Growth of Escherichia coli in Soil', italic: true },
 			{ text: '. Test Press, 2021.', italic: false },
-		]);
-	});
+		] );
+	} );
 
-	it('reads <i> in a manual display override', () => {
+	it( 'reads <i> in a manual display override', () => {
 		expect(
 			getDisplaySegments(
 				{
@@ -465,15 +471,15 @@ describe('inline markup', () => {
 				},
 				{ inlineMarkup: true }
 			)
-		).toEqual([
+		).toEqual( [
 			{ text: 'Ostrom, E. ', italic: false },
 			{ text: 'Governing', italic: true },
 			{ text: ', 1990.', italic: false },
-		]);
-	});
-});
+		] );
+	} );
+} );
 
-describe('quoted titles', () => {
+describe( 'quoted titles', () => {
 	const webpage = {
 		csl: { type: 'webpage', title: 'Usage Statistics for Drupal Core' },
 		formattedText:
@@ -481,10 +487,10 @@ describe('quoted titles', () => {
 		displayOverride: null,
 	};
 
-	it('does not italicize a title quoted with punctuation inside the quote', () => {
+	it( 'does not italicize a title quoted with punctuation inside the quote', () => {
 		expect(
-			getDisplaySegments(webpage, { quoteAwareItalics: true })
-		).toEqual([{ text: webpage.formattedText, italic: false }]);
+			getDisplaySegments( webpage, { quoteAwareItalics: true } )
+		).toEqual( [ { text: webpage.formattedText, italic: false } ] );
 		expect(
 			getDisplaySegments(
 				{
@@ -494,35 +500,35 @@ describe('quoted titles', () => {
 				},
 				{ quoteAwareItalics: true }
 			)
-		).toEqual([
+		).toEqual( [
 			{
 				text: 'Lee. "Usage Statistics for Drupal Core,?" 2024.',
 				italic: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it('still italicizes an unquoted title, and a period alone is no quote', () => {
+	it( 'still italicizes an unquoted title, and a period alone is no quote', () => {
 		const apa = {
 			...webpage,
 			formattedText:
 				'Drupal.org. (2026). Usage Statistics for Drupal Core. https://drupal.org.',
 		};
 
-		expect(getDisplaySegments(apa, { quoteAwareItalics: true })[1]).toEqual(
-			{ text: 'Usage Statistics for Drupal Core', italic: true }
-		);
-	});
+		expect(
+			getDisplaySegments( apa, { quoteAwareItalics: true } )[ 1 ]
+		).toEqual( { text: 'Usage Statistics for Drupal Core', italic: true } );
+	} );
 
-	it('italicizes it as before without the option (the pre-1.9.1 shape)', () => {
-		expect(getDisplaySegments(webpage)[1]).toEqual({
+	it( 'italicizes it as before without the option (the pre-1.9.1 shape)', () => {
+		expect( getDisplaySegments( webpage )[ 1 ] ).toEqual( {
 			text: 'Usage Statistics for Drupal Core',
 			italic: true,
-		});
-	});
-});
+		} );
+	} );
+} );
 
-describe('titles stored with straight quotation marks', () => {
+describe( 'titles stored with straight quotation marks', () => {
 	const options = {
 		quoteAwareItalics: true,
 		urlAwareItalics: true,
@@ -538,27 +544,27 @@ describe('titles stored with straight quotation marks', () => {
 		displayOverride: null,
 	};
 
-	it('italicizes a book title whose apostrophe citeproc printed curly', () => {
-		expect(getDisplaySegments(nelson, options)).toEqual([
+	it( 'italicizes a book title whose apostrophe citeproc printed curly', () => {
+		expect( getDisplaySegments( nelson, options ) ).toEqual( [
 			{ text: 'Nelson, Ted. ', italic: false },
 			{
 				text: 'Ted Nelson’s Computer Paradigm, Expressed as One-Liners',
 				italic: true,
 			},
 			{ text: '. Mindful Press, 1999.', italic: false },
-		]);
-	});
+		] );
+	} );
 
-	it('left it roman without quoteFoldedItalics, as save() did through 1.15.0', () => {
+	it( 'left it roman without quoteFoldedItalics, as save() did through 1.15.0', () => {
 		expect(
-			getDisplaySegments(nelson, {
+			getDisplaySegments( nelson, {
 				quoteAwareItalics: true,
 				urlAwareItalics: true,
-			})
-		).toEqual([{ text: nelson.formattedText, italic: false }]);
-	});
+			} )
+		).toEqual( [ { text: nelson.formattedText, italic: false } ] );
+	} );
 
-	it('italicizes a journal name with an apostrophe', () => {
+	it( 'italicizes a journal name with an apostrophe', () => {
 		expect(
 			getDisplaySegments(
 				{
@@ -573,14 +579,14 @@ describe('titles stored with straight quotation marks', () => {
 				},
 				options
 			)
-		).toEqual([
+		).toEqual( [
 			{ text: 'Moss, Ann. “Reading Aloud.” ', italic: false },
 			{ text: 'Children’s Literature Quarterly', italic: true },
 			{ text: ' 12 (2021).', italic: false },
-		]);
-	});
+		] );
+	} );
 
-	it('matches straight double quotes in a title to curly ones, and curly to straight', () => {
+	it( 'matches straight double quotes in a title to curly ones, and curly to straight', () => {
 		expect(
 			getDisplaySegments(
 				{
@@ -590,11 +596,11 @@ describe('titles stored with straight quotation marks', () => {
 				},
 				options
 			)
-		).toEqual([
+		).toEqual( [
 			{ text: 'Ålund, Åsa. ', italic: false },
 			{ text: 'The “Best” Book', italic: true },
 			{ text: '. Test Press.', italic: false },
-		]);
+		] );
 		expect(
 			getDisplaySegments(
 				{
@@ -604,34 +610,34 @@ describe('titles stored with straight quotation marks', () => {
 				},
 				options
 			)
-		).toEqual([
+		).toEqual( [
 			{ text: 'Lee, Kim. ', italic: false },
 			{ text: "Writers' Lives", italic: true },
 			{ text: '. Test Press.', italic: false },
-		]);
-	});
-	it('matches a title as long as the CSL sanitizer accepts', () => {
-		const title = "Nelson's paradigm ".repeat(3600).trimEnd();
-		const shown = title.replaceAll("'", '’');
+		] );
+	} );
+	it( 'matches a title as long as the CSL sanitizer accepts', () => {
+		const title = "Nelson's paradigm ".repeat( 3600 ).trimEnd();
+		const shown = title.replaceAll( "'", '’' );
 
 		expect(
 			getDisplaySegments(
 				{
 					csl: { type: 'book', title },
-					formattedText: `Zoë Moss. ${shown}. Press ’99.`,
+					formattedText: `Zoë Moss. ${ shown }. Press ’99.`,
 					displayOverride: null,
 				},
 				options
 			)
-		).toEqual([
+		).toEqual( [
 			{ text: 'Zoë Moss. ', italic: false },
 			{ text: shown, italic: true },
 			{ text: '. Press ’99.', italic: false },
-		]);
-	});
-});
+		] );
+	} );
+} );
 
-describe('titles inside URLs', () => {
+describe( 'titles inside URLs', () => {
 	const elife = {
 		csl: {
 			type: 'article-journal',
@@ -645,18 +651,18 @@ describe('titles inside URLs', () => {
 	};
 	const options = { quoteAwareItalics: true, urlAwareItalics: true };
 
-	it('italicizes the journal name, not its last occurrence inside the DOI link', () => {
-		expect(getDisplaySegments(elife, options)).toEqual([
+	it( 'italicizes the journal name, not its last occurrence inside the DOI link', () => {
+		expect( getDisplaySegments( elife, options ) ).toEqual( [
 			{ text: 'Kim, Lee. “A Study of Cell Signalling.” ', italic: false },
 			{ text: 'eLife', italic: true },
 			{
 				text: ' 12 (2023): e83254. https://doi.org/10.7554/eLife.83254.',
 				italic: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it('leaves a title that only occurs inside a URL unitalicized', () => {
+	it( 'leaves a title that only occurs inside a URL unitalicized', () => {
 		expect(
 			getDisplaySegments(
 				{
@@ -666,18 +672,23 @@ describe('titles inside URLs', () => {
 				},
 				options
 			)
-		).toEqual([
+		).toEqual( [
 			{
 				text: 'Kim, Lee. 2023. https://doi.org/10.7554/eLife.83254.',
 				italic: false,
 			},
-		]);
-	});
+		] );
+	} );
 
-	it('italicizes inside the URL as before without the option (the pre-1.10.0 shape)', () => {
-		const segments = getDisplaySegments(elife, { quoteAwareItalics: true });
+	it( 'italicizes inside the URL as before without the option (the pre-1.10.0 shape)', () => {
+		const segments = getDisplaySegments( elife, {
+			quoteAwareItalics: true,
+		} );
 
-		expect(segments.at(-2)).toEqual({ text: 'eLife', italic: true });
-		expect(segments.at(-1)).toEqual({ text: '.83254.', italic: false });
-	});
-});
+		expect( segments.at( -2 ) ).toEqual( { text: 'eLife', italic: true } );
+		expect( segments.at( -1 ) ).toEqual( {
+			text: '.83254.',
+			italic: false,
+		} );
+	} );
+} );

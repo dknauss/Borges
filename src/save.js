@@ -18,10 +18,10 @@ import {
 	renderBibliographySave,
 } from './save-markup';
 
-export default function save({ attributes }) {
-	return renderBibliographySave(attributes, {
+export default function save( { attributes } ) {
+	return renderBibliographySave( attributes, {
 		sortEntries: true,
-		headingTag: getHeadingTag(attributes.headingLevel),
+		headingTag: getHeadingTag( attributes.headingLevel ),
 		entryTag: 'span',
 		includeCiteExport: attributes.outputCiteExport ?? false,
 		repeatedAuthors: true,
@@ -35,5 +35,5 @@ export default function save({ attributes }) {
 		canonicalDoiUrl: true,
 		jsonLdItemList: true,
 		labels: LOCALE_INDEPENDENT_SAVE_LABELS,
-	});
+	} );
 }

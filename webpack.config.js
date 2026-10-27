@@ -1,6 +1,6 @@
-const path = require('path');
-const defaultConfig = require('@wordpress/scripts/config/webpack.config');
-const DependencyExtractionWebpackPlugin = require('@wordpress/dependency-extraction-webpack-plugin');
+const path = require( 'path' );
+const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
+const DependencyExtractionWebpackPlugin = require( '@wordpress/dependency-extraction-webpack-plugin' );
 
 const wpIconsRequest = '@wordpress/icons';
 
@@ -16,14 +16,14 @@ module.exports = {
 				: defaultEntry;
 		return {
 			...base,
-			validation: path.resolve(__dirname, 'src/validation.js'),
-			view: path.resolve(__dirname, 'src/view.js'),
+			validation: path.resolve( __dirname, 'src/validation.js' ),
+			view: path.resolve( __dirname, 'src/view.js' ),
 		};
 	},
 	resolve: {
-		...(defaultConfig.resolve || {}),
+		...( defaultConfig.resolve || {} ),
 		alias: {
-			...(defaultConfig.resolve?.alias || {}),
+			...( defaultConfig.resolve?.alias || {} ),
 			'react/jsx-runtime$': path.resolve(
 				__dirname,
 				'node_modules/react/jsx-runtime.js'
@@ -35,17 +35,17 @@ module.exports = {
 		},
 	},
 	plugins: [
-		...(defaultConfig.plugins || []).filter(
-			(plugin) =>
+		...( defaultConfig.plugins || [] ).filter(
+			( plugin ) =>
 				plugin.constructor.name !== 'DependencyExtractionWebpackPlugin'
 		),
-		new DependencyExtractionWebpackPlugin({
-			requestToExternal(request) {
-				if (request === wpIconsRequest) {
+		new DependencyExtractionWebpackPlugin( {
+			requestToExternal( request ) {
+				if ( request === wpIconsRequest ) {
 					return null;
 				}
 			},
-		}),
+		} ),
 	],
 	output: {
 		...defaultConfig.output,

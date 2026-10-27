@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { spawnSync } = require('node:child_process');
+const { spawnSync } = require( 'node:child_process' );
 
 const commands = [
 	{
@@ -17,20 +17,20 @@ const commands = [
 	{
 		label: 'PHPUnit coordination fixtures',
 		cmd: 'composer',
-		args: ['test:php', '--', 'tests/phpunit/SortCoordinationTest.php'],
+		args: [ 'test:php', '--', 'tests/phpunit/SortCoordinationTest.php' ],
 	},
 ];
 
-for (const command of commands) {
-	process.stdout.write(`\n== ${command.label} ==\n`);
-	const result = spawnSync(command.cmd, command.args, {
+for ( const command of commands ) {
+	process.stdout.write( `\n== ${ command.label } ==\n` );
+	const result = spawnSync( command.cmd, command.args, {
 		stdio: 'inherit',
 		shell: false,
-	});
+	} );
 
-	if (result.status !== 0) {
-		process.exit(result.status || 1);
+	if ( result.status !== 0 ) {
+		process.exit( result.status || 1 );
 	}
 }
 
-process.stdout.write('\nSort coordination verification passed.\n');
+process.stdout.write( '\nSort coordination verification passed.\n' );

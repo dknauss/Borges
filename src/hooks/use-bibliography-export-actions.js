@@ -24,14 +24,14 @@ import { getPlainDisplayText } from '../lib/formatting';
  * @param {(target: Object) => void}                                    options.queueFocus    Focus queue helper.
  * @return {Object} Clipboard/export action handlers.
  */
-export function useBibliographyExportActions({
+export function useBibliographyExportActions( {
 	announce,
 	citationStyle,
 	citationsRef,
 	queueFocus,
-}) {
-	const handleCopyBibliography = useCallback(async () => {
-		if (!citationsRef.current.length) {
+} ) {
+	const handleCopyBibliography = useCallback( async () => {
+		if ( ! citationsRef.current.length ) {
 			return;
 		}
 
@@ -44,7 +44,7 @@ export function useBibliographyExportActions({
 			);
 			announce(
 				'success',
-				__('Copied bibliography.', 'borges-bibliography-builder'),
+				__( 'Copied bibliography.', 'borges-bibliography-builder' ),
 				{
 					type: 'snackbar',
 				}
@@ -57,17 +57,17 @@ export function useBibliographyExportActions({
 					'borges-bibliography-builder'
 				)
 			);
-			queueFocus({ type: 'notice' });
+			queueFocus( { type: 'notice' } );
 		}
-	}, [announce, citationStyle, citationsRef, queueFocus]);
+	}, [ announce, citationStyle, citationsRef, queueFocus ] );
 
 	const handleCopyCitation = useCallback(
-		async (citation) => {
+		async ( citation ) => {
 			try {
-				await copyTextToClipboard(getPlainDisplayText(citation));
+				await copyTextToClipboard( getPlainDisplayText( citation ) );
 				announce(
 					'success',
-					__('Copied citation.', 'borges-bibliography-builder'),
+					__( 'Copied citation.', 'borges-bibliography-builder' ),
 					{
 						type: 'snackbar',
 					}
@@ -80,19 +80,19 @@ export function useBibliographyExportActions({
 						'borges-bibliography-builder'
 					)
 				);
-				queueFocus({ type: 'notice' });
+				queueFocus( { type: 'notice' } );
 			}
 		},
-		[announce, queueFocus]
+		[ announce, queueFocus ]
 	);
 
-	const handleDownloadCslJson = useCallback(() => {
-		if (!citationsRef.current.length) {
+	const handleDownloadCslJson = useCallback( () => {
+		if ( ! citationsRef.current.length ) {
 			return;
 		}
 
 		try {
-			downloadCslJsonExport(citationsRef.current, citationStyle);
+			downloadCslJsonExport( citationsRef.current, citationStyle );
 			announce(
 				'success',
 				__(
@@ -111,20 +111,23 @@ export function useBibliographyExportActions({
 					'borges-bibliography-builder'
 				)
 			);
-			queueFocus({ type: 'notice' });
+			queueFocus( { type: 'notice' } );
 		}
-	}, [announce, citationStyle, citationsRef, queueFocus]);
+	}, [ announce, citationStyle, citationsRef, queueFocus ] );
 
-	const handleDownloadBibtex = useCallback(async () => {
-		if (!citationsRef.current.length) {
+	const handleDownloadBibtex = useCallback( async () => {
+		if ( ! citationsRef.current.length ) {
 			return;
 		}
 
 		try {
-			await downloadBibtexExport(citationsRef.current, citationStyle);
+			await downloadBibtexExport( citationsRef.current, citationStyle );
 			announce(
 				'success',
-				__('Downloaded BibTeX export.', 'borges-bibliography-builder'),
+				__(
+					'Downloaded BibTeX export.',
+					'borges-bibliography-builder'
+				),
 				{
 					type: 'snackbar',
 				}
@@ -137,17 +140,17 @@ export function useBibliographyExportActions({
 					'borges-bibliography-builder'
 				)
 			);
-			queueFocus({ type: 'notice' });
+			queueFocus( { type: 'notice' } );
 		}
-	}, [announce, citationStyle, citationsRef, queueFocus]);
+	}, [ announce, citationStyle, citationsRef, queueFocus ] );
 
-	const handleDownloadBiblatex = useCallback(async () => {
-		if (!citationsRef.current.length) {
+	const handleDownloadBiblatex = useCallback( async () => {
+		if ( ! citationsRef.current.length ) {
 			return;
 		}
 
 		try {
-			await downloadBiblatexExport(citationsRef.current, citationStyle);
+			await downloadBiblatexExport( citationsRef.current, citationStyle );
 			announce(
 				'success',
 				__(
@@ -166,20 +169,20 @@ export function useBibliographyExportActions({
 					'borges-bibliography-builder'
 				)
 			);
-			queueFocus({ type: 'notice' });
+			queueFocus( { type: 'notice' } );
 		}
-	}, [announce, citationStyle, citationsRef, queueFocus]);
+	}, [ announce, citationStyle, citationsRef, queueFocus ] );
 
-	const handleDownloadRis = useCallback(() => {
-		if (!citationsRef.current.length) {
+	const handleDownloadRis = useCallback( () => {
+		if ( ! citationsRef.current.length ) {
 			return;
 		}
 
 		try {
-			downloadRisExport(citationsRef.current, citationStyle);
+			downloadRisExport( citationsRef.current, citationStyle );
 			announce(
 				'success',
-				__('Downloaded RIS export.', 'borges-bibliography-builder'),
+				__( 'Downloaded RIS export.', 'borges-bibliography-builder' ),
 				{
 					type: 'snackbar',
 				}
@@ -192,9 +195,9 @@ export function useBibliographyExportActions({
 					'borges-bibliography-builder'
 				)
 			);
-			queueFocus({ type: 'notice' });
+			queueFocus( { type: 'notice' } );
 		}
-	}, [announce, citationStyle, citationsRef, queueFocus]);
+	}, [ announce, citationStyle, citationsRef, queueFocus ] );
 
 	return {
 		handleCopyBibliography,

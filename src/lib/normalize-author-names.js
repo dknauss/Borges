@@ -14,12 +14,12 @@
 
 import { NAME_PARTICLES } from './name-particles';
 
-const NAME_LIST_FIELDS = ['author', 'editor', 'reviewed-author'];
+const NAME_LIST_FIELDS = [ 'author', 'editor', 'reviewed-author' ];
 
-function titleCaseWord(word) {
+function titleCaseWord( word ) {
 	const lower = word.toLowerCase();
 
-	if (NAME_PARTICLES.has(lower)) {
+	if ( NAME_PARTICLES.has( lower ) ) {
 		return lower;
 	}
 
@@ -27,7 +27,7 @@ function titleCaseWord(word) {
 	// "smith-jones" -> "Smith-Jones" and "o'brien" -> "O'Brien".
 	return lower.replace(
 		/(^|[-'’])(\p{L})/gu,
-		(match, separator, letter) => separator + letter.toUpperCase()
+		( match, separator, letter ) => separator + letter.toUpperCase()
 	);
 }
 
@@ -41,59 +41,67 @@ function titleCaseWord(word) {
  *                                               the given-name field, where such tokens are almost always initials.
  * @return {string} Normalized token (or the original value when not a string).
  */
-export function normalizeNameToken(value, { allowShortInitials = false } = {}) {
-	if (typeof value !== 'string' || value === '') {
+export function normalizeNameToken(
+	value,
+	{ allowShortInitials = false } = {}
+) {
+	if ( typeof value !== 'string' || value === '' ) {
 		return value;
 	}
 
 	// Any lowercase letter means the casing is intentional — leave it.
-	if (/\p{Ll}/u.test(value)) {
+	if ( /\p{Ll}/u.test( value ) ) {
 		return value;
 	}
 
 	// No uppercase letter at all (punctuation, digits, caseless scripts).
-	if (!/\p{Lu}/u.test(value)) {
+	if ( ! /\p{Lu}/u.test( value ) ) {
 		return value;
 	}
 
-	const letterRuns = /** @type {string[]} */ (value.match(/\p{L}+/gu) || []);
+	const letterRuns = /** @type {string[]} */ (
+		value.match( /\p{L}+/gu ) || []
+	);
 
 	// Dotted/spaced initials ("A. M.", "J. D.") — every letter run is a single
 	// character. Leave these regardless of field.
-	if (letterRuns.length > 0 && letterRuns.every((run) => run.length === 1)) {
+	if (
+		letterRuns.length > 0 &&
+		letterRuns.every( ( run ) => run.length === 1 )
+	) {
 		return value;
 	}
 
 	// Given field: also leave short concatenated initials ("JD", "FHC").
-	if (allowShortInitials) {
+	if ( allowShortInitials ) {
 		const letterCount = letterRuns.reduce(
-			(total, run) => total + run.length,
+			( total, run ) => total + run.length,
 			0
 		);
 
-		if (letterCount > 0 && letterCount <= 3) {
+		if ( letterCount > 0 && letterCount <= 3 ) {
 			return value;
 		}
 	}
 
-	return value.replace(/\p{L}[\p{L}'’.-]*/gu, titleCaseWord);
+	return value.replace( /\p{L}[\p{L}'’.-]*/gu, titleCaseWord );
 }
 
-function normalizeNameEntry(name) {
-	if (!name || typeof name !== 'object') {
+function normalizeNameEntry( name ) {
+	if ( ! name || typeof name !== 'object' ) {
 		return name;
 	}
 
 	const next = { ...name };
 
-	if (typeof next.family === 'string') {
-		next.family = normalizeNameToken(next.family);
+	if ( typeof next.family === 'string' ) {
+		next.family = normalizeNameToken( next.family );
 	}
 
-	if (typeof next.given === 'string') {
-		next.given = normalizeNameToken(next.given, {
+	if ( typeof next.given === 'string' ) {
+		next.given = normalizeNameToken( next.given, {
 			allowShortInitials: true,
-		});
+		} );
 	}
 
 	return next;
@@ -109,16 +117,16 @@ function normalizeNameEntry(name) {
  * @param {Object} csl CSL-JSON object.
  * @return {Object} New CSL object with normalized name casing.
  */
-export function normalizeCslNameCase(csl) {
-	if (!csl || typeof csl !== 'object') {
+export function normalizeCslNameCase( csl ) {
+	if ( ! csl || typeof csl !== 'object' ) {
 		return csl;
 	}
 
 	const result = { ...csl };
 
-	for (const field of NAME_LIST_FIELDS) {
-		if (Array.isArray(result[field])) {
-			result[field] = result[field].map(normalizeNameEntry);
+	for ( const field of NAME_LIST_FIELDS ) {
+		if ( Array.isArray( result[ field ] ) ) {
+			result[ field ] = result[ field ].map( normalizeNameEntry );
 		}
 	}
 

@@ -34,19 +34,19 @@ const ARXIV_URL_PREFIX_SOURCE =
 // Standalone: `arXiv:ID` or an arxiv.org abs/pdf URL. A bare `2301.00001` is
 // not accepted; without the label it is indistinguishable from a number.
 const ARXIV_REGEX = new RegExp(
-	`^(?:arxiv:\\s*|${ARXIV_URL_PREFIX_SOURCE})(${ARXIV_ID_SOURCE})(?:\\.pdf)?\\/?$`,
+	`^(?:arxiv:\\s*|${ ARXIV_URL_PREFIX_SOURCE })(${ ARXIV_ID_SOURCE })(?:\\.pdf)?\\/?$`,
 	'iu'
 );
 // The lookbehind keeps an embedded link from matching inside a longer
 // hostname: `evilarxiv.org/abs/…` or `mirror.arxiv.org/abs/…` is not arXiv.
 const EMBEDDED_ARXIV_REGEX = new RegExp(
-	`(?:\\barxiv:\\s*|(?<![\\w.-])${ARXIV_URL_PREFIX_SOURCE})(${ARXIV_ID_SOURCE})`,
+	`(?:\\barxiv:\\s*|(?<![\\w.-])${ ARXIV_URL_PREFIX_SOURCE })(${ ARXIV_ID_SOURCE })`,
 	'iu'
 );
 // arXiv's own DataCite DOIs (10.48550/arXiv.ID) are not in CrossRef, so they
 // resolve through the arXiv backend instead of the DOI one.
 const ARXIV_DOI_REGEX = new RegExp(
-	`^(?:(?:https?:\\/\\/)?(?:dx\\.)?doi\\.org\\/|doi:)?10\\.48550\\/arxiv\\.(${ARXIV_ID_SOURCE})$`,
+	`^(?:(?:https?:\\/\\/)?(?:dx\\.)?doi\\.org\\/|doi:)?10\\.48550\\/arxiv\\.(${ ARXIV_ID_SOURCE })$`,
 	'iu'
 );
 // Standalone ISBN: an `ISBN`/`ISBN-10`/`ISBN-13` label with either length, or
@@ -82,25 +82,25 @@ const ARCHIVE_LABEL_REGEX = /^ia:\s*([A-Za-z0-9][A-Za-z0-9._-]{0,99})$/iu;
 const ARCHIVE_ARK_REGEX =
 	/^(?:(?:https?:\/\/)?(?:n2t\.net|(?:www\.)?archive\.org(?:\/details)?)\/)?ark:\/?13960\/([a-z0-9]{1,40})\/?$/iu;
 
-export function normalizePmidInput(value) {
-	return value.replace(/^PMID:\s*/iu, '').trim();
+export function normalizePmidInput( value ) {
+	return value.replace( /^PMID:\s*/iu, '' ).trim();
 }
 
-export function normalizePmcidInput(value) {
-	return value.replace(/^(?:PMCID:\s*)?PMC/iu, '').trim();
+export function normalizePmcidInput( value ) {
+	return value.replace( /^(?:PMCID:\s*)?PMC/iu, '' ).trim();
 }
 
-export function normalizeDoiInput(value) {
+export function normalizeDoiInput( value ) {
 	return value
 		.trim()
-		.replace(/[).,;:\s]+$/u, '')
-		.replace(/^(?:https?:\/\/)?doi:/iu, '');
+		.replace( /[).,;:\s]+$/u, '' )
+		.replace( /^(?:https?:\/\/)?doi:/iu, '' );
 }
 
-export function normalizeDoiValueForLookup(value) {
-	return normalizeDoiInput(value)
+export function normalizeDoiValueForLookup( value ) {
+	return normalizeDoiInput( value )
 		.toLowerCase()
-		.replace(/^(?:https?:\/\/)?(?:dx\.)?doi\.org\//u, '');
+		.replace( /^(?:https?:\/\/)?(?:dx\.)?doi\.org\//u, '' );
 }
 
 /**
@@ -115,16 +115,16 @@ export function normalizeDoiValueForLookup(value) {
  * @param {string} chunk Free-text citation string (already trimmed).
  * @return {{ format: 'doi'|'pmid'|'pmcid'|'arxiv'|'isbn', value: string, rawValue: string } | null} Extracted identifier result, or null if none found.
  */
-export function extractEmbeddedIdentifier(chunk) {
+export function extractEmbeddedIdentifier( chunk ) {
 	// DOI first — higher authority than PMID when both co-occur.
-	const doiMatch = chunk.match(EMBEDDED_DOI_REGEX);
-	if (doiMatch) {
-		const arxivIdFromDoi = getArxivId(doiMatch[0]);
+	const doiMatch = chunk.match( EMBEDDED_DOI_REGEX );
+	if ( doiMatch ) {
+		const arxivIdFromDoi = getArxivId( doiMatch[ 0 ] );
 
-		if (arxivIdFromDoi) {
+		if ( arxivIdFromDoi ) {
 			return {
 				format: 'arxiv',
-				value: `arXiv:${arxivIdFromDoi}`,
+				value: `arXiv:${ arxivIdFromDoi }`,
 				rawValue: chunk,
 			};
 		}
@@ -133,47 +133,47 @@ export function extractEmbeddedIdentifier(chunk) {
 			format: 'doi',
 			// Strip trailing punctuation (.,;:) and any doi: URL prefix via the
 			// existing normalizeDoiInput helper. Preserves the https://doi.org/ form.
-			value: normalizeDoiInput(doiMatch[0]),
+			value: normalizeDoiInput( doiMatch[ 0 ] ),
 			rawValue: chunk,
 		};
 	}
 
 	// PMID second — label required to avoid false positives on bare numbers.
-	const pmidMatch = chunk.match(EMBEDDED_PMID_REGEX);
-	if (pmidMatch) {
+	const pmidMatch = chunk.match( EMBEDDED_PMID_REGEX );
+	if ( pmidMatch ) {
 		return {
 			format: 'pmid',
 			// Normalized to the PMID:NNNN form that PARSER_BACKENDS.pmid expects.
-			value: `PMID:${pmidMatch[1]}`,
+			value: `PMID:${ pmidMatch[ 1 ] }`,
 			rawValue: chunk,
 		};
 	}
 
-	const pmcidMatch = chunk.match(EMBEDDED_PMCID_REGEX);
-	if (pmcidMatch) {
+	const pmcidMatch = chunk.match( EMBEDDED_PMCID_REGEX );
+	if ( pmcidMatch ) {
 		return {
 			format: 'pmcid',
-			value: `PMC${pmcidMatch[1]}`,
+			value: `PMC${ pmcidMatch[ 1 ] }`,
 			rawValue: chunk,
 		};
 	}
 
-	const arxivMatch = chunk.match(EMBEDDED_ARXIV_REGEX);
-	if (arxivMatch) {
+	const arxivMatch = chunk.match( EMBEDDED_ARXIV_REGEX );
+	if ( arxivMatch ) {
 		return {
 			format: 'arxiv',
-			value: `arXiv:${arxivMatch[1]}`,
+			value: `arXiv:${ arxivMatch[ 1 ] }`,
 			rawValue: chunk,
 		};
 	}
 
 	// ISBN last: a book DOI or PMID carries richer metadata when present.
-	const isbnMatch = chunk.match(EMBEDDED_ISBN_REGEX);
-	const embeddedIsbn = isbnMatch ? normalizeIsbn(isbnMatch[1]) : null;
-	if (embeddedIsbn) {
+	const isbnMatch = chunk.match( EMBEDDED_ISBN_REGEX );
+	const embeddedIsbn = isbnMatch ? normalizeIsbn( isbnMatch[ 1 ] ) : null;
+	if ( embeddedIsbn ) {
 		return {
 			format: 'isbn',
-			value: `ISBN ${embeddedIsbn}`,
+			value: `ISBN ${ embeddedIsbn }`,
 			rawValue: chunk,
 		};
 	}
@@ -187,13 +187,13 @@ export function extractEmbeddedIdentifier(chunk) {
  * @param {string} value Standalone identifier text.
  * @return {string|null} The arXiv ID, or null when the value is not one.
  */
-export function getArxivId(value) {
+export function getArxivId( value ) {
 	const trimmed = value.trim();
 	const match =
-		trimmed.match(ARXIV_REGEX) ||
-		normalizeDoiInput(trimmed).match(ARXIV_DOI_REGEX);
+		trimmed.match( ARXIV_REGEX ) ||
+		normalizeDoiInput( trimmed ).match( ARXIV_DOI_REGEX );
 
-	return match ? match[1] : null;
+	return match ? match[ 1 ] : null;
 }
 
 /**
@@ -204,42 +204,46 @@ export function getArxivId(value) {
  * @param {string} value Digits (with optional hyphens/spaces), ISBN-10 or -13.
  * @return {string|null} The ISBN-13, or null when the checksum fails.
  */
-export function normalizeIsbn(value) {
-	const isbn = String(value).replace(/[\s-]/gu, '').toUpperCase();
+export function normalizeIsbn( value ) {
+	const isbn = String( value ).replace( /[\s-]/gu, '' ).toUpperCase();
 
-	const isbn13CheckDigit = (firstTwelve) => {
+	const isbn13CheckDigit = ( firstTwelve ) => {
 		let sum = 0;
-		for (let i = 0; i < 12; i++) {
-			sum += Number(firstTwelve[i]) * (i % 2 === 0 ? 1 : 3);
+		for ( let i = 0; i < 12; i++ ) {
+			sum += Number( firstTwelve[ i ] ) * ( i % 2 === 0 ? 1 : 3 );
 		}
-		return String((10 - (sum % 10)) % 10);
+		return String( ( 10 - ( sum % 10 ) ) % 10 );
 	};
 
-	if (/^\d{9}[\dX]$/u.test(isbn)) {
+	if ( /^\d{9}[\dX]$/u.test( isbn ) ) {
 		let sum = 0;
-		for (let i = 0; i < 10; i++) {
-			sum += (isbn[i] === 'X' ? 10 : Number(isbn[i])) * (10 - i);
+		for ( let i = 0; i < 10; i++ ) {
+			sum +=
+				( isbn[ i ] === 'X' ? 10 : Number( isbn[ i ] ) ) * ( 10 - i );
 		}
-		if (sum % 11 !== 0) {
+		if ( sum % 11 !== 0 ) {
 			return null;
 		}
-		const base = `978${isbn.slice(0, 9)}`;
-		return base + isbn13CheckDigit(base);
+		const base = `978${ isbn.slice( 0, 9 ) }`;
+		return base + isbn13CheckDigit( base );
 	}
 
-	if (/^97[89]\d{10}$/u.test(isbn)) {
-		return isbn13CheckDigit(isbn.slice(0, 12)) === isbn[12] ? isbn : null;
+	if ( /^97[89]\d{10}$/u.test( isbn ) ) {
+		return isbn13CheckDigit( isbn.slice( 0, 12 ) ) === isbn[ 12 ]
+			? isbn
+			: null;
 	}
 
 	return null;
 }
 
-export function getStandaloneIsbn(value) {
+export function getStandaloneIsbn( value ) {
 	const trimmed = value.trim();
 	const match =
-		trimmed.match(LABELED_ISBN_REGEX) || trimmed.match(BARE_ISBN13_REGEX);
+		trimmed.match( LABELED_ISBN_REGEX ) ||
+		trimmed.match( BARE_ISBN13_REGEX );
 
-	return match ? normalizeIsbn(match[1]) : null;
+	return match ? normalizeIsbn( match[ 1 ] ) : null;
 }
 
 /**
@@ -250,19 +254,19 @@ export function getStandaloneIsbn(value) {
  * @param {string} value Raw LCCN.
  * @return {string|null} The normalized LCCN, or null when it is not one.
  */
-export function normalizeLccn(value) {
-	let lccn = String(value)
-		.replace(/\s+/gu, '')
+export function normalizeLccn( value ) {
+	let lccn = String( value )
+		.replace( /\s+/gu, '' )
 		.toLowerCase()
-		.replace(/\/.*$/u, '');
-	const hyphenated = lccn.match(/^([a-z]{0,3}(?:\d{2}|\d{4}))-(\d{1,6})$/u);
+		.replace( /\/.*$/u, '' );
+	const hyphenated = lccn.match( /^([a-z]{0,3}(?:\d{2}|\d{4}))-(\d{1,6})$/u );
 
-	if (hyphenated) {
-		lccn = hyphenated[1] + hyphenated[2].padStart(6, '0');
+	if ( hyphenated ) {
+		lccn = hyphenated[ 1 ] + hyphenated[ 2 ].padStart( 6, '0' );
 	}
 
 	// A normalized LCCN is a two- or four-digit year plus a six-digit serial.
-	return /^[a-z]{0,3}(?:\d{8}|\d{10})$/u.test(lccn) ? lccn : null;
+	return /^[a-z]{0,3}(?:\d{8}|\d{10})$/u.test( lccn ) ? lccn : null;
 }
 
 /**
@@ -275,27 +279,28 @@ export function normalizeLccn(value) {
  * @param {string} value Standalone identifier text.
  * @return {string|null} `OCLC:…`, `LCCN:…`, or `OLID:…`; null when not one.
  */
-export function getCatalogKey(value) {
-	const trimmed = String(value).trim();
+export function getCatalogKey( value ) {
+	const trimmed = String( value ).trim();
 	const oclc =
-		trimmed.match(OCLC_INPUT_REGEX) || trimmed.match(WORLDCAT_URL_REGEX);
+		trimmed.match( OCLC_INPUT_REGEX ) ||
+		trimmed.match( WORLDCAT_URL_REGEX );
 
-	if (oclc) {
-		return `OCLC:${oclc[1]}`;
+	if ( oclc ) {
+		return `OCLC:${ oclc[ 1 ] }`;
 	}
 
 	const lccnInput =
-		trimmed.match(LCCN_INPUT_REGEX) || trimmed.match(LCCN_URL_REGEX);
+		trimmed.match( LCCN_INPUT_REGEX ) || trimmed.match( LCCN_URL_REGEX );
 
-	if (lccnInput) {
-		const lccn = normalizeLccn(lccnInput[1]);
+	if ( lccnInput ) {
+		const lccn = normalizeLccn( lccnInput[ 1 ] );
 
-		return lccn ? `LCCN:${lccn}` : null;
+		return lccn ? `LCCN:${ lccn }` : null;
 	}
 
-	const olid = trimmed.match(OPEN_LIBRARY_EDITION_REGEX);
+	const olid = trimmed.match( OPEN_LIBRARY_EDITION_REGEX );
 
-	return olid ? `OLID:${olid[1].toUpperCase()}` : null;
+	return olid ? `OLID:${ olid[ 1 ].toUpperCase() }` : null;
 }
 
 /**
@@ -306,16 +311,17 @@ export function getCatalogKey(value) {
  * @param {string} value Standalone identifier text.
  * @return {string|null} The item identifier or `ark:/13960/…`; null when not one.
  */
-export function getArchiveId(value) {
-	const trimmed = String(value).trim();
-	const ark = trimmed.match(ARCHIVE_ARK_REGEX);
+export function getArchiveId( value ) {
+	const trimmed = String( value ).trim();
+	const ark = trimmed.match( ARCHIVE_ARK_REGEX );
 
-	if (ark) {
-		return `ark:/13960/${ark[1].toLowerCase()}`;
+	if ( ark ) {
+		return `ark:/13960/${ ark[ 1 ].toLowerCase() }`;
 	}
 
 	const item =
-		trimmed.match(ARCHIVE_URL_REGEX) || trimmed.match(ARCHIVE_LABEL_REGEX);
+		trimmed.match( ARCHIVE_URL_REGEX ) ||
+		trimmed.match( ARCHIVE_LABEL_REGEX );
 
-	return item ? item[1] : null;
+	return item ? item[ 1 ] : null;
 }
