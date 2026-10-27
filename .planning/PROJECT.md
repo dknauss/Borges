@@ -22,8 +22,9 @@ block backed by CSL-JSON.
     work is tracked as **release-versioned GSD milestones** (see _Milestone
     convention_ below).
 -   Frontend Cite/Export affordances **shipped** in 1.4.x. Remaining active phase
-    work: `05-writable-bibliography-rest` (deferred design memo) and
-    `06-ci-optimization` (unplanned strategy sketch) — both backlog.
+    work: `06-ci-optimization` (unplanned strategy sketch, backlog).
+    `05-writable-bibliography-rest` is complete (its last milestone, M4,
+    shipped in 1.15.0).
 -   The hidden 51-entry formatter cliff is now replaced by an explicit, tested
     50-total-citation policy for 1.x
 -   Maintain CSL-JSON as the canonical citation model
@@ -47,8 +48,8 @@ without milestone ceremony).
     `/gsd:complete-milestone <version> --archive-phases`. Don't tag a release
     while its milestone still has unverified in-scope phases.
 -   **Backlog phases get assigned to a release** when prioritized, rather than
-    floating. Current loose backlog: `05-writable-bibliography-rest` and
-    `06-ci-optimization` — assign each to a release milestone when picked up.
+    floating. Current loose backlog: `06-ci-optimization` — assign it to a release
+    milestone when picked up.
 -   **Source of truth for "what shipped" is git** (`git log main`, tags,
     `package.json` version), not the planning docs — cross-check before trusting
     a `.planning/` status claim.

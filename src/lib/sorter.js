@@ -200,8 +200,53 @@ function compareAuthorChains( chainA, chainB, locale ) {
 	return chainA.length - chainB.length;
 }
 
+/**
+ * Compare two entries by their whole primary-contributor chains when both
+ * have one, else by the author sort key (a title for an authorless entry).
+ *
+ * Shared by the notes and author-date comparators, so a single-author work
+ * sorts before co-authored works that begin with the same name, and
+ * contributors who share a family name sort by given name.
+ *
+ * @param {Object} a      Citation.
+ * @param {Object} b      Citation.
+ * @param {string} locale Style locale.
+ * @param {Object} rule   Sort rule from sortCitations().
+ * @return {number} Comparison result.
+ */
+function compareAuthorChainsOrKeys( a, b, locale, rule ) {
+	const chainA = getAuthorChain( a.csl, rule.particles );
+	const chainB = getAuthorChain( b.csl, rule.particles );
+
+	if ( chainA.length && chainB.length ) {
+		const chainCmp = compareAuthorChains( chainA, chainB, locale );
+		if ( chainCmp !== 0 ) {
+			return chainCmp;
+		}
+	}
+
+	return compareAuthors( a, b, locale, rule );
+}
+
+/**
+ * Notes-bibliography order: authors, then title, then year.
+ *
+ * With `rule.authorChains` the authors compare as whole chains, as CMOS
+ * 17th ed. 14.67–14.70 asks: "Gessner, Conrad" before "Gessner, Conrad, and
+ * Josias Simler", and "Smith, Adam" before "Smith, John". Without it only the
+ * first contributor's family name counts, the order save() produced before
+ * 1.16.0.
+ *
+ * @param {Object} a      Citation.
+ * @param {Object} b      Citation.
+ * @param {string} locale Style locale.
+ * @param {Object} rule   Sort rule from sortCitations().
+ * @return {number} Comparison result.
+ */
 function compareNotes( a, b, locale, rule ) {
-	const authorCmp = compareAuthors( a, b, locale, rule );
+	const authorCmp = rule.authorChains
+		? compareAuthorChainsOrKeys( a, b, locale, rule )
+		: compareAuthors( a, b, locale, rule );
 	if ( authorCmp !== 0 ) {
 		return authorCmp;
 	}
@@ -215,22 +260,7 @@ function compareNotes( a, b, locale, rule ) {
 }
 
 function compareAuthorDate( a, b, locale, rule ) {
-	const chainA = getAuthorChain( a.csl, rule.particles );
-	const chainB = getAuthorChain( b.csl, rule.particles );
-
-	if ( chainA.length && chainB.length ) {
-		const chainCmp = compareAuthorChains( chainA, chainB, locale );
-		if ( chainCmp !== 0 ) {
-			return chainCmp;
-		}
-	} else {
-		const authorCmp = compareAuthors( a, b, locale, rule );
-		if ( authorCmp !== 0 ) {
-			return authorCmp;
-		}
-	}
-
-	const authorCmp = compareAuthors( a, b, locale, rule );
+	const authorCmp = compareAuthorChainsOrKeys( a, b, locale, rule );
 	if ( authorCmp !== 0 ) {
 		return authorCmp;
 	}
@@ -269,6 +299,11 @@ function getComparatorForFamily( family, locale, rule ) {
  * `localeArticles: false` skips only the English ones, the order save()
  * produced before 1.16.0.
  *
+ * Notes styles compare whole author chains, as author-date styles always
+ * have, so a single-author work precedes co-authored works that begin with
+ * the same name. `notesAuthorChains: false` compares only the first
+ * contributor's family name, the order save() produced before 1.16.0.
+ *
  * @param {Array}   citations                   Array of citation objects.
  * @param {string}  styleKey                    Citation style key.
  * @param {Object}  [options]                   Options.
@@ -277,6 +312,9 @@ function getComparatorForFamily( family, locale, rule ) {
  * @param {boolean} [options.localeArticles]    Skip the style locale's
  *                                              leading articles too
  *                                              (default true).
+ * @param {boolean} [options.notesAuthorChains] Compare whole author chains
+ *                                              in notes styles
+ *                                              (default true).
  * @return {Array} Sorted citation array.
  *
  * @since 0.1.0
@@ -284,7 +322,11 @@ function getComparatorForFamily( family, locale, rule ) {
 export function sortCitations(
 	citations,
 	styleKey,
-	{ particleAwareSort = true, localeArticles = true } = {}
+	{
+		particleAwareSort = true,
+		localeArticles = true,
+		notesAuthorChains = true,
+	} = {}
 ) {
 	const style = getStyleDefinition( styleKey );
 	const locale = style.locale || 'en-US';
@@ -299,6 +341,7 @@ export function sortCitations(
 		articles: localeArticles
 			? getLeadingArticlesPattern( locale )
 			: ENGLISH_ARTICLES,
+		authorChains: notesAuthorChains,
 	};
 	const comparator = getComparatorForFamily( style.family, locale, rule );
 

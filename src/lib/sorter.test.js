@@ -292,6 +292,107 @@ describe( 'sortCitations', () => {
 		expect( sortCitations( citations ) ).toHaveLength( 2 );
 	} );
 
+	describe( 'notes-bibliography author chains (#212)', () => {
+		const gessner = { family: 'Gessner', given: 'Conrad' };
+		const gessnerCitations = () => [
+			createCitation( {
+				id: 'gessner-simler',
+				authors: [ gessner, { family: 'Simler', given: 'Josias' } ],
+				title: 'Bibliotheca',
+				year: 1574,
+			} ),
+			createCitation( {
+				id: 'gessner',
+				authors: [ gessner ],
+				title: 'Bibliotheca universalis, sive Catalogus omnium scriptorum locupletissimus',
+				year: 1545,
+			} ),
+		];
+
+		it.each( [ 'chicago-notes-bibliography', 'oscola' ] )(
+			'puts a single-author work before co-authored works with the same first author in %s',
+			( styleKey ) => {
+				expect(
+					sortCitations( gessnerCitations(), styleKey ).map(
+						( c ) => c.id
+					)
+				).toEqual( [ 'gessner', 'gessner-simler' ] );
+			}
+		);
+
+		it( 'orders co-authored works by their next author before the title', () => {
+			const citations = [
+				...gessnerCitations(),
+				createCitation( {
+					id: 'gessner-frisius',
+					authors: [
+						gessner,
+						{ family: 'Frisius', given: 'Johannes' },
+					],
+					title: 'Zeta',
+					year: 1555,
+				} ),
+			];
+
+			expect(
+				sortCitations( citations, 'chicago-notes-bibliography' ).map(
+					( c ) => c.id
+				)
+			).toEqual( [ 'gessner', 'gessner-frisius', 'gessner-simler' ] );
+		} );
+
+		it( 'orders authors who share a family name by given name before title', () => {
+			const citations = [
+				createCitation( {
+					id: 'john',
+					family: 'Smith',
+					given: 'John',
+					title: 'Alpha',
+					year: 2001,
+				} ),
+				createCitation( {
+					id: 'adam',
+					family: 'Smith',
+					given: 'Adam',
+					title: 'Zeta',
+					year: 1776,
+				} ),
+			];
+
+			expect(
+				sortCitations( citations, 'chicago-notes-bibliography' ).map(
+					( c ) => c.id
+				)
+			).toEqual( [ 'adam', 'john' ] );
+		} );
+
+		it( 'still sorts an authorless work by title among authors', () => {
+			const citations = [
+				createCitation( { id: 'zeta', family: 'Zeta', title: 'X' } ),
+				createCitation( { id: 'beowulf', title: 'Beowulf' } ),
+				createCitation( { id: 'alpha', family: 'Alpha', title: 'Y' } ),
+			];
+
+			expect(
+				sortCitations( citations, 'chicago-notes-bibliography' ).map(
+					( c ) => c.id
+				)
+			).toEqual( [ 'alpha', 'beowulf', 'zeta' ] );
+		} );
+
+		it( 'keeps the pre-1.16.0 first-surname order with notesAuthorChains: false', () => {
+			expect(
+				sortCitations(
+					gessnerCitations(),
+					'chicago-notes-bibliography',
+					{
+						notesAuthorChains: false,
+					}
+				).map( ( c ) => c.id )
+			).toEqual( [ 'gessner-simler', 'gessner' ] );
+		} );
+	} );
+
 	it( 'sorts author-date entries with same author and year by title', () => {
 		const citations = [
 			createCitation( {

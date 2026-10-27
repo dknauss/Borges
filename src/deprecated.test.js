@@ -643,3 +643,48 @@ describe( '1.15.0 deprecation italics (deprecated[0])', () => {
 		);
 	} );
 } );
+
+describe( '1.15.0 deprecation notes order (deprecated[0])', () => {
+	const gessner = { family: 'Gessner', given: 'Conrad' };
+	const attributes = {
+		citationStyle: 'chicago-notes-bibliography',
+		citations: [
+			{
+				id: 'gessner-simler',
+				csl: {
+					type: 'book',
+					title: 'Bibliotheca',
+					author: [ gessner, { family: 'Simler', given: 'Josias' } ],
+				},
+				formattedText:
+					'Gessner, Conrad, and Josias Simler. Bibliotheca. Christoph Froschauer, 1574.',
+				displayOverride: null,
+			},
+			{
+				id: 'gessner',
+				csl: {
+					type: 'book',
+					title: 'Bibliotheca universalis',
+					author: [ gessner ],
+				},
+				formattedText:
+					'Gessner, Conrad. Bibliotheca universalis. Christoph Froschauer, 1545.',
+				displayOverride: null,
+			},
+		],
+	};
+	const order = ( markup ) =>
+		[ ...markup.matchAll( /id="ref-([^"]+)"/g ) ].map(
+			( match ) => match[ 1 ]
+		);
+
+	it( 'sorted by first surname then title; save() puts the single author first (#212)', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 0 ].save( { attributes } )
+		);
+		const current = renderToStaticMarkup( save( { attributes } ) );
+
+		expect( order( old ) ).toEqual( [ 'gessner-simler', 'gessner' ] );
+		expect( order( current ) ).toEqual( [ 'gessner', 'gessner-simler' ] );
+	} );
+} );

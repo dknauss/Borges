@@ -35,8 +35,8 @@ after completion.
     via PR #37 `3995d14`, with follow-up fixes such as #47; deterministic frontend
     behavior covered by E2E in PR #53. **Archived** to
     `.planning/archive/phases/`)
--   **Phase 05** — writable bibliography REST/Abilities design (memo complete;
-    implementation deferred — active backlog)
+-   **Phase 05** — writable bibliography REST/Abilities (**complete**: M0–M3
+    in 1.7.0, M5 in 1.12.0, M4 in 1.15.0; status in the design memo)
 -   **Phase 06** — CI optimization (strategy sketch only, never planned into
     executable tasks — active backlog)
 -   **Phase 07** — free-text embedded-identifier resolution, Tier 1 (**shipped**;
@@ -452,7 +452,7 @@ The owner chose this order on 2026-10-23:
       (`src/lib/__fixtures__/reference-manager-exports/`). Still open: real,
       anonymized Zotero and Mendeley exports from the owner's libraries, then
       Papers, RefWorks, and BibDesk once samples exist
-5. **Phase 05 M4: bulk routes** — reformat and deduplicate built 2026-10-24, shipped in 1.15.0
+5. **Phase 05 M4: bulk routes** — **complete**: reformat and deduplicate built 2026-10-24, shipped in 1.15.0; nothing in M4 remains
     - Design agreed with Dan 2026-10-24: synchronous batches (up to 25
       posts, a `remaining` list) instead of a polled job ID, since jobs
       would need stored records and cron; a per-user budget of 250 posts
