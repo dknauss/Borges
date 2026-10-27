@@ -72,7 +72,8 @@
 	"dependencies": {
 		"@citation-js/core": "0.7.18",
 		"@citation-js/plugin-bibtex": "0.7.18",
-		"@citation-js/plugin-doi": "0.7.18"
+		"@citation-js/plugin-doi": "0.7.18",
+		"@citation-js/plugin-ris": "0.7.18"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.11.3",

@@ -1,6 +1,6 @@
 /**
  * Splitting pasted input into items: format detection per chunk, standalone
- * identifier lines, and BibTeX entry boundaries.
+ * identifier lines, and RIS record and BibTeX entry boundaries.
  *
  * Split from parser.js (refactor memo, Phase E); parser.js re-exports the
  * public names, so importers are unchanged.
@@ -217,7 +217,7 @@ function findBibtexEntryEnd(input, openIndex) {
  * @param {string} input Pasted text.
  * @return {Array<{bibtex: boolean, value: string, raw?: string}>} Segments in paste order.
  */
-export function segmentPastedInput(input) {
+function segmentBibtexInput(input) {
 	const segments = [];
 	const macros = [];
 	let hasBibtex = false;
@@ -280,6 +280,80 @@ export function segmentPastedInput(input) {
 				: segment;
 		})
 		.filter((segment) => segment.value.trim());
+}
+
+const RIS_RECORD_START_REGEX = /^\s*TY {2}- /u;
+const RIS_RECORD_END_REGEX = /^\s*ER {2}-/u;
+
+/**
+ * Split pasted input into whole RIS records and the text between them.
+ *
+ * A record runs from its `TY  - ` line to its `ER  - ` line. A record left
+ * open ends where the next `TY` line or the input does, so one truncated
+ * record does not swallow the next. Line endings in the records are
+ * normalized to LF, since Zotero writes RIS with CRLF. Input without a `TY`
+ * line is returned as one text part, unchanged.
+ *
+ * @param {string} input Pasted text.
+ * @return {Array<{ris: boolean, value: string}>} Parts in paste order.
+ */
+function splitRisRecords(input) {
+	const lines = input.split(/\r\n?|\n/u);
+
+	if (!lines.some((line) => RIS_RECORD_START_REGEX.test(line))) {
+		return [{ ris: false, value: input }];
+	}
+
+	const parts = [];
+	let text = [];
+	let record = null;
+
+	const closeRecord = () => {
+		if (record) {
+			parts.push({ ris: true, value: record.join('\n').trim() });
+			record = null;
+		}
+	};
+
+	for (const line of lines) {
+		if (RIS_RECORD_START_REGEX.test(line)) {
+			closeRecord();
+			parts.push({ ris: false, value: text.join('\n') });
+			text = [];
+			record = [line];
+		} else if (record) {
+			record.push(line);
+
+			if (RIS_RECORD_END_REGEX.test(line)) {
+				closeRecord();
+			}
+		} else {
+			text.push(line);
+		}
+	}
+
+	closeRecord();
+	parts.push({ ris: false, value: text.join('\n') });
+
+	return parts;
+}
+
+/**
+ * Split pasted input into RIS records, BibTeX entries, and the text between.
+ *
+ * RIS records are lifted out first, by their `TY` and `ER` lines, so a paste
+ * can mix a reference manager's RIS export with DOIs or formatted citations.
+ * The rest goes through `segmentBibtexInput()`.
+ *
+ * @param {string} input Pasted text.
+ * @return {Array<{bibtex: boolean, ris?: boolean, value: string, raw?: string}>} Segments in paste order.
+ */
+export function segmentPastedInput(input) {
+	return splitRisRecords(input).flatMap((part) =>
+		part.ris
+			? [{ bibtex: false, ris: true, value: part.value, raw: part.value }]
+			: segmentBibtexInput(part.value)
+	);
 }
 
 const BIBTEX_ENTRY_TYPE_ALIASES = {

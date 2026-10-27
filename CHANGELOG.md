@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **RIS import.** Paste a reference manager's RIS export, a whole `.ris` file or single records, and each record imports as a citation. Records can sit in one paste with DOIs and formatted citations, and Zotero's CRLF line endings are fine. Borges reads RIS with `@citation-js/plugin-ris` (MIT, editor only), which follows the RIS specification as Zotero does; it also keeps a web page's `Y2` access date, which the plugin drops. Tested against Zotero 10 and Mendeley Reference Manager RIS exports in the reference-manager corpus, the sample library they were made from (checked against Zotero's own CSL JSON of it), and a round trip through Borges's RIS export.
 - **`wp borges duplicates`.** A read-only report of repeated citations across the whole site, or in the posts you name: one row per later copy of a work in the same bibliography (what `wp borges deduplicate` would remove) and per work listed in two bibliographies of one post (which deduplicate leaves alone). It changes nothing, and follows the read commands' rules: no `--user` checks no capabilities, and `--user` skips posts that user cannot edit. See `docs/wp-cli.md`.
 
 ### Changed

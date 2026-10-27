@@ -33,7 +33,8 @@ These are the most reliable import paths and should be treated as primary suppor
 | CSL-JSON (array or single item)          | Supported | A reference manager's CSL JSON export, or Borges's own CSL-JSON download; invalid items are skipped by position |
 | BibTeX entries with no cite key          | Supported | EndNote's `@article{` straight into the fields, and Mendeley's `@misc{,`; export builds a key from the author and year |
 | EndNote `type` field                     | Normalized | EndNote reference-type names (`Journal Article`, `Book Section`, …) are dropped instead of becoming CSL `genre` |
-| Multiple DOI / BibTeX entries in one add | Supported | Up to 50 entries per add                                                 |
+| RIS records and whole `.ris` exports     | Supported | Zotero, Mendeley, EndNote. Each `TY` … `ER` record is lifted out of the paste, so records mix with DOIs and formatted citations; CRLF line endings are fine. Read by `@citation-js/plugin-ris` with the RIS specification's type tables, as Zotero reads them (`T2` on a conference paper is its event title, `A2` on a book a series editor); `Y2` on a web page is its access date. Corpus: the Zotero and Mendeley `.ris` files in `contributed/` |
+| Multiple DOI / BibTeX / RIS entries in one add | Supported | Up to 50 entries per add                                                 |
 
 ### 2. Supported formatted citation categories
 
@@ -72,7 +73,6 @@ These should fail closed with a notice rather than being treated as supported in
 | Broad multimedia / audiovisual raw citations | Limited / mostly unsupported   | Some may parse incidentally, but not yet a declared support class |
 | Broad multilingual BibTeX dialects           | Unsupported as a general claim | Only a small tested alias allowlist exists                        |
 | JSON that is not CSL-JSON                    | Unsupported as import          | Rejected with its own notice; CSL-JSON arrays and single items import (see section 1) |
-| RIS                                          | Unsupported as import          | RIS is an export format only                                      |
 | EndNote XML, Word bibliography XML, MODS     | Unsupported as import          | Rejected with its own notice, instead of being read as free text  |
 
 ## Non-English BibTeX normalization policy

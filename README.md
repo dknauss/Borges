@@ -15,7 +15,7 @@
 
 Borges Bibliography Builder is named after Jorge Luis Borges (1899–1986), the Argentine writer, essayist, poet, and librarian whose work imagined infinite libraries, invented books, and self-referential labyrinths.
 
-Borges, the plugin, adds a single bibliography builder block to the WordPress editor. It transforms pasted scholarly references — DOI numbers/URLs, PubMed/PMID and PubMed Central/PMCID identifiers, arXiv IDs, ISBNs, BibTeX and BibLaTeX entries, and supported formatted citations — into a semantically rich, auto-sorted bibliography with static saved output. Export your work as CSL-JSON, BibTeX, BibLaTeX, and RIS for Zotero, Mendeley, EndNote, JabRef, BibDesk, and similar tools.
+Borges, the plugin, adds a single bibliography builder block to the WordPress editor. It transforms pasted scholarly references — DOI numbers/URLs, PubMed/PMID and PubMed Central/PMCID identifiers, arXiv IDs, ISBNs, BibTeX and BibLaTeX entries, RIS records, and supported formatted citations — into a semantically rich, auto-sorted bibliography with static saved output. Export your work as CSL-JSON, BibTeX, BibLaTeX, and RIS for Zotero, Mendeley, EndNote, JabRef, BibDesk, and similar tools.
 
 No shortcodes. No citation database tables or long-lived settings. Static HTML output survives plugin deactivation.
 
@@ -46,7 +46,7 @@ Both demo Blueprints explicitly request PHP `intl` support because editor-time C
 | Import form | Manual entry | Structured field editor |
 |---|---|---|
 | ![](.wordpress-org/screenshot-3.png) | ![](.wordpress-org/screenshot-4.png) | ![](.wordpress-org/screenshot-5.png) |
-| Paste DOIs, PubMed/PMID identifiers, BibTeX, or free-text citations into the import form. Hover any entry to reveal copy, edit, and delete actions. | Switch to Manual Entry to build a citation field by field: Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL. These fields are populated automatically from DOIs, PubMed/PMID records, and any pasted input that can be parsed. | Correct imported or free-text citations in place with the structured field editor — fix individual fields without retyping the whole entry. |
+| Paste DOIs, PubMed/PMID identifiers, BibTeX, RIS, or free-text citations into the import form. Hover any entry to reveal copy, edit, and delete actions. | Switch to Manual Entry to build a citation field by field: Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL. These fields are populated automatically from DOIs, PubMed/PMID records, and any pasted input that can be parsed. | Correct imported or free-text citations in place with the structured field editor — fix individual fields without retyping the whole entry. |
 
 | Numeric reorder | Settings sidebar | Exports |
 |---|---|---|
@@ -63,7 +63,7 @@ Both demo Blueprints explicitly request PHP `intl` support because editor-time C
 1. Upload the plugin files to `/wp-content/plugins/borges-bibliography-builder/`, or install directly through the WordPress plugin screen.
 2. Activate the plugin through the **Plugins** screen in WordPress.
 3. Add the **Bibliography** block to any post or page.
-4. Paste DOI(s), PubMed/PMID identifiers, BibTeX entries, or supported citations.
+4. Paste DOI(s), PubMed/PMID identifiers, BibTeX entries, RIS records, or supported citations.
 
 ## Compatibility
 

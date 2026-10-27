@@ -13,7 +13,8 @@ paper, a master's thesis, a report, an edited reference work, and a web page
 with an access date. Import it into a new, empty library in each manager and
 export that library, so every manager's files describe the same records and
 can be compared field by field. It is not itself an export, so it is not in
-`manifest.json`.
+`manifest.json`; `src/lib/ris-import.test.js` imports it and checks the result
+against Zotero's CSL JSON export of the same records.
 
 Current files:
 

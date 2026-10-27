@@ -9,15 +9,15 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Create accessible, structured bibliographies from DOI, PubMed, BibTeX, CSL-JSON, free text, and manual entries — with RIS export.
+Create accessible, structured bibliographies from DOI, PubMed, BibTeX, RIS, CSL-JSON, free text, and manual entries — with RIS export.
 
 == Description ==
 
 Named for Jorge Luis Borges (1899–1986), the Argentine writer and librarian known for stories about infinite libraries, imaginary books, and labyrinths of knowledge, Borges Bibliography Builder brings order to scholarly references in WordPress.
 
-The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibTeX, CSL-JSON, manual entries, and supported free-text citations into a semantically rich, deduplicated, auto-sorted reference list with RIS export for citation managers.
+The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibTeX, RIS, CSL-JSON, manual entries, and supported free-text citations into a semantically rich, deduplicated, auto-sorted reference list with RIS export for citation managers.
 
-**One-click import.** Paste a DOI and Crossref resolves the metadata instantly. Paste a PubMed/PMID identifier and Borges resolves it through an authenticated WordPress REST proxy to NCBI/PMC citation metadata. Paste BibTeX or formatted citations for books, articles, chapters, webpages, reviews, and theses.
+**One-click import.** Paste a DOI and Crossref resolves the metadata instantly. Paste a PubMed/PMID identifier and Borges resolves it through an authenticated WordPress REST proxy to NCBI/PMC citation metadata. Paste BibTeX, RIS, or formatted citations for books, articles, chapters, webpages, reviews, and theses.
 
 **Nine citation styles.** Choose from Chicago Notes-Bibliography, Chicago Author-Date, APA 7, MLA 9, Harvard, Vancouver, IEEE, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) — all with automatic sorting per style rules, following each manual's current edition. Each style is a [Citation Style Language](https://citationstyles.org/) (CSL) file written for Borges and rendered by the citeproc-php engine.
 
@@ -40,7 +40,7 @@ The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibT
 1. Upload the plugin files to `/wp-content/plugins/borges-bibliography-builder/`, or install directly through the WordPress plugin screen.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Add the "Bibliography" block to any post or page.
-4. Paste DOI(s), PubMed/PMID identifiers, BibTeX, CSL-JSON, or supported citations for books, articles, chapters, and webpages — or add citations manually.
+4. Paste DOI(s), PubMed/PMID identifiers, BibTeX, RIS, CSL-JSON, or supported citations for books, articles, chapters, and webpages — or add citations manually.
 
 == Frequently Asked Questions ==
 
@@ -52,7 +52,7 @@ The package includes seed PO/MO files for translator review and import in French
 
 = What citation input formats does the Borges Bibliography Builder support? =
 
-Bare DOIs, DOI URLs, PubMed/PMID identifiers, PubMed Central PMCIDs, arXiv IDs and links, ISBNs, OCLC numbers, LCCNs, Open Library edition IDs, Internet Archive item links and ARKs, BibTeX and BibLaTeX, CSL-JSON, manual citation entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. Free-text citations that include an inline DOI or labeled PMID are routed through the DOI/PubMed resolvers before falling back to the heuristic parser. RIS is supported as an export format, not as an import format. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
+Bare DOIs, DOI URLs, PubMed/PMID identifiers, PubMed Central PMCIDs, arXiv IDs and links, ISBNs, OCLC numbers, LCCNs, Open Library edition IDs, Internet Archive item links and ARKs, BibTeX and BibLaTeX, RIS (single records or a whole `.ris` export), CSL-JSON, manual citation entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. Free-text citations that include an inline DOI or labeled PMID are routed through the DOI/PubMed resolvers before falling back to the heuristic parser. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
 
 = Does the ABNT style implement NBR 6023:2025? =
 
@@ -108,7 +108,7 @@ Version 4.0 replaced the plugin's registration API, so the integration requires 
 
 1. Front-end bibliography output with hanging indents, italic titles, and linked DOIs, styled by the active theme.
 2. Discover the Bibliography block in the block inserter by searching for "Bibliography."
-3. Paste DOIs, PubMed/PMID identifiers, BibTeX, CSL-JSON, or free-text citations into the import form; hover any entry to reveal copy, edit, and delete actions.
+3. Paste DOIs, PubMed/PMID identifiers, BibTeX, RIS, CSL-JSON, or free-text citations into the import form; hover any entry to reveal copy, edit, and delete actions.
 4. Switch to Manual Entry to build a citation field by field — Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL.
 5. Correct imported or free-text citations in place with the structured field editor — fix individual fields without retyping the whole entry.
 6. For numbered styles such as IEEE and Vancouver, reorder entries with the up and down controls (or Alt+Arrow keys) to set citation numbering.
