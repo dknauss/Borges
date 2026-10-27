@@ -610,6 +610,25 @@ describe('titles stored with straight quotation marks', () => {
 			{ text: '. Test Press.', italic: false },
 		]);
 	});
+	it('matches a title as long as the CSL sanitizer accepts', () => {
+		const title = "Nelson's paradigm ".repeat(3600).trimEnd();
+		const shown = title.replaceAll("'", '’');
+
+		expect(
+			getDisplaySegments(
+				{
+					csl: { type: 'book', title },
+					formattedText: `Zoë Moss. ${shown}. Press ’99.`,
+					displayOverride: null,
+				},
+				options
+			)
+		).toEqual([
+			{ text: 'Zoë Moss. ', italic: false },
+			{ text: shown, italic: true },
+			{ text: '. Press ’99.', italic: false },
+		]);
+	});
 });
 
 describe('titles inside URLs', () => {

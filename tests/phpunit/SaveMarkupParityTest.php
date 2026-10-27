@@ -157,4 +157,44 @@ final class SaveMarkupParityTest extends TestCase {
 			)
 		);
 	}
+
+	/**
+	 * A title as long as the CSL sanitizer accepts (65,536 bytes per field)
+	 * is matched without a size limit: a pattern built from it once failed
+	 * to compile and left the PHP render fatal.
+	 */
+	public function test_display_segments_match_a_title_of_the_longest_accepted_size(): void {
+		$words = str_repeat( "Nelson's paradigm ", 3600 );
+		$title = rtrim( $words );
+		$shown = str_replace( "'", "\u{2019}", $title );
+
+		$this->assertGreaterThan( 40000, strlen( $title ) );
+		$this->assertLessThan( 65536, strlen( $title ) );
+		$this->assertSame(
+			array(
+				array(
+					'text'   => "Zo\u{EB} Moss. ",
+					'italic' => false,
+				),
+				array(
+					'text'   => $shown,
+					'italic' => true,
+				),
+				array(
+					'text'   => ". Press \u{2019}99.",
+					'italic' => false,
+				),
+			),
+			bibliography_builder_save_display_segments(
+				array(
+					'csl'             => array(
+						'type'  => 'book',
+						'title' => $title,
+					),
+					'formattedText'   => "Zo\u{EB} Moss. " . $shown . ". Press \u{2019}99.",
+					'displayOverride' => null,
+				)
+			)
+		);
+	}
 }
