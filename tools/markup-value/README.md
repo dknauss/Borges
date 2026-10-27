@@ -28,7 +28,7 @@ Yoast SEO integration.
 
 ## Running it
 
-From the repository root, with PHP 7.4+ and Node 20+:
+From the repository root, with PHP 7.4+ and Node 22.19+ (Lighthouse 13 requires it):
 
 ```sh
 composer install          # the formatter needs citeproc-php
