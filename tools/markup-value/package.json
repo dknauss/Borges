@@ -1,0 +1,22 @@
+{
+	"name": "borges-markup-value",
+	"private": true,
+	"description": "Measures what Borges front-end markup gives search engines, reference managers, and language models, against a plain HTML citation list. See README.md.",
+	"type": "module",
+	"scripts": {
+		"render": "php render.php",
+		"measure": "node measure.mjs",
+		"lighthouse": "node lighthouse.mjs",
+		"all": "php render.php && node measure.mjs && node lighthouse.mjs"
+	},
+	"dependencies": {
+		"@adobe/structured-data-validator": "1.7.0",
+		"@marbec/web-auto-extractor": "2.2.1",
+		"@mozilla/readability": "0.6.0",
+		"axe-core": "4.11.0",
+		"chrome-launcher": "1.2.2",
+		"jsdom": "26.1.0",
+		"lighthouse": "12.8.2",
+		"turndown": "7.2.0"
+	}
+}
