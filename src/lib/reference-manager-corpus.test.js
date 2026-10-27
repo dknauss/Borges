@@ -34,6 +34,12 @@ const NON_EXPORT_FILES = new Set([
 	'borges-sample.ris',
 ]);
 
+// A file Borges does not read as BibTeX or CSL-JSON (RIS, say) can still hold
+// DOIs, which the parser looks up online. The corpus pins what Borges makes of
+// the file itself, so lookups fail here instead of reaching CrossRef.
+const offlineFetch = () =>
+	Promise.reject(new Error('No network in the reference-manager corpus'));
+
 const manifest = JSON.parse(
 	fs.readFileSync(path.join(CORPUS_DIR, 'manifest.json'), 'utf8')
 );
@@ -93,7 +99,9 @@ describe('reference-manager corpus manifest', () => {
 describe('reference-manager corpus (real citation-js)', () => {
 	it.each(manifest.files)('$path', async ({ path: file, expect: want }) => {
 		const result = await parsePastedInput(
-			fs.readFileSync(path.join(CORPUS_DIR, file), 'utf8')
+			fs.readFileSync(path.join(CORPUS_DIR, file), 'utf8'),
+			undefined,
+			{ fetchFn: offlineFetch }
 		);
 
 		expect(result.entries).toHaveLength(want.entries);

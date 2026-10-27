@@ -270,7 +270,7 @@
 				"truncated": false,
 				"inputFormat": "none"
 			},
-			"knownGaps": "Borges does not import RIS, so each record comes back as unreadable input. Kept as a sample for deciding whether it should."
+			"knownGaps": "Borges does not import RIS. Online, the 4 records with a DO line are looked up on CrossRef by DOI alone (so the RIS fields are ignored) and the other 8 come back as unreadable input; the test runs offline, so all 12 are errors. Kept as a sample for deciding whether to import RIS."
 		}
 	]
 }
