@@ -105,6 +105,7 @@ export function renderBibliographySave(
 		quoteFoldedItalics = false,
 		particleAwareSort = false,
 		localeArticles = false,
+		notesAuthorChains = false,
 		citeExportData = false,
 		canonicalDoiUrl = false,
 		jsonLdItemList = false,
@@ -130,6 +131,7 @@ export function renderBibliographySave(
 		? sortCitations(citations, citationStyle, {
 				particleAwareSort,
 				localeArticles,
+				notesAuthorChains,
 		  })
 		: citations;
 	const cslArray = renderedCitations.map((c) => c.csl);
