@@ -61,6 +61,7 @@ Found while writing full styles to replace the minimal ones (2026-09). Each one 
 | Page ranges with "-" | Any `page-range-format` returns `"$from-$to"`; none returns an en dash | Omit it where an en dash is wanted |
 | "J.- woo" | `StringHelper::initializeBySpaceOrHyphen()` keeps a lowercase part after a hyphen as a particle | Formatter initializes it ("J.-W.") |
 | `page-first` empty | Not derived from `page` | Derived in `bibliography_builder_prepare_csl_for_formatter()` |
+| Years below 1000 (731, or BC years such as -334) print nothing; a range prints "–100" | `Date::createDateTime()` puts an empty date before any date with a year below 1000, and the empty date is the one rendered, so `DatePart::renderYear()`'s BC branch never runs | `bibliography_builder_early_date_literal()` turns such a date into a year-only literal ("334 BCE", "100–44 BCE", "4 BCE–30 CE", "334 AEC" for ABNT); month and day are dropped |
 
 These are upstream behaviors, not Borges bugs. The literal-name and cross-entry state issues are worth reporting upstream (pkp/citeproc-php) if they are still present in a newer release.
 

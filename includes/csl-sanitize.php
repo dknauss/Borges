@@ -244,6 +244,11 @@ function bibliography_builder_sanitize_csl_value( $value, $depth, &$valid ) {
 /**
  * Normalize one CSL date part to an integer.
  *
+ * CSL-JSON writes a BC year as a negative number (-334 for 334 BC), and some
+ * exporters, Better CSL JSON among them, write every year as a string, so
+ * "-334" arrives too. A signed digit string becomes that integer, matching
+ * `normalizeDatePart()` in `src/lib/csl-sanitize.js`.
+ *
  * @param mixed $part Date part.
  * @return int|null
  */
@@ -256,7 +261,7 @@ function bibliography_builder_normalize_csl_date_part( $part ) {
 		return (int) $part;
 	}
 
-	if ( is_string( $part ) && preg_match( '/^\d+$/', $part ) ) {
+	if ( is_string( $part ) && preg_match( '/^-?\d+$/', $part ) ) {
 		return (int) $part;
 	}
 

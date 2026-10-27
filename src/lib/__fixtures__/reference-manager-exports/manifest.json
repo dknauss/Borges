@@ -55,12 +55,11 @@
 			"licenseFile": "public/better-bibtex/LICENSE",
 			"quirks": "The same EDTF dates as CSL-JSON, including BC years written as strings",
 			"expect": {
-				"entries": 14,
-				"errors": 1,
+				"entries": 15,
+				"errors": 0,
 				"truncated": false,
 				"inputFormat": "csl-json"
-			},
-			"knownGaps": "Item 14 is skipped: its BC years are strings (\"-334\"), and the CSL sanitizer only accepts a negative year as a number."
+			}
 		},
 		{
 			"path": "public/better-bibtex/extra-creators-uppercase-doi-825.biblatex.bib",

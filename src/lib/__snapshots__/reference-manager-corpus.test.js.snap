@@ -2029,6 +2029,58 @@ exports[`reference-manager corpus (real citation-js) public/better-bibtex/edtf-d
     "type": "book",
   },
   {
+    "accessed": {
+      "date-parts": [
+        [
+          -333,
+          11,
+          5,
+        ],
+      ],
+    },
+    "author": [
+      {
+        "family": "Doe5",
+        "given": "John",
+      },
+    ],
+    "citation-key": "t5",
+    "event-date": {
+      "date-parts": [
+        [
+          "-1",
+        ],
+      ],
+    },
+    "id": "t5",
+    "issued": {
+      "date-parts": [
+        [
+          -334,
+        ],
+      ],
+    },
+    "original-date": {
+      "date-parts": [
+        [
+          "-334",
+        ],
+        [
+          "-333",
+        ],
+      ],
+    },
+    "submitted": {
+      "date-parts": [
+        [
+          "-2",
+        ],
+      ],
+    },
+    "title": "BC tests: -0333",
+    "type": "book",
+  },
+  {
     "author": [
       {
         "family": "Doe6",
@@ -2040,10 +2092,12 @@ exports[`reference-manager corpus (real citation-js) public/better-bibtex/edtf-d
     "issued": {
       "date-parts": [
         [
+          -100,
           7,
           12,
         ],
         [
+          -44,
           3,
           15,
         ],

@@ -81,7 +81,7 @@ if ( 'callback' === $mode ) {
 	$prepared   = array();
 
 	foreach ( array_values( $clean ) as $index => $item ) {
-		$entry       = bibliography_builder_prepare_csl_for_formatter( $item, $demote );
+		$entry       = bibliography_builder_prepare_csl_for_formatter( $item, $demote, $definition['locale'] );
 		$entry['id'] = 'bibliography-builder-format-' . $index;
 		$prepared[]  = $entry;
 	}
