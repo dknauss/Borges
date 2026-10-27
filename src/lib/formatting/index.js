@@ -300,14 +300,38 @@ function overlapsAny(ranges, start, end) {
 	return ranges.some((range) => start < range.end && end > range.start);
 }
 
+/**
+ * Quotation marks a formatter may change, each mapped to its straight form.
+ * citeproc prints a stored straight apostrophe as ’ (and straight double
+ * quotes as “ ”), so a title is searched for with these folded on both sides.
+ * Every mark is one UTF-16 code unit, so folded offsets are the text's own.
+ */
+const FOLDED_QUOTES = {
+	'‘': "'",
+	'’': "'",
+	'“': '"',
+	'”': '"',
+};
+
+/**
+ * Fold curly quotation marks to straight ones, keeping the text's length.
+ *
+ * @param {string} text Text.
+ * @return {string} Text with ‘ ’ as ' and “ ” as ".
+ */
+function foldQuotes(text) {
+	return text.replace(/[‘’“”]/gu, (mark) => FOLDED_QUOTES[mark]);
+}
+
 function findLastRange(
 	text,
 	value,
 	ranges,
 	punctuationInsideQuotes,
-	urlRanges = []
+	urlRanges = [],
+	searchText = text
 ) {
-	let start = text.lastIndexOf(value);
+	let start = searchText.lastIndexOf(value);
 
 	while (start !== -1) {
 		const end = start + value.length;
@@ -320,7 +344,7 @@ function findLastRange(
 			return { start, end };
 		}
 
-		start = text.lastIndexOf(value, start - 1);
+		start = searchText.lastIndexOf(value, start - 1);
 	}
 
 	return null;
@@ -331,18 +355,21 @@ function addRange(
 	text,
 	value,
 	punctuationInsideQuotes = false,
-	urlRanges = []
+	urlRanges = [],
+	searchText = null
 ) {
 	if (!value) {
 		return;
 	}
 
+	// A folded search text means the value is folded too (quoteFoldedItalics).
 	const range = findLastRange(
 		text,
-		value,
+		searchText ? foldQuotes(String(value)) : value,
 		ranges,
 		punctuationInsideQuotes,
-		urlRanges
+		urlRanges,
+		searchText ?? text
 	);
 
 	if (!range) {
@@ -432,12 +459,19 @@ function getItalicizedFields(citation) {
  * name that is part of its own DOI (eLife) keeps its link whole; without it,
  * the shape save() had before 1.10.0.
  *
- * @param {Object}  citation                    Citation object.
- * @param {Object}  [options]                   Options.
- * @param {boolean} [options.inlineMarkup]      Read inline HTML in the text.
- * @param {boolean} [options.quoteAwareItalics] Skip quoted titles that end in
- *                                              punctuation.
- * @param {boolean} [options.urlAwareItalics]   Skip title matches inside URLs.
+ * With `quoteFoldedItalics`, a title is matched with its quotation marks
+ * folded (' ‘ ’ alike, " “ ” alike), so a stored straight apostrophe still
+ * finds the curly one citeproc printed; without it, the shape save() had
+ * through 1.15.0, when such a title stayed roman.
+ *
+ * @param {Object}  citation                     Citation object.
+ * @param {Object}  [options]                    Options.
+ * @param {boolean} [options.inlineMarkup]       Read inline HTML in the text.
+ * @param {boolean} [options.quoteAwareItalics]  Skip quoted titles that end in
+ *                                               punctuation.
+ * @param {boolean} [options.urlAwareItalics]    Skip title matches inside URLs.
+ * @param {boolean} [options.quoteFoldedItalics] Match titles with quotation
+ *                                               marks folded.
  * @return {DisplaySegment[]} Array of text segments with italic flags.
  *
  * @since 0.1.0
@@ -448,6 +482,7 @@ export function getDisplaySegments(
 		inlineMarkup = false,
 		quoteAwareItalics = false,
 		urlAwareItalics = false,
+		quoteFoldedItalics = false,
 	} = {}
 ) {
 	const rawText = getDisplayText(citation);
@@ -463,6 +498,7 @@ export function getDisplaySegments(
 
 	const titleRanges = [];
 	const urlRanges = urlAwareItalics ? getUrlRanges(displayText) : [];
+	const searchText = quoteFoldedItalics ? foldQuotes(displayText) : null;
 
 	for (const value of getItalicizedFields(citation)) {
 		addRange(
@@ -470,7 +506,8 @@ export function getDisplaySegments(
 			displayText,
 			inlineMarkup && value ? stripInlineMarkup(value) : value,
 			quoteAwareItalics,
-			urlRanges
+			urlRanges,
+			searchText
 		);
 	}
 
