@@ -68,10 +68,22 @@ the best a machine reader gets:
 - **missing**: not on the page at all (APA prints no ISBN, for instance).
 
 `perLayer` scores each layer on its own. Authors count as correct only when a
-layer gives every last name once, in order. COinS spans are read the way
-Zotero's OpenURL reader orders and merges `rft.au`, `rft.aulast`/`rft.aufirst`,
-and `rft.aucorp` names, so an author it would list twice or out of place
-counts as wrong.
+layer gives every last name once, in order. COinS spans are read by Zotero's
+own OpenURL reader (the one its browser connector uses), so an author Zotero
+would import twice, drop, or move counts as wrong. The reader is AGPL-licensed
+code from `zotero/utilities` at a fixed commit, downloaded on first use into
+`node_modules/.cache/` here rather than kept in the repository.
+
+## Zotero author check
+
+`npm run zotero` (also the last step of `npm run all`) runs `coins-cases.php`,
+which saves each author list in `coins-cases.json` with COinS on and renders it
+through the COinS enrichment, then imports every span with Zotero's reader and
+fails unless each comes out with exactly the expected authors, in order. The
+cases cover organizations first and among people, one-part and given-only
+names, shared last names, initials Zotero rewrites, and an empty name entry.
+`tests/phpunit/CoinsEnrichmentTest.php` checks the same lists in CI against a
+model of that reader.
 
 **Reader mode** (`readerMode`). Mozilla Readability then Turndown, the
 HTML-to-Markdown step many LLM ingestion pipelines use: what survives, and its

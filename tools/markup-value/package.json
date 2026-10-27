@@ -7,7 +7,8 @@
 		"render": "php render.php",
 		"measure": "node measure.mjs",
 		"lighthouse": "node lighthouse.mjs",
-		"all": "php render.php && node measure.mjs && node lighthouse.mjs"
+		"zotero": "node zotero-coins.mjs",
+		"all": "php render.php && node measure.mjs && node lighthouse.mjs && node zotero-coins.mjs"
 	},
 	"dependencies": {
 		"@adobe/structured-data-validator": "1.7.0",

@@ -83,7 +83,8 @@ final class CoinsEnrichmentTest extends TestCase {
 		// The first author stays in rft.aulast and rft.aufirst only.
 		$this->assertContains( array( 'rft.aulast', 'Alpha' ), $coins[0] );
 		$this->assertNotContains( array( 'rft.au', 'Alpha, Ada' ), $coins[0] );
-		$this->assertContains( array( 'rft.aucorp', 'Test & Co.' ), $coins[0] );
+		$this->assertContains( array( 'rft.au', 'Test & Co.,' ), $coins[0] );
+		$this->assertStringNotContainsString( 'rft.aucorp', implode( '&', array_column( $coins[0], 0 ) ) );
 		$this->assertNotContains( array( 'rft_id', 'info:pmid/31452104' ), $coins[0] );
 
 		$this->assertNotContains( array( 'rft.au', 'Zeta, Zoe' ), $coins[1] );
@@ -141,14 +142,20 @@ final class CoinsEnrichmentTest extends TestCase {
 	 * reads authors, the reader Zotero's browser connector uses for COinS:
 	 *
 	 * - `rft.au` names are listed in the order they come, split at the comma
-	 *   into last and first name, or at the last space without one.
+	 *   into last and first name (a trailing comma leaves no first name), or
+	 *   at the last space without one. Zotero also trims other punctuation
+	 *   and spaces out initials, which this model leaves out.
 	 * - `rft.aulast`, `rft.aufirst`, and `rft.aucorp` build a second list:
 	 *   `aulast` and `aufirst` fill in the latest name there when it lacks
-	 *   that part, and otherwise start a new one. Each remembers how many
-	 *   `rft.au` names came before it and is put back at that place.
+	 *   that part, and otherwise start a new one. An `aulast`/`aufirst` name
+	 *   remembers how many `rft.au` names came before it and is put back at
+	 *   that place; an `aucorp` name remembers nothing and goes to the front.
 	 * - A name from the second list is dropped when an `rft.au` name has its
 	 *   last name and a non-empty first name that starts with its first name.
 	 *   A dropped-name check against a name with no first name throws.
+	 *
+	 * zotero-coins.mjs in tools/markup-value runs the same cases through
+	 * Zotero's own reader, which is AGPL-licensed and so not kept here.
 	 *
 	 * @return string[] "Last, First", "Last", or "[org] Name".
 	 */
@@ -166,8 +173,11 @@ final class CoinsEnrichmentTest extends TestCase {
 			}
 
 			if ( 'rft.au' === $key ) {
-				if ( false !== strpos( $value, ',' ) ) {
-					list( $family, $given ) = array_map( 'trim', explode( ',', $value, 2 ) );
+				// The comma is looked for before the trim, so "Name," is one last name.
+				$inverted = false !== strpos( $value, ',' );
+				$value    = trim( $value, " \t," );
+				if ( $inverted ) {
+					list( $family, $given ) = array_map( 'trim', array_pad( explode( ',', $value, 2 ), 2, '' ) );
 				} else {
 					$space  = strrpos( $value, ' ' );
 					$family = false === $space ? $value : substr( $value, $space + 1 );
@@ -185,7 +195,7 @@ final class CoinsEnrichmentTest extends TestCase {
 				$complex[] = array(
 					( 'rft.aufirst' === $key ? 'first' : 'last' ) => $value,
 					'org'                                          => 'rft.aucorp' === $key,
-					'offset'                                       => count( $plain ),
+					'offset'                                       => 'rft.aucorp' === $key ? null : count( $plain ),
 				);
 			}
 		}
@@ -204,7 +214,7 @@ final class CoinsEnrichmentTest extends TestCase {
 					}
 				}
 			}
-			array_splice( $names, $name['offset'] + $inserted, 0, array( $name ) );
+			array_splice( $names, null === $name['offset'] ? 0 : $name['offset'] + $inserted, 0, array( $name ) );
 			++$inserted;
 		}
 
@@ -264,12 +274,12 @@ final class CoinsEnrichmentTest extends TestCase {
 		return array(
 			'people'                          => array( array( $ada, $ben, array( 'family' => 'Gamma', 'given' => 'G.A.' ) ), array( 'Alpha, Ada', 'Beta, Ben', 'Gamma, G.A.' ) ),
 			'organization first'              => array( array( $org, $ben ), array( 'World Health Organization', 'Beta, Ben' ) ),
-			'organization among people'       => array( array( $ada, $org, $ben ), array( 'Alpha, Ada', '[org] World Health Organization', 'Beta, Ben' ) ),
+			'organization among people'       => array( array( $ada, $org, $ben ), array( 'Alpha, Ada', 'World Health Organization', 'Beta, Ben' ) ),
 			'one-part name first'             => array( array( $plato, $ben ), array( 'Plato', 'Beta, Ben' ) ),
 			'given name only first'           => array( array( array( 'given' => 'Homer' ), $ben ), array( 'Homer', 'Beta, Ben' ) ),
 			'one-part names later'            => array( array( $ada, $plato, array( 'given' => 'Homer' ) ), array( 'Alpha, Ada', 'Plato', 'Homer' ) ),
 			'shared last name, initials'      => array( array( array( 'family' => 'Kim', 'given' => 'J.' ), array( 'family' => 'Kim', 'given' => 'J.-H.' ) ), array( 'Kim, J.', 'Kim, J.-H.' ) ),
-			'shared last name, one-part name' => array( array( $plato, array( 'family' => 'Plato', 'given' => 'Jane' ), $org ), array( 'Plato', 'Plato, Jane', '[org] World Health Organization' ) ),
+			'shared last name, one-part name' => array( array( $plato, array( 'family' => 'Plato', 'given' => 'Jane' ), $org ), array( 'Plato', 'Plato, Jane', 'World Health Organization' ) ),
 			'one author'                      => array( array( $ada ), array( 'Alpha, Ada' ) ),
 			'empty first name entry'          => array( array( array(), $ada, $ben ), array( 'Alpha, Ada', 'Beta, Ben' ) ),
 		);
@@ -287,8 +297,13 @@ final class CoinsEnrichmentTest extends TestCase {
 			self::read_authors( 'rft.aulast=Plato&rft.au=Plato&rft.au=Beta%2C%20Ben' )
 		);
 		$this->assertSame(
-			array( 'World Health Organization', '[org] World Health Organization', 'Beta, Ben' ),
+			array( '[org] World Health Organization', 'World Health Organization', 'Beta, Ben' ),
 			self::read_authors( 'rft.aulast=World%20Health%20Organization&rft.aucorp=World%20Health%20Organization&rft.au=Beta%2C%20Ben' )
+		);
+		// An organization written as rft.aucorp moves ahead of the first author.
+		$this->assertSame(
+			array( '[org] CERN', 'Alpha, Ada', 'Beta, Ben' ),
+			self::read_authors( 'rft.aulast=Alpha&rft.aufirst=Ada&rft.aucorp=CERN&rft.au=Beta%2C%20Ben' )
 		);
 	}
 

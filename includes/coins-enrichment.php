@@ -7,11 +7,10 @@
  * read COinS, such as Zotero's browser connector, then import every other
  * author as missing. This adds, as the block renders, what save() leaves out:
  *
- * - every author after the first, in order: an `rft.au` ("Family, Given")
- *   for a person, an `rft.aucorp` for an organization. The first author keeps
- *   its `rft.aulast` and `rft.aufirst`, so readers that know only those see
- *   what they did before. See bibliography_builder_coins_enrich_title() for
- *   how this keeps Zotero from listing an author twice or out of order.
+ * - every author after the first, in order, as `rft.au`. The first author
+ *   keeps its `rft.aulast` and `rft.aufirst`, so readers that know only those
+ *   see what they did before. See bibliography_builder_coins_enrich_title()
+ *   for how this keeps Zotero from listing an author twice or out of order.
  * - an `rft_id` of `info:pmid/…` for a PubMed ID, beside the DOI's.
  *
  * The stored content is untouched, so no block deprecation is needed, and
@@ -33,8 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @param mixed $author A CSL name object.
  * @return array{corporate: bool, last: string, au: string}|null `last` is
- *     the name a reader files the author under; `au` is the `rft.au` or
- *     `rft.aucorp` value.
+ *     the name a reader files the author under; `au` is the `rft.au` value.
  */
 function bibliography_builder_coins_author( $author ) {
 	if ( ! is_array( $author ) ) {
@@ -46,10 +44,13 @@ function bibliography_builder_coins_author( $author ) {
 	$given   = isset( $author['given'] ) && is_string( $author['given'] ) ? trim( $author['given'] ) : '';
 
 	if ( '' === $family && '' !== $literal ) {
+		// The trailing comma marks the name as inverted with no first name,
+		// so Zotero files all of it as one last name instead of splitting it
+		// at its last space ("Organization", first name "World Health").
 		return array(
 			'corporate' => true,
 			'last'      => $literal,
-			'au'        => $literal,
+			'au'        => $literal . ',',
 		);
 	}
 
@@ -70,13 +71,15 @@ function bibliography_builder_coins_author( $author ) {
  * One entry's COinS `title` with what save() leaves out.
  *
  * The save() function writes the first author as `rft.aulast` and
- * `rft.aufirst`. Every later author is added after it, in order: a person
- * as `rft.au` ("Family, Given"), an organization as `rft.aucorp`. Z39.88-2004
- * lets both repeat.
+ * `rft.aufirst`. Every later author is added after it, in order, as an
+ * `rft.au`, which Z39.88-2004 lets repeat: "Family, Given" for a person, the
+ * name and a comma for an organization. Organizations are not written as
+ * `rft.aucorp`: Zotero's OpenURL reader puts every `aucorp` name ahead of
+ * all the others, so a corporate coauthor would move to the front.
  *
- * The first author is not repeated as `rft.au`. Zotero's OpenURL reader puts
- * `aulast`/`aufirst` and `aucorp` names back in their place among the `au`
- * names, and drops one only when an `au` name looks like the same person.
+ * The first author is not repeated as `rft.au`. Zotero's reader puts the
+ * `aulast`/`aufirst` name back in its place among the `au` names, and drops
+ * it only when an `au` name looks like the same person.
  * That test misses normalized initials and one-part names, so repeating the
  * first author listed it twice. The same test can also drop a first author
  * whose last name a later author shares, or throw when that first author
@@ -145,8 +148,7 @@ function bibliography_builder_coins_enrich_title( $csl, $title ) {
 		}
 
 		foreach ( array_filter( array_slice( $authors, $from ) ) as $author ) {
-			$added[] = ( $author['corporate'] ? 'rft.aucorp=' : 'rft.au=' )
-				. bibliography_builder_encode_uri_component( $author['au'] );
+			$added[] = 'rft.au=' . bibliography_builder_encode_uri_component( $author['au'] );
 		}
 	}
 

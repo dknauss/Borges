@@ -42,6 +42,7 @@ import {
 	manifest as readManifest,
 	norm,
 	serve,
+	zoteroOpenUrl,
 } from './lib.mjs';
 
 const require = createRequire(import.meta.url);
@@ -161,83 +162,24 @@ function fromJsonLd(work) {
 	};
 }
 
+/** Zotero's OpenURL reader, loaded in main(). */
+let openUrl;
+
 /**
- * The last names of a COinS span's authors, in the order Zotero's OpenURL
- * reader (zotero/utilities, openurl.js) lists them:
+ * The last names of a COinS span's authors, as Zotero's own OpenURL reader
+ * imports them: in its order, with any name it repeats or drops.
  *
- * - `rft.au` names in the order they come, the last name before the comma,
- *   or after the last space without one.
- * - `rft.aulast`, `rft.aufirst`, and `rft.aucorp` in a second list, where
- *   `aulast` and `aufirst` fill in the latest name when it lacks that part
- *   and otherwise start a new one. Each goes back in at its place among the
- *   `au` names, unless an `au` name has its last name and a non-empty first
- *   name starting with its first name.
- *
- * @param {URLSearchParams} kev The span's key-value pairs.
+ * @param {string} title The span's title attribute (a KEV string).
  * @return {string[]} Last names; a reader failure gives [].
  */
-function coinsAuthors(kev) {
-	const plain = [];
-	const complex = [];
-
-	for (const [key, value] of kev) {
-		const latest = complex[complex.length - 1];
-		if (!value) {
-			continue;
-		}
-		if (key === 'rft.au') {
-			const comma = value.indexOf(',');
-			const space = value.lastIndexOf(' ');
-			const name = { last: value, first: '' };
-			if (comma >= 0) {
-				name.last = value.slice(0, comma).trim();
-				name.first = value.slice(comma + 1).trim();
-			} else if (space >= 0) {
-				// Without a comma, the last name follows the last space.
-				name.last = value.slice(space + 1);
-				name.first = value.slice(0, space);
-			}
-			plain.push(name);
-		} else if (
-			key === 'rft.aulast' &&
-			latest &&
-			latest.last === undefined
-		) {
-			latest.last = value;
-		} else if (
-			key === 'rft.aufirst' &&
-			latest &&
-			latest.first === undefined
-		) {
-			latest.first = value;
-		} else if (['rft.aulast', 'rft.aufirst', 'rft.aucorp'].includes(key)) {
-			complex.push({
-				[key === 'rft.aufirst' ? 'first' : 'last']: value,
-				offset: plain.length,
-			});
-		}
+function coinsAuthors(title) {
+	try {
+		return openUrl
+			.parseContextObject(title)
+			.creators.map((creator) => creator.lastName || '');
+	} catch (error) {
+		return [];
 	}
-
-	const names = [...plain];
-	let inserted = 0;
-	for (const name of complex) {
-		const same = plain.find(
-			(other) =>
-				name.last !== undefined &&
-				other.last === name.last &&
-				other.first
-		);
-		if (same && name.first === undefined) {
-			return []; // Zotero's reader throws here.
-		}
-		if (same && same.first.startsWith(name.first)) {
-			continue;
-		}
-		names.splice(name.offset + inserted, 0, name);
-		inserted++;
-	}
-
-	return names.map((name) => name.last || name.first || '');
 }
 
 /**
@@ -252,7 +194,7 @@ function fromCoins(title) {
 	const get = (key) => kev.get(key) || undefined;
 	const ids = kev.getAll('rft_id');
 	const doi = ids.find((id) => id.startsWith('info:doi/'));
-	const authors = coinsAuthors(kev);
+	const authors = coinsAuthors(title);
 	const pages =
 		get('rft.pages') ||
 		(get('rft.spage') && get('rft.epage')
@@ -681,6 +623,7 @@ async function main() {
 	const items = (await readCorpus()).items;
 	const manifest = await readManifest();
 	const validator = new Validator(await schemaOrg());
+	openUrl = await zoteroOpenUrl();
 	const server = await serve();
 	const browser = await launchChromium();
 	const results = {
