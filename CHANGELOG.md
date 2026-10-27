@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Thesis and report types from BibTeX.** A BibTeX `@mastersthesis`, `@phdthesis`, or `@techreport`, or a BibLaTeX `type` holding a standard type key such as `mathesis` or `patentde`, now imports with a readable genre ("Master's thesis", "PhD thesis", "technical report", "German patent"). Before, the bare key was stored, so a style that prints the genre showed "[mathesis]". Found in Zotero's own BibTeX export.
 - **EndNote BibTeX without cite keys.** EndNote's BibTeX export can write entries with no key (`@article{` straight into the fields), and Mendeley writes `@misc{,` for an item without one. Borges couldn't read either; it now imports them, and export builds a key from the author and year.
 - **Pasted XML exports.** Pasting an EndNote XML or Word bibliography XML file saved the markup as a free-text citation. Borges now says it can't read XML exports and suggests BibTeX or CSL JSON.
-- **Place of publication from Mendeley BibTeX.** Mendeley Reference Manager writes the place into a nonstandard `city` field, which was dropped, so its books, chapters, and reports imported with no place. Borges now reads `city` when the entry has no `address` or `location`.
+- **Place of publication from Mendeley BibTeX.** Mendeley Reference Manager writes the place into a nonstandard `city` field, which was dropped, so its books, chapters, and reports imported with no place. Borges now reads `city` when the entry has no `address` or `location`. Only field names count, never text inside a value, so a title such as "Why city = culture matters" imports unchanged, and a value that mentions `address =` does not block the place.
 
 ### Testing
 

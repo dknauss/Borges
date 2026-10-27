@@ -335,6 +335,32 @@ not a citation at all`);
 		expect(result.entries[0].csl['publisher-place']).toBe('München');
 	});
 
+	it('keeps a title that contains city = and imports the city', async () => {
+		const result = await parsePastedInput(`@book{a,
+   title = {Why city = culture matters},
+   city = {Montreal},
+   publisher = {P},
+   year = {2001}
+}`);
+
+		expect(result.errors).toEqual([]);
+		expect(result.entries[0].csl.title).toBe('Why city = culture matters');
+		expect(result.entries[0].csl['publisher-place']).toBe('Montreal');
+	});
+
+	it('imports the city when a value contains address =', async () => {
+		const result = await parsePastedInput(`@book{a,
+   title = {The address = problem},
+   city = {Montreal},
+   publisher = {P},
+   year = {2001}
+}`);
+
+		expect(result.errors).toEqual([]);
+		expect(result.entries[0].csl.title).toBe('The address = problem');
+		expect(result.entries[0].csl['publisher-place']).toBe('Montreal');
+	});
+
 	it('leaves @string macros alone when adding a missing key', async () => {
 		const result = await parsePastedInput(`@string{cell = {Cell}}
 @article{

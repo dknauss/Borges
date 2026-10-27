@@ -189,4 +189,44 @@ describe('renameBibtexCityField', () => {
 			)
 		).toBe('@string{city = {Chicago}}\n@book{a, address = city}');
 	});
+
+	it('never renames city inside a field value', () => {
+		expect(
+			renameBibtexCityField(
+				'@book{a,\n  title = {Why city = culture matters},\n  city = {Montreal}\n}'
+			)
+		).toBe(
+			'@book{a,\n  title = {Why city = culture matters},\n  address = {Montreal}\n}'
+		);
+	});
+
+	it('never renames city inside a quoted value', () => {
+		expect(
+			renameBibtexCityField(
+				'@book{a, note = "x, city = y", city = {Montreal}}'
+			)
+		).toBe('@book{a, note = "x, city = y", address = {Montreal}}');
+	});
+
+	it('ignores address or location written inside a value', () => {
+		expect(
+			renameBibtexCityField(
+				'@book{a, title = {The address = home}, note = {location = here}, city = {Lyon}}'
+			)
+		).toBe(
+			'@book{a, title = {The address = home}, note = {location = here}, address = {Lyon}}'
+		);
+	});
+
+	it('reads the first field of a keyless entry', () => {
+		expect(renameBibtexCityField('@book{city = {Oslo}, title = {T}}')).toBe(
+			'@book{address = {Oslo}, title = {T}}'
+		);
+	});
+
+	it('leaves a value mentioning another @type{ alone', () => {
+		const entry = '@book{a, title = {On @misc{b, city = x}}, year = 2001}';
+
+		expect(renameBibtexCityField(entry)).toBe(entry);
+	});
 });
