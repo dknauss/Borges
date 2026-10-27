@@ -51,7 +51,7 @@ Before writable routes can exist, each bibliography block needs a stable `biblio
 
 **Risk:** low — existing blocks get IDs lazily on next save, no migration required.
 
-**Status (2026-09-25): done (unreleased).** `bibliographyId` and editor-side assignment shipped in 1.4.0 (#37). M0 closed the rest in `src/lib/stable-ids.js` and `src/hooks/use-stable-ids.js`:
+**Status (2026-09-25): done, released in 1.7.0.** `bibliographyId` and editor-side assignment shipped in 1.4.0 (#37). M0 closed the rest in `src/lib/stable-ids.js` and `src/hooks/use-stable-ids.js`:
 - **Uniqueness within a post.** A duplicated or pasted block (the later one in document order) takes a new `bibliographyId` *and* new citation IDs, since citation IDs are the `ref-<id>` element IDs in saved markup and must be unique on the page.
 - **Citation IDs.** Citations keep `id` as a top-level entry field, not inside the CSL-JSON object as sketched above; that is where every import path already put it. Missing, blank, whitespace-bearing, or repeated IDs are replaced on mount; any other existing ID is kept so `#ref-…` links survive.
 - **No undo step.** Assignments are marked non-persistent via `__unstableMarkNextChangeAsNotPersistent` where available.
@@ -80,7 +80,7 @@ GET /bibliography/v1/posts/{post_id}/bibliographies/{index}/duplicates
 ```
 Returns pairs of entries that appear to be duplicates (same DOI, or same normalised title + author + year).
 
-**Status (2026-09-25): done (unreleased).** Shipped in `includes/review.php` with these changes from the sketch:
+**Status (2026-09-25): done, released in 1.7.0.** Shipped in `includes/review.php` with these changes from the sketch:
 - **Addressing.** Each route takes `{ref}`: the index, or the block's `bibliographyId` (all-digit refs are indexes; the editor only generates UUIDs). This answers open question 3; a follow-up extended it to the existing single-bibliography route and the `borges/export-bibliography` ability, where index requests behave as before.
 - **Abilities.** The follow-up also added `borges/validate-bibliography`, `borges/find-duplicate-citations`, and `borges/preview-bibliography-style`, sharing the routes' code and `edit_post` check.
 - **Diff is a sub-route.** `?format=diff` became `GET …/{ref}/preview?style=<key>`, because it needs `edit_post` and runs citeproc, while the existing single route is publicly readable for published posts and never formats. The style must be one of the supported `citationStyle` keys (`apa-7`, not `apa`). Blocks over the formatter's 50-item cap return 400 (open question 2 still applies to writes).
@@ -128,7 +128,7 @@ POST /bibliography/v1/posts/{post_id}/bibliographies/{index}/reformat
 ```
 Reformat all citations to a new CSL style. Updates both the block attribute and the rendered HTML. Body: `{ "style": "apa-7" }`. Idempotent.
 
-**Status (2026-09-26): done (unreleased), as M3.** Shipped in `includes/write-routes.php` behind the M2 filter, with M2's dry-run, `edit_post`, and `If-Match` rules and its splice-and-verify write path. Changes from the sketch:
+**Status (2026-09-26): done, as M3, released in 1.7.0.** Shipped in `includes/write-routes.php` behind the M2 filter, with M2's dry-run, `edit_post`, and `If-Match` rules and its splice-and-verify write path. Changes from the sketch:
 - **Settings PATCH leaves out `citationStyle`.** Changing the style without reformatting would leave every entry's text in the old style, so the PATCH refuses it (`400`, `bibliography_builder_style_needs_reformat`) and points to `…/reformat`. It takes `outputCiteExport` as well as the three output toggles. A setting sent with its `block.json` default is dropped from the block comment, as the editor's serializer drops it.
 - **Reformat mirrors the editor's `handleCitationStyleChange`.** It keeps manual display text and export strings, re-sorts for the new style, and swaps a heading still set to the old style's default for the new one's (a PHP copy of the registry's `headingPlaceholder`, pinned by a drift test). The stored CSL-JSON is untouched.
 - **Formatter cost (open question 2), for one block.** A reformat formats in chunks of the `/format` limit (50), up to the editor's 200-citation cap, in the request. Bulk reformat across posts stays with Tier 4.
@@ -148,11 +148,11 @@ POST /bibliography/v1/bulk/reformat
 ```
 Body: `{ "post_ids": [...], "style": "chicago-notes-bibliography" }`. Batch reformat. Rate-limited; returns a job ID for polling.
 
-**Status (2026-10-24): reformat done (unreleased), as M4.** Shipped in `includes/bulk-routes.php` and `includes/rate-limit.php`, behind the write-routes filter. Changes from the sketch, agreed with Dan before any code:
+**Status (2026-10-24): done, as M4, released in 1.15.0.** Shipped in `includes/bulk-routes.php` and `includes/rate-limit.php`, behind the write-routes filter. Changes from the sketch, agreed with Dan before any code:
 - **Synchronous batches, not jobs.** A job queue needs stored job records and a cron runner, which the plugin's no-persistence pledge (`verify-metrics.sh`) forbids. A request names up to 25 posts as `posts: [ { id, etag } ]`, does what it can within its budget and a 15-second time budget, and returns the rest as `remaining`. Each post commits on its own with its own ETag check, and gets one revision for all its blocks.
 - **Rate limit.** A per-user budget counted in posts (250 per 15 minutes; dry runs count too), reserved atomically up front and refunded for posts not reached. A request over the budget is clipped; only an empty budget gets `429` with `Retry-After`. Responses carry `RateLimit-*` headers. One saving bulk request runs per site at a time. Counters use the object cache when it is persistent, else `bbb_` transients. Filters: `bibliography_builder_bulk_rate_limit`, `…_rate_limit_key`, `…_max_posts_per_request`, `…_time_budget`.
 - **WP-CLI and abilities.** `wp borges reformat` needs `--user`, `edit_others_posts`, and the filter, batches with `--batch-size` and `--sleep`, and skips the budget. `borges/bulk-reformat` calls the route callback, so it shares the budget.
-- **Deduplicate (2026-10-24, unreleased)** is built on the same scaffolding, as `POST /bulk/deduplicate` with `posts: [ { id, etag } ]` like reformat (not `post_ids`). It removes later copies within each bibliography, keeping the first, by the editor's duplicate rules, and refreshes year suffixes. Duplicates across two blocks of one post are reported in `crossBlockDuplicates` and not removed, since a post with one bibliography per chapter means to repeat them. It shares reformat's budget and lock; `borges/bulk-deduplicate` and `wp borges deduplicate` wrap it.
+- **Deduplicate (2026-10-24, released in 1.15.0)** is built on the same scaffolding, as `POST /bulk/deduplicate` with `posts: [ { id, etag } ]` like reformat (not `post_ids`). It removes later copies within each bibliography, keeping the first, by the editor's duplicate rules, and refreshes year suffixes. Duplicates across two blocks of one post are reported in `crossBlockDuplicates` and not removed, since a post with one bibliography per chapter means to repeat them. It shares reformat's budget and lock; `borges/bulk-deduplicate` and `wp borges deduplicate` wrap it.
 
 ---
 
@@ -199,7 +199,7 @@ This splice approach is fragile for posts with many blocks. A safer alternative 
 
 **Splicing decision.** Re-serializing the whole post with `serialize_blocks( parse_blocks() )` is semantically lossless but can rewrite other blocks' comment JSON byte-for-byte (escaping), producing noisy revisions. Tier 2 should instead locate the target block's byte range with the block-delimiter grammar `WP_Block_Parser` uses (document order, matching `bibliography_builder_collect_blocks()` indexing), replace only that range with `serialize_block()` of the updated block, and verify by re-parsing that exactly one block changed before calling `wp_update_post()`.
 
-**M2 (2026-09-26): implemented, unreleased.** See `docs/rest-write-routes.md`.
+**M2 (2026-09-26): implemented, released in 1.7.0.** See `docs/rest-write-routes.md`.
 
 - **Block-range locator** (`includes/block-locator.php`):
   - uses core's delimiter grammar and document-order indexing;
@@ -272,12 +272,14 @@ This decision should be revisited once Tier 2 is prototyped and the static-save 
 | Milestone | Scope | Blocker |
 |---|---|---|
 | M0 | Stable IDs (no routes) | None — implement in next feature sprint |
-| M1 | Validate + diff read extensions (Tier 1) — **done (unreleased)** | M0 complete |
-| M2 | Tier 2 add/update/delete/reorder behind an opt-in filter — **done (unreleased)**; see `docs/rest-write-routes.md` | M1 + static-save spike |
-| M3 | Reformat, reorder, ETag (Tier 2 complete) — **done (unreleased)**: reorder and ETag shipped with M2, block settings and reformat (Tier 3) with M3 | M2 validated |
-| M4 | Bulk routes (Tier 4) — **reformat and deduplicate done (unreleased)** | M3 + rate-limiting design |
-| M5 | Abilities registration (Tier 5) — **done (unreleased)**: six write abilities wrapping the M2/M3 routes | WP Abilities API stable |
+| M1 | Validate + diff read extensions (Tier 1) — **done (1.7.0)** | M0 complete |
+| M2 | Tier 2 add/update/delete/reorder behind an opt-in filter — **done (1.7.0)**; see `docs/rest-write-routes.md` | M1 + static-save spike |
+| M3 | Reformat, reorder, ETag (Tier 2 complete) — **done (1.7.0)**: reorder and ETag shipped with M2, block settings and reformat (Tier 3) with M3 | M2 validated |
+| M4 | Bulk routes (Tier 4) — **done (1.15.0)**: bulk reformat and deduplicate, their abilities, and `wp borges reformat` and `deduplicate` | M3 + rate-limiting design |
+| M5 | Abilities registration (Tier 5) — **done (1.12.0)**: six write abilities wrapping the M2/M3 routes | WP Abilities API stable |
 
 **2026-09-24 update:** the Abilities API is in core as of WordPress 6.9, so M5's blocker is gone for the read side. The read-only cut shipped ahead of the other milestones, in 1.6.0: `borges/get-bibliographies`, `borges/export-bibliography`, and `borges/validate-citations` in `includes/abilities.php`, using core's `wp_register_ability()` on `wp_abilities_api_init` with `readonly` annotations. The memo's `bibliography/read` naming was replaced by core's required `namespace/action` form under the `borges/` namespace. Writable abilities stay behind M0–M3.
 
 **2026-10-14 update:** the write abilities shipped behind the write-routes filter in `includes/write-abilities.php`: `borges/add-citations`, `borges/update-citation`, `borges/delete-citation`, `borges/reorder-citations`, `borges/update-bibliography-settings`, and `borges/reformat-bibliography`. Rather than re-implement the routes, each ability builds the request its route would receive and calls the route's callback, so permissions, dry runs, and the ETag check cannot drift between the two surfaces. `etag` in the input is sent as `If-Match`. Tier 4 (bulk) is the only milestone left.
+
+**2026-10-27 update:** Phase 05 is complete. M0 to M3 shipped in 1.7.0, the write abilities (M5) in 1.12.0, and the bulk routes (M4) in 1.15.0. Two items from the Tier 4 sketch were changed on purpose rather than left undone: bulk requests are synchronous batches, not polled jobs, and duplicates across blocks or posts are reported, never removed. The write routes stay off unless the `bibliography_builder_enable_write_routes` filter turns them on; whether they should ever be on by default is a separate decision outside this phase. Later additions on the same code, such as `wp borges duplicates`, are tracked in `CHANGELOG.md`.

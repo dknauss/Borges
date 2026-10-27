@@ -61,9 +61,9 @@ _Last reviewed: 2026-10-25._
    - 1.13.0 (2026-10-23) — render-time JSON-LD enrichment, Article `citation` link, output-defaults filter.
    - 1.14.0 (2026-10-23) — year suffixes in author-date styles; read-only WP-CLI commands.
    - 1.15.0 (2026-10-25) — bulk reformat and deduplicate with a rate limit (Phase 05 M4); duplicate-creating edits refused.
-3. **Active phases** are still only `05-writable-bibliography-rest` (M0–M3
-   shipped in 1.7.0, M5 write abilities in 1.12.0, M4 bulk routes in 1.15.0) and
-   `06-ci-optimization` (unplanned strategy sketch). Neither gates a release.
+3. **Active phases**: only `06-ci-optimization` (unplanned strategy sketch),
+   which does not gate a release. `05-writable-bibliography-rest` is complete
+   (M0–M3 shipped in 1.7.0, M5 write abilities in 1.12.0, M4 bulk routes in 1.15.0).
 4. Keep the release artifact, WordPress.org SVN output, Playground blueprints,
    and docs aligned whenever import behavior changes for any supported input
    (DOI, PMID, PMCID, arXiv, ISBN, BibTeX/BibLaTeX, free text).
@@ -77,7 +77,7 @@ ordering. In short:
 2. **Sort-conformance backlog**: test items closed and year suffixes added 2026-10-23; ABNT leading articles await a product decision
 3. **WP-CLI read commands**: `list`, `export`, `validate` built 2026-10-23 (`docs/wp-cli.md`); `duplicates`, `preview`, and write commands still to consider
 4. **Reference-manager export corpus**: needs real exports from the owner
-5. **Phase 05 M4 bulk routes**: reformat and deduplicate shipped in 1.15.0
+5. **Phase 05 M4 bulk routes**: complete; reformat and deduplicate shipped in 1.15.0
 6. **First-wave official language packs**
 
 ## Last Activity
@@ -140,7 +140,7 @@ Phase B split shipped in 1.12.0.
 
 Shipped lines: 1.3.x (`v1.3.0`–`v1.3.4`), 1.4.x (`v1.4.0`–`v1.4.2`), 1.5.x
 (`v1.5.0`, `v1.5.1`), 1.6.x (`v1.6.0`). Phases 04 (Cite/Export) and 07
-(embedded identifiers) are shipped and archived. Phase 05 shipped its read-only
-Abilities cut in 1.6.0, and M0 (stable IDs) and M1 (review routes) since; its
-writable milestones (M2–M4) remain behind the design memo. Phase 06 is an unplanned sketch. Future
+(embedded identifiers) are shipped and archived. Phase 05 is complete: its read-only
+Abilities cut shipped in 1.6.0, M0–M3 in 1.7.0, the write abilities (M5) in
+1.12.0, and the bulk routes (M4) in 1.15.0. Phase 06 is an unplanned sketch. Future
 work is tracked against release versions, not a GSD milestone label.

@@ -31,6 +31,7 @@ export default function save({ attributes }) {
 		quoteFoldedItalics: true,
 		particleAwareSort: true,
 		localeArticles: true,
+		notesAuthorChains: true,
 		citeExportData: true,
 		canonicalDoiUrl: true,
 		jsonLdItemList: true,
