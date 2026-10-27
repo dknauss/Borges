@@ -198,5 +198,28 @@
       { "id": "angstrom-nfc", "csl": { "type": "book", "title": "Alpha Recherches", "author": [{ "family": "\u00c5ngstr\u00f6m", "given": "Anders" }], "issued": { "date-parts": [[2020]] }}}
     ],
     "expectedOrder": ["angell", "angstrom-nfc", "angstrom-nfd", "anzalone"]
+  },
+  {
+    "id": "case-abnt-leading-articles",
+    "style": "abnt",
+    "citations": [
+      { "id": "o-guarani", "csl": { "type": "book", "title": "O Guarani", "issued": { "date-parts": [[1857]] } } },
+      { "id": "iracema", "csl": { "type": "book", "title": "Iracema", "issued": { "date-parts": [[1865]] } } },
+      { "id": "uma-historia", "csl": { "type": "book", "title": "Uma história do Brasil", "issued": { "date-parts": [[1900]] } } },
+      { "id": "the-hobbit", "csl": { "type": "book", "title": "The Hobbit", "issued": { "date-parts": [[1937]] } } },
+      { "id": "os-sertoes", "csl": { "type": "book", "title": "Os sertões", "issued": { "date-parts": [[1902]] } } },
+      { "id": "alencar-as-minas", "csl": { "type": "book", "title": "As minas de prata", "author": [{ "family": "Alencar", "given": "José de" }], "issued": { "date-parts": [[1865]] } } },
+      { "id": "alencar-luciola", "csl": { "type": "book", "title": "Lucíola", "author": [{ "family": "Alencar", "given": "José de" }], "issued": { "date-parts": [[1865]] } } }
+    ],
+    "expectedOrder": ["alencar-luciola", "alencar-as-minas", "o-guarani", "uma-historia", "the-hobbit", "iracema", "os-sertoes"]
+  },
+  {
+    "id": "case-english-style-keeps-portuguese-articles",
+    "style": "apa-7",
+    "citations": [
+      { "id": "o-guarani", "csl": { "type": "book", "title": "O Guarani", "issued": { "date-parts": [[1857]] } } },
+      { "id": "iracema", "csl": { "type": "book", "title": "Iracema", "issued": { "date-parts": [[1865]] } } }
+    ],
+    "expectedOrder": ["iracema", "o-guarani"]
   }
 ]
