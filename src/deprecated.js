@@ -126,6 +126,9 @@ export const deprecated = [
 		// Freezes the save() shape of 1.15.0: titles sorted without an
 		// English leading article only, so ABNT filed "O Guarani" under O,
 		// where NBR 6033 §3.4 files it under G.
+		// Notes styles also compared only the first author's family name, so
+		// "Gessner, Conrad, and Josias Simler" could precede "Gessner,
+		// Conrad", where CMOS 14.67–14.70 puts the single author first (#212).
 		attributes: deprecatedAttributes,
 		save: ({ attributes }) =>
 			renderBibliographySave(attributes, {
