@@ -255,8 +255,79 @@ function bibliography_builder_save_url_ranges( $text ) {
 }
 
 /**
- * `findLastRange()`: the last occurrence of a value that is neither quoted,
- * inside a URL, nor overlapping a range already found. Offsets are bytes;
+ * `foldQuotes()`: ‘ and ’ as ', “ and ” as ", so a stored straight apostrophe
+ * still finds the curly one citeproc printed. In UTF-8 a curly mark is three
+ * bytes and a straight one one, so folding moves every later byte; the map
+ * gives, for each byte offset in the folded text (and its end), the offset of
+ * the same byte in the original. JS needs no map: each mark is one UTF-16 unit.
+ *
+ * @param string $text Text.
+ * @return array{text: string, offsets: array<int, int>}
+ */
+function bibliography_builder_save_fold_quotes( $text ) {
+	$folds   = array(
+		"\u{2018}" => "'",
+		"\u{2019}" => "'",
+		"\u{201C}" => '"',
+		"\u{201D}" => '"',
+	);
+	$folded  = '';
+	$offsets = array();
+	$cursor  = 0;
+	$length  = strlen( $text );
+
+	// Copy the text between curly marks whole; only the marks shrink. A
+	// \xE2\x80 that starts another character (an en dash, say) is copied.
+	while ( $cursor < $length ) {
+		$next = strpos( $text, "\xE2\x80", $cursor );
+		$mark = false === $next ? '' : substr( $text, $next, 3 );
+
+		if ( false === $next || ! isset( $folds[ $mark ] ) ) {
+			$stop    = false === $next ? $length : $next + 2;
+			$folded .= substr( $text, $cursor, $stop - $cursor );
+			$cursor  = bibliography_builder_save_append_offsets( $offsets, $cursor, $stop );
+			continue;
+		}
+
+		if ( $next > $cursor ) {
+			$folded .= substr( $text, $cursor, $next - $cursor );
+			bibliography_builder_save_append_offsets( $offsets, $cursor, $next );
+		}
+
+		$folded   .= $folds[ $mark ];
+		$offsets[] = $next;
+		$cursor    = $next + 3;
+	}
+
+	$offsets[] = $length;
+
+	return array(
+		'text'    => $folded,
+		'offsets' => $offsets,
+	);
+}
+
+/**
+ * Append each byte offset from $from up to, not including, $to.
+ *
+ * @param array<int, int> $offsets Offset map, appended to in place.
+ * @param int             $from    First offset.
+ * @param int             $to      Offset to stop before.
+ * @return int $to, where the copy stopped.
+ */
+function bibliography_builder_save_append_offsets( &$offsets, $from, $to ) {
+	for ( $offset = $from; $offset < $to; $offset++ ) {
+		$offsets[] = $offset;
+	}
+
+	return $to;
+}
+
+/**
+ * `findLastRange()` with `quoteFoldedItalics`: the last occurrence of a value
+ * that is neither quoted, inside a URL, nor overlapping a range already
+ * found, with quotation marks folded on both sides. The search runs on the
+ * folded text; offsets returned and checked are the original text's bytes.
  * UTF-8 substring search finds the same occurrences as JavaScript's UTF-16
  * search.
  *
@@ -267,10 +338,14 @@ function bibliography_builder_save_url_ranges( $text ) {
  * @return array|null
  */
 function bibliography_builder_save_find_last_range( $text, $value, $ranges, $url_ranges = array() ) {
-	$start = strrpos( $text, $value );
+	$folded = bibliography_builder_save_fold_quotes( $text );
+	$needle = bibliography_builder_save_fold_quotes( $value )['text'];
+	$search = $folded['text'];
+	$at     = strrpos( $search, $needle );
 
-	while ( false !== $start ) {
-		$end      = $start + strlen( $value );
+	while ( false !== $at ) {
+		$start    = $folded['offsets'][ $at ];
+		$end      = $folded['offsets'][ $at + strlen( $needle ) ];
 		$overlaps = false;
 
 		foreach ( array_merge( $ranges, $url_ranges ) as $range ) {
@@ -284,12 +359,12 @@ function bibliography_builder_save_find_last_range( $text, $value, $ranges, $url
 			);
 		}
 
-		if ( 0 === $start ) {
+		if ( 0 === $at ) {
 			return null;
 		}
 
-		// lastIndexOf( value, start - 1 ): the last match starting before $start.
-		$start = strrpos( substr( $text, 0, $start - 1 + strlen( $value ) ), $value );
+		// lastIndexOf( value, at - 1 ): the last match starting before $at.
+		$at = strrpos( substr( $search, 0, $at - 1 + strlen( $needle ) ), $needle );
 	}
 
 	return null;

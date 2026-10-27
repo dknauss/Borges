@@ -28,6 +28,7 @@ export default function save({ attributes }) {
 		inlineMarkup: true,
 		quoteAwareItalics: true,
 		urlAwareItalics: true,
+		quoteFoldedItalics: true,
 		particleAwareSort: true,
 		localeArticles: true,
 		citeExportData: true,
