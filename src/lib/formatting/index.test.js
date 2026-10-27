@@ -522,6 +522,115 @@ describe('quoted titles', () => {
 	});
 });
 
+describe('titles stored with straight quotation marks', () => {
+	const options = {
+		quoteAwareItalics: true,
+		urlAwareItalics: true,
+		quoteFoldedItalics: true,
+	};
+	const nelson = {
+		csl: {
+			type: 'book',
+			title: "Ted Nelson's Computer Paradigm, Expressed as One-Liners",
+		},
+		formattedText:
+			'Nelson, Ted. Ted Nelson’s Computer Paradigm, Expressed as One-Liners. Mindful Press, 1999.',
+		displayOverride: null,
+	};
+
+	it('italicizes a book title whose apostrophe citeproc printed curly', () => {
+		expect(getDisplaySegments(nelson, options)).toEqual([
+			{ text: 'Nelson, Ted. ', italic: false },
+			{
+				text: 'Ted Nelson’s Computer Paradigm, Expressed as One-Liners',
+				italic: true,
+			},
+			{ text: '. Mindful Press, 1999.', italic: false },
+		]);
+	});
+
+	it('left it roman without quoteFoldedItalics, as save() did through 1.15.0', () => {
+		expect(
+			getDisplaySegments(nelson, {
+				quoteAwareItalics: true,
+				urlAwareItalics: true,
+			})
+		).toEqual([{ text: nelson.formattedText, italic: false }]);
+	});
+
+	it('italicizes a journal name with an apostrophe', () => {
+		expect(
+			getDisplaySegments(
+				{
+					csl: {
+						type: 'article-journal',
+						title: 'Reading Aloud',
+						'container-title': "Children's Literature Quarterly",
+					},
+					formattedText:
+						'Moss, Ann. “Reading Aloud.” Children’s Literature Quarterly 12 (2021).',
+					displayOverride: null,
+				},
+				options
+			)
+		).toEqual([
+			{ text: 'Moss, Ann. “Reading Aloud.” ', italic: false },
+			{ text: 'Children’s Literature Quarterly', italic: true },
+			{ text: ' 12 (2021).', italic: false },
+		]);
+	});
+
+	it('matches straight double quotes in a title to curly ones, and curly to straight', () => {
+		expect(
+			getDisplaySegments(
+				{
+					csl: { type: 'book', title: 'The "Best" Book' },
+					formattedText: 'Ålund, Åsa. The “Best” Book. Test Press.',
+					displayOverride: null,
+				},
+				options
+			)
+		).toEqual([
+			{ text: 'Ålund, Åsa. ', italic: false },
+			{ text: 'The “Best” Book', italic: true },
+			{ text: '. Test Press.', italic: false },
+		]);
+		expect(
+			getDisplaySegments(
+				{
+					csl: { type: 'book', title: 'Writers’ Lives' },
+					formattedText: "Lee, Kim. Writers' Lives. Test Press.",
+					displayOverride: null,
+				},
+				options
+			)
+		).toEqual([
+			{ text: 'Lee, Kim. ', italic: false },
+			{ text: "Writers' Lives", italic: true },
+			{ text: '. Test Press.', italic: false },
+		]);
+	});
+	it('matches a title as long as the CSL sanitizer accepts', () => {
+		const title = "Nelson's paradigm ".repeat(3600).trimEnd();
+		const shown = title.replaceAll("'", '’');
+
+		expect(
+			getDisplaySegments(
+				{
+					csl: { type: 'book', title },
+					formattedText: `Zoë Moss. ${shown}. Press ’99.`,
+					displayOverride: null,
+				},
+				options
+			)
+		).toEqual([
+			{ text: 'Zoë Moss. ', italic: false },
+			{ text: shown, italic: true },
+			{ text: '. Press ’99.', italic: false },
+		]);
+	});
+});
+
 describe('titles inside URLs', () => {
 	const elife = {
 		csl: {

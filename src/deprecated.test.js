@@ -580,3 +580,32 @@ describe('email-safe markup deprecation (deprecated[1])', () => {
 		expect(current).not.toContain('data-cite-');
 	});
 });
+
+describe('1.15.0 deprecation italics (deprecated[0])', () => {
+	const attributes = {
+		citationStyle: 'chicago-notes-bibliography',
+		citations: [
+			{
+				id: 'nelson',
+				csl: {
+					type: 'book',
+					title: "Ted Nelson's Computer Paradigm, Expressed as One-Liners",
+					author: [{ family: 'Nelson', given: 'Ted' }],
+				},
+				formattedText:
+					'Nelson, Ted. Ted Nelson’s Computer Paradigm, Expressed as One-Liners. Mindful Press, 1999.',
+				displayOverride: null,
+			},
+		],
+	};
+
+	it('left a title with a straight apostrophe roman; save() italicizes it', () => {
+		const old = renderToStaticMarkup(deprecated[0].save({ attributes }));
+		const current = renderToStaticMarkup(save({ attributes }));
+
+		expect(old).not.toContain('<i>');
+		expect(current).toContain(
+			'Nelson, Ted. <i>Ted Nelson’s Computer Paradigm, Expressed as One-Liners</i>. Mindful Press, 1999.'
+		);
+	});
+});

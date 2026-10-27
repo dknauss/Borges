@@ -1906,6 +1906,92 @@
 			}
 		},
 		{
+			"name": "quote-folded-titles",
+			"note": "Titles stored with straight quotation marks, which citeproc prints curly: a book title with an apostrophe, a journal name with one, and a book title in straight double quotes, each still italicized. Non-ASCII text before and curly marks after each title pin PHP's byte offsets.",
+			"attributes": {
+				"citationStyle": "chicago-notes-bibliography",
+				"headingText": "Bibliography",
+				"citations": [
+					{
+						"id": "nelson",
+						"csl": {
+							"id": "nelson",
+							"type": "book",
+							"title": "Ted Nelson's Computer Paradigm, Expressed as One-Liners",
+							"publisher": "Mindful Press",
+							"publisher-place": "Sausalito",
+							"author": [
+								{
+									"family": "Nelson",
+									"given": "Ted"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										1999
+									]
+								]
+							}
+						},
+						"formattedText": "Nelson, Ted. Ted Nelson’s Computer Paradigm, Expressed as One-Liners. Sausalito: Mindful Press, 1999.",
+						"displayOverride": null
+					},
+					{
+						"id": "moss",
+						"csl": {
+							"id": "moss",
+							"type": "article-journal",
+							"title": "Reading Aloud",
+							"container-title": "Children's Literature Quarterly",
+							"volume": "12",
+							"issue": "1",
+							"page": "1–9",
+							"author": [
+								{
+									"family": "Moss",
+									"given": "Zoë"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2021
+									]
+								]
+							}
+						},
+						"formattedText": "Moss, Zoë. “Reading Aloud.” Children’s Literature Quarterly 12, no. 1 (2021): 1–9. Moss’s notes.",
+						"displayOverride": null
+					},
+					{
+						"id": "best",
+						"csl": {
+							"id": "best",
+							"type": "book",
+							"title": "The \"Best\" Book",
+							"publisher": "Test Press",
+							"author": [
+								{
+									"family": "Ålund",
+									"given": "Åsa"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2020
+									]
+								]
+							}
+						},
+						"formattedText": "Ålund, Åsa. The “Best” Book. Test Press, 2020. ‘Quoted’ after.",
+						"displayOverride": null
+					}
+				]
+			}
+		},
+		{
 			"name": "empty",
 			"note": "No citations: save() returns null.",
 			"attributes": {
