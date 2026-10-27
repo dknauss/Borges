@@ -206,6 +206,44 @@ describe('validateAndSanitizeCsl', () => {
 		expect(result.issued['date-parts']).toEqual([[2023, 11]]);
 	});
 
+	it('accepts BC years written as strings, as Better CSL JSON writes them', () => {
+		const result = validateAndSanitizeCsl({
+			...MINIMAL_VALID,
+			issued: {
+				'date-parts': [
+					['-100', 7, 12],
+					['-44', '3', '15'],
+				],
+			},
+			accessed: { 'date-parts': [['-334']] },
+		});
+
+		expect(result.issued['date-parts']).toEqual([
+			[-100, 7, 12],
+			[-44, 3, 15],
+		]);
+		expect(result.accessed['date-parts']).toEqual([[-334]]);
+	});
+
+	it('keeps BC years written as numbers, and reads "-0" as 0', () => {
+		const result = validateAndSanitizeCsl({
+			...MINIMAL_VALID,
+			issued: { 'date-parts': [[-334], ['-0']] },
+		});
+
+		expect(result.issued['date-parts']).toEqual([[-334], [0]]);
+		expect(Object.is(result.issued['date-parts'][1][0], -0)).toBe(false);
+	});
+
+	it('drops date parts that are not signed digit strings', () => {
+		const result = validateAndSanitizeCsl({
+			...MINIMAL_VALID,
+			issued: { 'date-parts': [['2023', '--5', '-', '+7', '1.5']] },
+		});
+
+		expect(result.issued['date-parts']).toEqual([[2023]]);
+	});
+
 	it('accepts literal and raw dates without date-parts', () => {
 		const result = validateAndSanitizeCsl({
 			...MINIMAL_VALID,
