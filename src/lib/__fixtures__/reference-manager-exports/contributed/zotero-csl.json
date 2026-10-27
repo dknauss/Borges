@@ -1,0 +1,303 @@
+[
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/7GE6TV7K",
+		"type": "article-journal",
+		"container-title": "Nature",
+		"DOI": "10.1038/s41586-020-2649-2",
+		"issue": "7825",
+		"language": "en",
+		"page": "357-362",
+		"title": "Array programming with NumPy",
+		"volume": "585",
+		"author": [
+			{
+				"family": "Harris",
+				"given": "Charles R."
+			},
+			{
+				"family": "Millman",
+				"given": "K. Jarrod"
+			},
+			{
+				"family": "Walt",
+				"given": "Stéfan J.",
+				"non-dropping-particle": "van der"
+			},
+			{
+				"family": "Gommers",
+				"given": "Ralf"
+			}
+		],
+		"issued": {
+			"date-parts": [
+				[
+					"2020",
+					9,
+					17
+				]
+			]
+		}
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/8TCFWBBQ",
+		"type": "book",
+		"publisher": "University of Chicago Press",
+		"publisher-place": "Chicago",
+		"title": "The Structure of Scientific Revolutions",
+		"author": [
+			{
+				"family": "Kuhn",
+				"given": "Thomas S."
+			}
+		],
+		"issued": {
+			"date-parts": [
+				[
+					"1962"
+				]
+			]
+		}
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/NR6TVMD8",
+		"type": "chapter",
+		"container-title": "The Interpretation of Cultures",
+		"page": "3-30",
+		"publisher": "Basic Books",
+		"publisher-place": "New York",
+		"title": "Thick Description: Toward an Interpretive Theory of Culture",
+		"author": [
+			{
+				"family": "Geertz",
+				"given": "Clifford"
+			}
+		],
+		"issued": {
+			"date-parts": [
+				[
+					"1973"
+				]
+			]
+		}
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/FNLTDGDW",
+		"type": "paper-conference",
+		"event-title": "Advances in Neural Information Processing Systems",
+		"title": "Attention Is All You Need",
+		"URL": "https://arxiv.org/abs/1706.03762",
+		"volume": "30",
+		"author": [
+			{
+				"family": "Vaswani",
+				"given": "Ashish"
+			},
+			{
+				"family": "Shazeer",
+				"given": "Noam"
+			},
+			{
+				"family": "Parmar",
+				"given": "Niki"
+			},
+			{
+				"family": "Uszkoreit",
+				"given": "Jakob"
+			},
+			{
+				"family": "Jones",
+				"given": "Llion"
+			},
+			{
+				"family": "Gomez",
+				"given": "Aidan N."
+			},
+			{
+				"family": "Kaiser",
+				"given": "Łukasz"
+			},
+			{
+				"family": "Polosukhin",
+				"given": "Illia"
+			}
+		],
+		"issued": {
+			"date-parts": [
+				[
+					"2017"
+				]
+			]
+		}
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/BCD7NTZI",
+		"type": "article-journal",
+		"container-title": "Monatshefte für Mathematik und Physik",
+		"DOI": "10.1007/BF01700692",
+		"issue": "1",
+		"language": "de",
+		"page": "173-198",
+		"title": "Über formal unentscheidbare Sätze der Principia Mathematica und verwandter Systeme I",
+		"volume": "38",
+		"author": [
+			{
+				"family": "Gödel",
+				"given": "Kurt"
+			}
+		],
+		"issued": {
+			"date-parts": [
+				[
+					"1931"
+				]
+			]
+		}
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/A26ZQYF4",
+		"type": "article-journal",
+		"container-title": "Bell System Technical Journal",
+		"DOI": "10.1002/j.1538-7305.1948.tb01338.x",
+		"issue": "3",
+		"page": "379-423",
+		"title": "A Mathematical Theory of Communication",
+		"volume": "27",
+		"author": [
+			{
+				"family": "Shannon",
+				"given": "Claude E."
+			}
+		],
+		"issued": {
+			"date-parts": [
+				[
+					"1948"
+				]
+			]
+		}
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/U4Z874P9",
+		"type": "thesis",
+		"genre": "Master's thesis",
+		"publisher": "Massachusetts Institute of Technology",
+		"publisher-place": "Cambridge, MA",
+		"title": "A Symbolic Analysis of Relay and Switching Circuits",
+		"author": [
+			{
+				"family": "Shannon",
+				"given": "Claude E."
+			}
+		],
+		"issued": {
+			"date-parts": [
+				[
+					"1940"
+				]
+			]
+		}
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/TUTHGG8J",
+		"type": "book",
+		"language": "fr",
+		"publisher": "Gallimard",
+		"publisher-place": "Paris",
+		"title": "Le Deuxième Sexe",
+		"author": [
+			{
+				"family": "Beauvoir",
+				"given": "Simone",
+				"non-dropping-particle": "de"
+			}
+		],
+		"issued": {
+			"date-parts": [
+				[
+					"1949"
+				]
+			]
+		}
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/SRXHDPLD",
+		"type": "book",
+		"publisher": "Metaphysics Research Lab, Stanford University",
+		"publisher-place": "Stanford, CA",
+		"title": "The Stanford Encyclopedia of Philosophy",
+		"URL": "https://plato.stanford.edu/",
+		"collection-editor": [
+			{
+				"family": "Zalta",
+				"given": "Edward N."
+			}
+		]
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/KGEK52NU",
+		"type": "webpage",
+		"title": "Citation Style Language",
+		"URL": "https://citationstyles.org/",
+		"author": [
+			{
+				"literal": "Citation Style Language"
+			}
+		],
+		"accessed": {
+			"date-parts": [
+				[
+					"2024",
+					3,
+					12
+				]
+			]
+		}
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/PA2E6KZK",
+		"type": "article-journal",
+		"container-title": "Nature",
+		"DOI": "10.1038/171737a0",
+		"issue": "4356",
+		"page": "737-738",
+		"title": "Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid",
+		"volume": "171",
+		"author": [
+			{
+				"family": "Watson",
+				"given": "J. D."
+			},
+			{
+				"family": "Crick",
+				"given": "F. H. C."
+			}
+		],
+		"issued": {
+			"date-parts": [
+				[
+					"1953"
+				]
+			]
+		}
+	},
+	{
+		"id": "http://zotero.org/users/local/bchbAvEY/items/IR9KVTIY",
+		"type": "report",
+		"publisher": "United States Government Printing Office",
+		"publisher-place": "Washington, DC",
+		"title": "Science, the Endless Frontier",
+		"author": [
+			{
+				"family": "Bush",
+				"given": "Vannevar"
+			}
+		],
+		"issued": {
+			"date-parts": [
+				[
+					"1945"
+				]
+			]
+		}
+	}
+]

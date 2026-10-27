@@ -12,6 +12,9 @@
 *.yml text eol=lf
 *.yaml text eol=lf
 
+# Keep reference-manager export fixtures byte for byte (Zotero writes RIS with CRLF).
+/src/lib/__fixtures__/reference-manager-exports/**/*.ris -text
+
 # Exclude from release archives.
 /.github        export-ignore
 /.gitattributes export-ignore

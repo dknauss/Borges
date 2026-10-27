@@ -25,7 +25,14 @@ const CORPUS_DIR = path.join(
 	'reference-manager-exports'
 );
 const EXPORT_DIRS = ['public', 'contributed'];
-const NON_EXPORT_FILES = new Set(['LICENSE', 'README.md', '.gitkeep']);
+// Notices, docs, and the sample library imported before exporting, which no
+// manager wrote and so is not an export.
+const NON_EXPORT_FILES = new Set([
+	'LICENSE',
+	'README.md',
+	'.gitkeep',
+	'borges-sample.ris',
+]);
 
 const manifest = JSON.parse(
 	fs.readFileSync(path.join(CORPUS_DIR, 'manifest.json'), 'utf8')
