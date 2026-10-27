@@ -224,6 +224,21 @@ describe('renameBibtexCityField', () => {
 		);
 	});
 
+	it('skips a stray @ before the entry', () => {
+		expect(
+			renameBibtexCityField('Ask me@home.\n@book{a, city = {Oslo}}')
+		).toBe('Ask me@home.\n@book{a, address = {Oslo}}');
+	});
+
+	it.each([
+		['plain text', 'city = Oslo'],
+		['only a macro', '@string{city = {Oslo}}'],
+		['an unclosed macro', '@string{city = {Oslo}'],
+		['an entry with no city', '@book{a, title = {T}}'],
+	])('returns %s unchanged', (_label, value) => {
+		expect(renameBibtexCityField(value)).toBe(value);
+	});
+
 	it('leaves a value mentioning another @type{ alone', () => {
 		const entry = '@book{a, title = {On @misc{b, city = x}}, year = 2001}';
 
