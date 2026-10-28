@@ -339,4 +339,151 @@ final class CoinsEnrichmentTest extends TestCase {
 		$this->assertStringNotContainsString( 'rft.aulast=', $kev );
 		$this->assertStringContainsString( 'rft.au=Kim%2C%20J.&rft.au=Kim%2C%20J.-H.', $kev );
 	}
+
+	/**
+	 * One CSL item's saved COinS span, enriched as it renders, as key-value
+	 * pairs in order.
+	 *
+	 * @return array<int, array{0: string, 1: string}>
+	 */
+	private static function enriched_pairs( array $csl ): array {
+		$csl['id'] = 'c';
+		$saved     = bibliography_builder_escape_save_attribute( bibliography_builder_save_build_coins( $csl ) );
+		$html      = bibliography_builder_enrich_rendered_coins(
+			'<ul><li id="ref-c"><span class="Z3988" aria-hidden="true" title="' . $saved . '"></span></li></ul>',
+			array(
+				'attrs' => array(
+					'citations' => array(
+						array(
+							'id'  => 'c',
+							'csl' => $csl,
+						),
+					),
+				),
+			)
+		);
+		preg_match( '#title="([^"]*)"#', $html, $match );
+
+		return array_map(
+			static function ( $pair ) {
+				list( $key, $value ) = explode( '=', $pair, 2 );
+				return array( $key, rawurldecode( $value ) );
+			},
+			explode( '&', html_entity_decode( $match[1], ENT_QUOTES, 'UTF-8' ) )
+		);
+	}
+
+	public function test_a_chapter_gets_its_genre_and_pages(): void {
+		$pairs = self::enriched_pairs(
+			array(
+				'type'            => 'chapter',
+				'title'           => 'The library of Babel',
+				'container-title' => 'Labyrinths',
+				'publisher'       => 'New Directions',
+				'page'            => '51–58',
+			)
+		);
+
+		$this->assertContains( array( 'rft_val_fmt', 'info:ofi/fmt:kev:mtx:book' ), $pairs );
+		$this->assertContains( array( 'rft.genre', 'bookitem' ), $pairs );
+		$this->assertContains( array( 'rft.spage', '51' ), $pairs );
+		$this->assertContains( array( 'rft.epage', '58' ), $pairs );
+		$this->assertContains( array( 'rft.pub', 'New Directions' ), $pairs );
+	}
+
+	public function test_a_conference_paper_moves_to_the_book_format(): void {
+		$pairs = self::enriched_pairs(
+			array(
+				'type'            => 'paper-conference',
+				'title'           => 'BERT',
+				'container-title' => 'Proceedings of NAACL',
+				'publisher'       => 'Association for Computational Linguistics',
+				'publisher-place' => 'Minneapolis',
+				'page'            => '4171-4186',
+			)
+		);
+		$keys  = array_column( $pairs, 0 );
+
+		$this->assertContains( array( 'rft_val_fmt', 'info:ofi/fmt:kev:mtx:book' ), $pairs );
+		$this->assertNotContains( 'rft.jtitle', $keys );
+		$this->assertContains( array( 'rft.btitle', 'Proceedings of NAACL' ), $pairs );
+		$this->assertContains( array( 'rft.atitle', 'BERT' ), $pairs );
+		$this->assertContains( array( 'rft.genre', 'proceeding' ), $pairs );
+		$this->assertContains( array( 'rft.pub', 'Association for Computational Linguistics' ), $pairs );
+		$this->assertContains( array( 'rft.place', 'Minneapolis' ), $pairs );
+		$this->assertSame( 1, count( array_keys( $keys, 'rft.spage', true ) ) );
+	}
+
+	public function test_a_report_is_titled_in_the_book_format(): void {
+		$pairs = self::enriched_pairs(
+			array(
+				'type'            => 'report',
+				'title'           => 'Annual report',
+				'container-title' => 'Working papers',
+				'publisher'       => 'Institute',
+			)
+		);
+		$keys  = array_column( $pairs, 0 );
+
+		$this->assertContains( array( 'rft.genre', 'report' ), $pairs );
+		$this->assertContains( array( 'rft.btitle', 'Annual report' ), $pairs );
+		$this->assertContains( array( 'rft.series', 'Working papers' ), $pairs );
+		$this->assertNotContains( 'rft.atitle', $keys );
+		$this->assertContains( array( 'rft.pub', 'Institute' ), $pairs );
+	}
+
+	public function test_book_edition_journal_issn_and_urls_are_added(): void {
+		$book = self::enriched_pairs(
+			array(
+				'type'      => 'book',
+				'title'     => 'Introduction to algorithms',
+				'edition'   => '3',
+				'publisher' => 'MIT Press',
+				'page'      => '1292',
+			)
+		);
+
+		$this->assertContains( array( 'rft.genre', 'book' ), $book );
+		$this->assertContains( array( 'rft.edition', '3' ), $book );
+		// A book's CSL page count is not a page range.
+		$this->assertNotContains( 'rft.pages', array_column( $book, 0 ) );
+
+		$preprint = self::enriched_pairs(
+			array(
+				'type'  => 'article',
+				'title' => 'Attention is all you need',
+				'URL'   => 'https://arxiv.org/abs/1706.03762',
+				'ISSN'  => '1234-5678',
+			)
+		);
+
+		$this->assertContains( array( 'rft.genre', 'preprint' ), $preprint );
+		$this->assertContains( array( 'rft_id', 'https://arxiv.org/abs/1706.03762' ), $preprint );
+		$this->assertContains( array( 'rft.issn', '1234-5678' ), $preprint );
+
+		$article = self::enriched_pairs(
+			array(
+				'type'  => 'article-journal',
+				'title' => 'T',
+				'URL'   => 'javascript:alert(1)',
+			)
+		);
+
+		$this->assertContains( array( 'rft.genre', 'article' ), $article );
+		$this->assertNotContains( 'rft_id', array_column( $article, 0 ) );
+	}
+
+	public function test_a_web_page_gets_no_genre(): void {
+		$pairs = self::enriched_pairs(
+			array(
+				'type'            => 'webpage',
+				'title'           => 'Block editor handbook',
+				'container-title' => 'WordPress Developer Resources',
+				'URL'             => 'https://developer.wordpress.org/block-editor/',
+			)
+		);
+
+		$this->assertNotContains( 'rft.genre', array_column( $pairs, 0 ) );
+		$this->assertContains( array( 'rft_id', 'https://developer.wordpress.org/block-editor/' ), $pairs );
+	}
 }

@@ -12,6 +12,10 @@
  *   see what they did before. See bibliography_builder_coins_enrich_title()
  *   for how this keeps Zotero from listing an author twice or out of order.
  * - an `rft_id` of `info:pmid/…` for a PubMed ID, beside the DOI's.
+ * - the kind of work and the fields its format has room for, so a reader
+ *   imports a chapter as a chapter and a conference paper as a conference
+ *   paper, with their pages, publisher, edition, ISSN, and URL. See
+ *   bibliography_builder_coins_enrich_fields().
  *
  * The stored content is untouched, so no block deprecation is needed, and
  * posts gain the fields without being re-saved. Markup that already carries
@@ -159,13 +163,159 @@ function bibliography_builder_coins_enrich_title( $csl, $title ) {
 		$added[] = 'rft_id=' . bibliography_builder_encode_uri_component( 'info:pmid/' . $pmid );
 	}
 
-	if ( array() === $added ) {
+	$before = $pairs;
+	$pairs  = bibliography_builder_coins_enrich_fields( $csl, $pairs );
+
+	if ( array() === $added && $pairs === $before ) {
 		return $title;
 	}
 
 	// Encoded pairs hold no characters that need attribute escaping besides
 	// the `&` that joins them.
 	return implode( '&amp;', array_merge( $pairs, $added ) );
+}
+
+/**
+ * The OpenURL `rft.genre` for a CSL type, or '' for none.
+ *
+ * @since 1.17.0
+ *
+ * @param string $type CSL item type.
+ * @return string
+ */
+function bibliography_builder_coins_genre( $type ) {
+	$genres = array(
+		'article-journal'   => 'article',
+		'article-magazine'  => 'article',
+		'article-newspaper' => 'article',
+		'article'           => 'preprint',
+		'book'              => 'book',
+		'chapter'           => 'bookitem',
+		'paper-conference'  => 'proceeding',
+		'report'            => 'report',
+	);
+
+	return isset( $genres[ $type ] ) ? $genres[ $type ] : '';
+}
+
+/**
+ * One span's key-value pairs with the kind of work and the fields save()
+ * leaves out.
+ *
+ * Zotero's OpenURL reader, like most, takes the item type from the format
+ * and `rft.genre`. save() writes no genre, so a chapter, a book-format span
+ * with both titles, imported as a book under the book's title; and it writes
+ * conference papers and reports in the journal format, so they imported as
+ * journal articles, with no place for a publisher. This adds:
+ *
+ * - `rft.genre`: `article`, `preprint`, `book`, `bookitem` (a chapter),
+ *   `proceeding` (a conference paper), or `report`.
+ * - for conference papers and reports, the book format Z39.88-2004 gives
+ *   them: the proceedings title moves from `rft.jtitle` to `rft.btitle`, a
+ *   report's own title from `rft.atitle` to `rft.btitle` (its container, a
+ *   series, to `rft.series`), and the publisher and place are added.
+ * - a chapter's or other book-format item's pages, as `rft.spage` and
+ *   `rft.epage`, or `rft.pages` when they are not a simple range.
+ * - a book's `rft.edition`, a journal's `rft.issn`, and the work's URL as an
+ *   `rft_id`, which readers save as the item's link.
+ *
+ * Keys the span already has are left alone. Editors and translators are not
+ * added: the formats have no key for them, and readers that take
+ * `rft.contributor` file every such name as a plain contributor.
+ *
+ * @since 1.17.0
+ *
+ * @param array    $csl   The citation's CSL-JSON.
+ * @param string[] $pairs The span's `key=value` pairs, values URI-encoded.
+ * @return string[]
+ */
+function bibliography_builder_coins_enrich_fields( $csl, $pairs ) {
+	$keys = array();
+
+	foreach ( $pairs as $pair ) {
+		$keys[] = strstr( $pair, '=', true );
+	}
+
+	$has    = static function ( string $key ) use ( &$keys ): bool {
+		return in_array( $key, $keys, true );
+	};
+	$add    = static function ( string $key, string $value ) use ( &$pairs, &$keys ): void {
+		if ( '' !== $value && ! in_array( $key, $keys, true ) ) {
+			$pairs[] = $key . '=' . bibliography_builder_encode_uri_component( $value );
+			$keys[]  = $key;
+		}
+	};
+	$rename = static function ( string $from, string $to ) use ( &$pairs, &$keys ): void {
+		foreach ( $pairs as $index => $pair ) {
+			if ( 0 === strpos( $pair, $from . '=' ) && ! in_array( $to, $keys, true ) ) {
+				$pairs[ $index ] = $to . substr( $pair, strlen( $from ) );
+				$keys[ $index ]  = $to;
+			}
+		}
+	};
+	$string = static function ( string $field ) use ( $csl ): string {
+		return bibliography_builder_json_ld_csl_string( $csl, $field );
+	};
+
+	$format  = static function ( string $name ): string {
+		return 'rft_val_fmt=' . bibliography_builder_encode_uri_component( 'info:ofi/fmt:kev:mtx:' . $name );
+	};
+	$type    = $string( 'type' );
+	$journal = in_array( $format( 'journal' ), $pairs, true );
+	$book    = in_array( $format( 'book' ), $pairs, true );
+
+	if ( $journal && ( 'paper-conference' === $type || 'report' === $type ) ) {
+		foreach ( $pairs as $index => $pair ) {
+			if ( 0 === strpos( $pair, 'rft_val_fmt=' ) ) {
+				$pairs[ $index ] = $format( 'book' );
+			}
+		}
+
+		if ( 'report' === $type ) {
+			$rename( 'rft.jtitle', 'rft.series' );
+			$rename( 'rft.atitle', 'rft.btitle' );
+		} else {
+			$rename( 'rft.jtitle', 'rft.btitle' );
+		}
+
+		$journal = false;
+		$book    = true;
+	}
+
+	if ( ! $journal && ! $book ) {
+		return $pairs;
+	}
+
+	$add( 'rft.genre', bibliography_builder_coins_genre( $type ) );
+
+	if ( $book ) {
+		if ( ! $has( 'rft.spage' ) && ! $has( 'rft.pages' ) && 'book' !== $type ) {
+			$page   = $string( 'page' );
+			$bounds = '' !== $page ? bibliography_builder_save_page_bounds( $page ) : null;
+
+			if ( null !== $bounds && null !== $bounds[0] && null !== $bounds[1] ) {
+				$add( 'rft.spage', $bounds[0] );
+				$add( 'rft.epage', $bounds[1] );
+			} else {
+				$add( 'rft.pages', $page );
+			}
+		}
+
+		$add( 'rft.pub', $string( 'publisher' ) );
+		$add( 'rft.place', $string( 'publisher-place' ) );
+		$add( 'rft.edition', $string( 'edition' ) );
+	} else {
+		$add( 'rft.issn', $string( 'ISSN' ) );
+	}
+
+	$url    = $string( 'URL' );
+	$url_id = 'rft_id=' . bibliography_builder_encode_uri_component( $url );
+
+	if ( preg_match( '#^https?://#i', $url ) && ! in_array( $url_id, $pairs, true ) ) {
+		$pairs[] = $url_id;
+	}
+
+	return $pairs;
 }
 
 /**

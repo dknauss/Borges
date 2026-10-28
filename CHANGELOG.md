@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Saved markup for OSCOLA bibliographies with primary sources changed, so the block gains a deprecation for the 1.16.0 shape (`src/deprecated.js`, `tests/fixtures/deprecations/v16-deprecated.html`). Existing blocks stay valid and take the new shape the next time they are edited.
+- **COinS says what kind of work each entry is.** As a page renders, each COinS span now carries an OpenURL `rft.genre` (`article`, `preprint`, `book`, `bookitem`, `proceeding`, or `report`) and the fields its format has room for. Zotero's browser connector had imported a chapter as a book under the book's title, losing the chapter's own title, and a conference paper as a journal article, with no publisher. Now a chapter imports as a book section with its pages; a conference paper and a report move to the book format, with the proceedings or report title, publisher, and place; a book gains its edition, a journal article its ISSN, and every entry with a web address its URL. Editors and translators are still left out: OpenURL has no key for them. A preprint's publisher is written nowhere, since the journal format has no place for one and Zotero keeps none on a journal article. Saved posts need no change; the same `bibliography_builder_enrich_coins` filter turns this off.
+- `tools/markup-value` reads every COinS field, not only the authors, through Zotero's own OpenURL reader, and counts only the fields the resulting Zotero item type keeps.
 
 ## [1.16.0] - 2026-10-28
 
