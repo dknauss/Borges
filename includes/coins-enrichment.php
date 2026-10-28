@@ -236,16 +236,16 @@ function bibliography_builder_coins_enrich_fields( $csl, $pairs ) {
 		$keys[] = strstr( $pair, '=', true );
 	}
 
-	$has    = static function ( $key ) use ( &$keys ) {
+	$has    = static function ( string $key ) use ( &$keys ): bool {
 		return in_array( $key, $keys, true );
 	};
-	$add    = static function ( $key, $value ) use ( &$pairs, &$keys ) {
+	$add    = static function ( string $key, string $value ) use ( &$pairs, &$keys ): void {
 		if ( '' !== $value && ! in_array( $key, $keys, true ) ) {
 			$pairs[] = $key . '=' . bibliography_builder_encode_uri_component( $value );
 			$keys[]  = $key;
 		}
 	};
-	$rename = static function ( $from, $to ) use ( &$pairs, &$keys ) {
+	$rename = static function ( string $from, string $to ) use ( &$pairs, &$keys ): void {
 		foreach ( $pairs as $index => $pair ) {
 			if ( 0 === strpos( $pair, $from . '=' ) && ! in_array( $to, $keys, true ) ) {
 				$pairs[ $index ] = $to . substr( $pair, strlen( $from ) );
@@ -253,11 +253,11 @@ function bibliography_builder_coins_enrich_fields( $csl, $pairs ) {
 			}
 		}
 	};
-	$string = static function ( $field ) use ( $csl ) {
+	$string = static function ( string $field ) use ( $csl ): string {
 		return bibliography_builder_json_ld_csl_string( $csl, $field );
 	};
 
-	$format  = static function ( $name ) {
+	$format  = static function ( string $name ): string {
 		return 'rft_val_fmt=' . bibliography_builder_encode_uri_component( 'info:ofi/fmt:kev:mtx:' . $name );
 	};
 	$type    = $string( 'type' );
@@ -294,8 +294,8 @@ function bibliography_builder_coins_enrich_fields( $csl, $pairs ) {
 			$bounds = '' !== $page ? bibliography_builder_save_page_bounds( $page ) : null;
 
 			if ( null !== $bounds && null !== $bounds[0] && null !== $bounds[1] ) {
-				$add( 'rft.spage', (string) $bounds[0] );
-				$add( 'rft.epage', (string) $bounds[1] );
+				$add( 'rft.spage', $bounds[0] );
+				$add( 'rft.epage', $bounds[1] );
 			} else {
 				$add( 'rft.pages', $page );
 			}
