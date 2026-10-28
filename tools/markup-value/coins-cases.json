@@ -1,0 +1,201 @@
+{
+	"description": "Author lists checked by zotero-coins.mjs: each case's COinS span, enriched as it renders, must import into Zotero with exactly these authors, in this order. Zotero's reader trims trailing punctuation from rft.au names.",
+	"cases": [
+		{
+			"name": "people, one with initials",
+			"author": [
+				{
+					"family": "Alpha",
+					"given": "Ada"
+				},
+				{
+					"family": "Beta",
+					"given": "Ben"
+				},
+				{
+					"family": "Gamma",
+					"given": "G.A."
+				}
+			],
+			"expected": [ "Alpha, Ada", "Beta, Ben", "Gamma, G. A." ]
+		},
+		{
+			"name": "organization first",
+			"author": [
+				{
+					"literal": "World Health Organization"
+				},
+				{
+					"family": "Beta",
+					"given": "Ben"
+				}
+			],
+			"expected": [ "World Health Organization", "Beta, Ben" ]
+		},
+		{
+			"name": "organization among people",
+			"author": [
+				{
+					"family": "Alpha",
+					"given": "Ada"
+				},
+				{
+					"literal": "CERN"
+				},
+				{
+					"family": "Beta",
+					"given": "Ben"
+				},
+				{
+					"literal": "World Health Organization"
+				}
+			],
+			"expected": [
+				"Alpha, Ada",
+				"CERN",
+				"Beta, Ben",
+				"World Health Organization"
+			]
+		},
+		{
+			"name": "one-part name first",
+			"author": [
+				{
+					"family": "Plato"
+				},
+				{
+					"family": "Beta",
+					"given": "Ben"
+				}
+			],
+			"expected": [ "Plato", "Beta, Ben" ]
+		},
+		{
+			"name": "given name only first",
+			"author": [
+				{
+					"given": "Homer"
+				},
+				{
+					"family": "Beta",
+					"given": "Ben"
+				}
+			],
+			"expected": [ "Homer", "Beta, Ben" ]
+		},
+		{
+			"name": "one-part names later",
+			"author": [
+				{
+					"family": "Alpha",
+					"given": "Ada"
+				},
+				{
+					"family": "Plato"
+				},
+				{
+					"given": "Homer"
+				}
+			],
+			"expected": [ "Alpha, Ada", "Plato", "Homer" ]
+		},
+		{
+			"name": "compound one-part surname later, sharing its last word with the first author",
+			"author": [
+				{
+					"family": "Waals"
+				},
+				{
+					"family": "van der Waals"
+				},
+				{
+					"given": "Ali ibn Musa"
+				}
+			],
+			"expected": [ "Waals", "van der Waals", "Ali ibn Musa" ]
+		},
+		{
+			"name": "shared last name, initials",
+			"author": [
+				{
+					"family": "Kim",
+					"given": "J."
+				},
+				{
+					"family": "Kim",
+					"given": "J.-H."
+				}
+			],
+			"expected": [ "Kim, J.", "Kim, J.-H." ]
+		},
+		{
+			"name": "shared last name, one-part first author, organization",
+			"author": [
+				{
+					"family": "Plato"
+				},
+				{
+					"family": "Plato",
+					"given": "Jane"
+				},
+				{
+					"literal": "World Health Organization"
+				}
+			],
+			"expected": [ "Plato", "Plato, Jane", "World Health Organization" ]
+		},
+		{
+			"name": "initials the reader would rewrite",
+			"author": [
+				{
+					"family": "Smith",
+					"given": "J.A."
+				},
+				{
+					"family": "Jones",
+					"given": "Bo"
+				}
+			],
+			"expected": [ "Smith, J.A.", "Jones, Bo" ]
+		},
+		{
+			"name": "particles",
+			"author": [
+				{
+					"family": "van der Berg",
+					"given": "Jan"
+				},
+				{
+					"family": "Ng",
+					"given": "Andrew Y."
+				}
+			],
+			"expected": [ "van der Berg, Jan", "Ng, Andrew Y." ]
+		},
+		{
+			"name": "one author",
+			"author": [
+				{
+					"family": "Alpha",
+					"given": "Ada"
+				}
+			],
+			"expected": [ "Alpha, Ada" ]
+		},
+		{
+			"name": "empty first name entry",
+			"author": [
+				{},
+				{
+					"family": "Alpha",
+					"given": "Ada"
+				},
+				{
+					"family": "Beta",
+					"given": "Ben"
+				}
+			],
+			"expected": [ "Alpha, Ada", "Beta, Ben" ]
+		}
+	]
+}

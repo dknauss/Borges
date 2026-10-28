@@ -11,8 +11,8 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
-| Main plugin file (`bibliography-builder.php`) | **815** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **15094** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| Main plugin file (`bibliography-builder.php`) | **816** | `wc -l bibliography-builder.php` |
+| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **15485** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
 | JS source (`src/`, excl. `*.test.js`) | **12561** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **3,156 bytes** | `npm run build` then `wc -c < build/view.js` |
 
@@ -45,6 +45,9 @@ page-relative identifiers and fields from the stored citations (one `strpos()` p
 block, then one JSON decode and encode and one `get_permalink()` of the already-loaded post), and
 whose Yoast SEO and Rank Math schema filters parse the queried post's blocks once each when those
 plugins build their graph (cached for the request); none of it does I/O;
+`includes/coins-enrichment.php`, whose `render_block` filter appends authors and a PMID to
+saved COinS spans from the stored citations (one `strpos()` per bibliography block, then two
+regular-expression passes), and does no I/O;
 `includes/output-defaults.php`, which only defines functions and adds a `block_editor_settings_all`
 filter that runs only in the editor;
 `includes/abilities.php`, which only defines functions and adds two Abilities API hooks, which

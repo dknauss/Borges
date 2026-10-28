@@ -42,6 +42,7 @@ import {
 	manifest as readManifest,
 	norm,
 	serve,
+	zoteroOpenUrl,
 } from './lib.mjs';
 
 const require = createRequire( import.meta.url );
@@ -103,8 +104,13 @@ function matches( field, expected, actual ) {
 		return false;
 	}
 	if ( field === 'authors' ) {
-		const got = new Set( ( actual || [] ).map( norm ) );
-		return expected.every( ( name ) => got.has( name ) );
+		// Every author, once each, in order: a reader that drops, repeats,
+		// or reorders a name gets the author list wrong.
+		const got = ( actual || [] ).map( norm );
+		return (
+			got.length === expected.length &&
+			expected.every( ( name, index ) => got[ index ] === name )
+		);
 	}
 	if ( field === 'isbn' ) {
 		return isbnDigits( expected ) === isbnDigits( actual );
@@ -164,6 +170,26 @@ function fromJsonLd( work ) {
 	};
 }
 
+/** Zotero's OpenURL reader, loaded in main(). */
+let openUrl;
+
+/**
+ * The last names of a COinS span's authors, as Zotero's own OpenURL reader
+ * imports them: in its order, with any name it repeats or drops.
+ *
+ * @param {string} title The span's title attribute (a KEV string).
+ * @return {string[]} Last names; a reader failure gives [].
+ */
+function coinsAuthors( title ) {
+	try {
+		return openUrl
+			.parseContextObject( title )
+			.creators.map( ( creator ) => creator.lastName || '' );
+	} catch {
+		return [];
+	}
+}
+
 /**
  * OpenURL ContextObject in a COinS span to fields, using the KEV keys
  * Zotero's COinS translator reads (Z39.88-2004 journal, book, and
@@ -176,15 +202,7 @@ function fromCoins( title ) {
 	const get = ( key ) => kev.get( key ) || undefined;
 	const ids = kev.getAll( 'rft_id' );
 	const doi = ids.find( ( id ) => id.startsWith( 'info:doi/' ) );
-	const authors = [
-		...kev.getAll( 'rft.aulast' ),
-		...kev.getAll( 'rft.aucorp' ),
-	];
-	for ( const au of kev.getAll( 'rft.au' ) ) {
-		authors.push(
-			au.includes( ',' ) ? au.split( ',' )[ 0 ] : au.split( ' ' ).pop()
-		);
-	}
+	const authors = coinsAuthors( title );
 	const pages =
 		get( 'rft.pages' ) ||
 		( get( 'rft.spage' ) && get( 'rft.epage' )
@@ -623,6 +641,7 @@ async function main() {
 	const items = ( await readCorpus() ).items;
 	const manifest = await readManifest();
 	const validator = new Validator( await schemaOrg() );
+	openUrl = await zoteroOpenUrl();
 	const server = await serve();
 	const browser = await launchChromium();
 	const results = {

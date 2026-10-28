@@ -21,8 +21,8 @@ reference list, so any difference comes from the list markup alone.
 | `borges-full.html` | The Borges block with every output layer on. |
 
 The citations are formatted by the plugin's own citeproc formatter and saved
-by its PHP port of `save()`. The render-time JSON-LD enrichment runs as it does
-on a live site. Every page carries the same `Article` JSON-LD an SEO plugin
+by its PHP port of `save()`. The render-time JSON-LD and COinS enrichment run
+as they do on a live site. Every page carries the same `Article` JSON-LD an SEO plugin
 prints; on the Borges pages it gains the cited works as `citation`, through the
 Yoast SEO integration.
 
@@ -67,7 +67,23 @@ the best a machine reader gets:
   journal, and the answer depends on the citation style.
 - **missing**: not on the page at all (APA prints no ISBN, for instance).
 
-`perLayer` scores each layer on its own.
+`perLayer` scores each layer on its own. Authors count as correct only when a
+layer gives every last name once, in order. COinS spans are read by Zotero's
+own OpenURL reader (the one its browser connector uses), so an author Zotero
+would import twice, drop, or move counts as wrong. The reader is AGPL-licensed
+code from `zotero/utilities` at a fixed commit, downloaded on first use into
+`node_modules/.cache/` here rather than kept in the repository.
+
+## Zotero author check
+
+`npm run zotero` (also the last step of `npm run all`) runs `coins-cases.php`,
+which saves each author list in `coins-cases.json` with COinS on and renders it
+through the COinS enrichment, then imports every span with Zotero's reader and
+fails unless each comes out with exactly the expected authors, in order. The
+cases cover organizations first and among people, one-part and given-only
+names, shared last names, initials Zotero rewrites, and an empty name entry.
+`tests/phpunit/CoinsEnrichmentTest.php` checks the same lists in CI against a
+model of that reader.
 
 **Reader mode** (`readerMode`). Mozilla Readability then Turndown, the
 HTML-to-Markdown step many LLM ingestion pipelines use: what survives, and its
