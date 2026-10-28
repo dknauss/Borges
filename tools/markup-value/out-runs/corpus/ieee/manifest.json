@@ -1,0 +1,35 @@
+{
+    "pageUrl": "https://example.org/what-a-bibliography-tells-machines/",
+    "style": "ieee",
+    "order": [
+        "harris2020",
+        "lecun2015",
+        "wilkinson2016",
+        "knuth1984",
+        "bernerslee2001",
+        "maldacena1998",
+        "vaswani2017",
+        "devlin2019",
+        "cormen2009",
+        "borges1962",
+        "borges1962babel",
+        "wporg-handbook"
+    ],
+    "variants": {
+        "plain": {
+            "page": "plain.html",
+            "pageBytes": 3804,
+            "postContentBytes": 2305
+        },
+        "borges-default": {
+            "page": "borges-default.html",
+            "pageBytes": 17611,
+            "postContentBytes": 17799
+        },
+        "borges-full": {
+            "page": "borges-full.html",
+            "pageBytes": 44326,
+            "postContentBytes": 43373
+        }
+    }
+}

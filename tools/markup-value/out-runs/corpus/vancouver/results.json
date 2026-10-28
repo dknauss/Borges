@@ -1,0 +1,553 @@
+{
+	"generated": "2026-10-28T21:53:41.641Z",
+	"corpus": {
+		"works": 12,
+		"style": "vancouver"
+	},
+	"schemaOrgVersion": "29.3",
+	"variants": {
+		"plain": {
+			"weight": {
+				"pageBytes": 3572,
+				"pageGzipBytes": 1842,
+				"blockBytes": 2074,
+				"pageTokens": 893,
+				"pageTokensO200k": 1070,
+				"visibleTextBytes": 2135
+			},
+			"structuredData": {
+				"jsonLdBlocks": 1,
+				"microdataItems": 0,
+				"rdfaItems": 0,
+				"typedNodes": 2,
+				"facts": 7,
+				"types": [
+					"Article",
+					"Person"
+				],
+				"externalIds": 0,
+				"citationEdges": 0,
+				"validator": {
+					"errors": 0,
+					"warnings": 0,
+					"issues": []
+				}
+			},
+			"fieldRecovery": {
+				"entriesWithLayer": {
+					"jsonld": 0,
+					"coins": 0,
+					"cslJson": 0
+				},
+				"perLayer": {
+					"jsonld": {
+						"correct": 0,
+						"byField": {
+							"title": 0,
+							"authors": 0,
+							"year": 0,
+							"container": 0,
+							"doi": 0,
+							"isbn": 0,
+							"pages": 0,
+							"publisher": 0
+						},
+						"misses": []
+					},
+					"coins": {
+						"correct": 0,
+						"byField": {
+							"title": 0,
+							"authors": 0,
+							"year": 0,
+							"container": 0,
+							"doi": 0,
+							"isbn": 0,
+							"pages": 0,
+							"publisher": 0
+						},
+						"misses": []
+					},
+					"cslJson": {
+						"correct": 0,
+						"byField": {
+							"title": 0,
+							"authors": 0,
+							"year": 0,
+							"container": 0,
+							"doi": 0,
+							"isbn": 0,
+							"pages": 0,
+							"publisher": 0
+						},
+						"misses": []
+					}
+				},
+				"byField": {
+					"title": {
+						"labeled": 0,
+						"pattern": 0,
+						"unlabeled": 12,
+						"missing": 0
+					},
+					"authors": {
+						"labeled": 0,
+						"pattern": 0,
+						"unlabeled": 12,
+						"missing": 0
+					},
+					"year": {
+						"labeled": 0,
+						"pattern": 0,
+						"unlabeled": 11,
+						"missing": 0
+					},
+					"container": {
+						"labeled": 0,
+						"pattern": 0,
+						"unlabeled": 9,
+						"missing": 0
+					},
+					"doi": {
+						"labeled": 0,
+						"pattern": 7,
+						"unlabeled": 0,
+						"missing": 1
+					},
+					"isbn": {
+						"labeled": 0,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 2
+					},
+					"pages": {
+						"labeled": 0,
+						"pattern": 0,
+						"unlabeled": 2,
+						"missing": 6
+					},
+					"publisher": {
+						"labeled": 0,
+						"pattern": 0,
+						"unlabeled": 5,
+						"missing": 0
+					}
+				},
+				"totals": {
+					"labeled": 0,
+					"pattern": 7,
+					"unlabeled": 51,
+					"missing": 9,
+					"pairs": 67
+				}
+			},
+			"readerMode": {
+				"markdownBytes": 2219,
+				"markdownTokens": 555,
+				"markdownTokensO200k": 686,
+				"titlesKept": 12,
+				"doiLinksKept": 0,
+				"jsonLdKept": false
+			},
+			"browser": {
+				"axe": {
+					"violations": [],
+					"passes": 20
+				},
+				"roles": {
+					"listitem": 12,
+					"biblioentry": 0,
+					"list": 1,
+					"link": 1,
+					"urlNamedLink": 1
+				},
+				"landmarks": [
+					{
+						"role": "main",
+						"name": ""
+					}
+				],
+				"withoutJs": {
+					"jsonLd": 1,
+					"coins": 0,
+					"entries": 12
+				}
+			}
+		},
+		"borges-default": {
+			"weight": {
+				"pageBytes": 17391,
+				"pageGzipBytes": 3924,
+				"blockBytes": 17353,
+				"pageTokens": 4347,
+				"pageTokensO200k": 5078,
+				"visibleTextBytes": 2135
+			},
+			"structuredData": {
+				"jsonLdBlocks": 2,
+				"microdataItems": 0,
+				"rdfaItems": 0,
+				"typedNodes": 113,
+				"facts": 290,
+				"types": [
+					"Article",
+					"Book",
+					"Chapter",
+					"ItemList",
+					"ListItem",
+					"Organization",
+					"Periodical",
+					"Person",
+					"PropertyValue",
+					"PublicationIssue",
+					"PublicationVolume",
+					"ScholarlyArticle",
+					"WebPage",
+					"WebSite"
+				],
+				"externalIds": 11,
+				"citationEdges": 12,
+				"validator": {
+					"errors": 0,
+					"warnings": 0,
+					"issues": []
+				}
+			},
+			"fieldRecovery": {
+				"entriesWithLayer": {
+					"jsonld": 12,
+					"coins": 0,
+					"cslJson": 0
+				},
+				"perLayer": {
+					"jsonld": {
+						"correct": 67,
+						"byField": {
+							"title": 12,
+							"authors": 12,
+							"year": 11,
+							"container": 9,
+							"doi": 8,
+							"isbn": 2,
+							"pages": 8,
+							"publisher": 5
+						},
+						"misses": []
+					},
+					"coins": {
+						"correct": 0,
+						"byField": {
+							"title": 0,
+							"authors": 0,
+							"year": 0,
+							"container": 0,
+							"doi": 0,
+							"isbn": 0,
+							"pages": 0,
+							"publisher": 0
+						},
+						"misses": []
+					},
+					"cslJson": {
+						"correct": 0,
+						"byField": {
+							"title": 0,
+							"authors": 0,
+							"year": 0,
+							"container": 0,
+							"doi": 0,
+							"isbn": 0,
+							"pages": 0,
+							"publisher": 0
+						},
+						"misses": []
+					}
+				},
+				"byField": {
+					"title": {
+						"labeled": 12,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"authors": {
+						"labeled": 12,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"year": {
+						"labeled": 11,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"container": {
+						"labeled": 9,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"doi": {
+						"labeled": 8,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"isbn": {
+						"labeled": 2,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"pages": {
+						"labeled": 8,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"publisher": {
+						"labeled": 5,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					}
+				},
+				"totals": {
+					"labeled": 67,
+					"pattern": 0,
+					"unlabeled": 0,
+					"missing": 0,
+					"pairs": 67
+				}
+			},
+			"readerMode": {
+				"markdownBytes": 2244,
+				"markdownTokens": 561,
+				"markdownTokensO200k": 712,
+				"titlesKept": 12,
+				"doiLinksKept": 0,
+				"jsonLdKept": false
+			},
+			"browser": {
+				"axe": {
+					"violations": [],
+					"passes": 29
+				},
+				"roles": {
+					"listitem": 0,
+					"biblioentry": 12,
+					"list": 1,
+					"link": 1,
+					"urlNamedLink": 0
+				},
+				"landmarks": [
+					{
+						"role": "main",
+						"name": ""
+					},
+					{
+						"role": "doc-bibliography",
+						"name": "Bibliography"
+					}
+				],
+				"withoutJs": {
+					"jsonLd": 2,
+					"coins": 0,
+					"entries": 12
+				}
+			}
+		},
+		"borges-full": {
+			"weight": {
+				"pageBytes": 43874,
+				"pageGzipBytes": 8025,
+				"blockBytes": 42695,
+				"pageTokens": 10967,
+				"pageTokensO200k": 14501,
+				"visibleTextBytes": 2135
+			},
+			"structuredData": {
+				"jsonLdBlocks": 2,
+				"microdataItems": 0,
+				"rdfaItems": 0,
+				"typedNodes": 113,
+				"facts": 290,
+				"types": [
+					"Article",
+					"Book",
+					"Chapter",
+					"ItemList",
+					"ListItem",
+					"Organization",
+					"Periodical",
+					"Person",
+					"PropertyValue",
+					"PublicationIssue",
+					"PublicationVolume",
+					"ScholarlyArticle",
+					"WebPage",
+					"WebSite"
+				],
+				"externalIds": 11,
+				"citationEdges": 12,
+				"validator": {
+					"errors": 0,
+					"warnings": 0,
+					"issues": []
+				}
+			},
+			"fieldRecovery": {
+				"entriesWithLayer": {
+					"jsonld": 12,
+					"coins": 12,
+					"cslJson": 12
+				},
+				"perLayer": {
+					"jsonld": {
+						"correct": 67,
+						"byField": {
+							"title": 12,
+							"authors": 12,
+							"year": 11,
+							"container": 9,
+							"doi": 8,
+							"isbn": 2,
+							"pages": 8,
+							"publisher": 5
+						},
+						"misses": []
+					},
+					"coins": {
+						"correct": 66,
+						"byField": {
+							"title": 12,
+							"authors": 12,
+							"year": 11,
+							"container": 9,
+							"doi": 8,
+							"isbn": 2,
+							"pages": 8,
+							"publisher": 4
+						},
+						"misses": [
+							{
+								"id": "vaswani2017",
+								"field": "publisher",
+								"expected": "arXiv",
+								"got": null
+							}
+						]
+					},
+					"cslJson": {
+						"correct": 67,
+						"byField": {
+							"title": 12,
+							"authors": 12,
+							"year": 11,
+							"container": 9,
+							"doi": 8,
+							"isbn": 2,
+							"pages": 8,
+							"publisher": 5
+						},
+						"misses": []
+					}
+				},
+				"byField": {
+					"title": {
+						"labeled": 12,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"authors": {
+						"labeled": 12,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"year": {
+						"labeled": 11,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"container": {
+						"labeled": 9,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"doi": {
+						"labeled": 8,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"isbn": {
+						"labeled": 2,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"pages": {
+						"labeled": 8,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					},
+					"publisher": {
+						"labeled": 5,
+						"pattern": 0,
+						"unlabeled": 0,
+						"missing": 0
+					}
+				},
+				"totals": {
+					"labeled": 67,
+					"pattern": 0,
+					"unlabeled": 0,
+					"missing": 0,
+					"pairs": 67
+				}
+			},
+			"readerMode": {
+				"markdownBytes": 2244,
+				"markdownTokens": 561,
+				"markdownTokensO200k": 712,
+				"titlesKept": 12,
+				"doiLinksKept": 0,
+				"jsonLdKept": false
+			},
+			"browser": {
+				"axe": {
+					"violations": [],
+					"passes": 32
+				},
+				"roles": {
+					"listitem": 0,
+					"biblioentry": 12,
+					"list": 1,
+					"link": 1,
+					"urlNamedLink": 0
+				},
+				"landmarks": [
+					{
+						"role": "main",
+						"name": ""
+					},
+					{
+						"role": "doc-bibliography",
+						"name": "Bibliography"
+					}
+				],
+				"withoutJs": {
+					"jsonLd": 2,
+					"coins": 12,
+					"entries": 12
+				}
+			}
+		}
+	}
+}

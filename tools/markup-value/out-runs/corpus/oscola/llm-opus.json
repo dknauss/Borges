@@ -1,0 +1,437 @@
+{
+	"generated": "2026-10-28T22:09:56.284Z",
+	"label": "opus",
+	"model": null,
+	"entries": 12,
+	"answered": 12,
+	"correct": 48,
+	"pairs": 67,
+	"unprinted": 0,
+	"byField": {
+		"title": {
+			"correct": 12,
+			"pairs": 12
+		},
+		"authors": {
+			"correct": 7,
+			"pairs": 12
+		},
+		"year": {
+			"correct": 11,
+			"pairs": 11
+		},
+		"container": {
+			"correct": 9,
+			"pairs": 9
+		},
+		"doi": {
+			"correct": 3,
+			"pairs": 8
+		},
+		"isbn": {
+			"correct": 0,
+			"pairs": 2
+		},
+		"pages": {
+			"correct": 1,
+			"pairs": 8
+		},
+		"publisher": {
+			"correct": 5,
+			"pairs": 5
+		}
+	},
+	"misses": [
+		{
+			"id": "bernerslee2001",
+			"field": "pages",
+			"want": "34-43",
+			"got": null
+		},
+		{
+			"id": "borges1962",
+			"field": "isbn",
+			"want": "9780811200127",
+			"got": null
+		},
+		{
+			"id": "borges1962babel",
+			"field": "pages",
+			"want": "51-58",
+			"got": null
+		},
+		{
+			"id": "cormen2009",
+			"field": "authors",
+			"want": [
+				"cormen",
+				"leiserson",
+				"rivest",
+				"stein"
+			],
+			"got": [
+				"cormen"
+			]
+		},
+		{
+			"id": "cormen2009",
+			"field": "isbn",
+			"want": "9780262033848",
+			"got": null
+		},
+		{
+			"id": "devlin2019",
+			"field": "authors",
+			"want": [
+				"devlin",
+				"chang",
+				"lee",
+				"toutanova"
+			],
+			"got": [
+				"devlin"
+			]
+		},
+		{
+			"id": "devlin2019",
+			"field": "pages",
+			"want": "4171-4186",
+			"got": null
+		},
+		{
+			"id": "harris2020",
+			"field": "authors",
+			"want": [
+				"harris",
+				"millman",
+				"van der walt",
+				"gommers"
+			],
+			"got": [
+				"harris"
+			]
+		},
+		{
+			"id": "harris2020",
+			"field": "doi",
+			"want": "10.1038/s41586-020-2649-2",
+			"got": null
+		},
+		{
+			"id": "harris2020",
+			"field": "pages",
+			"want": "357-362",
+			"got": "357"
+		},
+		{
+			"id": "knuth1984",
+			"field": "doi",
+			"want": "10.1093/comjnl/27.2.97",
+			"got": null
+		},
+		{
+			"id": "knuth1984",
+			"field": "pages",
+			"want": "97-111",
+			"got": "97"
+		},
+		{
+			"id": "lecun2015",
+			"field": "doi",
+			"want": "10.1038/nature14539",
+			"got": null
+		},
+		{
+			"id": "lecun2015",
+			"field": "pages",
+			"want": "436-444",
+			"got": "436"
+		},
+		{
+			"id": "maldacena1998",
+			"field": "doi",
+			"want": "10.4310/ATMP.1998.v2.n2.a1",
+			"got": null
+		},
+		{
+			"id": "maldacena1998",
+			"field": "pages",
+			"want": "231-252",
+			"got": "231"
+		},
+		{
+			"id": "vaswani2017",
+			"field": "authors",
+			"want": [
+				"vaswani",
+				"shazeer",
+				"parmar",
+				"uszkoreit"
+			],
+			"got": [
+				"vaswani"
+			]
+		},
+		{
+			"id": "wilkinson2016",
+			"field": "authors",
+			"want": [
+				"wilkinson",
+				"dumontier",
+				"aalbersberg",
+				"appleton"
+			],
+			"got": [
+				"wilkinson"
+			]
+		},
+		{
+			"id": "wilkinson2016",
+			"field": "doi",
+			"want": "10.1038/sdata.2016.18",
+			"got": null
+		}
+	],
+	"answer": [
+		{
+			"type": "article-magazine",
+			"title": "The Semantic Web",
+			"author": [
+				{
+					"family": "Berners-Lee",
+					"given": "T"
+				},
+				{
+					"family": "Hendler",
+					"given": "J"
+				},
+				{
+					"family": "Lassila",
+					"given": "O"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						2001
+					]
+				]
+			},
+			"container-title": "Scientific American",
+			"DOI": "10.1038/scientificamerican0501-34"
+		},
+		{
+			"type": "book",
+			"title": "Labyrinths: Selected stories and other writings",
+			"author": [
+				{
+					"family": "Borges",
+					"given": "JL"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						1962
+					]
+				]
+			},
+			"publisher": "New Directions"
+		},
+		{
+			"type": "chapter",
+			"title": "The library of Babel",
+			"author": [
+				{
+					"family": "Borges",
+					"given": "JL"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						1962
+					]
+				]
+			},
+			"container-title": "Labyrinths: Selected stories and other writings",
+			"publisher": "New Directions"
+		},
+		{
+			"type": "book",
+			"title": "Introduction to algorithms",
+			"author": [
+				{
+					"family": "Cormen",
+					"given": "TH"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						2009
+					]
+				]
+			},
+			"publisher": "MIT Press"
+		},
+		{
+			"type": "paper-conference",
+			"title": "BERT: Pre-training of deep bidirectional transformers for language understanding",
+			"author": [
+				{
+					"family": "Devlin",
+					"given": "J"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						2019
+					]
+				]
+			},
+			"container-title": "Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+			"publisher": "Association for Computational Linguistics",
+			"DOI": "10.18653/v1/N19-1423"
+		},
+		{
+			"type": "article-journal",
+			"title": "Array programming with NumPy",
+			"author": [
+				{
+					"family": "Harris",
+					"given": "CR"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						2020
+					]
+				]
+			},
+			"container-title": "Nature",
+			"volume": "585",
+			"page": "357"
+		},
+		{
+			"type": "article-journal",
+			"title": "Literate programming",
+			"author": [
+				{
+					"family": "Knuth",
+					"given": "DE"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						1984
+					]
+				]
+			},
+			"container-title": "The Computer Journal",
+			"volume": "27",
+			"page": "97"
+		},
+		{
+			"type": "article-journal",
+			"title": "Deep learning",
+			"author": [
+				{
+					"family": "LeCun",
+					"given": "Y"
+				},
+				{
+					"family": "Bengio",
+					"given": "Y"
+				},
+				{
+					"family": "Hinton",
+					"given": "G"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						2015
+					]
+				]
+			},
+			"container-title": "Nature",
+			"volume": "521",
+			"page": "436"
+		},
+		{
+			"type": "article-journal",
+			"title": "The large N limit of superconformal field theories and supergravity",
+			"author": [
+				{
+					"family": "Maldacena",
+					"given": "J"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						1998
+					]
+				]
+			},
+			"container-title": "Advances in Theoretical and Mathematical Physics",
+			"volume": "2",
+			"page": "231"
+		},
+		{
+			"type": "article",
+			"title": "Attention is all you need",
+			"author": [
+				{
+					"family": "Vaswani",
+					"given": "A"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						2017
+					]
+				]
+			},
+			"publisher": "arXiv",
+			"DOI": "10.48550/arXiv.1706.03762"
+		},
+		{
+			"type": "article-journal",
+			"title": "The FAIR Guiding Principles for scientific data management and stewardship",
+			"author": [
+				{
+					"family": "Wilkinson",
+					"given": "MD"
+				}
+			],
+			"issued": {
+				"date-parts": [
+					[
+						2016
+					]
+				]
+			},
+			"container-title": "Scientific Data",
+			"volume": "3",
+			"page": "160018"
+		},
+		{
+			"type": "webpage",
+			"title": "Block Editor Handbook",
+			"author": [
+				{
+					"literal": "WordPress.org"
+				}
+			],
+			"container-title": "WordPress Developer Resources",
+			"URL": "https://developer.wordpress.org/block-editor/"
+		}
+	]
+}

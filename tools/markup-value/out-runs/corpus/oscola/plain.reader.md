@@ -1,0 +1,16 @@
+Citations carry more than prose: each names a work that a reader, a search engine, or a language model may want to find again. This page cites Harris et al. (2020), LeCun et al. (2015), and the FAIR principles (Wilkinson et al., 2016), among others.
+
+## References
+
+*   Berners-Lee T, Hendler J and Lassila O, ‘The Semantic Web’ Scientific American (May 2001) [https://doi.org/10.1038/scientificamerican0501-34](https://doi.org/10.1038/scientificamerican0501-34)
+*   Borges JL, Labyrinths: Selected stories and other writings (New Directions 1962)
+*   Borges JL, ‘The library of Babel’ in Donald A. Yates and James E. Irby (eds), Labyrinths: Selected stories and other writings (New Directions 1962)
+*   Cormen TH and others, Introduction to algorithms (3rd edn, MIT Press 2009)
+*   Devlin J and others, ‘BERT: Pre-training of deep bidirectional transformers for language understanding’ (Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Association for Computational Linguistics 2019) [https://doi.org/10.18653/v1/N19-1423](https://doi.org/10.18653/v1/N19-1423)
+*   Harris CR and others, ‘Array programming with NumPy’ (2020) 585 Nature 357
+*   Knuth DE, ‘Literate programming’ (1984) 27 The Computer Journal 97
+*   LeCun Y, Bengio Y and Hinton G, ‘Deep learning’ (2015) 521 Nature 436
+*   Maldacena J, ‘The large N limit of superconformal field theories and supergravity’ (1998) 2 Advances in Theoretical and Mathematical Physics 231
+*   Vaswani A and others, ‘Attention is all you need’ (arXiv 2017) [https://doi.org/10.48550/arXiv.1706.03762](https://doi.org/10.48550/arXiv.1706.03762)
+*   Wilkinson MD and others, ‘The FAIR Guiding Principles for scientific data management and stewardship’ (2016) 3 Scientific Data 160018
+*   WordPress.org, ‘Block Editor Handbook’ (WordPress Developer Resources) [https://developer.wordpress.org/block-editor/](https://developer.wordpress.org/block-editor/) accessed 27 October 2026

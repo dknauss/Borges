@@ -131,6 +131,53 @@ final class FormatterAdaptationTest extends TestCase {
 		$this->assertArrayNotHasKey( 'page-first', bibliography_builder_prepare_csl_for_formatter( array( 'title' => 'x' ) ) );
 	}
 
+	public function test_a_repository_prefix_repeating_the_publisher_is_dropped() {
+		$arxiv = array(
+			'type'      => 'article',
+			'publisher' => 'arXiv',
+			'number'    => 'arXiv:1706.03762',
+		);
+		$this->assertSame( '1706.03762', bibliography_builder_prepare_csl_for_formatter( $arxiv )['number'] );
+
+		// Another publisher, or no publisher, leaves the number alone.
+		$this->assertSame( 'arXiv:1706.03762', bibliography_builder_prepare_csl_for_formatter( array( 'number' => 'arXiv:1706.03762' ) )['number'] );
+		$this->assertSame(
+			'TR-42',
+			bibliography_builder_prepare_csl_for_formatter(
+				array(
+					'publisher' => 'MIT',
+					'number'    => 'TR-42',
+				)
+			)['number']
+		);
+	}
+
+	public function test_arxiv_numbers_print_once_in_apa_and_ieee() {
+		if ( ! class_exists( '\\Seboettg\\CiteProc\\CiteProc' ) || ! class_exists( 'DOMDocument' ) ) {
+			$this->markTestSkipped( 'citeproc-php and DOM are required.' );
+		}
+
+		$item = array(
+			'type'      => 'article',
+			'title'     => 'Attention is all you need',
+			'author'    => array(
+				array(
+					'family' => 'Vaswani',
+					'given'  => 'Ashish',
+				),
+			),
+			'publisher' => 'arXiv',
+			'number'    => 'arXiv:1706.03762',
+			'issued'    => array( 'date-parts' => array( array( 2017 ) ) ),
+		);
+
+		foreach ( array( 'apa-7', 'ieee' ) as $style ) {
+			$text = bibliography_builder_format_csl_items( array( $item ), $style )[0];
+			$this->assertStringContainsString( 'arXiv:1706.03762', $text, $style );
+			$this->assertStringNotContainsString( 'arXiv:arXiv', $text, $style );
+		}
+	}
+
 	public function test_space_before_a_label_comma_is_removed() {
 		$style = array( 'family' => 'notes' );
 

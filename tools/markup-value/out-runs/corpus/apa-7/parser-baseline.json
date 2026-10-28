@@ -1,0 +1,121 @@
+{
+	"generated": "2026-10-28T21:53:20.610Z",
+	"parser": "anystyle version 1.6.0 (cli 1.5.0, data 1.3.0)",
+	"input": "plain.html, one entry per line",
+	"correct": 56,
+	"pairs": 67,
+	"byField": {
+		"title": {
+			"correct": 10,
+			"pairs": 12
+		},
+		"authors": {
+			"correct": 10,
+			"pairs": 12
+		},
+		"year": {
+			"correct": 11,
+			"pairs": 11
+		},
+		"container": {
+			"correct": 8,
+			"pairs": 9
+		},
+		"doi": {
+			"correct": 8,
+			"pairs": 8
+		},
+		"isbn": {
+			"correct": 0,
+			"pairs": 2
+		},
+		"pages": {
+			"correct": 8,
+			"pairs": 8
+		},
+		"publisher": {
+			"correct": 1,
+			"pairs": 5
+		}
+	},
+	"misses": [
+		{
+			"id": "borges1962",
+			"field": "isbn",
+			"want": "9780811200127",
+			"got": null
+		},
+		{
+			"id": "borges1962",
+			"field": "publisher",
+			"want": "New Directions",
+			"got": null
+		},
+		{
+			"id": "borges1962babel",
+			"field": "publisher",
+			"want": "New Directions",
+			"got": null
+		},
+		{
+			"id": "cormen2009",
+			"field": "isbn",
+			"want": "9780262033848",
+			"got": null
+		},
+		{
+			"id": "devlin2019",
+			"field": "publisher",
+			"want": "Association for Computational Linguistics",
+			"got": null
+		},
+		{
+			"id": "harris2020",
+			"field": "authors",
+			"want": [
+				"harris",
+				"millman",
+				"van der walt",
+				"gommers"
+			],
+			"got": [
+				"harris",
+				"millman",
+				"walt",
+				"gommers"
+			]
+		},
+		{
+			"id": "vaswani2017",
+			"field": "title",
+			"want": "Attention is all you need",
+			"got": null
+		},
+		{
+			"id": "vaswani2017",
+			"field": "publisher",
+			"want": "arXiv",
+			"got": null
+		},
+		{
+			"id": "wporg-handbook",
+			"field": "title",
+			"want": "Block Editor Handbook",
+			"got": "Block Editor Handbook. WordPress Developer Resources"
+		},
+		{
+			"id": "wporg-handbook",
+			"field": "authors",
+			"want": [
+				"wordpress.org"
+			],
+			"got": []
+		},
+		{
+			"id": "wporg-handbook",
+			"field": "container",
+			"want": "WordPress Developer Resources",
+			"got": null
+		}
+	]
+}

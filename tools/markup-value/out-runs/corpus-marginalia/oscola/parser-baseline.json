@@ -1,0 +1,525 @@
+{
+	"generated": "2026-10-28T21:54:59.461Z",
+	"parser": "anystyle version 1.6.0 (cli 1.5.0, data 1.3.0)",
+	"input": "plain.html, one entry per line",
+	"correct": 55,
+	"pairs": 130,
+	"byField": {
+		"title": {
+			"correct": 25,
+			"pairs": 36
+		},
+		"authors": {
+			"correct": 16,
+			"pairs": 23
+		},
+		"year": {
+			"correct": 9,
+			"pairs": 24
+		},
+		"container": {
+			"correct": 1,
+			"pairs": 25
+		},
+		"doi": {
+			"correct": 1,
+			"pairs": 1
+		},
+		"isbn": {
+			"correct": 0,
+			"pairs": 0
+		},
+		"pages": {
+			"correct": 0,
+			"pairs": 4
+		},
+		"publisher": {
+			"correct": 3,
+			"pairs": 17
+		}
+	},
+	"misses": [
+		{
+			"id": "adobe-sdv",
+			"field": "title",
+			"want": "Structured Data Validator",
+			"got": "Structured Data Validator (GitHub"
+		},
+		{
+			"id": "adobe-sdv",
+			"field": "authors",
+			"want": [
+				"adobe"
+			],
+			"got": []
+		},
+		{
+			"id": "adobe-sdv",
+			"field": "publisher",
+			"want": "GitHub",
+			"got": null
+		},
+		{
+			"id": "google-ai-features",
+			"field": "year",
+			"want": "2025",
+			"got": null
+		},
+		{
+			"id": "google-ai-features",
+			"field": "container",
+			"want": "Google Search Central",
+			"got": null
+		},
+		{
+			"id": "britannica-apostolic",
+			"field": "title",
+			"want": "Apostolic Succession",
+			"got": "Apostolic Succession’ Encyclopaedia Britannica"
+		},
+		{
+			"id": "britannica-apostolic",
+			"field": "container",
+			"want": "Encyclopaedia Britannica",
+			"got": null
+		},
+		{
+			"id": "borges1962",
+			"field": "year",
+			"want": "1962",
+			"got": null
+		},
+		{
+			"id": "borges1962",
+			"field": "container",
+			"want": "Labyrinths: Selected Stories and Other Writings",
+			"got": "Labyrinths: Selected Stories and Other Writings (New Directions 1962"
+		},
+		{
+			"id": "borges1962",
+			"field": "publisher",
+			"want": "New Directions",
+			"got": null
+		},
+		{
+			"id": "brand1988",
+			"field": "publisher",
+			"want": "Penguin",
+			"got": null
+		},
+		{
+			"id": "brand1985",
+			"field": "authors",
+			"want": [
+				"brand",
+				"herron"
+			],
+			"got": [
+				"s",
+				"m"
+			]
+		},
+		{
+			"id": "brand1985",
+			"field": "pages",
+			"want": "44",
+			"got": null
+		},
+		{
+			"id": "schemaorg-citation",
+			"field": "title",
+			"want": "citation",
+			"got": null
+		},
+		{
+			"id": "schemaorg-citation",
+			"field": "container",
+			"want": "Schema.org",
+			"got": null
+		},
+		{
+			"id": "hoi-gessner",
+			"field": "container",
+			"want": "HistoryofInformation.com",
+			"got": null
+		},
+		{
+			"id": "fensham1962",
+			"field": "container",
+			"want": "Journal of Near Eastern Studies",
+			"got": null
+		},
+		{
+			"id": "fensham1962",
+			"field": "pages",
+			"want": "129-139",
+			"got": null
+		},
+		{
+			"id": "gessner1545",
+			"field": "year",
+			"want": "1545",
+			"got": null
+		},
+		{
+			"id": "gessner1545",
+			"field": "publisher",
+			"want": "Christoph Froschauer",
+			"got": null
+		},
+		{
+			"id": "gessner-simler1574",
+			"field": "title",
+			"want": "Bibliotheca",
+			"got": null
+		},
+		{
+			"id": "gessner-simler1574",
+			"field": "authors",
+			"want": [
+				"gessner",
+				"simler"
+			],
+			"got": [
+				"c",
+				"j"
+			]
+		},
+		{
+			"id": "gessner-simler1574",
+			"field": "year",
+			"want": "1574",
+			"got": null
+		},
+		{
+			"id": "gessner-simler1574",
+			"field": "publisher",
+			"want": "Christoph Froschauer",
+			"got": null
+		},
+		{
+			"id": "britannica-isnad",
+			"field": "title",
+			"want": "Isnād",
+			"got": null
+		},
+		{
+			"id": "britannica-isnad",
+			"field": "container",
+			"want": "Encyclopaedia Britannica",
+			"got": null
+		},
+		{
+			"id": "schemaorg-ispartof",
+			"field": "title",
+			"want": "isPartOf",
+			"got": null
+		},
+		{
+			"id": "schemaorg-ispartof",
+			"field": "container",
+			"want": "Schema.org",
+			"got": null
+		},
+		{
+			"id": "jimenez2016",
+			"field": "year",
+			"want": "2016",
+			"got": null
+		},
+		{
+			"id": "jimenez2016",
+			"field": "container",
+			"want": "Babel und Bibel 9",
+			"got": null
+		},
+		{
+			"id": "jimenez2016",
+			"field": "pages",
+			"want": "227-242",
+			"got": null
+		},
+		{
+			"id": "jimenez2016",
+			"field": "publisher",
+			"want": "Eisenbrauns",
+			"got": null
+		},
+		{
+			"id": "hoi-trithemius",
+			"field": "container",
+			"want": "HistoryofInformation.com",
+			"got": null
+		},
+		{
+			"id": "knauss2026pr203",
+			"field": "year",
+			"want": "2026",
+			"got": null
+		},
+		{
+			"id": "knauss2026pr203",
+			"field": "container",
+			"want": "Borges Bibliography Builder, pull request #203",
+			"got": null
+		},
+		{
+			"id": "knauss2026pr203",
+			"field": "publisher",
+			"want": "GitHub",
+			"got": null
+		},
+		{
+			"id": "knauss2026page",
+			"field": "year",
+			"want": "2026",
+			"got": null
+		},
+		{
+			"id": "knauss2026page",
+			"field": "container",
+			"want": "Marginalia",
+			"got": null
+		},
+		{
+			"id": "knauss2026badsector",
+			"field": "container",
+			"want": "Bad Sector",
+			"got": null
+		},
+		{
+			"id": "mark2017",
+			"field": "container",
+			"want": "World History Encyclopedia",
+			"got": null
+		},
+		{
+			"id": "mozilla-readability",
+			"field": "title",
+			"want": "Readability.js",
+			"got": null
+		},
+		{
+			"id": "mozilla-readability",
+			"field": "authors",
+			"want": [
+				"mozilla"
+			],
+			"got": []
+		},
+		{
+			"id": "mozilla-readability",
+			"field": "publisher",
+			"want": "GitHub",
+			"got": null
+		},
+		{
+			"id": "otoole2018",
+			"field": "year",
+			"want": "2018",
+			"got": null
+		},
+		{
+			"id": "otoole2018",
+			"field": "container",
+			"want": "Quote Investigator",
+			"got": null
+		},
+		{
+			"id": "ortelius1570",
+			"field": "title",
+			"want": "Theatrum orbis terrarum",
+			"got": "Theatrum orbis terrarum (Gilles Coppens de Diest 1570"
+		},
+		{
+			"id": "ortelius1570",
+			"field": "year",
+			"want": "1570",
+			"got": null
+		},
+		{
+			"id": "ortelius1570",
+			"field": "publisher",
+			"want": "Gilles Coppens de Diest",
+			"got": null
+		},
+		{
+			"id": "fre803",
+			"field": "container",
+			"want": "Federal Rules of Evidence",
+			"got": null
+		},
+		{
+			"id": "fre803",
+			"field": "publisher",
+			"want": "Legal Information Institute, Cornell Law School",
+			"got": null
+		},
+		{
+			"id": "lighthouse-sd",
+			"field": "year",
+			"want": "2019",
+			"got": null
+		},
+		{
+			"id": "lighthouse-sd",
+			"field": "container",
+			"want": "Lighthouse, Chrome for Developers",
+			"got": null
+		},
+		{
+			"id": "google-gallery",
+			"field": "year",
+			"want": "2026",
+			"got": null
+		},
+		{
+			"id": "google-gallery",
+			"field": "container",
+			"want": "Google Search Central",
+			"got": null
+		},
+		{
+			"id": "etcsl-kinglist",
+			"field": "title",
+			"want": "The Sumerian King List",
+			"got": "The Sumerian King List’ (The Electronic Text Corpus of Sumerian Literature"
+		},
+		{
+			"id": "etcsl-kinglist",
+			"field": "container",
+			"want": "The Electronic Text Corpus of Sumerian Literature",
+			"got": null
+		},
+		{
+			"id": "etcsl-kinglist",
+			"field": "publisher",
+			"want": "University of Oxford",
+			"got": null
+		},
+		{
+			"id": "taylor-colophons",
+			"field": "container",
+			"want": "Reading the Library of Ashurbanipal",
+			"got": null
+		},
+		{
+			"id": "taylor-colophons",
+			"field": "publisher",
+			"want": "British Museum and LMU Munich",
+			"got": null
+		},
+		{
+			"id": "wiki-theatrum",
+			"field": "title",
+			"want": "Theatrum Orbis Terrarum",
+			"got": null
+		},
+		{
+			"id": "wiki-theatrum",
+			"field": "container",
+			"want": "Wikipedia",
+			"got": null
+		},
+		{
+			"id": "trithemius1494",
+			"field": "year",
+			"want": "1494",
+			"got": null
+		},
+		{
+			"id": "trithemius1494",
+			"field": "publisher",
+			"want": "Johann Amerbach",
+			"got": null
+		},
+		{
+			"id": "chicago1906",
+			"field": "title",
+			"want": "Manual of Style: Being a Compilation of the Typographical Rules in Force at the University of Chicago Press",
+			"got": "Manual of Style: Being a Compilation of the Typographical Rules in Force at the"
+		},
+		{
+			"id": "chicago1906",
+			"field": "authors",
+			"want": [
+				"university of chicago press"
+			],
+			"got": []
+		},
+		{
+			"id": "zotero-coins",
+			"field": "year",
+			"want": "2020",
+			"got": null
+		},
+		{
+			"id": "zotero-coins",
+			"field": "container",
+			"want": "Zotero Documentation",
+			"got": null
+		},
+		{
+			"id": "volpini2026",
+			"field": "authors",
+			"want": [
+				"volpini",
+				"raad",
+				"gamba",
+				"riccitelli"
+			],
+			"got": [
+				"a"
+			]
+		},
+		{
+			"id": "volpini2026",
+			"field": "year",
+			"want": "2026",
+			"got": null
+		},
+		{
+			"id": "volpini2026",
+			"field": "publisher",
+			"want": "arXiv",
+			"got": null
+		},
+		{
+			"id": "walton1981",
+			"field": "container",
+			"want": "Biblical Archaeologist",
+			"got": null
+		},
+		{
+			"id": "walton1981",
+			"field": "pages",
+			"want": "207-208",
+			"got": null
+		},
+		{
+			"id": "zecchini2024",
+			"field": "authors",
+			"want": [
+				"zecchini",
+				"moore",
+				"ubl",
+				"siddle"
+			],
+			"got": [
+				"g"
+			]
+		},
+		{
+			"id": "zecchini2024",
+			"field": "year",
+			"want": "2024",
+			"got": null
+		},
+		{
+			"id": "zecchini2024",
+			"field": "container",
+			"want": "Vercel Blog",
+			"got": null
+		}
+	]
+}

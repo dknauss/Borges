@@ -1,0 +1,40 @@
+Citations carry more than prose: each names a work that a reader, a search engine, or a language model may want to find again. This page cites Harris et al. (2020), LeCun et al. (2015), and the FAIR principles (Wilkinson et al., 2016), among others.
+
+## References
+
+*   Adobe, Structured Data Validator (GitHub) [https://github.com/adobe/structured-data-validator](https://github.com/adobe/structured-data-validator) accessed 27 October 2026
+*   ‘AI Features and Your Website’ (Google Search Central, 10 December 2025) [https://developers.google.com/search/docs/appearance/ai-features](https://developers.google.com/search/docs/appearance/ai-features) accessed 27 October 2026
+*   ‘Apostolic Succession’ Encyclopaedia Britannica
+*   Borges JL, ‘The Library of Babel’ in Donald A. Yates and James E. Irby (eds), Labyrinths: Selected Stories and Other Writings (New Directions 1962)
+*   Brand S, The Media Lab: Inventing the Future at MIT (Penguin 1988)
+*   Brand S and Herron M, ‘Keep Designing’ Whole Earth Review (May 1985)
+*   ‘citation’ (Schema.org) [https://schema.org/citation](https://schema.org/citation) accessed 27 October 2026
+*   ‘Conrad Gessner Issues the First Universal Bibliography Since the Invention of Printing’ (HistoryofInformation.com) [https://historyofinformation.com/detail.php?id=1248](https://historyofinformation.com/detail.php?id=1248) accessed 27 October 2026
+*   Fensham FC, ‘Widow, Orphan, and the Poor in Ancient Near Eastern Legal and Wisdom Literature’ (1962) 21 Journal of Near Eastern Studies 129
+*   Gessner C, Bibliotheca universalis, sive Catalogus omnium scriptorum locupletissimus (Christoph Froschauer 1545)
+*   Gessner C and Simler J, Bibliotheca (Christoph Froschauer 1574) [https://archive.org/details/bibliotheca00gess](https://archive.org/details/bibliotheca00gess)
+*   Grafton A, The Footnote: A Curious History (Harvard University Press 1997)
+*   ‘Isnād’ Encyclopaedia Britannica
+*   ‘isPartOf’ (Schema.org) [https://schema.org/isPartOf](https://schema.org/isPartOf) accessed 27 October 2026
+*   Jiménez E, ‘May the Reader Not Withhold the Tablet! On a Formula in Late Babylonian Colophons’ in L. Kogan et al. (eds), Babel und Bibel 9 (Eisenbrauns 2016)
+*   ‘Johannes Trithemius Publishes the Earliest Subject Bibliography, on Mostly on Ecclesiastical Writings’ (HistoryofInformation.com) [https://historyofinformation.com/detail.php?id=344](https://historyofinformation.com/detail.php?id=344) accessed 27 October 2026
+*   Knauss D, ‘Add tools/markup-value: Measure What Borges Markup Gives Machines’ (Borges Bibliography Builder, pull request #203, 27 October 2026) [https://github.com/dknauss/Borges/pull/203](https://github.com/dknauss/Borges/pull/203)
+*   Knauss D, ‘The Page Is an Interface’ (Marginalia, 25 October 2026) [https://m.arginalia.com/the-page-is-an-interface/](https://m.arginalia.com/the-page-is-an-interface/)
+*   Knauss D, ‘What Citation Markup Gives Machines’ (Bad Sector, October 2026) [https://badsector.blog/what-citation-markup-gives-machines/](https://badsector.blog/what-citation-markup-gives-machines/)
+*   Lichtheim M, Ancient Egyptian Literature: A Book of Readings (University of California Press 1976)
+*   Mark JJ, ‘Ancient Egyptian Vizier’ World History Encyclopedia (2017)
+*   Mozilla, Readability.js (GitHub) [https://github.com/mozilla/readability](https://github.com/mozilla/readability) accessed 27 October 2026
+*   O’Toole G, ‘Information Wants To Be Expensive. Information Wants To Be Free’ (Quote Investigator, 9 March 2018) [https://quoteinvestigator.com/2018/03/09/info/](https://quoteinvestigator.com/2018/03/09/info/)
+*   Ortelius A, Theatrum orbis terrarum (Gilles Coppens de Diest 1570) [https://archive.org/details/theatrumorbister00orte](https://archive.org/details/theatrumorbister00orte)
+*   ‘Rule 803. Exceptions to the Rule Against Hearsay’ (Federal Rules of Evidence) [https://www.law.cornell.edu/rules/fre/rule\_803](https://www.law.cornell.edu/rules/fre/rule_803) accessed 27 October 2026
+*   ‘Structured Data Is Valid’ (Lighthouse, Chrome for Developers, 2 May 2019) [https://developer.chrome.com/docs/lighthouse/seo/structured-data](https://developer.chrome.com/docs/lighthouse/seo/structured-data) accessed 27 October 2026
+*   ‘Structured Data Markup That Google Search Supports’ (Google Search Central, 16 October 2026) [https://developers.google.com/search/docs/appearance/structured-data/search-gallery](https://developers.google.com/search/docs/appearance/structured-data/search-gallery) accessed 27 October 2026
+*   ‘The Sumerian King List’ (The Electronic Text Corpus of Sumerian Literature) [https://etcsl.orinst.ox.ac.uk/section2/tr211.htm](https://etcsl.orinst.ox.ac.uk/section2/tr211.htm) accessed 27 October 2026
+*   Taylor J, ‘Library Colophons’ (Reading the Library of Ashurbanipal) [https://oracc.museum.upenn.edu/asbp/rlasb/librarycolophons/](https://oracc.museum.upenn.edu/asbp/rlasb/librarycolophons/) accessed 27 October 2026
+*   ‘Theatrum Orbis Terrarum’ Wikipedia
+*   Trithemius J, Liber de scriptoribus ecclesiasticis (Johann Amerbach 1494)
+*   University of Chicago Press, Manual of Style: Being a Compilation of the Typographical Rules in Force at the University of Chicago Press (University of Chicago Press 1906)
+*   ‘Using Zotero to Create COinS Metadata’ (Zotero Documentation, 14 June 2020) [https://www.zotero.org/support/dev/exposing\_metadata/coins](https://www.zotero.org/support/dev/exposing_metadata/coins) accessed 27 October 2026
+*   Volpini A and others, ‘Structured Linked Data as a Memory Layer for Agent-Orchestrated Retrieval’ (arXiv 2026) [https://doi.org/10.48550/arXiv.2603.10700](https://doi.org/10.48550/arXiv.2603.10700)
+*   Walton JH, ‘The Antediluvian Section of the Sumerian King List and Genesis 5’ (1981) 44 Biblical Archaeologist 207
+*   Zecchini G and others, ‘The Rise of the AI Crawler’ (Vercel Blog, 17 December 2024) [https://vercel.com/blog/the-rise-of-the-ai-crawler](https://vercel.com/blog/the-rise-of-the-ai-crawler)

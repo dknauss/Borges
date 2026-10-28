@@ -1,0 +1,355 @@
+{
+	"generated": "2026-10-28T21:55:07.217Z",
+	"parser": "anystyle version 1.6.0 (cli 1.5.0, data 1.3.0)",
+	"input": "plain.html, one entry per line",
+	"correct": 82,
+	"pairs": 130,
+	"byField": {
+		"title": {
+			"correct": 23,
+			"pairs": 36
+		},
+		"authors": {
+			"correct": 18,
+			"pairs": 23
+		},
+		"year": {
+			"correct": 21,
+			"pairs": 24
+		},
+		"container": {
+			"correct": 6,
+			"pairs": 25
+		},
+		"doi": {
+			"correct": 1,
+			"pairs": 1
+		},
+		"isbn": {
+			"correct": 0,
+			"pairs": 0
+		},
+		"pages": {
+			"correct": 3,
+			"pairs": 4
+		},
+		"publisher": {
+			"correct": 10,
+			"pairs": 17
+		}
+	},
+	"misses": [
+		{
+			"id": "adobe-sdv",
+			"field": "authors",
+			"want": [
+				"adobe"
+			],
+			"got": []
+		},
+		{
+			"id": "adobe-sdv",
+			"field": "publisher",
+			"want": "GitHub",
+			"got": null
+		},
+		{
+			"id": "google-ai-features",
+			"field": "title",
+			"want": "AI Features and Your Website",
+			"got": "Google Search Central"
+		},
+		{
+			"id": "google-ai-features",
+			"field": "container",
+			"want": "Google Search Central",
+			"got": null
+		},
+		{
+			"id": "britannica-apostolic",
+			"field": "title",
+			"want": "Apostolic Succession",
+			"got": "In: Encyclopaedia Britannica"
+		},
+		{
+			"id": "britannica-apostolic",
+			"field": "container",
+			"want": "Encyclopaedia Britannica",
+			"got": null
+		},
+		{
+			"id": "borges1962",
+			"field": "container",
+			"want": "Labyrinths: Selected Stories and Other Writings",
+			"got": null
+		},
+		{
+			"id": "brand1985",
+			"field": "pages",
+			"want": "44",
+			"got": null
+		},
+		{
+			"id": "schemaorg-citation",
+			"field": "title",
+			"want": "citation",
+			"got": "Schema.org"
+		},
+		{
+			"id": "schemaorg-citation",
+			"field": "container",
+			"want": "Schema.org",
+			"got": null
+		},
+		{
+			"id": "hoi-gessner",
+			"field": "title",
+			"want": "Conrad Gessner Issues the First Universal Bibliography Since the Invention of Printing",
+			"got": "Conrad Gessner Issues the First Universal Bibliography Since the Invention of Printing. HistoryofInformation.com"
+		},
+		{
+			"id": "hoi-gessner",
+			"field": "container",
+			"want": "HistoryofInformation.com",
+			"got": null
+		},
+		{
+			"id": "britannica-isnad",
+			"field": "title",
+			"want": "Isnād",
+			"got": "In: Encyclopaedia Britannica"
+		},
+		{
+			"id": "britannica-isnad",
+			"field": "container",
+			"want": "Encyclopaedia Britannica",
+			"got": null
+		},
+		{
+			"id": "schemaorg-ispartof",
+			"field": "title",
+			"want": "isPartOf",
+			"got": null
+		},
+		{
+			"id": "schemaorg-ispartof",
+			"field": "container",
+			"want": "Schema.org",
+			"got": null
+		},
+		{
+			"id": "jimenez2016",
+			"field": "container",
+			"want": "Babel und Bibel 9",
+			"got": null
+		},
+		{
+			"id": "hoi-trithemius",
+			"field": "title",
+			"want": "Johannes Trithemius Publishes the Earliest Subject Bibliography, on Mostly on Ecclesiastical Writings",
+			"got": "Johannes Trithemius Publishes the Earliest Subject Bibliography, on Mostly on Ecclesiastical Writings. HistoryofInformation.com"
+		},
+		{
+			"id": "hoi-trithemius",
+			"field": "container",
+			"want": "HistoryofInformation.com",
+			"got": null
+		},
+		{
+			"id": "knauss2026pr203",
+			"field": "year",
+			"want": "2026",
+			"got": null
+		},
+		{
+			"id": "knauss2026pr203",
+			"field": "container",
+			"want": "Borges Bibliography Builder, pull request #203",
+			"got": "Borges Bibliography Builder, pull request"
+		},
+		{
+			"id": "knauss2026pr203",
+			"field": "publisher",
+			"want": "GitHub",
+			"got": null
+		},
+		{
+			"id": "knauss2026badsector",
+			"field": "container",
+			"want": "Bad Sector",
+			"got": null
+		},
+		{
+			"id": "mark2017",
+			"field": "container",
+			"want": "World History Encyclopedia",
+			"got": null
+		},
+		{
+			"id": "mozilla-readability",
+			"field": "title",
+			"want": "Readability.js",
+			"got": "S. l.]: GitHub"
+		},
+		{
+			"id": "mozilla-readability",
+			"field": "authors",
+			"want": [
+				"mozilla"
+			],
+			"got": [
+				"readability.js"
+			]
+		},
+		{
+			"id": "mozilla-readability",
+			"field": "publisher",
+			"want": "GitHub",
+			"got": null
+		},
+		{
+			"id": "fre803",
+			"field": "title",
+			"want": "Rule 803. Exceptions to the Rule Against Hearsay",
+			"got": "Rule 803. Exceptions to the Rule Against Hearsay. Federal Rules of Evidence"
+		},
+		{
+			"id": "fre803",
+			"field": "container",
+			"want": "Federal Rules of Evidence",
+			"got": null
+		},
+		{
+			"id": "fre803",
+			"field": "publisher",
+			"want": "Legal Information Institute, Cornell Law School",
+			"got": null
+		},
+		{
+			"id": "lighthouse-sd",
+			"field": "title",
+			"want": "Structured Data Is Valid",
+			"got": "Lighthouse, Chrome for Developers, 2 maio 2019"
+		},
+		{
+			"id": "lighthouse-sd",
+			"field": "year",
+			"want": "2019",
+			"got": null
+		},
+		{
+			"id": "lighthouse-sd",
+			"field": "container",
+			"want": "Lighthouse, Chrome for Developers",
+			"got": null
+		},
+		{
+			"id": "google-gallery",
+			"field": "title",
+			"want": "Structured Data Markup That Google Search Supports",
+			"got": "Structured Data Markup That Google Search Supports. Google Search Central, 16 out"
+		},
+		{
+			"id": "google-gallery",
+			"field": "container",
+			"want": "Google Search Central",
+			"got": null
+		},
+		{
+			"id": "etcsl-kinglist",
+			"field": "title",
+			"want": "The Sumerian King List",
+			"got": "The Electronic Text Corpus of Sumerian Literature"
+		},
+		{
+			"id": "etcsl-kinglist",
+			"field": "container",
+			"want": "The Electronic Text Corpus of Sumerian Literature",
+			"got": null
+		},
+		{
+			"id": "etcsl-kinglist",
+			"field": "publisher",
+			"want": "University of Oxford",
+			"got": null
+		},
+		{
+			"id": "taylor-colophons",
+			"field": "title",
+			"want": "Library Colophons",
+			"got": "Library Colophons. Reading the Library of Ashurbanipal"
+		},
+		{
+			"id": "taylor-colophons",
+			"field": "container",
+			"want": "Reading the Library of Ashurbanipal",
+			"got": null
+		},
+		{
+			"id": "taylor-colophons",
+			"field": "publisher",
+			"want": "British Museum and LMU Munich",
+			"got": null
+		},
+		{
+			"id": "wiki-theatrum",
+			"field": "container",
+			"want": "Wikipedia",
+			"got": null
+		},
+		{
+			"id": "chicago1906",
+			"field": "authors",
+			"want": [
+				"university of chicago press"
+			],
+			"got": [
+				"press"
+			]
+		},
+		{
+			"id": "volpini2026",
+			"field": "authors",
+			"want": [
+				"volpini",
+				"raad",
+				"gamba",
+				"riccitelli"
+			],
+			"got": [
+				"volpini"
+			]
+		},
+		{
+			"id": "volpini2026",
+			"field": "year",
+			"want": "2026",
+			"got": null
+		},
+		{
+			"id": "volpini2026",
+			"field": "publisher",
+			"want": "arXiv",
+			"got": null
+		},
+		{
+			"id": "zecchini2024",
+			"field": "authors",
+			"want": [
+				"zecchini",
+				"moore",
+				"ubl",
+				"siddle"
+			],
+			"got": [
+				"zecchini"
+			]
+		},
+		{
+			"id": "zecchini2024",
+			"field": "container",
+			"want": "Vercel Blog",
+			"got": null
+		}
+	]
+}
