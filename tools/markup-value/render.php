@@ -34,8 +34,14 @@ require_once dirname( __DIR__, 2 ) . '/tests/phpunit/bootstrap.php';
 const BORGES_MV_PAGE_URL = 'https://example.org/what-a-bibliography-tells-machines/';
 
 $borges_mv_dir    = __DIR__;
-$borges_mv_out    = $borges_mv_dir . '/out';
-$borges_mv_corpus = json_decode( (string) file_get_contents( $borges_mv_dir . '/corpus.json' ), true );
+// MV_CORPUS, MV_STYLE, and MV_OUT let the same pages be built from another
+// corpus or in another style, into another folder (see README.md).
+$borges_mv_out    = getenv( 'MV_OUT' ) ? (string) getenv( 'MV_OUT' ) : $borges_mv_dir . '/out';
+$borges_mv_corpus = json_decode( (string) file_get_contents( getenv( 'MV_CORPUS' ) ? (string) getenv( 'MV_CORPUS' ) : $borges_mv_dir . '/corpus.json' ), true );
+
+if ( getenv( 'MV_STYLE' ) ) {
+	$borges_mv_corpus['citationStyle'] = (string) getenv( 'MV_STYLE' );
+}
 
 if ( ! is_dir( $borges_mv_out ) ) {
 	mkdir( $borges_mv_out, 0777, true );
@@ -275,4 +281,4 @@ foreach ( $variants as $name => $overrides ) {
 
 file_put_contents( $borges_mv_out . '/manifest.json', wp_json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) . "\n" );
 
-echo 'Wrote ' . count( $variants ) . " pages to tools/markup-value/out/\n";
+echo 'Wrote ' . count( $variants ) . ' pages to ' . $borges_mv_out . "\n";

@@ -8,11 +8,24 @@ import { createServer } from 'node:http';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { dirname, extname, join, normalize } from 'node:path';
+import {
+	dirname,
+	extname,
+	join,
+	normalize,
+	resolve as resolvePath,
+} from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const TOOL_DIR = dirname( fileURLToPath( import.meta.url ) );
-export const OUT_DIR = join( TOOL_DIR, 'out' );
+// MV_OUT and MV_CORPUS match render.php's, for pages built from another
+// corpus, in another style, or into another folder.
+export const OUT_DIR = process.env.MV_OUT
+	? resolvePath( process.env.MV_OUT )
+	: join( TOOL_DIR, 'out' );
+export const CORPUS_PATH = process.env.MV_CORPUS
+	? resolvePath( process.env.MV_CORPUS )
+	: join( TOOL_DIR, 'corpus.json' );
 export const BUILD_DIR = join( TOOL_DIR, '..', '..', 'build' );
 export const VARIANTS = [ 'plain', 'borges-default', 'borges-full' ];
 
@@ -65,7 +78,7 @@ export async function readJson( path ) {
 	return JSON.parse( await readFile( path, 'utf8' ) );
 }
 
-export const corpus = () => readJson( join( TOOL_DIR, 'corpus.json' ) );
+export const corpus = () => readJson( CORPUS_PATH );
 export const manifest = () => readJson( join( OUT_DIR, 'manifest.json' ) );
 
 /**
