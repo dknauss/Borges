@@ -276,7 +276,7 @@ function bibliography_builder_get_formatter_style_cache_payload( $style_key, $st
  * @return string
  */
 function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style ) {
-	$payload = array( 'version' => 4 )
+	$payload = array( 'version' => 5 )
 		+ bibliography_builder_get_formatter_style_cache_payload( $style_key, $style )
 		+ array( 'csl_items' => bibliography_builder_sort_for_cache_key( array_values( $csl_items ) ) );
 
@@ -295,7 +295,7 @@ function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $
  * @return string
  */
 function bibliography_builder_get_formatter_entry_map_key( $style_key, $style ) {
-	$payload = array( 'version' => 2 ) + bibliography_builder_get_formatter_style_cache_payload( $style_key, $style );
+	$payload = array( 'version' => 3 ) + bibliography_builder_get_formatter_style_cache_payload( $style_key, $style );
 
 	return 'entries_' . bibliography_builder_hash_cache_payload( $payload );
 }
@@ -465,6 +465,9 @@ function bibliography_builder_extract_citeproc_entries( $html, $style ) {
  *   so citeproc-php prints "Duijnhoven, Elza van". Other styles print the name
  *   as stored, so their output is unchanged; splitting there would also make
  *   citeproc-php print an elided particle with a space ("d’ Alembert").
+ * - A repository ID whose number repeats its publisher ("arXiv:1706.03762"
+ *   with publisher "arXiv") loses the prefix, which APA and IEEE print
+ *   beside the publisher.
  * - Years before 1000, BCE years among them: citeproc-php renders none of
  *   them, so such a date becomes a year-only literal. See
  *   bibliography_builder_early_date_literal().
@@ -516,6 +519,18 @@ function bibliography_builder_prepare_csl_for_formatter( $item, $demote_particle
 				}
 			}
 		}
+	}
+
+	// arXiv and other repositories store an ID with its repository prefix
+	// ("arXiv:1706.03762"), as Zotero does. Styles that print
+	// "publisher:number" (APA 7, IEEE) would repeat it.
+	if (
+		isset( $item['number'], $item['publisher'] )
+		&& is_string( $item['number'] ) && is_string( $item['publisher'] )
+		&& '' !== trim( $item['publisher'] )
+		&& 0 === stripos( $item['number'], trim( $item['publisher'] ) . ':' )
+	) {
+		$item['number'] = ltrim( substr( $item['number'], strlen( trim( $item['publisher'] ) ) + 1 ) );
 	}
 
 	if ( empty( $item['page-first'] ) && isset( $item['page'] ) && is_scalar( $item['page'] ) ) {

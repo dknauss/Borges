@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **arXiv numbers print once in APA 7 and IEEE.** A preprint's number, stored with its repository prefix (`arXiv:1706.03762`) as Zotero stores it, printed as "arXiv:arXiv:1706.03762" in the two styles that join the publisher and the number. The prefix is dropped as the citation is formatted, so the stored record and its exports keep it. Existing citations print correctly the next time they are formatted ([#224](https://github.com/dknauss/Borges/issues/224)).
 - **No `url` beside each bibliography entry's `item` in the JSON-LD.** Google's Rich Results Test reads a bibliography's `ItemList` as a carousel, where a `ListItem` may carry `url` or `item` but not both, and reported every page with a bibliography as having an invalid item. Each work's `@id` still points at its entry on the page when it has no DOI.
 - **Encyclopedia and dictionary entries name their reference work.** Their JSON-LD now carries the encyclopedia or dictionary as `isPartOf`, a `CreativeWork`, so a citation of a Britannica or Wikipedia entry keeps its container.
 - `tools/markup-value` builds its pages from any corpus, in any style, into any folder (`MV_CORPUS`, `MV_STYLE`, `MV_OUT`); `npm run sweep` measures every style; `corpus-marginalia.json` adds a real reference list of 36 works; `llm-baseline.mjs` scores a language model's reading of the plain list; and every structured layer's misses are listed in `results.json`.
