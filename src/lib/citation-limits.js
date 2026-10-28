@@ -21,7 +21,7 @@ export function getBibliographyLimitExceededMessage(
 	currentCount,
 	limit = MAX_CITATIONS_PER_BIBLIOGRAPHY
 ) {
-	const remaining = Math.max(limit - currentCount, 0);
+	const remaining = Math.max( limit - currentCount, 0 );
 	const citationLabel = _n(
 		'citation',
 		'citations',
@@ -36,8 +36,8 @@ export function getBibliographyLimitExceededMessage(
 	);
 	const slotVerb =
 		remaining === 1
-			? __('remains', 'borges-bibliography-builder')
-			: __('remain', 'borges-bibliography-builder');
+			? __( 'remains', 'borges-bibliography-builder' )
+			: __( 'remain', 'borges-bibliography-builder' );
 
 	return sprintf(
 		/* translators: 1: attempted citation count, 2: localized citation/citations label, 3: maximum citation count, 4: remaining slot count, 5: localized slot/slots label, 6: localized remains/remain verb. */

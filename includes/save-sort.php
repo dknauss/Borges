@@ -454,16 +454,6 @@ function bibliography_builder_sort_compare(
 		);
 	};
 
-	if ( 'notes' === $family ) {
-		if ( 0 !== $authors ) {
-			return $authors;
-		}
-
-		$title_comparison = $titles();
-
-		return 0 !== $title_comparison ? $title_comparison : bibliography_builder_sort_compare_years( $a, $b );
-	}
-
 	$key =
 		/**
 		 * Sort key for one contributor.
@@ -477,6 +467,9 @@ function bibliography_builder_sort_compare(
 	$chain_a = array_map( $key, (array) bibliography_builder_sort_primary_contributors( $a ) );
 	$chain_b = array_map( $key, (array) bibliography_builder_sort_primary_contributors( $b ) );
 
+	// Both families compare whole author chains first (`compareAuthorChainsOrKeys()`),
+	// so a single-author work precedes co-authored works that begin with the
+	// same name (CMOS 17th ed. 14.67–14.70 for notes styles).
 	if ( array() !== $chain_a && array() !== $chain_b ) {
 		$chains = bibliography_builder_sort_compare_chains( $collator, $chain_a, $chain_b );
 
@@ -487,6 +480,12 @@ function bibliography_builder_sort_compare(
 
 	if ( 0 !== $authors ) {
 		return $authors;
+	}
+
+	if ( 'notes' === $family ) {
+		$title_comparison = $titles();
+
+		return 0 !== $title_comparison ? $title_comparison : bibliography_builder_sort_compare_years( $a, $b );
 	}
 
 	$years = bibliography_builder_sort_compare_years( $a, $b );

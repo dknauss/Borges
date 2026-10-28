@@ -15,8 +15,8 @@ const TYPE_MAP = {
 	webpage: 'WebPage',
 };
 
-function isLikelyOrganizationAuthor(author) {
-	return Boolean(author?.literal && !author.family && !author.given);
+function isLikelyOrganizationAuthor( author ) {
+	return Boolean( author?.literal && ! author.family && ! author.given );
 }
 
 /**
@@ -33,8 +33,8 @@ function isLikelyOrganizationAuthor(author) {
  *
  * @since 0.1.0
  */
-export function cslToJsonLd(csl, { canonicalDoiUrl = true } = {}) {
-	const schemaType = TYPE_MAP[csl.type] || 'CreativeWork';
+export function cslToJsonLd( csl, { canonicalDoiUrl = true } = {} ) {
+	const schemaType = TYPE_MAP[ csl.type ] || 'CreativeWork';
 
 	const result = {
 		'@context': 'https://schema.org',
@@ -43,9 +43,9 @@ export function cslToJsonLd(csl, { canonicalDoiUrl = true } = {}) {
 	};
 
 	// Authors.
-	if (csl.author && csl.author.length) {
-		result.author = csl.author.map((a) => {
-			if (isLikelyOrganizationAuthor(a)) {
+	if ( csl.author && csl.author.length ) {
+		result.author = csl.author.map( ( a ) => {
+			if ( isLikelyOrganizationAuthor( a ) ) {
 				return {
 					'@type': 'Organization',
 					name: a.literal,
@@ -55,59 +55,64 @@ export function cslToJsonLd(csl, { canonicalDoiUrl = true } = {}) {
 			const person = {
 				'@type': 'Person',
 				name:
-					a.literal || [a.given, a.family].filter(Boolean).join(' '),
+					a.literal ||
+					[ a.given, a.family ].filter( Boolean ).join( ' ' ),
 			};
-			if (a.family) {
+			if ( a.family ) {
 				person.familyName = a.family;
 			}
-			if (a.given) {
+			if ( a.given ) {
 				person.givenName = a.given;
 			}
-			if (a.ORCID) {
-				person.sameAs = a.ORCID.startsWith('http')
+			if ( a.ORCID ) {
+				person.sameAs = a.ORCID.startsWith( 'http' )
 					? a.ORCID
 					: 'https://orcid.org/' + a.ORCID;
 			}
 			return person;
-		});
+		} );
 	}
 
 	// Date.
-	if (csl.issued && csl.issued['date-parts'] && csl.issued['date-parts'][0]) {
-		const parts = csl.issued['date-parts'][0];
+	if (
+		csl.issued &&
+		csl.issued[ 'date-parts' ] &&
+		csl.issued[ 'date-parts' ][ 0 ]
+	) {
+		const parts = csl.issued[ 'date-parts' ][ 0 ];
 		result.datePublished = parts
-			.map((part, index) =>
-				index === 0 ? String(part) : String(part).padStart(2, '0')
+			.map( ( part, index ) =>
+				index === 0 ? String( part ) : String( part ).padStart( 2, '0' )
 			)
-			.join('-');
+			.join( '-' );
 	}
 
 	// Publication context.
-	if (csl['container-title']) {
-		if (csl.type === 'article-journal') {
+	if ( csl[ 'container-title' ] ) {
+		if ( csl.type === 'article-journal' ) {
 			result.isPartOf = {
 				'@type': 'Periodical',
-				name: csl['container-title'],
+				name: csl[ 'container-title' ],
 			};
-			if (csl.ISSN) {
-				result.isPartOf.issn = Array.isArray(csl.ISSN)
-					? csl.ISSN[0]
+			if ( csl.ISSN ) {
+				result.isPartOf.issn = Array.isArray( csl.ISSN )
+					? csl.ISSN[ 0 ]
 					: csl.ISSN;
 			}
-		} else if (csl.type === 'chapter') {
+		} else if ( csl.type === 'chapter' ) {
 			result.isPartOf = {
 				'@type': 'Book',
-				name: csl['container-title'],
+				name: csl[ 'container-title' ],
 			};
-		} else if (csl.type === 'paper-conference') {
+		} else if ( csl.type === 'paper-conference' ) {
 			result.isPartOf = {
 				'@type': 'Event',
-				name: csl['container-title'],
+				name: csl[ 'container-title' ],
 			};
 		}
 	}
 
-	if (csl.publisher) {
+	if ( csl.publisher ) {
 		result.publisher = {
 			'@type': 'Organization',
 			name: csl.publisher,
@@ -115,7 +120,7 @@ export function cslToJsonLd(csl, { canonicalDoiUrl = true } = {}) {
 	}
 
 	// Identifiers.
-	if (csl.DOI) {
+	if ( csl.DOI ) {
 		result.identifier = {
 			'@type': 'PropertyValue',
 			propertyID: 'DOI',
@@ -125,16 +130,19 @@ export function cslToJsonLd(csl, { canonicalDoiUrl = true } = {}) {
 		// COinS output (coins.js) uses info:doi/ per OpenURL convention.
 		result.url = canonicalDoiUrl
 			? 'https://doi.org/' +
-			  String(csl.DOI).split('/').map(encodeURIComponent).join('/')
-			: 'https://doi.org/' + encodeURIComponent(csl.DOI);
+				String( csl.DOI )
+					.split( '/' )
+					.map( encodeURIComponent )
+					.join( '/' )
+			: 'https://doi.org/' + encodeURIComponent( csl.DOI );
 	}
 
-	const isbn = getPrimaryIdentifierValue(csl.ISBN);
-	if (isbn) {
+	const isbn = getPrimaryIdentifierValue( csl.ISBN );
+	if ( isbn ) {
 		result.isbn = isbn;
 	}
 
-	if (csl.URL && !result.url) {
+	if ( csl.URL && ! result.url ) {
 		result.url = csl.URL;
 	}
 
@@ -163,11 +171,11 @@ export function cslToJsonLd(csl, { canonicalDoiUrl = true } = {}) {
  * @param {string} json Serialized JSON.
  * @return {string} JSON safe to embed in a script element.
  */
-function escapeForScriptContext(json) {
+function escapeForScriptContext( json ) {
 	return json
-		.replace(/</g, '\\u003c')
-		.replace(/\u2028/g, '\\u2028')
-		.replace(/\u2029/g, '\\u2029');
+		.replace( /</g, '\\u003c' )
+		.replace( /\u2028/g, '\\u2028' )
+		.replace( /\u2029/g, '\\u2029' );
 }
 
 /**
@@ -179,9 +187,9 @@ function escapeForScriptContext(json) {
  *
  * @since 0.1.0
  */
-export function buildJsonLdString(cslArray, options = {}) {
-	const data = cslArray.map((csl) => cslToJsonLd(csl, options));
-	return escapeForScriptContext(JSON.stringify(data));
+export function buildJsonLdString( cslArray, options = {} ) {
+	const data = cslArray.map( ( csl ) => cslToJsonLd( csl, options ) );
+	return escapeForScriptContext( JSON.stringify( data ) );
 }
 
 /**
@@ -201,19 +209,18 @@ export function buildJsonLdString(cslArray, options = {}) {
  *
  * @since 1.11.0
  */
-export function wrapJsonLdItemList(items) {
+export function wrapJsonLdItemList( items ) {
 	return {
 		'@context': 'https://schema.org',
 		'@type': 'ItemList',
-		itemListElement: items.map((item, index) => {
-			// eslint-disable-next-line no-unused-vars -- dropped on purpose.
+		itemListElement: items.map( ( item, index ) => {
 			const { '@context': context, ...work } = item;
 			return {
 				'@type': 'ListItem',
 				position: index + 1,
 				item: work,
 			};
-		}),
+		} ),
 	};
 }
 
@@ -229,11 +236,11 @@ export function wrapJsonLdItemList(items) {
  *
  * @since 1.11.0
  */
-export function buildJsonLdItemListString(cslArray, options = {}) {
+export function buildJsonLdItemListString( cslArray, options = {} ) {
 	const data = wrapJsonLdItemList(
-		cslArray.map((csl) => cslToJsonLd(csl, options))
+		cslArray.map( ( csl ) => cslToJsonLd( csl, options ) )
 	);
-	return escapeForScriptContext(JSON.stringify(data));
+	return escapeForScriptContext( JSON.stringify( data ) );
 }
 
 /**
@@ -245,6 +252,6 @@ export function buildJsonLdItemListString(cslArray, options = {}) {
  *
  * @since 0.1.0
  */
-export function buildCslJsonString(cslArray) {
-	return escapeForScriptContext(JSON.stringify(cslArray));
+export function buildCslJsonString( cslArray ) {
+	return escapeForScriptContext( JSON.stringify( cslArray ) );
 }

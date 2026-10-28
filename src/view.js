@@ -20,7 +20,7 @@
  * `data-cite-labels` attribute, so this script needs no `wp-i18n`.
  */
 
-const DEFAULT_LABELS = Object.freeze({
+const DEFAULT_LABELS = Object.freeze( {
 	toggle: 'Cite / Export',
 	copy: 'Copy citation',
 	copied: 'Copied',
@@ -28,48 +28,50 @@ const DEFAULT_LABELS = Object.freeze({
 	cslJson: 'CSL-JSON',
 	bibtex: 'BibTeX',
 	biblatex: 'BibLaTeX',
-});
+} );
 
 /**
  * Downloads offered for an entry, in panel order: data attribute, media type,
  * filename suffix, and label key.
  */
-const EXPORT_FORMATS = Object.freeze([
-	['citeRis', 'application/x-research-info-systems', '.ris', 'ris'],
+const EXPORT_FORMATS = Object.freeze( [
+	[ 'citeRis', 'application/x-research-info-systems', '.ris', 'ris' ],
 	[
 		'citeCslJson',
 		'application/vnd.citationstyles.csl+json',
 		'.csl.json',
 		'cslJson',
 	],
-	['citeBibtex', 'text/x-bibtex', '.bib', 'bibtex'],
-	['citeBiblatex', 'text/x-bibtex', '.biblatex.bib', 'biblatex'],
-]);
+	[ 'citeBibtex', 'text/x-bibtex', '.bib', 'bibtex' ],
+	[ 'citeBiblatex', 'text/x-bibtex', '.biblatex.bib', 'biblatex' ],
+] );
 
-function getLabels(entry) {
-	const section = entry.closest('[data-cite-labels]');
+function getLabels( entry ) {
+	const section = entry.closest( '[data-cite-labels]' );
 
-	if (!section) {
+	if ( ! section ) {
 		return DEFAULT_LABELS;
 	}
 
 	try {
-		const translated = JSON.parse(section.getAttribute('data-cite-labels'));
+		const translated = JSON.parse(
+			section.getAttribute( 'data-cite-labels' )
+		);
 
 		return { ...DEFAULT_LABELS, ...translated };
-	} catch (error) {
+	} catch {
 		return DEFAULT_LABELS;
 	}
 }
 
-function createElement(tag, className, text) {
-	const element = document.createElement(tag);
+function createElement( tag, className, text ) {
+	const element = document.createElement( tag );
 
-	if (className) {
+	if ( className ) {
 		element.className = className;
 	}
 
-	if (typeof text === 'string') {
+	if ( typeof text === 'string' ) {
 		element.textContent = text;
 	}
 
@@ -81,15 +83,17 @@ function createElement(tag, className, text) {
  *
  * @param {Document|Element} root Where to look.
  */
-export function buildCiteExportPanels(root = document) {
-	const entries = root.querySelectorAll('li[data-cite-ris]');
+export function buildCiteExportPanels( root = document ) {
+	const entries = root.querySelectorAll( 'li[data-cite-ris]' );
 
-	entries.forEach((entry) => {
-		if (entry.querySelector(':scope > .bibliography-builder-cite-export')) {
+	entries.forEach( ( entry ) => {
+		if (
+			entry.querySelector( ':scope > .bibliography-builder-cite-export' )
+		) {
 			return;
 		}
 
-		const labels = getLabels(entry);
+		const labels = getLabels( entry );
 		const base = entry.dataset.citeFilename || 'citation';
 		const details = createElement(
 			'details',
@@ -104,7 +108,10 @@ export function buildCiteExportPanels(root = document) {
 			'bibliography-builder-cite-copy',
 			labels.copy
 		);
-		const links = createElement('ul', 'bibliography-builder-export-links');
+		const links = createElement(
+			'ul',
+			'bibliography-builder-export-links'
+		);
 
 		details.appendChild(
 			createElement(
@@ -115,128 +122,128 @@ export function buildCiteExportPanels(root = document) {
 		);
 
 		copy.type = 'button';
-		copy.setAttribute('aria-live', 'polite');
-		copy.setAttribute('data-cite-text', entry.dataset.citeText || '');
-		copy.setAttribute('data-copied-label', labels.copied);
-		panel.appendChild(copy);
+		copy.setAttribute( 'aria-live', 'polite' );
+		copy.setAttribute( 'data-cite-text', entry.dataset.citeText || '' );
+		copy.setAttribute( 'data-copied-label', labels.copied );
+		panel.appendChild( copy );
 
-		EXPORT_FORMATS.forEach(([key, mime, suffix, labelKey]) => {
-			const body = entry.dataset[key];
+		EXPORT_FORMATS.forEach( ( [ key, mime, suffix, labelKey ] ) => {
+			const body = entry.dataset[ key ];
 
-			if (!body) {
+			if ( ! body ) {
 				return;
 			}
 
-			const item = document.createElement('li');
-			const link = createElement('a', null, labels[labelKey]);
+			const item = document.createElement( 'li' );
+			const link = createElement( 'a', null, labels[ labelKey ] );
 
-			link.href = `data:${mime};charset=utf-8,${encodeURIComponent(
+			link.href = `data:${ mime };charset=utf-8,${ encodeURIComponent(
 				body
-			)}`;
-			link.setAttribute('download', base + suffix);
-			link.setAttribute('data-cite-export-filename', base + suffix);
+			) }`;
+			link.setAttribute( 'download', base + suffix );
+			link.setAttribute( 'data-cite-export-filename', base + suffix );
 			link.rel = 'noopener';
-			item.appendChild(link);
-			links.appendChild(item);
-		});
+			item.appendChild( link );
+			links.appendChild( item );
+		} );
 
-		panel.appendChild(links);
-		details.appendChild(panel);
-		entry.appendChild(details);
-	});
+		panel.appendChild( links );
+		details.appendChild( panel );
+		entry.appendChild( details );
+	} );
 }
 
 const COPY_LABEL_RESET_MS = 2000;
 
-export function applyExportFilenames(root = document) {
+export function applyExportFilenames( root = document ) {
 	const links = root.querySelectorAll(
 		'.bibliography-builder-cite-export a[data-cite-export-filename]'
 	);
 
-	links.forEach((link) => {
-		const filename = link.getAttribute('data-cite-export-filename');
-		if (filename) {
-			link.setAttribute('download', filename);
+	links.forEach( ( link ) => {
+		const filename = link.getAttribute( 'data-cite-export-filename' );
+		if ( filename ) {
+			link.setAttribute( 'download', filename );
 		}
-	});
+	} );
 }
 
-function writeToClipboard(text) {
+function writeToClipboard( text ) {
 	const clipboard =
 		typeof window !== 'undefined' && window.navigator
 			? window.navigator.clipboard
 			: undefined;
 
-	if (clipboard && typeof clipboard.writeText === 'function') {
-		return clipboard.writeText(text);
+	if ( clipboard && typeof clipboard.writeText === 'function' ) {
+		return clipboard.writeText( text );
 	}
 
 	// Legacy fallback for browsers without the async Clipboard API.
 	try {
-		const textarea = document.createElement('textarea');
+		const textarea = document.createElement( 'textarea' );
 		textarea.value = text;
-		textarea.setAttribute('readonly', '');
+		textarea.setAttribute( 'readonly', '' );
 		textarea.style.position = 'absolute';
 		textarea.style.left = '-9999px';
-		document.body.appendChild(textarea);
+		document.body.appendChild( textarea );
 		textarea.select();
-		document.execCommand('copy');
-		document.body.removeChild(textarea);
+		document.execCommand( 'copy' );
+		document.body.removeChild( textarea );
 		return Promise.resolve();
-	} catch (error) {
-		return Promise.reject(error);
+	} catch ( error ) {
+		return Promise.reject( error );
 	}
 }
 
-function showCopied(button) {
-	if (typeof button.dataset.copyResetLabel === 'undefined') {
+function showCopied( button ) {
+	if ( typeof button.dataset.copyResetLabel === 'undefined' ) {
 		button.dataset.copyResetLabel = button.textContent;
 	}
 
-	button.classList.add('is-copied');
-	button.textContent = button.getAttribute('data-copied-label') || 'Copied';
+	button.classList.add( 'is-copied' );
+	button.textContent = button.getAttribute( 'data-copied-label' ) || 'Copied';
 
-	window.clearTimeout(button.copyResetTimer);
-	button.copyResetTimer = window.setTimeout(() => {
-		button.classList.remove('is-copied');
+	window.clearTimeout( button.copyResetTimer );
+	button.copyResetTimer = window.setTimeout( () => {
+		button.classList.remove( 'is-copied' );
 		button.textContent = button.dataset.copyResetLabel;
-	}, COPY_LABEL_RESET_MS);
+	}, COPY_LABEL_RESET_MS );
 }
 
-export function attachCiteCopy(root = document) {
+export function attachCiteCopy( root = document ) {
 	const buttons = root.querySelectorAll(
 		'.bibliography-builder-cite-export .bibliography-builder-cite-copy'
 	);
 
-	buttons.forEach((button) => {
-		if (button.dataset.citeCopyBound === 'true') {
+	buttons.forEach( ( button ) => {
+		if ( button.dataset.citeCopyBound === 'true' ) {
 			return;
 		}
 		button.dataset.citeCopyBound = 'true';
 
-		button.addEventListener('click', () => {
-			const text = button.getAttribute('data-cite-text') || '';
-			if (!text) {
+		button.addEventListener( 'click', () => {
+			const text = button.getAttribute( 'data-cite-text' ) || '';
+			if ( ! text ) {
 				return;
 			}
 
-			writeToClipboard(text).then(
-				() => showCopied(button),
+			writeToClipboard( text ).then(
+				() => showCopied( button ),
 				() => {}
 			);
-		});
-	});
+		} );
+	} );
 }
 
-if (typeof document !== 'undefined') {
+if ( typeof document !== 'undefined' ) {
 	const enhance = () => {
 		buildCiteExportPanels();
 		applyExportFilenames();
 		attachCiteCopy();
 	};
 
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', enhance);
+	if ( document.readyState === 'loading' ) {
+		document.addEventListener( 'DOMContentLoaded', enhance );
 	} else {
 		enhance();
 	}

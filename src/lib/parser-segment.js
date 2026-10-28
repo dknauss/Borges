@@ -25,42 +25,42 @@ import {
  * @param {string} chunk Trimmed text segment.
  * @return {{ format: string, value: string, rawValue?: string, fallbackValue?: string }} Detected format descriptor.
  */
-function detectFormat(chunk) {
-	if (PMID_REGEX.test(chunk)) {
+function detectFormat( chunk ) {
+	if ( PMID_REGEX.test( chunk ) ) {
 		return { format: 'pmid', value: chunk };
 	}
 
-	if (PMCID_REGEX.test(chunk)) {
+	if ( PMCID_REGEX.test( chunk ) ) {
 		return { format: 'pmcid', value: chunk };
 	}
 
 	// Before DOI: arXiv DOIs (10.48550/arXiv.ID) also match DOI_ONLY_REGEX.
-	if (getArxivId(chunk)) {
+	if ( getArxivId( chunk ) ) {
 		return { format: 'arxiv', value: chunk };
 	}
 
-	if (getStandaloneIsbn(chunk)) {
+	if ( getStandaloneIsbn( chunk ) ) {
 		return { format: 'isbn', value: chunk };
 	}
 
-	if (getCatalogKey(chunk) || OPEN_LIBRARY_WORK_REGEX.test(chunk)) {
+	if ( getCatalogKey( chunk ) || OPEN_LIBRARY_WORK_REGEX.test( chunk ) ) {
 		return { format: 'catalog', value: chunk };
 	}
 
-	if (getArchiveId(chunk)) {
+	if ( getArchiveId( chunk ) ) {
 		return { format: 'archive', value: chunk };
 	}
 
-	if (DOI_ONLY_REGEX.test(chunk)) {
+	if ( DOI_ONLY_REGEX.test( chunk ) ) {
 		return { format: 'doi', value: chunk };
 	}
 
-	if (BIBTEX_REGEX.test(chunk)) {
+	if ( BIBTEX_REGEX.test( chunk ) ) {
 		return { format: 'bibtex', value: chunk };
 	}
 
-	const embedded = extractEmbeddedIdentifier(chunk);
-	if (embedded) {
+	const embedded = extractEmbeddedIdentifier( chunk );
+	if ( embedded ) {
 		return { ...embedded, fallbackValue: chunk };
 	}
 
@@ -77,7 +77,7 @@ export function createDetectedItem(
 		format,
 		value,
 		rawValue,
-		...(fallbackValue !== undefined ? { fallbackValue } : {}),
+		...( fallbackValue !== undefined ? { fallbackValue } : {} ),
 	};
 }
 
@@ -91,70 +91,70 @@ const IDENTIFIER_FORMATS = [
 	'archive',
 ];
 
-function looksLikeStandaloneCitationLine(line) {
+function looksLikeStandaloneCitationLine( line ) {
 	const normalizedLine = line.trim();
 
-	if (!normalizedLine) {
+	if ( ! normalizedLine ) {
 		return false;
 	}
 
-	const format = detectFormat(normalizedLine).format;
+	const format = detectFormat( normalizedLine ).format;
 
-	if (IDENTIFIER_FORMATS.includes(format)) {
+	if ( IDENTIFIER_FORMATS.includes( format ) ) {
 		return true;
 	}
 
-	return /(?:\.|[)!?]|https?:\/\/\S+)$/u.test(normalizedLine);
+	return /(?:\.|[)!?]|https?:\/\/\S+)$/u.test( normalizedLine );
 }
 
-export function splitChunkIntoDetectedItems(chunk) {
-	if (BIBTEX_REGEX.test(chunk)) {
+export function splitChunkIntoDetectedItems( chunk ) {
+	if ( BIBTEX_REGEX.test( chunk ) ) {
 		return chunk
-			.split(/(?=@\w+\{)/)
-			.map((entry) => entry.trim())
-			.filter(Boolean)
-			.map((entry) => createDetectedItem('bibtex', entry, entry));
+			.split( /(?=@\w+\{)/ )
+			.map( ( entry ) => entry.trim() )
+			.filter( Boolean )
+			.map( ( entry ) => createDetectedItem( 'bibtex', entry, entry ) );
 	}
 
 	const lines = chunk
-		.split(/\n/)
-		.map((line) => line.trim())
-		.filter(Boolean);
+		.split( /\n/ )
+		.map( ( line ) => line.trim() )
+		.filter( Boolean );
 
-	if (!lines.length) {
+	if ( ! lines.length ) {
 		return [];
 	}
 
 	const allLinesAreIdentifiers =
 		lines.length > 1 &&
-		lines.every((line) =>
-			IDENTIFIER_FORMATS.includes(detectFormat(line).format)
+		lines.every( ( line ) =>
+			IDENTIFIER_FORMATS.includes( detectFormat( line ).format )
 		);
 
-	if (allLinesAreIdentifiers) {
-		return lines.map((line) => {
-			const detected = detectFormat(line);
-			return createDetectedItem(detected.format, line, line);
-		});
+	if ( allLinesAreIdentifiers ) {
+		return lines.map( ( line ) => {
+			const detected = detectFormat( line );
+			return createDetectedItem( detected.format, line, line );
+		} );
 	}
 
 	const allLinesLookStandalone =
-		lines.length > 1 && lines.every(looksLikeStandaloneCitationLine);
+		lines.length > 1 && lines.every( looksLikeStandaloneCitationLine );
 
-	if (allLinesLookStandalone) {
-		return lines.map((line) => {
-			const detectedLine = detectFormat(line);
+	if ( allLinesLookStandalone ) {
+		return lines.map( ( line ) => {
+			const detectedLine = detectFormat( line );
 			return createDetectedItem(
 				detectedLine.format,
 				detectedLine.value,
 				line,
 				detectedLine.fallbackValue
 			);
-		});
+		} );
 	}
 
-	const normalizedChunk = lines.join(' ');
-	const detectedChunk = detectFormat(normalizedChunk);
+	const normalizedChunk = lines.join( ' ' );
+	const detectedChunk = detectFormat( normalizedChunk );
 
 	return [
 		createDetectedItem(
@@ -167,7 +167,7 @@ export function splitChunkIntoDetectedItems(chunk) {
 }
 
 const BIBTEX_ENTRY_START_REGEX = /@\s*([a-z][\w-]*)\s*\{/giu;
-const BIBTEX_IGNORED_ENTRY_TYPES = new Set(['comment', 'preamble']);
+const BIBTEX_IGNORED_ENTRY_TYPES = new Set( [ 'comment', 'preamble' ] );
 
 /**
  * Return the index just past the brace that closes the one at `openIndex`,
@@ -177,20 +177,20 @@ const BIBTEX_IGNORED_ENTRY_TYPES = new Set(['comment', 'preamble']);
  * @param {number} openIndex Index of an opening `{`.
  * @return {number} End index (exclusive).
  */
-function findBibtexEntryEnd(input, openIndex) {
+function findBibtexEntryEnd( input, openIndex ) {
 	let depth = 0;
 
-	for (let index = openIndex; index < input.length; index += 1) {
-		const char = input[index];
+	for ( let index = openIndex; index < input.length; index += 1 ) {
+		const char = input[ index ];
 
-		if (char === '\\') {
+		if ( char === '\\' ) {
 			index += 1;
-		} else if (char === '{') {
+		} else if ( char === '{' ) {
 			depth += 1;
-		} else if (char === '}') {
+		} else if ( char === '}' ) {
 			depth -= 1;
 
-			if (depth === 0) {
+			if ( depth === 0 ) {
 				return index + 1;
 			}
 		}
@@ -217,69 +217,69 @@ function findBibtexEntryEnd(input, openIndex) {
  * @param {string} input Pasted text.
  * @return {Array<{bibtex: boolean, value: string, raw?: string}>} Segments in paste order.
  */
-function segmentBibtexInput(input) {
+function segmentBibtexInput( input ) {
 	const segments = [];
 	const macros = [];
 	let hasBibtex = false;
 	let hasFileLevelBlock = false;
 	let cursor = 0;
 
-	for (const match of input.matchAll(BIBTEX_ENTRY_START_REGEX)) {
-		if (match.index < cursor) {
+	for ( const match of input.matchAll( BIBTEX_ENTRY_START_REGEX ) ) {
+		if ( match.index < cursor ) {
 			continue;
 		}
 
 		const end = findBibtexEntryEnd(
 			input,
-			match.index + match[0].length - 1
+			match.index + match[ 0 ].length - 1
 		);
-		const entry = input.slice(match.index, end).trim();
-		const entryType = match[1].toLowerCase();
+		const entry = input.slice( match.index, end ).trim();
+		const entryType = match[ 1 ].toLowerCase();
 
-		segments.push({
+		segments.push( {
 			bibtex: false,
-			value: input.slice(cursor, match.index),
-		});
+			value: input.slice( cursor, match.index ),
+		} );
 		hasBibtex = true;
 		cursor = end;
 
-		if (entryType === 'string') {
-			macros.push(entry);
+		if ( entryType === 'string' ) {
+			macros.push( entry );
 			hasFileLevelBlock = true;
-		} else if (BIBTEX_IGNORED_ENTRY_TYPES.has(entryType)) {
+		} else if ( BIBTEX_IGNORED_ENTRY_TYPES.has( entryType ) ) {
 			hasFileLevelBlock = true;
 		} else {
-			segments.push({ bibtex: true, value: entry, raw: entry });
+			segments.push( { bibtex: true, value: entry, raw: entry } );
 		}
 	}
 
-	segments.push({ bibtex: false, value: input.slice(cursor) });
+	segments.push( { bibtex: false, value: input.slice( cursor ) } );
 
 	return segments
-		.map((segment) => {
-			if (segment.bibtex) {
+		.map( ( segment ) => {
+			if ( segment.bibtex ) {
 				return macros.length
 					? {
 							...segment,
-							value: `${macros.join(
+							value: `${ macros.join(
 								'\n'
-							)}\n${normalizeBibtexInput(segment.value)}`,
-					  }
+							) }\n${ normalizeBibtexInput( segment.value ) }`,
+						}
 					: segment;
 			}
 
-			if (hasFileLevelBlock) {
+			if ( hasFileLevelBlock ) {
 				return { ...segment, value: '' };
 			}
 
 			return hasBibtex
 				? {
 						...segment,
-						value: segment.value.replace(/^[ \t]*%.*$/gmu, ''),
-				  }
+						value: segment.value.replace( /^[ \t]*%.*$/gmu, '' ),
+					}
 				: segment;
-		})
-		.filter((segment) => segment.value.trim());
+		} )
+		.filter( ( segment ) => segment.value.trim() );
 }
 
 const RIS_RECORD_START_REGEX = /^\s*TY {2}- /u;
@@ -297,11 +297,11 @@ const RIS_RECORD_END_REGEX = /^\s*ER {2}-/u;
  * @param {string} input Pasted text.
  * @return {Array<{ris: boolean, value: string}>} Parts in paste order.
  */
-function splitRisRecords(input) {
-	const lines = input.split(/\r\n?|\n/u);
+function splitRisRecords( input ) {
+	const lines = input.split( /\r\n?|\n/u );
 
-	if (!lines.some((line) => RIS_RECORD_START_REGEX.test(line))) {
-		return [{ ris: false, value: input }];
+	if ( ! lines.some( ( line ) => RIS_RECORD_START_REGEX.test( line ) ) ) {
+		return [ { ris: false, value: input } ];
 	}
 
 	const parts = [];
@@ -309,31 +309,31 @@ function splitRisRecords(input) {
 	let record = null;
 
 	const closeRecord = () => {
-		if (record) {
-			parts.push({ ris: true, value: record.join('\n').trim() });
+		if ( record ) {
+			parts.push( { ris: true, value: record.join( '\n' ).trim() } );
 			record = null;
 		}
 	};
 
-	for (const line of lines) {
-		if (RIS_RECORD_START_REGEX.test(line)) {
+	for ( const line of lines ) {
+		if ( RIS_RECORD_START_REGEX.test( line ) ) {
 			closeRecord();
-			parts.push({ ris: false, value: text.join('\n') });
+			parts.push( { ris: false, value: text.join( '\n' ) } );
 			text = [];
-			record = [line];
-		} else if (record) {
-			record.push(line);
+			record = [ line ];
+		} else if ( record ) {
+			record.push( line );
 
-			if (RIS_RECORD_END_REGEX.test(line)) {
+			if ( RIS_RECORD_END_REGEX.test( line ) ) {
 				closeRecord();
 			}
 		} else {
-			text.push(line);
+			text.push( line );
 		}
 	}
 
 	closeRecord();
-	parts.push({ ris: false, value: text.join('\n') });
+	parts.push( { ris: false, value: text.join( '\n' ) } );
 
 	return parts;
 }
@@ -348,11 +348,18 @@ function splitRisRecords(input) {
  * @param {string} input Pasted text.
  * @return {Array<{bibtex: boolean, ris?: boolean, value: string, raw?: string}>} Segments in paste order.
  */
-export function segmentPastedInput(input) {
-	return splitRisRecords(input).flatMap((part) =>
+export function segmentPastedInput( input ) {
+	return splitRisRecords( input ).flatMap( ( part ) =>
 		part.ris
-			? [{ bibtex: false, ris: true, value: part.value, raw: part.value }]
-			: segmentBibtexInput(part.value)
+			? [
+					{
+						bibtex: false,
+						ris: true,
+						value: part.value,
+						raw: part.value,
+					},
+				]
+			: segmentBibtexInput( part.value )
 	);
 }
 
@@ -369,27 +376,27 @@ const BIBTEX_ENTRY_TYPE_ALIASES = {
 // added here; the BibTeX backend drops it from the result again.
 export const BIBTEX_MISSING_KEY = 'borges-missing-key';
 
-const BIBTEX_FILE_LEVEL_TYPES = new Set(['string', 'comment', 'preamble']);
+const BIBTEX_FILE_LEVEL_TYPES = new Set( [ 'string', 'comment', 'preamble' ] );
 
-export function normalizeBibtexInput(value) {
+export function normalizeBibtexInput( value ) {
 	return value.replace(
 		/^(\s*)@([a-z-]+)\s*\{(?:(?=(\s*(?:,|\}|[a-z][\w:.-]*\s*=)))|)/iu,
-		(match, leadingWhitespace, entryType, missingKey) => {
+		( match, leadingWhitespace, entryType, missingKey ) => {
 			const type = entryType.toLowerCase();
 			const normalizedEntryType =
-				BIBTEX_ENTRY_TYPE_ALIASES[type] || entryType;
+				BIBTEX_ENTRY_TYPE_ALIASES[ type ] || entryType;
 			let key = '';
 
 			if (
 				missingKey !== undefined &&
-				!BIBTEX_FILE_LEVEL_TYPES.has(type)
+				! BIBTEX_FILE_LEVEL_TYPES.has( type )
 			) {
-				key = missingKey.trimStart().startsWith(',')
+				key = missingKey.trimStart().startsWith( ',' )
 					? BIBTEX_MISSING_KEY
-					: `${BIBTEX_MISSING_KEY},`;
+					: `${ BIBTEX_MISSING_KEY },`;
 			}
 
-			return `${leadingWhitespace}@${normalizedEntryType}{${key}`;
+			return `${ leadingWhitespace }@${ normalizedEntryType }{${ key }`;
 		}
 	);
 }

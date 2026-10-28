@@ -1,4 +1,4 @@
-export const KNOWN_CSL_TYPES = new Set([
+export const KNOWN_CSL_TYPES = new Set( [
 	'article',
 	'article-journal',
 	'article-magazine',
@@ -45,8 +45,8 @@ export const KNOWN_CSL_TYPES = new Set([
 	'thesis',
 	'treaty',
 	'webpage',
-]);
-const STRING_FIELDS = new Set([
+] );
+const STRING_FIELDS = new Set( [
 	'title',
 	'container-title',
 	'publisher',
@@ -63,20 +63,20 @@ const STRING_FIELDS = new Set([
 	'publisher-place',
 	'event-place',
 	'reviewed-title',
-]);
-const STRING_OR_STRING_ARRAY_FIELDS = new Set(['ISBN', 'ISSN']);
-const NAME_LIST_FIELDS = new Set(['author', 'editor', 'reviewed-author']);
+] );
+const STRING_OR_STRING_ARRAY_FIELDS = new Set( [ 'ISBN', 'ISSN' ] );
+const NAME_LIST_FIELDS = new Set( [ 'author', 'editor', 'reviewed-author' ] );
 
-function isPlainObject(value) {
-	if (!value || typeof value !== 'object' || Array.isArray(value)) {
+function isPlainObject( value ) {
+	if ( ! value || typeof value !== 'object' || Array.isArray( value ) ) {
 		return false;
 	}
 
-	const prototype = Object.getPrototypeOf(value);
+	const prototype = Object.getPrototypeOf( value );
 	return prototype === Object.prototype || prototype === null;
 }
 
-function sanitizeScalar(value) {
+function sanitizeScalar( value ) {
 	if (
 		typeof value === 'string' ||
 		typeof value === 'number' ||
@@ -88,28 +88,33 @@ function sanitizeScalar(value) {
 	return undefined;
 }
 
-function sanitizeCslValue(value, depth = 0) {
-	if (depth > 10) {
+function sanitizeCslValue( value, depth = 0 ) {
+	if ( depth > 10 ) {
 		return undefined;
 	}
 
-	if (Array.isArray(value)) {
+	if ( Array.isArray( value ) ) {
 		return value
-			.map((item) => sanitizeCslValue(item, depth + 1))
-			.filter((item) => item !== undefined);
+			.map( ( item ) => sanitizeCslValue( item, depth + 1 ) )
+			.filter( ( item ) => item !== undefined );
 	}
 
-	if (isPlainObject(value)) {
-		return Object.entries(value).reduce(
-			(accumulator, [key, nestedValue]) => {
-				if (['__proto__', 'constructor', 'prototype'].includes(key)) {
+	if ( isPlainObject( value ) ) {
+		return Object.entries( value ).reduce(
+			( accumulator, [ key, nestedValue ] ) => {
+				if (
+					[ '__proto__', 'constructor', 'prototype' ].includes( key )
+				) {
 					return accumulator;
 				}
 
-				const sanitizedValue = sanitizeCslValue(nestedValue, depth + 1);
+				const sanitizedValue = sanitizeCslValue(
+					nestedValue,
+					depth + 1
+				);
 
-				if (sanitizedValue !== undefined) {
-					accumulator[key] = sanitizedValue;
+				if ( sanitizedValue !== undefined ) {
+					accumulator[ key ] = sanitizedValue;
 				}
 
 				return accumulator;
@@ -118,34 +123,34 @@ function sanitizeCslValue(value, depth = 0) {
 		);
 	}
 
-	return sanitizeScalar(value);
+	return sanitizeScalar( value );
 }
 
-function sanitizeAuthor(author) {
-	if (!isPlainObject(author)) {
-		throw new Error('Invalid CSL author entry.');
+function sanitizeAuthor( author ) {
+	if ( ! isPlainObject( author ) ) {
+		throw new Error( 'Invalid CSL author entry.' );
 	}
 
-	const sanitizedAuthor = sanitizeCslValue(author);
+	const sanitizedAuthor = sanitizeCslValue( author );
 
-	for (const key of ['family', 'given', 'literal', 'ORCID']) {
+	for ( const key of [ 'family', 'given', 'literal', 'ORCID' ] ) {
 		if (
-			Object.prototype.hasOwnProperty.call(sanitizedAuthor, key) &&
-			typeof sanitizedAuthor[key] !== 'string'
+			Object.prototype.hasOwnProperty.call( sanitizedAuthor, key ) &&
+			typeof sanitizedAuthor[ key ] !== 'string'
 		) {
-			throw new Error(`Invalid CSL author field: ${key}.`);
+			throw new Error( `Invalid CSL author field: ${ key }.` );
 		}
 	}
 
 	return sanitizedAuthor;
 }
 
-function sanitizeNameList(names, field) {
-	if (!Array.isArray(names)) {
-		throw new Error(`Invalid CSL ${field} list.`);
+function sanitizeNameList( names, field ) {
+	if ( ! Array.isArray( names ) ) {
+		throw new Error( `Invalid CSL ${ field } list.` );
 	}
 
-	return names.map(sanitizeAuthor);
+	return names.map( sanitizeAuthor );
 }
 
 /**
@@ -156,114 +161,118 @@ function sanitizeNameList(names, field) {
  * "-334" arrives too. A signed digit string becomes that integer; "-0" becomes
  * 0 rather than -0, which would print as "0" but compare oddly.
  *
- * @param {*} part Date part.
+ * @param {unknown} part Date part.
  * @return {number|undefined} The integer, or undefined to drop the part.
  */
-function normalizeDatePart(part) {
-	if (typeof part === 'number' && Number.isInteger(part)) {
+function normalizeDatePart( part ) {
+	if ( typeof part === 'number' && Number.isInteger( part ) ) {
 		return part;
 	}
 
-	if (typeof part === 'string' && /^-?\d+$/.test(part)) {
-		return Number(part) || 0;
+	if ( typeof part === 'string' && /^-?\d+$/.test( part ) ) {
+		return Number( part ) || 0;
 	}
 
 	return undefined;
 }
 
-function sanitizeIssued(issued) {
-	if (!isPlainObject(issued)) {
-		throw new Error('Invalid CSL issued value.');
+function sanitizeIssued( issued ) {
+	if ( ! isPlainObject( issued ) ) {
+		throw new Error( 'Invalid CSL issued value.' );
 	}
 
-	const sanitizedIssued = sanitizeCslValue(issued);
+	const sanitizedIssued = sanitizeCslValue( issued );
 	let hasValidDate = false;
 
-	if (Object.prototype.hasOwnProperty.call(sanitizedIssued, 'date-parts')) {
+	if (
+		Object.prototype.hasOwnProperty.call( sanitizedIssued, 'date-parts' )
+	) {
 		if (
-			!Array.isArray(sanitizedIssued['date-parts']) ||
-			!sanitizedIssued['date-parts'].length
+			! Array.isArray( sanitizedIssued[ 'date-parts' ] ) ||
+			! sanitizedIssued[ 'date-parts' ].length
 		) {
-			throw new Error('Invalid CSL issued date-parts.');
+			throw new Error( 'Invalid CSL issued date-parts.' );
 		}
 
-		const dateParts = sanitizedIssued['date-parts']
-			.map((datePart) => {
-				if (!Array.isArray(datePart)) {
+		const dateParts = sanitizedIssued[ 'date-parts' ]
+			.map( ( datePart ) => {
+				if ( ! Array.isArray( datePart ) ) {
 					return null;
 				}
 
 				const normalizedDatePart = datePart
-					.map(normalizeDatePart)
-					.filter((part) => part !== undefined);
+					.map( normalizeDatePart )
+					.filter( ( part ) => part !== undefined );
 
 				return normalizedDatePart.length ? normalizedDatePart : null;
-			})
-			.filter(Boolean);
+			} )
+			.filter( Boolean );
 
-		if (!dateParts.length) {
-			throw new Error('Invalid CSL issued date-parts.');
+		if ( ! dateParts.length ) {
+			throw new Error( 'Invalid CSL issued date-parts.' );
 		}
 
-		sanitizedIssued['date-parts'] = dateParts;
+		sanitizedIssued[ 'date-parts' ] = dateParts;
 		hasValidDate = true;
 	}
 
-	for (const field of ['literal', 'raw']) {
-		if (!Object.prototype.hasOwnProperty.call(sanitizedIssued, field)) {
+	for ( const field of [ 'literal', 'raw' ] ) {
+		if (
+			! Object.prototype.hasOwnProperty.call( sanitizedIssued, field )
+		) {
 			continue;
 		}
 
-		if (typeof sanitizedIssued[field] !== 'string') {
-			throw new Error('Invalid CSL issued value.');
+		if ( typeof sanitizedIssued[ field ] !== 'string' ) {
+			throw new Error( 'Invalid CSL issued value.' );
 		}
 
-		sanitizedIssued[field] = stripHtmlTags(sanitizedIssued[field]);
+		sanitizedIssued[ field ] = stripHtmlTags( sanitizedIssued[ field ] );
 		hasValidDate = true;
 	}
 
-	if (!hasValidDate) {
-		throw new Error('Invalid CSL issued date-parts.');
+	if ( ! hasValidDate ) {
+		throw new Error( 'Invalid CSL issued date-parts.' );
 	}
 
 	return sanitizedIssued;
 }
 
-export function stripHtmlTags(text) {
+export function stripHtmlTags( text ) {
 	let result = text;
 	let previous;
 	do {
 		previous = result;
-		result = result.replace(/<[^>]*>/gu, '');
-	} while (result !== previous);
+		result = result.replace( /<[^>]*>/gu, '' );
+	} while ( result !== previous );
 	return result;
 }
 
-function sanitizeStringField(value, field) {
-	if (typeof value === 'number' && field !== 'title') {
-		return String(value);
+function sanitizeStringField( value, field ) {
+	if ( typeof value === 'number' && field !== 'title' ) {
+		return String( value );
 	}
 
-	if (typeof value !== 'string') {
-		throw new Error(`Invalid CSL ${field}.`);
+	if ( typeof value !== 'string' ) {
+		throw new Error( `Invalid CSL ${ field }.` );
 	}
 
-	return stripHtmlTags(value);
+	return stripHtmlTags( value );
 }
 
-function sanitizeStringOrStringArrayField(value, field) {
-	if (typeof value === 'string') {
-		return stripHtmlTags(value);
+function sanitizeStringOrStringArrayField( value, field ) {
+	if ( typeof value === 'string' ) {
+		return stripHtmlTags( value );
 	}
 
 	if (
-		Array.isArray(value) &&
-		value.every((item) => typeof item === 'string')
+		Array.isArray( value ) &&
+		value.every( ( item ) => typeof item === 'string' )
 	) {
-		return value.map(stripHtmlTags);
+		return value.map( stripHtmlTags );
 	}
 
-	throw new Error(`Invalid CSL ${field}.`);
+	throw new Error( `Invalid CSL ${ field }.` );
 }
 
 /**
@@ -275,44 +284,47 @@ function sanitizeStringOrStringArrayField(value, field) {
  *
  * @since 0.1.0
  */
-export function validateAndSanitizeCsl(csl) {
-	if (!isPlainObject(csl)) {
-		throw new Error('Invalid CSL object.');
+export function validateAndSanitizeCsl( csl ) {
+	if ( ! isPlainObject( csl ) ) {
+		throw new Error( 'Invalid CSL object.' );
 	}
 
-	const sanitizedCsl = sanitizeCslValue(csl);
+	const sanitizedCsl = sanitizeCslValue( csl );
 
-	if (!KNOWN_CSL_TYPES.has(sanitizedCsl.type)) {
-		throw new Error('Invalid CSL type.');
+	if ( ! KNOWN_CSL_TYPES.has( sanitizedCsl.type ) ) {
+		throw new Error( 'Invalid CSL type.' );
 	}
 
-	for (const field of NAME_LIST_FIELDS) {
-		if (Object.prototype.hasOwnProperty.call(sanitizedCsl, field)) {
-			sanitizedCsl[field] = sanitizeNameList(sanitizedCsl[field], field);
-		}
-	}
-
-	if (Object.prototype.hasOwnProperty.call(sanitizedCsl, 'issued')) {
-		sanitizedCsl.issued = sanitizeIssued(sanitizedCsl.issued);
-	}
-
-	if (Object.prototype.hasOwnProperty.call(sanitizedCsl, 'accessed')) {
-		sanitizedCsl.accessed = sanitizeIssued(sanitizedCsl.accessed);
-	}
-
-	for (const field of STRING_FIELDS) {
-		if (Object.prototype.hasOwnProperty.call(sanitizedCsl, field)) {
-			sanitizedCsl[field] = sanitizeStringField(
-				sanitizedCsl[field],
+	for ( const field of NAME_LIST_FIELDS ) {
+		if ( Object.prototype.hasOwnProperty.call( sanitizedCsl, field ) ) {
+			sanitizedCsl[ field ] = sanitizeNameList(
+				sanitizedCsl[ field ],
 				field
 			);
 		}
 	}
 
-	for (const field of STRING_OR_STRING_ARRAY_FIELDS) {
-		if (Object.prototype.hasOwnProperty.call(sanitizedCsl, field)) {
-			sanitizedCsl[field] = sanitizeStringOrStringArrayField(
-				sanitizedCsl[field],
+	if ( Object.prototype.hasOwnProperty.call( sanitizedCsl, 'issued' ) ) {
+		sanitizedCsl.issued = sanitizeIssued( sanitizedCsl.issued );
+	}
+
+	if ( Object.prototype.hasOwnProperty.call( sanitizedCsl, 'accessed' ) ) {
+		sanitizedCsl.accessed = sanitizeIssued( sanitizedCsl.accessed );
+	}
+
+	for ( const field of STRING_FIELDS ) {
+		if ( Object.prototype.hasOwnProperty.call( sanitizedCsl, field ) ) {
+			sanitizedCsl[ field ] = sanitizeStringField(
+				sanitizedCsl[ field ],
+				field
+			);
+		}
+	}
+
+	for ( const field of STRING_OR_STRING_ARRAY_FIELDS ) {
+		if ( Object.prototype.hasOwnProperty.call( sanitizedCsl, field ) ) {
+			sanitizedCsl[ field ] = sanitizeStringOrStringArrayField(
+				sanitizedCsl[ field ],
 				field
 			);
 		}

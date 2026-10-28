@@ -1,5 +1,3 @@
-/* eslint-disable jsdoc/no-undefined-types, jsdoc/require-returns-description, no-undef, jsdoc/check-tag-names */
-
 /**
  * Shared citation-js mock factories for Jest test files.
  *
@@ -26,17 +24,17 @@ function citationJsPluginMock() {
 
 function stubFormattingFactory() {
 	return {
-		formatBibliographyEntries: jest.fn((cslItems) =>
-			cslItems.map(() => 'Formatted bibliography entry')
+		formatBibliographyEntries: jest.fn( ( cslItems ) =>
+			cslItems.map( () => 'Formatted bibliography entry' )
 		),
 	};
 }
 
 function descriptiveFormattingFactory() {
 	return {
-		formatBibliographyEntries: jest.fn((cslItems) =>
-			cslItems.map((item) =>
-				`${item.author?.[0]?.family || 'Unknown'}. ${item.title}. ${
+		formatBibliographyEntries: jest.fn( ( cslItems ) =>
+			cslItems.map( ( item ) =>
+				`${ item.author?.[ 0 ]?.family || 'Unknown' }. ${ item.title }. ${
 					item.URL || ''
 				}`.trim()
 			)

@@ -37,9 +37,9 @@ import '@wordpress/block-editor';
 import metadata from '../block.json';
 import save from './save';
 
-const FIXTURE_DIR = join(__dirname, '..', 'tests', 'fixtures', 'save-parity');
+const FIXTURE_DIR = join( __dirname, '..', 'tests', 'fixtures', 'save-parity' );
 const { cases } = JSON.parse(
-	readFileSync(join(FIXTURE_DIR, 'cases.json'), 'utf8')
+	readFileSync( join( FIXTURE_DIR, 'cases.json' ), 'utf8' )
 );
 
 /**
@@ -49,59 +49,59 @@ const { cases } = JSON.parse(
  * @param {Object} attributes Block attributes.
  * @return {string} Comment-safe JSON.
  */
-function serializeCommentAttributes(attributes) {
-	return JSON.stringify(attributes)
-		.replace(/--/g, '\\u002d\\u002d')
-		.replace(/</g, '\\u003c')
-		.replace(/>/g, '\\u003e')
-		.replace(/&/g, '\\u0026')
-		.replace(/\\"/g, '\\u0022');
+function serializeCommentAttributes( attributes ) {
+	return JSON.stringify( attributes )
+		.replace( /--/g, '\\u002d\\u002d' )
+		.replace( /</g, '\\u003c' )
+		.replace( />/g, '\\u003e' )
+		.replace( /&/g, '\\u0026' )
+		.replace( /\\"/g, '\\u0022' );
 }
 
-function blockMarkup(attributes, innerHTML) {
+function blockMarkup( attributes, innerHTML ) {
 	const { name } = metadata;
-	const json = serializeCommentAttributes(attributes);
+	const json = serializeCommentAttributes( attributes );
 
 	return innerHTML
-		? `<!-- wp:${name} ${json} -->\n${innerHTML}\n<!-- /wp:${name} -->`
-		: `<!-- wp:${name} ${json} /-->`;
+		? `<!-- wp:${ name } ${ json } -->\n${ innerHTML }\n<!-- /wp:${ name } -->`
+		: `<!-- wp:${ name } ${ json } /-->`;
 }
 
-describe('save() parity with the PHP port', () => {
-	beforeAll(() => {
+describe( 'save() parity with the PHP port', () => {
+	beforeAll( () => {
 		// Current save only: a block that validates only through a deprecation
 		// would be migrated on open, which a server write must never rely on.
-		registerBlockType(metadata.name, { ...metadata, save });
-	});
+		registerBlockType( metadata.name, { ...metadata, save } );
+	} );
 
-	afterAll(() => {
-		unregisterBlockType(metadata.name);
-	});
+	afterAll( () => {
+		unregisterBlockType( metadata.name );
+	} );
 
-	it('has cases', () => {
-		expect(cases.length).toBeGreaterThan(0);
-	});
+	it( 'has cases', () => {
+		expect( cases.length ).toBeGreaterThan( 0 );
+	} );
 
-	it.each(cases.map((testCase) => [testCase.name, testCase]))(
+	it.each( cases.map( ( testCase ) => [ testCase.name, testCase ] ) )(
 		'%s: PHP markup matches save() and validates',
-		(name, { attributes }) => {
+		( name, { attributes } ) => {
 			const phpMarkup = readFileSync(
-				join(FIXTURE_DIR, `${name}.html`),
+				join( FIXTURE_DIR, `${ name }.html` ),
 				'utf8'
-			).replace(/\n$/, '');
-			const [parsed] = parse(blockMarkup(attributes, phpMarkup));
+			).replace( /\n$/, '' );
+			const [ parsed ] = parse( blockMarkup( attributes, phpMarkup ) );
 
-			expect(parsed.name).toBe(metadata.name);
+			expect( parsed.name ).toBe( metadata.name );
 
-			const jsMarkup = getSaveContent(metadata.name, parsed.attributes);
+			const jsMarkup = getSaveContent( metadata.name, parsed.attributes );
 
-			if (process.env.BORGES_DUMP_SAVE_PARITY) {
+			if ( process.env.BORGES_DUMP_SAVE_PARITY ) {
 				// eslint-disable-next-line no-console
-				console.log(`${name}\n${jsMarkup}`);
+				console.log( `${ name }\n${ jsMarkup }` );
 			}
 
-			expect(phpMarkup).toBe(jsMarkup);
-			expect(parsed.isValid).toBe(true);
+			expect( phpMarkup ).toBe( jsMarkup );
+			expect( parsed.isValid ).toBe( true );
 		}
 	);
-});
+} );

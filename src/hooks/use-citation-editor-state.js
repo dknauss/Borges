@@ -26,46 +26,46 @@ const FORMATTER_FALLBACK_MESSAGE = __(
 	'borges-bibliography-builder'
 );
 
-function getFieldsSavedMessage(replacedOverride) {
+function getFieldsSavedMessage( replacedOverride ) {
 	return replacedOverride
 		? __(
 				'Fields updated. The edited display text was replaced with the reformatted citation.',
 				'borges-bibliography-builder'
-		  )
-		: __('Fields updated.', 'borges-bibliography-builder');
+			)
+		: __( 'Fields updated.', 'borges-bibliography-builder' );
 }
 
-function formatNameForField(name) {
-	if (!name) {
+function formatNameForField( name ) {
+	if ( ! name ) {
 		return '';
 	}
 
-	if (name.literal) {
+	if ( name.literal ) {
 		return name.literal;
 	}
 
-	if (name.family && name.given) {
-		return `${name.family}, ${name.given}`;
+	if ( name.family && name.given ) {
+		return `${ name.family }, ${ name.given }`;
 	}
 
 	return name.family || name.given || '';
 }
 
-function formatAuthorListForField(authors = []) {
-	return authors.map(formatNameForField).filter(Boolean).join('; ');
+function formatAuthorListForField( authors = [] ) {
+	return authors.map( formatNameForField ).filter( Boolean ).join( '; ' );
 }
 
-function parseAuthorFieldEntry(value) {
-	const normalized = value.trim().replace(/[.;]\s*$/u, '');
+function parseAuthorFieldEntry( value ) {
+	const normalized = value.trim().replace( /[.;]\s*$/u, '' );
 
-	if (!normalized) {
+	if ( ! normalized ) {
 		return null;
 	}
 
-	if (normalized.includes(',')) {
-		const [family, given] = normalized.split(/\s*,\s*/, 2);
+	if ( normalized.includes( ',' ) ) {
+		const [ family, given ] = normalized.split( /\s*,\s*/, 2 );
 
-		if (!family || !given) {
+		if ( ! family || ! given ) {
 			return {
 				literal: normalized,
 			};
@@ -77,17 +77,17 @@ function parseAuthorFieldEntry(value) {
 		};
 	}
 
-	const parts = normalized.split(/\s+/u);
+	const parts = normalized.split( /\s+/u );
 
-	if (parts.length === 1) {
+	if ( parts.length === 1 ) {
 		return {
 			literal: normalized,
 		};
 	}
 
 	return {
-		given: parts.slice(0, -1).join(' '),
-		family: parts.at(-1),
+		given: parts.slice( 0, -1 ).join( ' ' ),
+		family: parts.at( -1 ),
 	};
 }
 
@@ -102,26 +102,27 @@ function parseAuthorFieldEntry(value) {
  * @param {Array}  originals The citation's CSL names before the edit.
  * @return {Array} CSL names.
  */
-function parseAuthorFieldList(value, originals = []) {
-	const unused = [...originals];
-	const comparable = (text) => text.trim().replace(/[.;]\s*$/u, '');
+function parseAuthorFieldList( value, originals = [] ) {
+	const unused = [ ...originals ];
+	const comparable = ( text ) => text.trim().replace( /[.;]\s*$/u, '' );
 
 	return value
-		.split(/\s*;\s*/u)
-		.map((entry) => {
+		.split( /\s*;\s*/u )
+		.map( ( entry ) => {
 			const index = unused.findIndex(
-				(name) =>
-					comparable(formatNameForField(name)) === comparable(entry)
+				( name ) =>
+					comparable( formatNameForField( name ) ) ===
+					comparable( entry )
 			);
 
 			return index === -1
-				? parseAuthorFieldEntry(entry)
-				: unused.splice(index, 1)[0];
-		})
-		.filter(Boolean);
+				? parseAuthorFieldEntry( entry )
+				: unused.splice( index, 1 )[ 0 ];
+		} )
+		.filter( Boolean );
 }
 
-export function useCitationEditorState({
+export function useCitationEditorState( {
 	announce,
 	beginAsyncOperation = () => 0,
 	citationStyle,
@@ -132,44 +133,44 @@ export function useCitationEditorState({
 	outputCiteExport = false,
 	queueFocus,
 	setAttributes,
-}) {
-	const [editingId, setEditingId] = useState(null);
-	const [editText, setEditText] = useState('');
-	const [structuredEditingId, setStructuredEditingId] = useState(null);
-	const [structuredFields, setStructuredFields] = useState({});
-	const isEscapingEditRef = useRef(false);
-	const structuredEditingIdRef = useRef(null);
+} ) {
+	const [ editingId, setEditingId ] = useState( null );
+	const [ editText, setEditText ] = useState( '' );
+	const [ structuredEditingId, setStructuredEditingId ] = useState( null );
+	const [ structuredFields, setStructuredFields ] = useState( {} );
+	const isEscapingEditRef = useRef( false );
+	const structuredEditingIdRef = useRef( null );
 	// The fields as the form opened, so a save writes only what was edited.
-	const structuredInitialFieldsRef = useRef({});
+	const structuredInitialFieldsRef = useRef( {} );
 
-	const getEntryLabel = useCallback((citation) => {
-		const author = citation.csl.author?.[0];
+	const getEntryLabel = useCallback( ( citation ) => {
+		const author = citation.csl.author?.[ 0 ];
 		const name =
 			author?.family ||
 			author?.literal ||
-			__('Unknown', 'borges-bibliography-builder');
-		const year = citation.csl.issued?.['date-parts']?.[0]?.[0] || '';
-		return `${name} ${year}`.trim();
-	}, []);
+			__( 'Unknown', 'borges-bibliography-builder' );
+		const year = citation.csl.issued?.[ 'date-parts' ]?.[ 0 ]?.[ 0 ] || '';
+		return `${ name } ${ year }`.trim();
+	}, [] );
 
 	const getStructuredFieldId = useCallback(
-		(citationId, fieldKey) =>
-			`bibliography-builder-${citationId}-${fieldKey}`,
+		( citationId, fieldKey ) =>
+			`bibliography-builder-${ citationId }-${ fieldKey }`,
 		[]
 	);
 
 	const handleEditStart = useCallback(
-		(id) => {
+		( id ) => {
 			const entry = citationsRef.current.find(
-				(citation) => citation.id === id
+				( citation ) => citation.id === id
 			);
-			if (!entry) {
+			if ( ! entry ) {
 				return;
 			}
 
 			isEscapingEditRef.current = false;
-			setEditingId(id);
-			setEditText(getDisplayText(entry));
+			setEditingId( id );
+			setEditText( getDisplayText( entry ) );
 			announce(
 				'info',
 				__(
@@ -178,47 +179,47 @@ export function useCitationEditorState({
 				)
 			);
 		},
-		[announce, citationsRef]
+		[ announce, citationsRef ]
 	);
 
-	const resetEditingState = useCallback(() => {
-		setEditingId(null);
-		setEditText('');
-		setStructuredEditingId(null);
-		setStructuredFields({});
-	}, []);
+	const resetEditingState = useCallback( () => {
+		setEditingId( null );
+		setEditText( '' );
+		setStructuredEditingId( null );
+		setStructuredFields( {} );
+	}, [] );
 
-	const handleEditConfirm = useCallback(() => {
-		if (isEscapingEditRef.current) {
+	const handleEditConfirm = useCallback( () => {
+		if ( isEscapingEditRef.current ) {
 			isEscapingEditRef.current = false;
 			return;
 		}
 
-		if (!editingId) {
+		if ( ! editingId ) {
 			return;
 		}
 
-		const updated = citationsRef.current.map((citation) => {
-			if (citation.id !== editingId) {
+		const updated = citationsRef.current.map( ( citation ) => {
+			if ( citation.id !== editingId ) {
 				return citation;
 			}
 
-			const autoFormattedText = getAutoFormattedText(citation);
+			const autoFormattedText = getAutoFormattedText( citation );
 
 			return {
 				...citation,
 				displayOverride:
 					editText === autoFormattedText ? null : editText,
 			};
-		});
+		} );
 
 		citationsRef.current = updated;
-		setAttributes({ citations: updated });
+		setAttributes( { citations: updated } );
 		clearNotice();
-		queueFocus({ type: 'entry', id: editingId });
+		queueFocus( { type: 'entry', id: editingId } );
 		isEscapingEditRef.current = false;
-		setEditingId(null);
-		setEditText('');
+		setEditingId( null );
+		setEditText( '' );
 	}, [
 		clearNotice,
 		citationsRef,
@@ -226,56 +227,57 @@ export function useCitationEditorState({
 		editingId,
 		queueFocus,
 		setAttributes,
-	]);
+	] );
 
-	const handleEditCancel = useCallback(() => {
-		if (editingId) {
+	const handleEditCancel = useCallback( () => {
+		if ( editingId ) {
 			isEscapingEditRef.current = true;
 			clearNotice();
-			queueFocus({ type: 'entry', id: editingId });
+			queueFocus( { type: 'entry', id: editingId } );
 		}
 
-		setEditingId(null);
-		setEditText('');
-	}, [clearNotice, editingId, queueFocus]);
+		setEditingId( null );
+		setEditText( '' );
+	}, [ clearNotice, editingId, queueFocus ] );
 
 	const handleEditKeyDown = useCallback(
-		(event) => {
-			if (event.key === 'Enter') {
+		( event ) => {
+			if ( event.key === 'Enter' ) {
 				event.preventDefault();
 				handleEditConfirm();
-			} else if (event.key === 'Escape') {
+			} else if ( event.key === 'Escape' ) {
 				event.preventDefault();
 				handleEditCancel();
 			}
 		},
-		[handleEditCancel, handleEditConfirm]
+		[ handleEditCancel, handleEditConfirm ]
 	);
 
 	const handleStructuredEditStart = useCallback(
-		(id) => {
+		( id ) => {
 			const entry = citationsRef.current.find(
-				(citation) => citation.id === id
+				( citation ) => citation.id === id
 			);
 
-			if (!entry) {
+			if ( ! entry ) {
 				return;
 			}
 
 			const fields = {
-				authors: formatAuthorListForField(entry.csl.author),
+				authors: formatAuthorListForField( entry.csl.author ),
 				title: entry.csl.title || '',
-				containerTitle: entry.csl['container-title'] || '',
+				containerTitle: entry.csl[ 'container-title' ] || '',
 				publisher: entry.csl.publisher || '',
 				year:
-					String(entry.csl.issued?.['date-parts']?.[0]?.[0] || '') ||
-					'',
+					String(
+						entry.csl.issued?.[ 'date-parts' ]?.[ 0 ]?.[ 0 ] || ''
+					) || '',
 				page: entry.csl.page || '',
 				// CSL allows a numeric number; the field edits text.
 				articleNumber:
 					entry.csl.type === 'article-journal' &&
-					(entry.csl.number || entry.csl.number === 0)
-						? String(entry.csl.number)
+					( entry.csl.number || entry.csl.number === 0 )
+						? String( entry.csl.number )
 						: '',
 				doi: entry.csl.DOI || '',
 				url: entry.csl.URL || '',
@@ -283,8 +285,8 @@ export function useCitationEditorState({
 
 			structuredEditingIdRef.current = id;
 			structuredInitialFieldsRef.current = fields;
-			setStructuredEditingId(id);
-			setStructuredFields(fields);
+			setStructuredEditingId( id );
+			setStructuredFields( fields );
 			announce(
 				'info',
 				__(
@@ -293,40 +295,40 @@ export function useCitationEditorState({
 				)
 			);
 		},
-		[announce, citationsRef]
+		[ announce, citationsRef ]
 	);
 
-	const handleStructuredFieldChange = useCallback((field, value) => {
-		setStructuredFields((currentFields) => ({
+	const handleStructuredFieldChange = useCallback( ( field, value ) => {
+		setStructuredFields( ( currentFields ) => ( {
 			...currentFields,
-			[field]: value,
-		}));
-	}, []);
+			[ field ]: value,
+		} ) );
+	}, [] );
 
-	const handleStructuredEditCancel = useCallback(() => {
-		if (structuredEditingId) {
+	const handleStructuredEditCancel = useCallback( () => {
+		if ( structuredEditingId ) {
 			clearNotice();
-			queueFocus({ type: 'entry', id: structuredEditingId });
+			queueFocus( { type: 'entry', id: structuredEditingId } );
 		}
 
 		structuredEditingIdRef.current = null;
-		setStructuredEditingId(null);
-		setStructuredFields({});
-	}, [clearNotice, queueFocus, structuredEditingId]);
+		setStructuredEditingId( null );
+		setStructuredFields( {} );
+	}, [ clearNotice, queueFocus, structuredEditingId ] );
 
-	const handleStructuredEditSave = useCallback(async () => {
+	const handleStructuredEditSave = useCallback( async () => {
 		const activeStructuredEditingId =
 			structuredEditingIdRef.current || structuredEditingId;
 
-		if (!activeStructuredEditingId) {
+		if ( ! activeStructuredEditingId ) {
 			return;
 		}
 
 		const citation = citationsRef.current.find(
-			(entry) => entry.id === activeStructuredEditingId
+			( entry ) => entry.id === activeStructuredEditingId
 		);
 
-		if (!citation) {
+		if ( ! citation ) {
 			return;
 		}
 
@@ -336,28 +338,28 @@ export function useCitationEditorState({
 		// rebuilt). A text field that loaded with markup still counts as
 		// edited, so it is cleaned on save (see fieldText below).
 		const initialFields = structuredInitialFieldsRef.current || {};
-		const isEdited = (field) =>
-			String(structuredFields[field] ?? '') !==
-			String(initialFields[field] ?? '');
+		const isEdited = ( field ) =>
+			String( structuredFields[ field ] ?? '' ) !==
+			String( initialFields[ field ] ?? '' );
 
-		const identifierValidationMessage = validateIdentifierFields({
-			doi: isEdited('doi') ? structuredFields.doi : '',
-			url: isEdited('url') ? structuredFields.url : '',
-		});
+		const identifierValidationMessage = validateIdentifierFields( {
+			doi: isEdited( 'doi' ) ? structuredFields.doi : '',
+			url: isEdited( 'url' ) ? structuredFields.url : '',
+		} );
 
-		if (identifierValidationMessage) {
-			announce('warning', identifierValidationMessage);
-			queueFocus({ type: 'notice' });
+		if ( identifierValidationMessage ) {
+			announce( 'warning', identifierValidationMessage );
+			queueFocus( { type: 'notice' } );
 			return;
 		}
 
 		// "n.d." (or "no date") clears the date, as an empty field does.
-		const yearText = String(structuredFields.year ?? '').trim();
-		const year = /^(?:n\.?\s*d\.?|no date)$/iu.test(yearText)
+		const yearText = String( structuredFields.year ?? '' ).trim();
+		const year = /^(?:n\.?\s*d\.?|no date)$/iu.test( yearText )
 			? ''
 			: yearText;
 
-		if (isEdited('year') && year && !/^\d{1,4}$/u.test(year)) {
+		if ( isEdited( 'year' ) && year && ! /^\d{1,4}$/u.test( year ) ) {
 			announce(
 				'warning',
 				__(
@@ -365,7 +367,7 @@ export function useCitationEditorState({
 					'borges-bibliography-builder'
 				)
 			);
-			queueFocus({ type: 'notice' });
+			queueFocus( { type: 'notice' } );
 			return;
 		}
 
@@ -373,38 +375,39 @@ export function useCitationEditorState({
 		// store them (validateAndSanitizeCsl): markup typed or pasted into
 		// the form is dropped, not saved. A field that loaded with tags is
 		// cleaned on save as well.
-		const fieldText = (field) =>
-			stripHtmlTags(String(structuredFields[field] ?? '')).trim();
-		const needsWrite = (field) =>
-			isEdited(field) ||
-			fieldText(field) !== String(initialFields[field] ?? '').trim();
+		const fieldText = ( field ) =>
+			stripHtmlTags( String( structuredFields[ field ] ?? '' ) ).trim();
+		const needsWrite = ( field ) =>
+			isEdited( field ) ||
+			fieldText( field ) !==
+				String( initialFields[ field ] ?? '' ).trim();
 
 		const updatedCsl = { ...citation.csl };
 		const textFields = [
-			['title', 'title'],
-			['containerTitle', 'container-title'],
-			['publisher', 'publisher'],
-			['page', 'page'],
+			[ 'title', 'title' ],
+			[ 'containerTitle', 'container-title' ],
+			[ 'publisher', 'publisher' ],
+			[ 'page', 'page' ],
 		];
 
-		for (const [field, cslKey] of textFields) {
-			if (!needsWrite(field)) {
+		for ( const [ field, cslKey ] of textFields ) {
+			if ( ! needsWrite( field ) ) {
 				continue;
 			}
 
-			const text = fieldText(field);
+			const text = fieldText( field );
 
-			if (text) {
-				updatedCsl[cslKey] = text;
-			} else if (cslKey !== 'title') {
-				delete updatedCsl[cslKey];
+			if ( text ) {
+				updatedCsl[ cslKey ] = text;
+			} else if ( cslKey !== 'title' ) {
+				delete updatedCsl[ cslKey ];
 			}
 		}
 
-		if (needsWrite('authors')) {
-			const authors = fieldText('authors');
+		if ( needsWrite( 'authors' ) ) {
+			const authors = fieldText( 'authors' );
 
-			if (authors) {
+			if ( authors ) {
 				updatedCsl.author = parseAuthorFieldList(
 					authors,
 					citation.csl.author
@@ -418,34 +421,34 @@ export function useCitationEditorState({
 		// types keep whatever `number` they carry.
 		if (
 			citation.csl.type === 'article-journal' &&
-			isEdited('articleNumber')
+			isEdited( 'articleNumber' )
 		) {
-			const articleNumber = fieldText('articleNumber');
+			const articleNumber = fieldText( 'articleNumber' );
 
-			if (articleNumber) {
+			if ( articleNumber ) {
 				updatedCsl.number = articleNumber;
 			} else {
 				delete updatedCsl.number;
 			}
 			// CrossRef's own copy, kept from a DOI import, would now
 			// contradict `number` in the CSL-JSON output.
-			delete updatedCsl['article-number'];
+			delete updatedCsl[ 'article-number' ];
 		}
 
-		if (isEdited('doi')) {
-			const normalizedDoi = normalizeDoiValue(structuredFields.doi);
+		if ( isEdited( 'doi' ) ) {
+			const normalizedDoi = normalizeDoiValue( structuredFields.doi );
 
-			if (normalizedDoi) {
+			if ( normalizedDoi ) {
 				updatedCsl.DOI = normalizedDoi;
 			} else {
 				delete updatedCsl.DOI;
 			}
 		}
 
-		if (isEdited('url')) {
-			const normalizedUrl = normalizeUrlValue(structuredFields.url);
+		if ( isEdited( 'url' ) ) {
+			const normalizedUrl = normalizeUrlValue( structuredFields.url );
 
-			if (normalizedUrl) {
+			if ( normalizedUrl ) {
 				updatedCsl.URL = normalizedUrl;
 			} else {
 				delete updatedCsl.URL;
@@ -454,23 +457,29 @@ export function useCitationEditorState({
 
 		// A corrected year keeps the rest of the date (month, day): only the
 		// year part changes. A cleared year removes the date.
-		if (isEdited('year')) {
-			const originalParts = citation.csl.issued?.['date-parts']?.[0];
+		if ( isEdited( 'year' ) ) {
+			const originalParts = citation.csl.issued?.[ 'date-parts' ]?.[ 0 ];
 
-			if (!year) {
+			if ( ! year ) {
 				delete updatedCsl.issued;
-			} else if (Array.isArray(originalParts) && originalParts.length) {
+			} else if (
+				Array.isArray( originalParts ) &&
+				originalParts.length
+			) {
 				updatedCsl.issued = {
-					'date-parts': [[Number(year), ...originalParts.slice(1)]],
+					'date-parts': [
+						[ Number( year ), ...originalParts.slice( 1 ) ],
+					],
 				};
 			} else {
-				updatedCsl.issued = { 'date-parts': [[Number(year)]] };
+				updatedCsl.issued = { 'date-parts': [ [ Number( year ) ] ] };
 			}
 		}
 
 		// Saving unchanged fields keeps a hand-edited display line; saving an
 		// edit reformats the entry from its fields, replacing that line.
-		const fieldsChanged = Object.keys(structuredFields).some(needsWrite);
+		const fieldsChanged =
+			Object.keys( structuredFields ).some( needsWrite );
 
 		// No bibliography holds two copies of a work: an edit that would make
 		// this entry match another is refused, and the form stays open.
@@ -479,7 +488,7 @@ export function useCitationEditorState({
 			findDuplicateCitation(
 				{ csl: updatedCsl },
 				citationsRef.current.filter(
-					(entry) => entry.id !== activeStructuredEditingId
+					( entry ) => entry.id !== activeStructuredEditingId
 				)
 			)
 		) {
@@ -490,36 +499,35 @@ export function useCitationEditorState({
 					'borges-bibliography-builder'
 				)
 			);
-			queueFocus({ type: 'notice' });
+			queueFocus( { type: 'notice' } );
 			return;
 		}
 
 		const operationId = beginAsyncOperation();
-		const { formatBibliographyEntries } = await import(
-			'../lib/formatting/csl'
-		);
+		const { formatBibliographyEntries } =
+			await import( '../lib/formatting/csl' );
 
 		if (
 			structuredEditingIdRef.current !== activeStructuredEditingId ||
-			!isCurrentAsyncOperation(operationId)
+			! isCurrentAsyncOperation( operationId )
 		) {
 			return;
 		}
 
 		if (
-			!citationsRef.current.some(
-				(entry) => entry.id === activeStructuredEditingId
+			! citationsRef.current.some(
+				( entry ) => entry.id === activeStructuredEditingId
 			)
 		) {
 			structuredEditingIdRef.current = null;
-			setStructuredEditingId(null);
-			setStructuredFields({});
+			setStructuredEditingId( null );
+			setStructuredFields( {} );
 			return;
 		}
 
 		const replacedOverride =
-			fieldsChanged && Boolean(citation.displayOverride);
-		const nextEntries = citationsRef.current.map((entry) =>
+			fieldsChanged && Boolean( citation.displayOverride );
+		const nextEntries = citationsRef.current.map( ( entry ) =>
 			entry.id === activeStructuredEditingId
 				? {
 						...entry,
@@ -528,21 +536,21 @@ export function useCitationEditorState({
 							? null
 							: entry.displayOverride,
 						parseWarnings: fieldsChanged ? [] : entry.parseWarnings,
-				  }
+					}
 				: entry
 		);
-		if (nextEntries.length > MAX_CITATIONS_PER_BIBLIOGRAPHY) {
+		if ( nextEntries.length > MAX_CITATIONS_PER_BIBLIOGRAPHY ) {
 			announce(
 				'warning',
-				getBibliographyOverLimitMessage(nextEntries.length)
+				getBibliographyOverLimitMessage( nextEntries.length )
 			);
-			queueFocus({ type: 'notice' });
+			queueFocus( { type: 'notice' } );
 			return;
 		}
 
 		let formatterFallback = false;
 		const formattedTexts = await formatBibliographyEntries(
-			nextEntries.map((entry) => entry.csl),
+			nextEntries.map( ( entry ) => entry.csl ),
 			citationStyle,
 			{
 				onFallback: () => {
@@ -555,7 +563,7 @@ export function useCitationEditorState({
 		// would set structuredEditingIdRef.current to null — don't commit stale data.
 		if (
 			structuredEditingIdRef.current !== activeStructuredEditingId ||
-			!isCurrentAsyncOperation(operationId)
+			! isCurrentAsyncOperation( operationId )
 		) {
 			return;
 		}
@@ -563,9 +571,9 @@ export function useCitationEditorState({
 		// Only pre-compute the async BibTeX/BibLaTeX export strings when the
 		// Cite/Export feature is enabled (RIS/CSL-JSON are built in save()).
 		let exportStrings = null;
-		if (outputCiteExport) {
+		if ( outputCiteExport ) {
 			exportStrings = await computeExportStrings(
-				nextEntries.map((entry) => entry.csl),
+				nextEntries.map( ( entry ) => entry.csl ),
 				citationStyle
 			);
 
@@ -573,41 +581,44 @@ export function useCitationEditorState({
 			// operation could have arrived while building the export strings.
 			if (
 				structuredEditingIdRef.current !== activeStructuredEditingId ||
-				!isCurrentAsyncOperation(operationId)
+				! isCurrentAsyncOperation( operationId )
 			) {
 				return;
 			}
 		}
 
 		const updated = sortCitations(
-			nextEntries.map((entry, index) => ({
+			nextEntries.map( ( entry, index ) => ( {
 				...entry,
 				id: entry.id || createCitationId(),
-				formattedText: formattedTexts[index],
+				formattedText: formattedTexts[ index ],
 				// A structured edit changes the CSL, so drop any stale export
 				// strings; they are recomputed above (when enabled) or backfilled
 				// by the editor effect when the feature is on.
 				exportBibtex: exportStrings
-					? exportStrings[index]?.exportBibtex ?? ''
+					? ( exportStrings[ index ]?.exportBibtex ?? '' )
 					: undefined,
 				exportBiblatex: exportStrings
-					? exportStrings[index]?.exportBiblatex ?? ''
+					? ( exportStrings[ index ]?.exportBiblatex ?? '' )
 					: undefined,
-			})),
+			} ) ),
 			citationStyle
 		);
 
 		citationsRef.current = updated;
-		setAttributes({ citations: updated });
+		setAttributes( { citations: updated } );
 		announce(
 			formatterFallback ? 'warning' : 'success',
 			formatterFallback
 				? sprintf(
 						/* translators: %s: formatter fallback message. */
-						__('Fields updated. %s', 'borges-bibliography-builder'),
+						__(
+							'Fields updated. %s',
+							'borges-bibliography-builder'
+						),
 						FORMATTER_FALLBACK_MESSAGE
-				  )
-				: getFieldsSavedMessage(replacedOverride),
+					)
+				: getFieldsSavedMessage( replacedOverride ),
 			formatterFallback ? {} : { type: 'snackbar' }
 		);
 		queueFocus(
@@ -616,8 +627,8 @@ export function useCitationEditorState({
 				: { type: 'entry', id: activeStructuredEditingId }
 		);
 		structuredEditingIdRef.current = null;
-		setStructuredEditingId(null);
-		setStructuredFields({});
+		setStructuredEditingId( null );
+		setStructuredFields( {} );
 	}, [
 		announce,
 		beginAsyncOperation,
@@ -629,58 +640,62 @@ export function useCitationEditorState({
 		setAttributes,
 		structuredEditingId,
 		structuredFields,
-	]);
+	] );
 
 	const handleResetAutoFormat = useCallback(
-		(id) => {
-			const updated = citationsRef.current.map((citation) =>
+		( id ) => {
+			const updated = citationsRef.current.map( ( citation ) =>
 				citation.id === id
 					? {
 							...citation,
 							displayOverride: null,
-					  }
+						}
 					: citation
 			);
 
 			citationsRef.current = updated;
-			setAttributes({ citations: updated });
+			setAttributes( { citations: updated } );
 			announce(
 				'success',
-				__('Auto-format restored.', 'borges-bibliography-builder'),
+				__( 'Auto-format restored.', 'borges-bibliography-builder' ),
 				{
 					type: 'snackbar',
 				}
 			);
-			queueFocus({ type: 'entry', id });
+			queueFocus( { type: 'entry', id } );
 		},
-		[announce, citationsRef, queueFocus, setAttributes]
+		[ announce, citationsRef, queueFocus, setAttributes ]
 	);
 
 	const handleCitationStyleChange = useCallback(
-		async (nextStyle) => {
-			if (!nextStyle || nextStyle === citationStyle) {
+		async ( nextStyle ) => {
+			if ( ! nextStyle || nextStyle === citationStyle ) {
 				return;
 			}
 
-			const nextStyleLabel = getStyleDefinition(nextStyle).label;
-			const prevDefaultHeading = getDefaultHeadingText(citationStyle);
-			const nextDefaultHeading = getDefaultHeadingText(nextStyle);
+			const nextStyleLabel = getStyleDefinition( nextStyle ).label;
+			const prevDefaultHeading = getDefaultHeadingText( citationStyle );
+			const nextDefaultHeading = getDefaultHeadingText( nextStyle );
 			const headingUpdate =
 				headingText === prevDefaultHeading
 					? { headingText: nextDefaultHeading }
 					: {};
 
-			if (citationsRef.current.length > MAX_CITATIONS_PER_BIBLIOGRAPHY) {
+			if (
+				citationsRef.current.length > MAX_CITATIONS_PER_BIBLIOGRAPHY
+			) {
 				announce(
 					'warning',
-					getBibliographyOverLimitMessage(citationsRef.current.length)
+					getBibliographyOverLimitMessage(
+						citationsRef.current.length
+					)
 				);
-				queueFocus({ type: 'notice' });
+				queueFocus( { type: 'notice' } );
 				return;
 			}
 
-			if (!citationsRef.current.length) {
-				setAttributes({ citationStyle: nextStyle, ...headingUpdate });
+			if ( ! citationsRef.current.length ) {
+				setAttributes( { citationStyle: nextStyle, ...headingUpdate } );
 				announce(
 					'success',
 					sprintf(
@@ -700,16 +715,15 @@ export function useCitationEditorState({
 
 			const operationId = beginAsyncOperation();
 
-			const { formatBibliographyEntries } = await import(
-				'../lib/formatting/csl'
-			);
-			if (!isCurrentAsyncOperation(operationId)) {
+			const { formatBibliographyEntries } =
+				await import( '../lib/formatting/csl' );
+			if ( ! isCurrentAsyncOperation( operationId ) ) {
 				return;
 			}
 
 			let formatterFallback = false;
 			const formattedTexts = await formatBibliographyEntries(
-				citationsRef.current.map((citation) => citation.csl),
+				citationsRef.current.map( ( citation ) => citation.csl ),
 				nextStyle,
 				{
 					onFallback: () => {
@@ -717,48 +731,49 @@ export function useCitationEditorState({
 					},
 				}
 			);
-			if (!isCurrentAsyncOperation(operationId)) {
+			if ( ! isCurrentAsyncOperation( operationId ) ) {
 				return;
 			}
 
 			// A style change does not alter the CSL, so existing export strings
 			// stay valid; only (re)compute when the feature is enabled.
 			let exportStrings = null;
-			if (outputCiteExport) {
+			if ( outputCiteExport ) {
 				exportStrings = await computeExportStrings(
-					citationsRef.current.map((citation) => citation.csl),
+					citationsRef.current.map( ( citation ) => citation.csl ),
 					nextStyle
 				);
-				if (!isCurrentAsyncOperation(operationId)) {
+				if ( ! isCurrentAsyncOperation( operationId ) ) {
 					return;
 				}
 			}
 
 			const updated = sortCitations(
-				citationsRef.current.map((citation, index) => ({
+				citationsRef.current.map( ( citation, index ) => ( {
 					...citation,
 					id: citation.id || createCitationId(),
-					formattedText: formattedTexts[index],
+					formattedText: formattedTexts[ index ],
 					// Preserve existing strings when not recomputing (the spread
 					// keeps them); a style change never invalidates them.
-					...(exportStrings
+					...( exportStrings
 						? {
 								exportBibtex:
-									exportStrings[index]?.exportBibtex ?? '',
+									exportStrings[ index ]?.exportBibtex ?? '',
 								exportBiblatex:
-									exportStrings[index]?.exportBiblatex ?? '',
-						  }
-						: {}),
-				})),
+									exportStrings[ index ]?.exportBiblatex ??
+									'',
+							}
+						: {} ),
+				} ) ),
 				nextStyle
 			);
 
 			citationsRef.current = updated;
-			setAttributes({
+			setAttributes( {
 				citationStyle: nextStyle,
 				citations: updated,
 				...headingUpdate,
-			});
+			} );
 			clearNotice();
 			resetEditingState();
 			announce(
@@ -779,7 +794,7 @@ export function useCitationEditorState({
 								'borges-bibliography-builder'
 							),
 							FORMATTER_FALLBACK_MESSAGE
-					  )
+						)
 					: sprintf(
 							/* translators: 1: citation style label, 2: reformatted citation count, 3: localized citation/citations label. */
 							__(
@@ -794,11 +809,11 @@ export function useCitationEditorState({
 								updated.length,
 								'borges-bibliography-builder'
 							)
-					  ),
+						),
 				formatterFallback ? {} : { type: 'snackbar' }
 			);
-			if (formatterFallback) {
-				queueFocus({ type: 'notice' });
+			if ( formatterFallback ) {
+				queueFocus( { type: 'notice' } );
 			}
 		},
 		[

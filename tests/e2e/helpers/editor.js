@@ -10,7 +10,7 @@
  * the editor itself to report ready and ask the page which canvas it renders,
  * instead of guessing on a timer.
  */
-const { expect } = require('@playwright/test');
+const { expect } = require( '@playwright/test' );
 
 const CANVAS_IFRAME = 'iframe[name="editor-canvas"]';
 
@@ -20,26 +20,26 @@ const CANVAS_IFRAME = 'iframe[name="editor-canvas"]';
  *
  * @param {import('@playwright/test').Page} page Page.
  */
-async function waitForEditorReady(page) {
+async function waitForEditorReady( page ) {
 	await page.waitForFunction(
-		(iframeSelector) => {
+		( iframeSelector ) => {
 			const wp = window.wp;
 
 			if (
-				!wp?.blocks?.createBlock ||
-				!wp?.data?.dispatch('core/block-editor')?.insertBlock ||
-				!wp?.data?.dispatch('core/editor')?.savePost ||
-				!wp?.data?.select('core/editor')?.getCurrentPost()?.type
+				! wp?.blocks?.createBlock ||
+				! wp?.data?.dispatch( 'core/block-editor' )?.insertBlock ||
+				! wp?.data?.dispatch( 'core/editor' )?.savePost ||
+				! wp?.data?.select( 'core/editor' )?.getCurrentPost()?.type
 			) {
 				return false;
 			}
 
-			const iframe = document.querySelector(iframeSelector);
+			const iframe = document.querySelector( iframeSelector );
 			const root = iframe
-				? iframe.contentDocument?.querySelector('.is-root-container')
-				: document.querySelector('.is-root-container');
+				? iframe.contentDocument?.querySelector( '.is-root-container' )
+				: document.querySelector( '.is-root-container' );
 
-			return !!root;
+			return !! root;
 		},
 		CANVAS_IFRAME,
 		{ timeout: 60_000 }
@@ -53,13 +53,13 @@ async function waitForEditorReady(page) {
  * @param {import('@playwright/test').Page} page Page.
  * @return {Promise<import('@playwright/test').Page|import('@playwright/test').FrameLocator>} Canvas.
  */
-async function getEditorCanvas(page) {
+async function getEditorCanvas( page ) {
 	const iframed = await page.evaluate(
-		(iframeSelector) => !!document.querySelector(iframeSelector),
+		( iframeSelector ) => !! document.querySelector( iframeSelector ),
 		CANVAS_IFRAME
 	);
 
-	return iframed ? page.frameLocator(CANVAS_IFRAME) : page;
+	return iframed ? page.frameLocator( CANVAS_IFRAME ) : page;
 }
 
 /**
@@ -71,27 +71,29 @@ async function getEditorCanvas(page) {
  * @param {Object}                          attributes Block attributes.
  * @return {Promise<{canvas: Object, clientId: string}>} Canvas and client ID.
  */
-async function insertBlock(page, name, attributes = {}) {
-	await waitForEditorReady(page);
+async function insertBlock( page, name, attributes = {} ) {
+	await waitForEditorReady( page );
 
 	const clientId = await page.evaluate(
-		({ blockName, blockAttributes }) => {
+		( { blockName, blockAttributes } ) => {
 			const block = window.wp.blocks.createBlock(
 				blockName,
 				blockAttributes
 			);
-			const editor = window.wp.data.dispatch('core/block-editor');
-			editor.insertBlock(block);
-			editor.selectBlock(block.clientId);
+			const editor = window.wp.data.dispatch( 'core/block-editor' );
+			editor.insertBlock( block );
+			editor.selectBlock( block.clientId );
 			return block.clientId;
 		},
 		{ blockName: name, blockAttributes: attributes }
 	);
 
-	const canvas = await getEditorCanvas(page);
-	await expect(canvas.locator(`[data-block="${clientId}"]`)).toBeVisible({
+	const canvas = await getEditorCanvas( page );
+	await expect(
+		canvas.locator( `[data-block="${ clientId }"]` )
+	).toBeVisible( {
 		timeout: 30_000,
-	});
+	} );
 
 	return { canvas, clientId };
 }

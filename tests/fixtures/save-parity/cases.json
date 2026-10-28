@@ -1999,6 +1999,133 @@
 				"headingText": "Works Cited",
 				"citations": []
 			}
+		},
+		{
+			"name": "notes-author-chains",
+			"note": "Chicago notes: a single-author work before co-authored works with the same first author, then by second author; same family name ordered by given name (#212).",
+			"attributes": {
+				"citationStyle": "chicago-notes-bibliography",
+				"headingText": "",
+				"outputJsonLd": false,
+				"citations": [
+					{
+						"id": "gessner-simler",
+						"csl": {
+							"type": "book",
+							"title": "Bibliotheca",
+							"publisher": "Christoph Froschauer",
+							"author": [
+								{
+									"family": "Gessner",
+									"given": "Conrad"
+								},
+								{
+									"family": "Simler",
+									"given": "Josias"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										1574
+									]
+								]
+							}
+						},
+						"formattedText": "Gessner, Conrad, and Josias Simler. Bibliotheca. Christoph Froschauer, 1574."
+					},
+					{
+						"id": "smith-john",
+						"csl": {
+							"type": "book",
+							"title": "Alpha",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "John"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2001
+									]
+								]
+							}
+						},
+						"formattedText": "Smith, John. Alpha. 2001."
+					},
+					{
+						"id": "gessner",
+						"csl": {
+							"type": "book",
+							"title": "Bibliotheca universalis, sive Catalogus omnium scriptorum locupletissimus",
+							"publisher": "Christoph Froschauer",
+							"author": [
+								{
+									"family": "Gessner",
+									"given": "Conrad"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										1545
+									]
+								]
+							}
+						},
+						"formattedText": "Gessner, Conrad. Bibliotheca universalis, sive Catalogus omnium scriptorum locupletissimus. Christoph Froschauer, 1545."
+					},
+					{
+						"id": "smith-adam",
+						"csl": {
+							"type": "book",
+							"title": "Zeta",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "Adam"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										1776
+									]
+								]
+							}
+						},
+						"formattedText": "Smith, Adam. Zeta. 1776."
+					},
+					{
+						"id": "gessner-frisius",
+						"csl": {
+							"type": "book",
+							"title": "Appendix bibliothecae",
+							"publisher": "Christoph Froschauer",
+							"author": [
+								{
+									"family": "Gessner",
+									"given": "Conrad"
+								},
+								{
+									"family": "Frisius",
+									"given": "Johannes"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										1555
+									]
+								]
+							}
+						},
+						"formattedText": "Gessner, Conrad, and Johannes Frisius. Appendix bibliothecae. Christoph Froschauer, 1555."
+					}
+				]
+			}
 		}
 	]
 }

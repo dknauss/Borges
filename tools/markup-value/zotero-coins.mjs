@@ -14,31 +14,33 @@ import { join } from 'node:path';
 import { TOOL_DIR, zoteroAuthors, zoteroOpenUrl } from './lib.mjs';
 
 const { cases } = JSON.parse(
-	await readFile(join(TOOL_DIR, 'coins-cases.json'), 'utf8')
+	await readFile( join( TOOL_DIR, 'coins-cases.json' ), 'utf8' )
 );
 const titles = JSON.parse(
-	execFileSync('php', [join(TOOL_DIR, 'coins-cases.php')], {
+	execFileSync( 'php', [ join( TOOL_DIR, 'coins-cases.php' ) ], {
 		encoding: 'utf8',
-	})
+	} )
 );
 const openUrl = await zoteroOpenUrl();
 let failures = 0;
 
-cases.forEach((testCase, index) => {
-	const got = zoteroAuthors(openUrl, titles[index]);
-	const ok = JSON.stringify(got) === JSON.stringify(testCase.expected);
+cases.forEach( ( testCase, index ) => {
+	const got = zoteroAuthors( openUrl, titles[ index ] );
+	const ok = JSON.stringify( got ) === JSON.stringify( testCase.expected );
 
-	if (!ok) {
+	if ( ! ok ) {
 		failures++;
 	}
 
 	// eslint-disable-next-line no-console
 	console.log(
-		`${ok ? 'ok  ' : 'FAIL'} ${testCase.name}: ${JSON.stringify(got)}` +
-			(ok ? '' : `\n     expected ${JSON.stringify(testCase.expected)}`)
+		`${ ok ? 'ok  ' : 'FAIL' } ${ testCase.name }: ${ JSON.stringify( got ) }` +
+			( ok
+				? ''
+				: `\n     expected ${ JSON.stringify( testCase.expected ) }` )
 	);
-});
+} );
 
 // eslint-disable-next-line no-console
-console.log(`${cases.length - failures}/${cases.length} cases pass`);
+console.log( `${ cases.length - failures }/${ cases.length } cases pass` );
 process.exitCode = failures ? 1 : 0;

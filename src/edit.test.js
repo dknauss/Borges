@@ -23,50 +23,50 @@ import {
 	formatBibliographyEntry,
 } from './lib/formatting/csl';
 
-jest.mock('@wordpress/i18n', () => ({
-	__: (text) => text,
-	_n: (single, plural, count) => (count === 1 ? single : plural),
-	sprintf: (template, ...values) =>
-		template.replace(/%((\d+)\$)?[sd]/g, (match, _pos, index) => {
-			const valueIndex = index ? Number(index) - 1 : 0;
-			return String(values[valueIndex] ?? '');
-		}),
-}));
+jest.mock( '@wordpress/i18n', () => ( {
+	__: ( text ) => text,
+	_n: ( single, plural, count ) => ( count === 1 ? single : plural ),
+	sprintf: ( template, ...values ) =>
+		template.replace( /%((\d+)\$)?[sd]/g, ( match, _pos, index ) => {
+			const valueIndex = index ? Number( index ) - 1 : 0;
+			return String( values[ valueIndex ] ?? '' );
+		} ),
+} ) );
 
-jest.mock('@wordpress/notices', () => ({
+jest.mock( '@wordpress/notices', () => ( {
 	store: 'core/notices',
-}));
+} ) );
 
-jest.mock('@wordpress/data', () =>
-	require('./test-utils/wordpress-data-notices-mock').createWordpressDataNoticesMock()
+jest.mock( '@wordpress/data', () =>
+	require( './test-utils/wordpress-data-notices-mock' ).createWordpressDataNoticesMock()
 );
 
-jest.mock('@wordpress/block-editor', () => {
-	const ReactLocal = require('react');
+jest.mock( '@wordpress/block-editor', () => {
+	const ReactLocal = require( 'react' );
 
 	return {
-		useBlockProps: () => ({
+		useBlockProps: () => ( {
 			className: 'wp-block-bibliography-builder-bibliography',
-		}),
-		InspectorControls: ({ children }) =>
-			ReactLocal.createElement(ReactLocal.Fragment, null, children),
-		BlockControls: ({ children }) =>
-			ReactLocal.createElement(ReactLocal.Fragment, null, children),
+		} ),
+		InspectorControls: ( { children } ) =>
+			ReactLocal.createElement( ReactLocal.Fragment, null, children ),
+		BlockControls: ( { children } ) =>
+			ReactLocal.createElement( ReactLocal.Fragment, null, children ),
 	};
-});
+} );
 
-jest.mock('@wordpress/components', () => {
-	const ReactLocal = require('react');
+jest.mock( '@wordpress/components', () => {
+	const ReactLocal = require( 'react' );
 
 	return {
-		PanelBody: ({ title, children }) =>
+		PanelBody: ( { title, children } ) =>
 			ReactLocal.createElement(
 				'section',
 				null,
-				ReactLocal.createElement('h2', null, title),
+				ReactLocal.createElement( 'h2', null, title ),
 				children
 			),
-		SelectControl: ({ label, value, options, onChange, help }) =>
+		SelectControl: ( { label, value, options, onChange, help } ) =>
 			ReactLocal.createElement(
 				ReactLocal.Fragment,
 				null,
@@ -79,9 +79,10 @@ jest.mock('@wordpress/components', () => {
 						{
 							'aria-label': label,
 							value,
-							onChange: (event) => onChange?.(event.target.value),
+							onChange: ( event ) =>
+								onChange?.( event.target.value ),
 						},
-						options.map((option) =>
+						options.map( ( option ) =>
 							ReactLocal.createElement(
 								'option',
 								{
@@ -93,27 +94,33 @@ jest.mock('@wordpress/components', () => {
 						)
 					)
 				),
-				help ? ReactLocal.createElement('p', null, help) : null
+				help ? ReactLocal.createElement( 'p', null, help ) : null
 			),
-		Placeholder: ({ label, instructions, notices, className, children }) =>
+		Placeholder: ( {
+			label,
+			instructions,
+			notices,
+			className,
+			children,
+		} ) =>
 			ReactLocal.createElement(
 				'section',
 				{ className },
-				label ? ReactLocal.createElement('h2', null, label) : null,
+				label ? ReactLocal.createElement( 'h2', null, label ) : null,
 				instructions
-					? ReactLocal.createElement('p', null, instructions)
+					? ReactLocal.createElement( 'p', null, instructions )
 					: null,
 				notices || null,
 				children
 			),
-		Notice: ({ status = 'info', onRemove, children, className }) =>
+		Notice: ( { status = 'info', onRemove, children, className } ) =>
 			ReactLocal.createElement(
 				'div',
 				{
 					role: 'status',
 					className: `${
 						className || ''
-					} components-notice is-${status}`.trim(),
+					} components-notice is-${ status }`.trim(),
 				},
 				children,
 				onRemove
@@ -125,15 +132,16 @@ jest.mock('@wordpress/components', () => {
 								onClick: onRemove,
 							},
 							'Dismiss'
-					  )
+						)
 					: null
 			),
-		Snackbar: ({ onRemove, children, className }) =>
+		Snackbar: ( { onRemove, children, className } ) =>
 			ReactLocal.createElement(
 				'div',
 				{
 					role: 'status',
-					className: `${className || ''} components-snackbar`.trim(),
+					className:
+						`${ className || '' } components-snackbar`.trim(),
 				},
 				children,
 				onRemove
@@ -145,52 +153,53 @@ jest.mock('@wordpress/components', () => {
 								onClick: onRemove,
 							},
 							'Dismiss'
-					  )
+						)
 					: null
 			),
-		BaseControl: ({ label, children }) =>
-			ReactLocal.createElement('label', null, label, children),
-		Button: ({ label, className, onClick, children, ...rest }) =>
+		BaseControl: ( { label, children } ) =>
+			ReactLocal.createElement( 'label', null, label, children ),
+		Button: ( { label, className, onClick, children, ...rest } ) =>
 			ReactLocal.createElement(
 				'button',
 				{
 					type: 'button',
 					className,
 					'aria-label': label,
-					'aria-expanded': rest['aria-expanded'],
+					'aria-expanded': rest[ 'aria-expanded' ],
 					disabled: rest.disabled,
 					onClick,
 				},
 				children || 'icon'
 			),
-		TextControl: ({ label, value, disabled, onChange }) =>
-			ReactLocal.createElement('input', {
+		TextControl: ( { label, value, disabled, onChange } ) =>
+			ReactLocal.createElement( 'input', {
 				'aria-label': label,
 				value,
 				disabled,
-				readOnly: !onChange,
-				onChange: (event) => onChange?.(event.target.value),
-			}),
-		ToggleControl: ({ label, checked, onChange, help }) =>
+				readOnly: ! onChange,
+				onChange: ( event ) => onChange?.( event.target.value ),
+			} ),
+		ToggleControl: ( { label, checked, onChange, help } ) =>
 			ReactLocal.createElement(
 				ReactLocal.Fragment,
 				null,
 				ReactLocal.createElement(
 					'label',
 					null,
-					ReactLocal.createElement('input', {
+					ReactLocal.createElement( 'input', {
 						type: 'checkbox',
 						'aria-label': label,
 						checked,
-						onChange: (event) => onChange?.(event.target.checked),
-					}),
+						onChange: ( event ) =>
+							onChange?.( event.target.checked ),
+					} ),
 					label
 				),
-				help ? ReactLocal.createElement('p', null, help) : null
+				help ? ReactLocal.createElement( 'p', null, help ) : null
 			),
-		ToolbarGroup: ({ children }) =>
-			ReactLocal.createElement('div', null, children),
-		ToolbarButton: ({ label, isPressed, onClick, icon }) =>
+		ToolbarGroup: ( { children } ) =>
+			ReactLocal.createElement( 'div', null, children ),
+		ToolbarButton: ( { label, isPressed, onClick, icon } ) =>
 			ReactLocal.createElement(
 				'button',
 				{
@@ -199,20 +208,20 @@ jest.mock('@wordpress/components', () => {
 					'aria-pressed': isPressed ? 'true' : 'false',
 					onClick,
 				},
-				icon ? ReactLocal.createElement(icon) : label
+				icon ? ReactLocal.createElement( icon ) : label
 			),
 	};
-});
+} );
 
-jest.mock('@wordpress/icons', () => ({
+jest.mock( '@wordpress/icons', () => ( {
 	chevronDown: 'chevron-down',
 	chevronUp: 'chevron-up',
-}));
+} ) );
 
-jest.mock('./lib/wp-icons', () => {
-	const ReactLocal = require('react');
+jest.mock( './lib/wp-icons', () => {
+	const ReactLocal = require( 'react' );
 	const MockIcon = () =>
-		ReactLocal.createElement('span', { 'aria-hidden': 'true' });
+		ReactLocal.createElement( 'span', { 'aria-hidden': 'true' } );
 
 	return {
 		ChevronDownIcon: MockIcon,
@@ -227,10 +236,10 @@ jest.mock('./lib/wp-icons', () => {
 		ConfirmIcon: MockIcon,
 		CancelIcon: MockIcon,
 	};
-});
-jest.mock('@wordpress/element', () => {
-	const ReactLocal = require('react');
-	const ReactDOMLocal = require('react-dom');
+} );
+jest.mock( '@wordpress/element', () => {
+	const ReactLocal = require( 'react' );
+	const ReactDOMLocal = require( 'react-dom' );
 
 	return {
 		createElement: ReactLocal.createElement,
@@ -242,14 +251,14 @@ jest.mock('@wordpress/element', () => {
 		useEffect: ReactLocal.useEffect,
 		useMemo: ReactLocal.useMemo,
 	};
-});
+} );
 
-jest.mock('./lib/parser', () => ({
+jest.mock( './lib/parser', () => ( {
 	parsePastedInput: jest.fn(),
-	validateAndSanitizeCsl: jest.fn((csl) => csl),
-}));
+	validateAndSanitizeCsl: jest.fn( ( csl ) => csl ),
+} ) );
 
-jest.mock('./lib/export', () => ({
+jest.mock( './lib/export', () => ( {
 	buildPlainTextBibliographyContent: jest.fn(
 		() => 'Alpha citation\nBeta citation\n'
 	),
@@ -257,45 +266,45 @@ jest.mock('./lib/export', () => ({
 	downloadBiblatexExport: jest.fn(),
 	downloadCslJsonExport: jest.fn(),
 	downloadRisExport: jest.fn(),
-}));
+} ) );
 
-jest.mock('./lib/clipboard', () => ({
+jest.mock( './lib/clipboard', () => ( {
 	copyTextToClipboard: jest.fn(),
-}));
+} ) );
 
-jest.mock('./lib/formatting/csl', () => {
-	const getFormattedCitation = (item) =>
-		item.title || item['container-title'] || 'Formatted citation';
+jest.mock( './lib/formatting/csl', () => {
+	const getFormattedCitation = ( item ) =>
+		item.title || item[ 'container-title' ] || 'Formatted citation';
 
 	return {
 		__esModule: true,
-		formatBibliographyEntries: jest.fn((cslItems) =>
-			cslItems.map(getFormattedCitation)
+		formatBibliographyEntries: jest.fn( ( cslItems ) =>
+			cslItems.map( getFormattedCitation )
 		),
-		formatBibliographyEntry: jest.fn(getFormattedCitation),
+		formatBibliographyEntry: jest.fn( getFormattedCitation ),
 	};
-});
+} );
 
-jest.mock('./lib/formatting', () => ({
+jest.mock( './lib/formatting', () => ( {
 	getAutoFormattedText: jest.fn(
-		(citation) =>
+		( citation ) =>
 			citation.formattedText || citation.csl.title || 'Formatted citation'
 	),
 	getDisplayText: jest.fn(
-		(citation) =>
+		( citation ) =>
 			citation.displayOverride ||
 			citation.formattedText ||
 			citation.csl.title ||
 			'Formatted citation'
 	),
 	getPlainDisplayText: jest.fn(
-		(citation) =>
+		( citation ) =>
 			citation.displayOverride ||
 			citation.formattedText ||
 			citation.csl.title ||
 			'Formatted citation'
 	),
-	getDisplaySegments: jest.fn((citation) => [
+	getDisplaySegments: jest.fn( ( citation ) => [
 		{
 			text:
 				citation.displayOverride ||
@@ -304,8 +313,8 @@ jest.mock('./lib/formatting', () => ({
 				'Formatted citation',
 			italic: false,
 		},
-	]),
-	getStyleDefinition: jest.fn((styleKey) => {
+	] ),
+	getStyleDefinition: jest.fn( ( styleKey ) => {
 		const definitions = {
 			'chicago-notes-bibliography': {
 				label: 'Chicago Notes-Bibliography',
@@ -355,14 +364,15 @@ jest.mock('./lib/formatting', () => ({
 		};
 
 		const resolved =
-			definitions[styleKey] || definitions['chicago-notes-bibliography'];
+			definitions[ styleKey ] ||
+			definitions[ 'chicago-notes-bibliography' ];
 
 		return {
 			key: styleKey,
 			...resolved,
 		};
-	}),
-	getSelectableStyles: jest.fn(() => [
+	} ),
+	getSelectableStyles: jest.fn( () => [
 		{
 			label: 'Chicago Notes-Bibliography',
 			value: 'chicago-notes-bibliography',
@@ -399,8 +409,8 @@ jest.mock('./lib/formatting', () => ({
 			label: 'ABNT',
 			value: 'abnt',
 		},
-	]),
-	getHeadingPlaceholder: jest.fn((styleKey) => {
+	] ),
+	getHeadingPlaceholder: jest.fn( ( styleKey ) => {
 		const placeholders = {
 			'chicago-notes-bibliography': 'Bibliography',
 			'chicago-author-date': 'References',
@@ -413,10 +423,10 @@ jest.mock('./lib/formatting', () => ({
 			abnt: 'Referências',
 		};
 
-		return placeholders[styleKey] || 'Bibliography';
-	}),
+		return placeholders[ styleKey ] || 'Bibliography';
+	} ),
 	getDefaultHeadingText: jest.fn(
-		(styleKey = 'chicago-notes-bibliography') => {
+		( styleKey = 'chicago-notes-bibliography' ) => {
 			const placeholders = {
 				'chicago-notes-bibliography': 'Bibliography',
 				'chicago-author-date': 'References',
@@ -429,15 +439,15 @@ jest.mock('./lib/formatting', () => ({
 				abnt: 'Referências',
 			};
 
-			return placeholders[styleKey] || 'Bibliography';
+			return placeholders[ styleKey ] || 'Bibliography';
 		}
 	),
-	getListSemantics: jest.fn((styleKey) =>
-		['ieee', 'vancouver'].includes(styleKey) ? 'ol' : 'ul'
+	getListSemantics: jest.fn( ( styleKey ) =>
+		[ 'ieee', 'vancouver' ].includes( styleKey ) ? 'ol' : 'ul'
 	),
-}));
+} ) );
 
-function EditHarness({
+function EditHarness( {
 	initialCitations = [],
 	initialStyle = 'chicago-notes-bibliography',
 	initialHeadingText = '',
@@ -445,8 +455,8 @@ function EditHarness({
 	initialOutputJsonLd = true,
 	initialOutputCoins = false,
 	initialOutputCslJson = false,
-}) {
-	const [attributes, setAttributes] = React.useState({
+} ) {
+	const [ attributes, setAttributes ] = React.useState( {
 		citationStyle: initialStyle,
 		headingText: initialHeadingText,
 		headingLevel: initialHeadingLevel,
@@ -454,22 +464,22 @@ function EditHarness({
 		outputCoins: initialOutputCoins,
 		outputCslJson: initialOutputCslJson,
 		citations: initialCitations,
-	});
+	} );
 
 	return (
 		<Edit
-			attributes={attributes}
-			setAttributes={(nextAttributes) =>
-				setAttributes((previousAttributes) => ({
+			attributes={ attributes }
+			setAttributes={ ( nextAttributes ) =>
+				setAttributes( ( previousAttributes ) => ( {
 					...previousAttributes,
 					...nextAttributes,
-				}))
+				} ) )
 			}
 		/>
 	);
 }
 
-function createCitation({
+function createCitation( {
 	id,
 	family,
 	year,
@@ -485,44 +495,44 @@ function createCitation({
 	page,
 	doi,
 	parseWarnings = [],
-}) {
+} ) {
 	return {
 		id,
 		csl: {
 			type,
 			title,
 			rendered,
-			...(containerTitle
+			...( containerTitle
 				? {
 						'container-title': containerTitle,
-				  }
-				: {}),
-			...(publisher
+					}
+				: {} ),
+			...( publisher
 				? {
 						publisher,
-				  }
-				: {}),
-			...(page
+					}
+				: {} ),
+			...( page
 				? {
 						page,
-				  }
-				: {}),
-			...(doi
+					}
+				: {} ),
+			...( doi
 				? {
 						DOI: doi,
-				  }
-				: {}),
+					}
+				: {} ),
 			author: family
 				? [
 						{
 							family,
 						},
-				  ]
+					]
 				: [],
 			issued: year
 				? {
-						'date-parts': [[year]],
-				  }
+						'date-parts': [ [ year ] ],
+					}
 				: undefined,
 		},
 		formattedText,
@@ -538,12 +548,12 @@ function createCitation({
 // The mocked notices store is module-level state shared by every render in
 // this file; reset it per test so a notice left by one test (and its Dismiss
 // button) never leaks into another under --randomize.
-beforeEach(() => {
-	require('@wordpress/data').__unstableResetNotices();
-});
+beforeEach( () => {
+	require( '@wordpress/data' ).__unstableResetNotices();
+} );
 
-describe('Edit focus management', () => {
-	beforeEach(() => {
+describe( 'Edit focus management', () => {
+	beforeEach( () => {
 		jest.clearAllMocks();
 		buildPlainTextBibliographyContent.mockReset();
 		buildPlainTextBibliographyContent.mockReturnValue(
@@ -554,16 +564,16 @@ describe('Edit focus management', () => {
 		downloadCslJsonExport.mockReset();
 		downloadRisExport.mockReset();
 		copyTextToClipboard.mockReset();
-	});
+	} );
 
-	it('shows DOI/BibTeX-only guidance when parsing fails without entries', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'shows DOI/BibTeX-only guidance when parsing fails without entries', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [],
 			errors: [],
 			truncated: false,
-		});
+		} );
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		expect(
 			screen.getByPlaceholderText(
@@ -572,497 +582,503 @@ describe('Edit focus management', () => {
 		).toBeInTheDocument();
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'Some free-text citation'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, RIS record, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.'
 		);
-	});
+	} );
 
-	it('does not replay pasted citation text in parse failure feedback', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'does not replay pasted citation text in parse failure feedback', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [],
 			errors: [
 				'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, RIS record, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 			],
 			truncated: false,
 			remainingInput: 'Private Draft Citation',
-		});
+		} );
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'Private Draft Citation'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		const status = await screen.findByRole('status');
+		const status = await screen.findByRole( 'status' );
 
-		expect(status).toHaveTextContent(
+		expect( status ).toHaveTextContent(
 			'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, RIS record, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.'
 		);
-		expect(status).not.toHaveTextContent('Private Draft Citation');
-		expect(screen.getByLabelText('Add citations')).toHaveValue(
+		expect( status ).not.toHaveTextContent( 'Private Draft Citation' );
+		expect( screen.getByLabelText( 'Add citations' ) ).toHaveValue(
 			'Private Draft Citation'
 		);
-	});
+	} );
 
-	it('retains unparsed items in the add form after a partial paste succeeds', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'retains unparsed items in the add form after a partial paste succeeds', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [
-				createCitation({
+				createCitation( {
 					id: 'entry-a',
 					family: 'Alpha',
 					year: 2024,
 					title: 'Alpha citation',
-				}),
+				} ),
 			],
 			errors: [
 				'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, RIS record, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 			],
 			truncated: false,
 			remainingInput: 'Unparsed citation chunk',
-		});
+		} );
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'Alpha citation\nBad chunk'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			"Added 1 citation. Couldn't parse 1 item. Unparsed items remain in the form."
 		);
-		expect(screen.getByLabelText('Add citations')).toHaveValue(
+		expect( screen.getByLabelText( 'Add citations' ) ).toHaveValue(
 			'Unparsed citation chunk'
 		);
-	});
+	} );
 
-	it('reformats the full bibliography when parsed entries are appended', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'reformats the full bibliography when parsed entries are appended', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [
-				createCitation({
+				createCitation( {
 					id: 'entry-b',
 					family: 'Alpha',
 					year: 2023,
 					title: 'Alpha citation',
-				}),
+				} ),
 			],
 			errors: [],
 			truncated: false,
 			remainingInput: '',
-		});
+		} );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Zulu',
 						year: 2024,
 						title: 'Zulu citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'10.1234/context-aware'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		await waitFor(() => {
-			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+		await waitFor( () => {
+			expect( formatBibliographyEntries ).toHaveBeenCalledWith(
 				[
-					expect.objectContaining({ title: 'Zulu citation' }),
-					expect.objectContaining({ title: 'Alpha citation' }),
+					expect.objectContaining( { title: 'Zulu citation' } ),
+					expect.objectContaining( { title: 'Alpha citation' } ),
 				],
 				'chicago-notes-bibliography',
-				expect.objectContaining({
-					onFallback: expect.any(Function),
-				})
+				expect.objectContaining( {
+					onFallback: expect.any( Function ),
+				} )
 			);
-		});
-	});
+		} );
+	} );
 
-	it('passes existing DOI values to the parser and reports skipped duplicate DOI input', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'passes existing DOI values to the parser and reports skipped duplicate DOI input', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [],
 			errors: [],
 			truncated: false,
 			remainingInput: '',
 			skippedDuplicateCount: 1,
-		});
+		} );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
 						doi: '10.1234/already-present',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'https://doi.org/10.1234/already-present'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(parsePastedInput).toHaveBeenCalledWith(
+		expect( parsePastedInput ).toHaveBeenCalledWith(
 			'https://doi.org/10.1234/already-present',
 			'chicago-notes-bibliography',
-			expect.objectContaining({
+			expect.objectContaining( {
 				deferFormatting: true,
-				existingDoiValues: ['10.1234/already-present'],
-			})
+				existingDoiValues: [ '10.1234/already-present' ],
+			} )
 		);
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'No new citations added. Skipped 1 duplicate.'
 		);
-		expect(formatBibliographyEntries).not.toHaveBeenCalled();
-	});
+		expect( formatBibliographyEntries ).not.toHaveBeenCalled();
+	} );
 
-	it('does not parse when the bibliography already has 200 citations', async () => {
+	it( 'does not parse when the bibliography already has 200 citations', async () => {
 		render(
 			<EditHarness
-				initialCitations={Array.from({ length: 200 }, (_, index) =>
-					createCitation({
-						id: `entry-${index}`,
-						family: `Author ${index}`,
+				initialCitations={ Array.from( { length: 200 }, ( _, index ) =>
+					createCitation( {
+						id: `entry-${ index }`,
+						family: `Author ${ index }`,
 						year: 2024,
-						title: `Citation ${index}`,
-					})
-				)}
+						title: `Citation ${ index }`,
+					} )
+				) }
 			/>
 		);
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'10.1234/too-many'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'This bibliography already has the maximum of 200 citations. Remove a citation before adding another.'
 		);
-		expect(parsePastedInput).not.toHaveBeenCalled();
-		expect(formatBibliographyEntries).not.toHaveBeenCalled();
-	});
+		expect( parsePastedInput ).not.toHaveBeenCalled();
+		expect( formatBibliographyEntries ).not.toHaveBeenCalled();
+	} );
 
-	it('does not append parsed entries that would exceed the 200 citation total limit', async () => {
+	it( 'does not append parsed entries that would exceed the 200 citation total limit', async () => {
 		// 201 entries returned by the mock — only 199 slots are available (200 - 1 existing).
 		// Use 1 initial entry so the test renders quickly and stays below the soft cap.
-		parsePastedInput.mockResolvedValue({
-			entries: Array.from({ length: 201 }, (_, index) =>
-				createCitation({
-					id: `entry-new-${index}`,
-					family: `New ${index}`,
+		parsePastedInput.mockResolvedValue( {
+			entries: Array.from( { length: 201 }, ( _, index ) =>
+				createCitation( {
+					id: `entry-new-${ index }`,
+					family: `New ${ index }`,
 					year: 2024,
-					title: `New citation ${index}`,
-				})
+					title: `New citation ${ index }`,
+				} )
 			),
 			errors: [],
 			truncated: false,
 			remainingInput: '',
-		});
+		} );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-0',
 						family: 'Existing',
 						year: 2024,
 						title: 'Existing citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'10.1234/overflow'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Adding 201 citations would exceed the supported limit of 200 citations per bibliography. 199 slots remain; add fewer items or remove citations first.'
 		);
-		expect(formatBibliographyEntries).not.toHaveBeenCalled();
-		expect(screen.queryByText('New citation 0')).not.toBeInTheDocument();
-	});
+		expect( formatBibliographyEntries ).not.toHaveBeenCalled();
+		expect(
+			screen.queryByText( 'New citation 0' )
+		).not.toBeInTheDocument();
+	} );
 
-	it('keeps fallback and truncation details in the parse result notice', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'keeps fallback and truncation details in the parse result notice', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [
-				createCitation({
+				createCitation( {
 					id: 'entry-fallback',
 					family: 'Fallback',
 					year: 2026,
 					title: 'Fallback citation',
-				}),
+				} ),
 			],
 			errors: [],
 			truncated: true,
 			remainingInput: '',
-		});
+		} );
 		formatBibliographyEntries.mockImplementationOnce(
-			(cslItems, style, options) => {
+			( cslItems, style, options ) => {
 				options.onFallback();
-				return cslItems.map(() => 'Fallback formatted citation');
+				return cslItems.map( () => 'Fallback formatted citation' );
 			}
 		);
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'10.1234/fallback'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Added 1 citation. Only the first 50 items were processed. Formatter unavailable; added fallback citation text.'
 		);
-	});
+	} );
 
-	it('does not commit parsed entries after delete supersedes a pending parse', async () => {
+	it( 'does not commit parsed entries after delete supersedes a pending parse', async () => {
 		let resolveParse;
 		parsePastedInput.mockReturnValueOnce(
-			new Promise((resolve) => {
+			new Promise( ( resolve ) => {
 				resolveParse = resolve;
-			})
+			} )
 		);
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'existing',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Existing citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'10.1234/pending'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Delete citation: Alpha 2024' })
+			screen.getByRole( 'button', {
+				name: 'Delete citation: Alpha 2024',
+			} )
 		);
 
-		resolveParse({
+		resolveParse( {
 			entries: [
-				createCitation({
+				createCitation( {
 					id: 'pending-entry',
 					family: 'Pending',
 					year: 2025,
 					title: 'Pending citation',
-				}),
+				} ),
 			],
 			errors: [],
 			truncated: false,
 			remainingInput: '',
-		});
+		} );
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				screen.queryByText('Pending citation')
+				screen.queryByText( 'Pending citation' )
 			).not.toBeInTheDocument();
-		});
-		expect(screen.queryByText('Existing citation')).not.toBeInTheDocument();
-	});
+		} );
+		expect(
+			screen.queryByText( 'Existing citation' )
+		).not.toBeInTheDocument();
+	} );
 
-	it('shows a persistent error notice when parsing throws', async () => {
-		parsePastedInput.mockRejectedValueOnce(new Error('parser failed'));
+	it( 'shows a persistent error notice when parsing throws', async () => {
+		parsePastedInput.mockRejectedValueOnce( new Error( 'parser failed' ) );
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'10.1234/parser-failure'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Something went wrong while parsing. Please try again.'
 		);
-	});
+	} );
 
-	it('moves focus to the first newly added entry after a successful parse', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'moves focus to the first newly added entry after a successful parse', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [
-				createCitation({
+				createCitation( {
 					id: 'entry-b',
 					family: 'Zulu',
 					year: 2025,
 					title: 'Zulu citation',
-				}),
-				createCitation({
+				} ),
+				createCitation( {
 					id: 'entry-a',
 					family: 'Alpha',
 					year: 2024,
 					title: 'Alpha citation',
-				}),
+				} ),
 			],
 			errors: [],
 			truncated: false,
-		});
+		} );
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'10.1234/example-doi'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		const firstEntry = await screen.findByText('Alpha citation');
+		const firstEntry = await screen.findByText( 'Alpha citation' );
 
-		await waitFor(() => {
-			expect(firstEntry.closest('li')).toHaveFocus();
-		});
-	});
+		await waitFor( () => {
+			expect( firstEntry.closest( 'li' ) ).toHaveFocus();
+		} );
+	} );
 
-	it('re-sorts existing loaded citations into bibliography order', async () => {
+	it( 're-sorts existing loaded citations into bibliography order', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'marks',
 						family: 'Marks',
 						year: 2023,
 						title: 'The Book by Design',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'borel',
 						family: 'Borel',
 						year: 2023,
 						title: 'The Chicago Guide to Fact-Checking',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		const entries = screen.getAllByRole('listitem');
+		const entries = screen.getAllByRole( 'listitem' );
 
-		expect(entries[0]).toHaveTextContent(
+		expect( entries[ 0 ] ).toHaveTextContent(
 			'The Chicago Guide to Fact-Checking'
 		);
-		expect(entries[1]).toHaveTextContent('The Book by Design');
-	});
+		expect( entries[ 1 ] ).toHaveTextContent( 'The Book by Design' );
+	} );
 
-	it('preserves numeric-family order on load and re-sorts when switching to author-date', async () => {
+	it( 'preserves numeric-family order on load and re-sorts when switching to author-date', async () => {
 		render(
 			<EditHarness
 				initialStyle="ieee"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'zulu',
 						family: 'Zulu',
 						year: 2024,
 						title: 'Zulu citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'alpha',
 						family: 'Alpha',
 						year: 2023,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		let entries = screen.getAllByRole('listitem');
-		expect(entries[0]).toHaveTextContent('Zulu citation');
-		expect(entries[1]).toHaveTextContent('Alpha citation');
+		let entries = screen.getAllByRole( 'listitem' );
+		expect( entries[ 0 ] ).toHaveTextContent( 'Zulu citation' );
+		expect( entries[ 1 ] ).toHaveTextContent( 'Alpha citation' );
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Citation Style'),
+			screen.getByLabelText( 'Citation Style' ),
 			'chicago-author-date'
 		);
 
-		await waitFor(() => {
-			entries = screen.getAllByRole('listitem');
-			expect(entries[0]).toHaveTextContent('Alpha citation');
-			expect(entries[1]).toHaveTextContent('Zulu citation');
-		});
-	});
+		await waitFor( () => {
+			entries = screen.getAllByRole( 'listitem' );
+			expect( entries[ 0 ] ).toHaveTextContent( 'Alpha citation' );
+			expect( entries[ 1 ] ).toHaveTextContent( 'Zulu citation' );
+		} );
+	} );
 
-	it('does not re-sort when switching from author-date to numeric', async () => {
+	it( 'does not re-sort when switching from author-date to numeric', async () => {
 		render(
 			<EditHarness
 				initialStyle="chicago-author-date"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'z',
 						family: 'Zulu',
 						year: 2020,
 						title: 'Zulu citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		const beforeSwitch = screen
-			.getAllByRole('listitem')
-			.map((entry) => entry.textContent);
+			.getAllByRole( 'listitem' )
+			.map( ( entry ) => entry.textContent );
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Citation Style'),
+			screen.getByLabelText( 'Citation Style' ),
 			'ieee'
 		);
 
-		await waitFor(() => {
+		await waitFor( () => {
 			const afterSwitch = screen
-				.getAllByRole('listitem')
-				.map((entry) => entry.textContent);
-			expect(afterSwitch).toEqual(beforeSwitch);
-		});
-	});
+				.getAllByRole( 'listitem' )
+				.map( ( entry ) => entry.textContent );
+			expect( afterSwitch ).toEqual( beforeSwitch );
+		} );
+	} );
 
-	it('shows numeric reorder controls and inspector guidance for IEEE', () => {
+	it( 'shows numeric reorder controls and inspector guidance for IEEE', () => {
 		render(
 			<EditHarness
 				initialStyle="ieee"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'zulu',
 						family: 'Zulu',
 						year: 2024,
 						title: 'Zulu citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'alpha',
 						family: 'Alpha',
 						year: 2023,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
@@ -1072,1119 +1088,1144 @@ describe('Edit focus management', () => {
 			)
 		).toBeInTheDocument();
 		expect(
-			screen.getByRole('button', { name: "Move 'Zulu 2024' up" })
+			screen.getByRole( 'button', { name: "Move 'Zulu 2024' up" } )
 		).toBeDisabled();
 		expect(
-			screen.getByRole('button', { name: "Move 'Zulu 2024' down" })
+			screen.getByRole( 'button', { name: "Move 'Zulu 2024' down" } )
 		).toBeEnabled();
 		expect(
-			screen.getByRole('button', { name: "Move 'Alpha 2023' up" })
+			screen.getByRole( 'button', { name: "Move 'Alpha 2023' up" } )
 		).toBeEnabled();
 		expect(
-			screen.getByRole('button', { name: "Move 'Alpha 2023' down" })
+			screen.getByRole( 'button', { name: "Move 'Alpha 2023' down" } )
 		).toBeDisabled();
-	});
+	} );
 
-	it('does not render numeric reorder controls for author-date styles', () => {
+	it( 'does not render numeric reorder controls for author-date styles', () => {
 		render(
 			<EditHarness
 				initialStyle="chicago-author-date"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'alpha',
 						family: 'Alpha',
 						year: 2023,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		expect(
-			screen.queryByRole('button', { name: /Move '.*' up/ })
+			screen.queryByRole( 'button', { name: /Move '.*' up/ } )
 		).not.toBeInTheDocument();
 		expect(
 			screen.queryByText(
 				"IEEE/Vancouver: arrange entries to match the order they're first cited in your text."
 			)
 		).not.toBeInTheDocument();
-	});
+	} );
 
-	it('reorders numeric citations with arrow controls and keeps focus on moved entry', async () => {
+	it( 'reorders numeric citations with arrow controls and keeps focus on moved entry', async () => {
 		render(
 			<EditHarness
 				initialStyle="ieee"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'zulu',
 						family: 'Zulu',
 						year: 2024,
 						title: 'Zulu citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'alpha',
 						family: 'Alpha',
 						year: 2023,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: "Move 'Zulu 2024' down" })
+			screen.getByRole( 'button', { name: "Move 'Zulu 2024' down" } )
 		);
 
-		await waitFor(() => {
-			const entries = screen.getAllByRole('listitem');
-			expect(entries[0]).toHaveTextContent('Alpha citation');
-			expect(entries[1]).toHaveTextContent('Zulu citation');
-			expect(entries[1]).toHaveFocus();
-		});
-	});
+		await waitFor( () => {
+			const entries = screen.getAllByRole( 'listitem' );
+			expect( entries[ 0 ] ).toHaveTextContent( 'Alpha citation' );
+			expect( entries[ 1 ] ).toHaveTextContent( 'Zulu citation' );
+			expect( entries[ 1 ] ).toHaveFocus();
+		} );
+	} );
 
-	it('moves numeric citations up with arrow controls', async () => {
+	it( 'moves numeric citations up with arrow controls', async () => {
 		render(
 			<EditHarness
 				initialStyle="ieee"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'zulu',
 						family: 'Zulu',
 						year: 2024,
 						title: 'Zulu citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'alpha',
 						family: 'Alpha',
 						year: 2023,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: "Move 'Alpha 2023' up" })
+			screen.getByRole( 'button', { name: "Move 'Alpha 2023' up" } )
 		);
 
-		await waitFor(() => {
-			const entries = screen.getAllByRole('listitem');
-			expect(entries[0]).toHaveTextContent('Alpha citation');
-			expect(entries[1]).toHaveTextContent('Zulu citation');
-			expect(entries[0]).toHaveFocus();
-		});
-	});
+		await waitFor( () => {
+			const entries = screen.getAllByRole( 'listitem' );
+			expect( entries[ 0 ] ).toHaveTextContent( 'Alpha citation' );
+			expect( entries[ 1 ] ).toHaveTextContent( 'Zulu citation' );
+			expect( entries[ 0 ] ).toHaveFocus();
+		} );
+	} );
 
-	it('supports Alt+ArrowDown reorder shortcut for numeric styles', async () => {
+	it( 'supports Alt+ArrowDown reorder shortcut for numeric styles', async () => {
 		render(
 			<EditHarness
 				initialStyle="ieee"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'zulu',
 						family: 'Zulu',
 						year: 2024,
 						title: 'Zulu citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'alpha',
 						family: 'Alpha',
 						year: 2023,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		const firstEntry = screen.getAllByRole('listitem')[0];
+		const firstEntry = screen.getAllByRole( 'listitem' )[ 0 ];
 		firstEntry.focus();
-		fireEvent.keyDown(firstEntry, { key: 'ArrowDown', altKey: true });
+		fireEvent.keyDown( firstEntry, { key: 'ArrowDown', altKey: true } );
 
-		await waitFor(() => {
-			const entries = screen.getAllByRole('listitem');
-			expect(entries[0]).toHaveTextContent('Alpha citation');
-			expect(entries[1]).toHaveTextContent('Zulu citation');
-		});
-	});
+		await waitFor( () => {
+			const entries = screen.getAllByRole( 'listitem' );
+			expect( entries[ 0 ] ).toHaveTextContent( 'Alpha citation' );
+			expect( entries[ 1 ] ).toHaveTextContent( 'Zulu citation' );
+		} );
+	} );
 
-	it('supports Alt+ArrowUp reorder shortcut for numeric styles', async () => {
+	it( 'supports Alt+ArrowUp reorder shortcut for numeric styles', async () => {
 		render(
 			<EditHarness
 				initialStyle="ieee"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'alpha',
 						family: 'Alpha',
 						year: 2023,
 						title: 'Alpha citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'zulu',
 						family: 'Zulu',
 						year: 2024,
 						title: 'Zulu citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		const secondEntry = screen.getAllByRole('listitem')[1];
+		const secondEntry = screen.getAllByRole( 'listitem' )[ 1 ];
 		secondEntry.focus();
-		fireEvent.keyDown(secondEntry, { key: 'ArrowUp', altKey: true });
+		fireEvent.keyDown( secondEntry, { key: 'ArrowUp', altKey: true } );
 
-		await waitFor(() => {
-			const entries = screen.getAllByRole('listitem');
-			expect(entries[0]).toHaveTextContent('Zulu citation');
-			expect(entries[1]).toHaveTextContent('Alpha citation');
-		});
-	});
+		await waitFor( () => {
+			const entries = screen.getAllByRole( 'listitem' );
+			expect( entries[ 0 ] ).toHaveTextContent( 'Zulu citation' );
+			expect( entries[ 1 ] ).toHaveTextContent( 'Alpha citation' );
+		} );
+	} );
 
-	it('ignores Alt+ArrowDown reorder shortcut for non-numeric styles', async () => {
+	it( 'ignores Alt+ArrowDown reorder shortcut for non-numeric styles', async () => {
 		render(
 			<EditHarness
 				initialStyle="chicago-author-date"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'alpha',
 						family: 'Alpha',
 						year: 2023,
 						title: 'Alpha citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'zulu',
 						family: 'Zulu',
 						year: 2024,
 						title: 'Zulu citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		const firstEntry = screen.getAllByRole('listitem')[0];
+		const firstEntry = screen.getAllByRole( 'listitem' )[ 0 ];
 		firstEntry.focus();
-		fireEvent.keyDown(firstEntry, { key: 'ArrowDown', altKey: true });
+		fireEvent.keyDown( firstEntry, { key: 'ArrowDown', altKey: true } );
 
-		await waitFor(() => {
-			const entries = screen.getAllByRole('listitem');
-			expect(entries[0]).toHaveTextContent('Alpha citation');
-			expect(entries[1]).toHaveTextContent('Zulu citation');
-		});
-	});
+		await waitFor( () => {
+			const entries = screen.getAllByRole( 'listitem' );
+			expect( entries[ 0 ] ).toHaveTextContent( 'Alpha citation' );
+			expect( entries[ 1 ] ).toHaveTextContent( 'Zulu citation' );
+		} );
+	} );
 
-	it('allows selecting APA style before any citations are added', async () => {
-		render(<EditHarness />);
+	it( 'allows selecting APA style before any citations are added', async () => {
+		render( <EditHarness /> );
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Citation Style'),
+			screen.getByLabelText( 'Citation Style' ),
 			'apa-7'
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Style changed to APA 7.'
 		);
-		expect(screen.getByLabelText('Citation Style')).toHaveValue('apa-7');
-	});
+		expect( screen.getByLabelText( 'Citation Style' ) ).toHaveValue(
+			'apa-7'
+		);
+	} );
 
-	it('updates the visible bibliography heading from inspector settings', async () => {
-		render(<EditHarness />);
+	it( 'updates the visible bibliography heading from inspector settings', async () => {
+		render( <EditHarness /> );
 
 		await userEvent.type(
-			screen.getByLabelText('Visible Heading'),
+			screen.getByLabelText( 'Visible Heading' ),
 			'Works Cited'
 		);
 
-		expect(screen.getByLabelText('Visible Heading')).toHaveValue(
+		expect( screen.getByLabelText( 'Visible Heading' ) ).toHaveValue(
 			'Works Cited'
 		);
-	});
+	} );
 
-	it('previews the heading as a paragraph until a heading level is chosen', async () => {
+	it( 'previews the heading as a paragraph until a heading level is chosen', async () => {
 		const { container } = render(
 			<EditHarness initialHeadingText="Sources" />
 		);
 
-		expect(screen.getByLabelText('Heading Level')).toHaveValue('0');
+		expect( screen.getByLabelText( 'Heading Level' ) ).toHaveValue( '0' );
 		expect(
-			container.querySelector('p.bibliography-builder-heading-preview')
-		).toHaveTextContent('Sources');
+			container.querySelector( 'p.bibliography-builder-heading-preview' )
+		).toHaveTextContent( 'Sources' );
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Heading Level'),
+			screen.getByLabelText( 'Heading Level' ),
 			'2'
 		);
 
-		expect(screen.getByLabelText('Heading Level')).toHaveValue('2');
+		expect( screen.getByLabelText( 'Heading Level' ) ).toHaveValue( '2' );
 		expect(
-			container.querySelector('h2.bibliography-builder-heading-preview')
-		).toHaveTextContent('Sources');
+			container.querySelector( 'h2.bibliography-builder-heading-preview' )
+		).toHaveTextContent( 'Sources' );
 		expect(
-			container.querySelector('p.bibliography-builder-heading-preview')
+			container.querySelector( 'p.bibliography-builder-heading-preview' )
 		).toBeNull();
-	});
+	} );
 
-	it('stores the heading level as a number', async () => {
+	it( 'stores the heading level as a number', async () => {
 		const setAttributes = jest.fn();
 
 		render(
 			<Edit
-				attributes={{
+				attributes={ {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'Sources',
 					citations: [],
-				}}
-				setAttributes={setAttributes}
+				} }
+				setAttributes={ setAttributes }
 				clientId="heading-level"
 			/>
 		);
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Heading Level'),
+			screen.getByLabelText( 'Heading Level' ),
 			'3'
 		);
 
-		expect(setAttributes).toHaveBeenCalledWith({ headingLevel: 3 });
-	});
+		expect( setAttributes ).toHaveBeenCalledWith( { headingLevel: 3 } );
+	} );
 
-	it('renders notices inline within the block UI', async () => {
-		render(<EditHarness />);
+	it( 'renders notices inline within the block UI', async () => {
+		render( <EditHarness /> );
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Citation Style'),
+			screen.getByLabelText( 'Citation Style' ),
 			'apa-7'
 		);
 
-		const notice = await screen.findByRole('status');
+		const notice = await screen.findByRole( 'status' );
 		const blockRoot = document.querySelector(
 			'.wp-block-bibliography-builder-bibliography'
 		);
 
-		expect(blockRoot).toContainElement(notice);
-	});
+		expect( blockRoot ).toContainElement( notice );
+	} );
 
-	it('defaults metadata output toggles to JSON-LD on and COinS / CSL-JSON off', () => {
-		render(<EditHarness />);
+	it( 'defaults metadata output toggles to JSON-LD on and COinS / CSL-JSON off', () => {
+		render( <EditHarness /> );
 
-		expect(screen.getByLabelText('Output JSON-LD')).toBeChecked();
-		expect(screen.getByLabelText('Output COinS')).not.toBeChecked();
-		expect(screen.getByLabelText('Output CSL-JSON')).not.toBeChecked();
-	});
+		expect( screen.getByLabelText( 'Output JSON-LD' ) ).toBeChecked();
+		expect( screen.getByLabelText( 'Output COinS' ) ).not.toBeChecked();
+		expect( screen.getByLabelText( 'Output CSL-JSON' ) ).not.toBeChecked();
+	} );
 
-	it('downloads a CSL-JSON export from the inspector when citations are present', async () => {
+	it( 'downloads a CSL-JSON export from the inspector when citations are present', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Download CSL-JSON' })
+			screen.getByRole( 'button', { name: 'Download CSL-JSON' } )
 		);
 
-		expect(downloadCslJsonExport).toHaveBeenCalledWith(
-			expect.arrayContaining([
-				expect.objectContaining({ id: 'citation-1' }),
-			]),
+		expect( downloadCslJsonExport ).toHaveBeenCalledWith(
+			expect.arrayContaining( [
+				expect.objectContaining( { id: 'citation-1' } ),
+			] ),
 			'chicago-notes-bibliography'
 		);
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Downloaded CSL-JSON export.'
 		);
-	});
+	} );
 
-	it('disables the CSL-JSON export button when there are no citations', () => {
-		render(<EditHarness />);
+	it( 'disables the CSL-JSON export button when there are no citations', () => {
+		render( <EditHarness /> );
 
 		expect(
-			screen.getByRole('button', { name: 'Download CSL-JSON' })
+			screen.getByRole( 'button', { name: 'Download CSL-JSON' } )
 		).toBeDisabled();
-	});
+	} );
 
-	it('reports a CSL-JSON download failure without clearing citations', async () => {
-		downloadCslJsonExport.mockImplementationOnce(() => {
-			throw new Error('download failed');
-		});
+	it( 'reports a CSL-JSON download failure without clearing citations', async () => {
+		downloadCslJsonExport.mockImplementationOnce( () => {
+			throw new Error( 'download failed' );
+		} );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Download CSL-JSON' })
+			screen.getByRole( 'button', { name: 'Download CSL-JSON' } )
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Could not download CSL-JSON export in this browser.'
 		);
-		expect(screen.getByText('Alpha citation')).toBeInTheDocument();
-	});
+		expect( screen.getByText( 'Alpha citation' ) ).toBeInTheDocument();
+	} );
 
-	it('downloads a BibTeX export from the inspector when citations are present', async () => {
-		downloadBibtexExport.mockResolvedValue('blob:bib');
+	it( 'downloads a BibTeX export from the inspector when citations are present', async () => {
+		downloadBibtexExport.mockResolvedValue( 'blob:bib' );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Download BibTeX' })
+			screen.getByRole( 'button', { name: 'Download BibTeX' } )
 		);
 
-		await waitFor(() => {
-			expect(downloadBibtexExport).toHaveBeenCalledWith(
-				expect.arrayContaining([
-					expect.objectContaining({ id: 'citation-1' }),
-				]),
+		await waitFor( () => {
+			expect( downloadBibtexExport ).toHaveBeenCalledWith(
+				expect.arrayContaining( [
+					expect.objectContaining( { id: 'citation-1' } ),
+				] ),
 				'chicago-notes-bibliography'
 			);
-		});
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		} );
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Downloaded BibTeX export.'
 		);
-	});
+	} );
 
-	it('disables the BibTeX export button when there are no citations', () => {
-		render(<EditHarness />);
+	it( 'disables the BibTeX export button when there are no citations', () => {
+		render( <EditHarness /> );
 
 		expect(
-			screen.getByRole('button', { name: 'Download BibTeX' })
+			screen.getByRole( 'button', { name: 'Download BibTeX' } )
 		).toBeDisabled();
-	});
+	} );
 
-	it('reports a BibTeX download failure', async () => {
+	it( 'reports a BibTeX download failure', async () => {
 		downloadBibtexExport.mockRejectedValueOnce(
-			new Error('download failed')
+			new Error( 'download failed' )
 		);
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Download BibTeX' })
+			screen.getByRole( 'button', { name: 'Download BibTeX' } )
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Could not download BibTeX export in this browser.'
 		);
-	});
+	} );
 
-	it('downloads an RIS export from the inspector when citations are present', async () => {
+	it( 'downloads an RIS export from the inspector when citations are present', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Download RIS' })
+			screen.getByRole( 'button', { name: 'Download RIS' } )
 		);
 
-		expect(downloadRisExport).toHaveBeenCalledWith(
-			expect.arrayContaining([
-				expect.objectContaining({ id: 'citation-1' }),
-			]),
+		expect( downloadRisExport ).toHaveBeenCalledWith(
+			expect.arrayContaining( [
+				expect.objectContaining( { id: 'citation-1' } ),
+			] ),
 			'chicago-notes-bibliography'
 		);
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Downloaded RIS export.'
 		);
-	});
+	} );
 
-	it('disables the RIS export button when there are no citations', () => {
-		render(<EditHarness />);
+	it( 'disables the RIS export button when there are no citations', () => {
+		render( <EditHarness /> );
 
 		expect(
-			screen.getByRole('button', { name: 'Download RIS' })
+			screen.getByRole( 'button', { name: 'Download RIS' } )
 		).toBeDisabled();
-	});
+	} );
 
-	it('reports an RIS download failure', async () => {
-		downloadRisExport.mockImplementationOnce(() => {
-			throw new Error('download failed');
-		});
+	it( 'reports an RIS download failure', async () => {
+		downloadRisExport.mockImplementationOnce( () => {
+			throw new Error( 'download failed' );
+		} );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Download RIS' })
+			screen.getByRole( 'button', { name: 'Download RIS' } )
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Could not download RIS export in this browser.'
 		);
-	});
+	} );
 
-	it('downloads a BibLaTeX export from the inspector when citations are present', async () => {
-		downloadBiblatexExport.mockResolvedValue('blob:biblatex');
+	it( 'downloads a BibLaTeX export from the inspector when citations are present', async () => {
+		downloadBiblatexExport.mockResolvedValue( 'blob:biblatex' );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Download BibLaTeX' })
+			screen.getByRole( 'button', { name: 'Download BibLaTeX' } )
 		);
 
-		await waitFor(() => {
-			expect(downloadBiblatexExport).toHaveBeenCalledWith(
-				expect.arrayContaining([
-					expect.objectContaining({ id: 'citation-1' }),
-				]),
+		await waitFor( () => {
+			expect( downloadBiblatexExport ).toHaveBeenCalledWith(
+				expect.arrayContaining( [
+					expect.objectContaining( { id: 'citation-1' } ),
+				] ),
 				'chicago-notes-bibliography'
 			);
-		});
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		} );
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Downloaded BibLaTeX export.'
 		);
-	});
+	} );
 
-	it('disables the BibLaTeX export button when there are no citations', () => {
-		render(<EditHarness />);
+	it( 'disables the BibLaTeX export button when there are no citations', () => {
+		render( <EditHarness /> );
 
 		expect(
-			screen.getByRole('button', { name: 'Download BibLaTeX' })
+			screen.getByRole( 'button', { name: 'Download BibLaTeX' } )
 		).toBeDisabled();
-	});
+	} );
 
-	it('shows an error notice when BibLaTeX export fails', async () => {
+	it( 'shows an error notice when BibLaTeX export fails', async () => {
 		downloadBiblatexExport.mockRejectedValueOnce(
-			new Error('download failed')
+			new Error( 'download failed' )
 		);
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Download BibLaTeX' })
+			screen.getByRole( 'button', { name: 'Download BibLaTeX' } )
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Could not download BibLaTeX export in this browser.'
 		);
-	});
+	} );
 
-	it('copies the full bibliography from the inspector export controls', async () => {
-		copyTextToClipboard.mockResolvedValue(true);
+	it( 'copies the full bibliography from the inspector export controls', async () => {
+		copyTextToClipboard.mockResolvedValue( true );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Copy bibliography' })
+			screen.getByRole( 'button', { name: 'Copy bibliography' } )
 		);
 
-		expect(buildPlainTextBibliographyContent).toHaveBeenCalledWith(
-			expect.arrayContaining([
-				expect.objectContaining({ id: 'citation-1' }),
-			]),
+		expect( buildPlainTextBibliographyContent ).toHaveBeenCalledWith(
+			expect.arrayContaining( [
+				expect.objectContaining( { id: 'citation-1' } ),
+			] ),
 			'chicago-notes-bibliography'
 		);
-		expect(copyTextToClipboard).toHaveBeenCalledWith(
+		expect( copyTextToClipboard ).toHaveBeenCalledWith(
 			'Alpha citation\nBeta citation'
 		);
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Copied bibliography.'
 		);
-	});
+	} );
 
-	it('reports a full-bibliography copy failure', async () => {
-		copyTextToClipboard.mockRejectedValueOnce(new Error('copy failed'));
+	it( 'reports a full-bibliography copy failure', async () => {
+		copyTextToClipboard.mockRejectedValueOnce( new Error( 'copy failed' ) );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Copy bibliography' })
+			screen.getByRole( 'button', { name: 'Copy bibliography' } )
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Could not copy bibliography in this browser.'
 		);
-	});
+	} );
 
-	it('copies the visible citation text from the row action', async () => {
-		copyTextToClipboard.mockResolvedValue(true);
+	it( 'copies the visible citation text from the row action', async () => {
+		copyTextToClipboard.mockResolvedValue( true );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
 						displayOverride: 'Edited display citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Copy citation: Alpha 2024',
-			})
+			} )
 		);
 
-		expect(copyTextToClipboard).toHaveBeenCalledWith(
+		expect( copyTextToClipboard ).toHaveBeenCalledWith(
 			'Edited display citation'
 		);
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Copied citation.'
 		);
-	});
+	} );
 
-	it('reports a row-level citation copy failure', async () => {
-		copyTextToClipboard.mockRejectedValueOnce(new Error('copy failed'));
+	it( 'reports a row-level citation copy failure', async () => {
+		copyTextToClipboard.mockRejectedValueOnce( new Error( 'copy failed' ) );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Copy citation: Alpha 2024',
-			})
+			} )
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Could not copy citation in this browser.'
 		);
-	});
+	} );
 
-	it('stops Gutenberg-level undo propagation inside the add-citations textarea', () => {
-		render(<EditHarness />);
+	it( 'stops Gutenberg-level undo propagation inside the add-citations textarea', () => {
+		render( <EditHarness /> );
 
-		const textarea = screen.getByLabelText('Add citations');
-		const event = createEvent.keyDown(textarea, {
+		const textarea = screen.getByLabelText( 'Add citations' );
+		const event = createEvent.keyDown( textarea, {
 			key: 'z',
 			metaKey: true,
-		});
+		} );
 
 		event.stopPropagation = jest.fn();
 
-		fireEvent(textarea, event);
+		fireEvent( textarea, event );
 
-		expect(event.stopPropagation).toHaveBeenCalled();
-	});
+		expect( event.stopPropagation ).toHaveBeenCalled();
+	} );
 
-	it('does not stop propagation for ordinary textarea keys', () => {
-		render(<EditHarness />);
+	it( 'does not stop propagation for ordinary textarea keys', () => {
+		render( <EditHarness /> );
 
-		const textarea = screen.getByLabelText('Add citations');
-		const event = createEvent.keyDown(textarea, {
+		const textarea = screen.getByLabelText( 'Add citations' );
+		const event = createEvent.keyDown( textarea, {
 			key: 'a',
-		});
+		} );
 
 		event.stopPropagation = jest.fn();
-		fireEvent(textarea, event);
+		fireEvent( textarea, event );
 
-		expect(event.stopPropagation).not.toHaveBeenCalled();
-	});
+		expect( event.stopPropagation ).not.toHaveBeenCalled();
+	} );
 
-	it('defaults to Paste / Import mode and can switch modes from the toolbar or fallback link', async () => {
-		render(<EditHarness />);
+	it( 'defaults to Paste / Import mode and can switch modes from the toolbar or fallback link', async () => {
+		render( <EditHarness /> );
 
 		expect(
-			screen.getByRole('button', { name: 'Paste / Import' })
-		).toHaveAttribute('aria-pressed', 'true');
-		expect(screen.getByLabelText('Add citations')).toBeInTheDocument();
+			screen.getByRole( 'button', { name: 'Paste / Import' } )
+		).toHaveAttribute( 'aria-pressed', 'true' );
+		expect( screen.getByLabelText( 'Add citations' ) ).toBeInTheDocument();
 		expect(
-			screen.queryByLabelText('Publication Type')
+			screen.queryByLabelText( 'Publication Type' )
 		).not.toBeInTheDocument();
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
 
 		expect(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
-		).toHaveAttribute('aria-pressed', 'true');
-		expect(screen.getByLabelText('Publication Type')).toBeInTheDocument();
-		expect(screen.getByLabelText('Author(s)')).toBeInTheDocument();
-		expect(screen.getByLabelText('Title')).toBeInTheDocument();
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
+		).toHaveAttribute( 'aria-pressed', 'true' );
 		expect(
-			screen.getAllByRole('button', { name: 'Paste / Import' }).length
-		).toBeGreaterThan(0);
+			screen.getByLabelText( 'Publication Type' )
+		).toBeInTheDocument();
+		expect( screen.getByLabelText( 'Author(s)' ) ).toBeInTheDocument();
+		expect( screen.getByLabelText( 'Title' ) ).toBeInTheDocument();
+		expect(
+			screen.getAllByRole( 'button', { name: 'Paste / Import' } ).length
+		).toBeGreaterThan( 0 );
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Paste / Import' })[0]
+			screen.getAllByRole( 'button', { name: 'Paste / Import' } )[ 0 ]
 		);
 
-		expect(screen.getByLabelText('Add citations')).toBeInTheDocument();
+		expect( screen.getByLabelText( 'Add citations' ) ).toBeInTheDocument();
 		expect(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		).toBeInTheDocument();
-	});
+	} );
 
-	it('hides and shows the citation form when citations already exist', async () => {
+	it( 'hides and shows the citation form when citations already exist', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'citation-1',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Hide citation form' })
+			screen.getByRole( 'button', { name: 'Hide citation form' } )
 		);
 
 		expect(
-			screen.queryByLabelText('Add citations')
+			screen.queryByLabelText( 'Add citations' )
 		).not.toBeInTheDocument();
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Show citation form' })
+			screen.getByRole( 'button', { name: 'Show citation form' } )
 		);
 
-		expect(screen.getByLabelText('Add citations')).toBeInTheDocument();
-	});
+		expect( screen.getByLabelText( 'Add citations' ) ).toBeInTheDocument();
+	} );
 
-	it('adds a manual citation with only type and title, then focuses the new entry', async () => {
-		render(<EditHarness initialStyle="apa-7" />);
+	it( 'adds a manual citation with only type and title, then focuses the new entry', async () => {
+		render( <EditHarness initialStyle="apa-7" /> );
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
 		await userEvent.selectOptions(
-			screen.getByLabelText('Publication Type'),
+			screen.getByLabelText( 'Publication Type' ),
 			'book'
 		);
-		await userEvent.type(screen.getByLabelText('Title'), 'Manual Book');
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.type( screen.getByLabelText( 'Title' ), 'Manual Book' );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		await waitFor(() => {
-			expect(screen.getByText('Manual Book').closest('li')).toHaveFocus();
-		});
+		await waitFor( () => {
+			expect(
+				screen.getByText( 'Manual Book' ).closest( 'li' )
+			).toHaveFocus();
+		} );
 
-		expect(screen.getByRole('status')).toHaveTextContent(
+		expect( screen.getByRole( 'status' ) ).toHaveTextContent(
 			'Added 1 citation.'
 		);
-		expect(screen.getByLabelText('Publication Type')).toHaveValue('book');
-		expect(screen.getByLabelText('Title')).toHaveValue('');
-	});
+		expect( screen.getByLabelText( 'Publication Type' ) ).toHaveValue(
+			'book'
+		);
+		expect( screen.getByLabelText( 'Title' ) ).toHaveValue( '' );
+	} );
 
-	it('reformats the full bibliography when adding a manual citation', async () => {
+	it( 'reformats the full bibliography when adding a manual citation', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'existing',
 						family: 'Zulu',
 						year: 2024,
 						title: 'Zulu citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
 		await userEvent.selectOptions(
-			screen.getByLabelText('Publication Type'),
+			screen.getByLabelText( 'Publication Type' ),
 			'book'
 		);
-		await userEvent.type(screen.getByLabelText('Author(s)'), 'Alpha, Ada');
-		await userEvent.type(screen.getByLabelText('Title'), 'Alpha citation');
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.type(
+			screen.getByLabelText( 'Author(s)' ),
+			'Alpha, Ada'
+		);
+		await userEvent.type(
+			screen.getByLabelText( 'Title' ),
+			'Alpha citation'
+		);
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		await waitFor(() => {
-			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+		await waitFor( () => {
+			expect( formatBibliographyEntries ).toHaveBeenCalledWith(
 				[
-					expect.objectContaining({ title: 'Zulu citation' }),
-					expect.objectContaining({ title: 'Alpha citation' }),
+					expect.objectContaining( { title: 'Zulu citation' } ),
+					expect.objectContaining( { title: 'Alpha citation' } ),
 				],
 				'chicago-notes-bibliography',
-				expect.objectContaining({
-					onFallback: expect.any(Function),
-				})
+				expect.objectContaining( {
+					onFallback: expect.any( Function ),
+				} )
 			);
-		});
-	});
+		} );
+	} );
 
-	it('adds a manual citation without single-entry pre-formatting', async () => {
-		render(<EditHarness />);
+	it( 'adds a manual citation without single-entry pre-formatting', async () => {
+		render( <EditHarness /> );
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
 		await userEvent.selectOptions(
-			screen.getByLabelText('Publication Type'),
+			screen.getByLabelText( 'Publication Type' ),
 			'book'
 		);
-		await userEvent.type(screen.getByLabelText('Title'), 'Manual Book');
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.type( screen.getByLabelText( 'Title' ), 'Manual Book' );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Added 1 citation.'
 		);
-		expect(formatBibliographyEntry).not.toHaveBeenCalled();
-		expect(formatBibliographyEntries).toHaveBeenCalledTimes(1);
-	});
+		expect( formatBibliographyEntry ).not.toHaveBeenCalled();
+		expect( formatBibliographyEntries ).toHaveBeenCalledTimes( 1 );
+	} );
 
-	it('keeps a persistent notice when manual bibliography reformatting falls back', async () => {
+	it( 'keeps a persistent notice when manual bibliography reformatting falls back', async () => {
 		formatBibliographyEntries.mockImplementationOnce(
-			(cslItems, style, options) => {
+			( cslItems, style, options ) => {
 				options.onFallback();
-				return cslItems.map((item) => item.title);
+				return cslItems.map( ( item ) => item.title );
 			}
 		);
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
 		await userEvent.selectOptions(
-			screen.getByLabelText('Publication Type'),
+			screen.getByLabelText( 'Publication Type' ),
 			'book'
 		);
-		await userEvent.type(screen.getByLabelText('Title'), 'Manual Book');
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.type( screen.getByLabelText( 'Title' ), 'Manual Book' );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Added 1 citation. Formatter unavailable; added fallback citation text.'
 		);
-	});
+	} );
 
-	it('shows an error notice when manual citation creation fails', async () => {
+	it( 'shows an error notice when manual citation creation fails', async () => {
 		formatBibliographyEntries.mockRejectedValueOnce(
-			new Error('format failed')
+			new Error( 'format failed' )
 		);
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
 		await userEvent.selectOptions(
-			screen.getByLabelText('Publication Type'),
+			screen.getByLabelText( 'Publication Type' ),
 			'book'
 		);
-		await userEvent.type(screen.getByLabelText('Title'), 'Manual Book');
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.type( screen.getByLabelText( 'Title' ), 'Manual Book' );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Something went wrong while adding the citation. Please try again.'
 		);
-	});
+	} );
 
-	it('shows a validation notice for incomplete manual entries and focuses the notice', async () => {
-		render(<EditHarness />);
+	it( 'shows a validation notice for incomplete manual entries and focuses the notice', async () => {
+		render( <EditHarness /> );
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
 		await userEvent.selectOptions(
-			screen.getByLabelText('Publication Type'),
+			screen.getByLabelText( 'Publication Type' ),
 			'book'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Enter a title before adding.'
 		);
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
 				screen
-					.getByRole('status')
-					.closest('.bibliography-builder-editor-notices')
+					.getByRole( 'status' )
+					.closest( '.bibliography-builder-editor-notices' )
 			).toHaveFocus();
-		});
-	});
+		} );
+	} );
 
-	it('clears a manual validation notice when the user edits a manual field', async () => {
-		render(<EditHarness />);
+	it( 'clears a manual validation notice when the user edits a manual field', async () => {
+		render( <EditHarness /> );
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
 		await userEvent.selectOptions(
-			screen.getByLabelText('Publication Type'),
+			screen.getByLabelText( 'Publication Type' ),
 			'book'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Enter a title before adding.'
 		);
 
-		await userEvent.type(screen.getByLabelText('Title'), 'Manual Book');
+		await userEvent.type( screen.getByLabelText( 'Title' ), 'Manual Book' );
 
-		await waitFor(() => {
-			expect(screen.queryByRole('status')).not.toBeInTheDocument();
-		});
-	});
+		await waitFor( () => {
+			expect( screen.queryByRole( 'status' ) ).not.toBeInTheDocument();
+		} );
+	} );
 
-	it('clears manual entry fields with the Clear action', async () => {
-		render(<EditHarness />);
+	it( 'clears manual entry fields with the Clear action', async () => {
+		render( <EditHarness /> );
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
-		await userEvent.type(screen.getByLabelText('Title'), 'Manual Book');
-		await userEvent.click(screen.getByRole('button', { name: 'Clear' }));
+		await userEvent.type( screen.getByLabelText( 'Title' ), 'Manual Book' );
+		await userEvent.click(
+			screen.getByRole( 'button', { name: 'Clear' } )
+		);
 
-		expect(screen.getByLabelText('Title')).toHaveValue('');
-	});
+		expect( screen.getByLabelText( 'Title' ) ).toHaveValue( '' );
+	} );
 
-	it('skips duplicate manual entries before formatting them', async () => {
+	it( 'skips duplicate manual entries before formatting them', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-manual-book',
 						title: 'Manual Book',
 						type: 'book',
 						inputFormat: 'manual',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
 		await userEvent.selectOptions(
-			screen.getByLabelText('Publication Type'),
+			screen.getByLabelText( 'Publication Type' ),
 			'book'
 		);
-		await userEvent.type(screen.getByLabelText('Title'), 'Manual Book');
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.type( screen.getByLabelText( 'Title' ), 'Manual Book' );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'No new citations added. Skipped 1 duplicate.'
 		);
-		expect(formatBibliographyEntry).not.toHaveBeenCalled();
-		expect(screen.getAllByRole('listitem')).toHaveLength(1);
+		expect( formatBibliographyEntry ).not.toHaveBeenCalled();
+		expect( screen.getAllByRole( 'listitem' ) ).toHaveLength( 1 );
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
 				screen
-					.getByRole('status')
-					.closest('.bibliography-builder-editor-notices')
+					.getByRole( 'status' )
+					.closest( '.bibliography-builder-editor-notices' )
 			).toHaveFocus();
-		});
-	});
+		} );
+	} );
 
-	it('sorts manual entries with existing citations and reformats them on style change', async () => {
+	it( 'sorts manual entries with existing citations and reformats them on style change', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-z',
 						family: 'Zulu',
 						year: 2024,
 						title: 'Zulu citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getAllByRole('button', { name: 'Manual Entry' })[0]
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		);
 		await userEvent.selectOptions(
-			screen.getByLabelText('Publication Type'),
+			screen.getByLabelText( 'Publication Type' ),
 			'article-journal'
 		);
-		await userEvent.type(screen.getByLabelText('Author(s)'), 'Alpha, Ada');
-		await userEvent.type(screen.getByLabelText('Title'), 'Alpha citation');
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.type(
+			screen.getByLabelText( 'Author(s)' ),
+			'Alpha, Ada'
+		);
+		await userEvent.type(
+			screen.getByLabelText( 'Title' ),
+			'Alpha citation'
+		);
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		await waitFor(() => {
-			const entries = screen.getAllByRole('listitem');
-			expect(entries[0]).toHaveTextContent('Alpha citation');
-			expect(entries[1]).toHaveTextContent('Zulu citation');
-		});
+		await waitFor( () => {
+			const entries = screen.getAllByRole( 'listitem' );
+			expect( entries[ 0 ] ).toHaveTextContent( 'Alpha citation' );
+			expect( entries[ 1 ] ).toHaveTextContent( 'Zulu citation' );
+		} );
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Citation Style'),
+			screen.getByLabelText( 'Citation Style' ),
 			'apa-7'
 		);
 
-		await waitFor(() => {
-			expect(screen.getByText('Alpha citation')).toBeInTheDocument();
-		});
-	});
+		await waitFor( () => {
+			expect( screen.getByText( 'Alpha citation' ) ).toBeInTheDocument();
+		} );
+	} );
 
-	it('does not reformat legacy over-limit bibliographies on style change', async () => {
+	it( 'does not reformat legacy over-limit bibliographies on style change', async () => {
 		render(
 			<EditHarness
-				initialCitations={Array.from({ length: 201 }, (_, index) =>
-					createCitation({
-						id: `legacy-${index}`,
-						family: `Legacy ${index}`,
+				initialCitations={ Array.from( { length: 201 }, ( _, index ) =>
+					createCitation( {
+						id: `legacy-${ index }`,
+						family: `Legacy ${ index }`,
 						year: 2024,
-						title: `Legacy citation ${index}`,
-					})
-				)}
+						title: `Legacy citation ${ index }`,
+					} )
+				) }
 			/>
 		);
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Citation Style'),
+			screen.getByLabelText( 'Citation Style' ),
 			'apa-7'
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'This bibliography has 201 citations, which exceeds the supported limit of 200. Remove citations until it is within the supported limit before reformatting.'
 		);
-		expect(formatBibliographyEntries).not.toHaveBeenCalled();
-	});
+		expect( formatBibliographyEntries ).not.toHaveBeenCalled();
+	} );
 
-	it('allows toggling metadata output layers in block settings', async () => {
-		render(<EditHarness />);
+	it( 'allows toggling metadata output layers in block settings', async () => {
+		render( <EditHarness /> );
 
-		await userEvent.click(screen.getByLabelText('Output JSON-LD'));
-		await userEvent.click(screen.getByLabelText('Output COinS'));
-		await userEvent.click(screen.getByLabelText('Output CSL-JSON'));
+		await userEvent.click( screen.getByLabelText( 'Output JSON-LD' ) );
+		await userEvent.click( screen.getByLabelText( 'Output COinS' ) );
+		await userEvent.click( screen.getByLabelText( 'Output CSL-JSON' ) );
 
-		expect(screen.getByLabelText('Output COinS')).toBeChecked();
-		expect(screen.getByLabelText('Output CSL-JSON')).toBeChecked();
-		expect(screen.getByLabelText('Output JSON-LD')).not.toBeChecked();
-	});
+		expect( screen.getByLabelText( 'Output COinS' ) ).toBeChecked();
+		expect( screen.getByLabelText( 'Output CSL-JSON' ) ).toBeChecked();
+		expect( screen.getByLabelText( 'Output JSON-LD' ) ).not.toBeChecked();
+	} );
 
-	it('clears the current notice when typing into the add form again', async () => {
-		render(<EditHarness />);
+	it( 'clears the current notice when typing into the add form again', async () => {
+		render( <EditHarness /> );
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Citation Style'),
+			screen.getByLabelText( 'Citation Style' ),
 			'apa-7'
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Style changed to APA 7.'
 		);
 
-		await userEvent.type(screen.getByLabelText('Add citations'), '10.1234');
+		await userEvent.type(
+			screen.getByLabelText( 'Add citations' ),
+			'10.1234'
+		);
 
-		await waitFor(() => {
-			expect(screen.queryByRole('status')).not.toBeInTheDocument();
-		});
-	});
+		await waitFor( () => {
+			expect( screen.queryByRole( 'status' ) ).not.toBeInTheDocument();
+		} );
+	} );
 
-	it('reformats citations when the selected style changes and preserves display overrides', async () => {
+	it( 'reformats citations when the selected style changes and preserves display overrides', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
 						formattedText:
 							'chicago-notes-bibliography:Alpha citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'entry-b',
 						family: 'Bravo',
 						year: 2025,
@@ -2193,437 +2234,445 @@ describe('Edit focus management', () => {
 							'chicago-notes-bibliography:Bravo citation',
 						displayOverride: 'Manual Bravo',
 						inputFormat: 'freetext',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Citation Style'),
+			screen.getByLabelText( 'Citation Style' ),
 			'apa-7'
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Style changed to APA 7. Reformatted 2 citations.'
 		);
-		expect(screen.getByText('Alpha citation')).toBeInTheDocument();
-		expect(screen.getByText('Manual Bravo')).toBeInTheDocument();
-		expect(formatBibliographyEntries).toHaveBeenCalledWith(
+		expect( screen.getByText( 'Alpha citation' ) ).toBeInTheDocument();
+		expect( screen.getByText( 'Manual Bravo' ) ).toBeInTheDocument();
+		expect( formatBibliographyEntries ).toHaveBeenCalledWith(
 			[
-				expect.objectContaining({
+				expect.objectContaining( {
 					title: 'Alpha citation',
-				}),
-				expect.objectContaining({
+				} ),
+				expect.objectContaining( {
 					title: 'Bravo citation',
-				}),
+				} ),
 			],
 			'apa-7',
-			expect.objectContaining({
-				onFallback: expect.any(Function),
-			})
+			expect.objectContaining( {
+				onFallback: expect.any( Function ),
+			} )
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Reset edits',
-			})
+			} )
 		);
 
-		await waitFor(() => {
-			expect(screen.getByText('Bravo citation')).toBeInTheDocument();
-		});
-	});
+		await waitFor( () => {
+			expect( screen.getByText( 'Bravo citation' ) ).toBeInTheDocument();
+		} );
+	} );
 
-	it('uses singular wording when one citation is reformatted during a style change', async () => {
+	it( 'uses singular wording when one citation is reformatted during a style change', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
 						formattedText:
 							'chicago-notes-bibliography:Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.selectOptions(
-			screen.getByLabelText('Citation Style'),
+			screen.getByLabelText( 'Citation Style' ),
 			'apa-7'
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Style changed to APA 7. Reformatted 1 citation.'
 		);
-	});
+	} );
 
-	it('skips duplicate citations that are already present in the block', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'skips duplicate citations that are already present in the block', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [
-				createCitation({
+				createCitation( {
 					id: 'entry-b',
 					family: 'Alpha',
 					year: 2024,
 					title: 'Alpha citation',
 					doi: '10.1234/example-doi',
-				}),
+				} ),
 			],
 			errors: [],
 			truncated: false,
-		});
+		} );
 
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
 						doi: '10.1234/example-doi',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'10.1234/example-doi'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'No new citations added. Skipped 1 duplicate.'
 		);
-		expect(screen.getAllByText('Alpha citation')).toHaveLength(1);
-	});
+		expect( screen.getAllByText( 'Alpha citation' ) ).toHaveLength( 1 );
+	} );
 
-	it('skips duplicate citations within the same pasted batch', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'skips duplicate citations within the same pasted batch', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [
-				createCitation({
+				createCitation( {
 					id: 'entry-a',
 					family: 'Alpha',
 					year: 2024,
 					title: 'Alpha citation',
 					doi: '10.1234/example-doi',
-				}),
-				createCitation({
+				} ),
+				createCitation( {
 					id: 'entry-b',
 					family: 'Alpha',
 					year: 2024,
 					title: 'Alpha citation',
 					doi: '10.1234/example-doi',
-				}),
+				} ),
 			],
 			errors: [],
 			truncated: false,
-		});
+		} );
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'10.1234/example-doi\n10.1234/example-doi'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Added 1 citation. Skipped 1 duplicate.'
 		);
-		expect(screen.getAllByText('Alpha citation')).toHaveLength(1);
-	});
+		expect( screen.getAllByText( 'Alpha citation' ) ).toHaveLength( 1 );
+	} );
 
-	it('moves focus to the notice for partial parse results', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'moves focus to the notice for partial parse results', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [
-				createCitation({
+				createCitation( {
 					id: 'entry-a',
 					family: 'Alpha',
 					year: 2024,
 					title: 'Alpha citation',
-				}),
+				} ),
 			],
-			errors: ['Could not resolve one DOI.'],
+			errors: [ 'Could not resolve one DOI.' ],
 			truncated: false,
-		});
+		} );
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'10.1234/example-doi'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
 				screen
-					.getByRole('status')
-					.closest('.bibliography-builder-editor-notices')
+					.getByRole( 'status' )
+					.closest( '.bibliography-builder-editor-notices' )
 			).toHaveFocus();
-		});
-	});
+		} );
+	} );
 
-	it('moves focus to the next entry after deleting a citation', async () => {
+	it( 'moves focus to the next entry after deleting a citation', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'entry-b',
 						family: 'Bravo',
 						year: 2025,
 						title: 'Bravo citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Delete citation: Alpha 2024' })
+			screen.getByRole( 'button', {
+				name: 'Delete citation: Alpha 2024',
+			} )
 		);
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				screen.getByText('Bravo citation').closest('li')
+				screen.getByText( 'Bravo citation' ).closest( 'li' )
 			).toHaveFocus();
-		});
-	});
+		} );
+	} );
 
-	it('reformats remaining citations after deletion in author-date styles', async () => {
+	it( 'reformats remaining citations after deletion in author-date styles', async () => {
 		render(
 			<EditHarness
 				initialStyle="chicago-author-date"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2020,
 						title: 'Alpha citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'entry-b',
 						family: 'Alpha',
 						year: 2020,
 						title: 'Beta citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		const deleteButtons = screen.getAllByRole('button', {
+		const deleteButtons = screen.getAllByRole( 'button', {
 			name: 'Delete citation: Alpha 2020',
-		});
-		await userEvent.click(deleteButtons[0]);
+		} );
+		await userEvent.click( deleteButtons[ 0 ] );
 
-		await waitFor(() => {
-			expect(formatBibliographyEntries).toHaveBeenCalledWith(
-				[expect.objectContaining({ title: 'Beta citation' })],
+		await waitFor( () => {
+			expect( formatBibliographyEntries ).toHaveBeenCalledWith(
+				[ expect.objectContaining( { title: 'Beta citation' } ) ],
 				'chicago-author-date',
-				expect.objectContaining({
-					onFallback: expect.any(Function),
-				})
+				expect.objectContaining( {
+					onFallback: expect.any( Function ),
+				} )
 			);
-		});
-	});
+		} );
+	} );
 
-	it('skips deletion reformatting in numeric styles because list markers provide numbering', async () => {
+	it( 'skips deletion reformatting in numeric styles because list markers provide numbering', async () => {
 		render(
 			<EditHarness
 				initialStyle="ieee"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2020,
 						title: 'Alpha citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'entry-b',
 						family: 'Bravo',
 						year: 2021,
 						title: 'Bravo citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Delete citation: Alpha 2020' })
+			screen.getByRole( 'button', {
+				name: 'Delete citation: Alpha 2020',
+			} )
 		);
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Citation removed.'
 		);
-		expect(formatBibliographyEntries).not.toHaveBeenCalled();
-		expect(screen.getByText('Bravo citation')).toBeInTheDocument();
-	});
+		expect( formatBibliographyEntries ).not.toHaveBeenCalled();
+		expect( screen.getByText( 'Bravo citation' ) ).toBeInTheDocument();
+	} );
 
-	it('keeps a persistent notice when deletion reformatting falls back', async () => {
+	it( 'keeps a persistent notice when deletion reformatting falls back', async () => {
 		formatBibliographyEntries.mockImplementationOnce(
-			(cslItems, style, options) => {
+			( cslItems, style, options ) => {
 				options.onFallback();
-				return cslItems.map((item) => item.title);
+				return cslItems.map( ( item ) => item.title );
 			}
 		);
 
 		render(
 			<EditHarness
 				initialStyle="chicago-author-date"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2020,
 						title: 'Alpha citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'entry-b',
 						family: 'Alpha',
 						year: 2020,
 						title: 'Beta citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		const deleteButtons = screen.getAllByRole('button', {
+		const deleteButtons = screen.getAllByRole( 'button', {
 			name: 'Delete citation: Alpha 2020',
-		});
-		await userEvent.click(deleteButtons[0]);
+		} );
+		await userEvent.click( deleteButtons[ 0 ] );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Citation removed. Formatter unavailable; added fallback citation text.'
 		);
-	});
+	} );
 
-	it('keeps a persistent notice when deletion reformatting throws', async () => {
+	it( 'keeps a persistent notice when deletion reformatting throws', async () => {
 		formatBibliographyEntries.mockRejectedValueOnce(
-			new Error('format failed')
+			new Error( 'format failed' )
 		);
 
 		render(
 			<EditHarness
 				initialStyle="chicago-author-date"
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2020,
 						title: 'Alpha citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'entry-b',
 						family: 'Alpha',
 						year: 2020,
 						title: 'Beta citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		const deleteButtons = screen.getAllByRole('button', {
+		const deleteButtons = screen.getAllByRole( 'button', {
 			name: 'Delete citation: Alpha 2020',
-		});
-		await userEvent.click(deleteButtons[0]);
+		} );
+		await userEvent.click( deleteButtons[ 0 ] );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Citation removed. Formatter unavailable; added fallback citation text.'
 		);
-	});
+	} );
 
-	it('moves focus back to the add-citations textarea after deleting the last citation', async () => {
+	it( 'moves focus back to the add-citations textarea after deleting the last citation', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Delete citation: Alpha 2024' })
+			screen.getByRole( 'button', {
+				name: 'Delete citation: Alpha 2024',
+			} )
 		);
 
-		await waitFor(() => {
-			expect(screen.getByLabelText('Add citations')).toHaveFocus();
-		});
-	});
+		await waitFor( () => {
+			expect( screen.getByLabelText( 'Add citations' ) ).toHaveFocus();
+		} );
+	} );
 
-	it('does not show a visible Undo button after deletion', async () => {
+	it( 'does not show a visible Undo button after deletion', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-					createCitation({
+					} ),
+					createCitation( {
 						id: 'entry-b',
 						family: 'Bravo',
 						year: 2025,
 						title: 'Bravo citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		expect(
-			screen.queryByRole('button', { name: 'Undo' })
+			screen.queryByRole( 'button', { name: 'Undo' } )
 		).not.toBeInTheDocument();
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Delete citation: Alpha 2024' })
+			screen.getByRole( 'button', {
+				name: 'Delete citation: Alpha 2024',
+			} )
 		);
 
-		expect(screen.getByRole('status')).toHaveTextContent(
+		expect( screen.getByRole( 'status' ) ).toHaveTextContent(
 			'Citation removed.'
 		);
 
 		expect(
-			screen.queryByRole('button', { name: 'Undo' })
+			screen.queryByRole( 'button', { name: 'Undo' } )
 		).not.toBeInTheDocument();
-	});
+	} );
 
-	it('does not show a confidence pill for low-confidence free-text entries', () => {
+	it( 'does not show a confidence pill for low-confidence free-text entries', () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						title: 'Responses API',
 						type: 'webpage',
 						inputFormat: 'freetext',
 						parseConfidence: 'low',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		expect(screen.queryByText('Review')).not.toBeInTheDocument();
-	});
+		expect( screen.queryByText( 'Review' ) ).not.toBeInTheDocument();
+	} );
 
-	it('supports structured field editing and reset for heuristic free-text entries', async () => {
+	it( 'supports structured field editing and reset for heuristic free-text entries', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Smith',
 						title: 'Learning Blocks',
@@ -2634,71 +2683,71 @@ describe('Edit focus management', () => {
 						year: 2024,
 						inputFormat: 'freetext',
 						parseConfidence: 'low',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Edit fields for Smith 2024',
-			})
+			} )
 		);
 
-		const authorInput = screen.getByLabelText('Author(s)');
-		fireEvent.change(authorInput, {
+		const authorInput = screen.getByLabelText( 'Author(s)' );
+		fireEvent.change( authorInput, {
 			target: {
 				value: 'Smith, Ada; Scholar, Jane',
 			},
-		});
+		} );
 
-		const titleInput = screen.getByLabelText('Title');
-		fireEvent.change(titleInput, {
+		const titleInput = screen.getByLabelText( 'Title' );
+		fireEvent.change( titleInput, {
 			target: {
 				value: 'Learning Blocks Revised',
 			},
-		});
+		} );
 
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				screen.getByText('Learning Blocks Revised')
+				screen.getByText( 'Learning Blocks Revised' )
 			).toBeInTheDocument();
-		});
+		} );
 
 		await userEvent.click(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Edit citation: Smith 2024',
-			})
+			} )
 		);
 
-		const displayInput = screen.getByLabelText('Editing: Smith 2024');
-		fireEvent.change(displayInput, {
+		const displayInput = screen.getByLabelText( 'Editing: Smith 2024' );
+		fireEvent.change( displayInput, {
 			target: {
 				value: 'Manual override',
 			},
-		});
-		fireEvent.keyDown(displayInput, { key: 'Enter' });
+		} );
+		fireEvent.keyDown( displayInput, { key: 'Enter' } );
 
-		expect(screen.getByText('Manual override')).toBeInTheDocument();
+		expect( screen.getByText( 'Manual override' ) ).toBeInTheDocument();
 
 		await userEvent.click(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Reset edits',
-			})
+			} )
 		);
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				screen.getByText('Learning Blocks Revised')
+				screen.getByText( 'Learning Blocks Revised' )
 			).toBeInTheDocument();
-		});
-	});
+		} );
+	} );
 
-	it('keeps an imported record intact when only some fields are edited', async () => {
+	it( 'keeps an imported record intact when only some fields are edited', async () => {
 		const saved = [];
-		const citation = createCitation({
+		const citation = createCitation( {
 			id: 'entry-a',
 			family: 'King',
 			year: 2019,
@@ -2706,209 +2755,218 @@ describe('Edit focus management', () => {
 			type: 'article-journal',
 			containerTitle: 'Liberation',
 			inputFormat: 'doi',
-		});
+		} );
 		citation.csl.author = [
 			{ family: 'King', given: 'Martin Luther', suffix: 'Jr.' },
 			{ literal: 'Southern Christian Leadership Conference' },
 		];
-		citation.csl.issued = { 'date-parts': [[2019, 5, 3]] };
+		citation.csl.issued = { 'date-parts': [ [ 2019, 5, 3 ] ] };
 		citation.csl.volume = '12';
 		citation.csl.issue = '3';
 		citation.csl.ISSN = '0024-2004';
 
 		function RecordingHarness() {
-			const [attributes, setAttributes] = React.useState({
+			const [ attributes, setAttributes ] = React.useState( {
 				citationStyle: 'chicago-notes-bibliography',
 				headingText: '',
-				citations: [citation],
-			});
+				citations: [ citation ],
+			} );
 
 			return (
 				<Edit
-					attributes={attributes}
-					setAttributes={(next) => {
-						saved.push(next);
-						setAttributes((previous) => ({ ...previous, ...next }));
-					}}
+					attributes={ attributes }
+					setAttributes={ ( next ) => {
+						saved.push( next );
+						setAttributes( ( previous ) => ( {
+							...previous,
+							...next,
+						} ) );
+					} }
 				/>
 			);
 		}
 
-		render(<RecordingHarness />);
+		render( <RecordingHarness /> );
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Edit fields for King 2019' })
+			screen.getByRole( 'button', { name: 'Edit fields for King 2019' } )
 		);
-		fireEvent.change(screen.getByLabelText('Title'), {
+		fireEvent.change( screen.getByLabelText( 'Title' ), {
 			target: { value: 'Letter from a Birmingham Jail' },
-		});
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		} );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				saved.some((next) =>
+				saved.some( ( next ) =>
 					next.citations?.some(
-						(entry) =>
+						( entry ) =>
 							entry.csl.title === 'Letter from a Birmingham Jail'
 					)
 				)
-			).toBe(true);
-		});
+			).toBe( true );
+		} );
 
 		const csl = saved
-			.filter((next) => next.citations)
+			.filter( ( next ) => next.citations )
 			.pop()
-			.citations.find((entry) => entry.id === 'entry-a').csl;
+			.citations.find( ( entry ) => entry.id === 'entry-a' ).csl;
 
-		expect(csl.title).toBe('Letter from a Birmingham Jail');
-		expect(csl.author).toEqual([
+		expect( csl.title ).toBe( 'Letter from a Birmingham Jail' );
+		expect( csl.author ).toEqual( [
 			{ family: 'King', given: 'Martin Luther', suffix: 'Jr.' },
 			{ literal: 'Southern Christian Leadership Conference' },
-		]);
-		expect(csl.issued).toEqual({ 'date-parts': [[2019, 5, 3]] });
-		expect(csl).toMatchObject({
+		] );
+		expect( csl.issued ).toEqual( { 'date-parts': [ [ 2019, 5, 3 ] ] } );
+		expect( csl ).toMatchObject( {
 			volume: '12',
 			issue: '3',
 			ISSN: '0024-2004',
 			'container-title': 'Liberation',
-		});
-	});
+		} );
+	} );
 
-	it('removes the authors and date when they are cleared, and leaves an undated record undated', async () => {
+	it( 'removes the authors and date when they are cleared, and leaves an undated record undated', async () => {
 		const saved = [];
-		const dated = createCitation({
+		const dated = createCitation( {
 			id: 'entry-a',
 			family: 'King',
 			year: 2019,
 			title: 'Dated',
 			inputFormat: 'doi',
-		});
-		dated.csl.issued = { 'date-parts': [[2019, 5, 3]] };
-		const undated = createCitation({
+		} );
+		dated.csl.issued = { 'date-parts': [ [ 2019, 5, 3 ] ] };
+		const undated = createCitation( {
 			id: 'entry-b',
 			family: 'Zeta',
 			title: 'Undated',
 			inputFormat: 'doi',
-		});
+		} );
 		delete undated.csl.issued;
 
 		function RecordingHarness() {
-			const [attributes, setAttributes] = React.useState({
+			const [ attributes, setAttributes ] = React.useState( {
 				citationStyle: 'chicago-notes-bibliography',
 				headingText: '',
-				citations: [dated, undated],
-			});
+				citations: [ dated, undated ],
+			} );
 
 			return (
 				<Edit
-					attributes={attributes}
-					setAttributes={(next) => {
-						saved.push(next);
-						setAttributes((previous) => ({ ...previous, ...next }));
-					}}
+					attributes={ attributes }
+					setAttributes={ ( next ) => {
+						saved.push( next );
+						setAttributes( ( previous ) => ( {
+							...previous,
+							...next,
+						} ) );
+					} }
 				/>
 			);
 		}
 
-		const latest = (id) =>
+		const latest = ( id ) =>
 			saved
-				.filter((next) => next.citations)
+				.filter( ( next ) => next.citations )
 				.pop()
-				?.citations.find((entry) => entry.id === id)?.csl;
+				?.citations.find( ( entry ) => entry.id === id )?.csl;
 
-		render(<RecordingHarness />);
+		render( <RecordingHarness /> );
 
-		await userEvent.click(screen.getByText('Dated'));
-		fireEvent.change(screen.getByLabelText('Year'), {
+		await userEvent.click( screen.getByText( 'Dated' ) );
+		fireEvent.change( screen.getByLabelText( 'Year' ), {
 			target: { value: '' },
-		});
-		fireEvent.change(screen.getByLabelText('Author(s)'), {
+		} );
+		fireEvent.change( screen.getByLabelText( 'Author(s)' ), {
 			target: { value: '' },
-		});
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		} );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
-		await waitFor(() => {
-			expect(latest('entry-a')?.issued).toBeUndefined();
-		});
-		expect(latest('entry-a').author).toBeUndefined();
+		await waitFor( () => {
+			expect( latest( 'entry-a' )?.issued ).toBeUndefined();
+		} );
+		expect( latest( 'entry-a' ).author ).toBeUndefined();
 
-		await userEvent.click(screen.getByText('Undated'));
-		fireEvent.change(screen.getByLabelText('Title'), {
+		await userEvent.click( screen.getByText( 'Undated' ) );
+		fireEvent.change( screen.getByLabelText( 'Title' ), {
 			target: { value: 'Undated, revised' },
-		});
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		} );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
-		await waitFor(() => {
-			expect(latest('entry-b')?.title).toBe('Undated, revised');
-		});
-		expect(latest('entry-b').issued).toBeUndefined();
-		expect(latest('entry-b').author).toEqual([
-			expect.objectContaining({ family: 'Zeta' }),
-		]);
-	});
+		await waitFor( () => {
+			expect( latest( 'entry-b' )?.title ).toBe( 'Undated, revised' );
+		} );
+		expect( latest( 'entry-b' ).issued ).toBeUndefined();
+		expect( latest( 'entry-b' ).author ).toEqual( [
+			expect.objectContaining( { family: 'Zeta' } ),
+		] );
+	} );
 
-	it('replaces the year and authors when they are edited', async () => {
+	it( 'replaces the year and authors when they are edited', async () => {
 		const saved = [];
-		const citation = createCitation({
+		const citation = createCitation( {
 			id: 'entry-a',
 			family: 'King',
 			year: 2019,
 			title: 'Letter',
 			inputFormat: 'doi',
-		});
-		citation.csl.issued = { 'date-parts': [[2019, 5, 3]] };
+		} );
+		citation.csl.issued = { 'date-parts': [ [ 2019, 5, 3 ] ] };
 
 		function RecordingHarness() {
-			const [attributes, setAttributes] = React.useState({
+			const [ attributes, setAttributes ] = React.useState( {
 				citationStyle: 'chicago-notes-bibliography',
 				headingText: '',
-				citations: [citation],
-			});
+				citations: [ citation ],
+			} );
 
 			return (
 				<Edit
-					attributes={attributes}
-					setAttributes={(next) => {
-						saved.push(next);
-						setAttributes((previous) => ({ ...previous, ...next }));
-					}}
+					attributes={ attributes }
+					setAttributes={ ( next ) => {
+						saved.push( next );
+						setAttributes( ( previous ) => ( {
+							...previous,
+							...next,
+						} ) );
+					} }
 				/>
 			);
 		}
 
-		render(<RecordingHarness />);
+		render( <RecordingHarness /> );
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Edit fields for King 2019' })
+			screen.getByRole( 'button', { name: 'Edit fields for King 2019' } )
 		);
-		fireEvent.change(screen.getByLabelText('Year'), {
+		fireEvent.change( screen.getByLabelText( 'Year' ), {
 			target: { value: '1963' },
-		});
-		fireEvent.change(screen.getByLabelText('Author(s)'), {
+		} );
+		fireEvent.change( screen.getByLabelText( 'Author(s)' ), {
 			target: { value: 'King, Martin Luther' },
-		});
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		} );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
 		// A corrected year keeps the month and day.
-		await waitFor(() => {
-			const last = saved.filter((next) => next.citations).pop();
-			expect(last?.citations[0].csl.issued).toEqual({
-				'date-parts': [[1963, 5, 3]],
-			});
-		});
+		await waitFor( () => {
+			const last = saved.filter( ( next ) => next.citations ).pop();
+			expect( last?.citations[ 0 ].csl.issued ).toEqual( {
+				'date-parts': [ [ 1963, 5, 3 ] ],
+			} );
+		} );
 
-		const csl = saved.filter((next) => next.citations).pop()
-			.citations[0].csl;
-		expect(csl.author).toEqual([
+		const csl = saved.filter( ( next ) => next.citations ).pop()
+			.citations[ 0 ].csl;
+		expect( csl.author ).toEqual( [
 			{ family: 'King', given: 'Martin Luther' },
-		]);
-	});
+		] );
+	} );
 
-	it('cancels structured field editing with Escape', async () => {
+	it( 'cancels structured field editing with Escape', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Smith',
 						title: 'Learning Blocks',
@@ -2917,34 +2975,34 @@ describe('Edit focus management', () => {
 						year: 2024,
 						inputFormat: 'freetext',
 						parseConfidence: 'low',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Edit fields for Smith 2024',
-			})
+			} )
 		);
 
-		const titleInput = screen.getByLabelText('Title');
-		fireEvent.keyDown(titleInput, { key: 'Escape' });
+		const titleInput = screen.getByLabelText( 'Title' );
+		fireEvent.keyDown( titleInput, { key: 'Escape' } );
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				screen.getByText('Learning Blocks').closest('li')
+				screen.getByText( 'Learning Blocks' ).closest( 'li' )
 			).toHaveFocus();
-		});
+		} );
 
-		expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
-	});
+		expect( screen.queryByLabelText( 'Title' ) ).not.toBeInTheDocument();
+	} );
 
-	it('shows an Author(s) field in structured editing and uses it when saving', async () => {
+	it( 'shows an Author(s) field in structured editing and uses it when saving', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Smith',
 						title: 'Learning Blocks',
@@ -2952,51 +3010,51 @@ describe('Edit focus management', () => {
 						year: 2024,
 						inputFormat: 'freetext',
 						parseConfidence: 'low',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Edit fields for Smith 2024',
-			})
+			} )
 		);
 
-		const authorInput = screen.getByLabelText('Author(s)');
-		expect(authorInput).toHaveValue('Smith');
+		const authorInput = screen.getByLabelText( 'Author(s)' );
+		expect( authorInput ).toHaveValue( 'Smith' );
 
-		fireEvent.change(authorInput, {
+		fireEvent.change( authorInput, {
 			target: {
 				value: 'Smith, Ada; Scholar, Jane',
 			},
-		});
+		} );
 
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
-		await waitFor(() => {
-			expect(formatBibliographyEntries).toHaveBeenCalledWith(
+		await waitFor( () => {
+			expect( formatBibliographyEntries ).toHaveBeenCalledWith(
 				[
-					expect.objectContaining({
+					expect.objectContaining( {
 						author: [
 							{ family: 'Smith', given: 'Ada' },
 							{ family: 'Scholar', given: 'Jane' },
 						],
-					}),
+					} ),
 				],
 				'chicago-notes-bibliography',
-				expect.objectContaining({
-					onFallback: expect.any(Function),
-				})
+				expect.objectContaining( {
+					onFallback: expect.any( Function ),
+				} )
 			);
-		});
-	});
+		} );
+	} );
 
-	it('shows review warnings and structured field editing for flagged DOI records', async () => {
+	it( 'shows review warnings and structured field editing for flagged DOI records', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-review',
 						family: 'King',
 						year: 2025,
@@ -3005,9 +3063,9 @@ describe('Edit focus management', () => {
 						containerTitle: 'Administrative Science Quarterly',
 						doi: '10.1177/00018392251368878',
 						inputFormat: 'doi',
-						parseWarnings: ['review-metadata-incomplete'],
-					}),
-				]}
+						parseWarnings: [ 'review-metadata-incomplete' ],
+					} ),
+				] }
 			/>
 		);
 
@@ -3017,16 +3075,16 @@ describe('Edit focus management', () => {
 			)
 		).toBeInTheDocument();
 		expect(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Edit fields for King 2025',
-			})
+			} )
 		).toBeInTheDocument();
-	});
+	} );
 
-	it('surfaces review-needed records in the top notice after parsing', async () => {
-		parsePastedInput.mockResolvedValue({
+	it( 'surfaces review-needed records in the top notice after parsing', async () => {
+		parsePastedInput.mockResolvedValue( {
 			entries: [
-				createCitation({
+				createCitation( {
 					id: 'entry-review',
 					family: 'King',
 					year: 2025,
@@ -3035,63 +3093,63 @@ describe('Edit focus management', () => {
 					containerTitle: 'Administrative Science Quarterly',
 					doi: '10.1177/00018392251368878',
 					inputFormat: 'doi',
-					parseWarnings: ['review-metadata-incomplete'],
-				}),
+					parseWarnings: [ 'review-metadata-incomplete' ],
+				} ),
 			],
 			errors: [],
 			truncated: false,
-		});
+		} );
 
-		render(<EditHarness />);
+		render( <EditHarness /> );
 
 		await userEvent.type(
-			screen.getByLabelText('Add citations'),
+			screen.getByLabelText( 'Add citations' ),
 			'https://doi.org/10.1177/00018392251368878'
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Add' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
 
-		expect(await screen.findByRole('status')).toHaveTextContent(
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
 			'Added 1 citation. Review 1 imported record before publishing.'
 		);
-	});
+	} );
 
-	it('does not create resettable edits when saving an unchanged citation', async () => {
+	it( 'does not create resettable edits when saving an unchanged citation', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Edit citation: Alpha 2024' })
+			screen.getByRole( 'button', { name: 'Edit citation: Alpha 2024' } )
 		);
 
-		const input = screen.getByLabelText('Editing: Alpha 2024');
-		fireEvent.keyDown(input, { key: 'Enter' });
+		const input = screen.getByLabelText( 'Editing: Alpha 2024' );
+		fireEvent.keyDown( input, { key: 'Enter' } );
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				screen.getByText('Alpha citation').closest('li')
+				screen.getByText( 'Alpha citation' ).closest( 'li' )
 			).toHaveFocus();
-		});
+		} );
 
 		expect(
-			screen.queryByRole('button', { name: 'Reset edits' })
+			screen.queryByRole( 'button', { name: 'Reset edits' } )
 		).not.toBeInTheDocument();
-	});
+	} );
 
-	it('opens structured field editing when a structured-editable citation row is clicked', async () => {
+	it( 'opens structured field editing when a structured-editable citation row is clicked', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Smith',
 						title: 'Learning Blocks',
@@ -3099,166 +3157,170 @@ describe('Edit focus management', () => {
 						year: 2024,
 						inputFormat: 'freetext',
 						parseConfidence: 'low',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		await userEvent.click(screen.getByText('Learning Blocks'));
+		await userEvent.click( screen.getByText( 'Learning Blocks' ) );
 
-		expect(screen.getByLabelText('Author(s)')).toBeInTheDocument();
-		expect(screen.getByLabelText('Title')).toBeInTheDocument();
-	});
+		expect( screen.getByLabelText( 'Author(s)' ) ).toBeInTheDocument();
+		expect( screen.getByLabelText( 'Title' ) ).toBeInTheDocument();
+	} );
 
-	it('opens the field form when a resolved citation row is clicked, and keeps the line edit', async () => {
+	it( 'opens the field form when a resolved citation row is clicked, and keeps the line edit', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
 						inputFormat: 'doi',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
-		await userEvent.click(screen.getByText('Alpha citation'));
+		await userEvent.click( screen.getByText( 'Alpha citation' ) );
 
-		expect(screen.getByLabelText('Title')).toHaveValue('Alpha citation');
+		expect( screen.getByLabelText( 'Title' ) ).toHaveValue(
+			'Alpha citation'
+		);
 
-		await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Edit citation: Alpha 2024' })
+			screen.getByRole( 'button', { name: 'Cancel' } )
+		);
+		await userEvent.click(
+			screen.getByRole( 'button', { name: 'Edit citation: Alpha 2024' } )
 		);
 
 		expect(
-			screen.getByLabelText('Editing: Alpha 2024')
+			screen.getByLabelText( 'Editing: Alpha 2024' )
 		).toBeInTheDocument();
-	});
+	} );
 
-	it.each(['doi', 'manual', 'isbn', 'bibtex', 'csl-json', 'archive'])(
+	it.each( [ 'doi', 'manual', 'isbn', 'bibtex', 'csl-json', 'archive' ] )(
 		'offers Edit fields for a %s entry',
-		(inputFormat) => {
+		( inputFormat ) => {
 			render(
 				<EditHarness
-					initialCitations={[
-						createCitation({
+					initialCitations={ [
+						createCitation( {
 							id: 'entry-a',
 							family: 'Alpha',
 							year: 2024,
 							title: 'Alpha citation',
 							inputFormat,
-						}),
-					]}
+						} ),
+					] }
 				/>
 			);
 
 			expect(
-				screen.getByRole('button', {
+				screen.getByRole( 'button', {
 					name: 'Edit fields for Alpha 2024',
-				})
+				} )
 			).toBeInTheDocument();
 		}
 	);
 
-	it('restores focus to the entry after confirming or cancelling an edit', async () => {
+	it( 'restores focus to the entry after confirming or cancelling an edit', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Edit citation: Alpha 2024' })
+			screen.getByRole( 'button', { name: 'Edit citation: Alpha 2024' } )
 		);
 
-		const input = screen.getByLabelText('Editing: Alpha 2024');
-		fireEvent.change(input, {
+		const input = screen.getByLabelText( 'Editing: Alpha 2024' );
+		fireEvent.change( input, {
 			target: {
 				value: 'Updated citation',
 			},
-		});
-		fireEvent.keyDown(input, { key: 'Enter' });
+		} );
+		fireEvent.keyDown( input, { key: 'Enter' } );
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				screen.getByText('Updated citation').closest('li')
+				screen.getByText( 'Updated citation' ).closest( 'li' )
 			).toHaveFocus();
-		});
+		} );
 
 		expect(
-			screen.queryAllByText('Editing citation. Press Escape to cancel.')
-		).toHaveLength(0);
+			screen.queryAllByText( 'Editing citation. Press Escape to cancel.' )
+		).toHaveLength( 0 );
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Edit citation: Alpha 2024' })
+			screen.getByRole( 'button', { name: 'Edit citation: Alpha 2024' } )
 		);
 
-		const secondInput = screen.getByLabelText('Editing: Alpha 2024');
-		fireEvent.keyDown(secondInput, { key: 'Escape' });
+		const secondInput = screen.getByLabelText( 'Editing: Alpha 2024' );
+		fireEvent.keyDown( secondInput, { key: 'Escape' } );
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				screen.getByText('Updated citation').closest('li')
+				screen.getByText( 'Updated citation' ).closest( 'li' )
 			).toHaveFocus();
-		});
+		} );
 
 		expect(
-			screen.queryAllByText('Editing citation. Press Escape to cancel.')
-		).toHaveLength(0);
-	});
+			screen.queryAllByText( 'Editing citation. Press Escape to cancel.' )
+		).toHaveLength( 0 );
+	} );
 
-	it('does not blank the citation when Escape is followed by blur during inline editing', async () => {
+	it( 'does not blank the citation when Escape is followed by blur during inline editing', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Alpha',
 						year: 2024,
 						title: 'Alpha citation',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Edit citation: Alpha 2024' })
+			screen.getByRole( 'button', { name: 'Edit citation: Alpha 2024' } )
 		);
 
-		const input = screen.getByLabelText('Editing: Alpha 2024');
-		fireEvent.change(input, {
+		const input = screen.getByLabelText( 'Editing: Alpha 2024' );
+		fireEvent.change( input, {
 			target: {
 				value: '',
 			},
-		});
-		fireEvent.keyDown(input, { key: 'Escape' });
-		fireEvent.blur(input);
+		} );
+		fireEvent.keyDown( input, { key: 'Escape' } );
+		fireEvent.blur( input );
 
-		await waitFor(() => {
-			expect(screen.getByText('Alpha citation')).toBeInTheDocument();
-		});
+		await waitFor( () => {
+			expect( screen.getByText( 'Alpha citation' ) ).toBeInTheDocument();
+		} );
 
 		expect(
-			screen.queryByRole('button', { name: 'Reset edits' })
+			screen.queryByRole( 'button', { name: 'Reset edits' } )
 		).not.toBeInTheDocument();
-	});
+	} );
 
-	it('restores focus to the entry after confirming or cancelling structured field edits', async () => {
+	it( 'restores focus to the entry after confirming or cancelling structured field edits', async () => {
 		render(
 			<EditHarness
-				initialCitations={[
-					createCitation({
+				initialCitations={ [
+					createCitation( {
 						id: 'entry-a',
 						family: 'Smith',
 						title: 'Learning Blocks',
@@ -3266,333 +3328,346 @@ describe('Edit focus management', () => {
 						year: 2024,
 						inputFormat: 'freetext',
 						parseConfidence: 'low',
-					}),
-				]}
+					} ),
+				] }
 			/>
 		);
 
 		await userEvent.click(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Edit fields for Smith 2024',
-			})
+			} )
 		);
 
-		const titleInput = screen.getByLabelText('Title');
-		fireEvent.change(titleInput, {
+		const titleInput = screen.getByLabelText( 'Title' );
+		fireEvent.change( titleInput, {
 			target: {
 				value: 'Learning Blocks Revised',
 			},
-		});
+		} );
 
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				screen.getByText('Learning Blocks Revised').closest('li')
+				screen.getByText( 'Learning Blocks Revised' ).closest( 'li' )
 			).toHaveFocus();
-		});
+		} );
 
 		await userEvent.click(
-			screen.getByRole('button', {
+			screen.getByRole( 'button', {
 				name: 'Edit fields for Smith 2024',
-			})
+			} )
 		);
 
-		await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+		await userEvent.click(
+			screen.getByRole( 'button', { name: 'Cancel' } )
+		);
 
-		await waitFor(() => {
+		await waitFor( () => {
 			expect(
-				screen.getByText('Learning Blocks Revised').closest('li')
+				screen.getByText( 'Learning Blocks Revised' ).closest( 'li' )
 			).toHaveFocus();
-		});
-	});
-});
+		} );
+	} );
+} );
 
-describe('OSCOLA inspector notice', () => {
-	it('shows OSCOLA limitation notice when OSCOLA style is selected', () => {
-		render(<EditHarness initialStyle="oscola" />);
+describe( 'OSCOLA inspector notice', () => {
+	it( 'shows OSCOLA limitation notice when OSCOLA style is selected', () => {
+		render( <EditHarness initialStyle="oscola" /> );
 
 		expect(
-			screen.getByText(/OSCOLA convention groups bibliographies/i)
+			screen.getByText( /OSCOLA convention groups bibliographies/i )
 		).toBeInTheDocument();
-	});
+	} );
 
-	it('does not show OSCOLA notice for non-OSCOLA styles', () => {
-		render(<EditHarness initialStyle="chicago-notes-bibliography" />);
+	it( 'does not show OSCOLA notice for non-OSCOLA styles', () => {
+		render( <EditHarness initialStyle="chicago-notes-bibliography" /> );
 
 		expect(
-			screen.queryByText(/OSCOLA convention groups bibliographies/i)
+			screen.queryByText( /OSCOLA convention groups bibliographies/i )
 		).not.toBeInTheDocument();
-	});
+	} );
 
-	it('hides OSCOLA notice after dismissal', () => {
-		render(<EditHarness initialStyle="oscola" />);
+	it( 'hides OSCOLA notice after dismissal', () => {
+		render( <EditHarness initialStyle="oscola" /> );
 
 		expect(
-			screen.getByText(/OSCOLA convention groups bibliographies/i)
+			screen.getByText( /OSCOLA convention groups bibliographies/i )
 		).toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
+		fireEvent.click( screen.getByRole( 'button', { name: /dismiss/i } ) );
 
 		expect(
-			screen.queryByText(/OSCOLA convention groups bibliographies/i)
+			screen.queryByText( /OSCOLA convention groups bibliographies/i )
 		).not.toBeInTheDocument();
-	});
-});
+	} );
+} );
 
-describe('soft-cap notice', () => {
-	it('shows warning when citation count is at or above 100 but below 200', () => {
+describe( 'soft-cap notice', () => {
+	it( 'shows warning when citation count is at or above 100 but below 200', () => {
 		render(
 			<EditHarness
-				initialCitations={Array.from({ length: 100 }, (_, index) =>
-					createCitation({
-						id: `entry-${index}`,
-						family: `Author ${index}`,
+				initialCitations={ Array.from( { length: 100 }, ( _, index ) =>
+					createCitation( {
+						id: `entry-${ index }`,
+						family: `Author ${ index }`,
 						year: 2024,
-						title: `Citation ${index}`,
-					})
-				)}
+						title: `Citation ${ index }`,
+					} )
+				) }
 			/>
 		);
 
 		expect(
-			screen.getByText(/above the 100-entry threshold/i)
+			screen.getByText( /above the 100-entry threshold/i )
 		).toBeInTheDocument();
-	});
+	} );
 
-	it('does not show warning when citation count is below 100', () => {
+	it( 'does not show warning when citation count is below 100', () => {
 		render(
 			<EditHarness
-				initialCitations={Array.from({ length: 99 }, (_, index) =>
-					createCitation({
-						id: `entry-${index}`,
-						family: `Author ${index}`,
+				initialCitations={ Array.from( { length: 99 }, ( _, index ) =>
+					createCitation( {
+						id: `entry-${ index }`,
+						family: `Author ${ index }`,
 						year: 2024,
-						title: `Citation ${index}`,
-					})
-				)}
+						title: `Citation ${ index }`,
+					} )
+				) }
 			/>
 		);
 
 		expect(
-			screen.queryByText(/above the 100-entry threshold/i)
+			screen.queryByText( /above the 100-entry threshold/i )
 		).not.toBeInTheDocument();
-	});
+	} );
 
-	it('hides warning after dismissal', () => {
+	it( 'hides warning after dismissal', () => {
 		render(
 			<EditHarness
-				initialCitations={Array.from({ length: 100 }, (_, index) =>
-					createCitation({
-						id: `entry-${index}`,
-						family: `Author ${index}`,
+				initialCitations={ Array.from( { length: 100 }, ( _, index ) =>
+					createCitation( {
+						id: `entry-${ index }`,
+						family: `Author ${ index }`,
 						year: 2024,
-						title: `Citation ${index}`,
-					})
-				)}
+						title: `Citation ${ index }`,
+					} )
+				) }
 			/>
 		);
 
 		expect(
-			screen.getByText(/above the 100-entry threshold/i)
+			screen.getByText( /above the 100-entry threshold/i )
 		).toBeInTheDocument();
 
-		fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
+		fireEvent.click( screen.getByRole( 'button', { name: /dismiss/i } ) );
 
 		expect(
-			screen.queryByText(/above the 100-entry threshold/i)
+			screen.queryByText( /above the 100-entry threshold/i )
 		).not.toBeInTheDocument();
-	});
-});
+	} );
+} );
 
-describe('Edit fields keeps what the user did not change', () => {
-	function renderRecording(citations) {
+describe( 'Edit fields keeps what the user did not change', () => {
+	function renderRecording( citations ) {
 		const saved = [];
 
 		function RecordingHarness() {
-			const [attributes, setAttributes] = React.useState({
+			const [ attributes, setAttributes ] = React.useState( {
 				citationStyle: 'chicago-notes-bibliography',
 				headingText: '',
 				citations,
-			});
+			} );
 
 			return (
 				<Edit
-					attributes={attributes}
-					setAttributes={(next) => {
-						saved.push(next);
-						setAttributes((previous) => ({ ...previous, ...next }));
-					}}
+					attributes={ attributes }
+					setAttributes={ ( next ) => {
+						saved.push( next );
+						setAttributes( ( previous ) => ( {
+							...previous,
+							...next,
+						} ) );
+					} }
 				/>
 			);
 		}
 
-		render(<RecordingHarness />);
+		render( <RecordingHarness /> );
 
-		return (id) =>
+		return ( id ) =>
 			saved
-				.filter((next) => next.citations)
+				.filter( ( next ) => next.citations )
 				.pop()
-				?.citations.find((entry) => entry.id === id);
+				?.citations.find( ( entry ) => entry.id === id );
 	}
 
-	async function editTitle(label, title) {
+	async function editTitle( label, title ) {
 		await userEvent.click(
-			screen.getByRole('button', { name: `Edit fields for ${label}` })
+			screen.getByRole( 'button', { name: `Edit fields for ${ label }` } )
 		);
-		fireEvent.change(screen.getByLabelText('Title'), {
+		fireEvent.change( screen.getByLabelText( 'Title' ), {
 			target: { value: title },
-		});
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		} );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 	}
 
-	it('does not trim an untouched URL that ends in a parenthesis', async () => {
-		const citation = createCitation({
+	it( 'does not trim an untouched URL that ends in a parenthesis', async () => {
+		const citation = createCitation( {
 			id: 'entry-a',
 			family: 'Wiki',
 			year: 2024,
 			title: 'Mercury',
 			type: 'webpage',
 			inputFormat: 'csl-json',
-		});
+		} );
 		citation.csl.URL = 'https://en.wikipedia.org/wiki/Mercury_(planet)';
-		const latest = renderRecording([citation]);
+		const latest = renderRecording( [ citation ] );
 
-		await editTitle('Wiki 2024', 'Mercury, the planet');
+		await editTitle( 'Wiki 2024', 'Mercury, the planet' );
 
-		await waitFor(() => {
-			expect(latest('entry-a')?.csl.title).toBe('Mercury, the planet');
-		});
-		expect(latest('entry-a').csl.URL).toBe(
+		await waitFor( () => {
+			expect( latest( 'entry-a' )?.csl.title ).toBe(
+				'Mercury, the planet'
+			);
+		} );
+		expect( latest( 'entry-a' ).csl.URL ).toBe(
 			'https://en.wikipedia.org/wiki/Mercury_(planet)'
 		);
-	});
+	} );
 
-	it('saves an entry whose untouched DOI is stored as a doi.org link', async () => {
-		const citation = createCitation({
+	it( 'saves an entry whose untouched DOI is stored as a doi.org link', async () => {
+		const citation = createCitation( {
 			id: 'entry-a',
 			family: 'Ross',
 			year: 2020,
 			title: 'Imported',
 			inputFormat: 'csl-json',
-		});
+		} );
 		citation.csl.DOI = 'https://doi.org/10.1234/abc';
-		const latest = renderRecording([citation]);
+		const latest = renderRecording( [ citation ] );
 
-		await editTitle('Ross 2020', 'Imported, revised');
+		await editTitle( 'Ross 2020', 'Imported, revised' );
 
-		await waitFor(() => {
-			expect(latest('entry-a')?.csl.title).toBe('Imported, revised');
-		});
-		expect(latest('entry-a').csl.DOI).toBe('https://doi.org/10.1234/abc');
+		await waitFor( () => {
+			expect( latest( 'entry-a' )?.csl.title ).toBe(
+				'Imported, revised'
+			);
+		} );
+		expect( latest( 'entry-a' ).csl.DOI ).toBe(
+			'https://doi.org/10.1234/abc'
+		);
 		expect(
-			screen.queryByText('Enter a valid DOI before adding.')
+			screen.queryByText( 'Enter a valid DOI before adding.' )
 		).not.toBeInTheDocument();
-	});
+	} );
 
-	it('keeps the other authors as they were when one name is edited', async () => {
-		const citation = createCitation({
+	it( 'keeps the other authors as they were when one name is edited', async () => {
+		const citation = createCitation( {
 			id: 'entry-a',
 			family: 'Smith',
 			year: 2020,
 			title: 'Report',
 			inputFormat: 'doi',
-		});
+		} );
 		citation.csl.author = [
 			{ family: 'Smith', given: 'J.', suffix: 'Jr.' },
 			{ literal: 'University of California, Berkeley' },
 			{ family: 'Doe', given: 'Jane' },
 		];
-		const latest = renderRecording([citation]);
+		const latest = renderRecording( [ citation ] );
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Edit fields for Smith 2020' })
+			screen.getByRole( 'button', { name: 'Edit fields for Smith 2020' } )
 		);
-		fireEvent.change(screen.getByLabelText('Author(s)'), {
+		fireEvent.change( screen.getByLabelText( 'Author(s)' ), {
 			target: {
 				value: 'Smith, J.; University of California, Berkeley; Doe, Janet',
 			},
-		});
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		} );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
-		await waitFor(() => {
-			expect(latest('entry-a')?.csl.author?.[2]?.given).toBe('Janet');
-		});
-		expect(latest('entry-a').csl.author).toEqual([
+		await waitFor( () => {
+			expect( latest( 'entry-a' )?.csl.author?.[ 2 ]?.given ).toBe(
+				'Janet'
+			);
+		} );
+		expect( latest( 'entry-a' ).csl.author ).toEqual( [
 			{ family: 'Smith', given: 'J.', suffix: 'Jr.' },
 			{ literal: 'University of California, Berkeley' },
 			{ family: 'Doe', given: 'Janet' },
-		]);
-	});
+		] );
+	} );
 
-	it('keeps a hand-edited display line when no field changed, and says when an edit replaces it', async () => {
-		const citation = createCitation({
+	it( 'keeps a hand-edited display line when no field changed, and says when an edit replaces it', async () => {
+		const citation = createCitation( {
 			id: 'entry-a',
 			family: 'Alpha',
 			year: 2024,
 			title: 'Alpha citation',
 			inputFormat: 'doi',
 			displayOverride: 'My own wording of this citation.',
-		});
-		const latest = renderRecording([citation]);
+		} );
+		const latest = renderRecording( [ citation ] );
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Edit fields for Alpha 2024' })
+			screen.getByRole( 'button', { name: 'Edit fields for Alpha 2024' } )
 		);
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
-		await waitFor(() => {
-			expect(latest('entry-a')).toBeDefined();
-		});
-		expect(latest('entry-a').displayOverride).toBe(
+		await waitFor( () => {
+			expect( latest( 'entry-a' ) ).toBeDefined();
+		} );
+		expect( latest( 'entry-a' ).displayOverride ).toBe(
 			'My own wording of this citation.'
 		);
 
-		await editTitle('Alpha 2024', 'Alpha citation, revised');
+		await editTitle( 'Alpha 2024', 'Alpha citation, revised' );
 
-		await waitFor(() => {
-			expect(latest('entry-a')?.displayOverride).toBeNull();
-		});
+		await waitFor( () => {
+			expect( latest( 'entry-a' )?.displayOverride ).toBeNull();
+		} );
 		expect(
 			await screen.findByText(
 				'Fields updated. The edited display text was replaced with the reformatted citation.'
 			)
 		).toBeInTheDocument();
-	});
+	} );
 
-	it('warns instead of dropping the date when the year is not a number, and clears it for n.d.', async () => {
-		const citation = createCitation({
+	it( 'warns instead of dropping the date when the year is not a number, and clears it for n.d.', async () => {
+		const citation = createCitation( {
 			id: 'entry-a',
 			family: 'Alpha',
 			year: 2024,
 			title: 'Alpha citation',
 			inputFormat: 'doi',
-		});
-		const latest = renderRecording([citation]);
+		} );
+		const latest = renderRecording( [ citation ] );
 
 		await userEvent.click(
-			screen.getByRole('button', { name: 'Edit fields for Alpha 2024' })
+			screen.getByRole( 'button', { name: 'Edit fields for Alpha 2024' } )
 		);
-		fireEvent.change(screen.getByLabelText('Year'), {
+		fireEvent.change( screen.getByLabelText( 'Year' ), {
 			target: { value: 'c. 1850' },
-		});
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		} );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
 		expect(
 			await screen.findByText(
 				'Enter the year as a number, such as 1977, or leave it empty.'
 			)
 		).toBeInTheDocument();
-		expect(latest('entry-a')).toBeUndefined();
+		expect( latest( 'entry-a' ) ).toBeUndefined();
 
-		fireEvent.change(screen.getByLabelText('Year'), {
+		fireEvent.change( screen.getByLabelText( 'Year' ), {
 			target: { value: 'n.d.' },
-		});
-		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+		} );
+		await userEvent.click( screen.getByRole( 'button', { name: 'Save' } ) );
 
-		await waitFor(() => {
-			expect(latest('entry-a')).toBeDefined();
-		});
-		expect(latest('entry-a').csl.issued).toBeUndefined();
-	});
-});
+		await waitFor( () => {
+			expect( latest( 'entry-a' ) ).toBeDefined();
+		} );
+		expect( latest( 'entry-a' ).csl.issued ).toBeUndefined();
+	} );
+} );

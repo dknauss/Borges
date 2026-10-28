@@ -221,5 +221,24 @@
       { "id": "iracema", "csl": { "type": "book", "title": "Iracema", "issued": { "date-parts": [[1865]] } } }
     ],
     "expectedOrder": ["iracema", "o-guarani"]
+  },
+  {
+    "id": "case-notes-single-author-first",
+    "style": "chicago-notes-bibliography",
+    "citations": [
+      { "id": "gessner-simler-1574", "csl": { "type": "book", "title": "Bibliotheca", "author": [{ "family": "Gessner", "given": "Conrad" }, { "family": "Simler", "given": "Josias" }], "issued": { "date-parts": [[1574]] } } },
+      { "id": "gessner-1545", "csl": { "type": "book", "title": "Bibliotheca universalis, sive Catalogus omnium scriptorum locupletissimus", "author": [{ "family": "Gessner", "given": "Conrad" }], "issued": { "date-parts": [[1545]] } } },
+      { "id": "gessner-frisius-1555", "csl": { "type": "book", "title": "Appendix bibliothecae", "author": [{ "family": "Gessner", "given": "Conrad" }, { "family": "Frisius", "given": "Johannes" }], "issued": { "date-parts": [[1555]] } } }
+    ],
+    "expectedOrder": ["gessner-1545", "gessner-frisius-1555", "gessner-simler-1574"]
+  },
+  {
+    "id": "case-notes-same-family-by-given-name",
+    "style": "oscola",
+    "citations": [
+      { "id": "smith-john-alpha", "csl": { "type": "book", "title": "Alpha", "author": [{ "family": "Smith", "given": "John" }], "issued": { "date-parts": [[2001]] } } },
+      { "id": "smith-adam-zeta", "csl": { "type": "book", "title": "Zeta", "author": [{ "family": "Smith", "given": "Adam" }], "issued": { "date-parts": [[1776]] } } }
+    ],
+    "expectedOrder": ["smith-adam-zeta", "smith-john-alpha"]
   }
 ]

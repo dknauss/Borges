@@ -69,7 +69,10 @@ const WARNING_MESSAGES = {
 	),
 };
 
-const CITATION_FORM_LABEL = __('Add citations', 'borges-bibliography-builder');
+const CITATION_FORM_LABEL = __(
+	'Add citations',
+	'borges-bibliography-builder'
+);
 const PASTE_IMPORT_TAB_LABEL = __(
 	'Paste / Import',
 	'borges-bibliography-builder'
@@ -83,7 +86,7 @@ const FORMATTER_FALLBACK_MESSAGE = __(
 	'borges-bibliography-builder'
 );
 
-export default function Edit({ attributes, setAttributes, clientId }) {
+export default function Edit( { attributes, setAttributes, clientId } ) {
 	const {
 		citations,
 		citationStyle,
@@ -94,45 +97,49 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		outputCslJson = false,
 		outputCiteExport = false,
 	} = attributes;
-	const selectableStyles = useMemo(() => getSelectableStyles(), []);
+	const selectableStyles = useMemo( () => getSelectableStyles(), [] );
 	const blockProps = useBlockProps();
-	const headingPlaceholder = getHeadingPlaceholder(citationStyle);
-	const HeadingTag = getHeadingTag(headingLevel);
-	const listStyleDefinition = getStyleDefinition(citationStyle);
+	const headingPlaceholder = getHeadingPlaceholder( citationStyle );
+	const HeadingTag = getHeadingTag( headingLevel );
+	const listStyleDefinition = getStyleDefinition( citationStyle );
 	const isNumericFamily = listStyleDefinition.family === 'numeric';
-	const ListTag = getListSemantics(citationStyle);
+	const ListTag = getListSemantics( citationStyle );
 	const listClassName = `bibliography-builder-list bibliography-builder-list-${
 		listStyleDefinition.listType === 'ol' ? 'numeric' : 'unordered'
-	} bibliography-builder-list-${citationStyle}`;
-	const [inputValue, setInputValue] = useState('');
-	const [isLoading, setIsLoading] = useState(false);
-	const [oscolaNoticeDismissed, setOscolaNoticeDismissed] = useState(false);
-	const [softCapNoticeDismissed, setSoftCapNoticeDismissed] = useState(false);
+	} bibliography-builder-list-${ citationStyle }`;
+	const [ inputValue, setInputValue ] = useState( '' );
+	const [ isLoading, setIsLoading ] = useState( false );
+	const [ oscolaNoticeDismissed, setOscolaNoticeDismissed ] =
+		useState( false );
+	const [ softCapNoticeDismissed, setSoftCapNoticeDismissed ] =
+		useState( false );
 	const atSoftCap =
 		citations.length >= SOFT_CAP_CITATIONS_PER_BIBLIOGRAPHY &&
 		citations.length < MAX_CITATIONS_PER_BIBLIOGRAPHY;
-	const [isFormOpen, setIsFormOpen] = useState(true);
-	const [activeAddMode, setActiveAddMode] = useState('paste');
+	const [ isFormOpen, setIsFormOpen ] = useState( true );
+	const [ activeAddMode, setActiveAddMode ] = useState( 'paste' );
 	const sortedCitations = useMemo(
-		() => sortCitations(citations, citationStyle),
-		[citationStyle, citations]
+		() => sortCitations( citations, citationStyle ),
+		[ citationStyle, citations ]
 	);
-	const citationsRef = useRef(citations);
-	const asyncOperationRef = useRef(0);
+	const citationsRef = useRef( citations );
+	const asyncOperationRef = useRef( 0 );
 	const { announce, clearNotice, currentNotice, noticeVersion } =
 		useBlockNotices();
-	const beginAsyncOperation = useCallback(() => {
+	const beginAsyncOperation = useCallback( () => {
 		asyncOperationRef.current += 1;
 		return asyncOperationRef.current;
-	}, []);
+	}, [] );
 	const isCurrentAsyncOperation = useCallback(
-		(operationId) => asyncOperationRef.current === operationId,
+		( operationId ) => asyncOperationRef.current === operationId,
 		[]
 	);
-	const { noticeRef, pasteZoneRef, queueFocus, setEntryRef } = useEntryFocus({
-		citations,
-		noticeVersion,
-	});
+	const { noticeRef, pasteZoneRef, queueFocus, setEntryRef } = useEntryFocus(
+		{
+			citations,
+			noticeVersion,
+		}
+	);
 	const {
 		editText,
 		editingId,
@@ -150,7 +157,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		setEditText,
 		structuredEditingId,
 		structuredFields,
-	} = useCitationEditorState({
+	} = useCitationEditorState( {
 		announce,
 		beginAsyncOperation,
 		citationStyle,
@@ -161,14 +168,14 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		outputCiteExport,
 		queueFocus,
 		setAttributes,
-	});
-	const { moveCitationDown, moveCitationUp } = useCitationReorder({
+	} );
+	const { moveCitationDown, moveCitationUp } = useCitationReorder( {
 		announce,
 		citationsRef,
 		isCurrentAsyncOperation,
 		queueFocus,
 		setAttributes,
-	});
+	} );
 	const {
 		handleCopyBibliography,
 		handleCopyCitation,
@@ -176,80 +183,81 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		handleDownloadBibtex,
 		handleDownloadCslJson,
 		handleDownloadRis,
-	} = useBibliographyExportActions({
+	} = useBibliographyExportActions( {
 		announce,
 		citationStyle,
 		citationsRef,
 		queueFocus,
-	});
+	} );
 
-	useEffect(() => {
+	useEffect( () => {
 		citationsRef.current = citations;
-	}, [citations]);
+	}, [ citations ] );
 
-	useStableIds({ clientId, attributes, setAttributes });
-	useOutputDefaults({ attributes, setAttributes });
+	useStableIds( { clientId, attributes, setAttributes } );
+	useOutputDefaults( { attributes, setAttributes } );
 
 	// When Cite/Export is enabled, ensure existing citations have their async
 	// BibTeX/BibLaTeX export strings (RIS/CSL-JSON are computed in save()).
 	// Editing actions only pre-compute these while the feature is on, so this
 	// backfills citations that were added before it was toggled on.
-	useEffect(() => {
-		if (!outputCiteExport) {
+	useEffect( () => {
+		if ( ! outputCiteExport ) {
 			return undefined;
 		}
 		const needsExportStrings = citations.some(
-			(citation) => citation.exportBibtex === undefined
+			( citation ) => citation.exportBibtex === undefined
 		);
-		if (!needsExportStrings) {
+		if ( ! needsExportStrings ) {
 			return undefined;
 		}
 
 		let cancelled = false;
-		(async () => {
+		( async () => {
 			const exportStrings = await computeExportStrings(
-				citations.map((citation) => citation.csl),
+				citations.map( ( citation ) => citation.csl ),
 				citationStyle
 			);
-			if (cancelled) {
+			if ( cancelled ) {
 				return;
 			}
-			setAttributes({
-				citations: citations.map((citation, index) => ({
+			setAttributes( {
+				citations: citations.map( ( citation, index ) => ( {
 					...citation,
-					exportBibtex: exportStrings[index]?.exportBibtex ?? '',
-					exportBiblatex: exportStrings[index]?.exportBiblatex ?? '',
-				})),
-			});
-		})();
+					exportBibtex: exportStrings[ index ]?.exportBibtex ?? '',
+					exportBiblatex:
+						exportStrings[ index ]?.exportBiblatex ?? '',
+				} ) ),
+			} );
+		} )();
 
 		return () => {
 			cancelled = true;
 		};
-	}, [outputCiteExport, citations, citationStyle, setAttributes]);
+	}, [ outputCiteExport, citations, citationStyle, setAttributes ] );
 
-	useEffect(() => {
-		if (isNumericFamily) {
+	useEffect( () => {
+		if ( isNumericFamily ) {
 			return;
 		}
 
-		const sortedIds = sortedCitations.map((citation) => citation.id);
-		const currentIds = citations.map((citation) => citation.id);
+		const sortedIds = sortedCitations.map( ( citation ) => citation.id );
+		const currentIds = citations.map( ( citation ) => citation.id );
 
 		if (
 			sortedIds.length === currentIds.length &&
-			sortedIds.every((id, index) => id === currentIds[index])
+			sortedIds.every( ( id, index ) => id === currentIds[ index ] )
 		) {
 			return;
 		}
 
 		citationsRef.current = sortedCitations;
-		setAttributes({ citations: sortedCitations });
-	}, [citations, isNumericFamily, setAttributes, sortedCitations]);
+		setAttributes( { citations: sortedCitations } );
+	}, [ citations, isNumericFamily, setAttributes, sortedCitations ] );
 
 	const updatePasteInput = useCallback(
-		(nextValue, { syncDom = false } = {}) => {
-			setInputValue(nextValue);
+		( nextValue, { syncDom = false } = {} ) => {
+			setInputValue( nextValue );
 
 			if (
 				syncDom &&
@@ -259,9 +267,9 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				pasteZoneRef.current.value = nextValue;
 			}
 		},
-		[pasteZoneRef]
+		[ pasteZoneRef ]
 	);
-	const { handleParse } = useCitationImportActions({
+	const { handleParse } = useCitationImportActions( {
 		announce,
 		beginAsyncOperation,
 		citationStyle,
@@ -274,7 +282,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		setAttributes,
 		setIsLoading,
 		updatePasteInput,
-	});
+	} );
 	const {
 		handleManualAdd,
 		handleManualClear,
@@ -282,7 +290,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		manualFieldDefinitions,
 		manualFields,
 		manualTypeOptions,
-	} = useManualCitationActions({
+	} = useManualCitationActions( {
 		announce,
 		beginAsyncOperation,
 		citationStyle,
@@ -294,32 +302,33 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		pasteZoneRef,
 		queueFocus,
 		setAttributes,
-	});
+	} );
 
 	const handleDelete = useCallback(
-		async (id) => {
+		async ( id ) => {
 			const currentCitations = citationsRef.current;
-			const deletedIndex = currentCitations.findIndex((c) => c.id === id);
-			const entry = currentCitations[deletedIndex];
+			const deletedIndex = currentCitations.findIndex(
+				( c ) => c.id === id
+			);
+			const entry = currentCitations[ deletedIndex ];
 			let formatterFallback = false;
 			let overLimitAfterDelete = false;
 
-			if (!entry) {
+			if ( ! entry ) {
 				return;
 			}
 
 			const operationId = beginAsyncOperation();
-			let updated = currentCitations.filter((c) => c.id !== id);
+			let updated = currentCitations.filter( ( c ) => c.id !== id );
 
-			if (updated.length > MAX_CITATIONS_PER_BIBLIOGRAPHY) {
+			if ( updated.length > MAX_CITATIONS_PER_BIBLIOGRAPHY ) {
 				overLimitAfterDelete = true;
-			} else if (updated.length > 0 && !isNumericFamily) {
+			} else if ( updated.length > 0 && ! isNumericFamily ) {
 				try {
-					const { formatBibliographyEntries } = await import(
-						'./lib/formatting/csl'
-					);
+					const { formatBibliographyEntries } =
+						await import( './lib/formatting/csl' );
 					const formattedTexts = await formatBibliographyEntries(
-						updated.map((citation) => citation.csl),
+						updated.map( ( citation ) => citation.csl ),
 						citationStyle,
 						{
 							onFallback: () => {
@@ -329,37 +338,37 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					);
 
 					updated = sortCitations(
-						updated.map((citation, index) => ({
+						updated.map( ( citation, index ) => ( {
 							...citation,
-							formattedText: formattedTexts[index] || '',
-						})),
+							formattedText: formattedTexts[ index ] || '',
+						} ) ),
 						citationStyle
 					);
-				} catch (error) {
+				} catch {
 					formatterFallback = true;
 				}
 			}
 
-			if (!isCurrentAsyncOperation(operationId)) {
+			if ( ! isCurrentAsyncOperation( operationId ) ) {
 				return;
 			}
 
 			citationsRef.current = updated;
-			setAttributes({ citations: updated });
+			setAttributes( { citations: updated } );
 			let noticeMessage = __(
 				'Citation removed.',
 				'borges-bibliography-builder'
 			);
-			if (overLimitAfterDelete) {
+			if ( overLimitAfterDelete ) {
 				noticeMessage = sprintf(
 					/* translators: %s: follow-up status message after removing a citation. */
-					__('Citation removed. %s', 'borges-bibliography-builder'),
-					getBibliographyOverLimitMessage(updated.length)
+					__( 'Citation removed. %s', 'borges-bibliography-builder' ),
+					getBibliographyOverLimitMessage( updated.length )
 				);
-			} else if (formatterFallback) {
+			} else if ( formatterFallback ) {
 				noticeMessage = sprintf(
 					/* translators: %s: follow-up status message after removing a citation. */
-					__('Citation removed. %s', 'borges-bibliography-builder'),
+					__( 'Citation removed. %s', 'borges-bibliography-builder' ),
 					FORMATTER_FALLBACK_MESSAGE
 				);
 			}
@@ -374,16 +383,16 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					: { type: 'snackbar' }
 			);
 
-			if (!updated.length) {
-				queueFocus({ type: 'paste' });
+			if ( ! updated.length ) {
+				queueFocus( { type: 'paste' } );
 				return;
 			}
 
 			const nextEntry =
-				updated[deletedIndex] || updated[deletedIndex - 1];
+				updated[ deletedIndex ] || updated[ deletedIndex - 1 ];
 
-			if (nextEntry) {
-				queueFocus({ type: 'entry', id: nextEntry.id });
+			if ( nextEntry ) {
+				queueFocus( { type: 'entry', id: nextEntry.id } );
 			}
 		},
 		[
@@ -398,61 +407,61 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	);
 
 	const handleInputChange = useCallback(
-		(valueOrEvent) => {
+		( valueOrEvent ) => {
 			const nextValue =
 				typeof valueOrEvent === 'string'
 					? valueOrEvent
 					: valueOrEvent?.target?.value || '';
 
-			updatePasteInput(nextValue);
-			if (currentNotice) {
+			updatePasteInput( nextValue );
+			if ( currentNotice ) {
 				clearNotice();
 			}
 		},
-		[clearNotice, currentNotice, updatePasteInput]
+		[ clearNotice, currentNotice, updatePasteInput ]
 	);
 
-	const handleInputFocus = useCallback(() => {
+	const handleInputFocus = useCallback( () => {
 		// Notice is cleared on typing (handleInputChange), not on focus,
 		// to avoid a race where programmatic focus after parse clears
 		// the notice that was just announced.
-	}, []);
+	}, [] );
 
-	const handlePasteInputKeyDown = useCallback((event) => {
+	const handlePasteInputKeyDown = useCallback( ( event ) => {
 		const isUndoRedoShortcut =
-			(event.metaKey || event.ctrlKey) &&
-			['z', 'Z', 'y', 'Y'].includes(event.key);
+			( event.metaKey || event.ctrlKey ) &&
+			[ 'z', 'Z', 'y', 'Y' ].includes( event.key );
 
-		if (isUndoRedoShortcut) {
+		if ( isUndoRedoShortcut ) {
 			event.stopPropagation();
 		}
-	}, []);
+	}, [] );
 
-	useEffect(() => {
-		if (citations.length < SOFT_CAP_CITATIONS_PER_BIBLIOGRAPHY) {
-			setSoftCapNoticeDismissed(false);
+	useEffect( () => {
+		if ( citations.length < SOFT_CAP_CITATIONS_PER_BIBLIOGRAPHY ) {
+			setSoftCapNoticeDismissed( false );
 		}
-	}, [citations.length]);
+	}, [ citations.length ] );
 
 	const handleAddModeChange = useCallback(
-		(mode) => {
-			setActiveAddMode(mode);
-			setIsFormOpen(true);
+		( mode ) => {
+			setActiveAddMode( mode );
+			setIsFormOpen( true );
 			clearNotice();
 		},
-		[clearNotice]
+		[ clearNotice ]
 	);
 
 	const getCitationWarnings = useCallback(
-		(citation) =>
-			(citation.parseWarnings || [])
-				.map((warningCode) => WARNING_MESSAGES[warningCode])
-				.filter(Boolean),
+		( citation ) =>
+			( citation.parseWarnings || [] )
+				.map( ( warningCode ) => WARNING_MESSAGES[ warningCode ] )
+				.filter( Boolean ),
 		[]
 	);
 
 	const handleEntryActivate = useCallback(
-		(citation) => {
+		( citation ) => {
 			if (
 				editingId === citation.id ||
 				structuredEditingId === citation.id
@@ -463,43 +472,43 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			// Every entry is structured CSL-JSON, so a click opens the field
 			// form; the formatted line can still be overridden with Edit
 			// citation.
-			handleStructuredEditStart(citation.id);
+			handleStructuredEditStart( citation.id );
 		},
-		[editingId, handleStructuredEditStart, structuredEditingId]
+		[ editingId, handleStructuredEditStart, structuredEditingId ]
 	);
 
 	const handleEntryReorderKeyDown = useCallback(
-		(event, citation) => {
+		( event, citation ) => {
 			if (
-				!isNumericFamily ||
+				! isNumericFamily ||
 				event.target !== event.currentTarget ||
-				!event.altKey
+				! event.altKey
 			) {
 				return;
 			}
 
-			const label = getEntryLabel(citation);
+			const label = getEntryLabel( citation );
 
-			if (event.key === 'ArrowUp') {
+			if ( event.key === 'ArrowUp' ) {
 				event.preventDefault();
-				moveCitationUp(citation.id, label);
+				moveCitationUp( citation.id, label );
 				return;
 			}
 
-			if (event.key === 'ArrowDown') {
+			if ( event.key === 'ArrowDown' ) {
 				event.preventDefault();
-				moveCitationDown(citation.id, label);
+				moveCitationDown( citation.id, label );
 			}
 		},
-		[getEntryLabel, isNumericFamily, moveCitationDown, moveCitationUp]
+		[ getEntryLabel, isNumericFamily, moveCitationDown, moveCitationUp ]
 	);
 
-	const getEntryClassName = (citation) => {
-		if (structuredEditingId === citation.id) {
+	const getEntryClassName = ( citation ) => {
+		if ( structuredEditingId === citation.id ) {
 			return 'bibliography-builder-entry is-structured-editing';
 		}
 
-		if (editingId === citation.id) {
+		if ( editingId === citation.id ) {
 			return 'bibliography-builder-entry is-inline-editing';
 		}
 
@@ -508,185 +517,192 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	const renderAddForm = () => (
 		<>
-			{activeAddMode === 'paste' ? (
+			{ activeAddMode === 'paste' ? (
 				<>
 					<BaseControl
 						id="bibliography-builder-paste-input"
-						label={CITATION_FORM_LABEL}
+						label={ CITATION_FORM_LABEL }
 						hideLabelFromVision
 						className="bibliography-builder-textarea"
 					>
-						{/* Keep this as a native uncontrolled textarea so browser undo/redo
-							behaves normally before submission. */}
+						{ /* Keep this as a native uncontrolled textarea so browser undo/redo
+							behaves normally before submission. */ }
 						<textarea
-							ref={pasteZoneRef}
+							ref={ pasteZoneRef }
 							id="bibliography-builder-paste-input"
-							aria-label={CITATION_FORM_LABEL}
+							aria-label={ CITATION_FORM_LABEL }
 							className="bibliography-builder-native-textarea"
-							defaultValue={inputValue}
-							onChange={handleInputChange}
-							onFocus={handleInputFocus}
-							onKeyDown={handlePasteInputKeyDown}
-							placeholder={__(
+							defaultValue={ inputValue }
+							onChange={ handleInputChange }
+							onFocus={ handleInputFocus }
+							onKeyDown={ handlePasteInputKeyDown }
+							placeholder={ __(
 								'Add DOI(s), PubMed/PMID or PMCID records, arXiv IDs, ISBNs, OCLC/LCCN/Open Library numbers, Internet Archive links, BibTeX entries, CSL-JSON, and citations in supported styles for books, articles, chapters, and webpages. Separate multiple formatted citations with a blank line.',
 								'borges-bibliography-builder'
-							)}
-							rows={4}
-							disabled={isLoading}
+							) }
+							rows={ 4 }
+							disabled={ isLoading }
 						/>
 					</BaseControl>
 					<div className="bibliography-builder-form-actions">
 						<Button
 							variant="primary"
 							className="bibliography-builder-parse-button"
-							onClick={handleParse}
-							disabled={isLoading || !inputValue.trim()}
+							onClick={ handleParse }
+							disabled={ isLoading || ! inputValue.trim() }
 						>
-							{isLoading
+							{ isLoading
 								? __(
 										'Resolving…',
 										'borges-bibliography-builder'
-								  )
-								: __('Add', 'borges-bibliography-builder')}
+									)
+								: __( 'Add', 'borges-bibliography-builder' ) }
 						</Button>
 					</div>
 				</>
 			) : (
 				<StructuredCitationEditor
-					citation={{ id: 'manual-entry' }}
-					fields={manualFields}
-					fieldDefinitions={manualFieldDefinitions}
-					firstFieldRef={pasteZoneRef}
-					getStructuredFieldId={getStructuredFieldId}
-					onFieldChange={handleManualFieldChange}
-					onSave={handleManualAdd}
-					onCancel={handleManualClear}
-					onCancelLabel={__('Clear', 'borges-bibliography-builder')}
+					citation={ { id: 'manual-entry' } }
+					fields={ manualFields }
+					fieldDefinitions={ manualFieldDefinitions }
+					firstFieldRef={ pasteZoneRef }
+					getStructuredFieldId={ getStructuredFieldId }
+					onFieldChange={ handleManualFieldChange }
+					onSave={ handleManualAdd }
+					onCancel={ handleManualClear }
+					onCancelLabel={ __(
+						'Clear',
+						'borges-bibliography-builder'
+					) }
 					showTypeSelector
-					submitLabel={__('Add', 'borges-bibliography-builder')}
-					typeOptions={manualTypeOptions}
-					onTypeChange={(value) =>
-						handleManualFieldChange('type', value)
+					submitLabel={ __( 'Add', 'borges-bibliography-builder' ) }
+					typeOptions={ manualTypeOptions }
+					onTypeChange={ ( value ) =>
+						handleManualFieldChange( 'type', value )
 					}
 				/>
-			)}
+			) }
 		</>
 	);
 
 	const formToggleLabel = isFormOpen
-		? __('Hide citation form', 'borges-bibliography-builder')
-		: __('Show citation form', 'borges-bibliography-builder');
+		? __( 'Hide citation form', 'borges-bibliography-builder' )
+		: __( 'Show citation form', 'borges-bibliography-builder' );
 
 	return (
-		<div {...blockProps}>
+		<div { ...blockProps }>
 			<BlockControls>
 				<ToolbarGroup>
 					<ToolbarButton
-						aria-label={PASTE_IMPORT_TAB_LABEL}
-						icon={PasteImportIcon}
-						label={PASTE_IMPORT_TAB_LABEL}
-						title={PASTE_IMPORT_TAB_LABEL}
-						isPressed={isFormOpen && activeAddMode === 'paste'}
-						onClick={() => handleAddModeChange('paste')}
+						aria-label={ PASTE_IMPORT_TAB_LABEL }
+						icon={ PasteImportIcon }
+						label={ PASTE_IMPORT_TAB_LABEL }
+						title={ PASTE_IMPORT_TAB_LABEL }
+						isPressed={ isFormOpen && activeAddMode === 'paste' }
+						onClick={ () => handleAddModeChange( 'paste' ) }
 					/>
 					<ToolbarButton
-						aria-label={MANUAL_ENTRY_TAB_LABEL}
-						icon={ManualEntryIcon}
-						label={MANUAL_ENTRY_TAB_LABEL}
-						title={MANUAL_ENTRY_TAB_LABEL}
-						isPressed={isFormOpen && activeAddMode === 'manual'}
-						onClick={() => handleAddModeChange('manual')}
+						aria-label={ MANUAL_ENTRY_TAB_LABEL }
+						icon={ ManualEntryIcon }
+						label={ MANUAL_ENTRY_TAB_LABEL }
+						title={ MANUAL_ENTRY_TAB_LABEL }
+						isPressed={ isFormOpen && activeAddMode === 'manual' }
+						onClick={ () => handleAddModeChange( 'manual' ) }
 					/>
-					{citations.length > 0 && (
+					{ citations.length > 0 && (
 						<ToolbarButton
-							aria-label={formToggleLabel}
-							icon={isFormOpen ? ChevronUpIcon : ChevronDownIcon}
-							label={formToggleLabel}
-							title={formToggleLabel}
-							onClick={() => setIsFormOpen((open) => !open)}
+							aria-label={ formToggleLabel }
+							icon={
+								isFormOpen ? ChevronUpIcon : ChevronDownIcon
+							}
+							label={ formToggleLabel }
+							title={ formToggleLabel }
+							onClick={ () =>
+								setIsFormOpen( ( open ) => ! open )
+							}
 						/>
-					)}
+					) }
 				</ToolbarGroup>
 			</BlockControls>
 			<InspectorControls>
 				<PanelBody
 					title={
 						citations.length
-							? `${__(
+							? `${ __(
 									'Settings',
 									'borges-bibliography-builder'
-							  )} (${citations.length} ${
+								) } (${ citations.length } ${
 									citations.length === 1
 										? __(
 												'source',
 												'borges-bibliography-builder'
-										  )
+											)
 										: __(
 												'sources',
 												'borges-bibliography-builder'
-										  )
-							  })`
-							: __('Settings', 'borges-bibliography-builder')
+											)
+								})`
+							: __( 'Settings', 'borges-bibliography-builder' )
 					}
 				>
 					<SelectControl
-						label={__(
+						label={ __(
 							'Citation Style',
 							'borges-bibliography-builder'
-						)}
-						value={citationStyle}
-						options={selectableStyles}
-						onChange={handleCitationStyleChange}
+						) }
+						value={ citationStyle }
+						options={ selectableStyles }
+						onChange={ handleCitationStyleChange }
 						help={
 							isNumericFamily
 								? __(
 										"IEEE/Vancouver: arrange entries to match the order they're first cited in your text.",
 										'borges-bibliography-builder'
-								  )
+									)
 								: __(
 										'Changing styles reformats auto-generated citations and keeps manual overrides intact.',
 										'borges-bibliography-builder'
-								  )
+									)
 						}
 					/>
-					{citationStyle === 'oscola' && !oscolaNoticeDismissed && (
+					{ citationStyle === 'oscola' && ! oscolaNoticeDismissed && (
 						<Notice
 							status="info"
 							isDismissible
-							onRemove={() => setOscolaNoticeDismissed(true)}
+							onRemove={ () => setOscolaNoticeDismissed( true ) }
 						>
-							{__(
+							{ __(
 								'OSCOLA convention groups bibliographies by source type (cases, legislation, books, articles, online). Borges currently renders a single alphabetized list. See Epic-OSCOLA for tracking.',
 								'borges-bibliography-builder'
-							)}
+							) }
 						</Notice>
-					)}
+					) }
 					<TextControl
-						label={__(
+						label={ __(
 							'Visible Heading',
 							'borges-bibliography-builder'
-						)}
-						value={headingText}
-						onChange={(value) =>
-							setAttributes({ headingText: value })
+						) }
+						value={ headingText }
+						onChange={ ( value ) =>
+							setAttributes( { headingText: value } )
 						}
-						placeholder={headingPlaceholder}
-						help={__(
+						placeholder={ headingPlaceholder }
+						help={ __(
 							'Optional heading shown above the bibliography on the site front end when at least one citation exists.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					/>
 					<SelectControl
-						label={__(
+						label={ __(
 							'Heading Level',
 							'borges-bibliography-builder'
-						)}
-						value={String(
-							HEADING_LEVELS.includes(headingLevel)
+						) }
+						value={ String(
+							HEADING_LEVELS.includes( headingLevel )
 								? headingLevel
 								: 0
-						)}
-						options={[
+						) }
+						options={ [
 							{
 								label: __(
 									'Paragraph (not a heading)',
@@ -694,7 +710,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 								),
 								value: '0',
 							},
-							...HEADING_LEVELS.map((level) => ({
+							...HEADING_LEVELS.map( ( level ) => ( {
 								label: sprintf(
 									/* translators: %d: heading level, 2 to 6. */
 									__(
@@ -703,220 +719,236 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 									),
 									level
 								),
-								value: String(level),
-							})),
-						]}
-						onChange={(value) =>
-							setAttributes({ headingLevel: Number(value) })
+								value: String( level ),
+							} ) ),
+						] }
+						onChange={ ( value ) =>
+							setAttributes( { headingLevel: Number( value ) } )
 						}
-						help={__(
+						help={ __(
 							'Choose a heading level to put the visible heading in the page outline, where screen reader users navigate by headings. The size does not change with the level.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					/>
 					<ToggleControl
-						label={__(
+						label={ __(
 							'Output JSON-LD',
 							'borges-bibliography-builder'
-						)}
-						checked={outputJsonLd}
-						onChange={(value) =>
-							setAttributes({ outputJsonLd: value })
+						) }
+						checked={ outputJsonLd }
+						onChange={ ( value ) =>
+							setAttributes( { outputJsonLd: value } )
 						}
-						help={__(
+						help={ __(
 							'Helps search engines and other tools understand the bibliography.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					/>
 					<ToggleControl
-						label={__(
+						label={ __(
 							'Output COinS',
 							'borges-bibliography-builder'
-						)}
-						checked={outputCoins}
-						onChange={(value) =>
-							setAttributes({ outputCoins: value })
+						) }
+						checked={ outputCoins }
+						onChange={ ( value ) =>
+							setAttributes( { outputCoins: value } )
 						}
-						help={__(
+						help={ __(
 							'Lets Zotero and similar tools detect citations on the page.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					/>
 					<ToggleControl
-						label={__(
+						label={ __(
 							'Output CSL-JSON',
 							'borges-bibliography-builder'
-						)}
-						checked={outputCslJson}
-						onChange={(value) =>
-							setAttributes({ outputCslJson: value })
+						) }
+						checked={ outputCslJson }
+						onChange={ ( value ) =>
+							setAttributes( { outputCslJson: value } )
 						}
-						help={__(
+						help={ __(
 							'Makes citation data reusable by scholarly tools and services.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					/>
 					<ToggleControl
-						label={__(
+						label={ __(
 							'Per-entry Cite / Export',
 							'borges-bibliography-builder'
-						)}
-						checked={outputCiteExport}
-						onChange={(value) =>
-							setAttributes({ outputCiteExport: value })
+						) }
+						checked={ outputCiteExport }
+						onChange={ ( value ) =>
+							setAttributes( { outputCiteExport: value } )
 						}
-						help={__(
+						help={ __(
 							'Add per-entry disclosure panels with copy and download links for BibTeX, RIS, and CSL-JSON.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					/>
 				</PanelBody>
-				<PanelBody title={__('Exports', 'borges-bibliography-builder')}>
+				<PanelBody
+					title={ __( 'Exports', 'borges-bibliography-builder' ) }
+				>
 					<Button
 						variant="secondary"
-						onClick={handleCopyBibliography}
-						disabled={!citations.length}
+						onClick={ handleCopyBibliography }
+						disabled={ ! citations.length }
 					>
-						{__('Copy bibliography', 'borges-bibliography-builder')}
+						{ __(
+							'Copy bibliography',
+							'borges-bibliography-builder'
+						) }
 					</Button>
 					<p>
-						{__(
+						{ __(
 							'Copies the current bibliography as plain text in the current order and style.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					</p>
 					<Button
 						variant="secondary"
-						onClick={handleDownloadCslJson}
-						disabled={!citations.length}
+						onClick={ handleDownloadCslJson }
+						disabled={ ! citations.length }
 					>
-						{__('Download CSL-JSON', 'borges-bibliography-builder')}
+						{ __(
+							'Download CSL-JSON',
+							'borges-bibliography-builder'
+						) }
 					</Button>
 					<p>
-						{__(
+						{ __(
 							'Downloads the current bibliography as structured citation data.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					</p>
 					<Button
 						variant="secondary"
-						onClick={handleDownloadBibtex}
-						disabled={!citations.length}
+						onClick={ handleDownloadBibtex }
+						disabled={ ! citations.length }
 					>
-						{__('Download BibTeX', 'borges-bibliography-builder')}
+						{ __(
+							'Download BibTeX',
+							'borges-bibliography-builder'
+						) }
 					</Button>
 					<p>
-						{__(
+						{ __(
 							'Downloads the current bibliography as BibTeX for reference-manager and scholarly-writing workflows.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					</p>
 					<Button
 						variant="secondary"
-						onClick={handleDownloadBiblatex}
-						disabled={!citations.length}
+						onClick={ handleDownloadBiblatex }
+						disabled={ ! citations.length }
 					>
-						{__('Download BibLaTeX', 'borges-bibliography-builder')}
+						{ __(
+							'Download BibLaTeX',
+							'borges-bibliography-builder'
+						) }
 					</Button>
 					<p>
-						{__(
+						{ __(
 							'Downloads the current bibliography as BibLaTeX for LaTeX/Biber workflows with full Unicode support.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					</p>
 					<Button
 						variant="secondary"
-						onClick={handleDownloadRis}
-						disabled={!citations.length}
+						onClick={ handleDownloadRis }
+						disabled={ ! citations.length }
 					>
-						{__('Download RIS', 'borges-bibliography-builder')}
+						{ __( 'Download RIS', 'borges-bibliography-builder' ) }
 					</Button>
 					<p>
-						{__(
+						{ __(
 							'Downloads the current bibliography as RIS for citation managers and import/export workflows.',
 							'borges-bibliography-builder'
-						)}
+						) }
 					</p>
 				</PanelBody>
 			</InspectorControls>
 
-			{/* Heading */}
-			{headingText ? (
+			{ /* Heading */ }
+			{ headingText ? (
 				<HeadingTag className="bibliography-builder-heading bibliography-builder-heading-preview">
-					{headingText}
+					{ headingText }
 				</HeadingTag>
-			) : null}
+			) : null }
 
-			{/* Add form */}
+			{ /* Add form */ }
 			<div className="bibliography-builder-paste-zone">
-				{sortedCitations.length === 0 ? (
+				{ sortedCitations.length === 0 ? (
 					<Placeholder
-						label={CITATION_FORM_LABEL}
-						instructions={SUPPORTED_INPUT_MESSAGE}
+						label={ CITATION_FORM_LABEL }
+						instructions={ SUPPORTED_INPUT_MESSAGE }
 						notices={
 							<EditorCanvasNotices
-								currentNotice={currentNotice}
-								noticeRef={noticeRef}
-								onDismiss={clearNotice}
+								currentNotice={ currentNotice }
+								noticeRef={ noticeRef }
+								onDismiss={ clearNotice }
 							/>
 						}
 						className="bibliography-builder-placeholder"
 					>
-						{renderAddForm()}
+						{ renderAddForm() }
 					</Placeholder>
 				) : (
 					<>
-						{isFormOpen && renderAddForm()}
+						{ isFormOpen && renderAddForm() }
 						<EditorCanvasNotices
-							currentNotice={currentNotice}
-							noticeRef={noticeRef}
-							onDismiss={clearNotice}
+							currentNotice={ currentNotice }
+							noticeRef={ noticeRef }
+							onDismiss={ clearNotice }
 						/>
 					</>
-				)}
+				) }
 			</div>
 
-			{/* Soft-cap warning */}
-			{atSoftCap && !softCapNoticeDismissed && (
+			{ /* Soft-cap warning */ }
+			{ atSoftCap && ! softCapNoticeDismissed && (
 				<Notice
 					status="warning"
 					isDismissible
-					onRemove={() => setSoftCapNoticeDismissed(true)}
+					onRemove={ () => setSoftCapNoticeDismissed( true ) }
 				>
-					{getBibliographySoftCapWarningMessage(citations.length)}
+					{ getBibliographySoftCapWarningMessage( citations.length ) }
 				</Notice>
-			)}
+			) }
 
-			{/* Citation list */}
-			{sortedCitations.length > 0 && (
-				<ListTag className={listClassName} aria-busy={isLoading}>
-					{sortedCitations.map((citation, index) => (
+			{ /* Citation list */ }
+			{ sortedCitations.length > 0 && (
+				<ListTag className={ listClassName } aria-busy={ isLoading }>
+					{ sortedCitations.map( ( citation, index ) => (
 						/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */
 						<li
-							key={citation.id}
-							ref={(node) => setEntryRef(citation.id, node)}
-							className={getEntryClassName(citation)}
-							tabIndex={-1}
-							onKeyDown={(event) =>
-								handleEntryReorderKeyDown(event, citation)
+							key={ citation.id }
+							ref={ ( node ) => setEntryRef( citation.id, node ) }
+							className={ getEntryClassName( citation ) }
+							tabIndex={ -1 }
+							onKeyDown={ ( event ) =>
+								handleEntryReorderKeyDown( event, citation )
 							}
 						>
 							<CitationEntryBody
-								citation={citation}
-								citationWarnings={getCitationWarnings(citation)}
-								editText={editText}
-								editingId={editingId}
-								getEntryLabel={getEntryLabel}
-								getStructuredFieldId={getStructuredFieldId}
-								handleDelete={handleDelete}
-								handleCopyCitation={handleCopyCitation}
-								handleEntryActivate={() =>
-									handleEntryActivate(citation)
+								citation={ citation }
+								citationWarnings={ getCitationWarnings(
+									citation
+								) }
+								editText={ editText }
+								editingId={ editingId }
+								getEntryLabel={ getEntryLabel }
+								getStructuredFieldId={ getStructuredFieldId }
+								handleDelete={ handleDelete }
+								handleCopyCitation={ handleCopyCitation }
+								handleEntryActivate={ () =>
+									handleEntryActivate( citation )
 								}
-								handleEditConfirm={handleEditConfirm}
-								handleEditKeyDown={handleEditKeyDown}
-								handleEditStart={handleEditStart}
-								handleResetAutoFormat={handleResetAutoFormat}
+								handleEditConfirm={ handleEditConfirm }
+								handleEditKeyDown={ handleEditKeyDown }
+								handleEditStart={ handleEditStart }
+								handleResetAutoFormat={ handleResetAutoFormat }
 								handleStructuredEditCancel={
 									handleStructuredEditCancel
 								}
@@ -929,29 +961,31 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 								handleStructuredFieldChange={
 									handleStructuredFieldChange
 								}
-								isNumericFamily={isNumericFamily}
-								canMoveUp={index > 0}
-								canMoveDown={index < sortedCitations.length - 1}
-								onMoveUp={() =>
+								isNumericFamily={ isNumericFamily }
+								canMoveUp={ index > 0 }
+								canMoveDown={
+									index < sortedCitations.length - 1
+								}
+								onMoveUp={ () =>
 									moveCitationUp(
 										citation.id,
-										getEntryLabel(citation)
+										getEntryLabel( citation )
 									)
 								}
-								onMoveDown={() =>
+								onMoveDown={ () =>
 									moveCitationDown(
 										citation.id,
-										getEntryLabel(citation)
+										getEntryLabel( citation )
 									)
 								}
-								onEditTextChange={setEditText}
-								structuredEditingId={structuredEditingId}
-								structuredFields={structuredFields}
+								onEditTextChange={ setEditText }
+								structuredEditingId={ structuredEditingId }
+								structuredFields={ structuredFields }
 							/>
 						</li>
-					))}
+					) ) }
 				</ListTag>
-			)}
+			) }
 		</div>
 	);
 }

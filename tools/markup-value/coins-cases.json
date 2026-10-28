@@ -17,7 +17,7 @@
 					"given": "G.A."
 				}
 			],
-			"expected": ["Alpha, Ada", "Beta, Ben", "Gamma, G. A."]
+			"expected": [ "Alpha, Ada", "Beta, Ben", "Gamma, G. A." ]
 		},
 		{
 			"name": "organization first",
@@ -30,7 +30,7 @@
 					"given": "Ben"
 				}
 			],
-			"expected": ["World Health Organization", "Beta, Ben"]
+			"expected": [ "World Health Organization", "Beta, Ben" ]
 		},
 		{
 			"name": "organization among people",
@@ -68,7 +68,7 @@
 					"given": "Ben"
 				}
 			],
-			"expected": ["Plato", "Beta, Ben"]
+			"expected": [ "Plato", "Beta, Ben" ]
 		},
 		{
 			"name": "given name only first",
@@ -81,7 +81,7 @@
 					"given": "Ben"
 				}
 			],
-			"expected": ["Homer", "Beta, Ben"]
+			"expected": [ "Homer", "Beta, Ben" ]
 		},
 		{
 			"name": "one-part names later",
@@ -97,7 +97,7 @@
 					"given": "Homer"
 				}
 			],
-			"expected": ["Alpha, Ada", "Plato", "Homer"]
+			"expected": [ "Alpha, Ada", "Plato", "Homer" ]
 		},
 		{
 			"name": "compound one-part surname later, sharing its last word with the first author",
@@ -112,7 +112,7 @@
 					"given": "Ali ibn Musa"
 				}
 			],
-			"expected": ["Waals", "van der Waals", "Ali ibn Musa"]
+			"expected": [ "Waals", "van der Waals", "Ali ibn Musa" ]
 		},
 		{
 			"name": "shared last name, initials",
@@ -126,7 +126,7 @@
 					"given": "J.-H."
 				}
 			],
-			"expected": ["Kim, J.", "Kim, J.-H."]
+			"expected": [ "Kim, J.", "Kim, J.-H." ]
 		},
 		{
 			"name": "shared last name, one-part first author, organization",
@@ -142,7 +142,7 @@
 					"literal": "World Health Organization"
 				}
 			],
-			"expected": ["Plato", "Plato, Jane", "World Health Organization"]
+			"expected": [ "Plato", "Plato, Jane", "World Health Organization" ]
 		},
 		{
 			"name": "initials the reader would rewrite",
@@ -156,7 +156,7 @@
 					"given": "Bo"
 				}
 			],
-			"expected": ["Smith, J.A.", "Jones, Bo"]
+			"expected": [ "Smith, J.A.", "Jones, Bo" ]
 		},
 		{
 			"name": "particles",
@@ -170,7 +170,7 @@
 					"given": "Andrew Y."
 				}
 			],
-			"expected": ["van der Berg, Jan", "Ng, Andrew Y."]
+			"expected": [ "van der Berg, Jan", "Ng, Andrew Y." ]
 		},
 		{
 			"name": "one author",
@@ -180,7 +180,7 @@
 					"given": "Ada"
 				}
 			],
-			"expected": ["Alpha, Ada"]
+			"expected": [ "Alpha, Ada" ]
 		},
 		{
 			"name": "empty first name entry",
@@ -195,7 +195,7 @@
 					"given": "Ben"
 				}
 			],
-			"expected": ["Alpha, Ada", "Beta, Ben"]
+			"expected": [ "Alpha, Ada", "Beta, Ben" ]
 		}
 	]
 }

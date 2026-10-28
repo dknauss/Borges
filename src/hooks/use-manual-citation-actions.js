@@ -28,21 +28,21 @@ const FORMATTER_FALLBACK_MESSAGE = __(
  * add remains coordinated with paste, delete, structured edit, and style
  * changes.
  *
- * @param {Object}   options                         Hook options.
- * @param {Function} options.announce                Notice announcer.
- * @param {Function} options.beginAsyncOperation     Latest-operation starter.
- * @param {string}   options.citationStyle           Current citation style.
- * @param {Object}   options.citationsRef            Mutable citations ref.
- * @param {Function} options.clearNotice             Notice clearer.
- * @param {Object}   options.currentNotice           Current block notice.
- * @param {Function} options.isCurrentAsyncOperation Latest-operation checker.
- * @param {boolean}  options.outputCiteExport        Whether Cite/Export is on.
- * @param {Object}   options.pasteZoneRef            First field/focus ref.
- * @param {Function} options.queueFocus              Focus queue helper.
- * @param {Function} options.setAttributes           Block attribute setter.
+ * @param {Object}                                                      options                         Hook options.
+ * @param {(status: string, message: string, options?: Object) => void} options.announce                Notice announcer.
+ * @param {() => number}                                                options.beginAsyncOperation     Latest-operation starter.
+ * @param {string}                                                      options.citationStyle           Current citation style.
+ * @param {Object}                                                      options.citationsRef            Mutable citations ref.
+ * @param {() => void}                                                  options.clearNotice             Notice clearer.
+ * @param {Object}                                                      options.currentNotice           Current block notice.
+ * @param {(operationId: number) => boolean}                            options.isCurrentAsyncOperation Latest-operation checker.
+ * @param {boolean}                                                     options.outputCiteExport        Whether Cite/Export is on.
+ * @param {Object}                                                      options.pasteZoneRef            First field/focus ref.
+ * @param {(target: Object) => void}                                    options.queueFocus              Focus queue helper.
+ * @param {(attributes: Object) => void}                                options.setAttributes           Block attribute setter.
  * @return {Object} Manual-entry state and handlers.
  */
-export function useManualCitationActions({
+export function useManualCitationActions( {
 	announce,
 	beginAsyncOperation,
 	citationStyle,
@@ -54,95 +54,95 @@ export function useManualCitationActions({
 	pasteZoneRef,
 	queueFocus,
 	setAttributes,
-}) {
-	const manualTypeOptions = useMemo(() => MANUAL_ENTRY_TYPE_OPTIONS, []);
+} ) {
+	const manualTypeOptions = useMemo( () => MANUAL_ENTRY_TYPE_OPTIONS, [] );
 	const manualFieldDefinitions = useMemo(
 		() => [
 			{
 				key: 'authors',
-				label: __('Author(s)', 'borges-bibliography-builder'),
+				label: __( 'Author(s)', 'borges-bibliography-builder' ),
 			},
 			{
 				key: 'title',
-				label: __('Title', 'borges-bibliography-builder'),
+				label: __( 'Title', 'borges-bibliography-builder' ),
 			},
 			{
 				key: 'containerTitle',
-				label: __('Container', 'borges-bibliography-builder'),
+				label: __( 'Container', 'borges-bibliography-builder' ),
 			},
 			{
 				key: 'publisher',
-				label: __('Publisher', 'borges-bibliography-builder'),
+				label: __( 'Publisher', 'borges-bibliography-builder' ),
 			},
 			{
 				key: 'year',
-				label: __('Year', 'borges-bibliography-builder'),
+				label: __( 'Year', 'borges-bibliography-builder' ),
 			},
 			{
 				key: 'page',
-				label: __('Pages', 'borges-bibliography-builder'),
+				label: __( 'Pages', 'borges-bibliography-builder' ),
 			},
 			{
 				key: 'articleNumber',
-				label: __('Article number', 'borges-bibliography-builder'),
-				types: ['article-journal'],
+				label: __( 'Article number', 'borges-bibliography-builder' ),
+				types: [ 'article-journal' ],
 			},
 			{
 				key: 'doi',
-				label: __('DOI', 'borges-bibliography-builder'),
+				label: __( 'DOI', 'borges-bibliography-builder' ),
 			},
 			{
 				key: 'url',
-				label: __('URL', 'borges-bibliography-builder'),
+				label: __( 'URL', 'borges-bibliography-builder' ),
 			},
 		],
 		[]
 	);
-	const [manualFields, setManualFields] = useState(() =>
+	const [ manualFields, setManualFields ] = useState( () =>
 		createEmptyManualEntryFields()
 	);
 
 	const handleManualFieldChange = useCallback(
-		(field, value) => {
-			setManualFields((currentFields) => ({
+		( field, value ) => {
+			setManualFields( ( currentFields ) => ( {
 				...currentFields,
-				[field]: value,
-			}));
-			if (currentNotice) {
+				[ field ]: value,
+			} ) );
+			if ( currentNotice ) {
 				clearNotice();
 			}
 		},
-		[clearNotice, currentNotice]
+		[ clearNotice, currentNotice ]
 	);
 
-	const handleManualClear = useCallback(() => {
-		setManualFields(createEmptyManualEntryFields());
+	const handleManualClear = useCallback( () => {
+		setManualFields( createEmptyManualEntryFields() );
 		clearNotice();
 
-		if (pasteZoneRef.current?.focus) {
+		if ( pasteZoneRef.current?.focus ) {
 			pasteZoneRef.current.focus();
 		}
-	}, [clearNotice, pasteZoneRef]);
+	}, [ clearNotice, pasteZoneRef ] );
 
-	const handleManualAdd = useCallback(async () => {
-		const validationMessage = validateManualEntry(manualFields);
+	const handleManualAdd = useCallback( async () => {
+		const validationMessage = validateManualEntry( manualFields );
 
-		if (validationMessage) {
-			announce('warning', validationMessage);
-			queueFocus({ type: 'notice' });
+		if ( validationMessage ) {
+			announce( 'warning', validationMessage );
+			queueFocus( { type: 'notice' } );
 			return;
 		}
 
-		if (citationsRef.current.length >= MAX_CITATIONS_PER_BIBLIOGRAPHY) {
-			announce('warning', getBibliographyLimitReachedMessage());
-			queueFocus({ type: 'notice' });
+		if ( citationsRef.current.length >= MAX_CITATIONS_PER_BIBLIOGRAPHY ) {
+			announce( 'warning', getBibliographyLimitReachedMessage() );
+			queueFocus( { type: 'notice' } );
 			return;
 		}
 
 		try {
-			const csl = buildManualCsl(manualFields);
+			const csl = buildManualCsl( manualFields );
 
-			if (findDuplicateCitation({ csl }, citationsRef.current)) {
+			if ( findDuplicateCitation( { csl }, citationsRef.current ) ) {
 				announce(
 					'warning',
 					__(
@@ -150,7 +150,7 @@ export function useManualCitationActions({
 						'borges-bibliography-builder'
 					)
 				);
-				queueFocus({ type: 'notice' });
+				queueFocus( { type: 'notice' } );
 				return;
 			}
 
@@ -164,12 +164,11 @@ export function useManualCitationActions({
 					deferFormatting: true,
 				}
 			);
-			const { formatBibliographyEntries } = await import(
-				'../lib/formatting/csl'
-			);
-			const mergedEntries = [...citationsRef.current, entry];
+			const { formatBibliographyEntries } =
+				await import( '../lib/formatting/csl' );
+			const mergedEntries = [ ...citationsRef.current, entry ];
 			const formattedTexts = await formatBibliographyEntries(
-				mergedEntries.map((citation) => citation.csl),
+				mergedEntries.map( ( citation ) => citation.csl ),
 				citationStyle,
 				{
 					onFallback: () => {
@@ -177,43 +176,46 @@ export function useManualCitationActions({
 					},
 				}
 			);
-			if (!isCurrentAsyncOperation(operationId)) {
+			if ( ! isCurrentAsyncOperation( operationId ) ) {
 				return;
 			}
 
 			// Pre-compute async BibTeX/BibLaTeX strings only when the
 			// Cite/Export feature is enabled (RIS/CSL-JSON build in save()).
 			let exportStrings = null;
-			if (outputCiteExport) {
+			if ( outputCiteExport ) {
 				exportStrings = await computeExportStrings(
-					mergedEntries.map((citation) => citation.csl),
+					mergedEntries.map( ( citation ) => citation.csl ),
 					citationStyle
 				);
-				if (!isCurrentAsyncOperation(operationId)) {
+				if ( ! isCurrentAsyncOperation( operationId ) ) {
 					return;
 				}
 			}
 
 			const updated = sortCitations(
-				mergedEntries.map((citation, index) => ({
+				mergedEntries.map( ( citation, index ) => ( {
 					...citation,
 					id: citation.id || createCitationId(),
-					formattedText: formattedTexts[index] || '',
-					...(exportStrings
+					formattedText: formattedTexts[ index ] || '',
+					...( exportStrings
 						? {
 								exportBibtex:
-									exportStrings[index]?.exportBibtex ?? '',
+									exportStrings[ index ]?.exportBibtex ?? '',
 								exportBiblatex:
-									exportStrings[index]?.exportBiblatex ?? '',
-						  }
-						: {}),
-				})),
+									exportStrings[ index ]?.exportBiblatex ??
+									'',
+							}
+						: {} ),
+				} ) ),
 				citationStyle
 			);
 
 			citationsRef.current = updated;
-			setAttributes({ citations: updated });
-			setManualFields(createEmptyManualEntryFields(manualFields.type));
+			setAttributes( { citations: updated } );
+			setManualFields(
+				createEmptyManualEntryFields( manualFields.type )
+			);
 			announce(
 				formatterFallback ? 'warning' : 'success',
 				formatterFallback
@@ -224,8 +226,8 @@ export function useManualCitationActions({
 								'borges-bibliography-builder'
 							),
 							FORMATTER_FALLBACK_MESSAGE
-					  )
-					: __('Added 1 citation.', 'borges-bibliography-builder'),
+						)
+					: __( 'Added 1 citation.', 'borges-bibliography-builder' ),
 				formatterFallback ? {} : { type: 'snackbar' }
 			);
 			queueFocus(
@@ -233,7 +235,7 @@ export function useManualCitationActions({
 					? { type: 'notice' }
 					: { type: 'entry', id: entry.id }
 			);
-		} catch (error) {
+		} catch {
 			announce(
 				'error',
 				__(
@@ -241,7 +243,7 @@ export function useManualCitationActions({
 					'borges-bibliography-builder'
 				)
 			);
-			queueFocus({ type: 'notice' });
+			queueFocus( { type: 'notice' } );
 		}
 	}, [
 		announce,
@@ -253,7 +255,7 @@ export function useManualCitationActions({
 		outputCiteExport,
 		queueFocus,
 		setAttributes,
-	]);
+	] );
 
 	return {
 		handleManualAdd,

@@ -49,16 +49,22 @@ import { deprecated } from './deprecated';
 
 // The real useBlockProps.save() is editor-side; in Node it only contributes the
 // generated class name, which is what the saved markup actually carries.
-jest.mock('@wordpress/block-editor', () => ({
+jest.mock( '@wordpress/block-editor', () => ( {
 	useBlockProps: {
-		save: () => ({
+		save: () => ( {
 			className: 'wp-block-bibliography-builder-bibliography',
-		}),
+		} ),
 	},
-}));
+} ) );
 
-const FIXTURE_DIR = join(__dirname, '..', 'tests', 'fixtures', 'deprecations');
-const WRITE_MODE = Boolean(process.env.BORGES_WRITE_DEPRECATION_FIXTURES);
+const FIXTURE_DIR = join(
+	__dirname,
+	'..',
+	'tests',
+	'fixtures',
+	'deprecations'
+);
+const WRITE_MODE = Boolean( process.env.BORGES_WRITE_DEPRECATION_FIXTURES );
 
 /**
  * Attributes exercised by every fixture.
@@ -100,8 +106,8 @@ const FIXTURE_ATTRIBUTES = {
 				issue: '2',
 				page: '10-20',
 				URL: 'https://example.com/zeta',
-				author: [{ family: 'Zeta', given: 'Zoe' }],
-				issued: { 'date-parts': [[2020]] },
+				author: [ { family: 'Zeta', given: 'Zoe' } ],
+				issued: { 'date-parts': [ [ 2020 ] ] },
 			},
 			formattedText:
 				'Zeta, Zoe. "Zeta: a later work that sorts second." Journal of Block Testing 4, no. 2 (2020): 10-20. https://example.com/zeta.',
@@ -115,8 +121,8 @@ const FIXTURE_ATTRIBUTES = {
 				title: 'Alpha: an earlier work that sorts first',
 				publisher: 'Test University Press',
 				'publisher-place': 'Cambridge',
-				author: [{ family: 'Alpha', given: 'Ada' }],
-				issued: { 'date-parts': [[2018]] },
+				author: [ { family: 'Alpha', given: 'Ada' } ],
+				issued: { 'date-parts': [ [ 2018 ] ] },
 			},
 			formattedText:
 				'Alpha, Ada. Alpha: an earlier work that sorts first. Cambridge: Test University Press, 2018.',
@@ -150,7 +156,7 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					type: 'book',
 					title: 'O Guarani',
 					publisher: 'Empresa Nacional do Diário',
-					issued: { 'date-parts': [[1857]] },
+					issued: { 'date-parts': [ [ 1857 ] ] },
 				},
 				formattedText:
 					'O GUARANI. Rio de Janeiro: Empresa Nacional do Diário, 1857.',
@@ -163,7 +169,7 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					type: 'book',
 					title: 'Iracema',
 					publisher: 'Typ. de Viana & Filhos',
-					issued: { 'date-parts': [[1865]] },
+					issued: { 'date-parts': [ [ 1865 ] ] },
 				},
 				formattedText:
 					'IRACEMA. Rio de Janeiro: Typ. de Viana & Filhos, 1865.',
@@ -183,8 +189,8 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					type: 'book',
 					title: 'Ficciones',
 					publisher: 'Sur',
-					author: [{ family: 'Borges', given: 'Jorge Luis' }],
-					issued: { 'date-parts': [[1944]] },
+					author: [ { family: 'Borges', given: 'Jorge Luis' } ],
+					issued: { 'date-parts': [ [ 1944 ] ] },
 				},
 				formattedText: 'Borges, Jorge Luis. Ficciones. Sur, 1944.',
 				displayOverride: null,
@@ -196,8 +202,8 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					type: 'book',
 					title: 'El Aleph',
 					publisher: 'Losada',
-					author: [{ family: 'Borges', given: 'Jorge Luis' }],
-					issued: { 'date-parts': [[1949]] },
+					author: [ { family: 'Borges', given: 'Jorge Luis' } ],
+					issued: { 'date-parts': [ [ 1949 ] ] },
 				},
 				formattedText: 'Borges, Jorge Luis. El Aleph. Losada, 1949.',
 				displayOverride: null,
@@ -219,8 +225,8 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					type: 'book',
 					title: 'Governing the Commons',
 					publisher: 'Cambridge University Press',
-					author: [{ family: 'Ostrom', given: 'Elinor' }],
-					issued: { 'date-parts': [[1990]] },
+					author: [ { family: 'Ostrom', given: 'Elinor' } ],
+					issued: { 'date-parts': [ [ 1990 ] ] },
 				},
 				formattedText:
 					'Ostrom, Elinor. <i>Governing the Commons</i>. Cambridge University Press, 1990.',
@@ -233,8 +239,8 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					type: 'book',
 					title: 'Growth of <i>Escherichia coli</i> in Soil',
 					publisher: 'Test Press',
-					author: [{ family: 'Lee', given: 'Kim' }],
-					issued: { 'date-parts': [[2021]] },
+					author: [ { family: 'Lee', given: 'Kim' } ],
+					issued: { 'date-parts': [ [ 2021 ] ] },
 				},
 				formattedText:
 					'Lee, Kim. Growth of Escherichia coli in Soil. Test Press, 2021.',
@@ -269,7 +275,7 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					type: 'paper-conference',
 					title: 'A Conference Paper',
 					DOI: '10.14722/ndss.2019.23386',
-					author: [{ family: 'Moss', given: 'Ann' }],
+					author: [ { family: 'Moss', given: 'Ann' } ],
 				},
 				formattedText:
 					'Moss, Ann. “A Conference Paper.” NDSS Symposium, 2019.',
@@ -294,8 +300,8 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					volume: '12',
 					page: 'e83254',
 					DOI: '10.7554/eLife.83254',
-					author: [{ family: 'Kim', given: 'Lee' }],
-					issued: { 'date-parts': [[2023]] },
+					author: [ { family: 'Kim', given: 'Lee' } ],
+					issued: { 'date-parts': [ [ 2023 ] ] },
 				},
 				formattedText:
 					'Kim, Lee. “A Study of Cell Signalling.” eLife 12 (2023): e83254. https://doi.org/10.7554/eLife.83254.',
@@ -308,8 +314,8 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					type: 'book',
 					title: 'Alpha: an earlier work that sorts first',
 					publisher: 'Test University Press',
-					author: [{ family: 'Alpha', given: 'Ada' }],
-					issued: { 'date-parts': [[2018]] },
+					author: [ { family: 'Alpha', given: 'Ada' } ],
+					issued: { 'date-parts': [ [ 2018 ] ] },
 				},
 				formattedText:
 					'Alpha, Ada. Alpha: an earlier work that sorts first. Test University Press, 2018.',
@@ -333,8 +339,8 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					type: 'book',
 					title: 'Edwards: a work that sorts after the particle name',
 					publisher: 'Test University Press',
-					author: [{ family: 'Edwards', given: 'Ann' }],
-					issued: { 'date-parts': [[2019]] },
+					author: [ { family: 'Edwards', given: 'Ann' } ],
+					issued: { 'date-parts': [ [ 2019 ] ] },
 				},
 				formattedText:
 					'Edwards, Ann. Edwards: a work that sorts after the particle name. Test University Press, 2019.',
@@ -347,8 +353,8 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 					type: 'book',
 					title: 'Specialized Orthotic Care',
 					publisher: 'Test University Press',
-					author: [{ family: 'van Duijnhoven', given: 'Elza' }],
-					issued: { 'date-parts': [[2025]] },
+					author: [ { family: 'van Duijnhoven', given: 'Elza' } ],
+					issued: { 'date-parts': [ [ 2025 ] ] },
 				},
 				formattedText:
 					'Duijnhoven, Elza van. Specialized Orthotic Care. Test University Press, 2025.',
@@ -358,29 +364,29 @@ const FIXTURE_ATTRIBUTES_BY_VERSION = {
 	},
 };
 
-function fixtureAttributes(version) {
-	return FIXTURE_ATTRIBUTES_BY_VERSION[version] || FIXTURE_ATTRIBUTES;
+function fixtureAttributes( version ) {
+	return FIXTURE_ATTRIBUTES_BY_VERSION[ version ] || FIXTURE_ATTRIBUTES;
 }
 
 /**
  * Register the block under a throwaway name with a specific save implementation,
  * serialize one instance, then unregister. Used only to mint fixtures.
  *
- * @param {Function} saveImplementation The save function to serialize with.
- * @param {Object}   attributes         Block attributes.
+ * @param {(props: Object) => Object} saveImplementation The save function to serialize with.
+ * @param {Object}                    attributes         Block attributes.
  * @return {string} Serialized block markup.
  */
-function serializeWith(saveImplementation, attributes = FIXTURE_ATTRIBUTES) {
+function serializeWith( saveImplementation, attributes = FIXTURE_ATTRIBUTES ) {
 	const name = metadata.name;
-	if (getBlockTypes().some((type) => type.name === name)) {
-		unregisterBlockType(name);
+	if ( getBlockTypes().some( ( type ) => type.name === name ) ) {
+		unregisterBlockType( name );
 	}
-	registerBlockType(name, {
+	registerBlockType( name, {
 		...metadata,
 		save: saveImplementation,
-	});
-	const markup = serialize(createBlock(name, attributes));
-	unregisterBlockType(name);
+	} );
+	const markup = serialize( createBlock( name, attributes ) );
+	unregisterBlockType( name );
 	return markup;
 }
 
@@ -389,14 +395,14 @@ function serializeWith(saveImplementation, attributes = FIXTURE_ATTRIBUTES) {
  */
 function registerCurrentBlock() {
 	const name = metadata.name;
-	if (getBlockTypes().some((type) => type.name === name)) {
-		unregisterBlockType(name);
+	if ( getBlockTypes().some( ( type ) => type.name === name ) ) {
+		unregisterBlockType( name );
 	}
-	registerBlockType(name, {
+	registerBlockType( name, {
 		...metadata,
 		save,
 		deprecated,
-	});
+	} );
 }
 
 /**
@@ -408,11 +414,12 @@ function registerCurrentBlock() {
  * passing run that is tens of kilobytes of expected noise per fixture. Failures
  * still surface through the assertions.
  *
- * @param {Function} fn Function to run.
- * @return {*} Whatever `fn` returns.
+ * @template T
+ * @param {() => T} fn Function to run.
+ * @return {T} Whatever `fn` returns.
  */
 /* eslint-disable no-console -- swapping the console methods out is the point. */
-function withMutedConsole(fn) {
+function withMutedConsole( fn ) {
 	const saved = {
 		error: console.error,
 		warn: console.warn,
@@ -421,87 +428,87 @@ function withMutedConsole(fn) {
 		groupCollapsed: console.groupCollapsed,
 		groupEnd: console.groupEnd,
 	};
-	Object.keys(saved).forEach((method) => {
-		console[method] = () => {};
-	});
+	Object.keys( saved ).forEach( ( method ) => {
+		console[ method ] = () => {};
+	} );
 	try {
 		return fn();
 	} finally {
-		Object.assign(console, saved);
+		Object.assign( console, saved );
 	}
 }
 /* eslint-enable no-console */
 
-function fixtureName(index) {
+function fixtureName( index ) {
 	// Oldest deprecation first, so the numbering is chronological rather than
 	// tied to the array order (which is newest-first by Gutenberg convention).
 	const total = deprecated.length;
-	return `v${String(total - index).padStart(2, '0')}-deprecated.html`;
+	return `v${ String( total - index ).padStart( 2, '0' ) }-deprecated.html`;
 }
 
 const CURRENT_FIXTURE = 'v00-current.html';
 
-if (WRITE_MODE) {
-	describe('deprecation fixtures (write mode)', () => {
-		it('writes a fixture for the current save and every deprecation', () => {
-			if (!existsSync(FIXTURE_DIR)) {
-				mkdirSync(FIXTURE_DIR, { recursive: true });
+if ( WRITE_MODE ) {
+	describe( 'deprecation fixtures (write mode)', () => {
+		it( 'writes a fixture for the current save and every deprecation', () => {
+			if ( ! existsSync( FIXTURE_DIR ) ) {
+				mkdirSync( FIXTURE_DIR, { recursive: true } );
 			}
 
 			const written = [];
 
-			const currentPath = join(FIXTURE_DIR, CURRENT_FIXTURE);
-			writeFileSync(currentPath, `${serializeWith(save).trim()}\n`);
-			written.push(CURRENT_FIXTURE);
+			const currentPath = join( FIXTURE_DIR, CURRENT_FIXTURE );
+			writeFileSync( currentPath, `${ serializeWith( save ).trim() }\n` );
+			written.push( CURRENT_FIXTURE );
 
-			deprecated.forEach((entry, index) => {
-				const name = fixtureName(index);
+			deprecated.forEach( ( entry, index ) => {
+				const name = fixtureName( index );
 				writeFileSync(
-					join(FIXTURE_DIR, name),
-					`${serializeWith(
+					join( FIXTURE_DIR, name ),
+					`${ serializeWith(
 						entry.save,
-						fixtureAttributes(deprecated.length - index)
-					).trim()}\n`
+						fixtureAttributes( deprecated.length - index )
+					).trim() }\n`
 				);
-				written.push(name);
-			});
+				written.push( name );
+			} );
 
 			// eslint-disable-next-line no-console
 			console.log(
 				`Wrote ${
 					written.length
-				} fixtures to tests/fixtures/deprecations:\n  ${written.join(
+				} fixtures to tests/fixtures/deprecations:\n  ${ written.join(
 					'\n  '
-				)}`
+				) }`
 			);
-			expect(written).toHaveLength(deprecated.length + 1);
-		});
-	});
+			expect( written ).toHaveLength( deprecated.length + 1 );
+		} );
+	} );
 } else {
-	describe('deprecation fixtures', () => {
-		beforeEach(() => {
+	describe( 'deprecation fixtures', () => {
+		beforeEach( () => {
 			registerCurrentBlock();
-		});
+		} );
 
-		afterEach(() => {
+		afterEach( () => {
 			const name = metadata.name;
-			if (getBlockTypes().some((type) => type.name === name)) {
-				unregisterBlockType(name);
+			if ( getBlockTypes().some( ( type ) => type.name === name ) ) {
+				unregisterBlockType( name );
 			}
-		});
+		} );
 
-		it('has a committed fixture for the current save and every deprecation', () => {
+		it( 'has a committed fixture for the current save and every deprecation', () => {
 			const expectedCount = deprecated.length + 1;
-			const files = existsSync(FIXTURE_DIR)
-				? readdirSync(FIXTURE_DIR).filter((file) =>
-						file.endsWith('.html')
-				  )
+			const files = existsSync( FIXTURE_DIR )
+				? readdirSync( FIXTURE_DIR ).filter( ( file ) =>
+						file.endsWith( '.html' )
+					)
 				: [];
 
-			expect(files).toHaveLength(expectedCount);
-		});
+			expect( files ).toHaveLength( expectedCount );
+		} );
 
-		it('has no two fixtures with identical markup', () => {
+		it( 'has no two fixtures with identical markup', () => {
 			// Structural guard on the fixture data. Two identical fixtures mean
 			// their save() shapes do not differ under FIXTURE_ATTRIBUTES, so
 			// breaking or deleting one of those deprecations still leaves its
@@ -509,65 +516,71 @@ if (WRITE_MODE) {
 			// unnoticed. Catches the whole class rather than one instance:
 			// outputCiteExport: false previously made the current save and
 			// deprecated[0] byte-identical.
-			const files = readdirSync(FIXTURE_DIR).filter((file) =>
-				file.endsWith('.html')
+			const files = readdirSync( FIXTURE_DIR ).filter( ( file ) =>
+				file.endsWith( '.html' )
 			);
 			const byContent = new Map();
-			files.forEach((file) => {
-				const body = readFileSync(join(FIXTURE_DIR, file), 'utf8');
-				byContent.set(body, [...(byContent.get(body) || []), file]);
-			});
-			const duplicates = [...byContent.values()].filter(
-				(group) => group.length > 1
+			files.forEach( ( file ) => {
+				const body = readFileSync( join( FIXTURE_DIR, file ), 'utf8' );
+				byContent.set( body, [
+					...( byContent.get( body ) || [] ),
+					file,
+				] );
+			} );
+			const duplicates = [ ...byContent.values() ].filter(
+				( group ) => group.length > 1
 			);
 
-			expect(duplicates).toEqual([]);
-		});
+			expect( duplicates ).toEqual( [] );
+		} );
 
-		it('covers both sides of the linkVisibleUrls split', () => {
+		it( 'covers both sides of the linkVisibleUrls split', () => {
 			// Guards the fixture data itself, not the block. If a future edit
 			// drops the literal URL from FIXTURE_ATTRIBUTES, the
 			// linkVisibleUrls: true and false deprecations start serializing
 			// identically on that dimension and the fixtures quietly stop
 			// covering link rendering. Assert the two shapes still differ.
-			const files = readdirSync(FIXTURE_DIR).filter((file) =>
-				file.endsWith('.html')
+			const files = readdirSync( FIXTURE_DIR ).filter( ( file ) =>
+				file.endsWith( '.html' )
 			);
-			const withAnchor = files.filter((file) =>
-				readFileSync(join(FIXTURE_DIR, file), 'utf8').includes(
+			const withAnchor = files.filter( ( file ) =>
+				readFileSync( join( FIXTURE_DIR, file ), 'utf8' ).includes(
 					'<a href'
 				)
 			);
 
-			expect(withAnchor.length).toBeGreaterThan(0);
-			expect(withAnchor.length).toBeLessThan(files.length);
-		});
+			expect( withAnchor.length ).toBeGreaterThan( 0 );
+			expect( withAnchor.length ).toBeLessThan( files.length );
+		} );
 
 		const cases = [
 			{ label: 'current save()', file: CURRENT_FIXTURE },
-			...deprecated.map((entry, index) => ({
+			...deprecated.map( ( entry, index ) => ( {
 				label: `deprecation ${
 					deprecated.length - index
-				} (index ${index})`,
-				file: fixtureName(index),
-			})),
+				} (index ${ index })`,
+				file: fixtureName( index ),
+			} ) ),
 		];
 
-		it.each(cases)('markup saved by $label still validates', ({ file }) => {
-			const path = join(FIXTURE_DIR, file);
-			expect(existsSync(path)).toBe(true);
+		it.each( cases )(
+			'markup saved by $label still validates',
+			( { file } ) => {
+				const path = join( FIXTURE_DIR, file );
+				expect( existsSync( path ) ).toBe( true );
 
-			const markup = readFileSync(path, 'utf8');
-			const blocks = withMutedConsole(() => parse(markup));
+				const markup = readFileSync( path, 'utf8' );
+				const blocks = withMutedConsole( () => parse( markup ) );
 
-			expect(blocks).toHaveLength(1);
-			const [block] = blocks;
+				expect( blocks ).toHaveLength( 1 );
+				const [ block ] = blocks;
 
-			// An unregistered block parses as core/missing and would report
-			// "valid" vacuously, so assert identity before validity.
-			expect(block.name).toBe(metadata.name);
-			expect(block.isValid).toBe(true);
-			expect(block.attributes.citations).toHaveLength(2);
-		});
-	});
+				// An unregistered block parses as core/missing and would report
+				// "valid" vacuously, so assert identity before validity.
+				expect( block.name ).toBe( metadata.name );
+				expect( block.isValid ).toBe( true );
+				expect( block.attributes.citations ).toHaveLength( 2 );
+			}
+		);
+	} );
 }

@@ -14,10 +14,10 @@ export const RIS_EXPORT_MIME_TYPE =
 	'application/x-research-info-systems;charset=utf-8';
 
 async function getCiteConstructor() {
-	const [{ Cite }] = await Promise.all([
-		import('@citation-js/core'),
-		import('@citation-js/plugin-bibtex'),
-	]);
+	const [ { Cite } ] = await Promise.all( [
+		import( '@citation-js/core' ),
+		import( '@citation-js/plugin-bibtex' ),
+	] );
 
 	return Cite;
 }
@@ -32,14 +32,14 @@ async function getCiteConstructor() {
  *
  * @since 1.0.0
  */
-export function normalizeBibtexUnicodeQuotes(bibtex) {
+export function normalizeBibtexUnicodeQuotes( bibtex ) {
 	return bibtex
-		.replace(/\\textquotedblleft\{\}/gu, '“')
-		.replace(/\\textquotedblright\{\}/gu, '”')
-		.replace(/\\textquoteleft\{\}/gu, '‘')
-		.replace(/\\textquoteright\{\}/gu, '’')
-		.replace(/``/gu, '“')
-		.replace(/''/gu, '”');
+		.replace( /\\textquotedblleft\{\}/gu, '“' )
+		.replace( /\\textquotedblright\{\}/gu, '”' )
+		.replace( /\\textquoteleft\{\}/gu, '‘' )
+		.replace( /\\textquoteright\{\}/gu, '’' )
+		.replace( /``/gu, '“' )
+		.replace( /''/gu, '”' );
 }
 
 const RIS_TYPE_MAP = {
@@ -57,16 +57,16 @@ const RIS_TYPE_MAP = {
 	'review-book': 'GEN',
 };
 
-function getRisType(csl) {
-	return RIS_TYPE_MAP[csl.type] || 'GEN';
+function getRisType( csl ) {
+	return RIS_TYPE_MAP[ csl.type ] || 'GEN';
 }
 
-function appendRisLine(lines, tag, value) {
-	if (value === undefined || value === null || value === '') {
+function appendRisLine( lines, tag, value ) {
+	if ( value === undefined || value === null || value === '' ) {
 		return;
 	}
 
-	lines.push(`${tag}  - ${value}`);
+	lines.push( `${ tag }  - ${ value }` );
 }
 
 /**
@@ -76,12 +76,12 @@ function appendRisLine(lines, tag, value) {
  * @param {Object} csl CSL-JSON object.
  * @return {number|undefined} Publication year for export output.
  */
-function getIssuedYearForExport(csl) {
-	return csl.issued?.['date-parts']?.[0]?.[0];
+function getIssuedYearForExport( csl ) {
+	return csl.issued?.[ 'date-parts' ]?.[ 0 ]?.[ 0 ];
 }
 
-function splitPageRange(page = '') {
-	const [start, end] = String(page).split(/\s*[-–—]\s*/u);
+function splitPageRange( page = '' ) {
+	const [ start, end ] = String( page ).split( /\s*[-–—]\s*/u );
 
 	return {
 		start: start || '',
@@ -89,13 +89,13 @@ function splitPageRange(page = '') {
 	};
 }
 
-function formatRisAuthor(author) {
-	if (author.literal) {
+function formatRisAuthor( author ) {
+	if ( author.literal ) {
 		return author.literal;
 	}
 
-	if (author.family && author.given) {
-		return `${author.family}, ${author.given}`;
+	if ( author.family && author.given ) {
+		return `${ author.family }, ${ author.given }`;
 	}
 
 	return author.family || author.given || '';
@@ -106,15 +106,15 @@ function formatRisAuthor(author) {
 // are dropped. Such citations fall through to the title slug, then to the
 // generic "citation" basename. This keeps download filenames filesystem-safe
 // across platforms at the cost of less specific names for those entries.
-function slugifyExportName(value) {
-	return String(value || '')
-		.normalize('NFKD')
-		.replace(/[^\w\s-]/g, '')
+function slugifyExportName( value ) {
+	return String( value || '' )
+		.normalize( 'NFKD' )
+		.replace( /[^\w\s-]/g, '' )
 		.trim()
-		.replace(/[\s_]+/g, '-')
-		.replace(/-{2,}/g, '-')
-		.replace(/^-+|-+$/g, '')
-		.slice(0, 60);
+		.replace( /[\s_]+/g, '-' )
+		.replace( /-{2,}/g, '-' )
+		.replace( /^-+|-+$/g, '' )
+		.slice( 0, 60 );
 }
 
 /**
@@ -126,78 +126,78 @@ function slugifyExportName(value) {
  * @param {Object} csl CSL-JSON object for a single citation.
  * @return {string} Slugged basename (no extension).
  */
-export function getCitationExportBasename(csl) {
-	if (!csl) {
+export function getCitationExportBasename( csl ) {
+	if ( ! csl ) {
 		return 'citation';
 	}
 
 	const citationKey =
-		typeof csl['citation-key'] === 'string' ? csl['citation-key'] : '';
-	const fromKey = slugifyExportName(citationKey);
-	if (fromKey) {
+		typeof csl[ 'citation-key' ] === 'string' ? csl[ 'citation-key' ] : '';
+	const fromKey = slugifyExportName( citationKey );
+	if ( fromKey ) {
 		return fromKey;
 	}
 
-	const firstAuthor = (csl.author || [])[0] || {};
+	const firstAuthor = ( csl.author || [] )[ 0 ] || {};
 	const namePart =
 		firstAuthor.family || firstAuthor.literal || firstAuthor.given || '';
-	const year = csl.issued?.['date-parts']?.[0]?.[0] || '';
+	const year = csl.issued?.[ 'date-parts' ]?.[ 0 ]?.[ 0 ] || '';
 	const fromAuthorYear = slugifyExportName(
-		[namePart, year].filter(Boolean).join('-')
+		[ namePart, year ].filter( Boolean ).join( '-' )
 	);
-	if (fromAuthorYear) {
+	if ( fromAuthorYear ) {
 		return fromAuthorYear;
 	}
 
 	const fromTitle = slugifyExportName(
-		String(csl.title || '')
-			.split(/\s+/)
-			.slice(0, 4)
-			.join(' ')
+		String( csl.title || '' )
+			.split( /\s+/ )
+			.slice( 0, 4 )
+			.join( ' ' )
 	);
 	return fromTitle || 'citation';
 }
 
-export function cslToRisEntry(csl) {
+export function cslToRisEntry( csl ) {
 	const lines = [];
-	const { start, end } = splitPageRange(csl.page);
+	const { start, end } = splitPageRange( csl.page );
 
-	appendRisLine(lines, 'TY', getRisType(csl));
+	appendRisLine( lines, 'TY', getRisType( csl ) );
 
-	for (const author of csl.author || []) {
-		appendRisLine(lines, 'AU', formatRisAuthor(author));
+	for ( const author of csl.author || [] ) {
+		appendRisLine( lines, 'AU', formatRisAuthor( author ) );
 	}
 
-	for (const editor of csl.editor || []) {
-		appendRisLine(lines, 'A2', formatRisAuthor(editor));
+	for ( const editor of csl.editor || [] ) {
+		appendRisLine( lines, 'A2', formatRisAuthor( editor ) );
 	}
 
-	appendRisLine(lines, 'TI', csl.title);
+	appendRisLine( lines, 'TI', csl.title );
 	appendRisLine(
 		lines,
 		csl.type === 'book' ? 'BT' : 'T2',
-		csl['container-title']
+		csl[ 'container-title' ]
 	);
-	appendRisLine(lines, 'PB', csl.publisher);
-	appendRisLine(lines, 'PY', getIssuedYearForExport(csl));
-	appendRisLine(lines, 'DA', getIssuedYearForExport(csl));
-	appendRisLine(lines, 'VL', csl.volume);
-	appendRisLine(lines, 'IS', csl.issue);
-	appendRisLine(lines, 'SP', start);
-	appendRisLine(lines, 'EP', end);
-	appendRisLine(lines, 'DO', csl.DOI);
-	appendRisLine(lines, 'UR', csl.URL);
-	appendRisLine(lines, 'LA', csl.language);
+	appendRisLine( lines, 'PB', csl.publisher );
+	appendRisLine( lines, 'PY', getIssuedYearForExport( csl ) );
+	appendRisLine( lines, 'DA', getIssuedYearForExport( csl ) );
+	appendRisLine( lines, 'VL', csl.volume );
+	appendRisLine( lines, 'IS', csl.issue );
+	appendRisLine( lines, 'SP', start );
+	appendRisLine( lines, 'EP', end );
+	appendRisLine( lines, 'DO', csl.DOI );
+	appendRisLine( lines, 'UR', csl.URL );
+	appendRisLine( lines, 'LA', csl.language );
 	appendRisLine(
 		lines,
 		'SN',
-		getPrimaryIdentifierValue(csl.ISBN) ||
-			getPrimaryIdentifierValue(csl.ISSN)
+		getPrimaryIdentifierValue( csl.ISBN ) ||
+			getPrimaryIdentifierValue( csl.ISSN )
 	);
 
-	lines.push('ER  - ');
+	lines.push( 'ER  - ' );
 
-	return lines.join('\n');
+	return lines.join( '\n' );
 }
 
 /**
@@ -209,12 +209,12 @@ export function cslToRisEntry(csl) {
  *
  * @since 0.1.0
  */
-export function buildPlainTextBibliographyContent(citations, citationStyle) {
-	const sortedCitations = sortCitations(citations, citationStyle);
+export function buildPlainTextBibliographyContent( citations, citationStyle ) {
+	const sortedCitations = sortCitations( citations, citationStyle );
 
-	return `${sortedCitations
-		.map((citation) => getPlainDisplayText(citation))
-		.join('\n')}\n`;
+	return `${ sortedCitations
+		.map( ( citation ) => getPlainDisplayText( citation ) )
+		.join( '\n' ) }\n`;
 }
 
 /**
@@ -226,11 +226,11 @@ export function buildPlainTextBibliographyContent(citations, citationStyle) {
  *
  * @since 0.1.0
  */
-export function buildCslJsonExportContent(citations, citationStyle) {
-	const sortedCitations = sortCitations(citations, citationStyle);
-	const cslArray = sortedCitations.map((citation) => citation.csl);
+export function buildCslJsonExportContent( citations, citationStyle ) {
+	const sortedCitations = sortCitations( citations, citationStyle );
+	const cslArray = sortedCitations.map( ( citation ) => citation.csl );
 
-	return `${JSON.stringify(cslArray, null, 2)}\n`;
+	return `${ JSON.stringify( cslArray, null, 2 ) }\n`;
 }
 
 export function downloadTextExport(
@@ -238,27 +238,27 @@ export function downloadTextExport(
 	{ documentRef = document, urlRef = URL, BlobCtor = Blob } = {}
 ) {
 	if (
-		!documentRef?.createElement ||
-		!documentRef?.body ||
-		!urlRef?.createObjectURL ||
-		!BlobCtor
+		! documentRef?.createElement ||
+		! documentRef?.body ||
+		! urlRef?.createObjectURL ||
+		! BlobCtor
 	) {
-		throw new Error('Download API unavailable');
+		throw new Error( 'Download API unavailable' );
 	}
 
-	const fileBlob = new BlobCtor([content], {
+	const fileBlob = new BlobCtor( [ content ], {
 		type: mimeType,
-	});
-	const downloadUrl = urlRef.createObjectURL(fileBlob);
-	const link = documentRef.createElement('a');
+	} );
+	const downloadUrl = urlRef.createObjectURL( fileBlob );
+	const link = documentRef.createElement( 'a' );
 
 	link.href = downloadUrl;
 	link.download = filename;
 	link.rel = 'noopener';
-	documentRef.body.appendChild(link);
+	documentRef.body.appendChild( link );
 	link.click();
 	link.remove();
-	urlRef.revokeObjectURL?.(downloadUrl);
+	urlRef.revokeObjectURL?.( downloadUrl );
 
 	return undefined;
 }
@@ -273,10 +273,14 @@ export function downloadTextExport(
  *
  * @since 0.1.0
  */
-export function downloadCslJsonExport(citations, citationStyle, dependencies) {
+export function downloadCslJsonExport(
+	citations,
+	citationStyle,
+	dependencies
+) {
 	return downloadTextExport(
 		{
-			content: buildCslJsonExportContent(citations, citationStyle),
+			content: buildCslJsonExportContent( citations, citationStyle ),
 			filename: CSL_JSON_EXPORT_FILENAME,
 			mimeType: CSL_JSON_EXPORT_MIME_TYPE,
 		},
@@ -300,12 +304,12 @@ export async function buildBibtexExportContent(
 	citationStyle,
 	{ CiteCtor } = {}
 ) {
-	const sortedCitations = sortCitations(citations, citationStyle);
-	const cslArray = sortedCitations.map((citation) => citation.csl);
-	const CiteClass = CiteCtor || (await getCiteConstructor());
-	const cite = new CiteClass(cslArray);
+	const sortedCitations = sortCitations( citations, citationStyle );
+	const cslArray = sortedCitations.map( ( citation ) => citation.csl );
+	const CiteClass = CiteCtor || ( await getCiteConstructor() );
+	const cite = new CiteClass( cslArray );
 
-	return `${normalizeBibtexUnicodeQuotes(cite.format('bibtex'))}\n`;
+	return `${ normalizeBibtexUnicodeQuotes( cite.format( 'bibtex' ) ) }\n`;
 }
 
 /**
@@ -327,9 +331,9 @@ export async function downloadBibtexExport(
 
 	return downloadTextExport(
 		{
-			content: await buildBibtexExportContent(citations, citationStyle, {
+			content: await buildBibtexExportContent( citations, citationStyle, {
 				CiteCtor,
-			}),
+			} ),
 			filename: BIBTEX_EXPORT_FILENAME,
 			mimeType: BIBTEX_EXPORT_MIME_TYPE,
 		},
@@ -342,7 +346,7 @@ export async function downloadBibtexExport(
  *
  * BibLaTeX uses richer field semantics than legacy BibTeX: `date` instead of
  * `year`, `journaltitle` instead of `journal`, and full Unicode support without
- * TeX ligatures. The same @citation-js/plugin-bibtex package provides the
+ * TeX ligatures. The same `@citation-js/plugin-bibtex` package provides the
  * `biblatex` format string.
  *
  * @param {Array}  citations          Array of citation objects.
@@ -358,12 +362,12 @@ export async function buildBiblatexExportContent(
 	citationStyle,
 	{ CiteCtor } = {}
 ) {
-	const sortedCitations = sortCitations(citations, citationStyle);
-	const cslArray = sortedCitations.map((citation) => citation.csl);
-	const CiteClass = CiteCtor || (await getCiteConstructor());
-	const cite = new CiteClass(cslArray);
+	const sortedCitations = sortCitations( citations, citationStyle );
+	const cslArray = sortedCitations.map( ( citation ) => citation.csl );
+	const CiteClass = CiteCtor || ( await getCiteConstructor() );
+	const cite = new CiteClass( cslArray );
 
-	return `${cite.format('biblatex')}\n`;
+	return `${ cite.format( 'biblatex' ) }\n`;
 }
 
 /**
@@ -408,11 +412,11 @@ export async function downloadBiblatexExport(
  *
  * @since 0.1.0
  */
-export function buildRisExportContent(citations, citationStyle) {
-	const sortedCitations = sortCitations(citations, citationStyle);
-	const cslArray = sortedCitations.map((citation) => citation.csl);
+export function buildRisExportContent( citations, citationStyle ) {
+	const sortedCitations = sortCitations( citations, citationStyle );
+	const cslArray = sortedCitations.map( ( citation ) => citation.csl );
 
-	return `${cslArray.map(cslToRisEntry).join('\n\n')}\n`;
+	return `${ cslArray.map( cslToRisEntry ).join( '\n\n' ) }\n`;
 }
 
 /**
@@ -425,10 +429,10 @@ export function buildRisExportContent(citations, citationStyle) {
  *
  * @since 0.1.0
  */
-export function downloadRisExport(citations, citationStyle, dependencies) {
+export function downloadRisExport( citations, citationStyle, dependencies ) {
 	return downloadTextExport(
 		{
-			content: buildRisExportContent(citations, citationStyle),
+			content: buildRisExportContent( citations, citationStyle ),
 			filename: RIS_EXPORT_FILENAME,
 			mimeType: RIS_EXPORT_MIME_TYPE,
 		},

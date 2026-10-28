@@ -1,66 +1,70 @@
-function normalizeWhitespace(value) {
-	return (value || '').trim().replace(/\s+/gu, ' ');
+function normalizeWhitespace( value ) {
+	return ( value || '' ).trim().replace( /\s+/gu, ' ' );
 }
 
-function normalizeText(value) {
-	return normalizeWhitespace(value)
+function normalizeText( value ) {
+	return normalizeWhitespace( value )
 		.toLowerCase()
-		.replace(/[^\p{L}\p{N}\s]/gu, '');
+		.replace( /[^\p{L}\p{N}\s]/gu, '' );
 }
 
-function normalizeDoi(value) {
-	return normalizeWhitespace(value)
+function normalizeDoi( value ) {
+	return normalizeWhitespace( value )
 		.toLowerCase()
-		.replace(/^(?:https?:\/\/)?(?:dx\.)?doi\.org\//u, '')
-		.replace(/[).,;:\s]+$/u, '');
+		.replace( /^(?:https?:\/\/)?(?:dx\.)?doi\.org\//u, '' )
+		.replace( /[).,;:\s]+$/u, '' );
 }
 
-function getNormalizedDoi(citation) {
-	return citation?.csl?.DOI ? normalizeDoi(citation.csl.DOI) : '';
+function getNormalizedDoi( citation ) {
+	return citation?.csl?.DOI ? normalizeDoi( citation.csl.DOI ) : '';
 }
 
-function getNormalizedTitle(citation) {
-	return citation?.csl?.title ? normalizeText(citation.csl.title) : '';
+function getNormalizedTitle( citation ) {
+	return citation?.csl?.title ? normalizeText( citation.csl.title ) : '';
 }
 
-function getNormalizedFirstAuthor(citation) {
-	const firstAuthor = citation?.csl?.author?.[0];
+function getNormalizedFirstAuthor( citation ) {
+	const firstAuthor = citation?.csl?.author?.[ 0 ];
 
-	if (!firstAuthor) {
+	if ( ! firstAuthor ) {
 		return '';
 	}
 
-	return normalizeText(firstAuthor.family || firstAuthor.literal || '');
+	return normalizeText( firstAuthor.family || firstAuthor.literal || '' );
 }
 
-function getYear(citation) {
-	return citation?.csl?.issued?.['date-parts']?.[0]?.[0] || null;
+function getYear( citation ) {
+	return citation?.csl?.issued?.[ 'date-parts' ]?.[ 0 ]?.[ 0 ] || null;
 }
 
-function citationsMatch(candidate, existing) {
-	const candidateDoi = getNormalizedDoi(candidate);
-	const existingDoi = getNormalizedDoi(existing);
+function citationsMatch( candidate, existing ) {
+	const candidateDoi = getNormalizedDoi( candidate );
+	const existingDoi = getNormalizedDoi( existing );
 
-	if (candidateDoi && existingDoi && candidateDoi === existingDoi) {
+	if ( candidateDoi && existingDoi && candidateDoi === existingDoi ) {
 		return true;
 	}
 
-	const candidateTitle = getNormalizedTitle(candidate);
-	const existingTitle = getNormalizedTitle(existing);
+	const candidateTitle = getNormalizedTitle( candidate );
+	const existingTitle = getNormalizedTitle( existing );
 
-	if (!candidateTitle || !existingTitle || candidateTitle !== existingTitle) {
+	if (
+		! candidateTitle ||
+		! existingTitle ||
+		candidateTitle !== existingTitle
+	) {
 		return false;
 	}
 
-	const candidateYear = getYear(candidate);
-	const existingYear = getYear(existing);
+	const candidateYear = getYear( candidate );
+	const existingYear = getYear( existing );
 
-	if (candidateYear && existingYear && candidateYear === existingYear) {
+	if ( candidateYear && existingYear && candidateYear === existingYear ) {
 		return true;
 	}
 
-	const candidateAuthor = getNormalizedFirstAuthor(candidate);
-	const existingAuthor = getNormalizedFirstAuthor(existing);
+	const candidateAuthor = getNormalizedFirstAuthor( candidate );
+	const existingAuthor = getNormalizedFirstAuthor( existing );
 
 	if (
 		candidateAuthor &&
@@ -71,7 +75,10 @@ function citationsMatch(candidate, existing) {
 	}
 
 	return (
-		!candidateYear && !existingYear && !candidateAuthor && !existingAuthor
+		! candidateYear &&
+		! existingYear &&
+		! candidateAuthor &&
+		! existingAuthor
 	);
 }
 
@@ -84,10 +91,10 @@ function citationsMatch(candidate, existing) {
  *
  * @since 0.1.0
  */
-export function findDuplicateCitation(candidate, existingCitations) {
+export function findDuplicateCitation( candidate, existingCitations ) {
 	return (
-		existingCitations.find((existing) =>
-			citationsMatch(candidate, existing)
+		existingCitations.find( ( existing ) =>
+			citationsMatch( candidate, existing )
 		) || null
 	);
 }
@@ -107,16 +114,16 @@ export function partitionDuplicateCitations(
 ) {
 	const uniqueEntries = [];
 	const duplicateEntries = [];
-	const seenCitations = [...existingCitations];
+	const seenCitations = [ ...existingCitations ];
 
-	for (const entry of incomingEntries) {
-		if (findDuplicateCitation(entry, seenCitations)) {
-			duplicateEntries.push(entry);
+	for ( const entry of incomingEntries ) {
+		if ( findDuplicateCitation( entry, seenCitations ) ) {
+			duplicateEntries.push( entry );
 			continue;
 		}
 
-		uniqueEntries.push(entry);
-		seenCitations.push(entry);
+		uniqueEntries.push( entry );
+		seenCitations.push( entry );
 	}
 
 	return {

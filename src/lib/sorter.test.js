@@ -1,168 +1,176 @@
 import { sortCitations } from './sorter';
 
-function createCitation({ id, title, family, given, literal, authors, year }) {
+function createCitation( {
+	id,
+	title,
+	family,
+	given,
+	literal,
+	authors,
+	year,
+} ) {
 	return {
 		id,
 		csl: {
 			title,
-			...(authors || family || literal
+			...( authors || family || literal
 				? {
 						author: authors || [
 							{
-								...(family ? { family } : {}),
-								...(given ? { given } : {}),
-								...(literal ? { literal } : {}),
+								...( family ? { family } : {} ),
+								...( given ? { given } : {} ),
+								...( literal ? { literal } : {} ),
 							},
 						],
-				  }
-				: {}),
-			...(year
+					}
+				: {} ),
+			...( year
 				? {
 						issued: {
-							'date-parts': [[year]],
+							'date-parts': [ [ year ] ],
 						},
-				  }
-				: {}),
+					}
+				: {} ),
 		},
 	};
 }
 
-describe('sortCitations', () => {
-	it('sorts notes-bibliography entries by author, then title, then year', () => {
+describe( 'sortCitations', () => {
+	it( 'sorts notes-bibliography entries by author, then title, then year', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'c',
 				family: 'Smith',
 				year: 2024,
 				title: 'Zeta',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'a',
 				family: 'Binder',
 				year: 2025,
 				title: 'Zeta',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'b',
 				family: 'Binder',
 				year: 2024,
 				title: 'Omega',
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations).map((citation) => citation.id)).toEqual(
-			['b', 'a', 'c']
-		);
-	});
+		expect(
+			sortCitations( citations ).map( ( citation ) => citation.id )
+		).toEqual( [ 'b', 'a', 'c' ] );
+	} );
 
-	it('sorts author-date entries by author, then year, then title', () => {
+	it( 'sorts author-date entries by author, then year, then title', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'c',
 				family: 'Smith',
 				year: 2024,
 				title: 'Zeta',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'a',
 				family: 'Binder',
 				year: 2025,
 				title: 'Gamma',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'b',
 				family: 'Binder',
 				year: 2024,
 				title: 'Omega',
-			}),
+			} ),
 		];
 
 		expect(
-			sortCitations(citations, 'chicago-author-date').map(
-				(citation) => citation.id
+			sortCitations( citations, 'chicago-author-date' ).map(
+				( citation ) => citation.id
 			)
-		).toEqual(['b', 'a', 'c']);
-	});
+		).toEqual( [ 'b', 'a', 'c' ] );
+	} );
 
-	it('sorts author-date entries without dates after dated works by the same author', () => {
+	it( 'sorts author-date entries without dates after dated works by the same author', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'dated',
 				family: 'Binder',
 				year: 2022,
 				title: 'Title A',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'undated',
 				family: 'Binder',
 				title: 'Title B',
-			}),
+			} ),
 		];
 
 		expect(
-			sortCitations(citations, 'chicago-author-date').map(
-				(citation) => citation.id
+			sortCitations( citations, 'chicago-author-date' ).map(
+				( citation ) => citation.id
 			)
-		).toEqual(['dated', 'undated']);
-	});
+		).toEqual( [ 'dated', 'undated' ] );
+	} );
 
-	it('ignores leading articles and case in title sorting', () => {
+	it( 'ignores leading articles and case in title sorting', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'b',
 				family: 'Smith',
 				year: 2024,
 				title: 'The Zebra Handbook',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'a',
 				family: 'Smith',
 				year: 2024,
 				title: 'an aardvark study',
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations).map((citation) => citation.id)).toEqual(
-			['a', 'b']
-		);
-	});
+		expect(
+			sortCitations( citations ).map( ( citation ) => citation.id )
+		).toEqual( [ 'a', 'b' ] );
+	} );
 
-	it('falls back to title sorting when author data is absent', () => {
+	it( 'falls back to title sorting when author data is absent', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'no-author-b',
 				title: 'The Zebra Handbook',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'no-author-a',
 				title: 'An Assistant Handbook',
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations).map((citation) => citation.id)).toEqual(
-			['no-author-a', 'no-author-b']
-		);
-	});
+		expect(
+			sortCitations( citations ).map( ( citation ) => citation.id )
+		).toEqual( [ 'no-author-a', 'no-author-b' ] );
+	} );
 
-	it('sorts corporate authors from literal names instead of falling back to title order', () => {
+	it( 'sorts corporate authors from literal names instead of falling back to title order', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'title-only',
 				title: 'Zebra Institutions',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'literal-author',
 				literal: 'World Health Organization',
 				title: 'Alpha Report',
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations).map((citation) => citation.id)).toEqual(
-			['literal-author', 'title-only']
-		);
-	});
+		expect(
+			sortCitations( citations ).map( ( citation ) => citation.id )
+		).toEqual( [ 'literal-author', 'title-only' ] );
+	} );
 
-	it('sorts edited collections by editor surname before title fallback', () => {
+	it( 'sorts edited collections by editor surname before title fallback', () => {
 		const citations = [
 			{
 				id: 'marks',
@@ -176,138 +184,241 @@ describe('sortCitations', () => {
 					],
 				},
 			},
-			createCitation({
+			createCitation( {
 				id: 'borel',
 				family: 'Borel',
 				year: 2023,
 				title: 'The Chicago Guide to Fact-Checking',
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations).map((citation) => citation.id)).toEqual(
-			['borel', 'marks']
-		);
-	});
+		expect(
+			sortCitations( citations ).map( ( citation ) => citation.id )
+		).toEqual( [ 'borel', 'marks' ] );
+	} );
 
-	it('sorts author names case-insensitively with locale-aware comparison', () => {
+	it( 'sorts author names case-insensitively with locale-aware comparison', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'z',
 				family: 'Zulu',
 				year: 2024,
 				title: 'Alpha',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'a-umlaut',
 				family: 'Ångström',
 				year: 2024,
 				title: 'Beta',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'a-lower',
 				family: 'anderson',
 				year: 2024,
 				title: 'Gamma',
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations).map((citation) => citation.id)).toEqual(
-			['a-lower', 'a-umlaut', 'z']
-		);
-	});
+		expect(
+			sortCitations( citations ).map( ( citation ) => citation.id )
+		).toEqual( [ 'a-lower', 'a-umlaut', 'z' ] );
+	} );
 
-	it('sorts accented and particle surnames in a stable locale-aware order', () => {
+	it( 'sorts accented and particle surnames in a stable locale-aware order', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'garcia',
 				family: 'García',
 				year: 2024,
 				title: 'Alpha',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'de-beauvoir-upper',
 				family: 'De Beauvoir',
 				year: 2024,
 				title: 'Beta',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'de-beauvoir-lower',
 				family: 'de Beauvoir',
 				year: 2024,
 				title: 'Alpha',
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations).map((citation) => citation.id)).toEqual(
-			['de-beauvoir-lower', 'de-beauvoir-upper', 'garcia']
-		);
-	});
+		expect(
+			sortCitations( citations ).map( ( citation ) => citation.id )
+		).toEqual( [ 'de-beauvoir-lower', 'de-beauvoir-upper', 'garcia' ] );
+	} );
 
-	it('sorts notes-bibliography entries with same author and title by year ascending', () => {
+	it( 'sorts notes-bibliography entries with same author and title by year ascending', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'later',
 				family: 'Smith',
 				title: 'Alpha Study',
 				year: 2024,
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'earlier',
 				family: 'Smith',
 				title: 'Alpha Study',
 				year: 2018,
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations).map((c) => c.id)).toEqual([
+		expect( sortCitations( citations ).map( ( c ) => c.id ) ).toEqual( [
 			'earlier',
 			'later',
-		]);
-	});
+		] );
+	} );
 
-	it('treats notes-bibliography entries with identical author, title, and year as equal order', () => {
+	it( 'treats notes-bibliography entries with identical author, title, and year as equal order', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'first',
 				family: 'Smith',
 				title: 'Alpha',
 				year: 2024,
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'second',
 				family: 'Smith',
 				title: 'Alpha',
 				year: 2024,
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations)).toHaveLength(2);
-	});
+		expect( sortCitations( citations ) ).toHaveLength( 2 );
+	} );
 
-	it('sorts author-date entries with same author and year by title', () => {
+	describe( 'notes-bibliography author chains (#212)', () => {
+		const gessner = { family: 'Gessner', given: 'Conrad' };
+		const gessnerCitations = () => [
+			createCitation( {
+				id: 'gessner-simler',
+				authors: [ gessner, { family: 'Simler', given: 'Josias' } ],
+				title: 'Bibliotheca',
+				year: 1574,
+			} ),
+			createCitation( {
+				id: 'gessner',
+				authors: [ gessner ],
+				title: 'Bibliotheca universalis, sive Catalogus omnium scriptorum locupletissimus',
+				year: 1545,
+			} ),
+		];
+
+		it.each( [ 'chicago-notes-bibliography', 'oscola' ] )(
+			'puts a single-author work before co-authored works with the same first author in %s',
+			( styleKey ) => {
+				expect(
+					sortCitations( gessnerCitations(), styleKey ).map(
+						( c ) => c.id
+					)
+				).toEqual( [ 'gessner', 'gessner-simler' ] );
+			}
+		);
+
+		it( 'orders co-authored works by their next author before the title', () => {
+			const citations = [
+				...gessnerCitations(),
+				createCitation( {
+					id: 'gessner-frisius',
+					authors: [
+						gessner,
+						{ family: 'Frisius', given: 'Johannes' },
+					],
+					title: 'Zeta',
+					year: 1555,
+				} ),
+			];
+
+			expect(
+				sortCitations( citations, 'chicago-notes-bibliography' ).map(
+					( c ) => c.id
+				)
+			).toEqual( [ 'gessner', 'gessner-frisius', 'gessner-simler' ] );
+		} );
+
+		it( 'orders authors who share a family name by given name before title', () => {
+			const citations = [
+				createCitation( {
+					id: 'john',
+					family: 'Smith',
+					given: 'John',
+					title: 'Alpha',
+					year: 2001,
+				} ),
+				createCitation( {
+					id: 'adam',
+					family: 'Smith',
+					given: 'Adam',
+					title: 'Zeta',
+					year: 1776,
+				} ),
+			];
+
+			expect(
+				sortCitations( citations, 'chicago-notes-bibliography' ).map(
+					( c ) => c.id
+				)
+			).toEqual( [ 'adam', 'john' ] );
+		} );
+
+		it( 'still sorts an authorless work by title among authors', () => {
+			const citations = [
+				createCitation( { id: 'zeta', family: 'Zeta', title: 'X' } ),
+				createCitation( { id: 'beowulf', title: 'Beowulf' } ),
+				createCitation( { id: 'alpha', family: 'Alpha', title: 'Y' } ),
+			];
+
+			expect(
+				sortCitations( citations, 'chicago-notes-bibliography' ).map(
+					( c ) => c.id
+				)
+			).toEqual( [ 'alpha', 'beowulf', 'zeta' ] );
+		} );
+
+		it( 'keeps the pre-1.16.0 first-surname order with notesAuthorChains: false', () => {
+			expect(
+				sortCitations(
+					gessnerCitations(),
+					'chicago-notes-bibliography',
+					{
+						notesAuthorChains: false,
+					}
+				).map( ( c ) => c.id )
+			).toEqual( [ 'gessner-simler', 'gessner' ] );
+		} );
+	} );
+
+	it( 'sorts author-date entries with same author and year by title', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'z-title',
 				family: 'Jones',
 				year: 2022,
 				title: 'Zebra Study',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'a-title',
 				family: 'Jones',
 				year: 2022,
 				title: 'Alpha Study',
-			}),
+			} ),
 		];
 
 		expect(
-			sortCitations(citations, 'chicago-author-date').map((c) => c.id)
-		).toEqual(['a-title', 'z-title']);
-	});
+			sortCitations( citations, 'chicago-author-date' ).map(
+				( c ) => c.id
+			)
+		).toEqual( [ 'a-title', 'z-title' ] );
+	} );
 
-	it('applies solo-first ordering before year for matching first author in author-date styles', () => {
+	it( 'applies solo-first ordering before year for matching first author in author-date styles', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'smith-adams-2018',
 				title: 'Smith with Adams',
 				authors: [
@@ -315,14 +426,14 @@ describe('sortCitations', () => {
 					{ family: 'Adams', given: 'Bert' },
 				],
 				year: 2018,
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'smith-solo-2020',
 				title: 'Smith Solo',
-				authors: [{ family: 'Smith', given: 'Alice' }],
+				authors: [ { family: 'Smith', given: 'Alice' } ],
 				year: 2020,
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'smith-adams-2022',
 				title: 'Smith with Adams Later',
 				authors: [
@@ -330,8 +441,8 @@ describe('sortCitations', () => {
 					{ family: 'Adams', given: 'Bert' },
 				],
 				year: 2022,
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'smith-brown-2019',
 				title: 'Smith with Brown',
 				authors: [
@@ -339,8 +450,8 @@ describe('sortCitations', () => {
 					{ family: 'Brown', given: 'Cara' },
 				],
 				year: 2019,
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'smith-brown-davis-2017',
 				title: 'Smith with Brown and Davis',
 				authors: [
@@ -349,23 +460,25 @@ describe('sortCitations', () => {
 					{ family: 'Davis', given: 'Drew' },
 				],
 				year: 2017,
-			}),
+			} ),
 		];
 
 		expect(
-			sortCitations(citations, 'chicago-author-date').map((c) => c.id)
-		).toEqual([
+			sortCitations( citations, 'chicago-author-date' ).map(
+				( c ) => c.id
+			)
+		).toEqual( [
 			'smith-solo-2020',
 			'smith-adams-2018',
 			'smith-adams-2022',
 			'smith-brown-2019',
 			'smith-brown-davis-2017',
-		]);
-	});
+		] );
+	} );
 
-	it('breaks ties by year for identical author chains in author-date styles', () => {
+	it( 'breaks ties by year for identical author chains in author-date styles', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'later',
 				title: 'Later',
 				authors: [
@@ -373,8 +486,8 @@ describe('sortCitations', () => {
 					{ family: 'Adams', given: 'Bert' },
 				],
 				year: 2022,
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'earlier',
 				title: 'Earlier',
 				authors: [
@@ -382,17 +495,19 @@ describe('sortCitations', () => {
 					{ family: 'Adams', given: 'Bert' },
 				],
 				year: 2018,
-			}),
+			} ),
 		];
 
 		expect(
-			sortCitations(citations, 'chicago-author-date').map((c) => c.id)
-		).toEqual(['earlier', 'later']);
-	});
+			sortCitations( citations, 'chicago-author-date' ).map(
+				( c ) => c.id
+			)
+		).toEqual( [ 'earlier', 'later' ] );
+	} );
 
-	it('breaks ties by coauthor chain before year in author-date styles', () => {
+	it( 'breaks ties by coauthor chain before year in author-date styles', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'smith-brown-2019',
 				title: 'Smith with Brown',
 				authors: [
@@ -400,8 +515,8 @@ describe('sortCitations', () => {
 					{ family: 'Brown', given: 'Cara' },
 				],
 				year: 2019,
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'smith-adams-2020',
 				title: 'Smith with Adams',
 				authors: [
@@ -409,227 +524,227 @@ describe('sortCitations', () => {
 					{ family: 'Adams', given: 'Bert' },
 				],
 				year: 2020,
-			}),
+			} ),
 		];
 
 		expect(
-			sortCitations(citations, 'chicago-author-date').map((c) => c.id)
-		).toEqual(['smith-adams-2020', 'smith-brown-2019']);
-	});
+			sortCitations( citations, 'chicago-author-date' ).map(
+				( c ) => c.id
+			)
+		).toEqual( [ 'smith-adams-2020', 'smith-brown-2019' ] );
+	} );
 
-	it('distinguishes same-family single authors by given name in author-date styles', () => {
+	it( 'distinguishes same-family single authors by given name in author-date styles', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'smith-bob',
 				title: 'Bob Smith Work',
 				family: 'Smith',
 				given: 'Bob',
 				year: 2020,
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'smith-alice',
 				title: 'Alice Smith Work',
 				family: 'Smith',
 				given: 'Alice',
 				year: 2020,
-			}),
+			} ),
 		];
 
 		expect(
-			sortCitations(citations, 'chicago-author-date').map((c) => c.id)
-		).toEqual(['smith-alice', 'smith-bob']);
-	});
+			sortCitations( citations, 'chicago-author-date' ).map(
+				( c ) => c.id
+			)
+		).toEqual( [ 'smith-alice', 'smith-bob' ] );
+	} );
 
-	it('does not collide literal corporate and personal author keys with similar surnames', () => {
+	it( 'does not collide literal corporate and personal author keys with similar surnames', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'personal-open',
 				title: 'Personal Open',
 				family: 'Open',
 				given: 'Alice',
 				year: 2021,
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'literal-open',
 				title: 'Literal Open',
 				literal: 'Open',
 				year: 2021,
-			}),
+			} ),
 		];
 
-		const sortedIds = sortCitations(citations, 'chicago-author-date').map(
-			(c) => c.id
+		const sortedIds = sortCitations( citations, 'chicago-author-date' ).map(
+			( c ) => c.id
 		);
 
-		expect(sortedIds).toHaveLength(2);
-		expect(sortedIds[0]).not.toBe(sortedIds[1]);
-	});
+		expect( sortedIds ).toHaveLength( 2 );
+		expect( sortedIds[ 0 ] ).not.toBe( sortedIds[ 1 ] );
+	} );
 
-	it('sorts citations with no author and no title last using sentinel value', () => {
+	it( 'sorts citations with no author and no title last using sentinel value', () => {
 		const citations = [
-			createCitation({ id: 'titled', title: 'Something' }),
+			createCitation( { id: 'titled', title: 'Something' } ),
 			{ id: 'bare', csl: {} },
 		];
 
-		expect(sortCitations(citations).map((c) => c.id)).toEqual([
+		expect( sortCitations( citations ).map( ( c ) => c.id ) ).toEqual( [
 			'titled',
 			'bare',
-		]);
-	});
+		] );
+	} );
 
-	it('returns single-entry and empty citation arrays unchanged', () => {
+	it( 'returns single-entry and empty citation arrays unchanged', () => {
 		const single = [
-			createCitation({
+			createCitation( {
 				id: 'single',
 				family: 'Smith',
 				title: 'Only Entry',
 				year: 2024,
-			}),
+			} ),
 		];
 
-		expect(sortCitations(single)).toEqual(single);
-		expect(sortCitations([])).toEqual([]);
-	});
+		expect( sortCitations( single ) ).toEqual( single );
+		expect( sortCitations( [] ) ).toEqual( [] );
+	} );
 
-	it('preserves input order for IEEE numeric style', () => {
+	it( 'preserves input order for IEEE numeric style', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'smith',
 				family: 'Smith',
 				year: 2024,
 				title: 'Smith Study',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'adams',
 				family: 'Adams',
 				year: 2019,
 				title: 'Adams Study',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'zulu',
 				family: 'Zulu',
 				year: 2018,
 				title: 'Zulu Study',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'brown',
 				family: 'Brown',
 				year: 2021,
 				title: 'Brown Study',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'lee',
 				family: 'Lee',
 				year: 2020,
 				title: 'Lee Study',
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations, 'ieee').map((c) => c.id)).toEqual([
-			'smith',
-			'adams',
-			'zulu',
-			'brown',
-			'lee',
-		]);
-	});
+		expect(
+			sortCitations( citations, 'ieee' ).map( ( c ) => c.id )
+		).toEqual( [ 'smith', 'adams', 'zulu', 'brown', 'lee' ] );
+	} );
 
-	it('preserves input order for Vancouver numeric style', () => {
+	it( 'preserves input order for Vancouver numeric style', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'three',
 				family: 'Zulu',
 				year: 2018,
 				title: 'Zulu Study',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'one',
 				family: 'Adams',
 				year: 2024,
 				title: 'Adams Study',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'five',
 				family: 'Lee',
 				year: 2019,
 				title: 'Lee Study',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'two',
 				family: 'Brown',
 				year: 2021,
 				title: 'Brown Study',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'four',
 				family: 'Smith',
 				year: 2020,
 				title: 'Smith Study',
-			}),
+			} ),
 		];
 
-		expect(sortCitations(citations, 'vancouver').map((c) => c.id)).toEqual([
-			'three',
-			'one',
-			'five',
-			'two',
-			'four',
-		]);
-	});
+		expect(
+			sortCitations( citations, 'vancouver' ).map( ( c ) => c.id )
+		).toEqual( [ 'three', 'one', 'five', 'two', 'four' ] );
+	} );
 
-	it('produces identical order across 10 repeated calls for identical-key citations (stable sort)', () => {
+	it( 'produces identical order across 10 repeated calls for identical-key citations (stable sort)', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'first',
 				family: 'Smith',
 				year: 2020,
 				title: 'Alpha',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'second',
 				family: 'Smith',
 				year: 2020,
 				title: 'Alpha',
-			}),
+			} ),
 		];
 
-		const reference = sortCitations(citations, 'chicago-author-date').map(
-			(c) => c.id
+		const reference = sortCitations( citations, 'chicago-author-date' ).map(
+			( c ) => c.id
 		);
 
-		for (let i = 0; i < 9; i++) {
+		for ( let i = 0; i < 9; i++ ) {
 			expect(
-				sortCitations(citations, 'chicago-author-date').map((c) => c.id)
-			).toEqual(reference);
+				sortCitations( citations, 'chicago-author-date' ).map(
+					( c ) => c.id
+				)
+			).toEqual( reference );
 		}
-	});
+	} );
 
-	it('preserves stable order across JSON serialize/deserialize round-trip', () => {
+	it( 'preserves stable order across JSON serialize/deserialize round-trip', () => {
 		const citations = [
-			createCitation({
+			createCitation( {
 				id: 'first',
 				family: 'Jones',
 				year: 2021,
 				title: 'Same Title',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'second',
 				family: 'Jones',
 				year: 2021,
 				title: 'Same Title',
-			}),
-			createCitation({
+			} ),
+			createCitation( {
 				id: 'third',
 				family: 'Jones',
 				year: 2021,
 				title: 'Same Title',
-			}),
+			} ),
 		];
 
-		const sorted = sortCitations(citations, 'apa-7');
-		const roundTripped = JSON.parse(JSON.stringify(sorted));
-		const reSorted = sortCitations(roundTripped, 'apa-7');
+		const sorted = sortCitations( citations, 'apa-7' );
+		const roundTripped = JSON.parse( JSON.stringify( sorted ) );
+		const reSorted = sortCitations( roundTripped, 'apa-7' );
 
-		expect(reSorted.map((c) => c.id)).toEqual(sorted.map((c) => c.id));
-	});
-});
+		expect( reSorted.map( ( c ) => c.id ) ).toEqual(
+			sorted.map( ( c ) => c.id )
+		);
+	} );
+} );

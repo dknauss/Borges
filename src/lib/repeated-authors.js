@@ -17,7 +17,7 @@
  * includes/save-markup.php; the save-parity fixtures pin the two together.
  */
 
-export const REPEATED_AUTHOR_STYLES = Object.freeze(['mla-9']);
+export const REPEATED_AUTHOR_STYLES = Object.freeze( [ 'mla-9' ] );
 
 /**
  * The mark as saved: three U+2011 non-breaking hyphens, written as plain text.
@@ -38,8 +38,8 @@ const NAME_KEYS = [
 	'ORCID',
 ];
 
-function namePart(name, key) {
-	return name && typeof name[key] === 'string' ? name[key] : '';
+function namePart( name, key ) {
+	return name && typeof name[ key ] === 'string' ? name[ key ] : '';
 }
 
 /**
@@ -48,22 +48,22 @@ function namePart(name, key) {
  * @param {Object} citation Citation record.
  * @return {string|null} Key.
  */
-function getAuthorKey(citation) {
+function getAuthorKey( citation ) {
 	const authors = citation?.csl?.author;
 
-	if (!Array.isArray(authors) || authors.length === 0) {
+	if ( ! Array.isArray( authors ) || authors.length === 0 ) {
 		return null;
 	}
 
 	return authors
-		.map((name) =>
-			NAME_KEYS.map((key) => namePart(name, key)).join('\u0001')
+		.map( ( name ) =>
+			NAME_KEYS.map( ( key ) => namePart( name, key ) ).join( '\u0001' )
 		)
-		.join('\u0002');
+		.join( '\u0002' );
 }
 
-function joinParts(parts) {
-	return parts.filter((part) => part !== '').join(' ');
+function joinParts( parts ) {
+	return parts.filter( ( part ) => part !== '' ).join( ' ' );
 }
 
 /**
@@ -73,30 +73,30 @@ function joinParts(parts) {
  * @param {Object} name CSL name.
  * @return {string} Name, or '' when it has no family name or literal.
  */
-function getInvertedName(name) {
-	const literal = namePart(name, 'literal');
+function getInvertedName( name ) {
+	const literal = namePart( name, 'literal' );
 
-	if (literal !== '') {
+	if ( literal !== '' ) {
 		return literal;
 	}
 
-	if (namePart(name, 'family') === '') {
+	if ( namePart( name, 'family' ) === '' ) {
 		return '';
 	}
 
 	return [
-		joinParts([
-			namePart(name, 'non-dropping-particle'),
-			namePart(name, 'family'),
-		]),
-		joinParts([
-			namePart(name, 'given'),
-			namePart(name, 'dropping-particle'),
-		]),
-		namePart(name, 'suffix'),
+		joinParts( [
+			namePart( name, 'non-dropping-particle' ),
+			namePart( name, 'family' ),
+		] ),
+		joinParts( [
+			namePart( name, 'given' ),
+			namePart( name, 'dropping-particle' ),
+		] ),
+		namePart( name, 'suffix' ),
 	]
-		.filter((part) => part !== '')
-		.join(', ');
+		.filter( ( part ) => part !== '' )
+		.join( ', ' );
 }
 
 /**
@@ -105,24 +105,24 @@ function getInvertedName(name) {
  * @param {Object} name CSL name.
  * @return {string} Name, or '' when it has no family name or literal.
  */
-function getDisplayName(name) {
-	const literal = namePart(name, 'literal');
+function getDisplayName( name ) {
+	const literal = namePart( name, 'literal' );
 
-	if (literal !== '') {
+	if ( literal !== '' ) {
 		return literal;
 	}
 
-	if (namePart(name, 'family') === '') {
+	if ( namePart( name, 'family' ) === '' ) {
 		return '';
 	}
 
-	return joinParts([
-		namePart(name, 'given'),
-		namePart(name, 'dropping-particle'),
-		namePart(name, 'non-dropping-particle'),
-		namePart(name, 'family'),
-		namePart(name, 'suffix'),
-	]);
+	return joinParts( [
+		namePart( name, 'given' ),
+		namePart( name, 'dropping-particle' ),
+		namePart( name, 'non-dropping-particle' ),
+		namePart( name, 'family' ),
+		namePart( name, 'suffix' ),
+	] );
 }
 
 /**
@@ -136,23 +136,23 @@ function getDisplayName(name) {
  * @param {Array} authors CSL names.
  * @return {string|null} Names.
  */
-function getAuthorPrefix(authors) {
-	const first = getInvertedName(authors[0]);
+function getAuthorPrefix( authors ) {
+	const first = getInvertedName( authors[ 0 ] );
 	let block = first;
 
-	if (authors.length === 2) {
-		const second = getDisplayName(authors[1]);
-		block = second === '' ? '' : `${first}, and ${second}`;
-	} else if (authors.length >= 3) {
-		block = `${first}, et al.`;
+	if ( authors.length === 2 ) {
+		const second = getDisplayName( authors[ 1 ] );
+		block = second === '' ? '' : `${ first }, and ${ second }`;
+	} else if ( authors.length >= 3 ) {
+		block = `${ first }, et al.`;
 	}
 
-	if (first === '' || block === '') {
+	if ( first === '' || block === '' ) {
 		return null;
 	}
 
 	// A name ending in a period ("Jr.", "et al.") shares it with the entry.
-	return block.endsWith('.') ? block.slice(0, -1) : block;
+	return block.endsWith( '.' ) ? block.slice( 0, -1 ) : block;
 }
 
 /**
@@ -163,13 +163,13 @@ function getAuthorPrefix(authors) {
  * @param {Object} citation Citation record.
  * @return {boolean} Whether it is unformatted.
  */
-function isUnformatted(citation) {
+function isUnformatted( citation ) {
 	const text = citation?.formattedText;
 
 	return (
-		!text ||
+		! text ||
 		text === citation.csl?.title ||
-		text === citation.csl?.['container-title']
+		text === citation.csl?.[ 'container-title' ]
 	);
 }
 
@@ -177,46 +177,46 @@ function isUnformatted(citation) {
  * For each citation in display order, the author names to replace with
  * three hyphens, or null.
  *
- * @param {Array}    citations   Citations in display order.
- * @param {string}   styleKey    Citation style.
- * @param {Function} displayText (citation) => its display text.
+ * @param {Array}                        citations   Citations in display order.
+ * @param {string}                       styleKey    Citation style.
+ * @param {(citation: Object) => string} displayText Gives a citation's display text.
  * @return {Array<string|null>} Per-citation prefix.
  */
-export function getRepeatedAuthorPrefixes(citations, styleKey, displayText) {
-	if (!REPEATED_AUTHOR_STYLES.includes(styleKey)) {
-		return citations.map(() => null);
+export function getRepeatedAuthorPrefixes( citations, styleKey, displayText ) {
+	if ( ! REPEATED_AUTHOR_STYLES.includes( styleKey ) ) {
+		return citations.map( () => null );
 	}
 
-	return citations.map((citation, index) => {
-		const previous = citations[index - 1];
+	return citations.map( ( citation, index ) => {
+		const previous = citations[ index - 1 ];
 
 		// Only formatted entries: a title-only fallback can start with the very
 		// names it names.
 		if (
 			index === 0 ||
 			citation.displayOverride ||
-			isUnformatted(citation) ||
-			(!previous?.displayOverride && isUnformatted(previous))
+			isUnformatted( citation ) ||
+			( ! previous?.displayOverride && isUnformatted( previous ) )
 		) {
 			return null;
 		}
 
-		const key = getAuthorKey(citation);
+		const key = getAuthorKey( citation );
 
-		if (key === null || key !== getAuthorKey(previous)) {
+		if ( key === null || key !== getAuthorKey( previous ) ) {
 			return null;
 		}
 
-		const prefix = getAuthorPrefix(citation.csl.author);
+		const prefix = getAuthorPrefix( citation.csl.author );
 
 		if (
 			prefix === null ||
-			!displayText(citation).startsWith(`${prefix}.`) ||
-			!displayText(previous).startsWith(`${prefix}.`)
+			! displayText( citation ).startsWith( `${ prefix }.` ) ||
+			! displayText( previous ).startsWith( `${ prefix }.` )
 		) {
 			return null;
 		}
 
 		return prefix;
-	});
+	} );
 }

@@ -17,7 +17,7 @@
 		"axe-core": "4.11.0",
 		"chrome-launcher": "1.2.2",
 		"jsdom": "26.1.0",
-		"lighthouse": "12.8.2",
+		"lighthouse": "13.5.0",
 		"turndown": "7.2.0"
 	}
 }
