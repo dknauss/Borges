@@ -8,6 +8,7 @@
 		"measure": "node measure.mjs",
 		"lighthouse": "node lighthouse.mjs",
 		"zotero": "node zotero-coins.mjs",
+		"parser": "node parser-baseline.mjs",
 		"all": "php render.php && node measure.mjs && node lighthouse.mjs && node zotero-coins.mjs"
 	},
 	"dependencies": {
@@ -16,6 +17,7 @@
 		"@mozilla/readability": "0.6.0",
 		"axe-core": "4.11.0",
 		"chrome-launcher": "1.2.2",
+		"js-tiktoken": "1.0.21",
 		"jsdom": "26.1.0",
 		"lighthouse": "13.5.0",
 		"turndown": "7.2.0"
