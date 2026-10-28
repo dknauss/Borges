@@ -15,13 +15,7 @@
 			],
 			"publisher": "GitHub",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://github.com/adobe/structured-data-validator"
 		},
@@ -31,22 +25,10 @@
 			"title": "AI Features and Your Website",
 			"container-title": "Google Search Central",
 			"issued": {
-				"date-parts": [
-					[
-						2025,
-						12,
-						10
-					]
-				]
+				"date-parts": [ [ 2025, 12, 10 ] ]
 			},
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://developers.google.com/search/docs/appearance/ai-features"
 		},
@@ -56,13 +38,7 @@
 			"title": "Apostolic Succession",
 			"container-title": "Encyclopaedia Britannica",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://www.britannica.com/topic/apostolic-succession"
 		},
@@ -96,11 +72,7 @@
 			"publisher": "New Directions",
 			"publisher-place": "New York",
 			"issued": {
-				"date-parts": [
-					[
-						1962
-					]
-				]
+				"date-parts": [ [ 1962 ] ]
 			}
 		},
 		{
@@ -109,13 +81,7 @@
 			"title": "citation",
 			"container-title": "Schema.org",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://schema.org/citation"
 		},
@@ -125,13 +91,7 @@
 			"title": "Conrad Gessner Issues the First Universal Bibliography Since the Invention of Printing",
 			"container-title": "HistoryofInformation.com",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://historyofinformation.com/detail.php?id=1248"
 		},
@@ -149,11 +109,7 @@
 			"volume": "21",
 			"page": "129-139",
 			"issued": {
-				"date-parts": [
-					[
-						1962
-					]
-				]
+				"date-parts": [ [ 1962 ] ]
 			}
 		},
 		{
@@ -169,11 +125,7 @@
 			"publisher": "Christoph Froschauer",
 			"publisher-place": "Zurich",
 			"issued": {
-				"date-parts": [
-					[
-						1545
-					]
-				]
+				"date-parts": [ [ 1545 ] ]
 			}
 		},
 		{
@@ -193,11 +145,7 @@
 			"publisher": "Christoph Froschauer",
 			"publisher-place": "Zurich",
 			"issued": {
-				"date-parts": [
-					[
-						1574
-					]
-				]
+				"date-parts": [ [ 1574 ] ]
 			},
 			"URL": "https://archive.org/details/bibliotheca00gess"
 		},
@@ -214,11 +162,7 @@
 			"publisher": "Harvard University Press",
 			"publisher-place": "Cambridge, MA",
 			"issued": {
-				"date-parts": [
-					[
-						1997
-					]
-				]
+				"date-parts": [ [ 1997 ] ]
 			}
 		},
 		{
@@ -227,13 +171,7 @@
 			"title": "Isnād",
 			"container-title": "Encyclopaedia Britannica",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://www.britannica.com/topic/isnad"
 		},
@@ -243,13 +181,7 @@
 			"title": "isPartOf",
 			"container-title": "Schema.org",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://schema.org/isPartOf"
 		},
@@ -286,11 +218,7 @@
 			"publisher-place": "Winona Lake, IN",
 			"page": "227-242",
 			"issued": {
-				"date-parts": [
-					[
-						2016
-					]
-				]
+				"date-parts": [ [ 2016 ] ]
 			},
 			"URL": "https://epub.ub.uni-muenchen.de/49554/1/Jimenez_May_the_Reader_Not_Withhold_the_Tablet.pdf"
 		},
@@ -300,13 +228,7 @@
 			"title": "Johannes Trithemius Publishes the Earliest Subject Bibliography, on Mostly on Ecclesiastical Writings",
 			"container-title": "HistoryofInformation.com",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://historyofinformation.com/detail.php?id=344"
 		},
@@ -323,13 +245,7 @@
 			"container-title": "Borges Bibliography Builder, pull request #203",
 			"publisher": "GitHub",
 			"issued": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://github.com/dknauss/Borges/pull/203"
 		},
@@ -345,13 +261,7 @@
 			],
 			"container-title": "Marginalia",
 			"issued": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						25
-					]
-				]
+				"date-parts": [ [ 2026, 10, 25 ] ]
 			},
 			"URL": "https://m.arginalia.com/the-page-is-an-interface/"
 		},
@@ -369,11 +279,7 @@
 			"publisher": "University of California Press",
 			"publisher-place": "Berkeley",
 			"issued": {
-				"date-parts": [
-					[
-						1976
-					]
-				]
+				"date-parts": [ [ 1976 ] ]
 			}
 		},
 		{
@@ -388,13 +294,7 @@
 			],
 			"container-title": "World History Encyclopedia",
 			"issued": {
-				"date-parts": [
-					[
-						2017,
-						9,
-						20
-					]
-				]
+				"date-parts": [ [ 2017, 9, 20 ] ]
 			},
 			"URL": "https://www.worldhistory.org/Egyptian_Vizier/"
 		},
@@ -409,13 +309,7 @@
 			],
 			"publisher": "GitHub",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://github.com/mozilla/readability"
 		},
@@ -432,11 +326,7 @@
 			"publisher": "Gilles Coppens de Diest",
 			"publisher-place": "Antwerp",
 			"issued": {
-				"date-parts": [
-					[
-						1570
-					]
-				]
+				"date-parts": [ [ 1570 ] ]
 			},
 			"URL": "https://archive.org/details/theatrumorbister00orte"
 		},
@@ -447,13 +337,7 @@
 			"container-title": "Federal Rules of Evidence",
 			"publisher": "Legal Information Institute, Cornell Law School",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://www.law.cornell.edu/rules/fre/rule_803"
 		},
@@ -463,22 +347,10 @@
 			"title": "Structured Data Is Valid",
 			"container-title": "Lighthouse, Chrome for Developers",
 			"issued": {
-				"date-parts": [
-					[
-						2019,
-						5,
-						2
-					]
-				]
+				"date-parts": [ [ 2019, 5, 2 ] ]
 			},
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://developer.chrome.com/docs/lighthouse/seo/structured-data"
 		},
@@ -488,22 +360,10 @@
 			"title": "Structured Data Markup That Google Search Supports",
 			"container-title": "Google Search Central",
 			"issued": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						16
-					]
-				]
+				"date-parts": [ [ 2026, 10, 16 ] ]
 			},
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://developers.google.com/search/docs/appearance/structured-data/search-gallery"
 		},
@@ -514,13 +374,7 @@
 			"container-title": "The Electronic Text Corpus of Sumerian Literature",
 			"publisher": "University of Oxford",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://etcsl.orinst.ox.ac.uk/section2/tr211.htm"
 		},
@@ -537,13 +391,7 @@
 			"container-title": "Reading the Library of Ashurbanipal",
 			"publisher": "British Museum and LMU Munich",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://oracc.museum.upenn.edu/asbp/rlasb/librarycolophons/"
 		},
@@ -553,13 +401,7 @@
 			"title": "Theatrum Orbis Terrarum",
 			"container-title": "Wikipedia",
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://en.wikipedia.org/wiki/Theatrum_Orbis_Terrarum"
 		},
@@ -576,11 +418,7 @@
 			"publisher": "Johann Amerbach",
 			"publisher-place": "Basel",
 			"issued": {
-				"date-parts": [
-					[
-						1494
-					]
-				]
+				"date-parts": [ [ 1494 ] ]
 			}
 		},
 		{
@@ -595,11 +433,7 @@
 			"publisher": "University of Chicago Press",
 			"publisher-place": "Chicago",
 			"issued": {
-				"date-parts": [
-					[
-						1906
-					]
-				]
+				"date-parts": [ [ 1906 ] ]
 			}
 		},
 		{
@@ -608,22 +442,10 @@
 			"title": "Using Zotero to Create COinS Metadata",
 			"container-title": "Zotero Documentation",
 			"issued": {
-				"date-parts": [
-					[
-						2020,
-						6,
-						14
-					]
-				]
+				"date-parts": [ [ 2020, 6, 14 ] ]
 			},
 			"accessed": {
-				"date-parts": [
-					[
-						2026,
-						10,
-						27
-					]
-				]
+				"date-parts": [ [ 2026, 10, 27 ] ]
 			},
 			"URL": "https://www.zotero.org/support/dev/exposing_metadata/coins"
 		},
@@ -652,13 +474,7 @@
 			"publisher": "arXiv",
 			"number": "2603.10700",
 			"issued": {
-				"date-parts": [
-					[
-						2026,
-						3,
-						11
-					]
-				]
+				"date-parts": [ [ 2026, 3, 11 ] ]
 			},
 			"DOI": "10.48550/arXiv.2603.10700",
 			"URL": "https://arxiv.org/abs/2603.10700"
@@ -677,11 +493,7 @@
 			"volume": "44",
 			"page": "207-208",
 			"issued": {
-				"date-parts": [
-					[
-						1981
-					]
-				]
+				"date-parts": [ [ 1981 ] ]
 			}
 		},
 		{
@@ -708,13 +520,7 @@
 			],
 			"container-title": "Vercel Blog",
 			"issued": {
-				"date-parts": [
-					[
-						2024,
-						12,
-						17
-					]
-				]
+				"date-parts": [ [ 2024, 12, 17 ] ]
 			},
 			"URL": "https://vercel.com/blog/the-rise-of-the-ai-crawler"
 		},
@@ -730,12 +536,7 @@
 			],
 			"container-title": "Bad Sector",
 			"issued": {
-				"date-parts": [
-					[
-						2026,
-						10
-					]
-				]
+				"date-parts": [ [ 2026, 10 ] ]
 			},
 			"URL": "https://badsector.blog/what-citation-markup-gives-machines/"
 		},
@@ -755,12 +556,7 @@
 			],
 			"container-title": "Whole Earth Review",
 			"issued": {
-				"date-parts": [
-					[
-						1985,
-						5
-					]
-				]
+				"date-parts": [ [ 1985, 5 ] ]
 			},
 			"page": "44"
 		},
@@ -777,11 +573,7 @@
 			"publisher": "Penguin",
 			"publisher-place": "New York",
 			"issued": {
-				"date-parts": [
-					[
-						1988
-					]
-				]
+				"date-parts": [ [ 1988 ] ]
 			}
 		},
 		{
@@ -796,13 +588,7 @@
 			],
 			"container-title": "Quote Investigator",
 			"issued": {
-				"date-parts": [
-					[
-						2018,
-						3,
-						9
-					]
-				]
+				"date-parts": [ [ 2018, 3, 9 ] ]
 			},
 			"URL": "https://quoteinvestigator.com/2018/03/09/info/"
 		}
