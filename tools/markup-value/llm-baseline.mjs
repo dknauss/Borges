@@ -96,9 +96,9 @@ const plainText = ( value ) =>
  * Whether a ground-truth value appears in the printed entry, so a correct
  * answer can be told apart from one supplied from memory.
  *
- * @param {string} field Field name.
- * @param {string|string[]} want Ground-truth value.
- * @param {string} line  The plain entry, lowercased.
+ * @param {string}          field Field name.
+ * @param {string|string[]} want  Ground-truth value.
+ * @param {string}          line  The plain entry, lowercased.
  */
 function onPage( field, want, line ) {
 	const text = ` ${ plainText( line ) } `;
