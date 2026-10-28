@@ -433,8 +433,8 @@ sort-conformance backlog (1.14.0, 1.16.0); `wp borges list`, `export`,
 `validate`, `reformat`, `deduplicate`, and `duplicates` shipped (1.14.0–1.16.0);
 the reference-manager corpus now holds real Zotero 10 and Mendeley Reference
 Manager exports and public EndNote samples, and RIS import shipped (1.16.0);
-and Phase 05 is complete (M4 in 1.15.0). This order was proposed to the owner
-on 2026-10-28 and is not yet confirmed:
+and Phase 05 is complete (M4 in 1.15.0). The owner confirmed this order on
+2026-10-28, with Epic-OSCOLA as the next build:
 
 1. **Keep CI, runtime, and Playground hygiene green** (standing)
     - release-package output, WordPress.org artifact alignment, citeproc-php
@@ -442,7 +442,7 @@ on 2026-10-28 and is not yet confirmed:
       build, and the live resolver checks (DOI, PMID, PMCID, arXiv, ISBN,
       catalog, Internet Archive, Abilities)
 2. **Epic-OSCOLA grouped bibliographies** (large; needs a `save()`
-   deprecation). Scoped in `docs/planning/sort-conformance-plan.md`
+   deprecation). Designed in `docs/planning/oscola-grouping-plan.md`
 3. **Decide whether the write routes should ever be on by default.** The
    Phase 05 memo left this open; today they need the
    `bibliography_builder_enable_write_routes` filter

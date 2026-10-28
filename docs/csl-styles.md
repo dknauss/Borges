@@ -29,6 +29,8 @@ Earlier releases shipped about 2 KB stand-ins. Those initialized every given nam
 
 Each style follows its manual's current edition, last checked on 2026-10-05. When a manual publishes a new edition, update the style's rules, the edition named in its header comment, this table, and the goldens in `tests/fixtures/csl-styles/` (review every changed line), in one change. Already-saved bibliographies keep their text until an entry is added or edited, or the style is changed.
 
+**OSCOLA tables.** OSCOLA 5 (§§1.6–1.7) lists primary sources in tables before the bibliography. When an OSCOLA block holds a `legal_case`, `legislation`, `bill`, `regulation`, or `treaty`, `save()` splits it into groups declared in `includes/styles.json` (`groups`): Cases (names roman, "Re X" and "In re X" filed under X), Legislation (`legislation` and `bill`, then `regulation`, so statutory instruments follow statutes), Treaties, and Secondary Sources (every other type, one list). Each group is a `<div>` with a label one level below the block heading (a `<p>` when the heading is a paragraph or an `h6`) and a list named by it. A block of secondary sources alone stays one list. Not yet done: tables split by jurisdiction, statute sections as sub-entries, and "R v" cases filed under the defendant's name (they file under R). See `docs/planning/oscola-grouping-plan.md`.
+
 Deviations shared by every style, all forced by how the block stores and renders entries:
 
 - **Titles keep their stored capitalization.** APA's sentence case is not applied, and neither is ABNT's capitalized first word for title-first entries. The block re-applies italics by finding the stored title text in the formatted entry, so a case-transformed title would lose its italics.

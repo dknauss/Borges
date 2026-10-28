@@ -125,6 +125,32 @@ function migrateSortedAttributes( attributes ) {
 
 export const deprecated = [
 	{
+		// Freezes the save() shape of 1.16.0: OSCOLA listed cases,
+		// legislation, and treaties in one alphabetical list with the
+		// secondary sources, where OSCOLA 5 §§1.6–1.7 puts them in tables of
+		// their own, before the bibliography, with case names in roman.
+		attributes: deprecatedAttributes,
+		save: ( { attributes } ) =>
+			renderBibliographySave( attributes, {
+				sortEntries: true,
+				headingTag: getHeadingTag( attributes.headingLevel ),
+				entryTag: 'span',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				inlineMarkup: true,
+				quoteAwareItalics: true,
+				urlAwareItalics: true,
+				quoteFoldedItalics: true,
+				particleAwareSort: true,
+				localeArticles: true,
+				notesAuthorChains: true,
+				citeExportData: true,
+				canonicalDoiUrl: true,
+				jsonLdItemList: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			} ),
+	},
+	{
 		// Freezes the save() shape of 1.15.0: titles sorted without an
 		// English leading article only, so ABNT filed "O Guarani" under O,
 		// where NBR 6033 §3.4 files it under G.

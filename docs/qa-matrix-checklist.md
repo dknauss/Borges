@@ -84,6 +84,8 @@ Use this checklist for live QA in the local Studio site.
 | Chicago Notes-Bibliography → APA 7               | Citation text changes appropriately | ☐      |
 | Style switch with `displayOverride` present      | Override preserved                  | ☐      |
 | Reset after style switch                         | Restores current style output       | ☐      |
+| Switch to OSCOLA with a case and a statute       | Cases, Legislation, and Secondary Sources tables, in that order; case names roman | ☐      |
+| OSCOLA with secondary sources only               | One undivided list, no table labels | ☐      |
 
 ## Save / reload / frontend
 

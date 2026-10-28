@@ -78,7 +78,7 @@ _Last reviewed: 2026-10-28._
 ## Current Priority Order
 
 See "Immediate next-task priorities (2026-10-28)" in `ROADMAP.md` for the full
-ordering, proposed to the owner on 2026-10-28 and not yet confirmed. In short:
+ordering, confirmed by the owner on 2026-10-28 (Epic-OSCOLA is next). In short:
 
 1. **CI, runtime, and Playground hygiene** (standing)
 2. **Epic-OSCOLA grouped bibliographies** (large; needs a `save()` deprecation)

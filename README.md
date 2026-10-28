@@ -435,7 +435,7 @@ See [SPEC.md](SPEC.md) for the authoritative behavior specification and future p
 
 ## Known Limitations
 
-- **OSCOLA grouped bibliography** — OSCOLA convention requires the bibliography to be divided into source-type groups (cases, legislation, books, articles, online sources). Borges currently renders a single alphabetized list regardless of style. This limitation is displayed as a dismissible notice in the editor when OSCOLA is selected. Grouped-bibliography support is tracked as Epic-OSCOLA in [`docs/planning/sort-conformance-plan.md`](docs/planning/sort-conformance-plan.md).
+- **OSCOLA tables** — An OSCOLA bibliography that cites cases, legislation, or treaties lists them in a table of cases, a table of legislation, and a table of treaties before the secondary sources, as OSCOLA 5 (§§1.6–1.7) asks. The tables are not divided by jurisdiction, statutes have no sub-entries for the sections cited, and "R v" cases file under R, which is OSCOLA's rule for works other than criminal-law works. See [`docs/planning/oscola-grouping-plan.md`](docs/planning/oscola-grouping-plan.md).
 
 ## Contributing
 

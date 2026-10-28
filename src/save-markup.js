@@ -16,6 +16,7 @@ import {
 } from './lib/jsonld';
 import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
+import { getGroupLabelTag, groupCitations } from './lib/bibliography-groups';
 import {
 	REPEATED_AUTHOR_MARK,
 	getRepeatedAuthorPrefixes,
@@ -106,6 +107,7 @@ export function renderBibliographySave(
 		particleAwareSort = false,
 		localeArticles = false,
 		notesAuthorChains = false,
+		sourceGroups = false,
 		citeExportData = false,
 		canonicalDoiUrl = false,
 		jsonLdItemList = false,
@@ -132,6 +134,7 @@ export function renderBibliographySave(
 				particleAwareSort,
 				localeArticles,
 				notesAuthorChains,
+				sourceGroups,
 			} )
 		: citations;
 	const cslArray = renderedCitations.map( ( c ) => c.csl );
@@ -149,6 +152,197 @@ export function renderBibliographySave(
 	} bibliography-builder-list-${ citationStyle }`;
 	const HeadingTag = headingTag;
 	const EntryTag = entryTag;
+	const groups =
+		sortEntries && sourceGroups
+			? groupCitations( renderedCitations, citationStyle )
+			: null;
+	const GroupLabelTag = getGroupLabelTag( headingTag );
+
+	const renderEntry = ( citation, citationIndex, romanTitles = false ) => {
+		const displaySegments = getDisplaySegments( citation, {
+			inlineMarkup,
+			quoteAwareItalics,
+			urlAwareItalics,
+			quoteFoldedItalics,
+			romanTitles,
+		} );
+		const repeatedPrefix = repeatedAuthorPrefixes[ citationIndex ] || null;
+		const replacesAuthors =
+			repeatedPrefix !== null &&
+			displaySegments.length > 0 &&
+			! displaySegments[ 0 ].italic &&
+			displaySegments[ 0 ].text.startsWith( repeatedPrefix );
+		const shownSegments = replacesAuthors
+			? [
+					{
+						...displaySegments[ 0 ],
+						text: displaySegments[ 0 ].text.slice(
+							repeatedPrefix.length
+						),
+					},
+					...displaySegments.slice( 1 ),
+				]
+			: displaySegments;
+		const coinsTitle = outputCoins ? buildCoins( citation.csl ) : null;
+		const exportBase = getCitationExportBasename( citation.csl );
+
+		return (
+			<li
+				key={ citation.id }
+				role={
+					includeDeprecatedBiblioEntryRole
+						? 'doc-biblioentry'
+						: undefined
+				}
+				id={ `ref-${ citation.id }` }
+				lang={ citation.csl.language || undefined }
+				{ ...( includeCiteExport && citeExportData
+					? getCiteExportData( citation, inlineMarkup )
+					: {} ) }
+			>
+				<EntryTag className="bibliography-builder-entry-text">
+					{ replacesAuthors ? (
+						<span className="bibliography-builder-repeated-author">
+							<span
+								className="bibliography-builder-repeated-author-mark"
+								aria-hidden="true"
+							>
+								{ REPEATED_AUTHOR_MARK }
+							</span>
+							<span className="bibliography-builder-visually-hidden screen-reader-text">
+								{ repeatedPrefix }
+							</span>
+						</span>
+					) : null }
+					{ shownSegments.map( ( segment, index ) => {
+						const titleLabel =
+							citation.csl.title ||
+							citation.csl[ 'container-title' ];
+						const linkLabel =
+							( inlineMarkup && titleLabel
+								? stripInlineMarkup( titleLabel )
+								: titleLabel ) || labels.linkFallback;
+						const content = linkVisibleUrls
+							? splitTextIntoLinkParts( segment.text, {
+									linkLabel,
+								} ).map( ( part, partIndex ) =>
+									part.link ? (
+										<a
+											key={ `${ citation.id }-${ index }-${ partIndex }` }
+											href={ part.href }
+											rel="nofollow noopener noreferrer"
+											aria-label={
+												linkLabel
+													? `${ part.label } — ${ part.href }`
+													: undefined
+											}
+										>
+											{ part.text }
+										</a>
+									) : (
+										part.text
+									)
+								)
+							: segment.text;
+
+						return segment.italic ? (
+							<i key={ `${ citation.id }-${ index }` }>
+								{ content }
+							</i>
+						) : (
+							content
+						);
+					} ) }
+				</EntryTag>
+				{ outputCoins ? (
+					<span
+						className="Z3988"
+						aria-hidden="true"
+						title={ coinsTitle }
+					/>
+				) : null }
+				{ includeCiteExport && ! citeExportData ? (
+					<details className="bibliography-builder-cite-export">
+						<summary className="bibliography-builder-cite-export-toggle">
+							{ labels.toggle }
+						</summary>
+						<div className="bibliography-builder-cite-export-panel">
+							<button
+								type="button"
+								className="bibliography-builder-cite-copy"
+								aria-live="polite"
+								data-cite-text={ getCopyText(
+									citation,
+									inlineMarkup
+								) }
+								data-copied-label={ labels.copied || undefined }
+							>
+								{ labels.copy }
+							</button>
+							<ul className="bibliography-builder-export-links">
+								<li>
+									<a
+										href={ `data:application/x-research-info-systems;charset=utf-8,${ encodeURIComponent(
+											cslToRisEntry( citation.csl )
+										) }` }
+										download={ `${ exportBase }.ris` }
+										data-cite-export-filename={ `${ exportBase }.ris` }
+										rel="noopener"
+									>
+										{ labels.ris }
+									</a>
+								</li>
+								<li>
+									<a
+										href={ `data:application/vnd.citationstyles.csl+json;charset=utf-8,${ encodeURIComponent(
+											`${ JSON.stringify(
+												citation.csl,
+												null,
+												2
+											) }\n`
+										) }` }
+										download={ `${ exportBase }.csl.json` }
+										data-cite-export-filename={ `${ exportBase }.csl.json` }
+										rel="noopener"
+									>
+										{ labels.cslJson }
+									</a>
+								</li>
+								{ citation.exportBibtex ? (
+									<li>
+										<a
+											href={ `data:text/x-bibtex;charset=utf-8,${ encodeURIComponent(
+												citation.exportBibtex
+											) }` }
+											download={ `${ exportBase }.bib` }
+											data-cite-export-filename={ `${ exportBase }.bib` }
+											rel="noopener"
+										>
+											{ labels.bibtex }
+										</a>
+									</li>
+								) : null }
+								{ citation.exportBiblatex ? (
+									<li>
+										<a
+											href={ `data:text/x-bibtex;charset=utf-8,${ encodeURIComponent(
+												citation.exportBiblatex
+											) }` }
+											download={ `${ exportBase }.biblatex.bib` }
+											data-cite-export-filename={ `${ exportBase }.biblatex.bib` }
+											rel="noopener"
+										>
+											{ labels.biblatex }
+										</a>
+									</li>
+								) : null }
+							</ul>
+						</div>
+					</details>
+				) : null }
+			</li>
+		);
+	};
 
 	return (
 		<section
@@ -161,207 +355,43 @@ export function renderBibliographySave(
 					{ headingText }
 				</HeadingTag>
 			) : null }
-			<ListTag className={ listClassName }>
-				{ renderedCitations.map( ( citation, citationIndex ) => {
-					const displaySegments = getDisplaySegments( citation, {
-						inlineMarkup,
-						quoteAwareItalics,
-						urlAwareItalics,
-						quoteFoldedItalics,
-					} );
-					const repeatedPrefix =
-						repeatedAuthorPrefixes[ citationIndex ] || null;
-					const replacesAuthors =
-						repeatedPrefix !== null &&
-						displaySegments.length > 0 &&
-						! displaySegments[ 0 ].italic &&
-						displaySegments[ 0 ].text.startsWith( repeatedPrefix );
-					const shownSegments = replacesAuthors
-						? [
-								{
-									...displaySegments[ 0 ],
-									text: displaySegments[ 0 ].text.slice(
-										repeatedPrefix.length
-									),
-								},
-								...displaySegments.slice( 1 ),
-							]
-						: displaySegments;
-					const coinsTitle = outputCoins
-						? buildCoins( citation.csl )
-						: null;
-					const exportBase = getCitationExportBasename(
-						citation.csl
-					);
+			{ groups ? (
+				groups.map( ( group ) => {
+					const labelId = `bibliography-group-${ group.key }-${ group.citations[ 0 ].id }`;
 
 					return (
-						<li
-							key={ citation.id }
-							role={
-								includeDeprecatedBiblioEntryRole
-									? 'doc-biblioentry'
-									: undefined
-							}
-							id={ `ref-${ citation.id }` }
-							lang={ citation.csl.language || undefined }
-							{ ...( includeCiteExport && citeExportData
-								? getCiteExportData( citation, inlineMarkup )
-								: {} ) }
+						<div
+							key={ group.key }
+							className={ `bibliography-builder-group bibliography-builder-group-${ group.key }` }
 						>
-							<EntryTag className="bibliography-builder-entry-text">
-								{ replacesAuthors ? (
-									<span className="bibliography-builder-repeated-author">
-										<span
-											className="bibliography-builder-repeated-author-mark"
-											aria-hidden="true"
-										>
-											{ REPEATED_AUTHOR_MARK }
-										</span>
-										<span className="bibliography-builder-visually-hidden screen-reader-text">
-											{ repeatedPrefix }
-										</span>
-									</span>
-								) : null }
-								{ shownSegments.map( ( segment, index ) => {
-									const titleLabel =
-										citation.csl.title ||
-										citation.csl[ 'container-title' ];
-									const linkLabel =
-										( inlineMarkup && titleLabel
-											? stripInlineMarkup( titleLabel )
-											: titleLabel ) ||
-										labels.linkFallback;
-									const content = linkVisibleUrls
-										? splitTextIntoLinkParts(
-												segment.text,
-												{
-													linkLabel,
-												}
-											).map( ( part, partIndex ) =>
-												part.link ? (
-													<a
-														key={ `${ citation.id }-${ index }-${ partIndex }` }
-														href={ part.href }
-														rel="nofollow noopener noreferrer"
-														aria-label={
-															linkLabel
-																? `${ part.label } — ${ part.href }`
-																: undefined
-														}
-													>
-														{ part.text }
-													</a>
-												) : (
-													part.text
-												)
-											)
-										: segment.text;
-
-									return segment.italic ? (
-										<i
-											key={ `${ citation.id }-${ index }` }
-										>
-											{ content }
-										</i>
-									) : (
-										content
-									);
-								} ) }
-							</EntryTag>
-							{ outputCoins ? (
-								<span
-									className="Z3988"
-									aria-hidden="true"
-									title={ coinsTitle }
-								/>
-							) : null }
-							{ includeCiteExport && ! citeExportData ? (
-								<details className="bibliography-builder-cite-export">
-									<summary className="bibliography-builder-cite-export-toggle">
-										{ labels.toggle }
-									</summary>
-									<div className="bibliography-builder-cite-export-panel">
-										<button
-											type="button"
-											className="bibliography-builder-cite-copy"
-											aria-live="polite"
-											data-cite-text={ getCopyText(
-												citation,
-												inlineMarkup
-											) }
-											data-copied-label={
-												labels.copied || undefined
-											}
-										>
-											{ labels.copy }
-										</button>
-										<ul className="bibliography-builder-export-links">
-											<li>
-												<a
-													href={ `data:application/x-research-info-systems;charset=utf-8,${ encodeURIComponent(
-														cslToRisEntry(
-															citation.csl
-														)
-													) }` }
-													download={ `${ exportBase }.ris` }
-													data-cite-export-filename={ `${ exportBase }.ris` }
-													rel="noopener"
-												>
-													{ labels.ris }
-												</a>
-											</li>
-											<li>
-												<a
-													href={ `data:application/vnd.citationstyles.csl+json;charset=utf-8,${ encodeURIComponent(
-														`${ JSON.stringify(
-															citation.csl,
-															null,
-															2
-														) }\n`
-													) }` }
-													download={ `${ exportBase }.csl.json` }
-													data-cite-export-filename={ `${ exportBase }.csl.json` }
-													rel="noopener"
-												>
-													{ labels.cslJson }
-												</a>
-											</li>
-											{ citation.exportBibtex ? (
-												<li>
-													<a
-														href={ `data:text/x-bibtex;charset=utf-8,${ encodeURIComponent(
-															citation.exportBibtex
-														) }` }
-														download={ `${ exportBase }.bib` }
-														data-cite-export-filename={ `${ exportBase }.bib` }
-														rel="noopener"
-													>
-														{ labels.bibtex }
-													</a>
-												</li>
-											) : null }
-											{ citation.exportBiblatex ? (
-												<li>
-													<a
-														href={ `data:text/x-bibtex;charset=utf-8,${ encodeURIComponent(
-															citation.exportBiblatex
-														) }` }
-														download={ `${ exportBase }.biblatex.bib` }
-														data-cite-export-filename={ `${ exportBase }.biblatex.bib` }
-														rel="noopener"
-													>
-														{ labels.biblatex }
-													</a>
-												</li>
-											) : null }
-										</ul>
-									</div>
-								</details>
-							) : null }
-						</li>
+							<GroupLabelTag
+								className="bibliography-builder-group-heading"
+								id={ labelId }
+							>
+								{ group.label }
+							</GroupLabelTag>
+							<ListTag
+								className={ listClassName }
+								aria-labelledby={ labelId }
+							>
+								{ group.citations.map( ( citation ) =>
+									renderEntry(
+										citation,
+										renderedCitations.indexOf( citation ),
+										group.romanTitles
+									)
+								) }
+							</ListTag>
+						</div>
 					);
-				} ) }
-			</ListTag>
+				} )
+			) : (
+				<ListTag className={ listClassName }>
+					{ renderedCitations.map( ( citation, citationIndex ) =>
+						renderEntry( citation, citationIndex )
+					) }
+				</ListTag>
+			) }
 
 			{ outputJsonLd ? (
 				<script

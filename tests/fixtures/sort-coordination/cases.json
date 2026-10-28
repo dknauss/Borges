@@ -240,5 +240,31 @@
       { "id": "smith-adam-zeta", "csl": { "type": "book", "title": "Zeta", "author": [{ "family": "Smith", "given": "Adam" }], "issued": { "date-parts": [[1776]] } } }
     ],
     "expectedOrder": ["smith-adam-zeta", "smith-john-alpha"]
+  },
+  {
+    "id": "case-oscola-tables-first",
+    "style": "oscola",
+    "citations": [
+      { "id": "craig", "csl": { "type": "article-journal", "title": "Theory, Pure Theory and Values in Public Law", "author": [{ "family": "Craig", "given": "Paul" }], "issued": { "date-parts": [[2005]] } } },
+      { "id": "si", "csl": { "type": "regulation", "title": "Air Navigation Order 2016", "issued": { "date-parts": [[2016]] } } },
+      { "id": "zoos", "csl": { "type": "legislation", "title": "Zoos Act 1981", "issued": { "date-parts": [[1981]] } } },
+      { "id": "bill", "csl": { "type": "bill", "title": "Assisted Dying Bill", "issued": { "date-parts": [[2024]] } } },
+      { "id": "farquar", "csl": { "type": "legal_case", "title": "Re Farquar's Estate", "issued": { "date-parts": [[1907]] } } },
+      { "id": "donoghue", "csl": { "type": "legal_case", "title": "Donoghue v Stevenson", "issued": { "date-parts": [[1932]] } } },
+      { "id": "gault", "csl": { "type": "legal_case", "title": "In re Gault", "issued": { "date-parts": [[1967]] } } },
+      { "id": "reading", "csl": { "type": "legal_case", "title": "Reading v Attorney-General", "issued": { "date-parts": [[1951]] } } },
+      { "id": "echr", "csl": { "type": "treaty", "title": "European Convention on Human Rights", "issued": { "date-parts": [[1950]] } } },
+      { "id": "aston", "csl": { "type": "book", "title": "The Aston Lectures", "author": [{ "family": "Aston", "given": "Ann" }], "issued": { "date-parts": [[2010]] } } }
+    ],
+    "expectedOrder": ["donoghue", "farquar", "gault", "reading", "zoos", "bill", "si", "echr", "aston", "craig"]
+  },
+  {
+    "id": "case-oscola-secondary-only",
+    "style": "oscola",
+    "citations": [
+      { "id": "zed", "csl": { "type": "book", "title": "Zed", "author": [{ "family": "Zander", "given": "Michael" }], "issued": { "date-parts": [[2015]] } } },
+      { "id": "ash", "csl": { "type": "webpage", "title": "Ash", "author": [{ "family": "Ashworth", "given": "Andrew" }], "issued": { "date-parts": [[2020]] } } }
+    ],
+    "expectedOrder": ["ash", "zed"]
   }
 ]

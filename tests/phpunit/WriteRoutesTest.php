@@ -617,4 +617,29 @@ final class WriteRoutesTest extends TestCase {
 		$this->assertSame( 'empty', $error->get_error_data()['entries'][0]['id'] );
 	}
 
+	public function test_reformat_to_oscola_files_cases_in_their_own_table() {
+		$case                = self::citation( 'c-case', 'Donoghue v Stevenson', 'Zed', 'Zo', 1932 );
+		$case['csl']['type'] = 'legal_case';
+		unset( $case['csl']['author'] );
+		$content = self::block(
+			array(
+				'bibliographyId' => 'oscola-switch',
+				'citationStyle'  => 'chicago-notes-bibliography',
+				'citations'      => array( self::citation( 'c-book', 'Administrative Law', 'Craig', 'Paul', 2005 ), $case ),
+			)
+		);
+		bibliography_builder_test_set_post( self::POST_ID, 'publish', $content );
+
+		bibliography_builder_rest_reformat_bibliography(
+			self::commit( self::block_request( 'POST', 0, array( 'style' => 'oscola' ), '/reformat' ) )
+		);
+		$block = $this->saved_blocks()[0];
+
+		// The case comes first, in the table of cases, before the bibliography.
+		$this->assertSame( array( 'c-case', 'c-book' ), array_column( bibliography_builder_write_to_arrays( $block['attrs'] )['citations'], 'id' ) );
+		$html = get_post( self::POST_ID )->post_content;
+		$this->assertStringContainsString( 'bibliography-builder-group-cases', $html );
+		$this->assertStringContainsString( 'bibliography-builder-group-secondary', $html );
+		$this->assert_blocks_are_valid();
+	}
 }

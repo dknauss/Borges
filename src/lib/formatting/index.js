@@ -466,6 +466,10 @@ function getItalicizedFields( citation ) {
  * finds the curly one citeproc printed; without it, the shape save() had
  * through 1.15.0, when such a title stayed roman.
  *
+ * With `romanTitles`, no title is italicized; only inline `<i>`/`<em>` in the
+ * text is. OSCOLA's table of cases uses it: case names there are not
+ * italicised (OSCOLA 5 §1.6.2).
+ *
  * @param {Object}  citation                     Citation object.
  * @param {Object}  [options]                    Options.
  * @param {boolean} [options.inlineMarkup]       Read inline HTML in the text.
@@ -474,6 +478,7 @@ function getItalicizedFields( citation ) {
  * @param {boolean} [options.urlAwareItalics]    Skip title matches inside URLs.
  * @param {boolean} [options.quoteFoldedItalics] Match titles with quotation
  *                                               marks folded.
+ * @param {boolean} [options.romanTitles]        Leave titles roman.
  * @return {DisplaySegment[]} Array of text segments with italic flags.
  *
  * @since 0.1.0
@@ -485,6 +490,7 @@ export function getDisplaySegments(
 		quoteAwareItalics = false,
 		urlAwareItalics = false,
 		quoteFoldedItalics = false,
+		romanTitles = false,
 	} = {}
 ) {
 	const rawText = getDisplayText( citation );
@@ -502,7 +508,7 @@ export function getDisplaySegments(
 	const urlRanges = urlAwareItalics ? getUrlRanges( displayText ) : [];
 	const searchText = quoteFoldedItalics ? foldQuotes( displayText ) : null;
 
-	for ( const value of getItalicizedFields( citation ) ) {
+	for ( const value of romanTitles ? [] : getItalicizedFields( citation ) ) {
 		addRange(
 			titleRanges,
 			displayText,
