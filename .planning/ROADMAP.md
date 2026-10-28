@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-10-25):** `v1.15.0` (2026-10-25).
+**Current release baseline (reconciled 2026-10-28):** `v1.16.0` (2026-10-28).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -97,6 +97,11 @@ Releases since the milestone was retired, all outside any GSD phase:
     deduplicate across posts (REST, abilities, `wp borges
     reformat|deduplicate`) with a per-user rate limit; edits that would
     create a duplicate are refused.
+-   **1.16.0** (2026-10-28) — RIS import; BC dates and years before 1000;
+    render-time JSON-LD containers and full COinS author lists; single
+    author first in notes styles; ABNT leading articles; reference-manager
+    import fixes from the real-export corpus; `wp borges duplicates`;
+    `@wordpress/scripts` 37 tooling.
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -318,7 +323,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.15.0`.
+1.3.x release line. The current public release baseline is now `v1.16.0`.
 
 Completed Phase 2 outcomes:
 
@@ -420,60 +425,41 @@ Current operational note (2026-05-04):
 -   Post-launch cleanup should keep GitHub README, WordPress.org `readme.txt`,
     SPEC, release assets, and SVN output aligned.
 
-## Immediate next-task priorities (2026-10-23)
+## Immediate next-task priorities (2026-10-28)
 
-Replaces the 2026-10-13 list. Since then 1.11.0 through 1.13.0 shipped, Phase
-05 M5 (write abilities) landed in 1.12.0, and every ticket in
-`docs/planning/refactor-and-standards-memo.md` (Phases A–E) is merged, which
-also answers the leaner-root-file todo. No issues or pull requests are open.
-The owner chose this order on 2026-10-23:
+Replaces the 2026-10-23 list, every item of which has shipped or moved:
+year suffixes and the ABNT leading-article rule (NBR 6033 §3.4) closed the
+sort-conformance backlog (1.14.0, 1.16.0); `wp borges list`, `export`,
+`validate`, `reformat`, `deduplicate`, and `duplicates` shipped (1.14.0–1.16.0);
+the reference-manager corpus now holds real Zotero 10 and Mendeley Reference
+Manager exports and public EndNote samples, and RIS import shipped (1.16.0);
+and Phase 05 is complete (M4 in 1.15.0). This order was proposed to the owner
+on 2026-10-28 and is not yet confirmed:
 
 1. **Keep CI, runtime, and Playground hygiene green** (standing)
     - release-package output, WordPress.org artifact alignment, citeproc-php
       PHP deprecations, runtime smoke lanes, the `main-preview` Playground
       build, and the live resolver checks (DOI, PMID, PMCID, arXiv, ISBN,
       catalog, Internet Archive, Abilities)
-2. **Sort-conformance backlog** — test and documentation items closed
-   2026-10-23 (`docs/planning/sort-conformance-plan.md`, Appendix C,
-   "Follow-up audit"). Year suffixes (2020a, 2020b) for same-author,
-   same-year works now ship in APA, Chicago author-date, Harvard, and ABNT
-   (1.14.0). One product decision remains:
-    - Portuguese leading articles for ABNT: needs the NBR 6023 filing rule
-      cited before any change
-3. **WP-CLI read commands** — built 2026-10-23 (`docs/wp-cli.md`); see
-   "WP-CLI commands" below
-    - `wp borges list`, `export`, and `validate`, calling the same read
-      callbacks as the REST routes and abilities. `duplicates` and `preview`
-      can follow the same pattern. `wp borges reformat` (cross-post restyle)
-      came with M4; the per-citation write commands are still to do
-4. **Reference-manager export corpus** — pending todo
-   `2026-06-23-test-reference-manager-exports.md`; **needs the owner**
-    - a hand-authored corpus landed in #91
-      (`src/lib/__fixtures__/reference-manager-exports/`). Still open: real,
-      anonymized Zotero and Mendeley exports from the owner's libraries, then
-      Papers, RefWorks, and BibDesk once samples exist
-5. **Phase 05 M4: bulk routes** — **complete**: reformat and deduplicate built 2026-10-24, shipped in 1.15.0; nothing in M4 remains
-    - Design agreed with Dan 2026-10-24: synchronous batches (up to 25
-      posts, a `remaining` list) instead of a polled job ID, since jobs
-      would need stored records and cron; a per-user budget of 250 posts
-      per 15 minutes, dry runs included, clipped rather than refused; one
-      saving bulk request per site at a time; object cache when persistent,
-      else transients; hosts tune it with filters. WP-CLI `reformat` needs
-      `--user` and skips the budget. See `docs/rest-write-routes.md`,
-      "Bulk reformat"
-    - Deduplicate built 2026-10-24 on the same scaffolding (`POST
-      /bulk/deduplicate`, `borges/bulk-deduplicate`, `wp borges
-      deduplicate`): later copies within each bibliography are removed;
-      duplicates across blocks in a post are only reported
+2. **Epic-OSCOLA grouped bibliographies** (large; needs a `save()`
+   deprecation). Scoped in `docs/planning/sort-conformance-plan.md`
+3. **Decide whether the write routes should ever be on by default.** The
+   Phase 05 memo left this open; today they need the
+   `bibliography_builder_enable_write_routes` filter
+4. **Remaining WP-CLI commands**: `preview`, and the per-citation write
+   commands. See "WP-CLI commands" below
+5. **Phase 06 CI optimization**: measure first
 6. **First-wave official language packs** — pending todo
    `2026-06-14-coordinate-first-wave-language-packs.md`
     - push fr_FR, de_DE, es_ES, pt_BR, and ja on translate.wordpress.org
       against the current Stable strings. Human-translator work, not code
 
-Still parked: Phase 06 CI optimization, Epic-OSCOLA grouped bibliographies,
-Option B child blocks, the remaining "Evaluate" identifiers (ISSN, URL, ORCID
-enrichment), niche media identifiers, the PHP 8.x floor (todo
-`2026-10-14-research-php-8x-floor.md`), and the Secrets API key lookup.
+Still parked: EndNote's own exports (#200, needs a trial license), Papers,
+RefWorks, and BibDesk exports once samples exist, NBIB (PubMed's MEDLINE
+format), a URL resolver, Option B child blocks, the remaining "Evaluate"
+identifiers (ISSN, ORCID enrichment), niche media identifiers, the PHP 8.x
+floor (todo `2026-10-14-research-php-8x-floor.md`), and the Secrets API key
+lookup.
 
 ## Code quality backlog
 
@@ -548,10 +534,11 @@ Status: `list`, `export`, and `validate` shipped (1.14.0, 2026-10-23;
 check no capabilities, like core's commands, since shell access already reads
 the database; with `--user` they apply the same checks as the REST routes and
 abilities. Write commands will check `edit_post` and the write-routes filter
-either way. `duplicates` and `preview` are small follow-ups. `wp borges
-reformat` came with M4 (1.15.0): it needs `--user`,
-`edit_others_posts`, and the write-routes filter, and spends no rate-limit
-budget. The per-citation write commands are still to do.
+either way. `wp borges reformat` and `deduplicate` came with M4 (1.15.0):
+they need `--user`, `edit_others_posts`, and the write-routes filter, and
+spend no rate-limit budget. `wp borges duplicates` (1.16.0) reports what
+`deduplicate` would remove. `preview` and the per-citation write commands
+are still to do.
 
 ### Translation and language-pack backlog
 
