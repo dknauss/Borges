@@ -11,6 +11,7 @@
 		"parser": "node parser-baseline.mjs",
 		"llm": "node llm-baseline.mjs",
 		"sweep": "node sweep.mjs",
+		"zotero-ts": "node zotero-translate.mjs",
 		"all": "php render.php && node measure.mjs && node lighthouse.mjs && node zotero-coins.mjs"
 	},
 	"dependencies": {

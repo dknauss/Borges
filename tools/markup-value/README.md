@@ -140,6 +140,18 @@ an upper bound for plain text in this one style, not a property of plain
 HTML: APA prints no ISBN, and a reference with no clear publisher slot
 (a preprint server, a conference organizer) is where it guesses.
 
+## Zotero translation server
+
+`zotero-translate.mjs` (`npm run zotero-ts`) asks a running
+[Zotero translation server](https://github.com/zotero/translation-server) to
+save each rendered page, takes every item it offers, and scores the items
+with the same rules. Start the server first, with Docker (`docker run -p
+1969:1969 zotero/translation-server`) or from its source (`npm start`), and
+set `ZOTERO_TS_URL` if it is not at `http://127.0.0.1:1969`. On a page whose
+only structure is DOI links, Zotero's DOI translator fetches those records
+from Crossref or DataCite, so the result depends on the network and on the
+registries, not the page; a lookup that times out drops its item.
+
 ## Language model baseline
 
 `llm-baseline.mjs` is the parser baseline for language models: it gives a
@@ -159,10 +171,9 @@ page.
   measure what is machine-readable, which is a precondition, not an outcome.
 - **Google rich results.** Google offers no rich result for reference lists,
   so there is nothing to pass or fail beyond vocabulary validity.
-- **Zotero itself.** `measure.mjs` reads COinS with Zotero's own OpenURL
-  reader, but does not run the Zotero client that saves the item.
-  `scripts/test-zotero-interop.sh` runs the real Zotero translation server in
-  Docker.
+- **The Zotero app.** `npm run zotero-ts` asks a running Zotero translation
+  server to save each page, which picks the same translators the browser
+  connector would (see below), but not the desktop app that stores the item.
 - **Every language model.** `llm-baseline.mjs` scores whichever model you
   run it with, once, at temperature 0; other models, prompts, and runs can
   differ.
