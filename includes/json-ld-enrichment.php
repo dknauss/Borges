@@ -8,9 +8,8 @@
  * block renders, so every published post gets them without being re-saved
  * and the stored content is untouched:
  *
- * - The page's own URL, which gives the list an `@id`, each entry a `url`
- *   pointing at its visible `#ref-…` anchor, and each work without a DOI an
- *   `@id` on the page.
+ * - The page's own URL, which gives the list an `@id` and each work without
+ *   a DOI an `@id` at its visible `#ref-…` anchor on the page.
  * - Fields the baseline leaves out: `sameAs` links and an `identifier` for
  *   every DOI, PMID, PMCID, arXiv ID, and ISBN; the periodical, volume, and
  *   issue chain; containers for magazine, newspaper, and web citations, and
@@ -22,7 +21,9 @@
  * and Rank Math build the page's Article graph, so a short reference to each
  * work (type, `@id`, name) is added to it as schema.org `citation`. Every
  * work keeps its full description in the bibliography's own ItemList; the
- * shared `@id` is what joins the two.
+ * shared `@id` is what joins the two. On a site with neither plugin, Borges
+ * prints that edge itself: a `WebPage` node for the page, with the same
+ * `citation` references, in the document head.
  *
  * Both layers are on by default. `bibliography_builder_enrich_json_ld` and
  * `bibliography_builder_link_page_citations` turn them off.
@@ -291,6 +292,9 @@ function bibliography_builder_json_ld_work_id( $csl, $citation_id, $page_url ) {
  * - Magazine and newspaper articles are part of a `Periodical`, carrying the
  *   first ISSN as journals do, so the volume and issue chain applies to them.
  * - Web pages and blog posts are part of a `WebSite`.
+ * - Encyclopedia and dictionary entries are part of their reference work, a
+ *   `CreativeWork`: schema.org has no type for an encyclopedia, and the same
+ *   title may be a printed set or a website.
  * - A conference paper's `container-title` names the proceedings, a book, but
  *   save() types it as an `Event`, which `isPartOf` does not accept. It
  *   becomes a `Book`. The conference itself, from CSL `event-title` (or the
@@ -323,6 +327,11 @@ function bibliography_builder_json_ld_container( $work, $csl, $type ) {
 		} elseif ( 'webpage' === $type || 'post-weblog' === $type ) {
 			$work['isPartOf'] = array(
 				'@type' => 'WebSite',
+				'name'  => $container,
+			);
+		} elseif ( in_array( $type, array( 'entry-encyclopedia', 'entry-dictionary', 'entry' ), true ) ) {
+			$work['isPartOf'] = array(
+				'@type' => 'CreativeWork',
 				'name'  => $container,
 			);
 		}
@@ -616,9 +625,11 @@ function bibliography_builder_enrich_rendered_json_ld( $block_content, $parsed_b
 
 				$citation_id = $anchor_ids[ $index ];
 
-				if ( '' !== $page_url ) {
-					$element['url'] = $page_url . '#ref-' . rawurlencode( $citation_id );
-				}
+				// No `url` beside `item`: Google reads a list of ListItems as a
+				// carousel, where the two are mutually exclusive, and reports the
+				// page as invalid. The work's `@id` already points at its anchor
+				// when it has no DOI.
+				unset( $element['url'] );
 
 				if ( isset( $citations[ $citation_id ] ) ) {
 					$element['item'] = bibliography_builder_enrich_json_ld_work(
@@ -857,8 +868,97 @@ function bibliography_builder_rank_math_json_ld( $data ) {
 	return $data;
 }
 
+/**
+ * Whether an SEO plugin Borges adds `citation` to is building the page graph.
+ *
+ * @return bool
+ */
+function bibliography_builder_has_seo_graph_plugin() {
+	return defined( 'WPSEO_VERSION' ) || class_exists( 'RankMath' ) || defined( 'RANK_MATH_VERSION' );
+}
+
+/**
+ * The page's own `WebPage` node with its `citation` edges, for sites whose
+ * SEO plugin, if any, is not one Borges extends.
+ *
+ * @since 1.17.0
+ *
+ * @param WP_Post|null $post     The post; defaults to the queried post.
+ * @param string|null  $page_url Page URL; defaults to its permalink.
+ * @return array<string, mixed>|null The node, or null when there is nothing to link.
+ */
+function bibliography_builder_page_citation_node( $post = null, $page_url = null ) {
+	if ( bibliography_builder_has_seo_graph_plugin() || ! bibliography_builder_should_link_page_citations() ) {
+		return null;
+	}
+
+	if ( null === $page_url ) {
+		$page_url = bibliography_builder_json_ld_page_url();
+	}
+
+	$refs = bibliography_builder_get_cited_work_refs( $post, $page_url );
+
+	if ( array() === $refs || '' === $page_url ) {
+		return null;
+	}
+
+	$node = array(
+		'@context' => 'https://schema.org',
+		'@type'    => 'WebPage',
+		'@id'      => $page_url,
+		'url'      => $page_url,
+		'citation' => $refs,
+	);
+
+	/**
+	 * Filters the page node Borges prints when no supported SEO plugin builds
+	 * the page graph. Return null to print nothing, for example when the
+	 * theme or another plugin already describes the page.
+	 *
+	 * @since 1.17.0
+	 *
+	 * @param array<string, mixed>|null $node     The `WebPage` node with `citation`.
+	 * @param string                    $page_url The page URL, also its `@id`.
+	 */
+	$node = apply_filters( 'bibliography_builder_page_citation_node', $node, $page_url );
+
+	return is_array( $node ) ? $node : null;
+}
+
+/**
+ * Print the page's `WebPage` citation node in the document head.
+ *
+ * @since 1.17.0
+ *
+ * @return void
+ */
+function bibliography_builder_print_page_citation_node() {
+	if ( ! function_exists( 'is_singular' ) || ! is_singular() ) {
+		return;
+	}
+
+	$node = bibliography_builder_page_citation_node();
+
+	if ( null === $node ) {
+		return;
+	}
+
+	$json = bibliography_builder_json_encode( $node, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+
+	if ( false === $json ) {
+		return;
+	}
+
+	$json = bibliography_builder_escape_for_script( $json );
+
+	// Escaped for a script element above; JSON-LD is data, never executed.
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	echo '<script type="application/ld+json" class="bibliography-builder-page-citations">' . $json . "</script>\n";
+}
+
 // After the pre-1.11.0 nesting filter, which runs at the default priority.
 add_filter( 'render_block_bibliography-builder/bibliography', 'bibliography_builder_enrich_rendered_json_ld', 11, 2 );
 add_filter( 'wpseo_schema_article', 'bibliography_builder_yoast_schema_article' );
 add_filter( 'wpseo_schema_webpage', 'bibliography_builder_yoast_schema_webpage', 10, 2 );
 add_filter( 'rank_math/json_ld', 'bibliography_builder_rank_math_json_ld', 99 );
+add_action( 'wp_head', 'bibliography_builder_print_page_citation_node', 99 );

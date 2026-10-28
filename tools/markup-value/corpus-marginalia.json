@@ -1,0 +1,810 @@
+{
+	"$comment": "A second, real-world corpus for the markup-value measurement: the reference list of a Marginalia essay as saved by Borges, Chicago notes-bibliography. Its items are the ground truth, as in corpus.json. Use it with MV_CORPUS=corpus-marginalia.json.",
+	"title": "Bibliographies for Humans and Machines",
+	"description": "A reference list from a Marginalia essay: ancient and early modern books, encyclopedia and reference entries, web pages, software, and a preprint.",
+	"citationStyle": "chicago-notes-bibliography",
+	"items": [
+		{
+			"id": "adobe-sdv",
+			"type": "software",
+			"title": "Structured Data Validator",
+			"author": [
+				{
+					"literal": "Adobe"
+				}
+			],
+			"publisher": "GitHub",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://github.com/adobe/structured-data-validator"
+		},
+		{
+			"id": "google-ai-features",
+			"type": "webpage",
+			"title": "AI Features and Your Website",
+			"container-title": "Google Search Central",
+			"issued": {
+				"date-parts": [
+					[
+						2025,
+						12,
+						10
+					]
+				]
+			},
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://developers.google.com/search/docs/appearance/ai-features"
+		},
+		{
+			"id": "britannica-apostolic",
+			"type": "entry-encyclopedia",
+			"title": "Apostolic Succession",
+			"container-title": "Encyclopaedia Britannica",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://www.britannica.com/topic/apostolic-succession"
+		},
+		{
+			"id": "borges1962",
+			"type": "chapter",
+			"title": "The Library of Babel",
+			"author": [
+				{
+					"family": "Borges",
+					"given": "Jorge Luis"
+				}
+			],
+			"translator": [
+				{
+					"family": "Irby",
+					"given": "James E."
+				}
+			],
+			"container-title": "Labyrinths: Selected Stories and Other Writings",
+			"editor": [
+				{
+					"family": "Yates",
+					"given": "Donald A."
+				},
+				{
+					"family": "Irby",
+					"given": "James E."
+				}
+			],
+			"publisher": "New Directions",
+			"publisher-place": "New York",
+			"issued": {
+				"date-parts": [
+					[
+						1962
+					]
+				]
+			}
+		},
+		{
+			"id": "schemaorg-citation",
+			"type": "webpage",
+			"title": "citation",
+			"container-title": "Schema.org",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://schema.org/citation"
+		},
+		{
+			"id": "hoi-gessner",
+			"type": "webpage",
+			"title": "Conrad Gessner Issues the First Universal Bibliography Since the Invention of Printing",
+			"container-title": "HistoryofInformation.com",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://historyofinformation.com/detail.php?id=1248"
+		},
+		{
+			"id": "fensham1962",
+			"type": "article-journal",
+			"title": "Widow, Orphan, and the Poor in Ancient Near Eastern Legal and Wisdom Literature",
+			"author": [
+				{
+					"family": "Fensham",
+					"given": "F. Charles"
+				}
+			],
+			"container-title": "Journal of Near Eastern Studies",
+			"volume": "21",
+			"page": "129-139",
+			"issued": {
+				"date-parts": [
+					[
+						1962
+					]
+				]
+			}
+		},
+		{
+			"id": "gessner1545",
+			"type": "book",
+			"title": "Bibliotheca universalis, sive Catalogus omnium scriptorum locupletissimus",
+			"author": [
+				{
+					"family": "Gessner",
+					"given": "Conrad"
+				}
+			],
+			"publisher": "Christoph Froschauer",
+			"publisher-place": "Zurich",
+			"issued": {
+				"date-parts": [
+					[
+						1545
+					]
+				]
+			}
+		},
+		{
+			"id": "gessner-simler1574",
+			"type": "book",
+			"title": "Bibliotheca",
+			"author": [
+				{
+					"family": "Gessner",
+					"given": "Conrad"
+				},
+				{
+					"family": "Simler",
+					"given": "Josias"
+				}
+			],
+			"publisher": "Christoph Froschauer",
+			"publisher-place": "Zurich",
+			"issued": {
+				"date-parts": [
+					[
+						1574
+					]
+				]
+			},
+			"URL": "https://archive.org/details/bibliotheca00gess"
+		},
+		{
+			"id": "grafton1997",
+			"type": "book",
+			"title": "The Footnote: A Curious History",
+			"author": [
+				{
+					"family": "Grafton",
+					"given": "Anthony"
+				}
+			],
+			"publisher": "Harvard University Press",
+			"publisher-place": "Cambridge, MA",
+			"issued": {
+				"date-parts": [
+					[
+						1997
+					]
+				]
+			}
+		},
+		{
+			"id": "britannica-isnad",
+			"type": "entry-encyclopedia",
+			"title": "Isnād",
+			"container-title": "Encyclopaedia Britannica",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://www.britannica.com/topic/isnad"
+		},
+		{
+			"id": "schemaorg-ispartof",
+			"type": "webpage",
+			"title": "isPartOf",
+			"container-title": "Schema.org",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://schema.org/isPartOf"
+		},
+		{
+			"id": "jimenez2016",
+			"type": "chapter",
+			"title": "May the Reader Not Withhold the Tablet! On a Formula in Late Babylonian Colophons",
+			"author": [
+				{
+					"family": "Jiménez",
+					"given": "Enrique"
+				}
+			],
+			"container-title": "Babel und Bibel 9",
+			"editor": [
+				{
+					"family": "Kogan",
+					"given": "L."
+				},
+				{
+					"family": "Koslova",
+					"given": "N."
+				},
+				{
+					"family": "Loesov",
+					"given": "S."
+				},
+				{
+					"family": "Tishchenko",
+					"given": "S."
+				}
+			],
+			"publisher": "Eisenbrauns",
+			"publisher-place": "Winona Lake, IN",
+			"page": "227-242",
+			"issued": {
+				"date-parts": [
+					[
+						2016
+					]
+				]
+			},
+			"URL": "https://epub.ub.uni-muenchen.de/49554/1/Jimenez_May_the_Reader_Not_Withhold_the_Tablet.pdf"
+		},
+		{
+			"id": "hoi-trithemius",
+			"type": "webpage",
+			"title": "Johannes Trithemius Publishes the Earliest Subject Bibliography, on Mostly on Ecclesiastical Writings",
+			"container-title": "HistoryofInformation.com",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://historyofinformation.com/detail.php?id=344"
+		},
+		{
+			"id": "knauss2026pr203",
+			"type": "webpage",
+			"title": "Add tools/markup-value: Measure What Borges Markup Gives Machines",
+			"author": [
+				{
+					"family": "Knauss",
+					"given": "Dan"
+				}
+			],
+			"container-title": "Borges Bibliography Builder, pull request #203",
+			"publisher": "GitHub",
+			"issued": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://github.com/dknauss/Borges/pull/203"
+		},
+		{
+			"id": "knauss2026page",
+			"type": "post-weblog",
+			"title": "The Page Is an Interface",
+			"author": [
+				{
+					"family": "Knauss",
+					"given": "Dan"
+				}
+			],
+			"container-title": "Marginalia",
+			"issued": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						25
+					]
+				]
+			},
+			"URL": "https://m.arginalia.com/the-page-is-an-interface/"
+		},
+		{
+			"id": "lichtheim1976",
+			"type": "book",
+			"title": "Ancient Egyptian Literature: A Book of Readings",
+			"volume": "2",
+			"author": [
+				{
+					"family": "Lichtheim",
+					"given": "Miriam"
+				}
+			],
+			"publisher": "University of California Press",
+			"publisher-place": "Berkeley",
+			"issued": {
+				"date-parts": [
+					[
+						1976
+					]
+				]
+			}
+		},
+		{
+			"id": "mark2017",
+			"type": "entry-encyclopedia",
+			"title": "Ancient Egyptian Vizier",
+			"author": [
+				{
+					"family": "Mark",
+					"given": "Joshua J."
+				}
+			],
+			"container-title": "World History Encyclopedia",
+			"issued": {
+				"date-parts": [
+					[
+						2017,
+						9,
+						20
+					]
+				]
+			},
+			"URL": "https://www.worldhistory.org/Egyptian_Vizier/"
+		},
+		{
+			"id": "mozilla-readability",
+			"type": "software",
+			"title": "Readability.js",
+			"author": [
+				{
+					"literal": "Mozilla"
+				}
+			],
+			"publisher": "GitHub",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://github.com/mozilla/readability"
+		},
+		{
+			"id": "ortelius1570",
+			"type": "book",
+			"title": "Theatrum orbis terrarum",
+			"author": [
+				{
+					"family": "Ortelius",
+					"given": "Abraham"
+				}
+			],
+			"publisher": "Gilles Coppens de Diest",
+			"publisher-place": "Antwerp",
+			"issued": {
+				"date-parts": [
+					[
+						1570
+					]
+				]
+			},
+			"URL": "https://archive.org/details/theatrumorbister00orte"
+		},
+		{
+			"id": "fre803",
+			"type": "webpage",
+			"title": "Rule 803. Exceptions to the Rule Against Hearsay",
+			"container-title": "Federal Rules of Evidence",
+			"publisher": "Legal Information Institute, Cornell Law School",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://www.law.cornell.edu/rules/fre/rule_803"
+		},
+		{
+			"id": "lighthouse-sd",
+			"type": "webpage",
+			"title": "Structured Data Is Valid",
+			"container-title": "Lighthouse, Chrome for Developers",
+			"issued": {
+				"date-parts": [
+					[
+						2019,
+						5,
+						2
+					]
+				]
+			},
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://developer.chrome.com/docs/lighthouse/seo/structured-data"
+		},
+		{
+			"id": "google-gallery",
+			"type": "webpage",
+			"title": "Structured Data Markup That Google Search Supports",
+			"container-title": "Google Search Central",
+			"issued": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						16
+					]
+				]
+			},
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://developers.google.com/search/docs/appearance/structured-data/search-gallery"
+		},
+		{
+			"id": "etcsl-kinglist",
+			"type": "webpage",
+			"title": "The Sumerian King List",
+			"container-title": "The Electronic Text Corpus of Sumerian Literature",
+			"publisher": "University of Oxford",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://etcsl.orinst.ox.ac.uk/section2/tr211.htm"
+		},
+		{
+			"id": "taylor-colophons",
+			"type": "webpage",
+			"title": "Library Colophons",
+			"author": [
+				{
+					"family": "Taylor",
+					"given": "Jonathan"
+				}
+			],
+			"container-title": "Reading the Library of Ashurbanipal",
+			"publisher": "British Museum and LMU Munich",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://oracc.museum.upenn.edu/asbp/rlasb/librarycolophons/"
+		},
+		{
+			"id": "wiki-theatrum",
+			"type": "entry-encyclopedia",
+			"title": "Theatrum Orbis Terrarum",
+			"container-title": "Wikipedia",
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://en.wikipedia.org/wiki/Theatrum_Orbis_Terrarum"
+		},
+		{
+			"id": "trithemius1494",
+			"type": "book",
+			"title": "Liber de scriptoribus ecclesiasticis",
+			"author": [
+				{
+					"family": "Trithemius",
+					"given": "Johannes"
+				}
+			],
+			"publisher": "Johann Amerbach",
+			"publisher-place": "Basel",
+			"issued": {
+				"date-parts": [
+					[
+						1494
+					]
+				]
+			}
+		},
+		{
+			"id": "chicago1906",
+			"type": "book",
+			"title": "Manual of Style: Being a Compilation of the Typographical Rules in Force at the University of Chicago Press",
+			"author": [
+				{
+					"literal": "University of Chicago Press"
+				}
+			],
+			"publisher": "University of Chicago Press",
+			"publisher-place": "Chicago",
+			"issued": {
+				"date-parts": [
+					[
+						1906
+					]
+				]
+			}
+		},
+		{
+			"id": "zotero-coins",
+			"type": "webpage",
+			"title": "Using Zotero to Create COinS Metadata",
+			"container-title": "Zotero Documentation",
+			"issued": {
+				"date-parts": [
+					[
+						2020,
+						6,
+						14
+					]
+				]
+			},
+			"accessed": {
+				"date-parts": [
+					[
+						2026,
+						10,
+						27
+					]
+				]
+			},
+			"URL": "https://www.zotero.org/support/dev/exposing_metadata/coins"
+		},
+		{
+			"id": "volpini2026",
+			"type": "article",
+			"title": "Structured Linked Data as a Memory Layer for Agent-Orchestrated Retrieval",
+			"author": [
+				{
+					"family": "Volpini",
+					"given": "Andrea"
+				},
+				{
+					"family": "Raad",
+					"given": "Elie"
+				},
+				{
+					"family": "Gamba",
+					"given": "Beatrice"
+				},
+				{
+					"family": "Riccitelli",
+					"given": "David"
+				}
+			],
+			"publisher": "arXiv",
+			"number": "2603.10700",
+			"issued": {
+				"date-parts": [
+					[
+						2026,
+						3,
+						11
+					]
+				]
+			},
+			"DOI": "10.48550/arXiv.2603.10700",
+			"URL": "https://arxiv.org/abs/2603.10700"
+		},
+		{
+			"id": "walton1981",
+			"type": "article-journal",
+			"title": "The Antediluvian Section of the Sumerian King List and Genesis 5",
+			"author": [
+				{
+					"family": "Walton",
+					"given": "John H."
+				}
+			],
+			"container-title": "Biblical Archaeologist",
+			"volume": "44",
+			"page": "207-208",
+			"issued": {
+				"date-parts": [
+					[
+						1981
+					]
+				]
+			}
+		},
+		{
+			"id": "zecchini2024",
+			"type": "post-weblog",
+			"title": "The Rise of the AI Crawler",
+			"author": [
+				{
+					"family": "Zecchini",
+					"given": "Giacomo"
+				},
+				{
+					"family": "Moore",
+					"given": "Alice Alexandra"
+				},
+				{
+					"family": "Ubl",
+					"given": "Malte"
+				},
+				{
+					"family": "Siddle",
+					"given": "Ryan"
+				}
+			],
+			"container-title": "Vercel Blog",
+			"issued": {
+				"date-parts": [
+					[
+						2024,
+						12,
+						17
+					]
+				]
+			},
+			"URL": "https://vercel.com/blog/the-rise-of-the-ai-crawler"
+		},
+		{
+			"id": "knauss2026badsector",
+			"type": "post-weblog",
+			"title": "What Citation Markup Gives Machines",
+			"author": [
+				{
+					"family": "Knauss",
+					"given": "Dan"
+				}
+			],
+			"container-title": "Bad Sector",
+			"issued": {
+				"date-parts": [
+					[
+						2026,
+						10
+					]
+				]
+			},
+			"URL": "https://badsector.blog/what-citation-markup-gives-machines/"
+		},
+		{
+			"id": "brand1985",
+			"type": "article-magazine",
+			"title": "Keep Designing",
+			"author": [
+				{
+					"family": "Brand",
+					"given": "Stewart"
+				},
+				{
+					"family": "Herron",
+					"given": "Matt"
+				}
+			],
+			"container-title": "Whole Earth Review",
+			"issued": {
+				"date-parts": [
+					[
+						1985,
+						5
+					]
+				]
+			},
+			"page": "44"
+		},
+		{
+			"id": "brand1988",
+			"type": "book",
+			"title": "The Media Lab: Inventing the Future at MIT",
+			"author": [
+				{
+					"family": "Brand",
+					"given": "Stewart"
+				}
+			],
+			"publisher": "Penguin",
+			"publisher-place": "New York",
+			"issued": {
+				"date-parts": [
+					[
+						1988
+					]
+				]
+			}
+		},
+		{
+			"id": "otoole2018",
+			"type": "post-weblog",
+			"title": "Information Wants To Be Expensive. Information Wants To Be Free",
+			"author": [
+				{
+					"family": "O’Toole",
+					"given": "Garson"
+				}
+			],
+			"container-title": "Quote Investigator",
+			"issued": {
+				"date-parts": [
+					[
+						2018,
+						3,
+						9
+					]
+				]
+			},
+			"URL": "https://quoteinvestigator.com/2018/03/09/info/"
+		}
+	]
+}

@@ -41,6 +41,21 @@ npm run all               # render.php, measure.mjs, lighthouse.mjs
 
 Results land in `out/` (git-ignored): `results.json`, `lighthouse.json`, the
 pages, and each page as Markdown after reader mode (`*.reader.md`).
+
+Three environment variables, read by every script, build the same pages from
+another corpus, in another style, or into another folder: `MV_CORPUS` (a
+corpus file like `corpus.json`), `MV_STYLE` (a style key from
+`includes/styles.json`), and `MV_OUT`. `corpus-marginalia.json` is a second,
+real-world corpus: the 36-work reference list of an essay, in Chicago, with
+encyclopedia entries, web pages, software, early modern books, and a
+preprint. `npm run sweep` renders and measures the corpus in every style,
+into `out-runs/<corpus>/<style>/`, and summarizes what changes in
+`out-runs/<corpus>/styles.json`:
+
+```sh
+npm run sweep                                    # corpus.json, all styles
+MV_CORPUS=corpus-marginalia.json npm run sweep   # the second corpus
+```
 `measure.mjs` downloads the schema.org 29.3 vocabulary once into `out/`. Set
 `CHROMIUM_PATH` if Playwright's browser is not installed.
 
@@ -67,7 +82,8 @@ the best a machine reader gets:
   journal, and the answer depends on the citation style.
 - **missing**: not on the page at all (APA prints no ISBN, for instance).
 
-`perLayer` scores each layer on its own. Authors count as correct only when a
+`perLayer` scores each layer on its own, and lists each value it gets wrong
+or leaves out under `misses`. Authors count as correct only when a
 layer gives every last name once, in order. COinS spans are read by Zotero's
 own OpenURL reader (the one its browser connector uses), so an author Zotero
 would import twice, drop, or move counts as wrong. Every other COinS field is
@@ -124,6 +140,18 @@ an upper bound for plain text in this one style, not a property of plain
 HTML: APA prints no ISBN, and a reference with no clear publisher slot
 (a preprint server, a conference organizer) is where it guesses.
 
+## Language model baseline
+
+`llm-baseline.mjs` is the parser baseline for language models: it gives a
+model the plain list with a fixed prompt (`node llm-baseline.mjs
+--print-prompt`), asks for CSL-JSON, and scores the answer the same way. With
+`ANTHROPIC_API_KEY` set, `npm run llm -- --model <model id>` calls the API;
+`--input answer.json --label <name>` scores an answer from any other model or
+chat window. Run `npm run parser` first, which writes the plain list's
+entries to `plain-entries.txt`. Language models read what a style prints
+almost perfectly, so this mostly measures what each style leaves off the
+page.
+
 ## What it cannot measure
 
 - **Rankings or AI citations.** No public metric says whether a search engine
@@ -135,7 +163,6 @@ HTML: APA prints no ISBN, and a reference with no clear publisher slot
   reader, but does not run the Zotero client that saves the item.
   `scripts/test-zotero-interop.sh` runs the real Zotero translation server in
   Docker.
-- **A language model's extraction.** The "unlabeled" share is where a model
-  or a parser does the work a structured layer does for free. `npm run parser`
-  measures one parser; how well a given language model does it is not
-  measured here.
+- **Every language model.** `llm-baseline.mjs` scores whichever model you
+  run it with, once, at temperature 0; other models, prompts, and runs can
+  differ.

@@ -63,13 +63,16 @@ final class JsonLdEnrichmentTest extends TestCase {
 		$this->assertSame( 2, $list['numberOfItems'] );
 	}
 
-	public function test_entries_point_at_their_visible_anchors(): void {
+	public function test_entries_carry_an_item_and_no_url(): void {
 		$block    = $this->fixture();
 		$html     = $this->render( $block );
 		$elements = $this->json_ld( $html )['itemListElement'];
 
-		$this->assertSame( self::PAGE . '#ref-alpha2018', $elements[0]['url'] );
-		$this->assertSame( self::PAGE . '#ref-zeta2020', $elements[1]['url'] );
+		// Google treats `url` and `item` on one ListItem as mutually exclusive.
+		foreach ( $elements as $element ) {
+			$this->assertArrayHasKey( 'item', $element );
+			$this->assertArrayNotHasKey( 'url', $element );
+		}
 		$this->assertStringContainsString( 'id="ref-alpha2018"', $html );
 	}
 
@@ -196,6 +199,35 @@ final class JsonLdEnrichmentTest extends TestCase {
 		$this->assertSame( array( '@type', '@id', 'name' ), array_keys( $refs[0] ) );
 	}
 
+	public function test_page_node_links_the_cited_works_without_an_seo_plugin(): void {
+		$post = (object) array( 'post_content' => $this->content() );
+		bibliography_builder_test_set_parsed_blocks( $post->post_content, ( new WP_Block_Parser() )->parse( $post->post_content ) );
+		$refs = bibliography_builder_get_cited_work_refs( $post, self::PAGE );
+		$node = bibliography_builder_page_citation_node( $post, self::PAGE );
+
+		$this->assertSame( 'WebPage', $node['@type'] );
+		$this->assertSame( self::PAGE, $node['@id'] );
+		$this->assertSame( $refs, $node['citation'] );
+
+		// The same switch as the SEO plugin integrations turns it off.
+		add_filter( 'bibliography_builder_link_page_citations', '__return_false' );
+		$this->assertNull( bibliography_builder_page_citation_node( $post, self::PAGE ) );
+		remove_all_filters( 'bibliography_builder_link_page_citations' );
+
+		// So does returning null from its own filter.
+		add_filter(
+			'bibliography_builder_page_citation_node',
+			static function () {
+				return null;
+			}
+		);
+		$this->assertNull( bibliography_builder_page_citation_node( $post, self::PAGE ) );
+		remove_all_filters( 'bibliography_builder_page_citation_node' );
+
+		// A post without a bibliography has nothing to link.
+		$this->assertNull( bibliography_builder_page_citation_node( (object) array( 'post_content' => '<!-- wp:paragraph --><p>Hi</p><!-- /wp:paragraph -->' ), self::PAGE ) );
+	}
+
 	public function test_seo_graph_nodes_gain_citations(): void {
 		$refs = array(
 			array(
@@ -290,6 +322,27 @@ final class JsonLdEnrichmentTest extends TestCase {
 				)
 			)
 		);
+	}
+
+	public function test_reference_entries_are_part_of_their_reference_work(): void {
+		foreach ( array( 'entry-encyclopedia', 'entry-dictionary', 'entry' ) as $type ) {
+			$work = $this->enrich(
+				array(
+					'type'            => $type,
+					'title'           => 'Isnād',
+					'container-title' => 'Encyclopaedia Britannica',
+				)
+			);
+
+			$this->assertSame(
+				array(
+					'@type' => 'CreativeWork',
+					'name'  => 'Encyclopaedia Britannica',
+				),
+				$work['isPartOf'],
+				$type
+			);
+		}
 	}
 
 	public function test_conference_papers_are_part_of_their_proceedings(): void {

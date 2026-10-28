@@ -360,21 +360,20 @@ async function structuredData( html, validator ) {
 /* Field recovery                                                      */
 /* ------------------------------------------------------------------ */
 
-function jsonLdWorksById( document ) {
+/**
+ * The bibliography's works, keyed by their ListItem position (1-based),
+ * which follows the display order.
+ *
+ * @param {Document} document Page.
+ */
+function jsonLdWorksByPosition( document ) {
 	const works = {};
 	const visit = ( node ) => {
 		if ( Array.isArray( node ) ) {
 			node.forEach( visit );
 		} else if ( node && typeof node === 'object' ) {
-			if (
-				node[ '@type' ] === 'ListItem' &&
-				node.item &&
-				typeof node.url === 'string'
-			) {
-				const match = node.url.match( /#ref-(.+)$/ );
-				if ( match ) {
-					works[ match[ 1 ] ] = node.item;
-				}
+			if ( node[ '@type' ] === 'ListItem' && node.item ) {
+				works[ node.position ] = node.item;
 			}
 			Object.values( node ).forEach( visit );
 		}
@@ -392,7 +391,7 @@ function jsonLdWorksById( document ) {
 }
 
 function fieldRecovery( document, items, order ) {
-	const works = jsonLdWorksById( document );
+	const works = jsonLdWorksByPosition( document );
 	const entries = [ ...document.querySelectorAll( 'article li' ) ];
 	const layers = { jsonld: 0, coins: 0, cslJson: 0 };
 	const byField = Object.fromEntries(
@@ -414,6 +413,7 @@ function fieldRecovery( document, items, order ) {
 			{
 				correct: 0,
 				byField: Object.fromEntries( FIELDS.map( ( f ) => [ f, 0 ] ) ),
+				misses: [],
 			},
 		] )
 	);
@@ -425,7 +425,9 @@ function fieldRecovery( document, items, order ) {
 		const coins = li && li.querySelector( '.Z3988' );
 		const csl = li && li.getAttribute( 'data-cite-csl-json' );
 		const readers = {
-			jsonld: works[ id ] ? fromJsonLd( works[ id ] ) : null,
+			jsonld: works[ index + 1 ]
+				? fromJsonLd( works[ index + 1 ] )
+				: null,
 			coins: coins ? fromCoins( coins.getAttribute( 'title' ) ) : null,
 			cslJson: csl ? fromCsl( JSON.parse( csl ) ) : null,
 		};
@@ -449,13 +451,20 @@ function fieldRecovery( document, items, order ) {
 			}
 			let category = null;
 			for ( const [ layer, fields ] of Object.entries( readers ) ) {
-				if (
-					fields &&
-					matches( field, expected[ field ], fields[ field ] )
-				) {
+				if ( ! fields ) {
+					continue;
+				}
+				if ( matches( field, expected[ field ], fields[ field ] ) ) {
 					perLayer[ layer ].correct++;
 					perLayer[ layer ].byField[ field ]++;
 					category = 'labeled';
+				} else {
+					perLayer[ layer ].misses.push( {
+						id,
+						field,
+						expected: expected[ field ],
+						got: fields[ field ] ?? null,
+					} );
 				}
 			}
 			category = category || fromText( field, expected[ field ], text );
@@ -675,7 +684,7 @@ async function main() {
 		join( OUT_DIR, 'results.json' ),
 		JSON.stringify( results, null, '\t' ) + '\n'
 	);
-	process.stdout.write( 'Wrote tools/markup-value/out/results.json\n' );
+	process.stdout.write( `Wrote ${ join( OUT_DIR, 'results.json' ) }\n` );
 }
 
 main().catch( ( error ) => {
