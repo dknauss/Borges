@@ -892,6 +892,22 @@ function bibliography_builder_page_citation_node( $post = null, $page_url = null
 		return null;
 	}
 
+	$can_query = function_exists( 'is_singular' ) && function_exists( 'get_queried_object' );
+
+	if ( null === $post && $can_query && is_singular() ) {
+		$queried = get_queried_object();
+		$post    = $queried instanceof WP_Post ? $queried : null;
+	}
+
+	// A password-protected post shows its bibliography only to readers who
+	// gave the password, so the head must not list the works either.
+	$locked = null !== $post && ! empty( $post->ID ) && function_exists( 'post_password_required' )
+		&& post_password_required( $post );
+
+	if ( $locked ) {
+		return null;
+	}
+
 	if ( null === $page_url ) {
 		$page_url = bibliography_builder_json_ld_page_url();
 	}

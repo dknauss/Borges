@@ -224,6 +224,16 @@ final class JsonLdEnrichmentTest extends TestCase {
 		$this->assertNull( bibliography_builder_page_citation_node( $post, self::PAGE ) );
 		remove_all_filters( 'bibliography_builder_page_citation_node' );
 
+		// A password-protected post lists nothing until the password is given.
+		$locked = (object) array(
+			'ID'           => 4242,
+			'post_content' => $post->post_content,
+		);
+		$GLOBALS['bibliography_builder_test_password_posts'][4242] = true;
+		$this->assertNull( bibliography_builder_page_citation_node( $locked, self::PAGE ) );
+		unset( $GLOBALS['bibliography_builder_test_password_posts'][4242] );
+		$this->assertNotNull( bibliography_builder_page_citation_node( $locked, self::PAGE ) );
+
 		// A post without a bibliography has nothing to link.
 		$this->assertNull( bibliography_builder_page_citation_node( (object) array( 'post_content' => '<!-- wp:paragraph --><p>Hi</p><!-- /wp:paragraph -->' ), self::PAGE ) );
 	}

@@ -84,6 +84,50 @@ async function callAnthropic( model, prompt ) {
 	return body.content.map( ( part ) => part.text || '' ).join( '' );
 }
 
+const plainText = ( value ) =>
+	String( value )
+		.toLowerCase()
+		.normalize( 'NFKD' )
+		.replace( /[\u0300-\u036f]/g, '' )
+		.replace( /[^a-z0-9]+/g, ' ' )
+		.trim();
+
+/**
+ * Whether a ground-truth value appears in the printed entry, so a correct
+ * answer can be told apart from one supplied from memory.
+ *
+ * @param {string} field Field name.
+ * @param {string|string[]} want Ground-truth value.
+ * @param {string} line  The plain entry, lowercased.
+ */
+function onPage( field, want, line ) {
+	const text = ` ${ plainText( line ) } `;
+	const has = ( value ) => text.includes( ` ${ plainText( value ) } ` );
+
+	switch ( field ) {
+		case 'authors':
+			return want.every( ( name ) => has( name ) );
+		case 'isbn':
+			return line.replace( /[^0-9x]/g, '' ).includes(
+				String( want )
+					.replace( /[^0-9x]/gi, '' )
+					.toLowerCase()
+			);
+		case 'pages':
+			return String( want )
+				.split( /[^0-9a-z]+/i )
+				.filter( Boolean )
+				.every( ( part ) => has( part ) );
+		case 'doi':
+			return line.includes( String( want ).toLowerCase() );
+		case 'year':
+			// A year can carry a letter ("1962a") or sit in a date.
+			return line.includes( String( want ) );
+		default:
+			return has( want );
+	}
+}
+
 const parseArray = ( text ) =>
 	JSON.parse(
 		text.slice( text.indexOf( '[' ), text.lastIndexOf( ']' ) + 1 )
@@ -140,15 +184,7 @@ async function main() {
 			byField[ field ].pairs++;
 			if ( matches( field, want, got[ field ] ) ) {
 				byField[ field ].correct++;
-				const printed =
-					field === 'isbn'
-						? line.replace( /[^0-9x]/g, '' ).includes(
-								String( want )
-									.replace( /[^0-9x]/gi, '' )
-									.toLowerCase()
-							)
-						: true;
-				if ( ! printed ) {
+				if ( ! onPage( field, want, line ) ) {
 					unprinted++;
 				}
 			} else {
