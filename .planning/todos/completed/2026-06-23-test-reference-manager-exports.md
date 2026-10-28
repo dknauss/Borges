@@ -32,7 +32,8 @@ field/format is unsupported). Capture findings in the supported-input-style
 matrix and QA checklist, and add regression fixtures/tests for any
 manager-specific quirks that currently break or silently drop data.
 
-Decision: RIS input is explicitly out of scope for now. Borges supports RIS as
+Original decision (2026-06-23, since reversed; see "Resolution" below): RIS
+input is explicitly out of scope for now. Borges supports RIS as
 an export format for citation-manager interoperability, but not as an import
 format. Reference-manager testing should focus first on BibTeX, CSL-JSON, DOI,
 PMID, and free-text export paths; revisit RIS import only as a separately scoped
@@ -57,6 +58,31 @@ four quirks:
 Still open: replace the hand-authored fixtures with **real, anonymized
 exports** (at least Zotero and Mendeley), and add Papers, RefWorks, and
 BibDesk once real samples exist.
+
+## Resolution (2026-10-28)
+
+Completed and shipped in 1.16.0.
+
+- **Real exports.** `src/lib/__fixtures__/reference-manager-exports/contributed/`
+  holds Zotero 10's BibTeX, BibLaTeX, CSL JSON, and RIS exports of a 12-work
+  sample library, and Mendeley Reference Manager 2.150's BibTeX and RIS
+  exports (#195, #197, #199). `public/` holds Better BibTeX's and JabRef's own
+  test files, including a user's EndNote BibTeX export and an EndNote 20 XML
+  file. `src/lib/reference-manager-corpus.test.js` snapshots what each yields.
+- **Quirks fixed** (each with a regression test): BibTeX thesis and report
+  genres, entries without cite keys (EndNote, Mendeley), JabRef comments,
+  pasted XML exports, string BC years in Better CSL JSON, and Mendeley's
+  `city` field (#197, #198, #199, #213).
+- **RIS decision reversed.** RIS import shipped (#202), read by
+  `@citation-js/plugin-ris` and checked against the Zotero and Mendeley `.ris`
+  exports and a round trip through Borges's own RIS export.
+- **Docs.** `docs/supported-input-style-matrix.md` lists `.bib` and `.ris`
+  exports, keyless entries, and the XML refusal; `docs/qa-matrix-checklist.md`
+  has RIS and CSL-JSON rows.
+
+Left for the backlog (`.planning/ROADMAP.md`, "Still parked"): EndNote's own
+exports (#200, needs a trial license), and Papers, RefWorks, and BibDesk once
+samples exist.
 
 ## Acceptance targets
 

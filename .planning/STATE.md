@@ -1,14 +1,20 @@
 # Project State
 
-_Last reviewed: 2026-10-25._
+_Last reviewed: 2026-10-28._
 
 ## Current Focus
 
-0. **`v1.15.0` (2026-10-25) is the current release baseline.** Version strings
+0. **`v1.16.0` (2026-10-28) is the current release baseline.** Version strings
    agree across the plugin header, `package.json`, `block.json`, and
-   `readme.txt` (`Stable tag: 1.15.0`, `Tested up to: 7.1`). Treat the live
+   `readme.txt` (`Stable tag: 1.16.0`, `Tested up to: 7.1`). Treat the live
    WordPress.org plugin page as canonical for the publicly available version.
-1. **1.15.0** adds bulk reformat and bulk deduplicate across posts with a
+1. **1.16.0** imports RIS, prints BC dates and years before 1000, adds
+   JSON-LD containers and full COinS author lists at render time, sorts a
+   single author first in notes styles and skips Portuguese leading articles
+   in ABNT, fixes the import quirks the real reference-manager corpus found,
+   adds `wp borges duplicates`, and moves to `@wordpress/scripts` 37
+   (#194–#218).
+   **1.15.0** adds bulk reformat and bulk deduplicate across posts with a
    per-user rate limit (Phase 05 M4), and refuses citation edits that would
    create a duplicate (#188–#191).
    **1.14.0** letters same-author, same-year works (2020a, 2020b) in the
@@ -61,27 +67,29 @@ _Last reviewed: 2026-10-25._
    - 1.13.0 (2026-10-23) — render-time JSON-LD enrichment, Article `citation` link, output-defaults filter.
    - 1.14.0 (2026-10-23) — year suffixes in author-date styles; read-only WP-CLI commands.
    - 1.15.0 (2026-10-25) — bulk reformat and deduplicate with a rate limit (Phase 05 M4); duplicate-creating edits refused.
+   - 1.16.0 (2026-10-28) — RIS import, BC dates, render-time JSON-LD and COinS gaps closed, notes and ABNT sorting, reference-manager import fixes, `wp borges duplicates`.
 3. **Active phases**: only `06-ci-optimization` (unplanned strategy sketch),
    which does not gate a release. `05-writable-bibliography-rest` is complete
    (M0–M3 shipped in 1.7.0, M5 write abilities in 1.12.0, M4 bulk routes in 1.15.0).
 4. Keep the release artifact, WordPress.org SVN output, Playground blueprints,
    and docs aligned whenever import behavior changes for any supported input
-   (DOI, PMID, PMCID, arXiv, ISBN, BibTeX/BibLaTeX, free text).
+   (DOI, PMID, PMCID, arXiv, ISBN, BibTeX/BibLaTeX, RIS, CSL-JSON, free text).
 
 ## Current Priority Order
 
-See "Immediate next-task priorities (2026-10-23)" in `ROADMAP.md` for the full
-ordering. In short:
+See "Immediate next-task priorities (2026-10-28)" in `ROADMAP.md` for the full
+ordering, proposed to the owner on 2026-10-28 and not yet confirmed. In short:
 
 1. **CI, runtime, and Playground hygiene** (standing)
-2. **Sort-conformance backlog**: test items closed and year suffixes added 2026-10-23; ABNT leading articles await a product decision
-3. **WP-CLI read commands**: `list`, `export`, `validate` built 2026-10-23 (`docs/wp-cli.md`); `duplicates`, `preview`, and write commands still to consider
-4. **Reference-manager export corpus**: needs real exports from the owner
-5. **Phase 05 M4 bulk routes**: complete; reformat and deduplicate shipped in 1.15.0
+2. **Epic-OSCOLA grouped bibliographies** (large; needs a `save()` deprecation)
+3. **Decide whether the write routes should ever be on by default**
+4. **Remaining WP-CLI commands**: `preview` and per-citation writes
+5. **Phase 06 CI optimization**: measure first
 6. **First-wave official language packs**
 
 ## Last Activity
 
+- 2026-10-28: Released 1.16.0 (#194–#218).
 - 2026-10-25: Released 1.15.0 (#188–#191).
 - 2026-10-23: Released 1.14.0 (#183–#185).
 - 2026-10-23: Released 1.13.0 (#170).
@@ -119,19 +127,22 @@ ordering. In short:
 - **Dependabot:** #86 closed the open alerts that had an available fix. GitHub
   may still report alerts with no patched version; re-triage on the scheduled
   Dependency audit rather than tracking counts here.
-- **Coverage:** Real reference-manager exports remain the main paste/import
-  quality gap, now including BibLaTeX field mapping. Each external resolver
+- **Coverage:** The reference-manager corpus holds real Zotero 10 and
+  Mendeley Reference Manager exports (BibTeX, BibLaTeX, CSL JSON, RIS), Better
+  BibTeX and JabRef output, and public EndNote samples. EndNote's own exports
+  (#200), Papers, RefWorks, and BibDesk are still untested. Each external resolver
   (DOI, PMID, PMCID, arXiv, ISBN) has a live Playground check, but those are
   single-record happy paths against upstream services that can change.
 
 ## Pending Todos
 
-Three in `.planning/todos/pending/`:
+Two in `.planning/todos/pending/`:
 
 - Coordinate first-wave language packs (2026-06-14).
-- Test more reference-manager exports — Zotero, Mendeley, EndNote, etc.
-  (2026-06-23).
 - Research raising the PHP floor from 7.4 to 8.x (2026-10-14).
+
+The reference-manager exports todo (2026-06-23) is completed: real Zotero and
+Mendeley exports are in the corpus and RIS import shipped in 1.16.0.
 
 The leaner-root-file todo (2026-06-17) is completed: the refactor memo's
 Phase B split shipped in 1.12.0.
@@ -139,7 +150,7 @@ Phase B split shipped in 1.12.0.
 ## Roadmap Alignment
 
 Shipped lines: 1.3.x (`v1.3.0`–`v1.3.4`), 1.4.x (`v1.4.0`–`v1.4.2`), 1.5.x
-(`v1.5.0`, `v1.5.1`), 1.6.x (`v1.6.0`). Phases 04 (Cite/Export) and 07
+(`v1.5.0`, `v1.5.1`), and 1.6.0 through 1.16.0. Phases 04 (Cite/Export) and 07
 (embedded identifiers) are shipped and archived. Phase 05 is complete: its read-only
 Abilities cut shipped in 1.6.0, M0–M3 in 1.7.0, the write abilities (M5) in
 1.12.0, and the bulk routes (M4) in 1.15.0. Phase 06 is an unplanned sketch. Future

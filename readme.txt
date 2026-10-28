@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.15.0
+Stable tag: 1.16.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -194,6 +194,15 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 * Internet Archive terms of use: https://archive.org/about/terms.php
 
 == Changelog ==
+
+= 1.16.0 =
+* **Added:** RIS import. Paste a whole `.ris` export or single records from Zotero, Mendeley, EndNote, or another reference manager, alone or mixed with DOIs and formatted citations, and each record imports as a citation.
+* **Added:** `wp borges duplicates`, a read-only report of repeated citations within each bibliography and across the bibliographies of one post. Bulk deduplicate now copies any field the kept copy lacks (a DOI, pages, a volume) from the copies it removes.
+* **Changed:** richer structured data as pages render: magazine, newspaper, and web citations name their container in JSON-LD, conference papers are part of their proceedings, and COinS lists every author and the PubMed ID, so Zotero's browser connector imports the whole author list. Saved posts are unchanged. The new `bibliography_builder_enrich_coins` filter turns the COinS change off.
+* **Fixed:** titles stored with straight apostrophes or quotation marks are now italicized.
+* **Fixed:** BC dates. Years before 1000 now print in every style ("334 BCE", "731"; ABNT "334 AEC"), and string BC years in pasted CSL-JSON are kept.
+* **Fixed:** sorting. In Chicago notes-bibliography and OSCOLA a single author sorts before co-authored works that begin with the same name, and ABNT files titles without Portuguese leading articles (O, A, Os, As, Um, Uma, Uns, Umas).
+* **Fixed:** reference-manager imports: Mendeley's `city` field becomes the place of publication, BibTeX thesis and report types get readable genres, EndNote and Mendeley entries without cite keys import, comments in JabRef files are ignored, and pasted XML exports get a clear notice instead of becoming a citation.
 
 = 1.15.0 =
 * **Added:** bulk reformat across posts. With the write routes turned on, `POST /bibliography/v1/bulk/reformat` switches every bibliography in up to 25 posts to one citation style and saves each post once. It needs `edit_others_posts` plus `edit_post` on each post, previews unless `dry_run=false`, and returns the posts it did not reach as `remaining`. The `borges/bulk-reformat` ability and `wp borges reformat <post-id>... --style=<key> --user=<user>` do the same.
@@ -394,6 +403,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.16.0 =
+RIS import, BC dates and years before 1000, fuller JSON-LD and COinS for published posts, sorting fixes for Chicago notes, OSCOLA, and ABNT, and several reference-manager import fixes. No configuration changes required.
 
 = 1.15.0 =
 Opt-in bulk reformat and bulk deduplicate across posts (REST, abilities, and WP-CLI) with a per-user rate limit, and editing a citation can no longer create a duplicate. No configuration changes required.

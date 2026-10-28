@@ -38,7 +38,9 @@ Use this checklist for live QA in the local Studio site.
 | Mendeley export           | Whole `.bib` file with LaTeX escapes and an arXiv eprint                                | Every entry added, no errors     | ☐      |
 | EndNote BibTeX export     | Whole `.bib` file with `type = {Journal Article}`                                       | Every entry added, no genre      | ☐      |
 | JabRef export             | Whole `.bib` file with `% Encoding`, `@String`, and `@Comment{jabref-meta…}`            | Only real entries added          | ☐      |
-| CSL-JSON paste            | Zotero "Export as CSL JSON" array                                                       | Unsupported-input notice         | ☐      |
+| CSL-JSON paste            | Zotero "Export as CSL JSON" array                                                       | Every item added                 | ☐      |
+| Zotero RIS export         | Whole `.ris` file (`borges-sample.ris` in the corpus), CRLF line endings                | Every record added, no errors    | ☐      |
+| Mendeley RIS export       | Whole `.ris` file, mixed in one paste with a DOI                                        | Every record and the DOI added   | ☐      |
 | Raw book citation         | `Binder, Amy J., and Jeffrey L. Kidder... University of Chicago Press, 2022.`           | Citation added                   | ☐      |
 | Raw journal citation      | `Ada Smith, "Learning Blocks," Journal of WordPress Studies 12, no. 3 (2024): 117-134.` | Citation added                   | ☐      |
 | Raw chapter citation      | `Doyle, Kathleen. “The Queen Mary Psalter.” In The Book by Design...`                   | Citation added                   | ☐      |
