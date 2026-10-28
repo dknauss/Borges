@@ -373,10 +373,14 @@ function bibliography_builder_save_find_last_range( $text, $value, $ranges, $url
 /**
  * `getDisplaySegments()`.
  *
- * @param array $citation Citation record.
+ * With `$roman_titles` no title is italicized, only inline `<i>`/`<em>` in
+ * the text: case names in OSCOLA's table of cases (OSCOLA 5 §1.6.2).
+ *
+ * @param array $citation     Citation record.
+ * @param bool  $roman_titles Leave titles roman (`romanTitles`).
  * @return array<int, array{text: string, italic: bool}>
  */
-function bibliography_builder_save_display_segments( $citation ) {
+function bibliography_builder_save_display_segments( $citation, $roman_titles = false ) {
 	$raw_text      = bibliography_builder_save_display_text( $citation );
 	$parsed        = bibliography_builder_save_parse_inline_markup( $raw_text );
 	$text          = $parsed['text'];
@@ -398,7 +402,11 @@ function bibliography_builder_save_display_segments( $citation ) {
 	$title_ranges = array();
 	$url_ranges   = bibliography_builder_save_url_ranges( $text );
 
-	foreach ( bibliography_builder_save_italic_fields( bibliography_builder_citation_csl( $citation ) ) as $value ) {
+	$fields = $roman_titles
+		? array()
+		: bibliography_builder_save_italic_fields( bibliography_builder_citation_csl( $citation ) );
+
+	foreach ( $fields as $value ) {
 		if ( ! bibliography_builder_js_truthy( $value ) ) {
 			continue;
 		}

@@ -140,6 +140,53 @@ const FIXTURE_ATTRIBUTES = {
  * so its fixture is one; under FIXTURE_ATTRIBUTES it would match v00 exactly.
  */
 const FIXTURE_ATTRIBUTES_BY_VERSION = {
+	// v16 froze save() from before OSCOLA listed cases and legislation in
+	// tables of their own (OSCOLA 5 §§1.6–1.7). Only an OSCOLA list holding a
+	// primary source changes, so its fixture is a case, a statute, and an
+	// article; under FIXTURE_ATTRIBUTES it would match v00 exactly.
+	16: {
+		...FIXTURE_ATTRIBUTES,
+		citationStyle: 'oscola',
+		headingText: 'Bibliography',
+		citations: [
+			{
+				id: 'craig2005',
+				csl: {
+					id: 'craig2005',
+					type: 'article-journal',
+					title: 'Theory, “Pure Theory” and Values in Public Law',
+					'container-title': 'Public Law',
+					page: '440',
+					author: [ { family: 'Craig', given: 'Paul' } ],
+					issued: { 'date-parts': [ [ 2005 ] ] },
+				},
+				formattedText:
+					'Craig P, ‘Theory, “Pure Theory” and Values in Public Law’ [2005] PL 440',
+				displayOverride: null,
+			},
+			{
+				id: 'donoghue1932',
+				csl: {
+					id: 'donoghue1932',
+					type: 'legal_case',
+					title: 'Donoghue v Stevenson',
+					issued: { 'date-parts': [ [ 1932 ] ] },
+				},
+				formattedText: 'Donoghue v Stevenson [1932] AC 562 (HL)',
+				displayOverride: null,
+			},
+			{
+				id: 'hra1998',
+				csl: {
+					id: 'hra1998',
+					type: 'legislation',
+					title: 'Human Rights Act 1998',
+				},
+				formattedText: 'Human Rights Act 1998',
+				displayOverride: null,
+			},
+		],
+	},
 	// v15 froze save() from before ABNT skipped Portuguese leading articles
 	// (NBR 6033 §3.4). Only a title entry opening with one sorts differently,
 	// so its fixture is an ABNT list of two; under FIXTURE_ATTRIBUTES it would
@@ -554,18 +601,27 @@ if ( WRITE_MODE ) {
 		} );
 
 		const cases = [
-			{ label: 'current save()', file: CURRENT_FIXTURE },
+			{
+				label: 'current save()',
+				file: CURRENT_FIXTURE,
+				citationCount: FIXTURE_ATTRIBUTES.citations.length,
+			},
 			...deprecated.map( ( entry, index ) => ( {
 				label: `deprecation ${
 					deprecated.length - index
 				} (index ${ index })`,
 				file: fixtureName( index ),
+				citationCount: (
+					FIXTURE_ATTRIBUTES_BY_VERSION[
+						deprecated.length - index
+					] || FIXTURE_ATTRIBUTES
+				).citations.length,
 			} ) ),
 		];
 
 		it.each( cases )(
 			'markup saved by $label still validates',
-			( { file } ) => {
+			( { file, citationCount } ) => {
 				const path = join( FIXTURE_DIR, file );
 				expect( existsSync( path ) ).toBe( true );
 
@@ -579,7 +635,9 @@ if ( WRITE_MODE ) {
 				// "valid" vacuously, so assert identity before validity.
 				expect( block.name ).toBe( metadata.name );
 				expect( block.isValid ).toBe( true );
-				expect( block.attributes.citations ).toHaveLength( 2 );
+				expect( block.attributes.citations ).toHaveLength(
+					citationCount
+				);
 			}
 		);
 	} );

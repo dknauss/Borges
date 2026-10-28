@@ -3,14 +3,14 @@
 | | |
 |---|---|
 | Drafted | 2026-10-28, against `main` at `9fddeb9` (1.16.0) |
-| Status | Proposed; design decisions D1–D3 wait for the owner |
+| Status | In progress: D1–D3 decided 2026-10-28 (the recommended options); T1–T4 built in #220 |
 | Owner | TBD |
 | Replaces | The "Scope sketch" in `sort-conformance-plan.md`, Epic-OSCOLA (REQ-S5 deferred) |
 
 ## TL;DR
 
 - **The Epic-OSCOLA sketch groups the wrong way.** It splits an OSCOLA list into five groups: cases, legislation, books, articles, and online sources. OSCOLA 5 (2026) asks for tables of primary sources (cases first, then legislation, then other tables such as treaties) and one bibliography of secondary sources. It says "It is unnecessary to separate the various types of secondary sources from each other" (§1.7).
-- **Proposed design:** when an OSCOLA block holds cases, legislation, or treaties, `save()` writes one `<section>` per group, in OSCOLA's order: Cases, Legislation, Treaties, Secondary sources. Each group has its own label and list. A block that holds only secondary sources saves exactly as it does today.
+- **The design:** when an OSCOLA block holds cases, legislation, or treaties, `save()` writes one labelled list per group, in OSCOLA's order: Cases, Legislation, Treaties, Secondary sources. Each group has its own label and list. A block that holds only secondary sources saves exactly as it does today.
 - **Case names in the table of cases are not italicised** (§1.6.2), and cases sort by their first significant word, so "Re Farquar's Estate" files under F.
 - **One `save()` change, so one deprecation.** The change reaches only OSCOLA blocks with primary sources. The JS and PHP ports change together, pinned by the save-parity fixtures.
 - **Effort:** about 1.5–2 weeks. That's less than the sketch's 2–3 weeks, because secondary sources stay one list and exports stay flat.
@@ -43,7 +43,7 @@ The source is OSCOLA, 5th edition (Faculty of Law, University of Oxford, 2026), 
 | Plain-text export prints the group headings | The plain-text export prints the groups' labels | Same as the sketch |
 | Headings hard-coded as `<h3>` | One level below the block heading, or a paragraph when the block heading is a paragraph | Keeps to the Heading Level setting (1.9.0), whose default doesn't add headings to the outline |
 
-## 3. Proposed design
+## 3. Design
 
 ### 3.1 Data
 
@@ -51,45 +51,45 @@ The source is OSCOLA, 5th edition (Faculty of Law, University of Oxford, 2026), 
 
   ```json
   "groups": [
-      { "key": "cases", "label": "Table of Cases", "types": [ "legal_case" ] },
+      { "key": "cases", "label": "Table of Cases", "types": [ "legal_case" ], "romanTitles": true },
       { "key": "legislation", "label": "Table of Legislation", "types": [ "legislation", "bill", "regulation" ] },
       { "key": "treaties", "label": "Table of Treaties", "types": [ "treaty" ] },
-      { "key": "secondary", "label": "Bibliography", "types": "*" }
+      { "key": "secondary", "label": "Secondary Sources", "types": "*" }
   ]
   ```
 
-  JS reads it through `style-registry.js` and PHP through `includes/styles.php`, like every other style field. `StyleDataTest.php` checks that each CSL type appears in only one group. No other style declares `groups`, so the other eight styles are unaffected.
+  JS reads it through `getStyleGroups()` and PHP through `bibliography_builder_save_style_groups()`. `romanTitles` marks the table of cases. The secondary group is labelled "Secondary Sources", as in Newcastle's example, so it never repeats the block heading's default "Bibliography". `StyleDataTest.php` checks that each CSL type appears in only one group and that the catch-all comes last. No other style declares `groups`, so the other eight styles are unaffected.
 - `block.json` gets no new attribute. The grouping follows from the style and from each entry's `type`. An entry whose type is edited moves to its new group on the next save, the way it already moves when it's re-sorted.
 
 ### 3.2 Order
 
-- New module `src/lib/bibliography-groups.js` (ported in `includes/save-sort.php`): `groupCitations( sortedCitations, styleKey )` returns `[ { key, label, citations } ]`, or `null` when the style declares no groups or the block holds only secondary sources.
+- New module `src/lib/bibliography-groups.js` (ported in `includes/save-sort.php`): `groupCitations( sortedCitations, styleKey )` returns `[ { key, label, romanTitles, citations } ]`, or `null` when the style declares no groups or the block holds only secondary sources.
+- `sortCitations()` takes `sourceGroups` (default `true`; `save()` up to 1.16.0 sorted with it off). Its comparator puts each group in turn.
 - Groups come in the order `groups` lists them. Empty groups are skipped.
-- Inside a group, the existing notes-family comparator runs unchanged, with two additions:
-  - For `legal_case`, the sort key drops a leading `Re ` (and `In re `), so "Re Farquar's Estate" sorts as "Farquar's Estate" and "Re F" as "F".
-  - In Legislation, `regulation` sorts after `legislation` and `bill` (§1.6.3).
+- Inside a table of primary sources, entries file by type (in the order the group lists them, so `legislation`, then `bill`, then `regulation`: statutory instruments after statutes, §1.6.3), then by filing title, then by the notes-family comparator. The filing title skips a leading article, and for `legal_case` also a leading `Re` or `In re`, so "Re Farquar's Estate" files under F (§1.6.2). Secondary sources keep the notes-family order unchanged.
 - The flat order that `sortCitations()` returns elsewhere (exports, the read routes, `wp borges export`) becomes the grouped order read top to bottom, so every surface lists entries the way the page shows them.
 
 ### 3.3 Markup
 
-When `groupCitations()` returns groups, the one `<ul>` becomes one `<section>` per group, inside the existing `role="doc-bibliography"` wrapper:
+When `groupCitations()` returns groups, the one `<ul>` becomes one labelled list per group, inside the existing `role="doc-bibliography"` wrapper:
 
 ```html
 <section class="wp-block-bibliography-builder-bibliography" role="doc-bibliography" aria-label="Bibliography">
     <h2 class="bibliography-builder-heading">Sources</h2>
-    <section class="bibliography-builder-group bibliography-builder-group-cases" aria-labelledby="bibliography-group-cases-…">
-        <h3 class="bibliography-builder-group-heading" id="bibliography-group-cases-…">Table of Cases</h3>
-        <ul class="bibliography-builder-list bibliography-builder-list-unordered bibliography-builder-list-oscola">
-            <li id="ref-…">…</li>
+    <div class="bibliography-builder-group bibliography-builder-group-cases">
+        <h3 class="bibliography-builder-group-heading" id="bibliography-group-cases-donoghue">Table of Cases</h3>
+        <ul class="bibliography-builder-list bibliography-builder-list-unordered bibliography-builder-list-oscola" aria-labelledby="bibliography-group-cases-donoghue">
+            <li id="ref-donoghue">…</li>
         </ul>
-    </section>
-    <section class="bibliography-builder-group bibliography-builder-group-secondary" …>…</section>
+    </div>
+    <div class="bibliography-builder-group bibliography-builder-group-secondary">…</div>
 </section>
 ```
 
-- **Group heading level (D3).** Recommended: one level below the block heading (`h2` → `h3`, `h6` → a paragraph). When the block heading is a paragraph, which is the default, the group labels are paragraphs too. In both cases `aria-labelledby` names each group for screen readers.
-- **The `id` suffix** is the block's `bibliographyId`, so two OSCOLA blocks on one page don't share ids.
-- **Group labels are saved in English,** as the style's default heading ("Bibliography") already is. OSCOLA is an en-GB style, and saved markup must not depend on the editor's locale (see `save.js`). The labels can be edited with the D1 options below if Dan wants that.
+- **Group heading level (D3).** One level below the block heading (`h2` → `h3`, `h6` → a paragraph). When the block heading is a paragraph, which is the default, the group labels are paragraphs too. In both cases the list's `aria-labelledby` names it for screen readers ("Table of Cases, list, 3 items").
+- **A `<div>`, not a `<section>`, wraps each group.** A named `<section>` is a region landmark, and four landmarks per bibliography would crowd a screen reader's landmark list.
+- **The `id` suffix** is the group's first citation ID. Citation IDs are UUIDs, so two blocks on one page don't share label IDs, and blocks saved before `bibliographyId` existed need nothing new.
+- **Group labels are saved in English,** as the style's default heading ("Bibliography") already is. OSCOLA is an en-GB style, and saved markup must not depend on the editor's locale (see `save.js`). Editable labels can follow if authors ask for them.
 - **Entries keep their `<li id="ref-…">` markup,** `data-cite-*` attributes, and COinS spans. The JSON-LD `ItemList` keeps one `ListItem` per entry, in the grouped order, so `json-ld-enrichment.php`, which matches entries by `<li id="ref-…">` order, needs no change.
 - **Italics:** inside the Cases group, the title of a `legal_case` entry is not italicised. Italics in the stored text (`<i>`) are still honoured, so a hand-edited entry keeps what the author wrote.
 - **CSS:** the stylesheet gains a margin rule for `.bibliography-builder-group`. Nothing depends on it, so email and feed output still read correctly. `includes/email-output.php` needs no change, because it rewrites entries, not lists.
@@ -111,11 +111,11 @@ When `groupCitations()` returns groups, the one `<ul>` becomes one `<section>` p
 - BibTeX, BibLaTeX, RIS, and CSL-JSON stay flat and unchanged, apart from following the grouped order.
 - The plain-text read (`?format=text`, `wp borges export --format=text`) prints each group's label on its own line before its entries.
 
-## 4. Decisions for the owner
+## 4. Decisions (made 2026-10-28)
 
-- **D1. Groups.** (a) Recommended: OSCOLA 5's four groups (Cases, Legislation, Treaties, Secondary sources), shown only when there is a primary source. (b) The sketch's five groups, which split secondary sources against §1.7. (c) (a), plus a block setting that splits secondary sources by type for authors whose institution asks for it.
-- **D2. "Re" cases.** (a) Recommended: sort under the first significant word and leave the text as written ("Re Farquar's Estate", filed under F). (b) Also rewrite the displayed text to "Farquar's Estate, Re", as §1.6.2 shows. That changes the stored formatted text, and breaks the rule that `save()` prints what citeproc returned.
-- **D3. Group heading level.** (a) Recommended: one level below the block heading, and a paragraph when the block heading is a paragraph. (b) Always `h3`. (c) Always a paragraph.
+- **D1. Groups.** (a) **Chosen:** OSCOLA 5's four groups (Cases, Legislation, Treaties, Secondary sources), shown only when there is a primary source. (b) The sketch's five groups, which split secondary sources against §1.7. (c) (a), plus a block setting that splits secondary sources by type for authors whose institution asks for it.
+- **D2. "Re" cases.** (a) **Chosen:** sort under the first significant word and leave the text as written ("Re Farquar's Estate", filed under F). (b) Also rewrite the displayed text to "Farquar's Estate, Re", as §1.6.2 shows. That changes the stored formatted text, and breaks the rule that `save()` prints what citeproc returned.
+- **D3. Group heading level.** (a) **Chosen:** one level below the block heading, and a paragraph when the block heading is a paragraph. (b) Always `h3`. (c) Always a paragraph.
 
 ## 5. Out of scope
 
@@ -153,3 +153,4 @@ The quotations above were read through a text extraction of the manual. Before T
 | Date | Change | Author |
 | --- | --- | --- |
 | 2026-10-28 | First draft, from OSCOLA 5 §§1.6–1.7; replaces the Epic-OSCOLA scope sketch | Plan synthesis |
+| 2026-10-28 | D1–D3 decided (the recommended options); markup settled as a `<div>` per group with a labelled list, label IDs from the first citation, and "Secondary Sources" as the last label | Build |

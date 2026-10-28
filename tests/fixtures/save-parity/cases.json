@@ -2126,6 +2126,130 @@
 					}
 				]
 			}
+		},
+		{
+			"name": "oscola-tables",
+			"note": "OSCOLA 5 tables: cases (roman, filed without \"Re\"), legislation (statutes before SIs), treaties, then secondary sources; group labels one level below an h2 heading; every output on.",
+			"attributes": {
+				"citationStyle": "oscola",
+				"headingText": "Sources",
+				"headingLevel": 2,
+				"bibliographyId": "bib-oscola",
+				"outputCoins": true,
+				"outputCslJson": true,
+				"outputCiteExport": true,
+				"citations": [
+					{
+						"id": "craig",
+						"csl": {
+							"type": "article-journal",
+							"title": "Theory, “Pure Theory” and Values in Public Law",
+							"container-title": "Public Law",
+							"page": "440",
+							"author": [
+								{
+									"family": "Craig",
+									"given": "Paul"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2005
+									]
+								]
+							}
+						},
+						"formattedText": "Craig P, ‘Theory, “Pure Theory” and Values in Public Law’ [2005] PL 440"
+					},
+					{
+						"id": "si",
+						"csl": {
+							"type": "regulation",
+							"title": "Air Navigation Order 2016"
+						},
+						"formattedText": "Air Navigation Order 2016"
+					},
+					{
+						"id": "hra",
+						"csl": {
+							"type": "legislation",
+							"title": "Human Rights Act 1998"
+						},
+						"formattedText": "Human Rights Act 1998"
+					},
+					{
+						"id": "farquar",
+						"csl": {
+							"type": "legal_case",
+							"title": "Re Farquar's Estate"
+						},
+						"formattedText": "Re Farquar’s Estate [1907] 1 Ch 12"
+					},
+					{
+						"id": "donoghue",
+						"csl": {
+							"type": "legal_case",
+							"title": "<i>Donoghue</i> v Stevenson"
+						},
+						"formattedText": "<i>Donoghue</i> v Stevenson [1932] AC 562 (HL)"
+					},
+					{
+						"id": "echr",
+						"csl": {
+							"type": "treaty",
+							"title": "European Convention on Human Rights"
+						},
+						"formattedText": "European Convention on Human Rights (1950)"
+					},
+					{
+						"id": "book",
+						"csl": {
+							"type": "book",
+							"title": "Constitutional and Administrative Law",
+							"author": [
+								{
+									"family": "Bradley",
+									"given": "Anthony"
+								}
+							]
+						},
+						"formattedText": "Bradley A, Constitutional and Administrative Law (OUP 2018)"
+					}
+				]
+			}
+		},
+		{
+			"name": "oscola-paragraph-heading",
+			"note": "OSCOLA groups under the default paragraph heading: labels are paragraphs; a case alone still makes a table.",
+			"attributes": {
+				"citationStyle": "oscola",
+				"headingText": "Bibliography",
+				"citations": [
+					{
+						"id": "book",
+						"csl": {
+							"type": "book",
+							"title": "Legal Method",
+							"author": [
+								{
+									"family": "Hanson",
+									"given": "Sharon"
+								}
+							]
+						},
+						"formattedText": "Hanson S, Legal Method (Routledge 2016)"
+					},
+					{
+						"id": "case",
+						"csl": {
+							"type": "legal_case",
+							"title": "Carlill v Carbolic Smoke Ball Co"
+						},
+						"formattedText": "Carlill v Carbolic Smoke Ball Co [1893] 1 QB 256 (CA)"
+					}
+				]
+			}
 		}
 	]
 }
