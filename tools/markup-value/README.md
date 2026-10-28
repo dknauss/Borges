@@ -70,7 +70,12 @@ the best a machine reader gets:
 `perLayer` scores each layer on its own. Authors count as correct only when a
 layer gives every last name once, in order. COinS spans are read by Zotero's
 own OpenURL reader (the one its browser connector uses), so an author Zotero
-would import twice, drop, or move counts as wrong. The reader is AGPL-licensed
+would import twice, drop, or move counts as wrong. Every other COinS field is
+read the same way: the reader picks the item type from the span's format and
+genre, and only fields that Zotero item type keeps count (a journal article
+keeps no publisher, a book no page range). A chapter saved without
+`rft.genre=bookitem` imports as a book under the book's title, so its own title
+counts as wrong. The reader is AGPL-licensed
 code from `zotero/utilities` at a fixed commit, downloaded on first use into
 `node_modules/.cache/` here rather than kept in the repository.
 
@@ -107,9 +112,10 @@ the checks Lighthouse does make.
   measure what is machine-readable, which is a precondition, not an outcome.
 - **Google rich results.** Google offers no rich result for reference lists,
   so there is nothing to pass or fail beyond vocabulary validity.
-- **Zotero itself.** `measure.mjs` reads COinS with the KEV keys Zotero's COinS
-  translator uses, but does not run Zotero. `scripts/test-zotero-interop.sh`
-  runs the real Zotero translation server in Docker.
+- **Zotero itself.** `measure.mjs` reads COinS with Zotero's own OpenURL
+  reader, but does not run the Zotero client that saves the item.
+  `scripts/test-zotero-interop.sh` runs the real Zotero translation server in
+  Docker.
 - **A language model's extraction.** The "unlabeled" share is where a model
   would do the work a structured layer does for free; how well a given model
   does it is not measured here.

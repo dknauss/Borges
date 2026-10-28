@@ -191,37 +191,77 @@ function coinsAuthors( title ) {
 }
 
 /**
- * OpenURL ContextObject in a COinS span to fields, using the KEV keys
- * Zotero's COinS translator reads (Z39.88-2004 journal, book, and
- * dissertation formats).
+ * Fields a Zotero item of each type keeps, among those compared here. The
+ * OpenURL reader sets a publisher or ISBN on any item, but Zotero discards a
+ * field the item type does not have when it saves the item, so a journal
+ * article imported from COinS keeps no publisher.
+ */
+const ZOTERO_FIELDS = {
+	journalArticle: [ 'title', 'authors', 'year', 'container', 'doi', 'pages' ],
+	book: [ 'title', 'authors', 'year', 'doi', 'isbn', 'publisher' ],
+	bookSection: [
+		'title',
+		'authors',
+		'year',
+		'container',
+		'doi',
+		'isbn',
+		'pages',
+		'publisher',
+	],
+	conferencePaper: [
+		'title',
+		'authors',
+		'year',
+		'container',
+		'doi',
+		'isbn',
+		'pages',
+		'publisher',
+	],
+	report: [ 'title', 'authors', 'year', 'doi', 'pages', 'publisher' ],
+	thesis: [ 'title', 'authors', 'year', 'doi', 'publisher' ],
+	webpage: [ 'title', 'authors', 'year', 'container', 'doi' ],
+};
+
+/**
+ * OpenURL ContextObject in a COinS span to fields, as Zotero imports it: the
+ * span is read by Zotero's own OpenURL reader, which decides the item type
+ * from the format and genre (a book-format span without
+ * `rft.genre=bookitem` imports as a book, titled with the book's title), and
+ * only the fields that item type keeps are counted.
  *
  * @param {string} title The span's title attribute (a KEV string).
  */
 function fromCoins( title ) {
-	const kev = new URLSearchParams( title );
-	const get = ( key ) => kev.get( key ) || undefined;
-	const ids = kev.getAll( 'rft_id' );
-	const doi = ids.find( ( id ) => id.startsWith( 'info:doi/' ) );
-	const authors = coinsAuthors( title );
-	const pages =
-		get( 'rft.pages' ) ||
-		( get( 'rft.spage' ) && get( 'rft.epage' )
-			? `${ get( 'rft.spage' ) }-${ get( 'rft.epage' ) }`
-			: get( 'rft.spage' ) );
-	const isChapter = get( 'rft.atitle' ) && get( 'rft.btitle' );
+	let item;
+	try {
+		item = openUrl.parseContextObject( title );
+	} catch {
+		item = null;
+	}
+	if ( ! item || ! item.itemType ) {
+		return {};
+	}
 
-	return {
-		title: get( 'rft.atitle' ) || get( 'rft.btitle' ) || get( 'rft.title' ),
-		authors,
-		year: get( 'rft.date' ),
-		container:
-			get( 'rft.jtitle' ) ||
-			( isChapter ? get( 'rft.btitle' ) : undefined ),
-		doi: doi && doi.slice( 9 ),
-		isbn: get( 'rft.isbn' ),
-		pages,
-		publisher: get( 'rft.pub' ) || get( 'rft.inst' ),
+	const fields = {
+		title: item.title,
+		authors: coinsAuthors( title ),
+		year: item.date,
+		container: item.publicationTitle,
+		doi: item.DOI,
+		isbn: item.ISBN,
+		pages: item.pages,
+		publisher: item.publisher,
 	};
+	const kept = ZOTERO_FIELDS[ item.itemType ] || Object.keys( fields );
+
+	return Object.fromEntries(
+		Object.entries( fields ).map( ( [ key, value ] ) => [
+			key,
+			kept.includes( key ) ? value : undefined,
+		] )
+	);
 }
 
 /**
