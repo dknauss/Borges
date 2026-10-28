@@ -754,3 +754,49 @@ describe( 'cslToRisEntry (per-entry RIS for save() cite/export)', () => {
 		expect( ris ).toContain( 'AU  - Doe, Jane' );
 	} );
 } );
+
+describe( 'buildPlainTextBibliographyContent with OSCOLA tables', () => {
+	const citations = [
+		{
+			id: 'craig',
+			csl: {
+				type: 'article-journal',
+				title: 'Theory',
+				author: [ { family: 'Craig', given: 'Paul' } ],
+			},
+			formattedText: 'Craig P, ‘Theory’ [2005] PL 440',
+		},
+		{
+			id: 'hra',
+			csl: { type: 'legislation', title: 'Human Rights Act 1998' },
+			formattedText: 'Human Rights Act 1998',
+		},
+		{
+			id: 'donoghue',
+			csl: { type: 'legal_case', title: 'Donoghue v Stevenson' },
+			formattedText: 'Donoghue v Stevenson [1932] AC 562 (HL)',
+		},
+	];
+
+	it( 'prints each table under its label, then the secondary sources', () => {
+		expect( buildPlainTextBibliographyContent( citations, 'oscola' ) ).toBe(
+			[
+				'Table of Cases',
+				'Donoghue v Stevenson [1932] AC 562 (HL)',
+				'',
+				'Table of Legislation',
+				'Human Rights Act 1998',
+				'',
+				'Secondary Sources',
+				'Craig P, ‘Theory’ [2005] PL 440',
+				'',
+			].join( '\n' )
+		);
+	} );
+
+	it( 'prints no labels for secondary sources alone', () => {
+		expect(
+			buildPlainTextBibliographyContent( [ citations[ 0 ] ], 'oscola' )
+		).toBe( 'Craig P, ‘Theory’ [2005] PL 440\n' );
+	} );
+} );

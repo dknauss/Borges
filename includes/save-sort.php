@@ -494,7 +494,170 @@ function bibliography_builder_sort_compare(
 }
 
 /**
+ * The style's source-type groups, or null when it declares none.
+ *
+ * `getStyleGroups()` from `src/lib/bibliography-groups.js`: OSCOLA's tables
+ * of cases, legislation, and treaties, then its secondary sources. A group
+ * whose `types` is "*" takes every type no other group lists.
+ *
+ * @param mixed $style_key Style key.
+ * @return array<int, array{key: string, label: string, types: string[]|string, romanTitles: bool}>|null
+ */
+function bibliography_builder_save_style_groups( $style_key ) {
+	$styles = bibliography_builder_get_style_data()['styles'];
+	$key    = bibliography_builder_get_save_style_definition( $style_key )['key'];
+	$groups = isset( $styles[ $key ]['groups'] ) && is_array( $styles[ $key ]['groups'] )
+		? array_values( $styles[ $key ]['groups'] )
+		: array();
+
+	if ( array() === $groups ) {
+		return null;
+	}
+
+	$normalized = array();
+
+	foreach ( $groups as $group ) {
+		$group        = is_array( $group ) ? $group : array();
+		$types        = isset( $group['types'] ) ? $group['types'] : array();
+		$normalized[] = array(
+			'key'         => isset( $group['key'] ) ? (string) $group['key'] : '',
+			'label'       => isset( $group['label'] ) ? (string) $group['label'] : '',
+			'types'       => is_array( $types ) ? array_values( array_map( 'strval', $types ) ) : (string) $types,
+			'romanTitles' => isset( $group['romanTitles'] ) && true === $group['romanTitles'],
+		);
+	}
+
+	return $normalized;
+}
+
+/**
+ * `getGroupIndex()`: the group a CSL item belongs to, else the catch-all's.
+ *
+ * @param array $csl    CSL-JSON item.
+ * @param array $groups Groups from bibliography_builder_save_style_groups().
+ * @psalm-param array<int, array{types: string[]|string, ...}> $groups
+ * @return int Group index, or -1 when no group takes the item.
+ */
+function bibliography_builder_save_group_index( $csl, $groups ) {
+	$type = bibliography_builder_csl_field( $csl, 'type' );
+
+	foreach ( $groups as $index => $group ) {
+		if ( is_array( $group['types'] ) && in_array( $type, $group['types'], true ) ) {
+			return $index;
+		}
+	}
+
+	foreach ( $groups as $index => $group ) {
+		if ( '*' === $group['types'] ) {
+			return $index;
+		}
+	}
+
+	return -1;
+}
+
+/**
+ * `getTypeRank()`: where an item's type comes in its group's `types`.
+ *
+ * @param array $csl   CSL-JSON item.
+ * @param array $group Group from bibliography_builder_save_style_groups().
+ * @psalm-param array{types: string[]|string, ...} $group
+ * @return int
+ */
+function bibliography_builder_save_type_rank( $csl, $group ) {
+	if ( ! is_array( $group['types'] ) ) {
+		return 0;
+	}
+
+	$rank = array_search( bibliography_builder_csl_field( $csl, 'type' ), $group['types'], true );
+
+	return false === $rank ? 0 : (int) $rank;
+}
+
+/**
+ * `getFilingTitle()`: a table entry's title without a leading article, and a
+ * case name also without "Re" or "In re" (OSCOLA 5 §1.6.2).
+ *
+ * @param array    $csl      CSL-JSON item.
+ * @param string[] $articles Leading articles.
+ * @return string
+ */
+function bibliography_builder_save_filing_title( $csl, $articles ) {
+	$title = bibliography_builder_sort_title_key( $csl, $articles );
+
+	return 'legal_case' === bibliography_builder_csl_field( $csl, 'type' )
+		? (string) preg_replace(
+			'/^(in[' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ']+)?re[' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ']+/iu',
+			'',
+			$title
+		)
+		: $title;
+}
+
+/**
+ * `groupCitations()`: sorted citations split into their non-empty groups, or
+ * null when the style has no groups or every citation is a secondary source.
+ *
+ * @param array<int, mixed> $citations Citations in sort order.
+ * @param mixed             $style_key Style key.
+ * @return array<int, array{
+ *     key: string,
+ *     label: string,
+ *     types: string[]|string,
+ *     romanTitles: bool,
+ *     citations: array<int, mixed>
+ * }>|null
+ */
+function bibliography_builder_save_group_citations( $citations, $style_key ) {
+	$groups = bibliography_builder_save_style_groups( $style_key );
+
+	if ( null === $groups ) {
+		return null;
+	}
+
+	$buckets = array();
+
+	foreach ( $groups as $group ) {
+		$group['citations'] = array();
+		$buckets[]          = $group;
+	}
+
+	foreach ( $citations as $citation ) {
+		$index = bibliography_builder_save_group_index( bibliography_builder_citation_csl( $citation ), $groups );
+		$index = -1 === $index ? count( $buckets ) - 1 : $index;
+
+		$buckets[ $index ]['citations'][] = $citation;
+	}
+
+	$primary = false;
+
+	foreach ( $buckets as $bucket ) {
+		if ( '*' !== $bucket['types'] && array() !== $bucket['citations'] ) {
+			$primary = true;
+		}
+	}
+
+	if ( ! $primary ) {
+		return null;
+	}
+
+	return array_values(
+		array_filter(
+			$buckets,
+			static function ( array $bucket ): bool {
+				return array() !== $bucket['citations'];
+			}
+		)
+	);
+}
+
+/**
  * `sortCitations()`: stable sort by style family; numeric styles keep order.
+ *
+ * A style with source-type groups lists each group in turn, as
+ * `withSourceGroups()` does: tables of primary sources file by type rank,
+ * then filing title, then the family order; secondary sources keep the
+ * family order.
  *
  * @param array  $citations Citation records.
  * @param string $style_key Style key.
@@ -519,14 +682,52 @@ function bibliography_builder_sort_citations_for_save( $citations, $style_key ) 
 		$indexed[] = array( $index, $citation );
 	}
 
+	$groups   = bibliography_builder_save_style_groups( $style_key );
+	$group_of = static function ( array $csl ) use ( $groups ): int {
+		$index = bibliography_builder_save_group_index( $csl, (array) $groups );
+
+		return -1 === $index ? count( (array) $groups ) : $index;
+	};
+
 	usort(
 		$indexed,
-		static function ( $left, $right ) use ( $style, $collator, $demote, $articles ) {
+		static function ( $left, $right ) use ( $style, $collator, $demote, $articles, $groups, $group_of ) {
+			$csl_a = bibliography_builder_citation_csl( $left[1] );
+			$csl_b = bibliography_builder_citation_csl( $right[1] );
+
+			if ( null !== $groups ) {
+				$group_a = $group_of( $csl_a );
+				$group_b = $group_of( $csl_b );
+
+				if ( $group_a !== $group_b ) {
+					return $group_a - $group_b;
+				}
+
+				if ( isset( $groups[ $group_a ] ) && '*' !== $groups[ $group_a ]['types'] ) {
+					$rank = bibliography_builder_save_type_rank( $csl_a, $groups[ $group_a ] )
+						- bibliography_builder_save_type_rank( $csl_b, $groups[ $group_a ] );
+
+					if ( 0 !== $rank ) {
+						return $rank;
+					}
+
+					$title = bibliography_builder_locale_compare(
+						$collator,
+						bibliography_builder_save_filing_title( $csl_a, $articles ),
+						bibliography_builder_save_filing_title( $csl_b, $articles )
+					);
+
+					if ( 0 !== $title ) {
+						return $title;
+					}
+				}
+			}
+
 			$comparison = bibliography_builder_sort_compare(
 				$style['family'],
 				$collator,
-				bibliography_builder_citation_csl( $left[1] ),
-				bibliography_builder_citation_csl( $right[1] ),
+				$csl_a,
+				$csl_b,
 				$demote,
 				$articles
 			);

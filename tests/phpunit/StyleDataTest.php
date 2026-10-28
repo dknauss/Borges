@@ -38,6 +38,9 @@ final class StyleDataTest extends TestCase {
 		$this->assertNotEmpty( $styles );
 
 		foreach ( $styles as $key => $style ) {
+			// `groups` is the one optional field; test_groups_are_well_formed() checks it.
+			unset( $style['groups'] );
+
 			$this->assertSame( array_keys( self::FIELDS ), array_keys( $style ), $key );
 			$this->assertIsBool( $style['enabled'], $key );
 			$this->assertIsBool( $style['yearSuffix'], $key );
@@ -55,6 +58,57 @@ final class StyleDataTest extends TestCase {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Source-type groups (OSCOLA's tables): each has a unique key and a label,
+	 * lists known CSL types that no other group lists, and exactly one, the
+	 * last, takes every other type ("*"), so every entry lands in one group.
+	 */
+	public function test_groups_are_well_formed() {
+		$known  = bibliography_builder_get_known_csl_types();
+		$styled = 0;
+
+		foreach ( bibliography_builder_get_style_data()['styles'] as $key => $style ) {
+			if ( ! isset( $style['groups'] ) ) {
+				$this->assertNull( bibliography_builder_save_style_groups( $key ), $key );
+				continue;
+			}
+
+			++$styled;
+			$groups = $style['groups'];
+			$seen   = array();
+
+			$this->assertIsArray( $groups, $key );
+			$this->assertNotSame( 'numeric', $style['family'], $key );
+			$this->assertSame( '*', end( $groups )['types'], "$key: the last group takes the rest" );
+			$this->assertCount( 1, array_filter( $groups, static fn( $group ) => '*' === $group['types'] ), $key );
+			$this->assertSame( array_column( $groups, 'key' ), array_values( array_unique( array_column( $groups, 'key' ) ) ), $key );
+
+			foreach ( $groups as $group ) {
+				$this->assertSame( array( 'key', 'label', 'types' ), array_values( array_diff( array_keys( $group ), array( 'romanTitles' ) ) ), $key );
+				$this->assertMatchesRegularExpression( '/^[a-z]+$/', $group['key'], $key );
+				$this->assertNotSame( '', $group['label'], $key );
+
+				if ( isset( $group['romanTitles'] ) ) {
+					$this->assertIsBool( $group['romanTitles'], $key );
+				}
+
+				if ( '*' === $group['types'] ) {
+					continue;
+				}
+
+				foreach ( $group['types'] as $type ) {
+					$this->assertContains( $type, $known, "$key.{$group['key']}" );
+					$this->assertNotContains( $type, $seen, "$key: $type is in two groups" );
+					$seen[] = $type;
+				}
+			}
+
+			$this->assertSame( count( $groups ), count( (array) bibliography_builder_save_style_groups( $key ) ), $key );
+		}
+
+		$this->assertSame( 1, $styled, 'Only OSCOLA declares groups' );
 	}
 
 	public function test_name_particles_are_unique_lowercase_words() {

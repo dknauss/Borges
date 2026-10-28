@@ -28,6 +28,7 @@ specifications that supplement the authoritative `SPEC.md` at the repo root.
 | Document                                               | Status                                                                                                                                                                                       | Owner |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
 | [sort-conformance-plan.md](./sort-conformance-plan.md) | Sprints 1–4 shipped in 1.2.0; the remaining test items closed 2026-10-23 (Appendix C, "Follow-up audit"). Year suffixes added the same day. ABNT leading articles followed 2026-10-26 (NBR 6033 §3.4). Sprint 5 and Epic-OSCOLA unscheduled | TBD   |
+| [oscola-grouping-plan.md](./oscola-grouping-plan.md) | Proposed 2026-10-28: OSCOLA 5 tables of cases, legislation, and treaties, then one bibliography of secondary sources; replaces the Epic-OSCOLA sketch; decisions D1–D3 open | TBD |
 | [refactor-and-standards-memo.md](./refactor-and-standards-memo.md) | Done: Phases A–E merged and shipped in 1.12.0 (root-file split, shared JS/PHP style data, Psalm level 2, `checkJs`, large-file splits); answers the leaner-root-file todo | TBD |
 
 ## Archived plans

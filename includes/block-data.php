@@ -143,17 +143,42 @@ function bibliography_builder_get_citation_display_text( $citation ) {
 /**
  * Build plain-text bibliography output from stored citation display strings.
  *
+ * An OSCOLA list with tables of cases, legislation, or treaties prints each
+ * group's label on its own line before its entries, with a blank line
+ * between groups, as `buildPlainTextBibliographyContent()` does. Entries
+ * keep their stored order within each group.
+ *
  * @param array $bibliography Bibliography record.
  * @return string
  */
 function bibliography_builder_build_plain_text( $bibliography ) {
-	$lines = array();
+	$lines  = static function ( array $citations ): string {
+		$texts = array();
 
-	foreach ( $bibliography['citations'] as $citation ) {
-		$lines[] = bibliography_builder_strip_bounded( bibliography_builder_get_citation_display_text( $citation ) );
+		foreach ( $citations as $citation ) {
+			$texts[] = bibliography_builder_strip_bounded(
+				bibliography_builder_get_citation_display_text( is_array( $citation ) ? $citation : array() )
+			);
+		}
+
+		return implode( "\n", $texts );
+	};
+	$groups = bibliography_builder_save_group_citations(
+		$bibliography['citations'],
+		isset( $bibliography['citationStyle'] ) ? $bibliography['citationStyle'] : null
+	);
+
+	if ( null === $groups ) {
+		return $lines( $bibliography['citations'] ) . "\n";
 	}
 
-	return implode( "\n", $lines ) . "\n";
+	$sections = array();
+
+	foreach ( $groups as $group ) {
+		$sections[] = $group['label'] . "\n" . $lines( $group['citations'] );
+	}
+
+	return implode( "\n\n", $sections ) . "\n";
 }
 
 /**

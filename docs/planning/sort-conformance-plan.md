@@ -965,8 +965,8 @@ Affordance available for IEEE/Vancouver users; QA matrix updated.
 
 ## Epic-OSCOLA (REQ-S5 deferred) — Grouped bibliography support
 
-**Status:** Deferred — own epic, scoped but not scheduled
-**Effort estimate:** L (2–3 weeks)
+**Status:** Next build, confirmed by the owner 2026-10-28. The design is now [oscola-grouping-plan.md](./oscola-grouping-plan.md), which replaces the scope sketch below: OSCOLA 5 §1.7 keeps secondary sources in one list, so the five-group split sketched here is superseded
+**Effort estimate:** L (2–3 weeks); about 1.5–2 weeks in the new plan
 **Dependencies:** All sprints 1–4 complete
 
 ### Background
@@ -1306,3 +1306,4 @@ The four questions originally deferred during planning have been resolved per Co
 | 2026-05-07 | Consistency cleanup: updated Epic-OSCOLA and conformance-summary wording to match DOC1's two-readme scope and T1c's static-plus-mutation parity scope | Plan revision |
 | 2026-10-13 | Status refreshed: Sprints 1–4 shipped in 1.2.0; listed the remaining open items | Status review |
 | 2026-10-23 | Follow-up audit in Appendix C: Unicode normalization pinned, the PHP `save()` port checked against every coordination case, Chicago notes-bibliography and MLA 9 added to the citeproc-js conformance run, REQ-F1 items resolved; year suffixes and ABNT articles raised as product decisions | Status review |
+| 2026-10-28 | Epic-OSCOLA scheduled; its design moved to `oscola-grouping-plan.md` after OSCOLA 5 §§1.6–1.7 showed the five-group sketch splits secondary sources | Status review |

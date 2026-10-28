@@ -32,6 +32,7 @@ export default function save( { attributes } ) {
 		particleAwareSort: true,
 		localeArticles: true,
 		notesAuthorChains: true,
+		sourceGroups: true,
 		citeExportData: true,
 		canonicalDoiUrl: true,
 		jsonLdItemList: true,

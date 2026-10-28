@@ -79,7 +79,9 @@ Default: **Chicago Manual of Style — Notes-Bibliography**. Nine styles are sel
 -   OSCOLA
 -   ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025)
 
-Changing styles reformats all auto-generated citations and preserves manual display overrides. Future phases may extend this to custom CSL file uploads.
+Changing styles reformats all auto-generated citations and preserves manual display overrides.
+
+OSCOLA bibliographies that hold primary sources are saved as OSCOLA 5's tables: cases, legislation, treaties, then secondary sources, each with a label one level below the block heading. Other styles, and OSCOLA bibliographies of secondary sources alone, are one list. Future phases may extend this to custom CSL file uploads.
 
 ---
 

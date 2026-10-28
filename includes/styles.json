@@ -133,7 +133,30 @@
 			"yearSuffix": false,
 			"locale": "en-GB",
 			"inlineCitationMode": "note",
-			"headingPlaceholder": "Bibliography"
+			"headingPlaceholder": "Bibliography",
+			"groups": [
+				{
+					"key": "cases",
+					"label": "Table of Cases",
+					"types": [ "legal_case" ],
+					"romanTitles": true
+				},
+				{
+					"key": "legislation",
+					"label": "Table of Legislation",
+					"types": [ "legislation", "bill", "regulation" ]
+				},
+				{
+					"key": "treaties",
+					"label": "Table of Treaties",
+					"types": [ "treaty" ]
+				},
+				{
+					"key": "secondary",
+					"label": "Secondary Sources",
+					"types": "*"
+				}
+			]
 		},
 		"abnt": {
 			"label": "ABNT",

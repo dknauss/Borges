@@ -467,9 +467,16 @@ function bibliography_builder_save_block_props( $attrs ) {
  * @param bool  $output_coins Whether to emit COinS.
  * @param bool  $cite_export  Whether to emit the Cite / Export data.
  * @param mixed $repeated_prefix MLA author names to show as three hyphens, or null.
+ * @param bool  $roman_titles Leave titles roman (a table of cases).
  * @return string
  */
-function bibliography_builder_save_entry( $citation, $output_coins, $cite_export, $repeated_prefix = null ) {
+function bibliography_builder_save_entry(
+	$citation,
+	$output_coins,
+	$cite_export,
+	$repeated_prefix = null,
+	$roman_titles = false
+) {
 	$csl        = bibliography_builder_citation_csl( $citation );
 	$link_label = '';
 
@@ -484,7 +491,7 @@ function bibliography_builder_save_entry( $citation, $output_coins, $cite_export
 	$link_label = bibliography_builder_save_strip_inline_markup( $link_label );
 
 	$text     = '';
-	$segments = bibliography_builder_save_display_segments( $citation );
+	$segments = bibliography_builder_save_display_segments( $citation, $roman_titles );
 
 	if ( is_string( $repeated_prefix ) && array() !== $segments && ! $segments[0]['italic']
 		&& 0 === strncmp( $segments[0]['text'], $repeated_prefix, strlen( $repeated_prefix ) ) ) {
@@ -566,6 +573,18 @@ function bibliography_builder_save_heading_tag( $heading_level ) {
 }
 
 /**
+ * The element for group labels: one level below the block heading, or `p`
+ * when the block heading is `p` or `h6`. `getGroupLabelTag()` from
+ * `src/lib/bibliography-groups.js`.
+ *
+ * @param string $heading_tag The block heading's tag.
+ * @return string
+ */
+function bibliography_builder_save_group_label_tag( $heading_tag ) {
+	return 1 === preg_match( '/^h([2-5])$/', $heading_tag, $level ) ? 'h' . ( (int) $level[1] + 1 ) : 'p';
+}
+
+/**
  * Render the block's saved inner HTML from its attributes, as the current
  * `save()` would. Returns an empty string when there are no citations, where
  * `save()` returns null.
@@ -619,23 +638,77 @@ function bibliography_builder_render_save_markup( $attrs ) {
 			. '</' . $heading_tag . '>';
 	}
 
-	$html .= '<' . $list_tag . ' class="' . bibliography_builder_escape_save_attribute(
-		'bibliography-builder-list bibliography-builder-list-' . ( 'ol' === $list_tag ? 'numeric' : 'unordered' )
-		. ' bibliography-builder-list-' . $style_css
-	) . '">';
+	$list_class = 'bibliography-builder-list bibliography-builder-list-'
+		. ( 'ol' === $list_tag ? 'numeric' : 'unordered' )
+		. ' bibliography-builder-list-' . $style_css;
+	$sorted     = array_values( $sorted );
+	$repeated   = bibliography_builder_save_repeated_author_prefixes( $sorted, $style_key );
+	$entry      =
+		/**
+		 * One entry, with its MLA repeated-author prefix from the flat order.
+		 *
+		 * @param mixed $citation     Citation record.
+		 * @param bool  $roman_titles Leave titles roman.
+		 * @return string
+		 */
+		static function ( $citation, bool $roman_titles ) use ( $sorted, $repeated, $flag ): string {
+			$index = array_search( $citation, $sorted, true );
 
-	$repeated = bibliography_builder_save_repeated_author_prefixes( $sorted, $style_key );
+			return bibliography_builder_save_entry(
+				is_array( $citation ) ? $citation : array(),
+				$flag( 'outputCoins', false ),
+				$flag( 'outputCiteExport', false ),
+				false === $index ? null : $repeated[ $index ],
+				$roman_titles
+			);
+		};
+	$groups = bibliography_builder_save_group_citations( $sorted, $style_key );
 
-	foreach ( array_values( $sorted ) as $index => $citation ) {
-		$html .= bibliography_builder_save_entry(
-			is_array( $citation ) ? $citation : array(),
-			$flag( 'outputCoins', false ),
-			$flag( 'outputCiteExport', false ),
-			$repeated[ $index ]
+	if ( null === $groups ) {
+		$html .= '<' . $list_tag . bibliography_builder_save_attributes( array( 'class' => $list_class ) ) . '>';
+
+		foreach ( $sorted as $citation ) {
+			$html .= $entry( $citation, false );
+		}
+
+		$html .= '</' . $list_tag . '>';
+	} else {
+		// One label and list per group (`groupCitations()`), the label one
+		// level below the block heading (`getGroupLabelTag()`).
+		$label_tag = bibliography_builder_save_group_label_tag(
+			bibliography_builder_save_heading_tag( isset( $attrs['headingLevel'] ) ? $attrs['headingLevel'] : 0 )
 		);
-	}
 
-	$html .= '</' . $list_tag . '>';
+		foreach ( $groups as $group ) {
+			$first    = $group['citations'][0];
+			$first_id = is_array( $first ) && array_key_exists( 'id', $first )
+				? bibliography_builder_js_string( $first['id'] )
+				: 'undefined';
+			$label_id = 'bibliography-group-' . $group['key'] . '-' . $first_id;
+
+			$html .= '<div class="' . bibliography_builder_escape_save_attribute(
+				'bibliography-builder-group bibliography-builder-group-' . $group['key']
+			) . '">'
+				. '<' . $label_tag . bibliography_builder_save_attributes(
+					array(
+						'class' => 'bibliography-builder-group-heading',
+						'id'    => $label_id,
+					)
+				) . '>' . bibliography_builder_escape_save_text( $group['label'] ) . '</' . $label_tag . '>'
+				. '<' . $list_tag . bibliography_builder_save_attributes(
+					array(
+						'class'           => $list_class,
+						'aria-labelledby' => $label_id,
+					)
+				) . '>';
+
+			foreach ( $group['citations'] as $citation ) {
+				$html .= $entry( $citation, $group['romanTitles'] );
+			}
+
+			$html .= '</' . $list_tag . '></div>';
+		}
+	}
 
 	if ( $flag( 'outputJsonLd', true ) ) {
 		$html .= '<script type="application/ld+json">'

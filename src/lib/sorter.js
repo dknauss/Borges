@@ -1,6 +1,11 @@
 import styleData from '../../includes/styles.json';
 import { getStyleDefinition } from './formatting';
 import { demotesParticleForSort, getSortFamily } from './name-particles';
+import {
+	getGroupIndex,
+	getStyleGroups,
+	getTypeRank,
+} from './bibliography-groups';
 
 const ENGLISH_ARTICLES = /^(a|an|the)\s+/i;
 
@@ -273,6 +278,77 @@ function compareAuthorDate( a, b, locale, rule ) {
 	return compareTitles( a, b, locale, rule );
 }
 
+const CASE_NAME_PREFIX = /^(in\s+)?re\s+/i;
+
+/**
+ * The key a primary source files under in an OSCOLA table: its title's first
+ * significant word. Titles sort without a leading article, as elsewhere, and
+ * a case name also without "Re" (or "In re"), so "Re Farquar's Estate" files
+ * under F and "Re F" under F (OSCOLA 5 §1.6.2). The text shown is unchanged.
+ *
+ * @param {Object} csl      CSL-JSON item.
+ * @param {RegExp} articles Leading-article pattern.
+ * @return {string} Lowercase filing key.
+ */
+function getFilingTitle( csl = {}, articles = ENGLISH_ARTICLES ) {
+	const title = getTitleSort( csl, articles );
+
+	return csl.type === 'legal_case'
+		? title.replace( CASE_NAME_PREFIX, '' )
+		: title;
+}
+
+/**
+ * Wrap a family comparator so a style with source-type groups lists each
+ * group in turn (OSCOLA: cases, legislation, treaties, secondary sources).
+ *
+ * Inside a table of primary sources entries file by title, which is how
+ * tables are ordered (OSCOLA 5 §§1.6.2–1.6.3), with types in the order the
+ * group lists them, so statutory instruments follow statutes. Secondary
+ * sources keep the family order.
+ *
+ * @param {(a: Object, b: Object) => number} comparator Family comparator.
+ * @param {Array}                            groups     Groups from getStyleGroups().
+ * @param {string}                           locale     Style locale.
+ * @param {Object}                           rule       Sort rule from sortCitations().
+ * @return {(a: Object, b: Object) => number} Grouped comparator.
+ */
+function withSourceGroups( comparator, groups, locale, rule ) {
+	const groupOf = ( csl ) => {
+		const index = getGroupIndex( csl, groups );
+		return index === -1 ? groups.length : index;
+	};
+
+	return ( a, b ) => {
+		const groupA = groupOf( a.csl );
+		const groupB = groupOf( b.csl );
+
+		if ( groupA !== groupB ) {
+			return groupA - groupB;
+		}
+
+		const group = groups[ groupA ];
+
+		if ( ! group || group.types === '*' ) {
+			return comparator( a, b );
+		}
+
+		const rankCmp =
+			getTypeRank( a.csl, group ) - getTypeRank( b.csl, group );
+		if ( rankCmp !== 0 ) {
+			return rankCmp;
+		}
+
+		const titleCmp = getFilingTitle( a.csl, rule.articles ).localeCompare(
+			getFilingTitle( b.csl, rule.articles ),
+			locale,
+			{ sensitivity: 'base' }
+		);
+
+		return titleCmp !== 0 ? titleCmp : comparator( a, b );
+	};
+}
+
 function getComparatorForFamily( family, locale, rule ) {
 	switch ( family ) {
 		case 'notes':
@@ -304,6 +380,11 @@ function getComparatorForFamily( family, locale, rule ) {
  * the same name. `notesAuthorChains: false` compares only the first
  * contributor's family name, the order save() produced before 1.16.0.
  *
+ * A style with source-type groups (OSCOLA) lists its tables of primary
+ * sources first, each in turn, then the secondary sources (see
+ * src/lib/bibliography-groups.js). `sourceGroups: false` sorts them all as
+ * one list, the order save() produced through 1.16.0.
+ *
  * @param {Array}   citations                   Array of citation objects.
  * @param {string}  styleKey                    Citation style key.
  * @param {Object}  [options]                   Options.
@@ -315,6 +396,8 @@ function getComparatorForFamily( family, locale, rule ) {
  * @param {boolean} [options.notesAuthorChains] Compare whole author chains
  *                                              in notes styles
  *                                              (default true).
+ * @param {boolean} [options.sourceGroups]      List the style's source-type
+ *                                              groups in turn (default true).
  * @return {Array} Sorted citation array.
  *
  * @since 0.1.0
@@ -326,6 +409,7 @@ export function sortCitations(
 		particleAwareSort = true,
 		localeArticles = true,
 		notesAuthorChains = true,
+		sourceGroups = true,
 	} = {}
 ) {
 	const style = getStyleDefinition( styleKey );
@@ -343,11 +427,20 @@ export function sortCitations(
 			: ENGLISH_ARTICLES,
 		authorChains: notesAuthorChains,
 	};
-	const comparator = getComparatorForFamily( style.family, locale, rule );
+	const familyComparator = getComparatorForFamily(
+		style.family,
+		locale,
+		rule
+	);
 
-	if ( comparator === null ) {
+	if ( familyComparator === null ) {
 		return [ ...citations ];
 	}
+
+	const groups = sourceGroups ? getStyleGroups( styleKey ) : null;
+	const comparator = groups
+		? withSourceGroups( familyComparator, groups, locale, rule )
+		: familyComparator;
 
 	return [ ...citations ]
 		.map( ( citation, index ) => ( { citation, index } ) )

@@ -2,10 +2,8 @@ import styleData from '../../../includes/styles.json';
 
 // The style table lives in includes/styles.json, which the PHP formatter, the
 // PHP save() port, and the write routes read too.
-//
-// TODO(Epic-OSCOLA): OSCOLA convention requires bibliographies grouped by source type
-// (cases, legislation, books, articles, online). Currently rendered as a single
-// alphabetized list. See docs/planning/sort-conformance-plan.md Epic-OSCOLA section.
+// A style's `groups` (OSCOLA's tables of cases, legislation, and treaties)
+// are read by src/lib/bibliography-groups.js.
 
 export const DEFAULT_CITATION_STYLE = styleData.defaultStyle;
 

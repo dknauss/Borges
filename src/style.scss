@@ -19,6 +19,20 @@
 	text-align: center;
 }
 
+/* OSCOLA tables: a label above each group's list (bibliography-groups.js). */
+.wp-block-bibliography-builder-bibliography {
+
+	.bibliography-builder-group + .bibliography-builder-group {
+		margin-top: 1.5em;
+	}
+
+	.bibliography-builder-group-heading {
+		margin: 0 0 0.75em;
+		font-size: 1.1em;
+		font-weight: 600;
+	}
+}
+
 .wp-block-bibliography-builder-bibliography .bibliography-builder-list > li {
 	margin-bottom: 0.75em;
 }

@@ -74,6 +74,8 @@ final class SortCoordinationTest extends TestCase {
 	 * that order: the formatter renders each entry on its own and matches it
 	 * back by ID, and the saved order comes from the JS sorter and its PHP
 	 * port, which test_static_cases_match_expected_order_in_save_port() checks.
+	 * CSL has no way to put OSCOLA's tables of cases and legislation before
+	 * the secondary sources either, so that order is Borges's own too.
 	 *
 	 * @return string[]
 	 */
@@ -82,6 +84,7 @@ final class SortCoordinationTest extends TestCase {
 			'case-13-s4-leading-article-strip',
 			'case-18-unicode-normalization',
 			'case-abnt-leading-articles',
+			'case-oscola-tables-first',
 		);
 	}
 
