@@ -36,7 +36,12 @@ import Validator from '@adobe/structured-data-validator';
 import {
 	OUT_DIR,
 	VARIANTS,
+	FIELDS,
 	approxTokens,
+	familyNames,
+	matches,
+	truth,
+	o200kTokens,
 	corpus as readCorpus,
 	isbnDigits,
 	manifest as readManifest,
@@ -49,77 +54,6 @@ const require = createRequire( import.meta.url );
 const SCHEMA_VERSION = '29.3';
 const SCHEMA_FILE = join( OUT_DIR, `schemaorg-${ SCHEMA_VERSION }.jsonld` );
 const SCHEMA_URL = `https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/${ SCHEMA_VERSION }/schemaorg-current-https.jsonld`;
-
-export const FIELDS = [
-	'title',
-	'authors',
-	'year',
-	'container',
-	'doi',
-	'isbn',
-	'pages',
-	'publisher',
-];
-
-/* ------------------------------------------------------------------ */
-/* Ground truth                                                        */
-/* ------------------------------------------------------------------ */
-
-const familyNames = ( names ) =>
-	( names || [] )
-		.map( ( name ) =>
-			norm( name.family || name.literal || name.name || '' )
-		)
-		.filter( Boolean );
-
-/**
- * The fields the corpus item actually has; only these are scored.
- *
- * @param {Object} item CSL-JSON corpus item.
- */
-function truth( item ) {
-	return {
-		title: item.title,
-		authors: item.author ? familyNames( item.author ) : undefined,
-		year: item.issued
-			? String( item.issued[ 'date-parts' ][ 0 ][ 0 ] )
-			: undefined,
-		container: item[ 'container-title' ],
-		doi: item.DOI,
-		isbn: item.ISBN,
-		pages: item.page,
-		publisher: item.publisher,
-	};
-}
-
-/**
- * Whether an extracted value matches the truth for a field.
- *
- * @param {string}  field    Field name from FIELDS.
- * @param {unknown} expected Ground-truth value.
- * @param {unknown} actual   Extracted value.
- */
-function matches( field, expected, actual ) {
-	if ( actual === undefined || actual === null || actual === '' ) {
-		return false;
-	}
-	if ( field === 'authors' ) {
-		// Every author, once each, in order: a reader that drops, repeats,
-		// or reorders a name gets the author list wrong.
-		const got = ( actual || [] ).map( norm );
-		return (
-			got.length === expected.length &&
-			expected.every( ( name, index ) => got[ index ] === name )
-		);
-	}
-	if ( field === 'isbn' ) {
-		return isbnDigits( expected ) === isbnDigits( actual );
-	}
-	if ( field === 'year' ) {
-		return String( actual ).slice( 0, 4 ) === expected;
-	}
-	return norm( expected ) === norm( actual );
-}
 
 /* ------------------------------------------------------------------ */
 /* Readers: each turns one layer of one entry into the same fields     */
@@ -554,6 +488,7 @@ function readerMode( html, url, items ) {
 	return {
 		markdownBytes: Buffer.byteLength( markdown ),
 		markdownTokens: approxTokens( markdown ),
+		markdownTokensO200k: o200kTokens( markdown ),
 		titlesKept: titles,
 		doiLinksKept: doiLinks,
 		jsonLdKept: /application\/ld\+json|"@context"/.test( markdown ),
@@ -716,6 +651,7 @@ async function main() {
 					pageGzipBytes: gzipSync( html ).length,
 					blockBytes: Buffer.byteLength( block ),
 					pageTokens: approxTokens( html ),
+					pageTokensO200k: o200kTokens( html ),
 					visibleTextBytes: Buffer.byteLength(
 						visibleText( document )
 					),

@@ -108,6 +108,25 @@ export const isbnDigits = ( value ) =>
  */
 export const approxTokens = ( text ) => Math.round( text.length / 4 );
 
+let encoder;
+
+/**
+ * Tokens as OpenAI's o200k_base encoding counts them (GPT-4o and later),
+ * a real tokenizer to set beside the four-characters rule of thumb. Other
+ * models' tokenizers differ, but by far less than the rule of thumb does.
+ *
+ * @param {string} text Text to count.
+ * @return {number} Token count.
+ */
+export function o200kTokens( text ) {
+	if ( ! encoder ) {
+		const require = createRequire( import.meta.url );
+		const { Tiktoken } = require( 'js-tiktoken/lite' );
+		encoder = new Tiktoken( require( 'js-tiktoken/ranks/o200k_base' ) );
+	}
+	return encoder.encode( text ).length;
+}
+
 /*
  * Zotero's own OpenURL reader, which its browser connector uses for COinS,
  * from github.com/zotero/utilities at a fixed commit. It is AGPL-licensed, so
@@ -184,4 +203,75 @@ export function zoteroAuthors( openUrl, title ) {
 	} catch {
 		return null;
 	}
+}
+
+export const FIELDS = [
+	'title',
+	'authors',
+	'year',
+	'container',
+	'doi',
+	'isbn',
+	'pages',
+	'publisher',
+];
+
+/* ------------------------------------------------------------------ */
+/* Ground truth                                                        */
+/* ------------------------------------------------------------------ */
+
+export const familyNames = ( names ) =>
+	( names || [] )
+		.map( ( name ) =>
+			norm( name.family || name.literal || name.name || '' )
+		)
+		.filter( Boolean );
+
+/**
+ * The fields the corpus item actually has; only these are scored.
+ *
+ * @param {Object} item CSL-JSON corpus item.
+ */
+export function truth( item ) {
+	return {
+		title: item.title,
+		authors: item.author ? familyNames( item.author ) : undefined,
+		year: item.issued
+			? String( item.issued[ 'date-parts' ][ 0 ][ 0 ] )
+			: undefined,
+		container: item[ 'container-title' ],
+		doi: item.DOI,
+		isbn: item.ISBN,
+		pages: item.page,
+		publisher: item.publisher,
+	};
+}
+
+/**
+ * Whether an extracted value matches the truth for a field.
+ *
+ * @param {string}  field    Field name from FIELDS.
+ * @param {unknown} expected Ground-truth value.
+ * @param {unknown} actual   Extracted value.
+ */
+export function matches( field, expected, actual ) {
+	if ( actual === undefined || actual === null || actual === '' ) {
+		return false;
+	}
+	if ( field === 'authors' ) {
+		// Every author, once each, in order: a reader that drops, repeats,
+		// or reorders a name gets the author list wrong.
+		const got = ( actual || [] ).map( norm );
+		return (
+			got.length === expected.length &&
+			expected.every( ( name, index ) => got[ index ] === name )
+		);
+	}
+	if ( field === 'isbn' ) {
+		return isbnDigits( expected ) === isbnDigits( actual );
+	}
+	if ( field === 'year' ) {
+		return String( actual ).slice( 0, 4 ) === expected;
+	}
+	return norm( expected ) === norm( actual );
 }

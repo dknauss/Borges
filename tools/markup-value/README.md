@@ -92,8 +92,11 @@ model of that reader.
 
 **Reader mode** (`readerMode`). Mozilla Readability then Turndown, the
 HTML-to-Markdown step many LLM ingestion pipelines use: what survives, and its
-size. Token counts are the four-characters-per-token rule of thumb, not a
-real tokenizer.
+size. Token counts come two ways: `*TokensO200k` with a real tokenizer,
+`o200k_base` (the encoding OpenAI's GPT-4o and later models use, via
+`js-tiktoken`), and `*Tokens` with the four-characters-per-token rule of thumb,
+kept for comparison. Markup tokenizes worse than prose, so the real counts run
+about a third higher on the pages; other model families' tokenizers differ.
 
 **Browser** (`browser`). axe-core violations, roles from Chromium's
 accessibility tree (entries, landmarks, links announced as a bare URL), and
@@ -104,6 +107,22 @@ crawlers fetch pages.
 Lighthouse's SEO checks are page-level basics and do not score structured
 data, so identical scores are expected; they show the block costs nothing on
 the checks Lighthouse does make.
+
+## Citation parser baseline
+
+`npm run parser` asks what a reader gets from the plain list without any
+markup, by running a citation parser over it: AnyStyle
+(<https://anystyle.io>, BSD-2-Clause), a machine-learning parser. It takes
+the plain page's entries, one per line, parses them to CSL-JSON, and scores
+the result against the same ground truth and matching rules as `perLayer`,
+writing `out/parser-baseline.json` with each miss. It needs Ruby and
+`gem install anystyle-cli`; set `ANYSTYLE` to the executable if it is not on
+`PATH`. It is not part of `npm run all`, which needs only Node and PHP.
+
+A parser's result depends on the style and on what the style prints, so it is
+an upper bound for plain text in this one style, not a property of plain
+HTML: APA prints no ISBN, and a reference with no clear publisher slot
+(a preprint server, a conference organizer) is where it guesses.
 
 ## What it cannot measure
 
@@ -117,5 +136,6 @@ the checks Lighthouse does make.
   `scripts/test-zotero-interop.sh` runs the real Zotero translation server in
   Docker.
 - **A language model's extraction.** The "unlabeled" share is where a model
-  would do the work a structured layer does for free; how well a given model
-  does it is not measured here.
+  or a parser does the work a structured layer does for free. `npm run parser`
+  measures one parser; how well a given language model does it is not
+  measured here.
