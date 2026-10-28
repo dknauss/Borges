@@ -30,6 +30,7 @@ export function CitationEntryBody( {
 	handleStructuredEditStart,
 	handleStructuredFieldChange,
 	isNumericFamily = false,
+	romanTitles = false,
 	onEditTextChange,
 	onMoveDown,
 	onMoveUp,
@@ -99,6 +100,7 @@ export function CitationEntryBody( {
 							quoteAwareItalics: true,
 							urlAwareItalics: true,
 							quoteFoldedItalics: true,
+							romanTitles,
 						} ).map( ( segment, index ) =>
 							segment.italic ? (
 								<i key={ `${ citation.id }-${ index }` }>

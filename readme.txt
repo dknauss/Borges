@@ -135,7 +135,7 @@ Because output is static, your bibliographies remain intact as plain HTML even i
 
 == Known Limitations ==
 
-**OSCOLA grouped bibliography** — OSCOLA convention requires the bibliography to be divided into source-type groups (cases, legislation, books, articles, online sources). Borges currently renders a single alphabetized list regardless of style. A dismissible notice in the editor explains this when OSCOLA is selected. Grouped-bibliography support is planned for a future release.
+**OSCOLA tables** — An OSCOLA bibliography that cites cases, legislation, or treaties lists them in a table of cases, a table of legislation, and a table of treaties before the secondary sources, as OSCOLA 5 asks. The tables are not divided by jurisdiction, statutes have no sub-entries for the sections cited, and "R v" cases file under R, which is OSCOLA's rule for works other than criminal-law works.
 
 == Development ==
 

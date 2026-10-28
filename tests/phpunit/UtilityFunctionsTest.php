@@ -175,6 +175,30 @@ final class UtilityFunctionsTest extends TestCase {
 		$this->assertSame( "\n", bibliography_builder_build_plain_text( $bibliography ) );
 	}
 
+	public function test_build_plain_text_labels_oscola_tables() {
+		$bibliography = array(
+			'citationStyle' => 'oscola',
+			'citations'     => array(
+				array(
+					'csl'           => array( 'type' => 'book' ),
+					'formattedText' => 'Bradley A, Constitutional Law (OUP 2018)',
+				),
+				array(
+					'csl'           => array( 'type' => 'legal_case' ),
+					'formattedText' => 'Donoghue v Stevenson [1932] AC 562 (HL)',
+				),
+			),
+		);
+
+		$this->assertSame(
+			"Table of Cases\nDonoghue v Stevenson [1932] AC 562 (HL)\n\nSecondary Sources\nBradley A, Constitutional Law (OUP 2018)\n",
+			bibliography_builder_build_plain_text( $bibliography )
+		);
+
+		$bibliography['citations'] = array( $bibliography['citations'][0] );
+		$this->assertSame( "Bradley A, Constitutional Law (OUP 2018)\n", bibliography_builder_build_plain_text( $bibliography ) );
+	}
+
 	// ── bibliography_builder_build_csl_json ──────────────────────────────────
 
 	public function test_build_csl_json_extracts_csl_arrays() {

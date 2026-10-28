@@ -1,6 +1,7 @@
 import { getPlainDisplayText } from './formatting';
 import { getPrimaryIdentifierValue } from './csl-utils';
 import { sortCitations } from './sorter';
+import { groupCitations } from './bibliography-groups';
 
 export const CSL_JSON_EXPORT_FILENAME = 'bibliography.csl.json';
 export const CSL_JSON_EXPORT_MIME_TYPE =
@@ -203,6 +204,10 @@ export function cslToRisEntry( csl ) {
 /**
  * Build plain-text bibliography content.
  *
+ * An OSCOLA list with tables of cases, legislation, or treaties prints each
+ * group's label on its own line before its entries, with a blank line
+ * between groups, as the page shows them (see bibliography-groups.js).
+ *
  * @param {Array}  citations     Array of citation objects.
  * @param {string} citationStyle Citation style key.
  * @return {string} Plain-text bibliography.
@@ -211,10 +216,21 @@ export function cslToRisEntry( csl ) {
  */
 export function buildPlainTextBibliographyContent( citations, citationStyle ) {
 	const sortedCitations = sortCitations( citations, citationStyle );
+	const lines = ( list ) =>
+		list
+			.map( ( citation ) => getPlainDisplayText( citation ) )
+			.join( '\n' );
+	const groups = groupCitations( sortedCitations, citationStyle );
 
-	return `${ sortedCitations
-		.map( ( citation ) => getPlainDisplayText( citation ) )
-		.join( '\n' ) }\n`;
+	if ( groups ) {
+		return `${ groups
+			.map(
+				( group ) => `${ group.label }\n${ lines( group.citations ) }`
+			)
+			.join( '\n\n' ) }\n`;
+	}
+
+	return `${ lines( sortedCitations ) }\n`;
 }
 
 /**

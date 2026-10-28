@@ -47,6 +47,7 @@ import {
 import { HEADING_LEVELS, getHeadingTag } from './lib/heading-level';
 import { SUPPORTED_INPUT_MESSAGE } from './lib/input-support';
 import { sortCitations } from './lib/sorter';
+import { getGroupLabelTag, groupCitations } from './lib/bibliography-groups';
 import { computeExportStrings } from './hooks/compute-export-strings';
 import {
 	MAX_CITATIONS_PER_BIBLIOGRAPHY,
@@ -109,8 +110,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	} bibliography-builder-list-${ citationStyle }`;
 	const [ inputValue, setInputValue ] = useState( '' );
 	const [ isLoading, setIsLoading ] = useState( false );
-	const [ oscolaNoticeDismissed, setOscolaNoticeDismissed ] =
-		useState( false );
 	const [ softCapNoticeDismissed, setSoftCapNoticeDismissed ] =
 		useState( false );
 	const atSoftCap =
@@ -122,6 +121,11 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		() => sortCitations( citations, citationStyle ),
 		[ citationStyle, citations ]
 	);
+	const citationGroups = useMemo(
+		() => groupCitations( sortedCitations, citationStyle ),
+		[ citationStyle, sortedCitations ]
+	);
+	const GroupLabelTag = getGroupLabelTag( HeadingTag );
 	const citationsRef = useRef( citations );
 	const asyncOperationRef = useRef( 0 );
 	const { announce, clearNotice, currentNotice, noticeVersion } =
@@ -589,6 +593,52 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		? __( 'Hide citation form', 'borges-bibliography-builder' )
 		: __( 'Show citation form', 'borges-bibliography-builder' );
 
+	const renderEntry = ( citation, index, romanTitles = false ) => (
+		/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */
+		<li
+			key={ citation.id }
+			ref={ ( node ) => setEntryRef( citation.id, node ) }
+			className={ getEntryClassName( citation ) }
+			tabIndex={ -1 }
+			onKeyDown={ ( event ) =>
+				handleEntryReorderKeyDown( event, citation )
+			}
+		>
+			<CitationEntryBody
+				citation={ citation }
+				citationWarnings={ getCitationWarnings( citation ) }
+				editText={ editText }
+				editingId={ editingId }
+				getEntryLabel={ getEntryLabel }
+				getStructuredFieldId={ getStructuredFieldId }
+				handleDelete={ handleDelete }
+				handleCopyCitation={ handleCopyCitation }
+				handleEntryActivate={ () => handleEntryActivate( citation ) }
+				handleEditConfirm={ handleEditConfirm }
+				handleEditKeyDown={ handleEditKeyDown }
+				handleEditStart={ handleEditStart }
+				handleResetAutoFormat={ handleResetAutoFormat }
+				handleStructuredEditCancel={ handleStructuredEditCancel }
+				handleStructuredEditSave={ handleStructuredEditSave }
+				handleStructuredEditStart={ handleStructuredEditStart }
+				handleStructuredFieldChange={ handleStructuredFieldChange }
+				isNumericFamily={ isNumericFamily }
+				romanTitles={ romanTitles }
+				canMoveUp={ index > 0 }
+				canMoveDown={ index < sortedCitations.length - 1 }
+				onMoveUp={ () =>
+					moveCitationUp( citation.id, getEntryLabel( citation ) )
+				}
+				onMoveDown={ () =>
+					moveCitationDown( citation.id, getEntryLabel( citation ) )
+				}
+				onEditTextChange={ setEditText }
+				structuredEditingId={ structuredEditingId }
+				structuredFields={ structuredFields }
+			/>
+		</li>
+	);
+
 	return (
 		<div { ...blockProps }>
 			<BlockControls>
@@ -665,18 +715,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 									)
 						}
 					/>
-					{ citationStyle === 'oscola' && ! oscolaNoticeDismissed && (
-						<Notice
-							status="info"
-							isDismissible
-							onRemove={ () => setOscolaNoticeDismissed( true ) }
-						>
-							{ __(
-								'OSCOLA convention groups bibliographies by source type (cases, legislation, books, articles, online). Borges currently renders a single alphabetized list. See Epic-OSCOLA for tracking.',
-								'borges-bibliography-builder'
-							) }
-						</Notice>
-					) }
 					<TextControl
 						label={ __(
 							'Visible Heading',
@@ -918,74 +956,44 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			) }
 
 			{ /* Citation list */ }
-			{ sortedCitations.length > 0 && (
-				<ListTag className={ listClassName } aria-busy={ isLoading }>
-					{ sortedCitations.map( ( citation, index ) => (
-						/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */
-						<li
-							key={ citation.id }
-							ref={ ( node ) => setEntryRef( citation.id, node ) }
-							className={ getEntryClassName( citation ) }
-							tabIndex={ -1 }
-							onKeyDown={ ( event ) =>
-								handleEntryReorderKeyDown( event, citation )
-							}
+			{ sortedCitations.length > 0 &&
+				( citationGroups ? (
+					citationGroups.map( ( group ) => (
+						<div
+							key={ group.key }
+							className={ `bibliography-builder-group bibliography-builder-group-${ group.key }` }
 						>
-							<CitationEntryBody
-								citation={ citation }
-								citationWarnings={ getCitationWarnings(
-									citation
+							<GroupLabelTag
+								className="bibliography-builder-group-heading"
+								id={ `bibliography-group-${ group.key }-${ group.citations[ 0 ].id }` }
+							>
+								{ group.label }
+							</GroupLabelTag>
+							<ListTag
+								className={ listClassName }
+								aria-busy={ isLoading }
+								aria-labelledby={ `bibliography-group-${ group.key }-${ group.citations[ 0 ].id }` }
+							>
+								{ group.citations.map( ( citation ) =>
+									renderEntry(
+										citation,
+										sortedCitations.indexOf( citation ),
+										group.romanTitles
+									)
 								) }
-								editText={ editText }
-								editingId={ editingId }
-								getEntryLabel={ getEntryLabel }
-								getStructuredFieldId={ getStructuredFieldId }
-								handleDelete={ handleDelete }
-								handleCopyCitation={ handleCopyCitation }
-								handleEntryActivate={ () =>
-									handleEntryActivate( citation )
-								}
-								handleEditConfirm={ handleEditConfirm }
-								handleEditKeyDown={ handleEditKeyDown }
-								handleEditStart={ handleEditStart }
-								handleResetAutoFormat={ handleResetAutoFormat }
-								handleStructuredEditCancel={
-									handleStructuredEditCancel
-								}
-								handleStructuredEditSave={
-									handleStructuredEditSave
-								}
-								handleStructuredEditStart={
-									handleStructuredEditStart
-								}
-								handleStructuredFieldChange={
-									handleStructuredFieldChange
-								}
-								isNumericFamily={ isNumericFamily }
-								canMoveUp={ index > 0 }
-								canMoveDown={
-									index < sortedCitations.length - 1
-								}
-								onMoveUp={ () =>
-									moveCitationUp(
-										citation.id,
-										getEntryLabel( citation )
-									)
-								}
-								onMoveDown={ () =>
-									moveCitationDown(
-										citation.id,
-										getEntryLabel( citation )
-									)
-								}
-								onEditTextChange={ setEditText }
-								structuredEditingId={ structuredEditingId }
-								structuredFields={ structuredFields }
-							/>
-						</li>
-					) ) }
-				</ListTag>
-			) }
+							</ListTag>
+						</div>
+					) )
+				) : (
+					<ListTag
+						className={ listClassName }
+						aria-busy={ isLoading }
+					>
+						{ sortedCitations.map( ( citation, index ) =>
+							renderEntry( citation, index )
+						) }
+					</ListTag>
+				) ) }
 		</div>
 	);
 }

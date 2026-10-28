@@ -3372,35 +3372,80 @@ describe( 'Edit focus management', () => {
 	} );
 } );
 
-describe( 'OSCOLA inspector notice', () => {
-	it( 'shows OSCOLA limitation notice when OSCOLA style is selected', () => {
+describe( 'OSCOLA tables', () => {
+	const oscolaCitations = [
+		{
+			id: 'craig',
+			csl: {
+				type: 'article-journal',
+				title: 'Theory',
+				author: [ { family: 'Craig', given: 'Paul' } ],
+			},
+			formattedText: 'Craig P, ‘Theory’ [2005] PL 440',
+			displayOverride: null,
+		},
+		{
+			id: 'donoghue',
+			csl: { type: 'legal_case', title: 'Donoghue v Stevenson' },
+			formattedText: 'Donoghue v Stevenson [1932] AC 562 (HL)',
+			displayOverride: null,
+		},
+	];
+
+	it( 'no longer shows the single-list limitation notice', () => {
 		render( <EditHarness initialStyle="oscola" /> );
-
-		expect(
-			screen.getByText( /OSCOLA convention groups bibliographies/i )
-		).toBeInTheDocument();
-	} );
-
-	it( 'does not show OSCOLA notice for non-OSCOLA styles', () => {
-		render( <EditHarness initialStyle="chicago-notes-bibliography" /> );
 
 		expect(
 			screen.queryByText( /OSCOLA convention groups bibliographies/i )
 		).not.toBeInTheDocument();
 	} );
 
-	it( 'hides OSCOLA notice after dismissal', () => {
-		render( <EditHarness initialStyle="oscola" /> );
+	it( 'lists the table of cases before the secondary sources, as save() does', () => {
+		const { container } = render(
+			<EditHarness
+				initialStyle="oscola"
+				initialHeadingText="Bibliography"
+				initialHeadingLevel={ 2 }
+				initialCitations={ oscolaCitations }
+			/>
+		);
+
+		const labels = [
+			...container.querySelectorAll(
+				'.bibliography-builder-group-heading'
+			),
+		];
+		expect( labels.map( ( label ) => label.tagName ) ).toEqual( [
+			'H3',
+			'H3',
+		] );
+		expect( labels.map( ( label ) => label.textContent ) ).toEqual( [
+			'Table of Cases',
+			'Secondary Sources',
+		] );
+
+		const cases = screen.getByRole( 'list', { name: 'Table of Cases' } );
+		expect( cases ).toHaveTextContent( 'Donoghue v Stevenson' );
+		expect( cases.querySelector( 'i' ) ).toBeNull();
+		expect(
+			screen.getByRole( 'list', { name: 'Secondary Sources' } )
+		).toHaveTextContent( 'Craig P' );
+	} );
+
+	it( 'keeps one list for OSCOLA secondary sources alone', () => {
+		const { container } = render(
+			<EditHarness
+				initialStyle="oscola"
+				initialCitations={ [ oscolaCitations[ 0 ] ] }
+			/>
+		);
 
 		expect(
-			screen.getByText( /OSCOLA convention groups bibliographies/i )
-		).toBeInTheDocument();
-
-		fireEvent.click( screen.getByRole( 'button', { name: /dismiss/i } ) );
-
+			container.querySelector( '.bibliography-builder-group' )
+		).toBeNull();
 		expect(
-			screen.queryByText( /OSCOLA convention groups bibliographies/i )
-		).not.toBeInTheDocument();
+			container.querySelectorAll( '.bibliography-builder-list' )
+		).toHaveLength( 1 );
 	} );
 } );
 

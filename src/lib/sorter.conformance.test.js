@@ -7,7 +7,7 @@ const EXCLUDED_STYLE_KEYS = {
 	ieee: 'Numeric family preserves user order; citeproc-js order is not the product behavior.',
 	vancouver:
 		'Numeric family preserves user order; citeproc-js order is not the product behavior.',
-	oscola: 'OSCOLA grouped bibliography is deferred to Epic-OSCOLA and is out of current conformance scope.',
+	oscola: 'OSCOLA lists its tables of cases, legislation, and treaties before the secondary sources (OSCOLA 5 §§1.6–1.7), which CSL cannot express.',
 };
 
 const CONFORMANCE_STYLE_KEYS = Object.values( STYLE_DEFINITIONS )
