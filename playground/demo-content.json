@@ -62,6 +62,30 @@
 			]
 		},
 		{
+			"title": "RIS",
+			"description": "Records exported from Zotero, Mendeley, EndNote, or another reference manager, one or many. Each record runs from <code>TY  -</code> to <code>ER  -</code>.",
+			"samples": [
+				{
+					"format": "ris",
+					"input": "TY  - BOOK\nAU  - Kuhn, Thomas S.\nTI  - The Structure of Scientific Revolutions\nPY  - 1962\nPB  - University of Chicago Press\nCY  - Chicago\nER  - "
+				},
+				{
+					"format": "ris",
+					"input": "TY  - CHAP\nAU  - Geertz, Clifford\nTI  - Thick Description: Toward an Interpretive Theory of Culture\nT2  - The Interpretation of Cultures\nPY  - 1973\nSP  - 3\nEP  - 30\nPB  - Basic Books\nCY  - New York\nER  - "
+				}
+			]
+		},
+		{
+			"title": "CSL-JSON",
+			"description": "A reference manager’s CSL JSON export, or a CSL-JSON file downloaded from Borges. Paste a CSL-JSON document on its own, not mixed with other samples.",
+			"samples": [
+				{
+					"format": "csl-json",
+					"input": "[{\"type\": \"book\", \"title\": \"Orientalism\", \"author\": [{\"family\": \"Said\", \"given\": \"Edward W.\"}], \"publisher\": \"Pantheon Books\", \"publisher-place\": \"New York\", \"issued\": {\"date-parts\": [[1978]]}}]"
+				}
+			]
+		},
+		{
 			"title": "Formatted citations",
 			"description": "Plain-text citations for books, journal articles, chapters, and webpages, in Chicago or APA shape. A citation that contains a DOI, PMID, PMCID, or arXiv ID is looked up by that identifier instead.",
 			"samples": [
@@ -94,27 +118,31 @@
 		}
 	],
 	"features": [
-		"<strong>Citation Style</strong> (block sidebar): switch among Chicago, APA, MLA, Harvard, IEEE, Vancouver, OSCOLA, ABNT, and more. Generated text reformats; your manual edits are kept.",
+		"<strong>Citation Style</strong> (block sidebar): nine styles, Chicago Notes-Bibliography and Author-Date, APA 7, MLA 9, Harvard, IEEE, Vancouver, OSCOLA, and ABNT. Section 3 has an example of each. Switching reformats the generated text and keeps your manual edits.",
+		"<strong>Heading</strong>: type the heading in the block, and choose its level in the sidebar: <em>Paragraph</em> (the default, styled text) or H2 to H6. Leave it empty for no heading.",
 		"<strong>Edit fields</strong>: click any citation to correct its authors, title, year, DOI, and other fields; only the fields you change are saved. The pencil edits the displayed text instead, and <em>Reset edits</em> restores the generated text.",
 		"<strong>Manual Entry</strong>: next to <em>Paste / Import</em>, add a citation field by field when there is nothing to paste.",
 		"<strong>Duplicates</strong>: paste a DOI that is already in the list; it is skipped, not added twice.",
 		"<strong>Order</strong>: notes and author-date styles sort alphabetically. Numeric styles (IEEE, Vancouver) keep your order; use <em>Move citation up/down</em>.",
 		"<strong>Exports</strong> (block toolbar): copy the bibliography as text, or download BibTeX, BibLaTeX, RIS, or CSL-JSON.",
-		"<strong>Per-entry Cite / Export</strong> (sidebar): gives readers copy and download links under each entry on the published page.",
-		"<strong>Machine-readable output</strong> (sidebar): JSON-LD for search engines (on by default), COinS for Zotero, and embedded CSL-JSON.",
+		"<strong>Per-entry Cite / Export</strong> (sidebar, off by default): gives readers copy and download links under each entry on the published page. The Chicago Notes-Bibliography example in section 3 has it on.",
+		"<strong>Machine-readable output</strong> (sidebar): JSON-LD for search engines (on by default), COinS for Zotero, and embedded CSL-JSON. The examples in section 3 show each on and off.",
+		"<strong>Block settings</strong>: like other blocks, a bibliography takes an HTML anchor and extra CSS classes (<em>Advanced</em>), a font size, and top and bottom margin and padding.",
 		"<strong>Front end</strong>: use <em>View Post</em> to see the published bibliography, then open <a href=\"/wp-json/bibliography/v1/posts/1/bibliographies\">its read-only REST data</a>."
 	],
 	"examples": [
 		{
-			"title": "Chicago notes-bibliography, with Cite / Export",
-			"description": "A book, a chapter, a journal article, and a webpage, sorted alphabetically. Per-entry Cite / Export and COinS are on; view the post to try the copy and download links.",
+			"title": "Chicago Notes-Bibliography: per-entry Cite / Export",
+			"description": "A book, a chapter, a journal article, and a webpage, sorted alphabetically. <a href=\"/?p=1#demo-chicago-notes\">View the published page</a> and open <em>Cite / Export</em> under any entry to copy it or download it as RIS, BibTeX, BibLaTeX, or CSL-JSON. <strong>Settings:</strong> Per-entry Cite / Export on, and every machine-readable layer on (JSON-LD, COinS, embedded CSL-JSON); heading <em>Works Cited</em> at level H4.",
 			"attributes": {
 				"bibliographyId": "demo-chicago-notes",
 				"citationStyle": "chicago-notes-bibliography",
 				"headingText": "Works Cited",
+				"headingLevel": 4,
+				"anchor": "demo-chicago-notes",
 				"outputJsonLd": true,
 				"outputCoins": true,
-				"outputCslJson": false,
+				"outputCslJson": true,
 				"outputCiteExport": true
 			},
 			"citations": [
@@ -183,8 +211,57 @@
 			]
 		},
 		{
-			"title": "APA 7 author-date",
-			"description": "Journal articles and an arXiv preprint in APA style, with DOIs as links.",
+			"title": "Chicago Author-Date: same author, same year",
+			"description": "Three of Einstein’s 1905 papers. Author-date styles letter works by one author in one year (1905a, 1905b, 1905c) so in-text citations stay unambiguous. <strong>Settings:</strong> the default output (JSON-LD only); heading <em>References</em> at level H4.",
+			"attributes": {
+				"bibliographyId": "demo-chicago-author-date",
+				"citationStyle": "chicago-author-date",
+				"headingText": "References",
+				"headingLevel": 4,
+				"outputJsonLd": true,
+				"outputCoins": false,
+				"outputCslJson": false,
+				"outputCiteExport": false
+			},
+			"citations": [
+				{
+					"type": "article-journal",
+					"title": "Zur Elektrodynamik bewegter Körper",
+					"author": [{ "family": "Einstein", "given": "Albert" }],
+					"container-title": "Annalen der Physik",
+					"volume": "322",
+					"issue": "10",
+					"page": "891-921",
+					"DOI": "10.1002/andp.19053221004",
+					"issued": { "date-parts": [[1905]] }
+				},
+				{
+					"type": "article-journal",
+					"title": "Über einen die Erzeugung und Verwandlung des Lichtes betreffenden heuristischen Gesichtspunkt",
+					"author": [{ "family": "Einstein", "given": "Albert" }],
+					"container-title": "Annalen der Physik",
+					"volume": "322",
+					"issue": "6",
+					"page": "132-148",
+					"DOI": "10.1002/andp.19053220607",
+					"issued": { "date-parts": [[1905]] }
+				},
+				{
+					"type": "article-journal",
+					"title": "Ist die Trägheit eines Körpers von seinem Energieinhalt abhängig?",
+					"author": [{ "family": "Einstein", "given": "Albert" }],
+					"container-title": "Annalen der Physik",
+					"volume": "323",
+					"issue": "13",
+					"page": "639-641",
+					"DOI": "10.1002/andp.19053231314",
+					"issued": { "date-parts": [[1905]] }
+				}
+			]
+		},
+		{
+			"title": "APA 7",
+			"description": "Journal articles and an arXiv preprint, with DOIs as links. <strong>Settings:</strong> the defaults (JSON-LD only), with the heading at the default <em>Paragraph</em> level, so it is styled text rather than a heading.",
 			"attributes": {
 				"bibliographyId": "demo-apa-7",
 				"citationStyle": "apa-7",
@@ -242,8 +319,94 @@
 			]
 		},
 		{
-			"title": "IEEE numeric",
-			"description": "Numbered entries keep the order you give them. Select the block and use Move citation up/down to renumber.",
+			"title": "MLA 9: repeated authors",
+			"description": "Works by one author list the name once, then three hyphens, as MLA asks. <strong>Settings:</strong> COinS on, so Zotero’s browser connector can save every entry; heading <em>Works Cited</em> at level H4.",
+			"attributes": {
+				"bibliographyId": "demo-mla-9",
+				"citationStyle": "mla-9",
+				"headingText": "Works Cited",
+				"headingLevel": 4,
+				"outputJsonLd": true,
+				"outputCoins": true,
+				"outputCslJson": false,
+				"outputCiteExport": false
+			},
+			"citations": [
+				{
+					"type": "book",
+					"title": "Labyrinths: Selected Stories and Other Writings",
+					"author": [{ "family": "Borges", "given": "Jorge Luis" }],
+					"editor": [
+						{ "family": "Yates", "given": "Donald A." },
+						{ "family": "Irby", "given": "James E." }
+					],
+					"publisher": "New Directions",
+					"publisher-place": "New York",
+					"issued": { "date-parts": [[1962]] }
+				},
+				{
+					"type": "book",
+					"title": "Ficciones",
+					"author": [{ "family": "Borges", "given": "Jorge Luis" }],
+					"editor": [{ "family": "Kerrigan", "given": "Anthony" }],
+					"publisher": "Grove Press",
+					"publisher-place": "New York",
+					"issued": { "date-parts": [[1962]] }
+				},
+				{
+					"type": "book",
+					"title": "Other Inquisitions, 1937–1952",
+					"author": [{ "family": "Borges", "given": "Jorge Luis" }],
+					"translator": [{ "family": "Simms", "given": "Ruth L. C." }],
+					"publisher": "University of Texas Press",
+					"publisher-place": "Austin",
+					"issued": { "date-parts": [[1964]] }
+				},
+				{
+					"type": "book",
+					"title": "Borges: A Life",
+					"author": [{ "family": "Woodall", "given": "James" }],
+					"publisher": "Basic Books",
+					"publisher-place": "New York",
+					"issued": { "date-parts": [[1996]] }
+				}
+			]
+		},
+		{
+			"title": "Harvard: a bare list",
+			"description": "No heading and no machine-readable output: just the entries. <strong>Settings:</strong> heading left empty, JSON-LD off, and the block’s <em>Typography</em> font size set to Small.",
+			"attributes": {
+				"bibliographyId": "demo-harvard",
+				"citationStyle": "harvard",
+				"headingText": "",
+				"fontSize": "small",
+				"outputJsonLd": false,
+				"outputCoins": false,
+				"outputCslJson": false,
+				"outputCiteExport": false
+			},
+			"citations": [
+				{
+					"type": "book",
+					"title": "Governing the Commons: The Evolution of Institutions for Collective Action",
+					"author": [{ "family": "Ostrom", "given": "Elinor" }],
+					"publisher": "Cambridge University Press",
+					"publisher-place": "Cambridge",
+					"issued": { "date-parts": [[1990]] }
+				},
+				{
+					"type": "book",
+					"title": "The Structure of Scientific Revolutions",
+					"author": [{ "family": "Kuhn", "given": "Thomas S." }],
+					"publisher": "University of Chicago Press",
+					"publisher-place": "Chicago",
+					"issued": { "date-parts": [[1962]] }
+				}
+			]
+		},
+		{
+			"title": "IEEE",
+			"description": "Numbered entries keep the order you give them. Select the block and use <em>Move citation up/down</em> to renumber. <strong>Settings:</strong> the defaults, in a numbered list.",
 			"attributes": {
 				"bibliographyId": "demo-ieee",
 				"citationStyle": "ieee",
@@ -286,6 +449,168 @@
 					"page": "97-111",
 					"DOI": "10.1093/comjnl/27.2.97",
 					"issued": { "date-parts": [[1984]] }
+				}
+			]
+		},
+		{
+			"title": "Vancouver: biomedical references",
+			"description": "Numbered entries with PubMed IDs; authors after the sixth become “et al.” <strong>Settings:</strong> embedded CSL-JSON on (a <code>script</code> tag other tools can read), beside the default JSON-LD; heading <em>References</em> at level H4.",
+			"attributes": {
+				"bibliographyId": "demo-vancouver",
+				"citationStyle": "vancouver",
+				"headingText": "References",
+				"headingLevel": 4,
+				"outputJsonLd": true,
+				"outputCoins": false,
+				"outputCslJson": true,
+				"outputCiteExport": false
+			},
+			"citations": [
+				{
+					"type": "article-journal",
+					"title": "Molecular structure of nucleic acids: a structure for deoxyribose nucleic acid",
+					"author": [
+						{ "family": "Watson", "given": "J. D." },
+						{ "family": "Crick", "given": "F. H. C." }
+					],
+					"container-title": "Nature",
+					"container-title-short": "Nature",
+					"volume": "171",
+					"issue": "4356",
+					"page": "737-738",
+					"DOI": "10.1038/171737a0",
+					"PMID": "13054692",
+					"issued": { "date-parts": [[1953, 4, 25]] }
+				},
+				{
+					"type": "article-journal",
+					"title": "Highly accurate protein structure prediction with AlphaFold",
+					"author": [
+						{ "family": "Jumper", "given": "John" },
+						{ "family": "Evans", "given": "Richard" },
+						{ "family": "Pritzel", "given": "Alexander" },
+						{ "family": "Green", "given": "Tim" },
+						{ "family": "Figurnov", "given": "Michael" },
+						{ "family": "Ronneberger", "given": "Olaf" },
+						{ "family": "Tunyasuvunakool", "given": "Kathryn" }
+					],
+					"container-title": "Nature",
+					"container-title-short": "Nature",
+					"volume": "596",
+					"issue": "7873",
+					"page": "583-589",
+					"DOI": "10.1038/s41586-021-03819-2",
+					"PMID": "34265844",
+					"issued": { "date-parts": [[2021, 8]] }
+				}
+			]
+		},
+		{
+			"title": "OSCOLA: tables of cases, legislation, and treaties",
+			"description": "OSCOLA 5 lists primary sources in their own tables before the secondary sources. Each table’s label sits one level below the block heading. <strong>Settings:</strong> the default output; heading <em>Bibliography</em> at level H4, so the tables are labeled at H5.",
+			"attributes": {
+				"bibliographyId": "demo-oscola",
+				"citationStyle": "oscola",
+				"headingText": "Bibliography",
+				"headingLevel": 4,
+				"outputJsonLd": true,
+				"outputCoins": false,
+				"outputCslJson": false,
+				"outputCiteExport": false
+			},
+			"citations": [
+				{
+					"type": "legal_case",
+					"title": "Donoghue v Stevenson",
+					"container-title": "AC",
+					"issued": { "date-parts": [[1932]] },
+					"number": "562"
+				},
+				{
+					"type": "legal_case",
+					"title": "Carlill v Carbolic Smoke Ball Co",
+					"container-title": "1 QB",
+					"issued": { "date-parts": [[1893]] },
+					"number": "256"
+				},
+				{
+					"type": "legislation",
+					"title": "Human Rights Act",
+					"issued": { "date-parts": [[1998]] }
+				},
+				{
+					"type": "regulation",
+					"title": "Air Navigation Order 2016",
+					"number": "SI 2016/765"
+				},
+				{
+					"type": "treaty",
+					"title": "Convention for the Protection of Human Rights and Fundamental Freedoms",
+					"container-title": "213 UNTS",
+					"page": "221",
+					"issued": { "date-parts": [[1950, 11, 4]] }
+				},
+				{
+					"type": "book",
+					"title": "Constitutional and Administrative Law",
+					"author": [
+						{ "family": "Bradley", "given": "A. W." },
+						{ "family": "Ewing", "given": "K. D." },
+						{ "family": "Knight", "given": "C. J. S." }
+					],
+					"edition": "17",
+					"publisher": "Pearson",
+					"issued": { "date-parts": [[2018]] }
+				},
+				{
+					"type": "article-journal",
+					"title": "The Rule of Law",
+					"author": [{ "family": "Bingham", "given": "Tom" }],
+					"container-title": "Cambridge Law Journal",
+					"container-title-short": "CLJ",
+					"volume": "66",
+					"page": "67",
+					"issued": { "date-parts": [[2007]] }
+				}
+			]
+		},
+		{
+			"title": "ABNT: Brazilian references",
+			"description": "Surnames in capitals, with particles such as “de” after the given name, sorted by surname. <strong>Settings:</strong> the default output; heading <em>Referências</em> at level H4.",
+			"attributes": {
+				"bibliographyId": "demo-abnt",
+				"citationStyle": "abnt",
+				"headingText": "Referências",
+				"headingLevel": 4,
+				"outputJsonLd": true,
+				"outputCoins": false,
+				"outputCslJson": false,
+				"outputCiteExport": false
+			},
+			"citations": [
+				{
+					"type": "book",
+					"title": "O alienista",
+					"author": [{ "family": "Assis", "given": "Machado", "dropping-particle": "de" }],
+					"publisher": "Ática",
+					"publisher-place": "São Paulo",
+					"issued": { "date-parts": [[1997]] }
+				},
+				{
+					"type": "book",
+					"title": "Raízes do Brasil",
+					"author": [{ "family": "Holanda", "given": "Sérgio Buarque", "dropping-particle": "de" }],
+					"publisher": "José Olympio",
+					"publisher-place": "Rio de Janeiro",
+					"issued": { "date-parts": [[1936]] }
+				},
+				{
+					"type": "book",
+					"title": "Casa-grande & senzala",
+					"author": [{ "family": "Freyre", "given": "Gilberto" }],
+					"publisher": "Maia & Schmidt",
+					"publisher-place": "Rio de Janeiro",
+					"issued": { "date-parts": [[1933]] }
 				}
 			]
 		}
