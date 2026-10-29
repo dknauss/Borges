@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **OSCOLA repeated authors.** In an OSCOLA bibliography, one author's works now come oldest first, then by title within a year, and after the first of them the author's name becomes a double em dash, as OSCOLA 5 §1.7 asks: "—— Punishment and Responsibility (OUP 1968)". Works the author wrote with others follow, by co-author, with the dash for the first author only ("—— and Honoré AM, Causation in the Law (OUP 1959)"). Screen readers hear the name, as with MLA's hyphens. The dash is saved as two U+2014 characters, which WordPress's typography filter leaves alone. It applies only when the entries start with the name exactly as OSCOLA writes it, so manual display text and anything in doubt keep the full name.
+
+### Fixed
+
+- Two undated works by the same author now sort by title in author-date styles (APA, Chicago author-date, Harvard, ABNT). The editor kept them in the order they were added while the PHP port of `save()` (write routes, bulk reformat, WP-CLI) sorted them by title, so a bibliography written through the REST API could differ from the one the editor saves.
+
 ### Changed
+
+- The changes above alter saved markup for OSCOLA lists with two works by one author and for author-date lists with two undated works by one author, so the block gains a deprecation for the 1.17.0 shape (`tests/fixtures/deprecations/v17-deprecated.html`). Existing blocks stay valid.
 
 - `tools/markup-value` scores Borges's own free-text parser beside AnyStyle (`npm run borges-parser`, and in `npm run sweep`), and `docs/free-text-parsing.md` records the comparison, what AnyStyle is, and why Borges doesn't run it.
 

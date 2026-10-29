@@ -428,18 +428,48 @@ Current operational note (2026-05-04):
 -   Post-launch cleanup should keep GitHub README, WordPress.org `readme.txt`,
     SPEC, release assets, and SVN output aligned.
 
-## Immediate next-task priorities (2026-10-28, after 1.17.0)
+## Immediate next-task priorities (2026-10-29, after 1.17.0)
 
 Epic-OSCOLA shipped in 1.17.0 (#220), with the markup-value fixes from the
-same round (#223, #225, #227). Nothing else is in progress, so the free-text
-parser comes next:
+same round (#223, #225, #227); OSCOLA 5 §1.7's repeated-author dash and
+chronological order followed on 2026-10-29. On 2026-10-29 the owner put the
+most-used styles first. Usage share, from Mendeley Cite's October 2023 data
+(skewed to the sciences, so MLA and Chicago notes are under-counted): APA 56%,
+IEEE 10%, Vancouver 8%, Nature 3%, AMA 2%, Cite Them Right Harvard 2%, ABNT 1%,
+Chicago author-date 1%.
 
 1. **Keep CI, runtime, and Playground hygiene green** (standing)
     - release-package output, WordPress.org artifact alignment, citeproc-php
       PHP deprecations, runtime smoke lanes, the `main-preview` Playground
       build, and the live resolver checks (DOI, PMID, PMCID, arXiv, ISBN,
       catalog, Internet Archive, Abilities)
-2. **Free-text parser: Harvard, IEEE, Vancouver, OSCOLA, and ABNT input**
+2. **Style conformance for the most-used styles**, in this order:
+    1. **Journal abbreviations for IEEE and Vancouver** (both manuals require
+       them; about 19% of use). Use the record's short container title
+       (`container-title-short`, from PubMed's ISO abbreviation or CrossRef's
+       `short-container-title`) when it has one; print the full title
+       otherwise.
+    2. **APA sentence case** for article, chapter, and book titles (56% of
+       use; Vancouver needs it too). Needs a design: proper nouns cannot be
+       recovered from Title Case, and the block re-applies italics by finding
+       the stored title in the formatted entry.
+    3. **Nature and AMA**, the most-used styles Borges does not ship. Written
+       from their manuals, as the other styles were; AMA is close to
+       Vancouver.
+    4. **Smaller manual gaps found on 2026-10-29** by reading the goldens
+       against the manuals: Chicago and MLA print page ranges in full
+       ("301–322", where CMOS 9.64 and MLA 9 abbreviate to "301–22"; needs a
+       post-process, since any `page-range-format` makes citeproc-php join
+       with a hyphen); Chicago web pages put a period before the date where
+       CMOS uses a comma; thesis labels ("[Doctoral dissertation, …]" in APA,
+       "PhD dissertation" in MLA, "PhD thesis" in Cite Them Right); cases and
+       statutes in non-OSCOLA styles print in UK form, not Bluebook.
+    5. **An independent check of the goldens**: a dev-only tool that renders
+       the golden corpus with citeproc-js and the official CSL styles (CC
+       BY-SA, so downloaded at a pinned commit and never bundled, like the
+       Zotero COinS check in `tools/markup-value`) and reports differences
+       for review.
+3. **Free-text parser: Harvard, IEEE, Vancouver, OSCOLA, and ABNT input**
    ([#231](https://github.com/dknauss/Borges/issues/231)). The parser reads
    only Chicago and APA-like citations; `docs/free-text-parsing.md` has the
    measurements. Phased, stopping wherever `npm run sweep` shows collisions:
@@ -447,13 +477,13 @@ parser comes next:
    Harvard; (2) IEEE and Vancouver; (3) ABNT; (4) OSCOLA secondary sources.
    The risk is degrading APA and Chicago, not size: the parser is in the lazy
    import chunk, never on the front end
-3. **Decide whether the write routes should ever be on by default.** The
+4. **Decide whether the write routes should ever be on by default.** The
    Phase 05 memo left this open; today they need the
    `bibliography_builder_enable_write_routes` filter
-4. **Remaining WP-CLI commands**: `preview`, and the per-citation write
+5. **Remaining WP-CLI commands**: `preview`, and the per-citation write
    commands. See "WP-CLI commands" below
-5. **Phase 06 CI optimization**: measure first
-6. **First-wave official language packs** — pending todo
+6. **Phase 06 CI optimization**: measure first
+7. **First-wave official language packs** — pending todo
    `2026-06-14-coordinate-first-wave-language-packs.md`
     - push fr_FR, de_DE, es_ES, pt_BR, and ja on translate.wordpress.org
       against the current Stable strings. Human-translator work, not code

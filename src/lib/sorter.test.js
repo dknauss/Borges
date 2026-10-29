@@ -748,3 +748,54 @@ describe( 'sortCitations', () => {
 		);
 	} );
 } );
+
+describe( 'sortCitations: one author’s works', () => {
+	const hart = [ { family: 'Hart', given: 'H. L. A.' } ];
+	const book = ( id, title, year ) => ( {
+		id,
+		csl: {
+			type: 'book',
+			title,
+			author: hart,
+			...( year ? { issued: { 'date-parts': [ [ year ] ] } } : {} ),
+		},
+	} );
+	const works = [
+		book( 'undated', 'A Late Note' ),
+		book( 'punishment', 'Punishment and Responsibility', 1968 ),
+		book( 'concept', 'The Concept of Law', 1961 ),
+	];
+	const ids = ( list ) => list.map( ( citation ) => citation.id );
+
+	it( 'lists them oldest first in OSCOLA, undated last (OSCOLA 5 §1.7)', () => {
+		expect( ids( sortCitations( works, 'oscola' ) ) ).toEqual( [
+			'concept',
+			'punishment',
+			'undated',
+		] );
+		// By title, as save() did through 1.17.0, and as Chicago still does.
+		expect(
+			ids(
+				sortCitations( works, 'oscola', {
+					chronologicalAuthors: false,
+				} )
+			)
+		).toEqual( [ 'concept', 'undated', 'punishment' ] );
+		expect(
+			ids( sortCitations( works, 'chicago-notes-bibliography' ) )
+		).toEqual( [ 'concept', 'undated', 'punishment' ] );
+	} );
+
+	it( 'sorts undated works by title in author-date styles', () => {
+		const undated = [ book( 'beta', 'Beta' ), book( 'alpha', 'Alpha' ) ];
+
+		expect( ids( sortCitations( undated, 'apa-7' ) ) ).toEqual( [
+			'alpha',
+			'beta',
+		] );
+		// Stored order, as save() kept it through 1.17.0.
+		expect(
+			ids( sortCitations( undated, 'apa-7', { undatedTitles: false } ) )
+		).toEqual( [ 'beta', 'alpha' ] );
+	} );
+} );

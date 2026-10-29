@@ -2250,6 +2250,185 @@
 					}
 				]
 			}
+		},
+		{
+			"name": "oscola-repeated-authors",
+			"note": "OSCOLA 5 §1.7: one author's works oldest first, then the co-authored ones; a double em dash replaces the first author after the first work, dropping the comma before a title. A different author with the same family name keeps the full name, and the dash never crosses from the table of cases.",
+			"attributes": {
+				"citationStyle": "oscola",
+				"headingText": "Bibliography",
+				"citations": [
+					{
+						"id": "punishment",
+						"csl": {
+							"type": "book",
+							"title": "Punishment and Responsibility",
+							"author": [
+								{
+									"family": "Hart",
+									"given": "H. L. A."
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										1968
+									]
+								]
+							}
+						},
+						"formattedText": "Hart HLA, Punishment and Responsibility (OUP 1968)"
+					},
+					{
+						"id": "causation",
+						"csl": {
+							"type": "book",
+							"title": "Causation in the Law",
+							"author": [
+								{
+									"family": "Hart",
+									"given": "H. L. A."
+								},
+								{
+									"family": "Honoré",
+									"given": "A. M."
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										1959
+									]
+								]
+							}
+						},
+						"formattedText": "Hart HLA and Honoré AM, Causation in the Law (OUP 1959)"
+					},
+					{
+						"id": "concept",
+						"csl": {
+							"type": "book",
+							"title": "The Concept of Law",
+							"author": [
+								{
+									"family": "Hart",
+									"given": "H. L. A."
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										1961
+									]
+								]
+							}
+						},
+						"formattedText": "Hart HLA, The Concept of Law (Clarendon Press 1961)"
+					},
+					{
+						"id": "essays",
+						"csl": {
+							"type": "book",
+							"title": "Essays in Jurisprudence and Philosophy",
+							"author": [
+								{
+									"family": "Hart",
+									"given": "H. L. A."
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										1983
+									]
+								]
+							}
+						},
+						"formattedText": "Hart HLA, Essays in Jurisprudence and Philosophy (OUP 1983)"
+					},
+					{
+						"id": "other-hart",
+						"csl": {
+							"type": "book",
+							"title": "Law and Order",
+							"author": [
+								{
+									"family": "Hart",
+									"given": "Jenifer"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										1950
+									]
+								]
+							}
+						},
+						"formattedText": "Hart J, Law and Order (Blackwell 1950)"
+					},
+					{
+						"id": "undated",
+						"csl": {
+							"type": "book",
+							"title": "A Late Note",
+							"author": [
+								{
+									"family": "Hart",
+									"given": "H. L. A."
+								}
+							]
+						},
+						"formattedText": "Hart HLA, A Late Note (OUP)"
+					},
+					{
+						"id": "case",
+						"csl": {
+							"type": "legal_case",
+							"title": "Hart v Hart"
+						},
+						"formattedText": "Hart v Hart [1950] 1 All ER 1"
+					}
+				]
+			}
+		},
+		{
+			"name": "apa-undated-same-author",
+			"note": "APA: two undated works by the same author sort by title, as the PHP port always did (save() through 1.17.0 kept the stored order).",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "References",
+				"citations": [
+					{
+						"id": "beta",
+						"csl": {
+							"type": "book",
+							"title": "Beta notes",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "Jane"
+								}
+							]
+						},
+						"formattedText": "Smith, J. (n.d.). <i>Beta notes</i>."
+					},
+					{
+						"id": "alpha",
+						"csl": {
+							"type": "book",
+							"title": "Alpha notes",
+							"author": [
+								{
+									"family": "Smith",
+									"given": "Jane"
+								}
+							]
+						},
+						"formattedText": "Smith, J. (n.d.). <i>Alpha notes</i>."
+					}
+				]
+			}
 		}
 	]
 }

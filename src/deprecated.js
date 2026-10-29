@@ -125,6 +125,35 @@ function migrateSortedAttributes( attributes ) {
 
 export const deprecated = [
 	{
+		// Freezes the save() shape of 1.17.0: OSCOLA listed one author's
+		// works by title with the name written out each time, where OSCOLA 5
+		// §1.7 lists them oldest first and replaces the name with a double
+		// em dash after the first. Author-date styles also kept two undated
+		// works by the same authors in stored order, where the PHP port
+		// sorted them by title.
+		attributes: deprecatedAttributes,
+		save: ( { attributes } ) =>
+			renderBibliographySave( attributes, {
+				sortEntries: true,
+				headingTag: getHeadingTag( attributes.headingLevel ),
+				entryTag: 'span',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				inlineMarkup: true,
+				quoteAwareItalics: true,
+				urlAwareItalics: true,
+				quoteFoldedItalics: true,
+				particleAwareSort: true,
+				localeArticles: true,
+				notesAuthorChains: true,
+				sourceGroups: true,
+				citeExportData: true,
+				canonicalDoiUrl: true,
+				jsonLdItemList: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			} ),
+	},
+	{
 		// Freezes the save() shape of 1.16.0: OSCOLA listed cases,
 		// legislation, and treaties in one alphabetical list with the
 		// secondary sources, where OSCOLA 5 §§1.6–1.7 puts them in tables of

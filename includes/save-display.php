@@ -520,7 +520,18 @@ function bibliography_builder_save_build_segments( $text, $ranges ) {
 	return $segments;
 }
 
-// ── MLA repeated authors: src/lib/repeated-authors.js ───────────────────────
+// ── MLA and OSCOLA repeated authors: src/lib/repeated-authors.js ────────────
+
+/**
+ * `getRepeatedAuthorMark()`: three U+2011 non-breaking hyphens (MLA), or
+ * OSCOLA's double em dash.
+ *
+ * @param mixed $style_key Citation style.
+ * @return string
+ */
+function bibliography_builder_save_repeated_author_mark( $style_key ) {
+	return 'oscola' === $style_key ? "\u{2014}\u{2014}" : "\u{2011}\u{2011}\u{2011}";
+}
 
 /**
  * `namePart()`.
@@ -540,10 +551,11 @@ function bibliography_builder_save_name_part( $name, $key ) {
 /**
  * `getAuthorKey()`.
  *
- * @param mixed $citation Citation record.
+ * @param mixed $citation   Citation record.
+ * @param bool  $first_only Key only the first author.
  * @return string|null
  */
-function bibliography_builder_save_author_key( $citation ) {
+function bibliography_builder_save_author_key( $citation, $first_only = false ) {
 	$csl     = bibliography_builder_citation_csl( $citation );
 	$authors = isset( $csl['author'] ) ? $csl['author'] : null;
 
@@ -553,6 +565,10 @@ function bibliography_builder_save_author_key( $citation ) {
 
 	$keys  = array( 'family', 'given', 'literal', 'suffix', 'dropping-particle', 'non-dropping-particle', 'ORCID' );
 	$names = array();
+
+	if ( $first_only ) {
+		$authors = array_slice( $authors, 0, 1 );
+	}
 
 	foreach ( $authors as $name ) {
 		$parts = array();
@@ -720,21 +736,77 @@ function bibliography_builder_save_is_unformatted( $citation ) {
 }
 
 /**
+ * `getFirstAuthorPrefix()`: the text OSCOLA's dash replaces, the first
+ * author as the style writes it ("Hart HLA"), with the comma the dash drops
+ * before a title ("Hart HLA,"), or null.
+ *
+ * @param mixed  $name CSL name.
+ * @param string $text Display text.
+ * @return string|null
+ */
+function bibliography_builder_save_first_author_prefix( $name, $text ) {
+	if ( '' !== bibliography_builder_save_name_part( $name, 'suffix' )
+		|| '' !== bibliography_builder_save_name_part( $name, 'dropping-particle' ) ) {
+		return null;
+	}
+
+	$literal = bibliography_builder_save_name_part( $name, 'literal' );
+	$head    = '' !== $literal
+		? $literal
+		: bibliography_builder_save_join_name_parts(
+			array(
+				bibliography_builder_save_name_part( $name, 'non-dropping-particle' ),
+				bibliography_builder_save_name_part( $name, 'family' ),
+			)
+		);
+
+	if ( '' === $head || 0 !== strncmp( $text, $head, strlen( $head ) ) ) {
+		return null;
+	}
+
+	$prefix = $head;
+
+	$after_head = substr( $text, strlen( $head ) );
+
+	if ( '' === $literal && '' !== bibliography_builder_save_name_part( $name, 'given' )
+		&& preg_match( '/^ ([^' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ',]+)/u', $after_head, $initials ) ) {
+		$prefix = $head . ' ' . $initials[1];
+	}
+
+	$rest = substr( $text, strlen( $prefix ) );
+
+	if ( 0 === strncmp( $rest, ', ', 2 ) ) {
+		return $prefix . ',';
+	}
+
+	return 0 === strncmp( $rest, ' and ', 5 ) ? $prefix : null;
+}
+
+/**
  * `getRepeatedAuthorPrefixes()`: for each citation in display order, the
- * author names MLA 9 replaces with three hyphens, or null.
+ * author names MLA 9 replaces with three hyphens, or the first author OSCOLA
+ * replaces with a double em dash, or null. OSCOLA's dash never crosses from
+ * one of its tables to the next.
  *
  * @param array  $citations Citations in display order.
  * @param string $style_key Citation style.
  * @return array<int, string|null>
  */
 function bibliography_builder_save_repeated_author_prefixes( $citations, $style_key ) {
-	$citations = array_values( $citations );
-	$prefixes  = array();
+	$citations    = array_values( $citations );
+	$prefixes     = array();
+	$first_author = 'oscola' === $style_key;
+	$groups       = $first_author ? bibliography_builder_save_style_groups( $style_key ) : null;
+	$list_of      = static function ( array $citation ) use ( $groups ): ?int {
+		return null === $groups
+			? null
+			: bibliography_builder_save_group_index( bibliography_builder_citation_csl( $citation ), $groups );
+	};
 
 	foreach ( $citations as $index => $citation ) {
 		$prefixes[ $index ] = null;
 
-		if ( 'mla-9' !== $style_key || 0 === $index ) {
+		if ( ( 'mla-9' !== $style_key && ! $first_author ) || 0 === $index ) {
 			continue;
 		}
 
@@ -755,9 +827,29 @@ function bibliography_builder_save_repeated_author_prefixes( $citations, $style_
 			continue;
 		}
 
-		$key = bibliography_builder_save_author_key( $citation );
+		$key = bibliography_builder_save_author_key( $citation, $first_author );
 
-		if ( null === $key || bibliography_builder_save_author_key( $previous ) !== $key ) {
+		if ( null === $key || bibliography_builder_save_author_key( $previous, $first_author ) !== $key
+			|| $list_of( $citation ) !== $list_of( $previous ) ) {
+			continue;
+		}
+
+		if ( $first_author ) {
+			$prefix   = bibliography_builder_save_first_author_prefix(
+				bibliography_builder_citation_csl( $citation )['author'][0],
+				bibliography_builder_save_plain_display_text( $citation )
+			);
+			$previous = bibliography_builder_save_first_author_prefix(
+				bibliography_builder_citation_csl( $previous )['author'][0],
+				bibliography_builder_save_plain_display_text( $previous )
+			);
+
+			// The same name, whatever follows it ("," or " and ").
+			if ( null !== $prefix && null !== $previous
+				&& preg_replace( '/,$/', '', $prefix ) === preg_replace( '/,$/', '', $previous ) ) {
+				$prefixes[ $index ] = $prefix;
+			}
+
 			continue;
 		}
 
