@@ -51,7 +51,10 @@ final class EmailOutputTest extends TestCase {
 		$html = bibliography_builder_portable_markup( self::current_markup() );
 
 		self::assert_portable( $html );
-		$this->assertStringContainsString( '<p class="bibliography-builder-heading">Works &amp; &lt;Sources></p>', $html );
+		$this->assertStringContainsString(
+			'<p class="bibliography-builder-heading" style="margin:0 0 0.75em;font-size:1.25em;font-weight:600;text-align:center"><strong>Works &amp; &lt;Sources></strong></p>',
+			$html
+		);
 		$this->assertStringContainsString(
 			'<li id="ref-thesis-1"><span class="bibliography-builder-entry-text" style="font-style:normal">Solo. <i>A Thesis</i>. PhD, Uni, 2019.</span></li>',
 			$html
@@ -59,6 +62,19 @@ final class EmailOutputTest extends TestCase {
 		$this->assertSame(
 			substr_count( self::current_markup(), '<li id="ref-' ),
 			substr_count( $html, 'style="font-style:normal"' )
+		);
+	}
+
+	public function test_a_real_heading_is_left_to_the_email_client(): void {
+		$html = str_replace(
+			'<p class="bibliography-builder-heading">Works &amp; &lt;Sources></p>',
+			'<h3 class="bibliography-builder-heading">Works &amp; &lt;Sources></h3>',
+			self::current_markup()
+		);
+
+		$this->assertStringContainsString(
+			'<h3 class="bibliography-builder-heading">Works &amp; &lt;Sources></h3>',
+			bibliography_builder_portable_markup( $html )
 		);
 	}
 
