@@ -81,7 +81,8 @@ function bibliography_builder_server_timing_header( $timings ) {
 	$metrics = array();
 
 	foreach ( $timings as $name => $timing ) {
-		$metric = (string) preg_replace( '/[^A-Za-z0-9_-]/', '', $name ) . ';dur=' . (string) round( $timing['dur'], 1 );
+		$metric = (string) preg_replace( '/[^A-Za-z0-9_-]/', '', $name )
+			. ';dur=' . (string) round( $timing['dur'], 1 );
 
 		if ( '' !== $timing['desc'] ) {
 			$metric .= ';desc="' . str_replace( array( '"', '\\' ), '', $timing['desc'] ) . '"';
