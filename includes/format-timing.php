@@ -68,7 +68,7 @@ function bibliography_builder_format_timing( $name = null, $ms = 0.0, $desc = ''
  * @return float
  */
 function bibliography_builder_format_timing_since( $start ) {
-	return ( microtime( true ) - $start ) * 1000;
+	return ( microtime( true ) - $start ) * 1000.0;
 }
 
 /**
@@ -81,7 +81,7 @@ function bibliography_builder_server_timing_header( $timings ) {
 	$metrics = array();
 
 	foreach ( $timings as $name => $timing ) {
-		$metric = (string) preg_replace( '/[^A-Za-z0-9_-]/', '', $name ) . ';dur=' . round( $timing['dur'], 1 );
+		$metric = (string) preg_replace( '/[^A-Za-z0-9_-]/', '', $name ) . ';dur=' . (string) round( $timing['dur'], 1 );
 
 		if ( '' !== $timing['desc'] ) {
 			$metric .= ';desc="' . str_replace( array( '"', '\\' ), '', $timing['desc'] ) . '"';

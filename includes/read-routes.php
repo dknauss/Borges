@@ -43,7 +43,7 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 	bibliography_builder_format_timing();
 
 	if ( function_exists( 'timer_float' ) ) {
-		bibliography_builder_format_timing( 'wp', timer_float() * 1000, 'WordPress before the route' );
+		bibliography_builder_format_timing( 'wp', timer_float() * 1000.0, 'WordPress before the route' );
 	}
 
 	/**
