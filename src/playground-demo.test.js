@@ -9,7 +9,8 @@ import { parsePastedInput, extractEmbeddedIdentifier } from './lib/parser';
 import { computeExportStrings } from './hooks/compute-export-strings';
 
 // No network: every resolver fails, so an identifier sample surfaces the error
-// of the backend it was routed to. BibTeX and free text parse locally.
+// of the backend it was routed to. BibTeX, RIS, CSL-JSON, and free text parse
+// locally.
 jest.mock( '@wordpress/api-fetch', () =>
 	jest.fn( () => Promise.reject( new Error( 'offline' ) ) )
 );
@@ -46,11 +47,13 @@ describe( 'Playground demo samples', () => {
 				'arxiv',
 				'bibtex',
 				'catalog',
+				'csl-json',
 				'doi',
 				'freetext',
 				'isbn',
 				'pmcid',
 				'pmid',
+				'ris',
 			].sort()
 		);
 	} );
@@ -59,7 +62,7 @@ describe( 'Playground demo samples', () => {
 		expect( samples.length ).toBeLessThanOrEqual( 50 );
 	} );
 
-	const LOCAL_FORMATS = [ 'bibtex', 'freetext' ];
+	const LOCAL_FORMATS = [ 'bibtex', 'csl-json', 'freetext', 'ris' ];
 
 	it.each(
 		samples.filter(
