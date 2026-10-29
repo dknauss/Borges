@@ -615,6 +615,54 @@ describe( 'handleStructuredEditSave guard branches', () => {
 		expect( savedCsl ).not.toHaveProperty( 'issued' );
 	} );
 
+	it( 'keeps or releases the title capitalization through its checkbox', async () => {
+		const save = async ( csl, keepTitleCase ) => {
+			const args = makeHookArgs( [ makeCitation( { csl } ) ] );
+			const { result } = renderHook( () =>
+				useCitationEditorState( args )
+			);
+
+			act( () => result.current.handleStructuredEditStart( 'cit-1' ) );
+			const loaded = result.current.structuredFields.keepTitleCase;
+			if ( keepTitleCase !== undefined ) {
+				act( () =>
+					result.current.handleStructuredFieldChange(
+						'keepTitleCase',
+						keepTitleCase
+					)
+				);
+			}
+			await act( () => result.current.handleStructuredEditSave() );
+
+			return {
+				loaded,
+				calls: args.setAttributes.mock.calls,
+			};
+		};
+		const book = { type: 'book', title: 'Darwin and Wallace' };
+
+		const checked = await save( book, true );
+		expect( checked.loaded ).toBe( false );
+		expect( checked.calls[ 0 ][ 0 ].citations[ 0 ].csl.custom ).toEqual( {
+			'borges-keep-title-case': true,
+		} );
+
+		const kept = {
+			...book,
+			custom: { 'borges-keep-title-case': true },
+		};
+		const unchecked = await save( kept, false );
+		expect( unchecked.loaded ).toBe( true );
+		expect(
+			unchecked.calls[ 0 ][ 0 ].citations[ 0 ].csl
+		).not.toHaveProperty( 'custom' );
+
+		// Left alone, the flag is untouched.
+		expect(
+			( await save( kept ) ).calls[ 0 ][ 0 ].citations[ 0 ].csl.custom
+		).toEqual( { 'borges-keep-title-case': true } );
+	} );
+
 	it( 'edits a journal article number through its own field', async () => {
 		const save = async ( csl, articleNumber ) => {
 			const args = makeHookArgs( [ makeCitation( { csl } ) ] );

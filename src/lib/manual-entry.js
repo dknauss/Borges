@@ -1,6 +1,7 @@
 import { __ } from '@wordpress/i18n';
 import { validateAndSanitizeCsl } from './csl-sanitize';
 import { createCitationId } from './citation-id';
+import { setKeepTitleCase } from './keep-title-case';
 
 export const MANUAL_ENTRY_TYPE_OPTIONS = [
 	{
@@ -41,6 +42,7 @@ export const DEFAULT_MANUAL_ENTRY_FIELDS = {
 	articleNumber: '',
 	doi: '',
 	url: '',
+	keepTitleCase: false,
 };
 
 function normalizeFieldValue( value ) {
@@ -224,7 +226,9 @@ export function buildManualCsl( fields ) {
 		};
 	}
 
-	return validateAndSanitizeCsl( csl );
+	return validateAndSanitizeCsl(
+		setKeepTitleCase( csl, Boolean( fields.keepTitleCase ) )
+	);
 }
 
 export async function createManualCitationFromCsl(

@@ -132,7 +132,8 @@ export const deprecated = [
 		// works by the same authors in stored order, where the PHP port
 		// sorted them by title. Nor was a journal abbreviation
 		// (`container-title-short`) italicized where IEEE and Vancouver print
-		// it.
+		// it, nor a title the style printed in another case (APA's sentence
+		// case).
 		attributes: deprecatedAttributes,
 		save: ( { attributes } ) =>
 			renderBibliographySave( attributes, {

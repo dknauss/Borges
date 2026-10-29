@@ -15,17 +15,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Formatter style definitions, keyed by style key, from `styles.json`.
  *
- * @return array<string, array{template: string, locale: string, family: string, yearSuffix: bool}>
+ * `sentenceCase` is the style's optional sentence-case settings, or null;
+ * see includes/sentence-case.php.
+ *
+ * @return array<string, array{
+ *     template: string,
+ *     locale: string,
+ *     family: string,
+ *     yearSuffix: bool,
+ *     sentenceCase: array|null
+ * }>
  */
 function bibliography_builder_get_formatter_style_definitions() {
 	$definitions = array();
 
 	foreach ( bibliography_builder_get_style_data()['styles'] as $key => $style ) {
 		$definitions[ $key ] = array(
-			'template'   => (string) $style['cslTemplate'],
-			'locale'     => (string) $style['locale'],
-			'family'     => (string) $style['family'],
-			'yearSuffix' => (bool) $style['yearSuffix'],
+			'template'     => (string) $style['cslTemplate'],
+			'locale'       => (string) $style['locale'],
+			'family'       => (string) $style['family'],
+			'yearSuffix'   => (bool) $style['yearSuffix'],
+			'sentenceCase' => isset( $style['sentenceCase'] ) && is_array( $style['sentenceCase'] )
+				? $style['sentenceCase']
+				: null,
 		);
 	}
 
@@ -276,7 +288,7 @@ function bibliography_builder_get_formatter_style_cache_payload( $style_key, $st
  * @return string
  */
 function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style ) {
-	$payload = array( 'version' => 5 )
+	$payload = array( 'version' => 6 )
 		+ bibliography_builder_get_formatter_style_cache_payload( $style_key, $style )
 		+ array( 'csl_items' => bibliography_builder_sort_for_cache_key( array_values( $csl_items ) ) );
 
@@ -295,7 +307,7 @@ function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $
  * @return string
  */
 function bibliography_builder_get_formatter_entry_map_key( $style_key, $style ) {
-	$payload = array( 'version' => 3 ) + bibliography_builder_get_formatter_style_cache_payload( $style_key, $style );
+	$payload = array( 'version' => 4 ) + bibliography_builder_get_formatter_style_cache_payload( $style_key, $style );
 
 	return 'entries_' . bibliography_builder_hash_cache_payload( $payload );
 }
@@ -867,6 +879,11 @@ function bibliography_builder_render_csl_items( $csl_items, $style ) {
 			is_array( $item ) ? $item : array(),
 			$demote_particle,
 			isset( $style['locale'] ) ? (string) $style['locale'] : 'en-US'
+		);
+		// Titles the style prints in sentence case (APA, Vancouver, IEEE).
+		$item_array = bibliography_builder_sentence_case_item(
+			$item_array,
+			isset( $style['sentenceCase'] ) ? $style['sentenceCase'] : null
 		);
 		if ( $strip_short && isset( $item_array['container-title-short'] )
 			&& is_string( $item_array['container-title-short'] ) ) {

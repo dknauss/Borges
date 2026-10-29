@@ -325,6 +325,25 @@ function foldQuotes( text ) {
 	return text.replace( /[‘’“”]/gu, ( mark ) => FOLDED_QUOTES[ mark ] );
 }
 
+/**
+ * Lowercase each character whose lowercase is one character, keeping the
+ * text's length, so a title is found however the style capitalized it.
+ *
+ * @param {string} text Text.
+ * @return {string} Text with each character lowercased where that keeps one character.
+ */
+function foldCase( text ) {
+	let folded = '';
+
+	for ( const character of text ) {
+		const lower = character.toLowerCase();
+
+		folded += [ ...lower ].length === 1 ? lower : character;
+	}
+
+	return folded;
+}
+
 function findLastRange(
 	text,
 	value,
@@ -484,6 +503,11 @@ function getShortContainerTitle( citation ) {
  * looked for as its abbreviation (`container-title-short`), which IEEE and
  * Vancouver print; without it, the shape save() had through 1.17.0.
  *
+ * With `caseFoldedItalics`, a title that is not in the text as stored is
+ * looked for without regard to case, since APA, Vancouver, and IEEE print
+ * titles in sentence case (see includes/sentence-case.php); without it, the
+ * shape save() had through 1.17.0.
+ *
  * With `romanTitles`, no title is italicized; only inline `<i>`/`<em>` in the
  * text is. OSCOLA's table of cases uses it: case names there are not
  * italicised (OSCOLA 5 §1.6.2).
@@ -498,6 +522,8 @@ function getShortContainerTitle( citation ) {
  *                                                  marks folded.
  * @param {boolean} [options.shortContainerItalics] Italicize a journal
  *                                                  abbreviation.
+ * @param {boolean} [options.caseFoldedItalics]     Match a title without
+ *                                                  regard to case.
  * @param {boolean} [options.romanTitles]           Leave titles roman.
  * @return {DisplaySegment[]} Array of text segments with italic flags.
  *
@@ -511,6 +537,7 @@ export function getDisplaySegments(
 		urlAwareItalics = false,
 		quoteFoldedItalics = false,
 		shortContainerItalics = false,
+		caseFoldedItalics = false,
 		romanTitles = false,
 	} = {}
 ) {
@@ -529,15 +556,48 @@ export function getDisplaySegments(
 	const urlRanges = urlAwareItalics ? getUrlRanges( displayText ) : [];
 	const searchText = quoteFoldedItalics ? foldQuotes( displayText ) : null;
 
+	const caseFoldedText = caseFoldedItalics
+		? foldCase( searchText ?? displayText )
+		: null;
+
 	for ( const value of romanTitles ? [] : getItalicizedFields( citation ) ) {
+		const needle =
+			inlineMarkup && value ? stripInlineMarkup( value ) : value;
+		const found = titleRanges.length;
+
 		addRange(
 			titleRanges,
 			displayText,
-			inlineMarkup && value ? stripInlineMarkup( value ) : value,
+			needle,
 			quoteAwareItalics,
 			urlRanges,
 			searchText
 		);
+
+		// Not as stored: perhaps as the style cased it ("The origin of
+		// species" for a stored "The Origin of Species").
+		if (
+			caseFoldedText !== null &&
+			needle &&
+			titleRanges.length === found
+		) {
+			const range = findLastRange(
+				displayText,
+				foldCase(
+					searchText
+						? foldQuotes( String( needle ) )
+						: String( needle )
+				),
+				titleRanges,
+				quoteAwareItalics,
+				urlRanges,
+				caseFoldedText
+			);
+
+			if ( range ) {
+				titleRanges.push( range );
+			}
+		}
 	}
 
 	const shortTitle =

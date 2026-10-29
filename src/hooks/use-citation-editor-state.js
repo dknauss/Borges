@@ -11,6 +11,7 @@ import {
 	normalizeUrlValue,
 	validateIdentifierFields,
 } from '../lib/manual-entry';
+import { keepsTitleCase, setKeepTitleCase } from '../lib/keep-title-case';
 import { findDuplicateCitation } from '../lib/deduplicate';
 import { sortCitations } from '../lib/sorter';
 import {
@@ -282,6 +283,7 @@ export function useCitationEditorState( {
 						: '',
 				doi: entry.csl.DOI || '',
 				url: entry.csl.URL || '',
+				keepTitleCase: keepsTitleCase( entry.csl ),
 			};
 
 			structuredEditingIdRef.current = id;
@@ -383,7 +385,7 @@ export function useCitationEditorState( {
 			fieldText( field ) !==
 				String( initialFields[ field ] ?? '' ).trim();
 
-		const updatedCsl = { ...citation.csl };
+		let updatedCsl = { ...citation.csl };
 		const textFields = [
 			[ 'title', 'title' ],
 			[ 'containerTitle', 'container-title' ],
@@ -476,6 +478,13 @@ export function useCitationEditorState( {
 			} else {
 				updatedCsl.issued = { 'date-parts': [ [ Number( year ) ] ] };
 			}
+		}
+
+		if ( isEdited( 'keepTitleCase' ) ) {
+			updatedCsl = setKeepTitleCase(
+				updatedCsl,
+				Boolean( structuredFields.keepTitleCase )
+			);
 		}
 
 		// Saving unchanged fields keeps a hand-edited display line; saving an

@@ -340,6 +340,45 @@ function bibliography_builder_save_fold_quotes( $text ) {
 }
 
 /**
+ * `foldCase()`, on text `bibliography_builder_save_fold_quotes()` folded:
+ * each character whose lowercase is one character is lowercased. A few
+ * change their UTF-8 length (the Kelvin sign is three bytes, k one), so the
+ * offset map is carried through: each byte of a folded character maps to the
+ * original offset of the matching byte, or the character's last byte.
+ *
+ * @param array{text: string, offsets: array<int, int>} $folded Text folded by
+ *                                                              bibliography_builder_save_fold_quotes().
+ * @return array{text: string, offsets: array<int, int>}
+ */
+function bibliography_builder_save_fold_case( $folded ) {
+	$text    = '';
+	$offsets = array();
+	$cursor  = 0;
+
+	foreach ( (array) preg_split( '//u', $folded['text'], -1, PREG_SPLIT_NO_EMPTY ) as $character ) {
+		$character = (string) $character;
+		$lower     = mb_strtolower( $character, 'UTF-8' );
+		$lower     = 1 === mb_strlen( $lower, 'UTF-8' ) ? $lower : $character;
+		$bytes     = strlen( $character );
+		$length    = strlen( $lower );
+
+		for ( $byte = 0; $byte < $length; $byte++ ) {
+			$offsets[] = $folded['offsets'][ $cursor + min( $byte, $bytes - 1 ) ];
+		}
+
+		$text   .= $lower;
+		$cursor += $bytes;
+	}
+
+	$offsets[] = $folded['offsets'][ $cursor ];
+
+	return array(
+		'text'    => $text,
+		'offsets' => $offsets,
+	);
+}
+
+/**
  * Append each byte offset from $from up to, not including, $to.
  *
  * @param array<int, int> $offsets Offset map, appended to in place.
@@ -363,15 +402,31 @@ function bibliography_builder_save_append_offsets( &$offsets, $from, $to ) {
  * UTF-8 substring search finds the same occurrences as JavaScript's UTF-16
  * search.
  *
+ * With `$fold_case`, case is folded too (`caseFoldedItalics`).
+ *
  * @param string $text       Display text.
  * @param string $value      Field value.
  * @param array  $ranges     Ranges found so far.
  * @param array  $url_ranges URL ranges in the text.
+ * @param bool   $fold_case  Match without regard to case.
  * @return array|null
  */
-function bibliography_builder_save_find_last_range( $text, $value, $ranges, $url_ranges = array() ) {
+function bibliography_builder_save_find_last_range(
+	$text,
+	$value,
+	$ranges,
+	$url_ranges = array(),
+	$fold_case = false
+) {
 	$folded = bibliography_builder_save_fold_quotes( $text );
-	$needle = bibliography_builder_save_fold_quotes( $value )['text'];
+	$needle = bibliography_builder_save_fold_quotes( $value );
+
+	if ( $fold_case ) {
+		$folded = bibliography_builder_save_fold_case( $folded );
+		$needle = bibliography_builder_save_fold_case( $needle );
+	}
+
+	$needle = $needle['text'];
 	$search = $folded['text'];
 	$at     = strrpos( $search, $needle );
 
@@ -449,7 +504,12 @@ function bibliography_builder_save_display_segments( $citation, $roman_titles = 
 			continue;
 		}
 
+		// `caseFoldedItalics`: not as stored, perhaps as the style cased it
+		// ("The origin of species" for a stored "The Origin of Species").
 		$range = bibliography_builder_save_find_last_range( $text, $needle, $title_ranges, $url_ranges );
+		$range = null === $range
+			? bibliography_builder_save_find_last_range( $text, $needle, $title_ranges, $url_ranges, true )
+			: $range;
 
 		if ( null !== $range ) {
 			$title_ranges[] = $range;

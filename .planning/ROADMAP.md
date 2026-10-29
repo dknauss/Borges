@@ -451,9 +451,13 @@ Chicago author-date 1%.
        PubMed records carry it, and add RIS `J2` to the per-entry export
        (saved markup, so it needs a deprecation).
     2. **APA sentence case** for article, chapter, and book titles (56% of
-       use; Vancouver needs it too). Needs a design: proper nouns cannot be
-       recovered from Title Case, and the block re-applies italics by finding
-       the stored title in the formatted entry.
+       use; Vancouver and IEEE need it too). **Built 2026-10-29**, as the
+       owner chose: the formatter converts a copy of the title
+       (`includes/sentence-case.php`), the stored title never changes, and a
+       per-entry "Keep title capitalization as entered" checkbox covers the
+       proper nouns the heuristic cannot see. Follow-ups if users ask: a way
+       to protect one word rather than the whole title, and checking Harvard
+       (Cite Them Right) and ABNT against their manuals.
     3. **Nature and AMA**, the most-used styles Borges does not ship. Written
        from their manuals, as the other styles were; AMA is close to
        Vancouver.

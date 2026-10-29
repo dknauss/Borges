@@ -742,3 +742,48 @@ describe( 'getDisplaySegments journal abbreviations', () => {
 		).toEqual( [ 'Metadata Drift' ] );
 	} );
 } );
+
+describe( 'getDisplaySegments sentence-case titles', () => {
+	const book = ( formattedText ) => ( {
+		id: 'borges',
+		formattedText,
+		csl: { type: 'book', title: 'The Garden of Forking Paths' },
+	} );
+	const italics = ( entry, options = { caseFoldedItalics: true } ) =>
+		getDisplaySegments( entry, options )
+			.filter( ( segment ) => segment.italic )
+			.map( ( segment ) => segment.text );
+
+	it( 'finds a title the style printed in sentence case', () => {
+		const apa = book(
+			'Borges, J. L. (1941). The garden of forking paths.'
+		);
+
+		expect( italics( apa ) ).toEqual( [ 'The garden of forking paths' ] );
+		// Through 1.17.0 save() left it roman.
+		expect( italics( apa, {} ) ).toEqual( [] );
+	} );
+
+	it( 'prefers the title as stored', () => {
+		expect(
+			italics(
+				book(
+					'Borges. The garden of forking paths: The Garden of Forking Paths.'
+				)
+			)
+		).toEqual( [ 'The Garden of Forking Paths' ] );
+	} );
+
+	it( 'folds quotation marks and case together', () => {
+		expect(
+			italics(
+				{
+					id: 'o',
+					formattedText: 'Smith, A. (2020). O’Brien’s garden.',
+					csl: { type: 'book', title: "O'Brien's Garden" },
+				},
+				{ caseFoldedItalics: true, quoteFoldedItalics: true }
+			)
+		).toEqual( [ 'O’Brien’s garden' ] );
+	} );
+} );

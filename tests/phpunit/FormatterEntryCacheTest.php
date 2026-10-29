@@ -57,7 +57,7 @@ final class FormatterEntryCacheTest extends TestCase {
 		$second = bibliography_builder_format_csl_items( array( $beta, $alpha ), 'apa-7' );
 
 		$this->assertSame( 'Reused Alpha.', $second[1] );
-		$this->assertStringContainsString( 'Second Book', $second[0] );
+		$this->assertStringContainsString( 'Second book', $second[0] );
 		$this->assertSame(
 			array(
 				bibliography_builder_get_formatter_entry_hash( $beta ),

@@ -2518,6 +2518,82 @@
 					}
 				]
 			}
+		},
+		{
+			"name": "apa-sentence-case-titles",
+			"note": "APA prints book titles in sentence case from title-case records; a title missing its italic markup is found without regard to case. The Kelvin sign folds to one byte in PHP, so the offset map is exercised.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "References",
+				"citations": [
+					{
+						"id": "borges",
+						"csl": {
+							"type": "book",
+							"title": "The Garden of Forking Paths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Sur",
+							"issued": {
+								"date-parts": [
+									[
+										1941
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, J. L. (1941). The garden of forking paths. Sur."
+					},
+					{
+						"id": "kelvin",
+						"csl": {
+							"type": "book",
+							"title": "Temperatures in Kelvin Units",
+							"author": [
+								{
+									"family": "Thomson",
+									"given": "William"
+								}
+							],
+							"publisher": "Glasgow Press",
+							"issued": {
+								"date-parts": [
+									[
+										1850
+									]
+								]
+							}
+						},
+						"formattedText": "Thomson, W. (1850). Temperatures in Kelvin units. Glasgow Press."
+					},
+					{
+						"id": "tanaka",
+						"csl": {
+							"type": "article-journal",
+							"title": "The Return of the Card Catalogue",
+							"author": [
+								{
+									"family": "Tanaka",
+									"given": "Emi"
+								}
+							],
+							"container-title": "Library Quarterly",
+							"issued": {
+								"date-parts": [
+									[
+										2021
+									]
+								]
+							}
+						},
+						"formattedText": "Tanaka, E. (2021). The return of the card catalogue. <i>Library Quarterly</i>, <i>12</i>(3), 1–9."
+					}
+				]
+			}
 		}
 	]
 }

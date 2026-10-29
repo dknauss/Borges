@@ -103,6 +103,18 @@ export function useManualCitationActions( {
 				key: 'url',
 				label: __( 'URL', 'borges-bibliography-builder' ),
 			},
+			{
+				key: 'keepTitleCase',
+				label: __(
+					'Keep title capitalization as entered',
+					'borges-bibliography-builder'
+				),
+				help: __(
+					'APA, IEEE, and Vancouver otherwise print the title in sentence case.',
+					'borges-bibliography-builder'
+				),
+				control: 'checkbox',
+			},
 		],
 		[]
 	);

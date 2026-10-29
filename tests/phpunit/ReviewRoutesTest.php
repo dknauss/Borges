@@ -316,7 +316,7 @@ final class ReviewRoutesTest extends TestCase {
 		$this->assertSame( 'good-1', $first['id'] );
 		$this->assertSame( 'LeCun, Yann. "Deep Learning." Nature 521 (2015).', $first['current'] );
 		$this->assertStringContainsString( 'LeCun', $first['preview'] );
-		$this->assertStringContainsString( 'Deep Learning', $first['preview'] );
+		$this->assertStringContainsString( 'Deep learning', $first['preview'] );
 		$this->assertStringContainsString( '10.1038/nature14539', $first['preview'] );
 		$this->assertTrue( $first['changed'] );
 		$this->assertNull( $first['error'] );
