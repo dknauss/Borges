@@ -253,6 +253,7 @@ foreach ( $variants as $name => $overrides ) {
 		$body = bibliography_builder_nest_rendered_json_ld( $html );
 		$body = bibliography_builder_enrich_rendered_json_ld( $body, $parsed );
 		$body = bibliography_builder_enrich_rendered_coins( $body, $parsed );
+		$body = bibliography_builder_add_list_roles( $body );
 
 		// What Yoast SEO's Article piece becomes with Borges active. The
 		// bootstrap's parse_blocks() stub only returns what it was given.
