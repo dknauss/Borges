@@ -20,6 +20,16 @@ The weekly **Dependency audit** workflow runs:
 
 Dev-tool vulnerabilities should be triaged promptly, but they are not automatically release blockers unless they affect CI integrity, build output, local secret exposure, or packaged release contents.
 
+### `deepmerge` (GHSA-gcqx-w48m-w2h4), triaged 2026-10-28
+
+Dependabot's low-severity alert for `deepmerge` (prototype poisoning in
+`mergeObject()`, every version from 4.2.0, no patched release) comes from the
+`@wordpress/*` editor packages and Jest. Those packages are webpack externals
+supplied by WordPress itself, so `deepmerge` is in no file under `build/` and
+`npm audit --omit=dev --omit=optional` stays clean. No action until upstream
+ships a fix; the alert can be dismissed as "vulnerable code is not actually
+used".
+
 ## Remediation order
 
 1. Prefer direct dependency updates that keep the build and tests green.

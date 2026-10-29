@@ -428,24 +428,25 @@ Current operational note (2026-05-04):
 -   Post-launch cleanup should keep GitHub README, WordPress.org `readme.txt`,
     SPEC, release assets, and SVN output aligned.
 
-## Immediate next-task priorities (2026-10-28)
+## Immediate next-task priorities (2026-10-28, after 1.17.0)
 
-Replaces the 2026-10-23 list, every item of which has shipped or moved:
-year suffixes and the ABNT leading-article rule (NBR 6033 §3.4) closed the
-sort-conformance backlog (1.14.0, 1.16.0); `wp borges list`, `export`,
-`validate`, `reformat`, `deduplicate`, and `duplicates` shipped (1.14.0–1.16.0);
-the reference-manager corpus now holds real Zotero 10 and Mendeley Reference
-Manager exports and public EndNote samples, and RIS import shipped (1.16.0);
-and Phase 05 is complete (M4 in 1.15.0). The owner confirmed this order on
-2026-10-28, with Epic-OSCOLA as the next build:
+Epic-OSCOLA shipped in 1.17.0 (#220), with the markup-value fixes from the
+same round (#223, #225, #227). Nothing else is in progress, so the free-text
+parser comes next:
 
 1. **Keep CI, runtime, and Playground hygiene green** (standing)
     - release-package output, WordPress.org artifact alignment, citeproc-php
       PHP deprecations, runtime smoke lanes, the `main-preview` Playground
       build, and the live resolver checks (DOI, PMID, PMCID, arXiv, ISBN,
       catalog, Internet Archive, Abilities)
-2. **Epic-OSCOLA grouped bibliographies** (large; needs a `save()`
-   deprecation). Designed in `docs/planning/oscola-grouping-plan.md`
+2. **Free-text parser: Harvard, IEEE, Vancouver, OSCOLA, and ABNT input**
+   ([#231](https://github.com/dknauss/Borges/issues/231)). The parser reads
+   only Chicago and APA-like citations; `docs/free-text-parsing.md` has the
+   measurements. Phased, stopping wherever `npm run sweep` shows collisions:
+   (1) pass the block's style to `parseFreeTextCitation()` as a hint, plus
+   Harvard; (2) IEEE and Vancouver; (3) ABNT; (4) OSCOLA secondary sources.
+   The risk is degrading APA and Chicago, not size: the parser is in the lazy
+   import chunk, never on the front end
 3. **Decide whether the write routes should ever be on by default.** The
    Phase 05 memo left this open; today they need the
    `bibliography_builder_enable_write_routes` filter
