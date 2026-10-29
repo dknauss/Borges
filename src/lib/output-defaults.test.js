@@ -72,6 +72,20 @@ describe( 'output defaults', () => {
 		expect( getOutputDefaultChanges( inserted, {} ) ).toEqual( {
 			headingLevel: 2,
 		} );
+		expect( getOutputDefaultChanges( inserted, 'not an object' ) ).toEqual(
+			{ headingLevel: 2 }
+		);
+
+		// An attribute left out reads as block.json's 0.
+		const { headingLevel, ...withoutLevel } = inserted;
+
+		expect( headingLevel ).toBe( 0 );
+		expect( getOutputDefaultChanges( withoutLevel, undefined ) ).toEqual( {
+			headingLevel: 2,
+		} );
+		expect(
+			getOutputDefaultChanges( withoutLevel, { headingLevel: 0 } )
+		).toBeNull();
 	} );
 
 	it( 'uses the site heading level when it is a valid one', () => {
