@@ -112,6 +112,8 @@ export function buildCiteExportPanels( root = document ) {
 			'ul',
 			'bibliography-builder-export-links'
 		);
+		// Its markers are hidden: without the role, Safari reads no list.
+		links.setAttribute( 'role', 'list' );
 
 		details.appendChild(
 			createElement(

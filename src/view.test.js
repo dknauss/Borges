@@ -304,6 +304,17 @@ describe( 'buildCiteExportPanels (panel built from saved data)', () => {
 		).toBeNull();
 	} );
 
+	it( 'gives the built export list the list role', () => {
+		bibliography( fullData );
+		buildCiteExportPanels( document );
+
+		expect(
+			document
+				.querySelector( '.bibliography-builder-export-links' )
+				.getAttribute( 'role' )
+		).toBe( 'list' );
+	} );
+
 	it( 'wires the built copy button to the clipboard', () => {
 		const writeText = jest.fn( () => Promise.resolve() );
 		Object.defineProperty( window.navigator, 'clipboard', {

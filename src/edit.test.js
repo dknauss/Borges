@@ -3446,6 +3446,11 @@ describe( 'OSCOLA tables', () => {
 		expect(
 			container.querySelectorAll( '.bibliography-builder-list' )
 		).toHaveLength( 1 );
+		expect(
+			container
+				.querySelector( '.bibliography-builder-list' )
+				.getAttribute( 'role' )
+		).toBe( 'list' );
 	} );
 } );
 
