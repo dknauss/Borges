@@ -1317,27 +1317,27 @@ describe( 'Edit focus management', () => {
 		);
 	} );
 
-	it( 'previews the heading as a paragraph until a heading level is chosen', async () => {
+	it( 'starts a new block with an h2 heading that Paragraph turns back into a paragraph', async () => {
 		const { container } = render(
 			<EditHarness initialHeadingText="Sources" />
-		);
-
-		expect( screen.getByLabelText( 'Heading Level' ) ).toHaveValue( '0' );
-		expect(
-			container.querySelector( 'p.bibliography-builder-heading-preview' )
-		).toHaveTextContent( 'Sources' );
-
-		await userEvent.selectOptions(
-			screen.getByLabelText( 'Heading Level' ),
-			'2'
 		);
 
 		expect( screen.getByLabelText( 'Heading Level' ) ).toHaveValue( '2' );
 		expect(
 			container.querySelector( 'h2.bibliography-builder-heading-preview' )
 		).toHaveTextContent( 'Sources' );
+
+		await userEvent.selectOptions(
+			screen.getByLabelText( 'Heading Level' ),
+			'0'
+		);
+
+		expect( screen.getByLabelText( 'Heading Level' ) ).toHaveValue( '0' );
 		expect(
 			container.querySelector( 'p.bibliography-builder-heading-preview' )
+		).toHaveTextContent( 'Sources' );
+		expect(
+			container.querySelector( 'h2.bibliography-builder-heading-preview' )
 		).toBeNull();
 	} );
 

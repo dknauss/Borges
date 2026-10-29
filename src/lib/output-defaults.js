@@ -8,6 +8,10 @@
  * changing the defaults in `block.json`: an attribute left at its default is
  * not saved, so changing a default would change how every existing block
  * parses and invalidate its saved markup.
+ *
+ * The same setting carries `headingLevel`, the heading a new block starts
+ * with: an `<h2>` unless the site's `bibliography_builder_new_block_heading_level`
+ * filter says otherwise, though `block.json` keeps 0 (a paragraph).
  */
 
 export const OUTPUT_DEFAULTS_SETTING = 'bibliographyBuilderOutputDefaults';
@@ -18,6 +22,16 @@ export const OUTPUT_TOGGLE_KEYS = [
 	'outputCslJson',
 	'outputCiteExport',
 ];
+
+/**
+ * The heading level a new block starts with when the site sets none.
+ */
+export const NEW_BLOCK_HEADING_LEVEL = 2;
+
+/**
+ * Heading levels the block accepts: 0 (a paragraph) and 2 to 6.
+ */
+export const HEADING_LEVELS = [ 0, 2, 3, 4, 5, 6 ];
 
 /**
  * Whether the block was just inserted: it has no ID and no citations yet.
@@ -37,29 +51,37 @@ export function isNewBibliographyBlock( attributes ) {
 }
 
 /**
- * The toggle changes that bring a new block in line with the site defaults.
+ * The changes that bring a new block in line with the site defaults: the
+ * output toggles and the heading level.
  *
  * @param {Object} attributes   Block attributes.
- * @param {Object} siteDefaults Site defaults from the editor settings.
+ * @param {Object} siteDefaults Site defaults from the editor settings; when
+ *                              missing, a new block still gets the default
+ *                              heading level.
  * @return {Object|null} Attribute changes, or null when there are none.
  */
 export function getOutputDefaultChanges( attributes, siteDefaults ) {
-	if (
-		! siteDefaults ||
-		typeof siteDefaults !== 'object' ||
-		! isNewBibliographyBlock( attributes )
-	) {
+	if ( ! isNewBibliographyBlock( attributes ) ) {
 		return null;
 	}
 
+	const defaults =
+		siteDefaults && typeof siteDefaults === 'object' ? siteDefaults : {};
 	const changes = {};
+	const headingLevel = HEADING_LEVELS.includes( defaults.headingLevel )
+		? defaults.headingLevel
+		: NEW_BLOCK_HEADING_LEVEL;
+
+	if ( headingLevel !== ( attributes.headingLevel ?? 0 ) ) {
+		changes.headingLevel = headingLevel;
+	}
 
 	OUTPUT_TOGGLE_KEYS.forEach( ( key ) => {
 		if (
-			typeof siteDefaults[ key ] === 'boolean' &&
-			siteDefaults[ key ] !== attributes[ key ]
+			typeof defaults[ key ] === 'boolean' &&
+			defaults[ key ] !== attributes[ key ]
 		) {
-			changes[ key ] = siteDefaults[ key ];
+			changes[ key ] = defaults[ key ];
 		}
 	} );
 

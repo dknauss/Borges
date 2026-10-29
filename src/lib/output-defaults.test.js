@@ -1,18 +1,24 @@
 import metadata from '../../block.json';
 import {
+	HEADING_LEVELS,
+	NEW_BLOCK_HEADING_LEVEL,
 	OUTPUT_TOGGLE_KEYS,
 	getOutputDefaultChanges,
 	isNewBibliographyBlock,
 } from './output-defaults';
 
-const fresh = {
+// A new block as block.json defines it.
+const inserted = {
 	bibliographyId: '',
 	citations: [],
+	headingLevel: 0,
 	outputJsonLd: true,
 	outputCoins: false,
 	outputCslJson: false,
 	outputCiteExport: false,
 };
+// The same block once it has the new-block heading level.
+const fresh = { ...inserted, headingLevel: NEW_BLOCK_HEADING_LEVEL };
 
 describe( 'output defaults', () => {
 	it( 'covers every output toggle in block.json', () => {
@@ -54,6 +60,35 @@ describe( 'output defaults', () => {
 		).toBeNull();
 	} );
 
+	it( 'starts a new block with an h2, not the block.json paragraph', () => {
+		expect( metadata.attributes.headingLevel.default ).toBe( 0 );
+		expect( metadata.attributes.headingLevel.enum ).toEqual(
+			HEADING_LEVELS
+		);
+		expect( NEW_BLOCK_HEADING_LEVEL ).toBe( 2 );
+		expect( getOutputDefaultChanges( inserted, undefined ) ).toEqual( {
+			headingLevel: 2,
+		} );
+		expect( getOutputDefaultChanges( inserted, {} ) ).toEqual( {
+			headingLevel: 2,
+		} );
+	} );
+
+	it( 'uses the site heading level when it is a valid one', () => {
+		expect(
+			getOutputDefaultChanges( inserted, { headingLevel: 3 } )
+		).toEqual( { headingLevel: 3 } );
+		expect(
+			getOutputDefaultChanges( inserted, { headingLevel: 0 } )
+		).toBeNull();
+		expect(
+			getOutputDefaultChanges( inserted, { headingLevel: 7 } )
+		).toEqual( { headingLevel: 2 } );
+		expect(
+			getOutputDefaultChanges( inserted, { headingLevel: '3' } )
+		).toEqual( { headingLevel: 2 } );
+	} );
+
 	it( 'leaves saved, duplicated, and pasted blocks alone', () => {
 		const saved = { ...fresh, bibliographyId: 'abc' };
 		const filled = { ...fresh, citations: [ { id: 'a' } ] };
@@ -66,6 +101,12 @@ describe( 'output defaults', () => {
 		).toBeNull();
 		expect(
 			getOutputDefaultChanges( filled, { outputCoins: true } )
+		).toBeNull();
+		expect(
+			getOutputDefaultChanges(
+				{ ...inserted, bibliographyId: 'abc' },
+				{ headingLevel: 3 }
+			)
 		).toBeNull();
 	} );
 } );
