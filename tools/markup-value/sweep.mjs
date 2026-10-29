@@ -1,5 +1,5 @@
 /**
- * Runs render.php, measure.mjs, and parser-baseline.mjs once per citation
+ * Runs render.php, measure.mjs, parser-baseline.mjs, and borges-parser.mjs once per citation
  * style, for the corpus in MV_CORPUS (default corpus.json), and summarizes
  * what changes with the style: what a text-only reader finds unlabeled or
  * by pattern, and what a citation parser recovers from the plain list. The
@@ -52,6 +52,10 @@ async function main() {
 		} catch ( error ) {
 			parser = { error: String( error.message ).split( '\n' )[ 0 ] };
 		}
+		run( 'node', [ 'borges-parser.mjs' ] );
+		const borgesParser = JSON.parse(
+			await readFile( join( out, 'borges-parser.json' ), 'utf8' )
+		);
 		const results = JSON.parse(
 			await readFile( join( out, 'results.json' ), 'utf8' )
 		);
@@ -79,12 +83,19 @@ async function main() {
 							)
 						),
 					},
+			borgesParser: {
+				correct: borgesParser.correct,
+				pairs: borgesParser.pairs,
+				unparsed: borgesParser.unparsed,
+			},
 			jsonLdLabeled: borges.perLayer.jsonld.correct,
 		};
 		// eslint-disable-next-line no-console
 		console.log(
 			`${ style.padEnd( 28 ) } parser ${
 				parser.error ? 'n/a' : `${ parser.correct }/${ parser.pairs }`
+			}  Borges parser ${ borgesParser.correct }/${
+				borgesParser.pairs
 			}  JSON-LD ${ borges.perLayer.jsonld.correct }/${ plain.pairs }`
 		);
 	}
