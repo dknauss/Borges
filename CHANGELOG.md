@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Server-Timing on the formatter route.** `POST /bibliography/v1/format` (editors only) now reports where its time goes: WordPress before the route, sanitizing, cache lookups (with how many entries the caches answered), rendering, cache writes, and the whole callback. Browser developer tools show it, and `scripts/time-format-route.sh` adds `server_p50_ms` and `wp_p50_ms` to its lines (`SERVER_TIMING=1` prints each header), so a slow round trip on a real host can be split into Borges, WordPress, and the network.
+
 ### Changed
 
 - `tools/markup-value` scores Borges's own free-text parser beside AnyStyle (`npm run borges-parser`, and in `npm run sweep`), and `docs/free-text-parsing.md` records the comparison, what AnyStyle is, and why Borges doesn't run it.
