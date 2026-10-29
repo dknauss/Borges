@@ -1,6 +1,7 @@
 #!/bin/bash
 # Runs each prompt through the Codex CLI once and saves its final answer.
-# Usage: cd ~/Code/markup-value-codex && bash run.sh
+# The prompts are the .txt files beside this script; answers go to answers/.
+# Usage: bash run.sh  (set CODEX=/path/to/codex if it is not on PATH)
 set -u
 cd "$(dirname "$0")"
 # bash doesn't load zsh's PATH, so look for the Codex CLI in the usual places.

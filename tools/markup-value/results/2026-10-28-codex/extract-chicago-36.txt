@@ -1,38 +1,41 @@
-[
-{"type":"software","title":"Structured Data Validator","author":[{"literal":"Adobe"}],"container-title":"GitHub","URL":"https://github.com/adobe/structured-data-validator"},
-{"type":"webpage","title":"AI Features and Your Website","issued":{"date-parts":[[2025]]},"container-title":"Google Search Central","URL":"https://developers.google.com/search/docs/appearance/ai-features"},
-{"type":"entry-encyclopedia","title":"Apostolic Succession","container-title":"Encyclopaedia Britannica","URL":"https://www.britannica.com/topic/apostolic-succession"},
-{"type":"chapter","title":"The Library of Babel","author":[{"family":"Borges","given":"Jorge Luis"}],"issued":{"date-parts":[[1962]]},"container-title":"Labyrinths: Selected Stories and Other Writings","publisher":"New Directions"},
-{"type":"book","title":"The Media Lab: Inventing the Future at MIT","author":[{"family":"Brand","given":"Stewart"}],"issued":{"date-parts":[[1988]]},"publisher":"Penguin"},
-{"type":"article-magazine","title":"Keep Designing","author":[{"family":"Brand","given":"Stewart"},{"family":"Herron","given":"Matt"}],"issued":{"date-parts":[[1985]]},"container-title":"Whole Earth Review"},
-{"type":"webpage","title":"citation","container-title":"Schema.org","URL":"https://schema.org/citation"},
-{"type":"webpage","title":"Conrad Gessner Issues the First Universal Bibliography Since the Invention of Printing","container-title":"HistoryofInformation.com","URL":"https://historyofinformation.com/detail.php?id=1248"},
-{"type":"article-journal","title":"Widow, Orphan, and the Poor in Ancient Near Eastern Legal and Wisdom Literature","author":[{"family":"Fensham","given":"F. Charles"}],"issued":{"date-parts":[[1962]]},"container-title":"Journal of Near Eastern Studies","page":"129–139","volume":"21"},
-{"type":"book","title":"Bibliotheca universalis, sive Catalogus omnium scriptorum locupletissimus","author":[{"family":"Gessner","given":"Conrad"}],"issued":{"date-parts":[[1545]]},"publisher":"Christoph Froschauer"},
-{"type":"book","title":"Bibliotheca","author":[{"family":"Gessner","given":"Conrad"},{"family":"Simler","given":"Josias"}],"issued":{"date-parts":[[1574]]},"publisher":"Christoph Froschauer","URL":"https://archive.org/details/bibliotheca00gess"},
-{"type":"book","title":"The Footnote: A Curious History","author":[{"family":"Grafton","given":"Anthony"}],"issued":{"date-parts":[[1997]]},"publisher":"Harvard University Press"},
-{"type":"entry-encyclopedia","title":"Isnād","container-title":"Encyclopaedia Britannica","URL":"https://www.britannica.com/topic/isnad"},
-{"type":"webpage","title":"isPartOf","container-title":"Schema.org","URL":"https://schema.org/isPartOf"},
-{"type":"chapter","title":"May the Reader Not Withhold the Tablet! On a Formula in Late Babylonian Colophons","author":[{"family":"Jiménez","given":"Enrique"}],"issued":{"date-parts":[[2016]]},"container-title":"Babel und Bibel 9","page":"227–242","publisher":"Eisenbrauns","URL":"https://epub.ub.uni-muenchen.de/49554/1/Jimenez_May_the_Reader_Not_Withhold_the_Tablet.pdf"},
-{"type":"webpage","title":"Johannes Trithemius Publishes the Earliest Subject Bibliography, on Mostly on Ecclesiastical Writings","container-title":"HistoryofInformation.com","URL":"https://historyofinformation.com/detail.php?id=344"},
-{"type":"webpage","title":"Add tools/markup-value: Measure What Borges Markup Gives Machines","author":[{"family":"Knauss","given":"Dan"}],"issued":{"date-parts":[[2026]]},"container-title":"Borges Bibliography Builder","URL":"https://github.com/dknauss/Borges/pull/203"},
-{"type":"webpage","title":"The Page Is an Interface","author":[{"family":"Knauss","given":"Dan"}],"issued":{"date-parts":[[2026]]},"container-title":"Marginalia","URL":"https://m.arginalia.com/the-page-is-an-interface/"},
-{"type":"webpage","title":"What Citation Markup Gives Machines","author":[{"family":"Knauss","given":"Dan"}],"issued":{"date-parts":[[2026]]},"container-title":"Bad Sector","URL":"https://badsector.blog/what-citation-markup-gives-machines/"},
-{"type":"book","title":"Ancient Egyptian Literature: A Book of Readings","author":[{"family":"Lichtheim","given":"Miriam"}],"issued":{"date-parts":[[1976]]},"publisher":"University of California Press","volume":"2"},
-{"type":"entry-encyclopedia","title":"Ancient Egyptian Vizier","author":[{"family":"Mark","given":"Joshua J."}],"issued":{"date-parts":[[2017]]},"container-title":"World History Encyclopedia","URL":"https://www.worldhistory.org/Egyptian_Vizier/"},
-{"type":"software","title":"Readability.js","author":[{"literal":"Mozilla"}],"container-title":"GitHub","URL":"https://github.com/mozilla/readability"},
-{"type":"webpage","title":"Information Wants To Be Expensive. Information Wants To Be Free.","author":[{"family":"O’Toole","given":"Garson"}],"issued":{"date-parts":[[2018]]},"container-title":"Quote Investigator","URL":"https://quoteinvestigator.com/2018/03/09/info/"},
-{"type":"book","title":"Theatrum orbis terrarum","author":[{"family":"Ortelius","given":"Abraham"}],"issued":{"date-parts":[[1570]]},"publisher":"Gilles Coppens de Diest","URL":"https://archive.org/details/theatrumorbister00orte"},
-{"type":"legislation","title":"Rule 803. Exceptions to the Rule Against Hearsay","container-title":"Federal Rules of Evidence","URL":"https://www.law.cornell.edu/rules/fre/rule_803"},
-{"type":"webpage","title":"Structured Data Is Valid","issued":{"date-parts":[[2019]]},"container-title":"Lighthouse, Chrome for Developers","URL":"https://developer.chrome.com/docs/lighthouse/seo/structured-data"},
-{"type":"webpage","title":"Structured Data Markup That Google Search Supports","issued":{"date-parts":[[2026]]},"container-title":"Google Search Central","URL":"https://developers.google.com/search/docs/appearance/structured-data/search-gallery"},
-{"type":"webpage","title":"The Sumerian King List","container-title":"The Electronic Text Corpus of Sumerian Literature","URL":"https://etcsl.orinst.ox.ac.uk/section2/tr211.htm"},
-{"type":"webpage","title":"Library Colophons","author":[{"family":"Taylor","given":"Jonathan"}],"container-title":"Reading the Library of Ashurbanipal","URL":"https://oracc.museum.upenn.edu/asbp/rlasb/librarycolophons/"},
-{"type":"entry-encyclopedia","title":"Theatrum Orbis Terrarum","container-title":"Wikipedia","URL":"https://en.wikipedia.org/wiki/Theatrum_Orbis_Terrarum"},
-{"type":"book","title":"Liber de scriptoribus ecclesiasticis","author":[{"family":"Trithemius","given":"Johannes"}],"issued":{"date-parts":[[1494]]},"publisher":"Johann Amerbach"},
-{"type":"book","title":"Manual of Style: Being a Compilation of the Typographical Rules in Force at the University of Chicago Press","author":[{"literal":"University of Chicago Press"}],"issued":{"date-parts":[[1906]]},"publisher":"University of Chicago Press"},
-{"type":"webpage","title":"Using Zotero to Create COinS Metadata","issued":{"date-parts":[[2020]]},"container-title":"Zotero Documentation","URL":"https://www.zotero.org/support/dev/exposing_metadata/coins"},
-{"type":"article","title":"Structured Linked Data as a Memory Layer for Agent-Orchestrated Retrieval","author":[{"family":"Volpini","given":"Andrea"},{"family":"Raad","given":"Elie"},{"family":"Gamba","given":"Beatrice"},{"family":"Riccitelli","given":"David"}],"issued":{"date-parts":[[2026]]},"container-title":"arXiv","DOI":"10.48550/arXiv.2603.10700"},
-{"type":"article-journal","title":"The Antediluvian Section of the Sumerian King List and Genesis 5","author":[{"family":"Walton","given":"John H."}],"issued":{"date-parts":[[1981]]},"container-title":"Biblical Archaeologist","page":"207–208","volume":"44"},
-{"type":"webpage","title":"The Rise of the AI Crawler","author":[{"family":"Zecchini","given":"Giacomo"},{"family":"Moore","given":"Alice Alexandra"},{"family":"Ubl","given":"Malte"},{"family":"Siddle","given":"Ryan"}],"issued":{"date-parts":[[2024]]},"container-title":"Vercel Blog","URL":"https://vercel.com/blog/the-rise-of-the-ai-crawler"}
-]
+Below is a reference list, one entry per line. Convert each entry to CSL-JSON.
+
+Return only a JSON array with exactly one object per line of input, in the same order, and nothing else. Use only what the entry itself says: do not add information from memory or look anything up. Use these CSL-JSON keys where the entry gives a value: "type", "title", "author" (a list of {"family", "given"} or {"literal"} objects), "issued" ({"date-parts": [[year]]}), "container-title", "DOI" (without https://doi.org/), "ISBN", "page", "publisher", "volume", "issue", "URL".
+
+Reference list:
+Adobe. Structured Data Validator. GitHub, n.d. https://github.com/adobe/structured-data-validator.
+“AI Features and Your Website.” Google Search Central. December 10, 2025. https://developers.google.com/search/docs/appearance/ai-features.
+“Apostolic Succession.” In Encyclopaedia Britannica. n.d. https://www.britannica.com/topic/apostolic-succession.
+Borges, Jorge Luis. “The Library of Babel.” In Labyrinths: Selected Stories and Other Writings, edited by Donald A. Yates and James E. Irby. Translated by James E. Irby. New Directions, 1962.
+Brand, Stewart. The Media Lab: Inventing the Future at MIT. Penguin, 1988.
+Brand, Stewart, and Matt Herron. “Keep Designing.” Whole Earth Review, May 1985.
+“citation.” Schema.org. Accessed October 27, 2026. https://schema.org/citation.
+“Conrad Gessner Issues the First Universal Bibliography Since the Invention of Printing.” HistoryofInformation.com. Accessed October 27, 2026. https://historyofinformation.com/detail.php?id=1248.
+Fensham, F. Charles. “Widow, Orphan, and the Poor in Ancient Near Eastern Legal and Wisdom Literature.” Journal of Near Eastern Studies 21 (1962): 129–139.
+Gessner, Conrad. Bibliotheca universalis, sive Catalogus omnium scriptorum locupletissimus. Christoph Froschauer, 1545.
+Gessner, Conrad, and Josias Simler. Bibliotheca. Christoph Froschauer, 1574. https://archive.org/details/bibliotheca00gess.
+Grafton, Anthony. The Footnote: A Curious History. Harvard University Press, 1997.
+“Isnād.” In Encyclopaedia Britannica. n.d. https://www.britannica.com/topic/isnad.
+“isPartOf.” Schema.org. Accessed October 27, 2026. https://schema.org/isPartOf.
+Jiménez, Enrique. “May the Reader Not Withhold the Tablet! On a Formula in Late Babylonian Colophons.” In Babel und Bibel 9, edited by L. Kogan, N. Koslova, S. Loesov, and S. Tishchenko, 227–242. Eisenbrauns, 2016. https://epub.ub.uni-muenchen.de/49554/1/Jimenez_May_the_Reader_Not_Withhold_the_Tablet.pdf.
+“Johannes Trithemius Publishes the Earliest Subject Bibliography, on Mostly on Ecclesiastical Writings.” HistoryofInformation.com. Accessed October 27, 2026. https://historyofinformation.com/detail.php?id=344.
+Knauss, Dan. “Add tools/markup-value: Measure What Borges Markup Gives Machines.” Borges Bibliography Builder, pull request #203. October 27, 2026. https://github.com/dknauss/Borges/pull/203.
+Knauss, Dan. “The Page Is an Interface.” Marginalia. October 25, 2026. https://m.arginalia.com/the-page-is-an-interface/.
+Knauss, Dan. “What Citation Markup Gives Machines.” Bad Sector. October 2026. https://badsector.blog/what-citation-markup-gives-machines/.
+Lichtheim, Miriam. Ancient Egyptian Literature: A Book of Readings. Vol. 2. University of California Press, 1976.
+Mark, Joshua J. “Ancient Egyptian Vizier.” In World History Encyclopedia. 2017. https://www.worldhistory.org/Egyptian_Vizier/.
+Mozilla. Readability.js. GitHub, n.d. https://github.com/mozilla/readability.
+O’Toole, Garson. “Information Wants To Be Expensive. Information Wants To Be Free.” Quote Investigator. March 9, 2018. https://quoteinvestigator.com/2018/03/09/info/.
+Ortelius, Abraham. Theatrum orbis terrarum. Gilles Coppens de Diest, 1570. https://archive.org/details/theatrumorbister00orte.
+“Rule 803. Exceptions to the Rule Against Hearsay.” Federal Rules of Evidence. Accessed October 27, 2026. https://www.law.cornell.edu/rules/fre/rule_803.
+“Structured Data Is Valid.” Lighthouse, Chrome for Developers. May 2, 2019. https://developer.chrome.com/docs/lighthouse/seo/structured-data.
+“Structured Data Markup That Google Search Supports.” Google Search Central. October 16, 2026. https://developers.google.com/search/docs/appearance/structured-data/search-gallery.
+“The Sumerian King List.” The Electronic Text Corpus of Sumerian Literature. Accessed October 27, 2026. https://etcsl.orinst.ox.ac.uk/section2/tr211.htm.
+Taylor, Jonathan. “Library Colophons.” Reading the Library of Ashurbanipal. Accessed October 27, 2026. https://oracc.museum.upenn.edu/asbp/rlasb/librarycolophons/.
+“Theatrum Orbis Terrarum.” In Wikipedia. n.d. https://en.wikipedia.org/wiki/Theatrum_Orbis_Terrarum.
+Trithemius, Johannes. Liber de scriptoribus ecclesiasticis. Johann Amerbach, 1494.
+University of Chicago Press. Manual of Style: Being a Compilation of the Typographical Rules in Force at the University of Chicago Press. University of Chicago Press, 1906.
+“Using Zotero to Create COinS Metadata.” Zotero Documentation. June 14, 2020. https://www.zotero.org/support/dev/exposing_metadata/coins.
+Volpini, Andrea, Elie Raad, Beatrice Gamba, and David Riccitelli. “Structured Linked Data as a Memory Layer for Agent-Orchestrated Retrieval.” Preprint, arXiv, 2026. https://doi.org/10.48550/arXiv.2603.10700.
+Walton, John H. “The Antediluvian Section of the Sumerian King List and Genesis 5.” Biblical Archaeologist 44 (1981): 207–208.
+Zecchini, Giacomo, Alice Alexandra Moore, Malte Ubl, and Ryan Siddle. “The Rise of the AI Crawler.” Vercel Blog. December 17, 2024. https://vercel.com/blog/the-rise-of-the-ai-crawler.
