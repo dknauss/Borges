@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.16.0
+Stable tag: 1.17.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -194,6 +194,14 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 * Internet Archive terms of use: https://archive.org/about/terms.php
 
 == Changelog ==
+
+= 1.17.0 =
+* **Added:** OSCOLA tables of primary sources. An OSCOLA bibliography with cases, legislation, or treaties lists them as OSCOLA 5 asks: a table of cases, then legislation, then treaties, then the bibliography of secondary sources. Existing blocks stay valid and take the new shape the next time they are edited.
+* **Added:** on sites without Yoast SEO or Rank Math, the page's own `WebPage` structured data now links the cited works as schema.org `citation`. The new `bibliography_builder_page_citation_node` filter can change or drop it.
+* **Changed:** Google's Rich Results Test no longer reports bibliographies as invalid items: each JSON-LD entry carries `item` without `url`. Encyclopedia and dictionary entries name their reference work.
+* **Changed:** COinS names each entry's type, so Zotero's browser connector imports a chapter as a book section, a conference paper with its proceedings, and a book with its edition.
+* **Fixed:** VoiceOver in Safari reads the bibliography as a list again ("list, 12 items", "7 of 12"). Saved posts need no change.
+* **Fixed:** arXiv numbers print once in APA 7 and IEEE, not as "arXiv:arXiv:1706.03762".
 
 = 1.16.0 =
 * **Added:** RIS import. Paste a whole `.ris` export or single records from Zotero, Mendeley, EndNote, or another reference manager, alone or mixed with DOIs and formatted citations, and each record imports as a citation.
@@ -403,6 +411,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.17.0 =
+OSCOLA tables of cases, legislation, and treaties; structured data that passes Google's Rich Results Test and links cited works on every site; VoiceOver reads the bibliography as a list again in Safari. No configuration changes required.
 
 = 1.16.0 =
 RIS import, BC dates and years before 1000, fuller JSON-LD and COinS for published posts, sorting fixes for Chicago notes, OSCOLA, and ABNT, and several reference-manager import fixes. No configuration changes required.

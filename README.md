@@ -94,6 +94,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.17.0** — OSCOLA 5 tables of cases, legislation, and treaties; JSON-LD that passes Google's Rich Results Test, with cited works linked from the page on every site; COinS item types for Zotero; VoiceOver reads the bibliography as a list again in Safari; arXiv numbers print once in APA 7 and IEEE.
 - **1.16.0** — RIS import from Zotero, Mendeley, EndNote, and other reference managers; BC dates and years before 1000 in every style; fuller JSON-LD containers and COinS author lists as published posts render; single-author-first sorting in Chicago notes and OSCOLA and Portuguese leading articles skipped in ABNT; `wp borges duplicates`.
 - **1.15.0** — Opt-in bulk reformat and bulk deduplicate across posts through REST, abilities, and `wp borges reformat` / `deduplicate`, with a per-user rate limit; editing a citation can no longer turn it into a duplicate.
 - **1.14.0** — Same-author, same-year works are lettered (2020a, 2020b) in APA, Chicago author-date, Harvard, and ABNT; read-only WP-CLI commands `wp borges list`, `export`, and `validate`.

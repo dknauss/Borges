@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-10-28):** `v1.16.0` (2026-10-28).
+**Current release baseline (reconciled 2026-10-28):** `v1.17.0` (2026-10-28).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -102,6 +102,9 @@ Releases since the milestone was retired, all outside any GSD phase:
     author first in notes styles; ABNT leading articles; reference-manager
     import fixes from the real-export corpus; `wp borges duplicates`;
     `@wordpress/scripts` 37 tooling.
+-   **1.17.0** (2026-10-28) — OSCOLA 5 tables; page `citation` node without
+    an SEO plugin; no ListItem `url`; COinS item types; `role="list"` for
+    VoiceOver; arXiv numbers printed once.
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -323,7 +326,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.16.0`.
+1.3.x release line. The current public release baseline is now `v1.17.0`.
 
 Completed Phase 2 outcomes:
 
