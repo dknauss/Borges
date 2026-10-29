@@ -776,10 +776,17 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		$csl_items = bibliography_builder_assign_year_suffixes( $csl_items, sanitize_key( $style_key ) );
 	}
 
+	$started   = microtime( true );
 	$cache_key = bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style );
 	$cached    = bibliography_builder_cache_get( $cache_key, 'bibliography_builder_formatter' );
 
 	if ( $cached['hit'] && is_array( $cached['value'] ) ) {
+		bibliography_builder_format_timing(
+			'cache',
+			bibliography_builder_format_timing_since( $started ),
+			'whole list'
+		);
+
 		return $cached['value'];
 	}
 
@@ -801,8 +808,21 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		}
 	}
 
+	bibliography_builder_format_timing(
+		'cache',
+		bibliography_builder_format_timing_since( $started ),
+		( count( $hashes ) - count( $missing ) ) . ' of ' . count( $hashes ) . ' entries'
+	);
+
 	if ( array() !== $missing ) {
+		$started  = microtime( true );
 		$rendered = bibliography_builder_render_csl_items( $missing, $style );
+
+		bibliography_builder_format_timing(
+			'render',
+			bibliography_builder_format_timing_since( $started ),
+			count( $missing ) . ' entries'
+		);
 
 		if ( is_wp_error( $rendered ) ) {
 			return $rendered;
@@ -812,6 +832,8 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		$entries    = array();
 
 		ksort( $formatted );
+
+		$started = microtime( true );
 
 		foreach ( $hashes as $index => $hash ) {
 			$entries[ $hash ] = $formatted[ $index ];
@@ -823,9 +845,11 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 			'bibliography_builder_formatter',
 			BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
 		);
+		bibliography_builder_format_timing( 'store', bibliography_builder_format_timing_since( $started ) );
 	}
 
 	$formatted = array_values( $formatted );
+	$started   = microtime( true );
 
 	bibliography_builder_cache_set(
 		$cache_key,
@@ -833,6 +857,7 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		'bibliography_builder_formatter',
 		BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
 	);
+	bibliography_builder_format_timing( 'store', bibliography_builder_format_timing_since( $started ) );
 
 	return $formatted;
 }
