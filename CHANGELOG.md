@@ -10,9 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **New bibliographies start with a real heading.** A newly inserted block's visible heading ("Works Cited", "References") is now an `<h2>`, so it appears in the page's heading outline where screen reader users navigate. It was a paragraph unless the author chose a level. Existing blocks keep what they were saved with, and the Heading Level setting can still set any block back to Paragraph or to H3–H6. A site can choose another level for new blocks with the `bibliography_builder_new_block_heading_level` filter (0 for a paragraph, or 2–6).
-
 - `tools/markup-value` scores Borges's own free-text parser beside AnyStyle (`npm run borges-parser`, and in `npm run sweep`), and `docs/free-text-parsing.md` records the comparison, what AnyStyle is, and why Borges doesn't run it.
 - CI runs the three Playwright suites as parallel jobs that no longer wait for the Quality job, restores `node_modules`, the Playground CLI, Chromium, and WordPress downloads from cache, and cancels a pull request's superseded runs.
+
+### Fixed
+
+- **Bibliography headings in newsletters and feeds.** The default heading ("Works Cited", "References") is a paragraph the block's stylesheet sets larger, semibold, and centered. Email clients and feed readers show posts without that stylesheet, so it read as plain body text. Email and feed output now carry the same styles inline and set the heading in bold. A heading level of H2–H6 is unchanged; email clients style those themselves.
 
 ## [1.17.0] - 2026-10-28
 
