@@ -11,6 +11,14 @@ on:
 permissions:
     contents: read
 
+# A newer push to the same pull request cancels the older run, whose result no
+# longer matters. Every other run gets a group of its own (its run ID), so
+# pushes to main are never cancelled or queued behind each other: each one
+# still gets a full run, and the main preview job already skips a stale commit.
+concurrency:
+    group: ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+    cancel-in-progress: true
+
 jobs:
     quality:
         name: Quality (Node 22)
@@ -21,14 +29,8 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v5
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v5
-              with:
-                  node-version: 22
-                  cache: npm
-
-            - name: Install dependencies
-              run: npm ci --legacy-peer-deps
+            - name: Set up Node.js and dependencies
+              uses: ./.github/actions/setup-node-deps
 
             - name: Verify docs/current-metrics.md
               run: bash .github/scripts/verify-metrics.sh docs/current-metrics.md
@@ -87,29 +89,63 @@ jobs:
             - name: Run PHPUnit
               run: composer test:php
 
-    playwright-playground:
-        name: Playwright Playground smoke
+    # The three Playwright suites each boot their own Playground servers, so
+    # they run as parallel jobs rather than one after another (smoke ~3m, a11y
+    # ~1m, lifecycle ~2m in one job made it CI's critical path at ~7m45s). They
+    # no longer wait for Quality either: they test the build, not the lint, and
+    # the gate job below still holds the required check until both finish.
+    playwright-suites:
+        name: Playwright (${{ matrix.suite }})
         # Pinned: ubuntu-latest moved to 26.04, where Playwright 1.59 cannot
         # install Chromium. Move back once Playwright supports it.
         runs-on: ubuntu-24.04
         timeout-minutes: 20
-        needs: quality
+        strategy:
+            fail-fast: false
+            matrix:
+                suite:
+                    - playground
+                    - a11y
+                    - lifecycle
 
         steps:
             - name: Checkout
               uses: actions/checkout@v5
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v5
-              with:
-                  node-version: 22
-                  cache: npm
-
-            - name: Install dependencies
-              run: npm ci --legacy-peer-deps
+            - name: Set up Node.js and dependencies
+              uses: ./.github/actions/setup-node-deps
 
             - name: Build
               run: npm run build
+
+            # The test scripts run the Playground CLI through npx, which
+            # downloads it (~570 MB unpacked) on every run, and Chromium comes
+            # from the Playwright CDN. Keyed on the lockfile (Playwright's
+            # version) and the scripts (the pinned CLI version), so a bump to
+            # either misses and downloads fresh.
+            - name: Restore Playwright browsers and Playground CLI
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.cache/ms-playwright
+                      ~/.npm/_npx
+                  key: e2e-tools-ubuntu24-${{ hashFiles('package-lock.json', 'scripts/test-playground-e2e.sh', 'scripts/test-a11y.sh', 'scripts/test-lifecycle-e2e.sh') }}
+
+            # The Playground CLI keeps each WordPress release ZIP it downloads
+            # in ~/.wordpress-playground/ and reuses it when the version
+            # matches. Only the ZIPs are cached, never sites/. A stale ZIP is
+            # harmless: when "latest" moves on, the CLI downloads the new one,
+            # and the weekly key saves it.
+            - name: Compute weekly cache key
+              id: week
+              run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+            - name: Restore WordPress release ZIPs
+              uses: actions/cache@v4
+              with:
+                  path: ~/.wordpress-playground/*.zip
+                  key: playground-wp-${{ steps.week.outputs.week }}
+                  restore-keys: playground-wp-
 
             # This is the step that actually hung in #79 — apt-get, inside the
             # browser install — so it gets its own bound under the job timeout.
@@ -146,26 +182,50 @@ jobs:
               run: npx playwright install --with-deps chromium
 
             - name: Run Playground Playwright smoke
+              if: matrix.suite == 'playground'
               run: npm run test:e2e:playground
 
             - name: Run accessibility gate
+              if: matrix.suite == 'a11y'
               run: npm run test:a11y
 
             - name: Package release zip (for lifecycle tests)
+              if: matrix.suite == 'lifecycle'
               run: npm run package:release
 
             - name: Run lifecycle e2e tests
+              if: matrix.suite == 'lifecycle'
               run: npm run test:e2e:lifecycle
 
             - name: Upload Playwright results
               if: always()
               uses: actions/upload-artifact@v6
               with:
-                  name: playwright-results
+                  name: playwright-results-${{ matrix.suite }}
                   path: |
                       test-results
                       .tmp/playground-e2e
                   if-no-files-found: warn
+
+    # Keeps the "Playwright Playground smoke" check name that branch protection
+    # and the main preview depend on, and passes only when every suite passed
+    # (a skipped or cancelled suite fails it, too).
+    playwright-playground:
+        name: Playwright Playground smoke
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        if: always()
+        needs: playwright-suites
+
+        steps:
+            - name: Require every Playwright suite to pass
+              env:
+                  RESULT: ${{ needs.playwright-suites.result }}
+              run: |
+                  if [ "$RESULT" != "success" ]; then
+                      echo "::error::Playwright suites finished with result: ${RESULT}"
+                      exit 1
+                  fi
 
     psalm:
         name: Psalm
@@ -205,20 +265,14 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v5
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v5
-              with:
-                  node-version: 22
-                  cache: npm
+            - name: Set up Node.js and dependencies
+              uses: ./.github/actions/setup-node-deps
 
             - name: Set up PHP
               uses: shivammathur/setup-php@v2
               with:
                   php-version: '8.3'
                   coverage: xdebug
-
-            - name: Install JS dependencies
-              run: npm ci --legacy-peer-deps
 
             - name: Install Composer dependencies
               run: composer install --no-interaction --prefer-dist
@@ -249,14 +303,8 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v5
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v5
-              with:
-                  node-version: 22
-                  cache: npm
-
-            - name: Install dependencies
-              run: npm ci --legacy-peer-deps
+            - name: Set up Node.js and dependencies
+              uses: ./.github/actions/setup-node-deps
 
             - name: Build
               run: npm run build

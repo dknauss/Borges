@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `tools/markup-value` scores Borges's own free-text parser beside AnyStyle (`npm run borges-parser`, and in `npm run sweep`), and `docs/free-text-parsing.md` records the comparison, what AnyStyle is, and why Borges doesn't run it.
+- CI runs the three Playwright suites as parallel jobs that no longer wait for the Quality job, restores `node_modules`, the Playground CLI, Chromium, and WordPress downloads from cache, and cancels a pull request's superseded runs.
 
 ## [1.17.0] - 2026-10-28
 
