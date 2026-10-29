@@ -1,0 +1,17 @@
+Below is a reference list, one entry per line. Convert each entry to CSL-JSON.
+
+Return only a JSON array with exactly one object per line of input, in the same order, and nothing else. Use only what the entry itself says: do not add information from memory or look anything up. Use these CSL-JSON keys where the entry gives a value: "type", "title", "author" (a list of {"family", "given"} or {"literal"} objects), "issued" ({"date-parts": [[year]]}), "container-title", "DOI" (without https://doi.org/), "ISBN", "page", "publisher", "volume", "issue", "URL".
+
+Reference list:
+Berners-Lee, T., Hendler, J., & Lassila, O. (2001, May). The Semantic Web. Scientific American, 284(5), 34–43. https://doi.org/10.1038/scientificamerican0501-34
+Borges, J. L. (1962a). Labyrinths: Selected stories and other writings. New Directions.
+Borges, J. L. (1962b). The library of Babel. In D. A. Yates & J. E. Irby (Eds.), Labyrinths: Selected stories and other writings (pp. 51–58). New Directions.
+Cormen, T. H., Leiserson, C. E., Rivest, R. L., & Stein, C. (2009). Introduction to algorithms (3rd ed.). MIT Press.
+Devlin, J., Chang, M.-W., Lee, K., & Toutanova, K. (2019). BERT: Pre-training of deep bidirectional transformers for language understanding. In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (pp. 4171–4186). Association for Computational Linguistics. https://doi.org/10.18653/v1/N19-1423
+Harris, C. R., Millman, K. J., van der Walt, S. J., & Gommers, R. (2020). Array programming with NumPy. Nature, 585(7825), 357–362. https://doi.org/10.1038/s41586-020-2649-2
+Knuth, D. E. (1984). Literate programming. The Computer Journal, 27(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
+LeCun, Y., Bengio, Y., & Hinton, G. (2015). Deep learning. Nature, 521(7553), 436–444. https://doi.org/10.1038/nature14539
+Maldacena, J. (1998). The large N limit of superconformal field theories and supergravity. Advances in Theoretical and Mathematical Physics, 2(2), 231–252. https://doi.org/10.4310/ATMP.1998.v2.n2.a1
+Vaswani, A., Shazeer, N., Parmar, N., & Uszkoreit, J. (2017). Attention is all you need (arXiv:1706.03762). arXiv. https://doi.org/10.48550/arXiv.1706.03762
+Wilkinson, M. D., Dumontier, M., Aalbersberg, I. J., & Appleton, G. (2016). The FAIR Guiding Principles for scientific data management and stewardship. Scientific Data, 3, 160018. https://doi.org/10.1038/sdata.2016.18
+WordPress.org. (n.d.). Block Editor Handbook. WordPress Developer Resources. Retrieved October 27, 2026, from https://developer.wordpress.org/block-editor/
