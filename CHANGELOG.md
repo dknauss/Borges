@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-10-28
+
 ### Added
 
 - **OSCOLA tables of primary sources.** An OSCOLA bibliography that holds a case, legislation, or a treaty now lists them as OSCOLA 5 (§§1.6–1.7) asks: a table of cases first, then legislation (statutory instruments after statutes), then treaties, then the bibliography of secondary sources as one undivided list. Case names in the table of cases stay roman, and "Re X" files under X; its text is unchanged. Each table gets a label one level below the block heading, or a paragraph when the heading is a paragraph or an `h6`, and its list is named by that label (`aria-labelledby`). The editor, plain-text exports, the write routes, and bulk reformat show the same tables. An OSCOLA bibliography of secondary sources alone, and every other style, saves exactly as before. This replaces the editor notice that OSCOLA bibliographies were not divided.

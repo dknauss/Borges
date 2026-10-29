@@ -4,9 +4,9 @@ _Last reviewed: 2026-10-28._
 
 ## Current Focus
 
-0. **`v1.16.0` (2026-10-28) is the current release baseline.** Version strings
+0. **`v1.17.0` (2026-10-28) is the current release baseline.** Version strings
    agree across the plugin header, `package.json`, `block.json`, and
-   `readme.txt` (`Stable tag: 1.16.0`, `Tested up to: 7.1`). Treat the live
+   `readme.txt` (`Stable tag: 1.17.0`, `Tested up to: 7.1`). Treat the live
    WordPress.org plugin page as canonical for the publicly available version.
 1. **1.16.0** imports RIS, prints BC dates and years before 1000, adds
    JSON-LD containers and full COinS author lists at render time, sorts a
