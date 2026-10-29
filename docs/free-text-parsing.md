@@ -107,10 +107,12 @@ than the style allows.
 
 Within that limit, readers differ:
 
-- **Language models** (Claude Haiku, Sonnet, and Opus, once each) read every
-  detail the style printed and nothing it didn't: 65 of 67 in APA, 48 of 67
-  in OSCOLA, and 124 of 130 for the 36 works in Chicago. Asked ten questions
-  about the OSCOLA page, Sonnet answered 5 from the plain list (saying "not
+- **Language models** (Claude Haiku, Sonnet, and Opus, and OpenAI's GPT-6.1
+  through Codex, once each) read every detail the style printed and nothing
+  it didn't: 65 of 67 in APA, 48 of 67 in OSCOLA, and 124 of 130 for the 36
+  works in Chicago (121 for GPT-6.1, which filed "GitHub" and "arXiv" as
+  containers rather than publishers). Asked ten questions about the OSCOLA
+  page, Sonnet and GPT-6.1 each answered 5 from the plain list (saying "not
   on the page" for the other 5, without guessing) and 10 from the page with
   Borges's JSON-LD.
 - **AnyStyle** depends on the style's punctuation. It does best with IEEE,

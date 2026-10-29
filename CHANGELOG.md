@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `tools/markup-value/results/2026-10-28.md` adds OpenAI's GPT-6.1 (through Codex) beside the Claude models, with its answers in `results/2026-10-28-codex/`.
 - `tools/markup-value` scores Borges's own free-text parser beside AnyStyle (`npm run borges-parser`, and in `npm run sweep`), and `docs/free-text-parsing.md` records the comparison, what AnyStyle is, and why Borges doesn't run it.
 
 ## [1.17.0] - 2026-10-28
