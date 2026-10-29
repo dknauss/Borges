@@ -692,3 +692,53 @@ describe( 'titles inside URLs', () => {
 		} );
 	} );
 } );
+
+describe( 'getDisplaySegments journal abbreviations', () => {
+	const citation = ( formattedText, type = 'article-journal' ) => ( {
+		id: 'green',
+		formattedText,
+		csl: {
+			type,
+			title: 'Metadata Drift',
+			'container-title': 'Journal of Library Systems',
+			'container-title-short': 'J. Libr. Syst.',
+		},
+	} );
+	const italics = ( entry, options = { shortContainerItalics: true } ) =>
+		getDisplaySegments( entry, options )
+			.filter( ( segment ) => segment.italic )
+			.map( ( segment ) => segment.text );
+
+	it( 'italicizes the abbreviation IEEE prints', () => {
+		const ieee = citation(
+			'S. Green, “Metadata Drift,” J. Libr. Syst., vol. 27, 2020.'
+		);
+
+		expect( italics( ieee ) ).toEqual( [ 'J. Libr. Syst.' ] );
+		// Through 1.17.0 save() left it roman.
+		expect( italics( ieee, {} ) ).toEqual( [] );
+	} );
+
+	it( 'finds the abbreviation without periods, as Vancouver prints it', () => {
+		expect(
+			italics(
+				citation( 'Green S. Metadata Drift. J Libr Syst. 2020;27.' )
+			)
+		).toEqual( [ 'J Libr Syst' ] );
+	} );
+
+	it( 'prefers the full title, and ignores types without a container', () => {
+		expect(
+			italics(
+				citation(
+					'Green S. Metadata Drift. Journal of Library Systems.'
+				)
+			)
+		).toEqual( [ 'Journal of Library Systems' ] );
+		expect(
+			italics(
+				citation( 'Green S. Metadata Drift. J. Libr. Syst.', 'book' )
+			)
+		).toEqual( [ 'Metadata Drift' ] );
+	} );
+} );

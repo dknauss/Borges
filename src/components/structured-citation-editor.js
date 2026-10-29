@@ -17,6 +17,12 @@ export const STRUCTURED_FIELD_DEFINITIONS = [
 		label: __( 'Container', 'borges-bibliography-builder' ),
 	},
 	{
+		// CSL `container-title-short`: printed by IEEE and Vancouver.
+		key: 'containerTitleShort',
+		label: __( 'Journal abbreviation', 'borges-bibliography-builder' ),
+		types: [ 'article-journal' ],
+	},
+	{
 		key: 'publisher',
 		label: __( 'Publisher', 'borges-bibliography-builder' ),
 	},

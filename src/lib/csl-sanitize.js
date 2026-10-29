@@ -330,5 +330,40 @@ export function validateAndSanitizeCsl( csl ) {
 		}
 	}
 
-	return sanitizedCsl;
+	return sanitizeShortContainerTitle( sanitizedCsl );
+}
+
+/**
+ * Keep a journal abbreviation as one plain string in `container-title-short`,
+ * which IEEE and Vancouver print. Zotero's CSL-JSON calls it
+ * `journalAbbreviation`, and a list (as CrossRef's API gives it) keeps its
+ * first entry. Anything else is dropped rather than refused, since the
+ * abbreviation is never needed.
+ *
+ * Mirrored by bibliography_builder_sanitize_short_container_title() in
+ * includes/csl-sanitize.php.
+ *
+ * @param {Object} csl Sanitized CSL-JSON object.
+ * @return {Object} The object, with a string `container-title-short` or none.
+ */
+function sanitizeShortContainerTitle( csl ) {
+	const { journalAbbreviation, ...rest } = csl;
+	let short = Object.prototype.hasOwnProperty.call(
+		rest,
+		'container-title-short'
+	)
+		? rest[ 'container-title-short' ]
+		: journalAbbreviation;
+
+	if ( Array.isArray( short ) ) {
+		short = short[ 0 ];
+	}
+
+	delete rest[ 'container-title-short' ];
+
+	if ( typeof short === 'string' && stripHtmlTags( short ).trim() !== '' ) {
+		rest[ 'container-title-short' ] = stripHtmlTags( short ).trim();
+	}
+
+	return rest;
 }

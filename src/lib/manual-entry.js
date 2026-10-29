@@ -34,6 +34,7 @@ export const DEFAULT_MANUAL_ENTRY_FIELDS = {
 	authors: '',
 	title: '',
 	containerTitle: '',
+	containerTitleShort: '',
 	publisher: '',
 	year: '',
 	page: '',
@@ -181,6 +182,15 @@ export function buildManualCsl( fields ) {
 
 	if ( normalizeFieldValue( fields.containerTitle ) ) {
 		csl[ 'container-title' ] = normalizeFieldValue( fields.containerTitle );
+	}
+
+	if (
+		type === 'article-journal' &&
+		normalizeFieldValue( fields.containerTitleShort )
+	) {
+		csl[ 'container-title-short' ] = normalizeFieldValue(
+			fields.containerTitleShort
+		);
 	}
 
 	if ( normalizeFieldValue( fields.publisher ) ) {

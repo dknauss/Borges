@@ -130,7 +130,9 @@ export const deprecated = [
 		// §1.7 lists them oldest first and replaces the name with a double
 		// em dash after the first. Author-date styles also kept two undated
 		// works by the same authors in stored order, where the PHP port
-		// sorted them by title.
+		// sorted them by title. Nor was a journal abbreviation
+		// (`container-title-short`) italicized where IEEE and Vancouver print
+		// it.
 		attributes: deprecatedAttributes,
 		save: ( { attributes } ) =>
 			renderBibliographySave( attributes, {

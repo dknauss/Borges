@@ -445,10 +445,11 @@ Chicago author-date 1%.
       catalog, Internet Archive, Abilities)
 2. **Style conformance for the most-used styles**, in this order:
     1. **Journal abbreviations for IEEE and Vancouver** (both manuals require
-       them; about 19% of use). Use the record's short container title
-       (`container-title-short`, from PubMed's ISO abbreviation or CrossRef's
-       `short-container-title`) when it has one; print the full title
-       otherwise.
+       them; about 19% of use). **Built 2026-10-29**: the record's
+       `container-title-short` when it has one, the full title otherwise.
+       Follow-ups: confirm on the live resolver checks that CrossRef and
+       PubMed records carry it, and add RIS `J2` to the per-entry export
+       (saved markup, so it needs a deprecation).
     2. **APA sentence case** for article, chapter, and book titles (56% of
        use; Vancouver needs it too). Needs a design: proper nouns cannot be
        recovered from Title Case, and the block re-applies italics by finding

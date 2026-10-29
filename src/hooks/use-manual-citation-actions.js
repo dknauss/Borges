@@ -71,6 +71,14 @@ export function useManualCitationActions( {
 				label: __( 'Container', 'borges-bibliography-builder' ),
 			},
 			{
+				key: 'containerTitleShort',
+				label: __(
+					'Journal abbreviation',
+					'borges-bibliography-builder'
+				),
+				types: [ 'article-journal' ],
+			},
+			{
 				key: 'publisher',
 				label: __( 'Publisher', 'borges-bibliography-builder' ),
 			},

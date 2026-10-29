@@ -267,6 +267,7 @@ export function useCitationEditorState( {
 				authors: formatAuthorListForField( entry.csl.author ),
 				title: entry.csl.title || '',
 				containerTitle: entry.csl[ 'container-title' ] || '',
+				containerTitleShort: entry.csl[ 'container-title-short' ] || '',
 				publisher: entry.csl.publisher || '',
 				year:
 					String(
@@ -386,6 +387,7 @@ export function useCitationEditorState( {
 		const textFields = [
 			[ 'title', 'title' ],
 			[ 'containerTitle', 'container-title' ],
+			[ 'containerTitleShort', 'container-title-short' ],
 			[ 'publisher', 'publisher' ],
 			[ 'page', 'page' ],
 		];

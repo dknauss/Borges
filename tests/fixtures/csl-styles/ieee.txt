@@ -3,7 +3,7 @@ book-two-authors	T. J. Becker and Y. Nakamura, Reading Machines: Catalogues, Ind
 book-translated	J. P. Ferreira, The Garden of Forking Paths, H. Wright, Trans. London: Meridian Books, 2015.
 book-edited	C. Okafor and A. Lindqvist, Eds., Essays on Classification. Oxford: Delta Academic, 2018.
 chapter	C. Dubois, “Indexing the Infinite,” in Essays on Classification, C. Okafor and A. Lindqvist, Eds. Oxford: Delta Academic, 2018, pp. 45–67.
-article-one-author	S. Green, “Metadata Drift in Institutional Repositories,” Journal of Library Systems, vol. 27, no. 2, pp. 97–111, Apr. 2020, doi: 10.1234/jls.2020.0027.
+article-one-author	S. Green, “Metadata Drift in Institutional Repositories,” J. Libr. Syst., vol. 27, no. 2, pp. 97–111, Apr. 2020, doi: 10.1234/jls.2020.0027.
 article-three-authors	R. Hughes, O. Iqbal, and L. Jensen, “Citation Styles as Data,” Scholarly Communication Review, vol. 12, no. 4, pp. 301–322, 2022, doi: 10.5555/scr.12.4.301.
 article-eight-authors	J.-W. Kim et al., “A Shared Corpus of Reference Metadata,” Data in Brief, vol. 41, pp. 107–118, 2023.
 article-twenty-two-authors	A. Abbott et al., “Large Collaborations and Author Lists,” Physical Review Letters, vol. 130, no. 5, p. 051801, 2023, doi: 10.1103/example.130.051801.

@@ -29,6 +29,7 @@ export default function save( { attributes } ) {
 		quoteAwareItalics: true,
 		urlAwareItalics: true,
 		quoteFoldedItalics: true,
+		shortContainerItalics: true,
 		particleAwareSort: true,
 		localeArticles: true,
 		notesAuthorChains: true,

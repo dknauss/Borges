@@ -146,6 +146,27 @@ function bibliography_builder_save_plain_display_text( $citation ) {
 }
 
 /**
+ * `CONTAINER_TITLE_TYPES`: types whose container title, not their own title,
+ * is italicized.
+ *
+ * @return string[]
+ */
+function bibliography_builder_save_container_title_types() {
+	return array(
+		'article-journal',
+		'article-magazine',
+		'article-newspaper',
+		'chapter',
+		'entry',
+		'paper-conference',
+		'post',
+		'post-weblog',
+		'review',
+		'review-book',
+	);
+}
+
+/**
  * `getItalicizedFields()`.
  *
  * @param array $csl CSL-JSON item.
@@ -181,18 +202,7 @@ function bibliography_builder_save_italic_fields( $csl ) {
 		'treaty',
 		'webpage',
 	);
-	$container_types = array(
-		'article-journal',
-		'article-magazine',
-		'article-newspaper',
-		'chapter',
-		'entry',
-		'paper-conference',
-		'post',
-		'post-weblog',
-		'review',
-		'review-book',
-	);
+	$container_types = bibliography_builder_save_container_title_types();
 	$type            = bibliography_builder_csl_field( $csl, 'type' );
 
 	if ( in_array( $type, $title_types, true ) ) {
@@ -204,6 +214,28 @@ function bibliography_builder_save_italic_fields( $csl ) {
 	}
 
 	return array();
+}
+
+/**
+ * `getShortContainerTitle()`: the journal abbreviation, for a type whose
+ * container title is italicized, without inline markup; null when there is
+ * none.
+ *
+ * @param array $csl CSL-JSON item.
+ * @return string|null
+ */
+function bibliography_builder_save_short_container_title( $csl ) {
+	$short = bibliography_builder_csl_field( $csl, 'container-title-short' );
+	$type  = bibliography_builder_csl_field( $csl, 'type' );
+
+	if ( ! in_array( $type, bibliography_builder_save_container_title_types(), true )
+		|| ! bibliography_builder_js_truthy( $short ) ) {
+		return null;
+	}
+
+	$needle = bibliography_builder_save_strip_inline_markup( bibliography_builder_js_string( $short ) );
+
+	return '' === $needle ? null : $needle;
 }
 
 /**
@@ -418,6 +450,24 @@ function bibliography_builder_save_display_segments( $citation, $roman_titles = 
 		}
 
 		$range = bibliography_builder_save_find_last_range( $text, $needle, $title_ranges, $url_ranges );
+
+		if ( null !== $range ) {
+			$title_ranges[] = $range;
+		}
+	}
+
+	// `shortContainerItalics`: a container title not in the text is looked
+	// for as its abbreviation, which IEEE and Vancouver print.
+	$short = $roman_titles || array() !== $title_ranges
+		? null
+		: bibliography_builder_save_short_container_title( bibliography_builder_citation_csl( $citation ) );
+
+	// As stored ("J. Libr. Syst."), else without its periods, as Vancouver
+	// prints NLM abbreviations ("J Libr Syst").
+	foreach ( null === $short ? array() : array( $short, str_replace( '.', '', $short ) ) as $needle ) {
+		$range = array() === $title_ranges && '' !== $needle
+			? bibliography_builder_save_find_last_range( $text, $needle, $title_ranges, $url_ranges )
+			: null;
 
 		if ( null !== $range ) {
 			$title_ranges[] = $range;

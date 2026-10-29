@@ -2429,6 +2429,95 @@
 					}
 				]
 			}
+		},
+		{
+			"name": "ieee-journal-abbreviation",
+			"note": "IEEE prints the journal abbreviation (container-title-short), which is italicized as the full title would be; an entry whose text has the full title keeps that italic.",
+			"attributes": {
+				"citationStyle": "ieee",
+				"headingText": "References",
+				"citations": [
+					{
+						"id": "green",
+						"csl": {
+							"type": "article-journal",
+							"title": "Metadata Drift in Institutional Repositories",
+							"author": [
+								{
+									"family": "Green",
+									"given": "Samuel"
+								}
+							],
+							"container-title": "Journal of Library Systems",
+							"container-title-short": "J. Libr. Syst.",
+							"issued": {
+								"date-parts": [
+									[
+										2020
+									]
+								]
+							}
+						},
+						"formattedText": "S. Green, “Metadata Drift in Institutional Repositories,” <i>J. Libr. Syst.</i>, vol. 27, no. 2, pp. 97–111, Apr. 2020."
+					},
+					{
+						"id": "hughes",
+						"csl": {
+							"type": "article-journal",
+							"title": "Citation Styles as Data",
+							"author": [
+								{
+									"family": "Hughes",
+									"given": "Rebecca"
+								}
+							],
+							"container-title": "Scholarly Communication Review",
+							"container-title-short": "Sch. Commun. Rev.",
+							"issued": {
+								"date-parts": [
+									[
+										2022
+									]
+								]
+							}
+						},
+						"formattedText": "R. Hughes, “Citation Styles as Data,” Scholarly Communication Review, vol. 12, no. 4, pp. 301–322, 2022."
+					}
+				]
+			}
+		},
+		{
+			"name": "vancouver-journal-abbreviation",
+			"note": "Vancouver prints NLM's abbreviation without periods; the stored abbreviation keeps them, so it is found without them.",
+			"attributes": {
+				"citationStyle": "vancouver",
+				"headingText": "References",
+				"citations": [
+					{
+						"id": "green",
+						"csl": {
+							"type": "article-journal",
+							"title": "Metadata Drift in Institutional Repositories",
+							"author": [
+								{
+									"family": "Green",
+									"given": "Samuel"
+								}
+							],
+							"container-title": "Journal of Library Systems",
+							"container-title-short": "J. Libr. Syst.",
+							"issued": {
+								"date-parts": [
+									[
+										2020
+									]
+								]
+							}
+						},
+						"formattedText": "Green S. Metadata Drift in Institutional Repositories. J Libr Syst. 2020 Apr;27(2):97-111."
+					}
+				]
+			}
 		}
 	]
 }

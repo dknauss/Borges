@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **OSCOLA repeated authors.** In an OSCOLA bibliography, one author's works now come oldest first, then by title within a year, and after the first of them the author's name becomes a double em dash, as OSCOLA 5 §1.7 asks: "—— Punishment and Responsibility (OUP 1968)". Works the author wrote with others follow, by co-author, with the dash for the first author only ("—— and Honoré AM, Causation in the Law (OUP 1959)"). Screen readers hear the name, as with MLA's hyphens. The dash is saved as two U+2014 characters, which WordPress's typography filter leaves alone. It applies only when the entries start with the name exactly as OSCOLA writes it, so manual display text and anything in doubt keep the full name.
+- **Journal abbreviations in IEEE and Vancouver.** Both manuals cite a journal article by the journal's abbreviated title, and now Borges does too when the record has one (CSL `container-title-short`): IEEE prints it as stored ("J. Libr. Syst."), Vancouver without periods, as NLM writes them ("J Libr Syst"). A record without one prints the full title, as before. The abbreviation comes from the source when it supplies one (CrossRef and PubMed records, an RIS `J2`, a BibLaTeX `shortjournal`, or Zotero's `journalAbbreviation` in pasted CSL-JSON); Borges does not look it up. A new "Journal abbreviation" field in the entry editor sets it by hand. It is italicized where the full title would be.
 
 ### Fixed
 

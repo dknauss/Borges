@@ -857,13 +857,22 @@ function bibliography_builder_render_csl_items( $csl_items, $style ) {
 
 	$prepared_items  = array();
 	$demote_particle = 1 === preg_match( '/demote-non-dropping-particle="display-and-sort"/', $style_xml );
+	// citeproc-php ignores `strip-periods` on <text>, so a style that asks for
+	// it on the journal abbreviation (Vancouver: NLM's "Phys Rev Lett") gets
+	// the periods removed here.
+	$strip_short = 1 === preg_match( '/variable="container-title" form="short" strip-periods="true"/', $style_xml );
 
 	foreach ( $csl_items as $index => $item ) {
-		$item_array               = bibliography_builder_prepare_csl_for_formatter(
+		$item_array = bibliography_builder_prepare_csl_for_formatter(
 			is_array( $item ) ? $item : array(),
 			$demote_particle,
 			isset( $style['locale'] ) ? (string) $style['locale'] : 'en-US'
 		);
+		if ( $strip_short && isset( $item_array['container-title-short'] )
+			&& is_string( $item_array['container-title-short'] ) ) {
+			$item_array['container-title-short'] = str_replace( '.', '', $item_array['container-title-short'] );
+		}
+
 		$item_array['id']         = 'bibliography-builder-format-' . $index;
 		$prepared_items[ $index ] = $item_array;
 	}
