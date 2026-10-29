@@ -325,6 +325,25 @@ function foldQuotes( text ) {
 	return text.replace( /[‘’“”]/gu, ( mark ) => FOLDED_QUOTES[ mark ] );
 }
 
+/**
+ * Lowercase each character whose lowercase is one character, keeping the
+ * text's length, so a title is found however the style capitalized it.
+ *
+ * @param {string} text Text.
+ * @return {string} Text with each character lowercased where that keeps one character.
+ */
+function foldCase( text ) {
+	let folded = '';
+
+	for ( const character of text ) {
+		const lower = character.toLowerCase();
+
+		folded += [ ...lower ].length === 1 ? lower : character;
+	}
+
+	return folded;
+}
+
 function findLastRange(
 	text,
 	value,
@@ -344,6 +363,12 @@ function findLastRange(
 			! overlapsAny( urlRanges, start, end )
 		) {
 			return { start, end };
+		}
+
+		// lastIndexOf( value, -1 ) searches from 0 again: a rejected match at
+		// the start is the last one (the PHP port stops the same way).
+		if ( start === 0 ) {
+			return null;
 		}
 
 		start = searchText.lastIndexOf( value, start - 1 );
@@ -380,6 +405,20 @@ function addRange(
 
 	ranges.push( range );
 }
+
+// Types whose container title, not their own title, is italicized.
+const CONTAINER_TITLE_TYPES = [
+	'article-journal',
+	'article-magazine',
+	'article-newspaper',
+	'chapter',
+	'entry',
+	'paper-conference',
+	'post',
+	'post-weblog',
+	'review',
+	'review-book',
+];
 
 function getItalicizedFields( citation ) {
 	const type = citation.csl.type;
@@ -418,24 +457,34 @@ function getItalicizedFields( citation ) {
 		return [ citation.csl.title ];
 	}
 
-	if (
-		[
-			'article-journal',
-			'article-magazine',
-			'article-newspaper',
-			'chapter',
-			'entry',
-			'paper-conference',
-			'post',
-			'post-weblog',
-			'review',
-			'review-book',
-		].includes( type )
-	) {
+	if ( CONTAINER_TITLE_TYPES.includes( type ) ) {
 		return [ citation.csl[ 'container-title' ] ];
 	}
 
 	return [];
+}
+
+/**
+ * The journal abbreviation a style can print in place of the container
+ * title (IEEE, Vancouver), for a type whose container title is italicized.
+ *
+ * @param {Object} citation Citation record.
+ * @return {string|undefined} CSL `container-title-short`.
+ */
+function getShortContainerTitle( citation ) {
+	const { journalAbbreviation } = citation.csl;
+
+	if ( ! CONTAINER_TITLE_TYPES.includes( citation.csl.type ) ) {
+		return undefined;
+	}
+
+	// A record stored before the sanitizers mapped Zotero's name for it.
+	return (
+		citation.csl[ 'container-title-short' ] ||
+		( typeof journalAbbreviation === 'string'
+			? journalAbbreviation
+			: undefined )
+	);
 }
 
 /**
@@ -466,19 +515,32 @@ function getItalicizedFields( citation ) {
  * finds the curly one citeproc printed; without it, the shape save() had
  * through 1.15.0, when such a title stayed roman.
  *
+ * With `shortContainerItalics`, a container title that is not in the text is
+ * looked for as its abbreviation (`container-title-short`), which IEEE and
+ * Vancouver print; without it, the shape save() had through 1.17.0.
+ *
+ * With `caseFoldedItalics`, a title that is not in the text as stored is
+ * looked for without regard to case, since APA, Vancouver, and IEEE print
+ * titles in sentence case (see includes/sentence-case.php); without it, the
+ * shape save() had through 1.17.0.
+ *
  * With `romanTitles`, no title is italicized; only inline `<i>`/`<em>` in the
  * text is. OSCOLA's table of cases uses it: case names there are not
  * italicised (OSCOLA 5 §1.6.2).
  *
- * @param {Object}  citation                     Citation object.
- * @param {Object}  [options]                    Options.
- * @param {boolean} [options.inlineMarkup]       Read inline HTML in the text.
- * @param {boolean} [options.quoteAwareItalics]  Skip quoted titles that end in
- *                                               punctuation.
- * @param {boolean} [options.urlAwareItalics]    Skip title matches inside URLs.
- * @param {boolean} [options.quoteFoldedItalics] Match titles with quotation
- *                                               marks folded.
- * @param {boolean} [options.romanTitles]        Leave titles roman.
+ * @param {Object}  citation                        Citation object.
+ * @param {Object}  [options]                       Options.
+ * @param {boolean} [options.inlineMarkup]          Read inline HTML in the text.
+ * @param {boolean} [options.quoteAwareItalics]     Skip quoted titles that end in
+ *                                                  punctuation.
+ * @param {boolean} [options.urlAwareItalics]       Skip title matches inside URLs.
+ * @param {boolean} [options.quoteFoldedItalics]    Match titles with quotation
+ *                                                  marks folded.
+ * @param {boolean} [options.shortContainerItalics] Italicize a journal
+ *                                                  abbreviation.
+ * @param {boolean} [options.caseFoldedItalics]     Match a title without
+ *                                                  regard to case.
+ * @param {boolean} [options.romanTitles]           Leave titles roman.
  * @return {DisplaySegment[]} Array of text segments with italic flags.
  *
  * @since 0.1.0
@@ -490,6 +552,8 @@ export function getDisplaySegments(
 		quoteAwareItalics = false,
 		urlAwareItalics = false,
 		quoteFoldedItalics = false,
+		shortContainerItalics = false,
+		caseFoldedItalics = false,
 		romanTitles = false,
 	} = {}
 ) {
@@ -508,15 +572,74 @@ export function getDisplaySegments(
 	const urlRanges = urlAwareItalics ? getUrlRanges( displayText ) : [];
 	const searchText = quoteFoldedItalics ? foldQuotes( displayText ) : null;
 
+	const caseFoldedText = caseFoldedItalics
+		? foldCase( searchText ?? displayText )
+		: null;
+
 	for ( const value of romanTitles ? [] : getItalicizedFields( citation ) ) {
+		const needle =
+			inlineMarkup && value ? stripInlineMarkup( value ) : value;
+		const found = titleRanges.length;
+
 		addRange(
 			titleRanges,
 			displayText,
-			inlineMarkup && value ? stripInlineMarkup( value ) : value,
+			needle,
 			quoteAwareItalics,
 			urlRanges,
 			searchText
 		);
+
+		// Not as stored: perhaps as the style cased it ("The origin of
+		// species" for a stored "The Origin of Species").
+		if (
+			caseFoldedText !== null &&
+			needle &&
+			titleRanges.length === found
+		) {
+			const range = findLastRange(
+				displayText,
+				foldCase(
+					searchText
+						? foldQuotes( String( needle ) )
+						: String( needle )
+				),
+				titleRanges,
+				quoteAwareItalics,
+				urlRanges,
+				caseFoldedText
+			);
+
+			if ( range ) {
+				titleRanges.push( range );
+			}
+		}
+	}
+
+	const shortTitle =
+		shortContainerItalics && ! romanTitles && titleRanges.length === 0
+			? getShortContainerTitle( citation )
+			: null;
+
+	// As stored ("J. Libr. Syst."), else without its periods, as Vancouver
+	// prints NLM abbreviations ("J Libr Syst").
+	if ( shortTitle ) {
+		const short = inlineMarkup
+			? stripInlineMarkup( shortTitle )
+			: shortTitle;
+
+		for ( const value of [ short, short.replace( /\./g, '' ) ] ) {
+			if ( titleRanges.length === 0 ) {
+				addRange(
+					titleRanges,
+					displayText,
+					value,
+					quoteAwareItalics,
+					urlRanges,
+					searchText
+				);
+			}
+		}
 	}
 
 	const italicRanges = mergeRanges( [ ...titleRanges, ...markupRanges ] );

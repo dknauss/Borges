@@ -38,8 +38,9 @@ final class StyleDataTest extends TestCase {
 		$this->assertNotEmpty( $styles );
 
 		foreach ( $styles as $key => $style ) {
-			// `groups` is the one optional field; test_groups_are_well_formed() checks it.
-			unset( $style['groups'] );
+			// `groups` and `sentenceCase` are optional; test_groups_are_well_formed()
+			// and test_sentence_case_is_well_formed() check them.
+			unset( $style['groups'], $style['sentenceCase'] );
 
 			$this->assertSame( array_keys( self::FIELDS ), array_keys( $style ), $key );
 			$this->assertIsBool( $style['enabled'], $key );
@@ -139,6 +140,29 @@ final class StyleDataTest extends TestCase {
 	}
 
 	/**
+	 * Sentence case (includes/sentence-case.php) is on for APA 7, Vancouver,
+	 * and IEEE, each with a known scope and subtitle rule, and off for the
+	 * styles whose manuals want title case.
+	 */
+	public function test_sentence_case_is_well_formed() {
+		$on = array();
+
+		foreach ( bibliography_builder_get_style_data()['styles'] as $key => $style ) {
+			if ( ! isset( $style['sentenceCase'] ) ) {
+				continue;
+			}
+
+			$on[] = $key;
+
+			$this->assertSame( array( 'scope', 'subtitle' ), array_keys( $style['sentenceCase'] ), $key );
+			$this->assertContains( $style['sentenceCase']['scope'], array( 'works', 'parts' ), $key );
+			$this->assertContains( $style['sentenceCase']['subtitle'], array( 'capitalize', 'lowercase' ), $key );
+		}
+
+		$this->assertSame( array( 'apa-7', 'ieee', 'vancouver' ), $on );
+	}
+
+	/**
 	 * A style prints year suffixes only where styles.json turns them on: its
 	 * CSL template has the `year-suffix` slot after the year, and the others
 	 * have none, so a stray letter can never reach a style that does not use it.
@@ -168,10 +192,11 @@ final class StyleDataTest extends TestCase {
 		foreach ( $styles as $key => $style ) {
 			$this->assertSame(
 				array(
-					'template'   => $style['cslTemplate'],
-					'locale'     => $style['locale'],
-					'family'     => $style['family'],
-					'yearSuffix' => $style['yearSuffix'],
+					'template'     => $style['cslTemplate'],
+					'locale'       => $style['locale'],
+					'family'       => $style['family'],
+					'yearSuffix'   => $style['yearSuffix'],
+					'sentenceCase' => isset( $style['sentenceCase'] ) ? $style['sentenceCase'] : null,
 				),
 				bibliography_builder_get_formatter_style_definition( $key ),
 				$key

@@ -654,6 +654,7 @@ require_once __DIR__ . '/includes/block-data.php';
 require_once __DIR__ . '/includes/csl-sanitize.php';
 require_once __DIR__ . '/includes/format-timing.php';
 require_once __DIR__ . '/includes/formatter.php';
+require_once __DIR__ . '/includes/sentence-case.php';
 require_once __DIR__ . '/includes/read-routes.php';
 require_once __DIR__ . '/includes/google-books-key.php';
 require_once __DIR__ . '/includes/resolvers.php';

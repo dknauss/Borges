@@ -17,6 +17,12 @@ export const STRUCTURED_FIELD_DEFINITIONS = [
 		label: __( 'Container', 'borges-bibliography-builder' ),
 	},
 	{
+		// CSL `container-title-short`: printed by IEEE and Vancouver.
+		key: 'containerTitleShort',
+		label: __( 'Journal abbreviation', 'borges-bibliography-builder' ),
+		types: [ 'article-journal' ],
+	},
+	{
 		key: 'publisher',
 		label: __( 'Publisher', 'borges-bibliography-builder' ),
 	},
@@ -41,6 +47,20 @@ export const STRUCTURED_FIELD_DEFINITIONS = [
 	{
 		key: 'url',
 		label: __( 'URL', 'borges-bibliography-builder' ),
+	},
+	{
+		// CSL `custom`: APA, Vancouver, and IEEE print titles in sentence
+		// case unless the entry keeps them as entered.
+		key: 'keepTitleCase',
+		label: __(
+			'Keep title capitalization as entered',
+			'borges-bibliography-builder'
+		),
+		help: __(
+			'APA, IEEE, and Vancouver otherwise print the title in sentence case.',
+			'borges-bibliography-builder'
+		),
+		control: 'checkbox',
 	},
 ];
 
@@ -132,32 +152,79 @@ export function StructuredCitationEditor( {
 				.filter(
 					( { types } ) => ! types || types.includes( entryType )
 				)
-				.map( ( { key, label }, index ) => (
-					<div
-						key={ key }
-						className="bibliography-builder-structured-field"
-					>
-						<label
-							htmlFor={ getStructuredFieldId( citation.id, key ) }
+				.map( ( { key, label, help, control }, index ) =>
+					control === 'checkbox' ? (
+						<div
+							key={ key }
+							className="bibliography-builder-structured-field bibliography-builder-structured-checkbox"
 						>
-							{ label }
-						</label>
-						<input
-							id={ getStructuredFieldId( citation.id, key ) }
-							ref={
-								! showTypeSelector && index === 0
-									? setFirstFieldNode
-									: undefined
-							}
-							type="text"
-							value={ fields[ key ] || '' }
-							onChange={ ( event ) =>
-								onFieldChange( key, event.target.value )
-							}
-							onKeyDown={ handleKeyDown }
-						/>
-					</div>
-				) ) }
+							<input
+								id={ getStructuredFieldId( citation.id, key ) }
+								type="checkbox"
+								checked={ Boolean( fields[ key ] ) }
+								aria-describedby={
+									help
+										? getStructuredFieldId(
+												citation.id,
+												`${ key }-help`
+											)
+										: undefined
+								}
+								onChange={ ( event ) =>
+									onFieldChange( key, event.target.checked )
+								}
+								onKeyDown={ handleKeyDown }
+							/>
+							<label
+								htmlFor={ getStructuredFieldId(
+									citation.id,
+									key
+								) }
+							>
+								{ label }
+							</label>
+							{ help && (
+								<p
+									id={ getStructuredFieldId(
+										citation.id,
+										`${ key }-help`
+									) }
+									className="bibliography-builder-structured-help"
+								>
+									{ help }
+								</p>
+							) }
+						</div>
+					) : (
+						<div
+							key={ key }
+							className="bibliography-builder-structured-field"
+						>
+							<label
+								htmlFor={ getStructuredFieldId(
+									citation.id,
+									key
+								) }
+							>
+								{ label }
+							</label>
+							<input
+								id={ getStructuredFieldId( citation.id, key ) }
+								ref={
+									! showTypeSelector && index === 0
+										? setFirstFieldNode
+										: undefined
+								}
+								type="text"
+								value={ fields[ key ] || '' }
+								onChange={ ( event ) =>
+									onFieldChange( key, event.target.value )
+								}
+								onKeyDown={ handleKeyDown }
+							/>
+						</div>
+					)
+				) }
 			<div className="bibliography-builder-structured-actions">
 				<Button
 					variant="primary"

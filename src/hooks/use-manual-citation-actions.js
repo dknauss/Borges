@@ -71,6 +71,14 @@ export function useManualCitationActions( {
 				label: __( 'Container', 'borges-bibliography-builder' ),
 			},
 			{
+				key: 'containerTitleShort',
+				label: __(
+					'Journal abbreviation',
+					'borges-bibliography-builder'
+				),
+				types: [ 'article-journal' ],
+			},
+			{
 				key: 'publisher',
 				label: __( 'Publisher', 'borges-bibliography-builder' ),
 			},
@@ -94,6 +102,18 @@ export function useManualCitationActions( {
 			{
 				key: 'url',
 				label: __( 'URL', 'borges-bibliography-builder' ),
+			},
+			{
+				key: 'keepTitleCase',
+				label: __(
+					'Keep title capitalization as entered',
+					'borges-bibliography-builder'
+				),
+				help: __(
+					'APA, IEEE, and Vancouver otherwise print the title in sentence case.',
+					'borges-bibliography-builder'
+				),
+				control: 'checkbox',
 			},
 		],
 		[]

@@ -16,9 +16,14 @@ import {
 } from './lib/jsonld';
 import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
-import { getGroupLabelTag, groupCitations } from './lib/bibliography-groups';
 import {
-	REPEATED_AUTHOR_MARK,
+	getGroupIndex,
+	getGroupLabelTag,
+	getStyleGroups,
+	groupCitations,
+} from './lib/bibliography-groups';
+import {
+	getRepeatedAuthorMark,
 	getRepeatedAuthorPrefixes,
 } from './lib/repeated-authors';
 import {
@@ -104,10 +109,15 @@ export function renderBibliographySave(
 		quoteAwareItalics = false,
 		urlAwareItalics = false,
 		quoteFoldedItalics = false,
+		shortContainerItalics = false,
+		caseFoldedItalics = false,
 		particleAwareSort = false,
 		localeArticles = false,
 		notesAuthorChains = false,
 		sourceGroups = false,
+		chronologicalAuthors = false,
+		undatedTitles = false,
+		firstAuthorDash = false,
 		citeExportData = false,
 		canonicalDoiUrl = false,
 		jsonLdItemList = false,
@@ -135,16 +145,28 @@ export function renderBibliographySave(
 				localeArticles,
 				notesAuthorChains,
 				sourceGroups,
+				chronologicalAuthors,
+				undatedTitles,
 			} )
 		: citations;
 	const cslArray = renderedCitations.map( ( c ) => c.csl );
+	const styleGroups =
+		sortEntries && sourceGroups ? getStyleGroups( citationStyle ) : null;
 	const repeatedAuthorPrefixes = repeatedAuthors
 		? getRepeatedAuthorPrefixes(
 				renderedCitations,
 				citationStyle,
-				inlineMarkup ? getPlainDisplayText : getDisplayText
+				inlineMarkup ? getPlainDisplayText : getDisplayText,
+				{
+					firstAuthorDash,
+					listOf: ( citation ) =>
+						styleGroups
+							? getGroupIndex( citation.csl, styleGroups )
+							: null,
+				}
 			)
 		: [];
+	const repeatedAuthorMark = getRepeatedAuthorMark( citationStyle );
 	const styleDefinition = getStyleDefinition( citationStyle );
 	const ListTag = getListSemantics( citationStyle );
 	const listClassName = `bibliography-builder-list bibliography-builder-list-${
@@ -164,6 +186,8 @@ export function renderBibliographySave(
 			quoteAwareItalics,
 			urlAwareItalics,
 			quoteFoldedItalics,
+			shortContainerItalics,
+			caseFoldedItalics,
 			romanTitles,
 		} );
 		const repeatedPrefix = repeatedAuthorPrefixes[ citationIndex ] || null;
@@ -207,7 +231,7 @@ export function renderBibliographySave(
 								className="bibliography-builder-repeated-author-mark"
 								aria-hidden="true"
 							>
-								{ REPEATED_AUTHOR_MARK }
+								{ repeatedAuthorMark }
 							</span>
 							<span className="bibliography-builder-visually-hidden screen-reader-text">
 								{ repeatedPrefix }

@@ -692,3 +692,125 @@ describe( 'titles inside URLs', () => {
 		} );
 	} );
 } );
+
+describe( 'getDisplaySegments journal abbreviations', () => {
+	const citation = ( formattedText, type = 'article-journal' ) => ( {
+		id: 'green',
+		formattedText,
+		csl: {
+			type,
+			title: 'Metadata Drift',
+			'container-title': 'Journal of Library Systems',
+			'container-title-short': 'J. Libr. Syst.',
+		},
+	} );
+	const italics = ( entry, options = { shortContainerItalics: true } ) =>
+		getDisplaySegments( entry, options )
+			.filter( ( segment ) => segment.italic )
+			.map( ( segment ) => segment.text );
+
+	it( 'italicizes the abbreviation IEEE prints', () => {
+		const ieee = citation(
+			'S. Green, “Metadata Drift,” J. Libr. Syst., vol. 27, 2020.'
+		);
+
+		expect( italics( ieee ) ).toEqual( [ 'J. Libr. Syst.' ] );
+		// Through 1.17.0 save() left it roman.
+		expect( italics( ieee, {} ) ).toEqual( [] );
+	} );
+
+	it( 'finds the abbreviation without periods, as Vancouver prints it', () => {
+		expect(
+			italics(
+				citation( 'Green S. Metadata Drift. J Libr Syst. 2020;27.' )
+			)
+		).toEqual( [ 'J Libr Syst' ] );
+	} );
+
+	it( "reads an abbreviation stored under Zotero's name", () => {
+		const stored = citation(
+			'Green S. Metadata Drift. J Libr Syst. 2020.'
+		);
+		delete stored.csl[ 'container-title-short' ];
+		stored.csl.journalAbbreviation = 'J. Libr. Syst.';
+
+		expect( italics( stored ) ).toEqual( [ 'J Libr Syst' ] );
+	} );
+
+	it( 'prefers the full title, and ignores types without a container', () => {
+		expect(
+			italics(
+				citation(
+					'Green S. Metadata Drift. Journal of Library Systems.'
+				)
+			)
+		).toEqual( [ 'Journal of Library Systems' ] );
+		expect(
+			italics(
+				citation( 'Green S. Metadata Drift. J. Libr. Syst.', 'book' )
+			)
+		).toEqual( [ 'Metadata Drift' ] );
+	} );
+} );
+
+describe( 'getDisplaySegments sentence-case titles', () => {
+	const book = ( formattedText ) => ( {
+		id: 'borges',
+		formattedText,
+		csl: { type: 'book', title: 'The Garden of Forking Paths' },
+	} );
+	const italics = ( entry, options = { caseFoldedItalics: true } ) =>
+		getDisplaySegments( entry, options )
+			.filter( ( segment ) => segment.italic )
+			.map( ( segment ) => segment.text );
+
+	it( 'finds a title the style printed in sentence case', () => {
+		const apa = book(
+			'Borges, J. L. (1941). The garden of forking paths.'
+		);
+
+		expect( italics( apa ) ).toEqual( [ 'The garden of forking paths' ] );
+		// Through 1.17.0 save() left it roman.
+		expect( italics( apa, {} ) ).toEqual( [] );
+	} );
+
+	it( 'prefers the title as stored', () => {
+		expect(
+			italics(
+				book(
+					'Borges. The garden of forking paths: The Garden of Forking Paths.'
+				)
+			)
+		).toEqual( [ 'The Garden of Forking Paths' ] );
+	} );
+
+	it( 'folds quotation marks and case together', () => {
+		expect(
+			italics(
+				{
+					id: 'o',
+					formattedText: 'Smith, A. (2020). O’Brien’s garden.',
+					csl: { type: 'book', title: "O'Brien's Garden" },
+				},
+				{ caseFoldedItalics: true, quoteFoldedItalics: true }
+			)
+		).toEqual( [ 'O’Brien’s garden' ] );
+	} );
+} );
+
+describe( 'getDisplaySegments title at the start of a URL', () => {
+	it( 'stops when the only match, at the start, is inside a URL', () => {
+		const citation = {
+			id: 'url',
+			formattedText: 'https://example.org/report. Retrieved 2024.',
+			csl: { type: 'webpage', title: 'HTTPS://Example.org/Report' },
+		};
+
+		expect(
+			getDisplaySegments( citation, {
+				urlAwareItalics: true,
+				caseFoldedItalics: true,
+			} ).some( ( segment ) => segment.italic )
+		).toBe( false );
+	} );
+} );

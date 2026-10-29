@@ -1,6 +1,7 @@
 import { __ } from '@wordpress/i18n';
 import { validateAndSanitizeCsl } from './csl-sanitize';
 import { createCitationId } from './citation-id';
+import { setKeepTitleCase } from './keep-title-case';
 
 export const MANUAL_ENTRY_TYPE_OPTIONS = [
 	{
@@ -34,12 +35,14 @@ export const DEFAULT_MANUAL_ENTRY_FIELDS = {
 	authors: '',
 	title: '',
 	containerTitle: '',
+	containerTitleShort: '',
 	publisher: '',
 	year: '',
 	page: '',
 	articleNumber: '',
 	doi: '',
 	url: '',
+	keepTitleCase: false,
 };
 
 function normalizeFieldValue( value ) {
@@ -183,6 +186,15 @@ export function buildManualCsl( fields ) {
 		csl[ 'container-title' ] = normalizeFieldValue( fields.containerTitle );
 	}
 
+	if (
+		type === 'article-journal' &&
+		normalizeFieldValue( fields.containerTitleShort )
+	) {
+		csl[ 'container-title-short' ] = normalizeFieldValue(
+			fields.containerTitleShort
+		);
+	}
+
 	if ( normalizeFieldValue( fields.publisher ) ) {
 		csl.publisher = normalizeFieldValue( fields.publisher );
 	}
@@ -214,7 +226,9 @@ export function buildManualCsl( fields ) {
 		};
 	}
 
-	return validateAndSanitizeCsl( csl );
+	return validateAndSanitizeCsl(
+		setKeepTitleCase( csl, Boolean( fields.keepTitleCase ) )
+	);
 }
 
 export async function createManualCitationFromCsl(

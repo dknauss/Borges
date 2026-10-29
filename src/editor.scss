@@ -289,6 +289,30 @@
 			border-radius: 2px;
 			box-sizing: border-box;
 		}
+
+		// Checkbox first, label beside it, help text below.
+		.bibliography-builder-structured-checkbox {
+			display: grid;
+			grid-template-columns: auto 1fr;
+			align-items: center;
+			column-gap: 0.5em;
+
+			input[type="checkbox"] {
+				width: auto;
+				margin: 0;
+			}
+
+			label {
+				margin: 0;
+			}
+		}
+
+		.bibliography-builder-structured-help {
+			grid-column: 2;
+			margin: 0.25em 0 0;
+			font-size: 0.85em;
+			color: #50575e;
+		}
 	}
 
 	.bibliography-builder-paste-zone {

@@ -100,6 +100,8 @@ export function CitationEntryBody( {
 							quoteAwareItalics: true,
 							urlAwareItalics: true,
 							quoteFoldedItalics: true,
+							shortContainerItalics: true,
+							caseFoldedItalics: true,
 							romanTitles,
 						} ).map( ( segment, index ) =>
 							segment.italic ? (

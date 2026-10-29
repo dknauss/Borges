@@ -140,6 +140,63 @@ const FIXTURE_ATTRIBUTES = {
  * so its fixture is one; under FIXTURE_ATTRIBUTES it would match v00 exactly.
  */
 const FIXTURE_ATTRIBUTES_BY_VERSION = {
+	// v17 froze save() from before OSCOLA listed one author's works oldest
+	// first and replaced the name with a double em dash after the first
+	// (OSCOLA 5 §1.7). Only an OSCOLA list with two works by one author
+	// changes, so its fixture is three works by Hart; under
+	// FIXTURE_ATTRIBUTES it would match v00 exactly.
+	17: {
+		...FIXTURE_ATTRIBUTES,
+		citationStyle: 'oscola',
+		headingText: 'Bibliography',
+		citations: [
+			{
+				id: 'hart1968',
+				csl: {
+					id: 'hart1968',
+					type: 'book',
+					title: 'Punishment and Responsibility',
+					publisher: 'OUP',
+					author: [ { family: 'Hart', given: 'H. L. A.' } ],
+					issued: { 'date-parts': [ [ 1968 ] ] },
+				},
+				formattedText:
+					'Hart HLA, Punishment and Responsibility (OUP 1968)',
+				displayOverride: null,
+			},
+			{
+				id: 'hart1961',
+				csl: {
+					id: 'hart1961',
+					type: 'book',
+					title: 'The Concept of Law',
+					publisher: 'Clarendon Press',
+					author: [ { family: 'Hart', given: 'H. L. A.' } ],
+					issued: { 'date-parts': [ [ 1961 ] ] },
+				},
+				formattedText:
+					'Hart HLA, The Concept of Law (Clarendon Press 1961)',
+				displayOverride: null,
+			},
+			{
+				id: 'hart1959',
+				csl: {
+					id: 'hart1959',
+					type: 'book',
+					title: 'Causation in the Law',
+					publisher: 'OUP',
+					author: [
+						{ family: 'Hart', given: 'H. L. A.' },
+						{ family: 'Honoré', given: 'A. M.' },
+					],
+					issued: { 'date-parts': [ [ 1959 ] ] },
+				},
+				formattedText:
+					'Hart HLA and Honoré AM, Causation in the Law (OUP 1959)',
+				displayOverride: null,
+			},
+		],
+	},
 	// v16 froze save() from before OSCOLA listed cases and legislation in
 	// tables of their own (OSCOLA 5 §§1.6–1.7). Only an OSCOLA list holding a
 	// primary source changes, so its fixture is a case, a statute, and an

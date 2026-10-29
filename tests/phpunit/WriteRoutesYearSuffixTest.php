@@ -29,9 +29,9 @@ final class WriteRoutesYearSuffixTest extends TestCase {
 				'bibliographyId' => 'apa-block',
 				'citationStyle'  => 'apa-7',
 				'citations'      => array(
-					self::citation( 'alpha', 'Jones', 'Alpha Study', 2020 ),
-					self::citation( 'beta', 'Jones', 'Beta Study', 2020 ),
-					self::citation( 'smith', 'Smith', 'Gamma Study', 2019 ),
+					self::citation( 'alpha', 'Jones', 'Alpha study', 2020 ),
+					self::citation( 'beta', 'Jones', 'Beta study', 2020 ),
+					self::citation( 'smith', 'Smith', 'Gamma study', 2019 ),
 				),
 			)
 		)
@@ -41,7 +41,7 @@ final class WriteRoutesYearSuffixTest extends TestCase {
 					'bibliographyId' => 'mla-block',
 					'citationStyle'  => 'mla-9',
 					'citations'      => array(
-						self::citation( 'mla-alpha', 'Jones', 'Alpha Study', 2020 ),
+						self::citation( 'mla-alpha', 'Jones', 'Alpha study', 2020 ),
 					),
 				)
 			)
@@ -145,15 +145,15 @@ final class WriteRoutesYearSuffixTest extends TestCase {
 
 	public function test_adding_a_sibling_reletters_the_group_and_leaves_others_alone() {
 		$data = bibliography_builder_rest_add_citations(
-			self::request( 'POST', 'apa-block', array( 'items' => array( self::csl( 'Jones', 'An Aardvark Study', 2020 ) ) ) )
+			self::request( 'POST', 'apa-block', array( 'items' => array( self::csl( 'Jones', 'An aardvark study', 2020 ) ) ) )
 		)->get_data();
 		$new  = $data['changes']['added'][0];
 
 		$this->assertSame(
 			array(
-				$new    => 'Jones, T. (2020a). An Aardvark Study.',
-				'alpha' => 'Jones, T. (2020b). Alpha Study.',
-				'beta'  => 'Jones, T. (2020c). Beta Study.',
+				$new    => 'Jones, T. (2020a). An aardvark study.',
+				'alpha' => 'Jones, T. (2020b). Alpha study.',
+				'beta'  => 'Jones, T. (2020c). Beta study.',
 				'smith' => 'STORED smith',
 			),
 			$this->saved_texts()
@@ -167,7 +167,7 @@ final class WriteRoutesYearSuffixTest extends TestCase {
 
 		$this->assertSame(
 			array(
-				'alpha' => 'Jones, T. (2020). Alpha Study.',
+				'alpha' => 'Jones, T. (2020). Alpha study.',
 				'smith' => 'STORED smith',
 			),
 			$this->saved_texts()
@@ -181,8 +181,8 @@ final class WriteRoutesYearSuffixTest extends TestCase {
 
 		$this->assertSame(
 			array(
-				'beta'  => 'Jones, T. (2019). Beta Study.',
-				'alpha' => 'Jones, T. (2020). Alpha Study.',
+				'beta'  => 'Jones, T. (2019). Beta study.',
+				'alpha' => 'Jones, T. (2020). Alpha study.',
 				'smith' => 'STORED smith',
 			),
 			$this->saved_texts()
@@ -191,18 +191,18 @@ final class WriteRoutesYearSuffixTest extends TestCase {
 
 	public function test_an_unrelated_addition_reformats_nothing_else() {
 		$data = bibliography_builder_rest_add_citations(
-			self::request( 'POST', 'apa-block', array( 'items' => array( self::csl( 'Brown', 'Delta Study', 2018 ) ) ) )
+			self::request( 'POST', 'apa-block', array( 'items' => array( self::csl( 'Brown', 'Delta study', 2018 ) ) ) )
 		)->get_data();
 		$texts = $this->saved_texts();
 
 		$this->assertSame( 'STORED alpha', $texts['alpha'] );
 		$this->assertSame( 'STORED beta', $texts['beta'] );
-		$this->assertSame( 'Brown, T. (2018). Delta Study.', $texts[ $data['changes']['added'][0] ] );
+		$this->assertSame( 'Brown, T. (2018). Delta study.', $texts[ $data['changes']['added'][0] ] );
 	}
 
 	public function test_styles_without_year_suffixes_reformat_only_the_new_entry() {
 		$data  = bibliography_builder_rest_add_citations(
-			self::request( 'POST', 'mla-block', array( 'items' => array( self::csl( 'Jones', 'Beta Study', 2020 ) ) ) )
+			self::request( 'POST', 'mla-block', array( 'items' => array( self::csl( 'Jones', 'Beta study', 2020 ) ) ) )
 		)->get_data();
 		$texts = $this->saved_texts( 1 );
 

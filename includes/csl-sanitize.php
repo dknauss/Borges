@@ -606,7 +606,39 @@ function bibliography_builder_validate_and_sanitize_csl_item( $csl ) {
 		}
 	}
 
-	return $sanitized_csl;
+	return bibliography_builder_sanitize_short_container_title( $sanitized_csl );
+}
+
+/**
+ * Keep a journal abbreviation as one plain string in `container-title-short`,
+ * which IEEE and Vancouver print: `sanitizeShortContainerTitle()` in
+ * `src/lib/csl-sanitize.js`. Zotero's CSL-JSON calls it `journalAbbreviation`,
+ * and a list (as CrossRef's API gives it) keeps its first entry. Anything else
+ * is dropped rather than refused, since the abbreviation is never needed.
+ *
+ * @param array $csl Sanitized CSL-JSON item.
+ * @return array
+ */
+function bibliography_builder_sanitize_short_container_title( $csl ) {
+	$short = array_key_exists( 'container-title-short', $csl )
+		? $csl['container-title-short']
+		: ( isset( $csl['journalAbbreviation'] ) ? $csl['journalAbbreviation'] : null );
+
+	unset( $csl['container-title-short'], $csl['journalAbbreviation'] );
+
+	if ( is_array( $short ) ) {
+		$short = isset( $short[0] ) ? $short[0] : null;
+	}
+
+	if ( is_string( $short ) ) {
+		$short = bibliography_builder_js_trim( bibliography_builder_strip_csl_html( $short ) );
+
+		if ( '' !== $short ) {
+			$csl['container-title-short'] = $short;
+		}
+	}
+
+	return $csl;
 }
 
 /**
