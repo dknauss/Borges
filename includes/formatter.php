@@ -276,7 +276,13 @@ function bibliography_builder_get_formatter_style_cache_payload( $style_key, $st
 		// served after an upgrade.
 		'style_hash' => bibliography_builder_get_formatter_style_hash( $template ),
 		'locale'     => isset( $style['locale'] ) ? (string) $style['locale'] : '',
-	);
+	)
+	// Sentence case changes the text too, so a change to its settings
+	// (styles.json `sentenceCase`) or its rules never serves an entry cased
+	// the old way.
+	+ ( empty( $style['sentenceCase'] ) ? array() : array(
+		'sentence_case' => array( 'version' => BIBLIOGRAPHY_BUILDER_SENTENCE_CASE_VERSION ) + $style['sentenceCase'],
+	) );
 }
 
 /**

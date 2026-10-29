@@ -365,6 +365,12 @@ function findLastRange(
 			return { start, end };
 		}
 
+		// lastIndexOf( value, -1 ) searches from 0 again: a rejected match at
+		// the start is the last one (the PHP port stops the same way).
+		if ( start === 0 ) {
+			return null;
+		}
+
 		start = searchText.lastIndexOf( value, start - 1 );
 	}
 
@@ -466,9 +472,19 @@ function getItalicizedFields( citation ) {
  * @return {string|undefined} CSL `container-title-short`.
  */
 function getShortContainerTitle( citation ) {
-	return CONTAINER_TITLE_TYPES.includes( citation.csl.type )
-		? citation.csl[ 'container-title-short' ]
-		: undefined;
+	const { journalAbbreviation } = citation.csl;
+
+	if ( ! CONTAINER_TITLE_TYPES.includes( citation.csl.type ) ) {
+		return undefined;
+	}
+
+	// A record stored before the sanitizers mapped Zotero's name for it.
+	return (
+		citation.csl[ 'container-title-short' ] ||
+		( typeof journalAbbreviation === 'string'
+			? journalAbbreviation
+			: undefined )
+	);
 }
 
 /**

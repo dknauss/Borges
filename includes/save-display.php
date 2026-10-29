@@ -219,7 +219,9 @@ function bibliography_builder_save_italic_fields( $csl ) {
 /**
  * `getShortContainerTitle()`: the journal abbreviation, for a type whose
  * container title is italicized, without inline markup; null when there is
- * none.
+ * none. A record stored before the sanitizers mapped Zotero's
+ * `journalAbbreviation` still has it under that name, which the formatter
+ * prints.
  *
  * @param array $csl CSL-JSON item.
  * @return string|null
@@ -227,6 +229,12 @@ function bibliography_builder_save_italic_fields( $csl ) {
 function bibliography_builder_save_short_container_title( $csl ) {
 	$short = bibliography_builder_csl_field( $csl, 'container-title-short' );
 	$type  = bibliography_builder_csl_field( $csl, 'type' );
+
+	$zotero = bibliography_builder_csl_field( $csl, 'journalAbbreviation' );
+
+	if ( ! bibliography_builder_js_truthy( $short ) && is_string( $zotero ) ) {
+		$short = $zotero;
+	}
 
 	if ( ! in_array( $type, bibliography_builder_save_container_title_types(), true )
 		|| ! bibliography_builder_js_truthy( $short ) ) {

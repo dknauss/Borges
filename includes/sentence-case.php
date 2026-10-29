@@ -35,6 +35,16 @@
  * @package BibliographyBuilder
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Version of the conversion rules below, part of the formatter's cache keys:
+ * raise it whenever a change to them changes any converted title.
+ */
+const BIBLIOGRAPHY_BUILDER_SENTENCE_CASE_VERSION = 1;
+
 /**
  * The CSL `custom` key that keeps an entry's title as entered.
  */
@@ -230,7 +240,9 @@ function bibliography_builder_sentence_case( $title, $capitalize_subtitle = true
 	foreach ( array_reverse( $words, true ) as $index => $word ) {
 		$text = $word['text'];
 
-		if ( 0 === $index || bibliography_builder_sentence_case_keeps_word( $text ) ) {
+		$lowercase_article = $word['break'] && ! $capitalize_subtitle;
+
+		if ( 0 === $index || bibliography_builder_sentence_case_keeps_word( $text, $lowercase_article ) ) {
 			continue;
 		}
 
@@ -289,19 +301,28 @@ function bibliography_builder_is_title_case( $words ) {
 /**
  * Whether a word keeps its capitals: an acronym or a word with a capital
  * after its first letter (DNA, iPhone, McCarthy, O'Brien), a word with a
- * digit (COVID-19's "COVID", "3D"), the pronoun "I", or a single capital
- * other than the article "A" (vitamin D).
+ * digit (COVID-19's "COVID", "3D"), the pronoun "I" and its contractions
+ * (I'm, I've), or a single capital (vitamin A, hepatitis B). Title case
+ * lowercases the article "a" inside a title, so a capital A there is a name;
+ * only at the start of a subtitle, where title case capitalizes the article,
+ * does it lowercase for NLM's lowercase subtitles.
  *
- * @param string $word Word.
+ * @param string $word             Word.
+ * @param bool   $lowercase_article Whether a lone "A" is a subtitle's first
+ *                                  word that the style lowercases.
  * @return bool
  */
-function bibliography_builder_sentence_case_keeps_word( $word ) {
+function bibliography_builder_sentence_case_keeps_word( $word, $lowercase_article = false ) {
 	if ( preg_match( '/\p{N}/u', $word ) ) {
 		return true;
 	}
 
 	if ( 1 === mb_strlen( $word, 'UTF-8' ) ) {
-		return 'A' !== $word;
+		return mb_strtoupper( $word, 'UTF-8' ) === $word && ! ( $lowercase_article && 'A' === $word );
+	}
+
+	if ( 1 === preg_match( "/^I['\x{2019}]\p{L}+$/u", $word ) ) {
+		return true;
 	}
 
 	return 1 === preg_match( '/\p{Lu}/u', mb_substr( $word, 1, null, 'UTF-8' ) );

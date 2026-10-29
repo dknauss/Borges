@@ -727,6 +727,16 @@ describe( 'getDisplaySegments journal abbreviations', () => {
 		).toEqual( [ 'J Libr Syst' ] );
 	} );
 
+	it( "reads an abbreviation stored under Zotero's name", () => {
+		const stored = citation(
+			'Green S. Metadata Drift. J Libr Syst. 2020.'
+		);
+		delete stored.csl[ 'container-title-short' ];
+		stored.csl.journalAbbreviation = 'J. Libr. Syst.';
+
+		expect( italics( stored ) ).toEqual( [ 'J Libr Syst' ] );
+	} );
+
 	it( 'prefers the full title, and ignores types without a container', () => {
 		expect(
 			italics(
@@ -785,5 +795,22 @@ describe( 'getDisplaySegments sentence-case titles', () => {
 				{ caseFoldedItalics: true, quoteFoldedItalics: true }
 			)
 		).toEqual( [ 'O’Brien’s garden' ] );
+	} );
+} );
+
+describe( 'getDisplaySegments title at the start of a URL', () => {
+	it( 'stops when the only match, at the start, is inside a URL', () => {
+		const citation = {
+			id: 'url',
+			formattedText: 'https://example.org/report. Retrieved 2024.',
+			csl: { type: 'webpage', title: 'HTTPS://Example.org/Report' },
+		};
+
+		expect(
+			getDisplaySegments( citation, {
+				urlAwareItalics: true,
+				caseFoldedItalics: true,
+			} ).some( ( segment ) => segment.italic )
+		).toBe( false );
 	} );
 } );

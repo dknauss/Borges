@@ -615,6 +615,35 @@ describe( 'handleStructuredEditSave guard branches', () => {
 		expect( savedCsl ).not.toHaveProperty( 'issued' );
 	} );
 
+	it( "edits a journal abbreviation stored under Zotero's name", async () => {
+		const args = makeHookArgs( [
+			makeCitation( {
+				csl: {
+					type: 'article-journal',
+					title: 'Drift',
+					journalAbbreviation: 'J. Libr. Syst.',
+				},
+			} ),
+		] );
+		const { result } = renderHook( () => useCitationEditorState( args ) );
+
+		act( () => result.current.handleStructuredEditStart( 'cit-1' ) );
+		expect( result.current.structuredFields.containerTitleShort ).toBe(
+			'J. Libr. Syst.'
+		);
+		act( () =>
+			result.current.handleStructuredFieldChange(
+				'containerTitleShort',
+				''
+			)
+		);
+		await act( () => result.current.handleStructuredEditSave() );
+
+		const csl = args.setAttributes.mock.calls[ 0 ][ 0 ].citations[ 0 ].csl;
+		expect( csl ).not.toHaveProperty( 'journalAbbreviation' );
+		expect( csl ).not.toHaveProperty( 'container-title-short' );
+	} );
+
 	it( 'keeps or releases the title capitalization through its checkbox', async () => {
 		const save = async ( csl, keepTitleCase ) => {
 			const args = makeHookArgs( [ makeCitation( { csl } ) ] );

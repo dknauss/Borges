@@ -2594,6 +2594,39 @@
 					}
 				]
 			}
+		},
+		{
+			"name": "vancouver-zotero-journal-abbreviation",
+			"note": "A record stored before the sanitizers mapped Zotero's journalAbbreviation keeps it under that name; the formatter prints it, so save() italicizes it too.",
+			"attributes": {
+				"citationStyle": "vancouver",
+				"headingText": "References",
+				"citations": [
+					{
+						"id": "green",
+						"csl": {
+							"type": "article-journal",
+							"title": "Metadata drift",
+							"author": [
+								{
+									"family": "Green",
+									"given": "Samuel"
+								}
+							],
+							"container-title": "Journal of Library Systems",
+							"journalAbbreviation": "J. Libr. Syst.",
+							"issued": {
+								"date-parts": [
+									[
+										2020
+									]
+								]
+							}
+						},
+						"formattedText": "Green S. Metadata drift. J Libr Syst. 2020;27(2):97-111."
+					}
+				]
+			}
 		}
 	]
 }
