@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tools/markup-value` reads every COinS field, not only the authors, through Zotero's own OpenURL reader, and counts only the fields the resulting Zotero item type keeps.
 - `tools/markup-value` counts tokens with a real tokenizer (`o200k_base`, via `js-tiktoken`) beside the four-characters-per-token estimate, and `npm run parser` scores what a citation parser (AnyStyle) recovers from the plain list, so the plain baseline is measured rather than assumed.
 
+### Fixed
+
+- **VoiceOver reads the bibliography as a list again.** The block hides list markers, and Safari stops treating a `<ul>` or `<ol>` without markers as a list, so VoiceOver read each entry as plain text, with no "list, 12 items" and no "7 of 12". The bibliography lists now carry `role="list"`: added as the block renders, so saved posts and `save()` are unchanged and need no migration, and also in the editor and in the Cite / Export panel's list of formats ([#226](https://github.com/dknauss/Borges/issues/226)).
+
 ## [1.16.0] - 2026-10-28
 
 ### Added

@@ -971,6 +971,8 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 							</GroupLabelTag>
 							<ListTag
 								className={ listClassName }
+								// Markers are hidden, so Safari needs the role to keep it a list.
+								role="list"
 								aria-busy={ isLoading }
 								aria-labelledby={ `bibliography-group-${ group.key }-${ group.citations[ 0 ].id }` }
 							>
@@ -987,6 +989,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				) : (
 					<ListTag
 						className={ listClassName }
+						role="list"
 						aria-busy={ isLoading }
 					>
 						{ sortedCitations.map( ( citation, index ) =>
