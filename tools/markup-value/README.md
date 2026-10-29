@@ -140,6 +140,16 @@ an upper bound for plain text in this one style, not a property of plain
 HTML: APA prints no ISBN, and a reference with no clear publisher slot
 (a preprint server, a conference organizer) is where it guesses.
 
+## Borges's own parser
+
+`npm run borges-parser` (`borges-parser.mjs`) runs the same test with
+Borges's free-text parser, `parseFreeTextCitation()` from
+`src/lib/free-text-parser.js`, in place of AnyStyle, and writes
+`borges-parser.json`. It needs only Node: `src-esm-hooks.mjs` lets Node load
+the webpack-style source modules. It measures the parser alone; the editor
+resolves an entry's DOI or PMID before parsing. `npm run sweep` reports both
+parsers for every style. See `docs/free-text-parsing.md`.
+
 ## Zotero translation server
 
 `zotero-translate.mjs` (`npm run zotero-ts`) asks a running
