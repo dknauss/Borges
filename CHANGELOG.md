@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The bibliography heading takes its size and weight from the theme's headings, so a "Sources" h3 matches the theme's other h3s, such as a "Notes" heading above it. It was set to 1.25em at weight 600, which no theme's headings matched. It stays centred, and the block's Typography panel still sets its size.
+- List indents use logical properties (`padding-inline-start`, `inset-inline-start`). Right-to-left sites already got mirrored indents from the generated `-rtl.css`; now a right-to-left bibliography on a left-to-right site (a block or container with `dir="rtl"`) indents from the right too.
 - The changes above alter saved markup for OSCOLA lists with two works by one author, for author-date lists with two undated works by one author, and for entries whose title is in their text in another case but not marked italic (`save()` now looks for a title without regard to case when it is not there as stored), so the block gains a deprecation for the 1.17.0 shape (`tests/fixtures/deprecations/v17-deprecated.html`). Existing blocks stay valid.
 - `tools/markup-value` scores Borges's own free-text parser beside AnyStyle (`npm run borges-parser`, and in `npm run sweep`), and `docs/free-text-parsing.md` records the comparison, what AnyStyle is, and why Borges doesn't run it.
 - CI runs the three Playwright suites as parallel jobs that no longer wait for the Quality job, restores `node_modules`, the Playground CLI, Chromium, and WordPress downloads from cache, and cancels a pull request's superseded runs.
