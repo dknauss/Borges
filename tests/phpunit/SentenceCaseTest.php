@@ -40,6 +40,15 @@ final class SentenceCaseTest extends TestCase {
 			'one word'              => array( 'Bibliographies', 'Bibliographies', 'Bibliographies' ),
 			'short words only'      => array( 'The Cat', 'The cat', 'The cat' ),
 			'apa title case'        => array( 'Why the Mind Is in the Head', 'Why the mind is in the head', 'Why the mind is in the head' ),
+			'language'              => array( 'The Making of the English Working Class', 'The making of the English working class', 'The making of the English working class' ),
+			'provinces'             => array( 'COVID-19 Vaccination in Alberta and British Columbia', 'COVID-19 vaccination in Alberta and British Columbia', 'COVID-19 vaccination in Alberta and British Columbia' ),
+			'possessive country'    => array( "Canada's Northern Strategy", "Canada's northern strategy", "Canada's northern strategy" ),
+			'plural nationality'    => array( 'How Canadians Vote on Mondays', 'How Canadians vote on Mondays', 'How Canadians vote on Mondays' ),
+			'month'                 => array( 'Elections Held in October', 'Elections held in October', 'Elections held in October' ),
+			'phrase'                => array( 'Housing Policy in New York and Nova Scotia', 'Housing policy in New York and Nova Scotia', 'Housing policy in New York and Nova Scotia' ),
+			'phrase after colon'    => array( 'Treaties: First Nations and the Crown', 'Treaties: First Nations and the crown', 'Treaties: First Nations and the crown' ),
+			'word also common'      => array( 'The New Deal in South Carolina', 'The new deal in South Carolina', 'The new deal in South Carolina' ),
+			'ambiguous left out'    => array( 'A March Through Turkey', 'A march through turkey', 'A march through turkey' ),
 		);
 	}
 
@@ -55,6 +64,36 @@ final class SentenceCaseTest extends TestCase {
 	 */
 	public function test_a_title_of_names_alone_is_a_known_miss(): void {
 		$this->assertSame( 'Darwin and wallace', bibliography_builder_sentence_case( 'Darwin and Wallace' ) );
+	}
+
+	public function test_a_site_can_add_its_own_proper_nouns(): void {
+		add_filter(
+			'bibliography_builder_sentence_case_proper_nouns',
+			static function ( $words ) {
+				$words[] = 'Wallace';
+				$words[] = 'Gutenberg';
+				return $words;
+			}
+		);
+
+		try {
+			$this->assertSame( 'Darwin and Wallace', bibliography_builder_sentence_case( 'Darwin and Wallace' ) );
+			$this->assertSame( 'Marshall McLuhan and the Gutenberg galaxy', bibliography_builder_sentence_case( 'Marshall McLuhan and the Gutenberg Galaxy' ) );
+		} finally {
+			remove_all_filters( 'bibliography_builder_sentence_case_proper_nouns' );
+		}
+
+		$this->assertSame( 'Darwin and wallace', bibliography_builder_sentence_case( 'Darwin and Wallace' ) );
+	}
+
+	public function test_a_filter_that_returns_no_list_leaves_only_the_built_in_rules(): void {
+		add_filter( 'bibliography_builder_sentence_case_proper_nouns', '__return_false' );
+
+		try {
+			$this->assertSame( 'The making of the english working class', bibliography_builder_sentence_case( 'The Making of the English Working Class' ) );
+		} finally {
+			remove_all_filters( 'bibliography_builder_sentence_case_proper_nouns' );
+		}
 	}
 
 	private static function style( string $key ): ?array {

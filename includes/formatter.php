@@ -281,7 +281,12 @@ function bibliography_builder_get_formatter_style_cache_payload( $style_key, $st
 	// (styles.json `sentenceCase`) or its rules never serves an entry cased
 	// the old way.
 	+ ( empty( $style['sentenceCase'] ) ? array() : array(
-		'sentence_case' => array( 'version' => BIBLIOGRAPHY_BUILDER_SENTENCE_CASE_VERSION ) + $style['sentenceCase'],
+		'sentence_case' => array(
+			'version'      => BIBLIOGRAPHY_BUILDER_SENTENCE_CASE_VERSION,
+			// A site's `bibliography_builder_sentence_case_proper_nouns`
+			// filter changes the text as well.
+			'proper_nouns' => md5( implode( ' ', array_keys( bibliography_builder_sentence_case_proper_nouns() ) ) ),
+		) + $style['sentenceCase'],
 	) );
 }
 
