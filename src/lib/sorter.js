@@ -234,7 +234,19 @@ function compareAuthorChainsOrKeys( a, b, locale, rule ) {
 }
 
 /**
+ * Styles that list one author's works by date, oldest first, then by title
+ * within a year: OSCOLA 5 §1.7. Chicago (CMOS 18 14.67) keeps them by title.
+ *
+ * Mirrored by BIBLIOGRAPHY_BUILDER_CHRONOLOGICAL_AUTHOR_STYLES in
+ * includes/save-sort.php.
+ */
+export const CHRONOLOGICAL_AUTHOR_STYLES = Object.freeze( [ 'oscola' ] );
+
+/**
  * Notes-bibliography order: authors, then title, then year.
+ *
+ * With `rule.chronological` (CHRONOLOGICAL_AUTHOR_STYLES) one author's works
+ * come by year, then title, instead.
  *
  * With `rule.authorChains` the authors compare as whole chains, as CMOS
  * 17th ed. 14.67–14.70 asks: "Gessner, Conrad" before "Gessner, Conrad, and
@@ -256,6 +268,19 @@ function compareNotes( a, b, locale, rule ) {
 		return authorCmp;
 	}
 
+	// One author's works by date, as in an author-date list; works with no
+	// author, filed by title, keep the title order.
+	if (
+		rule.chronological &&
+		getPrimaryContributors( a.csl ) &&
+		getPrimaryContributors( b.csl )
+	) {
+		// Two undated works give NaN (Infinity - Infinity): equal, as in PHP.
+		const yearCmp = compareYears( a, b ) || 0;
+
+		return yearCmp !== 0 ? yearCmp : compareTitles( a, b, locale, rule );
+	}
+
 	const titleCmp = compareTitles( a, b, locale, rule );
 	if ( titleCmp !== 0 ) {
 		return titleCmp;
@@ -270,7 +295,12 @@ function compareAuthorDate( a, b, locale, rule ) {
 		return authorCmp;
 	}
 
-	const yearCmp = compareYears( a, b );
+	// Two undated works give NaN (Infinity - Infinity). Through 1.17.0 that
+	// NaN was returned, so they kept their stored order; now they compare
+	// equal and fall through to the title, as the PHP port always did.
+	const yearCmp = rule.undatedTitles
+		? compareYears( a, b ) || 0
+		: compareYears( a, b );
 	if ( yearCmp !== 0 ) {
 		return yearCmp;
 	}
@@ -380,24 +410,37 @@ function getComparatorForFamily( family, locale, rule ) {
  * the same name. `notesAuthorChains: false` compares only the first
  * contributor's family name, the order save() produced before 1.16.0.
  *
+ * In CHRONOLOGICAL_AUTHOR_STYLES (OSCOLA) one author's works come oldest
+ * first, then by title within a year. `chronologicalAuthors: false` keeps
+ * them by title, the order save() produced through 1.17.0.
+ *
+ * In author-date styles, two undated works by the same authors sort by
+ * title. `undatedTitles: false` keeps them in stored order, the order save()
+ * produced through 1.17.0 (the PHP port sorted them by title).
+ *
  * A style with source-type groups (OSCOLA) lists its tables of primary
  * sources first, each in turn, then the secondary sources (see
  * src/lib/bibliography-groups.js). `sourceGroups: false` sorts them all as
  * one list, the order save() produced through 1.16.0.
  *
- * @param {Array}   citations                   Array of citation objects.
- * @param {string}  styleKey                    Citation style key.
- * @param {Object}  [options]                   Options.
- * @param {boolean} [options.particleAwareSort] Follow the style's particle
- *                                              rule (default true).
- * @param {boolean} [options.localeArticles]    Skip the style locale's
- *                                              leading articles too
- *                                              (default true).
- * @param {boolean} [options.notesAuthorChains] Compare whole author chains
- *                                              in notes styles
- *                                              (default true).
- * @param {boolean} [options.sourceGroups]      List the style's source-type
- *                                              groups in turn (default true).
+ * @param {Array}   citations                      Array of citation objects.
+ * @param {string}  styleKey                       Citation style key.
+ * @param {Object}  [options]                      Options.
+ * @param {boolean} [options.particleAwareSort]    Follow the style's particle
+ *                                                 rule (default true).
+ * @param {boolean} [options.localeArticles]       Skip the style locale's
+ *                                                 leading articles too
+ *                                                 (default true).
+ * @param {boolean} [options.notesAuthorChains]    Compare whole author chains
+ *                                                 in notes styles
+ *                                                 (default true).
+ * @param {boolean} [options.sourceGroups]         List the style's source-type
+ *                                                 groups in turn (default true).
+ * @param {boolean} [options.chronologicalAuthors] List one author's works
+ *                                                 by date where the style asks
+ *                                                 (default true).
+ * @param {boolean} [options.undatedTitles]        Sort one author's undated
+ *                                                 works by title (default true).
  * @return {Array} Sorted citation array.
  *
  * @since 0.1.0
@@ -410,6 +453,8 @@ export function sortCitations(
 		localeArticles = true,
 		notesAuthorChains = true,
 		sourceGroups = true,
+		chronologicalAuthors = true,
+		undatedTitles = true,
 	} = {}
 ) {
 	const style = getStyleDefinition( styleKey );
@@ -426,6 +471,10 @@ export function sortCitations(
 			? getLeadingArticlesPattern( locale )
 			: ENGLISH_ARTICLES,
 		authorChains: notesAuthorChains,
+		chronological:
+			chronologicalAuthors &&
+			CHRONOLOGICAL_AUTHOR_STYLES.includes( styleKey ),
+		undatedTitles,
 	};
 	const familyComparator = getComparatorForFamily(
 		style.family,

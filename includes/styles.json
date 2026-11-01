@@ -68,7 +68,8 @@
 			"yearSuffix": true,
 			"locale": "en-US",
 			"inlineCitationMode": "parenthetical",
-			"headingPlaceholder": "References"
+			"headingPlaceholder": "References",
+			"sentenceCase": { "scope": "works", "subtitle": "capitalize" }
 		},
 		"mla-9": {
 			"label": "MLA 9",
@@ -107,7 +108,8 @@
 			"yearSuffix": false,
 			"locale": "en-US",
 			"inlineCitationMode": "numeric",
-			"headingPlaceholder": "References"
+			"headingPlaceholder": "References",
+			"sentenceCase": { "scope": "parts", "subtitle": "capitalize" }
 		},
 		"vancouver": {
 			"label": "Vancouver",
@@ -120,7 +122,8 @@
 			"yearSuffix": false,
 			"locale": "en-US",
 			"inlineCitationMode": "numeric",
-			"headingPlaceholder": "References"
+			"headingPlaceholder": "References",
+			"sentenceCase": { "scope": "works", "subtitle": "lowercase" }
 		},
 		"oscola": {
 			"label": "OSCOLA",

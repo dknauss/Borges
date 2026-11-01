@@ -55,6 +55,20 @@ function bibliography_builder_portable_markup( $html ) {
 		$html
 	);
 
+	// The default heading is a paragraph the block's stylesheet sets larger,
+	// semibold, and centered; without it, it reads as body text. Repeat those
+	// styles inline (the only kind most email clients keep) and add <strong>
+	// for feed readers that drop style attributes. A heading level other than
+	// "paragraph" saves an <h2>-<h6>, which clients style on their own.
+	$html = (string) preg_replace(
+		'#<p class="bibliography-builder-heading">(.*?)</p>#s',
+		'<p class="bibliography-builder-heading" style="'
+			. 'margin:0 0 0.75em;font-size:1.25em;font-weight:600;text-align:center'
+			. '"><strong>$1</strong></p>',
+		$html,
+		1
+	);
+
 	// Legacy entries in <cite>; current ones are already spans. Both get an
 	// inline style, the only kind of style most email clients keep.
 	return (string) preg_replace(

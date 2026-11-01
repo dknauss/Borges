@@ -1,0 +1,48 @@
+name: Set up Node.js and npm dependencies
+description: >
+    Sets up Node.js and installs npm dependencies with `npm ci`, restoring
+    node_modules from cache instead when package-lock.json is unchanged.
+
+# Why cache node_modules rather than only the npm download cache: `npm ci`
+# took 33-43s in every Node job even with setup-node's ~/.npm cache, and five
+# CI jobs pay it. Restoring node_modules takes a few seconds.
+#
+# The key is exact (no restore-keys), so a cache is only ever used for the
+# lockfile, Node version, and runner image that produced it. Any lockfile
+# change misses and runs a clean `npm ci`, which is what CI tested before.
+# package.json is hashed too, so a change there that the lockfile does not
+# reflect still fails `npm ci` as it always did.
+
+inputs:
+    node-version:
+        description: Node.js version to set up.
+        default: '22'
+
+runs:
+    using: composite
+    steps:
+        - name: Set up Node.js
+          uses: actions/setup-node@v5
+          with:
+              node-version: ${{ inputs.node-version }}
+
+        # ImageOS (for example ubuntu24) separates runner images, so a cache
+        # built on ubuntu-latest is never restored on the pinned ubuntu-24.04.
+        - name: Read runner image and Node version
+          id: env
+          shell: bash
+          run: |
+              echo "image=${ImageOS:-unknown}" >> "$GITHUB_OUTPUT"
+              echo "node=$(node --version)" >> "$GITHUB_OUTPUT"
+
+        - name: Restore node_modules
+          id: cache
+          uses: actions/cache@v4
+          with:
+              path: node_modules
+              key: node-modules-${{ steps.env.outputs.image }}-${{ steps.env.outputs.node }}-${{ hashFiles('package-lock.json', 'package.json') }}
+
+        - name: Install dependencies
+          if: steps.cache.outputs.cache-hit != 'true'
+          shell: bash
+          run: npm ci --legacy-peer-deps

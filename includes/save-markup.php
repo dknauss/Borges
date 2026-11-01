@@ -463,11 +463,12 @@ function bibliography_builder_save_block_props( $attrs ) {
 /**
  * One `<li>` entry.
  *
- * @param array $citation     Citation record.
- * @param bool  $output_coins Whether to emit COinS.
- * @param bool  $cite_export  Whether to emit the Cite / Export data.
- * @param mixed $repeated_prefix MLA author names to show as three hyphens, or null.
- * @param bool  $roman_titles Leave titles roman (a table of cases).
+ * @param array  $citation     Citation record.
+ * @param bool   $output_coins Whether to emit COinS.
+ * @param bool   $cite_export  Whether to emit the Cite / Export data.
+ * @param mixed  $repeated_prefix Author names to show as the repeated-author mark, or null.
+ * @param bool   $roman_titles Leave titles roman (a table of cases).
+ * @param string $repeated_mark The style's mark: `bibliography_builder_save_repeated_author_mark()`.
  * @return string
  */
 function bibliography_builder_save_entry(
@@ -475,7 +476,8 @@ function bibliography_builder_save_entry(
 	$output_coins,
 	$cite_export,
 	$repeated_prefix = null,
-	$roman_titles = false
+	$roman_titles = false,
+	$repeated_mark = "\u{2011}\u{2011}\u{2011}"
 ) {
 	$csl        = bibliography_builder_citation_csl( $citation );
 	$link_label = '';
@@ -496,10 +498,9 @@ function bibliography_builder_save_entry(
 	if ( is_string( $repeated_prefix ) && array() !== $segments && ! $segments[0]['italic']
 		&& 0 === strncmp( $segments[0]['text'], $repeated_prefix, strlen( $repeated_prefix ) ) ) {
 		$segments[0]['text'] = strval( substr( $segments[0]['text'], strlen( $repeated_prefix ) ) );
-		// U+2011 non-breaking hyphens, not "-": see REPEATED_AUTHOR_MARK.
-		$text .= '<span class="bibliography-builder-repeated-author">'
+		$text               .= '<span class="bibliography-builder-repeated-author">'
 			. '<span class="bibliography-builder-repeated-author-mark" aria-hidden="true">'
-			. "\u{2011}\u{2011}\u{2011}</span>"
+			. $repeated_mark . '</span>'
 			. '<span class="bibliography-builder-visually-hidden screen-reader-text">'
 			. bibliography_builder_escape_save_text( $repeated_prefix )
 			. '</span></span>';
@@ -645,13 +646,13 @@ function bibliography_builder_render_save_markup( $attrs ) {
 	$repeated   = bibliography_builder_save_repeated_author_prefixes( $sorted, $style_key );
 	$entry      =
 		/**
-		 * One entry, with its MLA repeated-author prefix from the flat order.
+		 * One entry, with its repeated-author prefix from the flat order.
 		 *
 		 * @param mixed $citation     Citation record.
 		 * @param bool  $roman_titles Leave titles roman.
 		 * @return string
 		 */
-		static function ( $citation, bool $roman_titles ) use ( $sorted, $repeated, $flag ): string {
+		static function ( $citation, bool $roman_titles ) use ( $sorted, $repeated, $flag, $style_key ): string {
 			$index = array_search( $citation, $sorted, true );
 
 			return bibliography_builder_save_entry(
@@ -659,7 +660,8 @@ function bibliography_builder_render_save_markup( $attrs ) {
 				$flag( 'outputCoins', false ),
 				$flag( 'outputCiteExport', false ),
 				false === $index ? null : $repeated[ $index ],
-				$roman_titles
+				$roman_titles,
+				bibliography_builder_save_repeated_author_mark( $style_key )
 			);
 		};
 	$groups = bibliography_builder_save_group_citations( $sorted, $style_key );

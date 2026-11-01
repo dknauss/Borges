@@ -12,6 +12,12 @@ on:
 permissions:
     contents: read
 
+# A newer push to the same pull request cancels the older run. Every other
+# run (main, manual) gets a group of its own, so it is never cancelled.
+concurrency:
+    group: runtime-matrix-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+    cancel-in-progress: true
+
 jobs:
     smoke-pr:
         name: Runtime smoke PR (${{ matrix.name }})
@@ -55,14 +61,8 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v5
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v5
-              with:
-                  node-version: 22
-                  cache: npm
-
-            - name: Install dependencies
-              run: npm ci --legacy-peer-deps
+            - name: Set up Node.js and dependencies
+              uses: ./.github/actions/setup-node-deps
 
             - name: Build plugin assets
               run: npm run build
@@ -184,14 +184,8 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v5
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v5
-              with:
-                  node-version: 22
-                  cache: npm
-
-            - name: Install dependencies
-              run: npm ci --legacy-peer-deps
+            - name: Set up Node.js and dependencies
+              uses: ./.github/actions/setup-node-deps
 
             - name: Build plugin assets
               run: npm run build

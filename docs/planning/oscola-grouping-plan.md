@@ -135,8 +135,8 @@ When `groupCitations()` returns groups, the one `<ul>` becomes one labelled list
 | T5 | Editor list grouping; remove the inspector notice and both readmes' limitation entries | S–M |
 | T6 | Plain-text read groups; flat exports in grouped order; write-route and bulk-reformat tests on an OSCOLA block | S |
 | T7 | Docs: `docs/csl-styles.md`, `SPEC.md`, the QA matrix, the demo page (`playground/demo-content.json`, with a case and a statute), and CHANGELOG | S |
-| T8 | **Separate, needs checking first:** OSCOLA 5 §1.7 says that after the first entry, "replace the author's name with a double em-dash". `docs/csl-styles.md` says OSCOLA 5 writes repeated authors in full. If the manual confirms it, extend `repeated-authors.js` (now MLA-only) to OSCOLA with the em-dash mark | S–M |
-| T9 | **Separate, needs checking first:** §1.7 lists one author's works chronologically. The notes comparator sorts by title, then year. If confirmed, OSCOLA's secondary sources sort author, then year, then title | S |
+| T8 | **Done (2026-10-29), checked against the OSCOLA 5 PDF:** OSCOLA 5 §1.7 says that after the first entry, "replace the author's name with a double em-dash". `docs/csl-styles.md` says OSCOLA 5 writes repeated authors in full. If the manual confirms it, extend `repeated-authors.js` (now MLA-only) to OSCOLA with the em-dash mark | S–M |
+| T9 | **Done (2026-10-29), checked against the OSCOLA 5 PDF:** §1.7 lists one author's works chronologically. The notes comparator sorts by title, then year. If confirmed, OSCOLA's secondary sources sort author, then year, then title | S |
 
 T1 through T7 can ship as one PR, because the markup change must land together with its deprecation. T8 and T9 each change `save()` too, so if Dan wants them they should ride in the same release, so that blocks go through as few deprecations as possible.
 

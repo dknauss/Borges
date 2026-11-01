@@ -1,6 +1,9 @@
 import {
+	FIRST_AUTHOR_DASH,
+	FIRST_AUTHOR_DASH_STYLES,
 	REPEATED_AUTHOR_MARK,
 	REPEATED_AUTHOR_STYLES,
+	getRepeatedAuthorMark,
 	getRepeatedAuthorPrefixes,
 } from './repeated-authors';
 
@@ -253,5 +256,112 @@ describe( 'getRepeatedAuthorPrefixes', () => {
 			[ 10, null ],
 			[ 11, null ],
 		] );
+	} );
+} );
+
+describe( 'getRepeatedAuthorPrefixes for OSCOLA', () => {
+	const hart = { family: 'Hart', given: 'H. L. A.' };
+	const honore = { family: 'Honoré', given: 'A. M.' };
+	const oscola = ( citations, options = {} ) =>
+		getRepeatedAuthorPrefixes( citations, 'oscola', displayText, {
+			firstAuthorDash: true,
+			...options,
+		} );
+	const harts = [
+		entry( 'a', [ hart ], 'Hart HLA, The Concept of Law (OUP 1961)' ),
+		entry(
+			'b',
+			[ hart ],
+			'Hart HLA, Punishment and Responsibility (OUP 1968)'
+		),
+		entry(
+			'c',
+			[ hart, honore ],
+			'Hart HLA and Honoré AM, Causation in the Law (OUP 1959)'
+		),
+	];
+
+	it( 'uses a double em dash for OSCOLA, three hyphens for MLA', () => {
+		expect( FIRST_AUTHOR_DASH_STYLES ).toEqual( [ 'oscola' ] );
+		expect( FIRST_AUTHOR_DASH ).toBe( '\u2014\u2014' );
+		expect( getRepeatedAuthorMark( 'oscola' ) ).toBe( FIRST_AUTHOR_DASH );
+		expect( getRepeatedAuthorMark( 'mla-9' ) ).toBe( REPEATED_AUTHOR_MARK );
+	} );
+
+	it( 'replaces the first author after the first work (OSCOLA 5 §1.7)', () => {
+		// "—— Punishment …" drops the comma; "—— and Honoré AM, …" keeps the
+		// co-author.
+		expect( oscola( harts ) ).toEqual( [ null, 'Hart HLA,', 'Hart HLA' ] );
+	} );
+
+	it( 'is off unless asked for, as save() was through 1.17.0', () => {
+		expect( prefixes( harts, 'oscola' ) ).toEqual( [ null, null, null ] );
+	} );
+
+	it( 'writes particles, literal names, and "and others" as OSCOLA does', () => {
+		const gogh = {
+			family: 'Gogh',
+			'non-dropping-particle': 'van',
+			given: 'Vincent',
+		};
+		const council = { literal: 'National Library Council' };
+
+		expect(
+			oscola( [
+				entry( 'a', [ gogh ], 'van Gogh V, Letters (Penguin 1996)' ),
+				entry(
+					'b',
+					[ gogh, hart, honore, hart ],
+					'van Gogh V and others, Sketches (Penguin 1997)'
+				),
+				entry(
+					'c',
+					[ council ],
+					'National Library Council, State of Open Metadata (2020)'
+				),
+				entry(
+					'd',
+					[ council ],
+					'National Library Council, Open Data (2021)'
+				),
+			] )
+		).toEqual( [ null, 'van Gogh V', null, 'National Library Council,' ] );
+	} );
+
+	it( 'keeps full names whenever in doubt', () => {
+		const junior = { ...hart, suffix: 'Jr' };
+		const jenifer = { family: 'Hart', given: 'Jenifer' };
+
+		expect(
+			oscola( [
+				// A different person with the same family name.
+				entry(
+					'a',
+					[ hart ],
+					'Hart HLA, The Concept of Law (OUP 1961)'
+				),
+				entry(
+					'b',
+					[ jenifer ],
+					'Hart J, Law and Order (Blackwell 1950)'
+				),
+				// A suffix, which OSCOLA's dash is not checked against.
+				entry( 'c', [ junior ], 'Hart HLA Jr, One (OUP 1990)' ),
+				entry( 'd', [ junior ], 'Hart HLA Jr, Two (OUP 1991)' ),
+				// Text that does not start with the name.
+				entry( 'e', [ hart ], 'Hart HLA, Essays (OUP 1983)' ),
+				entry( 'f', [ hart ], 'H. L. A. Hart, Essays (OUP 1984)' ),
+				// Manual display text.
+				entry( 'g', [ hart ], 'Hart HLA, More (OUP 1985)', {
+					displayOverride: 'Hart HLA, More Essays',
+				} ),
+			] )
+		).toEqual( [ null, null, null, null, null, null, null ] );
+	} );
+
+	it( 'never crosses from one list to the next', () => {
+		expect(
+			oscola( harts, { listOf: ( citation ) => citation.id === 'a' } )
+		).toEqual( [ null, null, 'Hart HLA' ] );
 	} );
 } );
