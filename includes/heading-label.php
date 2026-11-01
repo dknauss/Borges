@@ -55,7 +55,7 @@ function bibliography_builder_label_section_by_heading( $block_content, $block =
 	$result  = preg_replace_callback(
 		$pattern,
 		static function ( $parts ) use ( $heading_id ) {
-			$decode = static function ( $text ) {
+			$decode = static function ( string $text ): string {
 				return html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 			};
 
