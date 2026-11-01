@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.18.0] - 2026-11-01
+
 ### Added
 
 - **OSCOLA repeated authors.** In an OSCOLA bibliography, one author's works now come oldest first, then by title within a year, and after the first of them the author's name becomes a double em dash, as OSCOLA 5 §1.7 asks: "—— Punishment and Responsibility (OUP 1968)". Works the author wrote with others follow, by co-author, with the dash for the first author only ("—— and Honoré AM, Causation in the Law (OUP 1959)"). Screen readers hear the name, as with MLA's hyphens. The dash is saved as two U+2014 characters, which WordPress's typography filter leaves alone. It applies only when the entries start with the name exactly as OSCOLA writes it, so manual display text and anything in doubt keep the full name.

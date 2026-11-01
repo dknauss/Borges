@@ -48,7 +48,7 @@ feature work (Phases 04 + 07) shipped in the 1.4.x line; both phase directories 
 archived. Phases 05 (deferred) and 06 (sketch) remain active backlog. Future work
 is tracked against release versions rather than a GSD milestone label.
 
-**Current release baseline (reconciled 2026-10-28):** `v1.17.0` (2026-10-28).
+**Current release baseline (reconciled 2026-11-01):** `v1.18.0` (2026-11-01).
 Releases since the milestone was retired, all outside any GSD phase:
 
 -   **1.4.2** (2026-06-21) — embedded-identifier resolution (Phase 07, PR #52) and
@@ -105,6 +105,10 @@ Releases since the milestone was retired, all outside any GSD phase:
 -   **1.17.0** (2026-10-28) — OSCOLA 5 tables; page `citation` node without
     an SEO plugin; no ListItem `url`; COinS item types; `role="list"` for
     VoiceOver; arXiv numbers printed once.
+-   **1.18.0** (2026-11-01) — sentence case for APA, Vancouver, and IEEE; IEEE and
+    Vancouver journal abbreviations; OSCOLA repeated authors; h2 headings for
+    new blocks, styled by the theme; citation links without `nofollow`; the
+    section named by its heading.
 
 `CHANGELOG.md` and the live WordPress.org plugin page are canonical for release
 contents; this note only anchors the roadmap to them.
@@ -326,7 +330,7 @@ and executed through
 
 Implementation status: committed (`3d5d3de` "stabilize bibliography formatter
 workflows", `539b6b3` "address stabilization review notes") and shipped in the
-1.3.x release line. The current public release baseline is now `v1.17.0`.
+1.3.x release line. The current public release baseline is now `v1.18.0`.
 
 Completed Phase 2 outcomes:
 
@@ -427,6 +431,29 @@ Current operational note (2026-05-04):
 -   The first public WordPress.org release does not need a transition zip.
 -   Post-launch cleanup should keep GitHub README, WordPress.org `readme.txt`,
     SPEC, release assets, and SVN output aligned.
+
+## Release QA carried over from 1.18.0
+
+Checked before release (2026-11-01, in the workspace, not a browser):
+citeproc ran (APA 7, Chicago notes, IEEE, and MLA 9 give different text);
+1.17.0 and older saved markup renders with `rel="noopener"` and
+`aria-labelledby` through the new filters, and the deprecation tests keep it
+valid. Still to do by hand:
+
+-   **Sentence case on real bibliographies.** Re-format a few real APA
+    bibliographies and list the proper nouns that come out lowercase. The
+    workspace check lowercased "english", "alberta and british columbia",
+    "canada", "gutenberg", and "wallace" (the checkbox kept them). Decide
+    whether a short always-capitalized list (languages, nationalities,
+    countries, provinces and states, months, days) is worth adding.
+-   **Heading styles in themes.** With the heading now styled by the theme,
+    look at Twenty Twenty-Five and an Ollie child theme: Notes and Sources
+    headings should match and stay centred.
+-   **Upgrade path in a browser.** Open a post saved with 1.17.0: no
+    invalid-block warning in the editor; on the front end, links show
+    `rel="noopener"` and the section uses `aria-labelledby`.
+-   **Formatter notice.** In the editor, no "Formatter unavailable" notice
+    while switching among three styles.
 
 ## Immediate next-task priorities (2026-10-29, after 1.17.0)
 

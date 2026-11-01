@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.17.0
+Stable tag: 1.18.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -194,6 +194,16 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 * Internet Archive terms of use: https://archive.org/about/terms.php
 
 == Changelog ==
+
+= 1.18.0 =
+* **Added:** sentence case in APA 7, Vancouver, and IEEE. Titles imported in title case print in sentence case, as the manuals ask; the stored title never changes, so switching styles brings the capitals back. A proper noun that reads like an ordinary word can come out lowercase ("Darwin and wallace"), so each entry has a "Keep title capitalization as entered" checkbox. Existing blocks change only when their entries are next formatted.
+* **Added:** journal abbreviations in IEEE and Vancouver, from the record's abbreviated title when it has one, with a new "Journal abbreviation" field in the entry editor.
+* **Added:** OSCOLA repeated authors. One author's works come oldest first, and after the first the name becomes a double em dash, as OSCOLA 5 asks.
+* **Changed:** new bibliographies start with an h2 heading, so they appear in the page's heading outline. Existing blocks keep their level; the `bibliography_builder_new_block_heading_level` filter sets another.
+* **Changed:** the heading takes its size and weight from the theme's headings, and stays centred.
+* **Changed:** citation links no longer carry `nofollow` or `noreferrer`, which told search engines not to trust the works you cite. They carry `rel="noopener"`, on saved posts too. The new `bibliography_builder_citation_link_rel` filter can restore `nofollow`.
+* **Changed:** the bibliography is named by its visible heading (`aria-labelledby`) rather than a copy of it, on saved posts too.
+* **Fixed:** the default heading keeps its look in newsletters and feeds, and two undated works by one author sort by title in author-date styles.
 
 = 1.17.0 =
 * **Added:** OSCOLA tables of primary sources. An OSCOLA bibliography with cases, legislation, or treaties lists them as OSCOLA 5 asks: a table of cases, then legislation, then treaties, then the bibliography of secondary sources. Existing blocks stay valid and take the new shape the next time they are edited.
@@ -411,6 +421,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.18.0 =
+Sentence case in APA, Vancouver, and IEEE (check proper nouns, and tick "Keep title capitalization as entered" where needed); journal abbreviations; OSCOLA repeated authors; citation links without nofollow; new blocks start with an h2. Existing blocks stay valid. No configuration changes required.
 
 = 1.17.0 =
 OSCOLA tables of cases, legislation, and treaties; structured data that passes Google's Rich Results Test and links cited works on every site; VoiceOver reads the bibliography as a list again in Safari. No configuration changes required.
