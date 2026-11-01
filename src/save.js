@@ -41,6 +41,8 @@ export default function save( { attributes } ) {
 		citeExportData: true,
 		canonicalDoiUrl: true,
 		jsonLdItemList: true,
+		citationLinkRel: 'noopener',
+		headingLabelledBy: true,
 		labels: LOCALE_INDEPENDENT_SAVE_LABELS,
 	} );
 }
