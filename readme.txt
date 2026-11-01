@@ -196,7 +196,7 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 == Changelog ==
 
 = 1.18.0 =
-* **Added:** sentence case in APA 7, Vancouver, and IEEE. Titles imported in title case print in sentence case, as the manuals ask; the stored title never changes, so switching styles brings the capitals back. A proper noun that reads like an ordinary word can come out lowercase ("Darwin and wallace"), so each entry has a "Keep title capitalization as entered" checkbox. Existing blocks change only when their entries are next formatted.
+* **Added:** sentence case in APA 7, Vancouver, and IEEE. Titles imported in title case print in sentence case, as the manuals ask; the stored title never changes, so switching styles brings the capitals back. Languages, nationalities, countries, provinces, states, months, and days keep their capitals, and the `bibliography_builder_sentence_case_proper_nouns` filter adds your own. Other names can come out lowercase ("Darwin and wallace"), so each entry has a "Keep title capitalization as entered" checkbox. Existing blocks change only when their entries are next formatted.
 * **Added:** journal abbreviations in IEEE and Vancouver, from the record's abbreviated title when it has one, with a new "Journal abbreviation" field in the entry editor.
 * **Added:** OSCOLA repeated authors. One author's works come oldest first, and after the first the name becomes a double em dash, as OSCOLA 5 asks.
 * **Changed:** new bibliographies start with an h2 heading, so they appear in the page's heading outline. Existing blocks keep their level; the `bibliography_builder_new_block_heading_level` filter sets another.
@@ -423,7 +423,7 @@ The three changes below are hardening. None of them was exploitable; each was a 
 == Upgrade Notice ==
 
 = 1.18.0 =
-Sentence case in APA, Vancouver, and IEEE (check proper nouns, and tick "Keep title capitalization as entered" where needed); journal abbreviations; OSCOLA repeated authors; citation links without nofollow; new blocks start with an h2. Existing blocks stay valid. No configuration changes required.
+Sentence case in APA, Vancouver, and IEEE (check personal names, and tick "Keep title capitalization as entered" where needed); journal abbreviations; OSCOLA repeated authors; citation links without nofollow; new blocks start with an h2. Existing blocks stay valid. No configuration changes required.
 
 = 1.17.0 =
 OSCOLA tables of cases, legislation, and treaties; structured data that passes Google's Rich Results Test and links cited works on every site; VoiceOver reads the bibliography as a list again in Safari. No configuration changes required.

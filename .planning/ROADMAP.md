@@ -441,11 +441,13 @@ citeproc ran (APA 7, Chicago notes, IEEE, and MLA 9 give different text);
 valid. Still to do by hand:
 
 -   **Sentence case on real bibliographies.** Re-format a few real APA
-    bibliographies and list the proper nouns that come out lowercase. The
-    workspace check lowercased "english", "alberta and british columbia",
-    "canada", "gutenberg", and "wallace" (the checkbox kept them). Decide
-    whether a short always-capitalized list (languages, nationalities,
-    countries, provinces and states, months, days) is worth adding.
+    bibliographies and list the proper nouns that still come out lowercase.
+    The workspace check lowercased "english", "alberta and british columbia",
+    and "canada"; 1.18.0 added an always-capitalized list (languages,
+    nationalities, countries, provinces, states, months, days) that keeps
+    them. Personal and other names ("gutenberg", "wallace") still need the
+    checkbox or the `bibliography_builder_sentence_case_proper_nouns` filter;
+    note which ones recur.
 -   **Heading styles in themes.** With the heading now styled by the theme,
     look at Twenty Twenty-Five and an Ollie child theme: Notes and Sources
     headings should match and stay centred.

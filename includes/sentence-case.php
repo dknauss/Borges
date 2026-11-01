@@ -43,7 +43,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Version of the conversion rules below, part of the formatter's cache keys:
  * raise it whenever a change to them changes any converted title.
  */
-const BIBLIOGRAPHY_BUILDER_SENTENCE_CASE_VERSION = 1;
+const BIBLIOGRAPHY_BUILDER_SENTENCE_CASE_VERSION = 2;
 
 /**
  * The CSL `custom` key that keeps an entry's title as entered.
@@ -230,7 +230,9 @@ function bibliography_builder_sentence_case( $title, $capitalize_subtitle = true
 		$cursor  = $offset + strlen( $text );
 	}
 
-	if ( ! bibliography_builder_is_title_case( $words ) ) {
+	$proper = bibliography_builder_sentence_case_proper_indexes( $words );
+
+	if ( ! bibliography_builder_is_title_case( $words, $proper ) ) {
 		return $title;
 	}
 
@@ -242,7 +244,11 @@ function bibliography_builder_sentence_case( $title, $capitalize_subtitle = true
 
 		$lowercase_article = $word['break'] && ! $capitalize_subtitle;
 
-		if ( 0 === $index || bibliography_builder_sentence_case_keeps_word( $text, $lowercase_article ) ) {
+		if (
+			0 === $index
+			|| isset( $proper[ $index ] )
+			|| bibliography_builder_sentence_case_keeps_word( $text, $lowercase_article )
+		) {
 			continue;
 		}
 
@@ -263,10 +269,14 @@ function bibliography_builder_sentence_case( $title, $capitalize_subtitle = true
  * capitalized, and no word of four or more letters, other than a minor word
  * or one that keeps its capitals, starts lowercase.
  *
- * @param array<int, array{text: string, offset: int, break: bool}> $words Words.
+ * A proper noun from the lists in sentence-case-proper-nouns.php is
+ * capitalized either way, so it says nothing.
+ *
+ * @param array<int, array{text: string, offset: int, break: bool}> $words  Words.
+ * @param array<int, true>                                          $proper Indexes of proper nouns.
  * @return bool
  */
-function bibliography_builder_is_title_case( $words ) {
+function bibliography_builder_is_title_case( $words, $proper = array() ) {
 	$capitalized = false;
 	$minor       = bibliography_builder_sentence_case_minor_words();
 
@@ -278,6 +288,7 @@ function bibliography_builder_is_title_case( $words ) {
 		// its capitals (iPhone) says nothing either.
 		if (
 			0 === $index
+			|| isset( $proper[ $index ] )
 			|| ! preg_match( '/\p{L}/u', $first )
 			|| bibliography_builder_sentence_case_keeps_word( $text )
 		) {
