@@ -503,7 +503,7 @@ describe( 'save', () => {
 		);
 
 		expect( markup ).toContain(
-			'<a href="https://example.com/resource" rel="nofollow noopener noreferrer" aria-label="Example resource — https://example.com/resource">https://example.com/resource</a>.'
+			'<a href="https://example.com/resource" rel="noopener" aria-label="Example resource — https://example.com/resource">https://example.com/resource</a>.'
 		);
 	} );
 
@@ -735,7 +735,7 @@ describe( 'save', () => {
 		);
 
 		expect( markup ).toContain(
-			'<a href="https://example.org/resource" rel="nofollow noopener noreferrer">https://example.org/resource</a>'
+			'<a href="https://example.org/resource" rel="noopener">https://example.org/resource</a>'
 		);
 		expect( markup ).not.toContain( 'aria-label="Link to publication' );
 	} );

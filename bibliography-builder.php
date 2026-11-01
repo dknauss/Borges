@@ -667,6 +667,8 @@ require_once __DIR__ . '/includes/save-json-ld-coins.php';
 require_once __DIR__ . '/includes/save-cite-export.php';
 require_once __DIR__ . '/includes/frontend-labels.php';
 require_once __DIR__ . '/includes/list-semantics.php';
+require_once __DIR__ . '/includes/citation-link-rel.php';
+require_once __DIR__ . '/includes/heading-label.php';
 require_once __DIR__ . '/includes/frontend-json-ld.php';
 require_once __DIR__ . '/includes/json-ld-enrichment.php';
 require_once __DIR__ . '/includes/coins-enrichment.php';
