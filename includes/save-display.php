@@ -648,7 +648,9 @@ function bibliography_builder_save_build_segments( $text, $ranges ) {
  * @return string
  */
 function bibliography_builder_save_repeated_author_mark( $style_key ) {
-	return 'oscola' === $style_key ? "\u{2014}\u{2014}" : "\u{2011}\u{2011}\u{2011}";
+	return 'firstAuthor' === bibliography_builder_get_save_style_definition( $style_key )['repeatedAuthors']
+		? "\u{2014}\u{2014}"
+		: "\u{2011}\u{2011}\u{2011}";
 }
 
 /**
@@ -913,7 +915,8 @@ function bibliography_builder_save_first_author_prefix( $name, $text ) {
 function bibliography_builder_save_repeated_author_prefixes( $citations, $style_key ) {
 	$citations    = array_values( $citations );
 	$prefixes     = array();
-	$first_author = 'oscola' === $style_key;
+	$rule         = bibliography_builder_get_save_style_definition( $style_key )['repeatedAuthors'];
+	$first_author = 'firstAuthor' === $rule;
 	$groups       = $first_author ? bibliography_builder_save_style_groups( $style_key ) : null;
 	$list_of      = static function ( array $citation ) use ( $groups ): ?int {
 		return null === $groups
@@ -924,7 +927,7 @@ function bibliography_builder_save_repeated_author_prefixes( $citations, $style_
 	foreach ( $citations as $index => $citation ) {
 		$prefixes[ $index ] = null;
 
-		if ( ( 'mla-9' !== $style_key && ! $first_author ) || 0 === $index ) {
+		if ( '' === $rule || 0 === $index ) {
 			continue;
 		}
 

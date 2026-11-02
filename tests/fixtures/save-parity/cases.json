@@ -2627,6 +2627,85 @@
 					}
 				]
 			}
+		},
+		{
+			"name": "ris-journal-abbreviation",
+			"note": "The Cite / Export RIS carries the journal abbreviation as J2: container-title-short, or Zotero's journalAbbreviation on a record stored before the sanitizers mapped it. An entry without one has no J2 line.",
+			"attributes": {
+				"citationStyle": "vancouver",
+				"headingText": "References",
+				"outputCiteExport": true,
+				"citations": [
+					{
+						"id": "green",
+						"csl": {
+							"type": "article-journal",
+							"title": "Metadata drift",
+							"author": [
+								{
+									"family": "Green",
+									"given": "Samuel"
+								}
+							],
+							"container-title": "Journal of Library Systems",
+							"container-title-short": "J. Libr. Syst.",
+							"issued": {
+								"date-parts": [
+									[
+										2020
+									]
+								]
+							}
+						},
+						"formattedText": "Green S. Metadata drift. J Libr Syst. 2020;27(2):97-111."
+					},
+					{
+						"id": "hughes",
+						"csl": {
+							"type": "article-journal",
+							"title": "Citation styles as data",
+							"author": [
+								{
+									"family": "Hughes",
+									"given": "Rebecca"
+								}
+							],
+							"container-title": "Scholarly Communication Review",
+							"journalAbbreviation": "Sch. Commun. Rev.",
+							"issued": {
+								"date-parts": [
+									[
+										2022
+									]
+								]
+							}
+						},
+						"formattedText": "Hughes R. Citation styles as data. Sch Commun Rev. 2022;12(4):301-22."
+					},
+					{
+						"id": "irwin",
+						"csl": {
+							"type": "book",
+							"title": "Catalogues",
+							"author": [
+								{
+									"family": "Irwin",
+									"given": "Tess"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										2019
+									]
+								]
+							}
+						},
+						"formattedText": "Irwin T. Catalogues. Delta Academic; 2019."
+					}
+				]
+			}
 		}
 	]
 }

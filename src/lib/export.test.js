@@ -753,6 +753,56 @@ describe( 'cslToRisEntry (per-entry RIS for save() cite/export)', () => {
 		} );
 		expect( ris ).toContain( 'AU  - Doe, Jane' );
 	} );
+
+	it( 'adds the journal abbreviation as J2 only when asked', () => {
+		const csl = {
+			type: 'article-journal',
+			title: 'A Study',
+			'container-title': 'Journal of Library Systems',
+			'container-title-short': 'J. Libr. Syst.',
+		};
+
+		expect( cslToRisEntry( csl ) ).not.toContain( 'J2' );
+		expect( cslToRisEntry( csl, { journalAbbreviation: true } ) ).toContain(
+			'T2  - Journal of Library Systems\nJ2  - J. Libr. Syst.\n'
+		);
+	} );
+
+	it( "reads Zotero's journalAbbreviation and skips a missing one", () => {
+		const legacy = {
+			type: 'article-journal',
+			title: 'A Study',
+			journalAbbreviation: 'Sch. Commun. Rev.',
+		};
+
+		expect(
+			cslToRisEntry( legacy, { journalAbbreviation: true } )
+		).toContain( 'J2  - Sch. Commun. Rev.' );
+		expect(
+			cslToRisEntry(
+				{ type: 'book', title: 'A Book', 'container-title-short': [] },
+				{ journalAbbreviation: true }
+			)
+		).not.toContain( 'J2' );
+	} );
+
+	it( 'puts J2 in the bibliography RIS download', () => {
+		const content = buildRisExportContent(
+			[
+				{
+					id: 'a',
+					csl: {
+						type: 'article-journal',
+						title: 'A Study',
+						'container-title-short': 'J. Libr. Syst.',
+					},
+				},
+			],
+			'ieee'
+		);
+
+		expect( content ).toContain( 'J2  - J. Libr. Syst.' );
+	} );
 } );
 
 describe( 'buildPlainTextBibliographyContent with OSCOLA tables', () => {

@@ -49,15 +49,15 @@ export const STRUCTURED_FIELD_DEFINITIONS = [
 		label: __( 'URL', 'borges-bibliography-builder' ),
 	},
 	{
-		// CSL `custom`: APA, Vancouver, and IEEE print titles in sentence
-		// case unless the entry keeps them as entered.
+		// CSL `custom`: APA, Harvard, Vancouver, and IEEE print titles in
+		// sentence case unless the entry keeps them as entered.
 		key: 'keepTitleCase',
 		label: __(
 			'Keep title capitalization as entered',
 			'borges-bibliography-builder'
 		),
 		help: __(
-			'APA, IEEE, and Vancouver otherwise print the title in sentence case.',
+			'APA, Harvard, IEEE, and Vancouver otherwise print the title in sentence case.',
 			'borges-bibliography-builder'
 		),
 		control: 'checkbox',

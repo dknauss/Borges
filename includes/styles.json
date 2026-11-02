@@ -82,7 +82,8 @@
 			"yearSuffix": false,
 			"locale": "en-US",
 			"inlineCitationMode": "parenthetical",
-			"headingPlaceholder": "Works Cited"
+			"headingPlaceholder": "Works Cited",
+			"repeatedAuthors": "allAuthors"
 		},
 		"harvard": {
 			"label": "Harvard",
@@ -95,7 +96,8 @@
 			"yearSuffix": true,
 			"locale": "en-GB",
 			"inlineCitationMode": "parenthetical",
-			"headingPlaceholder": "References"
+			"headingPlaceholder": "References",
+			"sentenceCase": { "scope": "works", "subtitle": "lowercase" }
 		},
 		"ieee": {
 			"label": "IEEE",
@@ -137,6 +139,8 @@
 			"locale": "en-GB",
 			"inlineCitationMode": "note",
 			"headingPlaceholder": "Bibliography",
+			"repeatedAuthors": "firstAuthor",
+			"chronologicalAuthors": true,
 			"groups": [
 				{
 					"key": "cases",

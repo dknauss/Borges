@@ -80,15 +80,16 @@ function getCopyText( citation, inlineMarkup ) {
  * without the block's script and styles see only the bibliography, and
  * `data-` attributes survive the post-content HTML filter for every role.
  *
- * @param {Object}  citation     Citation record.
- * @param {boolean} inlineMarkup Whether display text may carry `<i>`/`<em>`.
+ * @param {Object}  citation            Citation record.
+ * @param {boolean} inlineMarkup        Whether display text may carry `<i>`/`<em>`.
+ * @param {boolean} journalAbbreviation Whether the RIS carries a `J2` line.
  * @return {Object} Attributes, in serialized order.
  */
-function getCiteExportData( citation, inlineMarkup ) {
+function getCiteExportData( citation, inlineMarkup, journalAbbreviation ) {
 	return {
 		'data-cite-text': getCopyText( citation, inlineMarkup ),
 		'data-cite-filename': getCitationExportBasename( citation.csl ),
-		'data-cite-ris': cslToRisEntry( citation.csl ),
+		'data-cite-ris': cslToRisEntry( citation.csl, { journalAbbreviation } ),
 		'data-cite-csl-json': `${ JSON.stringify( citation.csl, null, 2 ) }\n`,
 		'data-cite-bibtex': citation.exportBibtex || undefined,
 		'data-cite-biblatex': citation.exportBiblatex || undefined,
@@ -138,6 +139,7 @@ export function renderBibliographySave(
 		undatedTitles = false,
 		firstAuthorDash = false,
 		citeExportData = false,
+		risJournalAbbreviation = false,
 		canonicalDoiUrl = false,
 		jsonLdItemList = false,
 		citationLinkRel = 'nofollow noopener noreferrer',
@@ -247,7 +249,11 @@ export function renderBibliographySave(
 				id={ `ref-${ citation.id }` }
 				lang={ citation.csl.language || undefined }
 				{ ...( includeCiteExport && citeExportData
-					? getCiteExportData( citation, inlineMarkup )
+					? getCiteExportData(
+							citation,
+							inlineMarkup,
+							risJournalAbbreviation
+						)
 					: {} ) }
 			>
 				<EntryTag className="bibliography-builder-entry-text">

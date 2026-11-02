@@ -94,7 +94,7 @@ describe( 'StructuredCitationEditor keep-title-case checkbox', () => {
 
 		expect( checkbox ).not.toBeChecked();
 		expect( checkbox ).toHaveAccessibleDescription(
-			'APA, IEEE, and Vancouver otherwise print the title in sentence case.'
+			'APA, Harvard, IEEE, and Vancouver otherwise print the title in sentence case.'
 		);
 
 		checkbox.click();

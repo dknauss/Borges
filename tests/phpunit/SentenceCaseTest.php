@@ -1,6 +1,6 @@
 <?php
 /**
- * Sentence case for APA 7, Vancouver, and IEEE titles
+ * Sentence case for APA 7, Harvard, Vancouver, and IEEE titles
  * (includes/sentence-case.php).
  *
  * @package BibliographyBuilder
@@ -173,6 +173,36 @@ final class SentenceCaseTest extends TestCase {
 		$this->assertSame( 'Essays on Classification', $chapter['container-title'] );
 	}
 
+	/**
+	 * Cite Them Right: "only capitalise the first letter of the first word of
+	 * the title and any proper nouns", with the subtitle in lowercase, as
+	 * the guide cites itself ("Cite them right: the essential referencing
+	 * guide"), but journal names as published.
+	 */
+	public function test_harvard_follows_cite_them_right(): void {
+		$book = bibliography_builder_sentence_case_item(
+			array(
+				'type'  => 'book',
+				'title' => 'Cite Them Right: The Essential Referencing Guide',
+			),
+			self::style( 'harvard' )
+		);
+
+		$this->assertSame( 'Cite them right: the essential referencing guide', $book['title'] );
+
+		$article = bibliography_builder_sentence_case_item(
+			array(
+				'type'            => 'article-journal',
+				'title'           => 'Successful Teaching Placements in Secondary Schools',
+				'container-title' => 'European Journal of Teacher Education',
+			),
+			self::style( 'harvard' )
+		);
+
+		$this->assertSame( 'Successful teaching placements in secondary schools', $article['title'] );
+		$this->assertSame( 'European Journal of Teacher Education', $article['container-title'] );
+	}
+
 	public function test_vancouver_lowercases_a_subtitle(): void {
 		$item = bibliography_builder_sentence_case_item(
 			array(
@@ -191,7 +221,7 @@ final class SentenceCaseTest extends TestCase {
 			'title' => 'The Origin of Species',
 		);
 
-		foreach ( array( 'chicago-notes-bibliography', 'chicago-author-date', 'mla-9', 'harvard', 'oscola', 'abnt' ) as $key ) {
+		foreach ( array( 'chicago-notes-bibliography', 'chicago-author-date', 'mla-9', 'oscola', 'abnt' ) as $key ) {
 			$this->assertNull( self::style( $key ), $key );
 			$this->assertSame( $item, bibliography_builder_sentence_case_item( $item, self::style( $key ) ), $key );
 		}

@@ -39,6 +39,7 @@ export default function save( { attributes } ) {
 		undatedTitles: true,
 		firstAuthorDash: true,
 		citeExportData: true,
+		risJournalAbbreviation: true,
 		canonicalDoiUrl: true,
 		jsonLdItemList: true,
 		citationLinkRel: 'noopener',

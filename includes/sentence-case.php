@@ -2,11 +2,11 @@
 /**
  * Sentence case for styles that print titles that way.
  *
- * APA 7, Vancouver (NLM), and IEEE print the titles of works in sentence
- * case ("The origin of species"), but resolved records and most imports
- * store them in title case ("The Origin of Species"), and none of the
- * bundled CSL files changes case. The formatter therefore converts a copy of
- * the title before citeproc-php renders it. The stored CSL is never changed,
+ * APA 7, Harvard (Cite Them Right), Vancouver (NLM), and IEEE print the
+ * titles of works in sentence case ("The origin of species"), but resolved
+ * records and most imports store them in title case ("The Origin of
+ * Species"), and none of the bundled CSL files changes case. The formatter
+ * therefore converts a copy of the title before citeproc-php renders it. The stored CSL is never changed,
  * so another style, the JSON-LD, COinS, and every export keep the title as
  * entered.
  *
@@ -21,7 +21,7 @@
  *   than "A" (vitamin D).
  * - It keeps the first word, and capitalizes the first word after a colon,
  *   question mark, exclamation mark, or dash where the style does (APA,
- *   IEEE; NLM lowercases it).
+ *   IEEE; NLM and Cite Them Right lowercase it).
  * - It skips titles in another language, by the CSL `language` field, and
  *   entries whose `custom` field sets `borges-keep-title-case`, the editor's
  *   "Keep title capitalization as entered" checkbox.

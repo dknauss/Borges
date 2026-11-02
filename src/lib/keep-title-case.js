@@ -1,12 +1,12 @@
 /**
  * The per-entry flag that keeps a title's capitalization as entered.
  *
- * APA 7, Vancouver, and IEEE print titles in sentence case, which the PHP
- * formatter derives from the stored title (includes/sentence-case.php). The
- * conversion cannot tell every proper noun from an ordinary word, so an entry
- * can opt out: the editor's "Keep title capitalization as entered" checkbox
- * sets this flag in the CSL `custom` object, which CSL-JSON reserves for
- * application data.
+ * APA 7, Harvard, Vancouver, and IEEE print titles in sentence case, which
+ * the PHP formatter derives from the stored title
+ * (includes/sentence-case.php). The conversion cannot tell every proper noun
+ * from an ordinary word, so an entry can opt out: the editor's "Keep title
+ * capitalization as entered" checkbox sets this flag in the CSL `custom`
+ * object, which CSL-JSON reserves for application data.
  */
 
 /**

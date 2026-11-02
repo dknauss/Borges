@@ -159,7 +159,41 @@ export function getCitationExportBasename( csl ) {
 	return fromTitle || 'citation';
 }
 
-export function cslToRisEntry( csl ) {
+/**
+ * The journal abbreviation for an RIS `J2` line: CSL `container-title-short`,
+ * or Zotero's `journalAbbreviation` on a record stored before the sanitizers
+ * mapped it. Mirrored by bibliography_builder_save_ris_journal_abbreviation()
+ * in includes/save-cite-export.php.
+ *
+ * @param {Object} csl CSL-JSON object.
+ * @return {string|undefined} Abbreviation, if the record has one.
+ */
+function getRisJournalAbbreviation( csl ) {
+	const short = csl[ 'container-title-short' ];
+
+	if ( typeof short === 'string' && short !== '' ) {
+		return short;
+	}
+
+	return typeof csl.journalAbbreviation === 'string'
+		? csl.journalAbbreviation
+		: undefined;
+}
+
+/**
+ * One RIS record.
+ *
+ * @param {Object}  csl                           CSL-JSON object.
+ * @param {Object}  [options]                     Options.
+ * @param {boolean} [options.journalAbbreviation] Add a `J2` line with the
+ *                                                journal abbreviation. Off by
+ *                                                default: the Cite / Export
+ *                                                data of blocks saved by
+ *                                                1.18.0 and earlier has none
+ *                                                (src/deprecated.js).
+ * @return {string} RIS record.
+ */
+export function cslToRisEntry( csl, { journalAbbreviation = false } = {} ) {
 	const lines = [];
 	const { start, end } = splitPageRange( csl.page );
 
@@ -179,6 +213,9 @@ export function cslToRisEntry( csl ) {
 		csl.type === 'book' ? 'BT' : 'T2',
 		csl[ 'container-title' ]
 	);
+	if ( journalAbbreviation ) {
+		appendRisLine( lines, 'J2', getRisJournalAbbreviation( csl ) );
+	}
 	appendRisLine( lines, 'PB', csl.publisher );
 	appendRisLine( lines, 'PY', getIssuedYearForExport( csl ) );
 	appendRisLine( lines, 'DA', getIssuedYearForExport( csl ) );
@@ -432,7 +469,9 @@ export function buildRisExportContent( citations, citationStyle ) {
 	const sortedCitations = sortCitations( citations, citationStyle );
 	const cslArray = sortedCitations.map( ( citation ) => citation.csl );
 
-	return `${ cslArray.map( cslToRisEntry ).join( '\n\n' ) }\n`;
+	return `${ cslArray
+		.map( ( csl ) => cslToRisEntry( csl, { journalAbbreviation: true } ) )
+		.join( '\n\n' ) }\n`;
 }
 
 /**

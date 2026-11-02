@@ -128,10 +128,10 @@ final class CslStyleGoldenTest extends TestCase {
 			return array_map( 'wp_strip_all_tags', bibliography_builder_format_csl_items( $items, $style ) );
 		};
 
-		$this->assertSame( array( 'Moss, A. (2020) ‘Numbered Article’, Diabetes Research, 162, article 108125.' ), $text( array( $article ), 'harvard' ) );
+		$this->assertSame( array( 'Moss, A. (2020) ‘Numbered article’, Diabetes Research, 162, article 108125.' ), $text( array( $article ), 'harvard' ) );
 		// CrossRef also copies the article number into page; it is not a page.
 		$this->assertSame(
-			array( 'Moss, A. (2020) ‘Numbered Article’, Diabetes Research, 162, article 108125.' ),
+			array( 'Moss, A. (2020) ‘Numbered article’, Diabetes Research, 162, article 108125.' ),
 			$text( array( array_merge( $article, array( 'page' => '108125' ) ) ), 'harvard' )
 		);
 

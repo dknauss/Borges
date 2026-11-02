@@ -38,9 +38,9 @@ final class StyleDataTest extends TestCase {
 		$this->assertNotEmpty( $styles );
 
 		foreach ( $styles as $key => $style ) {
-			// `groups` and `sentenceCase` are optional; test_groups_are_well_formed()
-			// and test_sentence_case_is_well_formed() check them.
-			unset( $style['groups'], $style['sentenceCase'] );
+			// `groups`, `sentenceCase`, `repeatedAuthors`, and `chronologicalAuthors`
+			// are optional; the tests below check them.
+			unset( $style['groups'], $style['sentenceCase'], $style['repeatedAuthors'], $style['chronologicalAuthors'] );
 
 			$this->assertSame( array_keys( self::FIELDS ), array_keys( $style ), $key );
 			$this->assertIsBool( $style['enabled'], $key );
@@ -140,6 +140,39 @@ final class StyleDataTest extends TestCase {
 	}
 
 	/**
+	 * MLA 9 replaces every repeated author with hyphens, OSCOLA 5 the first
+	 * author with a double em dash and lists one author's works by date
+	 * (§1.7); no other bundled style does either.
+	 */
+	public function test_repeated_author_rules_are_well_formed() {
+		$rules         = array();
+		$chronological = array();
+
+		foreach ( bibliography_builder_get_style_data()['styles'] as $key => $style ) {
+			if ( isset( $style['repeatedAuthors'] ) ) {
+				$this->assertContains( $style['repeatedAuthors'], array( 'allAuthors', 'firstAuthor' ), $key );
+				$rules[ $key ] = $style['repeatedAuthors'];
+			}
+
+			if ( isset( $style['chronologicalAuthors'] ) ) {
+				$this->assertTrue( $style['chronologicalAuthors'], "$key: omit the flag instead of setting it false" );
+				$chronological[] = $key;
+			}
+		}
+
+		$this->assertSame(
+			array(
+				'mla-9'  => 'allAuthors',
+				'oscola' => 'firstAuthor',
+			),
+			$rules
+		);
+		$this->assertSame( array( 'oscola' ), $chronological );
+		$this->assertSame( "\u{2014}\u{2014}", bibliography_builder_save_repeated_author_mark( 'oscola' ) );
+		$this->assertSame( "\u{2011}\u{2011}\u{2011}", bibliography_builder_save_repeated_author_mark( 'mla-9' ) );
+	}
+
+	/**
 	 * Sentence case (includes/sentence-case.php) is on for APA 7, Vancouver,
 	 * and IEEE, each with a known scope and subtitle rule, and off for the
 	 * styles whose manuals want title case.
@@ -159,7 +192,7 @@ final class StyleDataTest extends TestCase {
 			$this->assertContains( $style['sentenceCase']['subtitle'], array( 'capitalize', 'lowercase' ), $key );
 		}
 
-		$this->assertSame( array( 'apa-7', 'ieee', 'vancouver' ), $on );
+		$this->assertSame( array( 'apa-7', 'harvard', 'ieee', 'vancouver' ), $on );
 	}
 
 	/**
@@ -208,6 +241,8 @@ final class StyleDataTest extends TestCase {
 					'family'                    => $style['family'],
 					'locale'                    => $style['locale'],
 					'demoteNonDroppingParticle' => $style['demoteNonDroppingParticle'],
+					'repeatedAuthors'           => isset( $style['repeatedAuthors'] ) ? $style['repeatedAuthors'] : '',
+					'chronologicalAuthors'      => ! empty( $style['chronologicalAuthors'] ),
 				),
 				bibliography_builder_get_save_style_definition( $key ),
 				$key
