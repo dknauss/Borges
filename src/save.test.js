@@ -300,6 +300,36 @@ describe( 'save', () => {
 			} )
 		);
 		expect( customHeadingMarkup ).toContain( 'aria-label="References"' );
+
+		// With a stable block ID, the section is named by the heading itself.
+		const labelledMarkup = renderToStaticMarkup(
+			save( {
+				attributes: {
+					bibliographyId: 'bib-1',
+					citationStyle: 'chicago-author-date',
+					headingText: 'References',
+					citations: [ createCitation() ],
+				},
+			} )
+		);
+		expect( labelledMarkup ).toContain(
+			'role="doc-bibliography" aria-labelledby="bibliography-heading-bib-1"><p class="bibliography-builder-heading" id="bibliography-heading-bib-1">References</p>'
+		);
+		expect( labelledMarkup ).not.toContain( 'aria-label="References"' );
+
+		// An unusable ID (an all-digit one reads as a block index) keeps aria-label.
+		const unusableIdMarkup = renderToStaticMarkup(
+			save( {
+				attributes: {
+					bibliographyId: '123',
+					citationStyle: 'chicago-author-date',
+					headingText: 'References',
+					citations: [ createCitation() ],
+				},
+			} )
+		);
+		expect( unusableIdMarkup ).toContain( 'aria-label="References"' );
+		expect( unusableIdMarkup ).not.toContain( 'aria-labelledby' );
 		expect( markup ).not.toContain( 'role="doc-biblioentry"' );
 		expect( markup ).toContain( 'id="ref-citation-7"' );
 		expect( markup ).toContain( 'lang="fr"' );
@@ -503,7 +533,7 @@ describe( 'save', () => {
 		);
 
 		expect( markup ).toContain(
-			'<a href="https://example.com/resource" rel="nofollow noopener noreferrer" aria-label="Example resource — https://example.com/resource">https://example.com/resource</a>.'
+			'<a href="https://example.com/resource" rel="noopener" aria-label="Example resource — https://example.com/resource">https://example.com/resource</a>.'
 		);
 	} );
 
@@ -735,7 +765,7 @@ describe( 'save', () => {
 		);
 
 		expect( markup ).toContain(
-			'<a href="https://example.org/resource" rel="nofollow noopener noreferrer">https://example.org/resource</a>'
+			'<a href="https://example.org/resource" rel="noopener">https://example.org/resource</a>'
 		);
 		expect( markup ).not.toContain( 'aria-label="Link to publication' );
 	} );

@@ -410,7 +410,7 @@ final class WriteRoutesTest extends TestCase {
 		$this->assertTrue( $attrs['outputCoins'] );
 		$this->assertFalse( $attrs['outputJsonLd'] );
 		$this->assertSame( array( 'c-knuth', 'c-turing' ), array_column( $attrs['citations'], 'id' ) );
-		$this->assertStringContainsString( 'Sources &amp; &lt;Notes&gt;', get_post( self::POST_ID )->post_content );
+		$this->assertStringContainsString( 'aria-labelledby="bibliography-heading-notes-block"><p class="bibliography-builder-heading" id="bibliography-heading-notes-block">Sources &amp; &lt;Notes></p>', get_post( self::POST_ID )->post_content );
 		$this->assert_blocks_are_valid();
 
 		// Back to a default: left out of the block comment, as the editor does.
@@ -438,7 +438,7 @@ final class WriteRoutesTest extends TestCase {
 
 		$this->assertSame( array( 'headingLevel' ), $data['changes']['updated'] );
 		$this->assertSame( 2, $attrs['headingLevel'] );
-		$this->assertStringContainsString( '<h2 class="bibliography-builder-heading">Works Cited</h2>', get_post( self::POST_ID )->post_content );
+		$this->assertStringContainsString( '<h2 class="bibliography-builder-heading" id="bibliography-heading-notes-block">Works Cited</h2>', get_post( self::POST_ID )->post_content );
 		$this->assert_blocks_are_valid();
 
 		// Back to the paragraph: left out of the block comment, as the editor does.
@@ -448,7 +448,7 @@ final class WriteRoutesTest extends TestCase {
 		$attrs = bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] );
 
 		$this->assertArrayNotHasKey( 'headingLevel', $attrs );
-		$this->assertStringContainsString( '<p class="bibliography-builder-heading">Works Cited</p>', get_post( self::POST_ID )->post_content );
+		$this->assertStringContainsString( '<p class="bibliography-builder-heading" id="bibliography-heading-notes-block">Works Cited</p>', get_post( self::POST_ID )->post_content );
 		$this->assert_blocks_are_valid();
 	}
 

@@ -423,14 +423,23 @@ function bibliography_builder_sort_compare_chains( $collator, $chain_a, $chain_b
 }
 
 /**
+ * Styles that list one author's works by date, oldest first, then by title
+ * within a year (OSCOLA 5 §1.7): `CHRONOLOGICAL_AUTHOR_STYLES` in
+ * `src/lib/sorter.js`.
+ */
+const BIBLIOGRAPHY_BUILDER_CHRONOLOGICAL_AUTHOR_STYLES = array( 'oscola' );
+
+/**
  * The comparator for a style family: `compareNotes()` or `compareAuthorDate()`.
  *
- * @param string   $family   Style family.
- * @param Collator $collator Collator.
- * @param array    $a        CSL-JSON item.
- * @param array    $b        CSL-JSON item.
- * @param bool     $demote   Whether the style demotes particles for sorting.
- * @param string[] $articles Leading articles titles sort without.
+ * @param string   $family        Style family.
+ * @param Collator $collator      Collator.
+ * @param array    $a             CSL-JSON item.
+ * @param array    $b             CSL-JSON item.
+ * @param bool     $demote        Whether the style demotes particles for sorting.
+ * @param string[] $articles      Leading articles titles sort without.
+ * @param bool     $chronological Whether a notes style lists one author's
+ *                                works by date (`rule.chronological`).
  * @return int
  */
 function bibliography_builder_sort_compare(
@@ -439,7 +448,8 @@ function bibliography_builder_sort_compare(
 	$a,
 	$b,
 	$demote = false,
-	$articles = array( 'a', 'an', 'the' )
+	$articles = array( 'a', 'an', 'the' ),
+	$chronological = false
 ) {
 	$authors = bibliography_builder_locale_compare(
 		$collator,
@@ -480,6 +490,14 @@ function bibliography_builder_sort_compare(
 
 	if ( 0 !== $authors ) {
 		return $authors;
+	}
+
+	if ( 'notes' === $family && $chronological
+		&& null !== bibliography_builder_sort_primary_contributors( $a )
+		&& null !== bibliography_builder_sort_primary_contributors( $b ) ) {
+		$years = bibliography_builder_sort_compare_years( $a, $b );
+
+		return 0 !== $years ? $years : $titles();
 	}
 
 	if ( 'notes' === $family ) {
@@ -729,7 +747,8 @@ function bibliography_builder_sort_citations_for_save( $citations, $style_key ) 
 				$csl_a,
 				$csl_b,
 				$demote,
-				$articles
+				$articles,
+				in_array( $style['key'], BIBLIOGRAPHY_BUILDER_CHRONOLOGICAL_AUTHOR_STYLES, true )
 			);
 
 			return 0 !== $comparison ? $comparison : $left[0] - $right[0];

@@ -59,7 +59,7 @@
 	}
 
 	.bibliography-builder-list {
-		padding-left: 0;
+		padding-inline-start: 0;
 		margin: 0 0 1em;
 	}
 
@@ -75,8 +75,6 @@
 
 	.bibliography-builder-heading-preview {
 		margin: 0 0 0.75em;
-		font-size: 1.25em;
-		font-weight: 600;
 		text-align: center;
 	}
 
@@ -126,12 +124,12 @@
 
 	.bibliography-builder-list-numeric > .bibliography-builder-entry {
 		counter-increment: bibliography-item;
-		padding-left: calc(var(--bibliography-builder-marker-width) + 0.75em);
+		padding-inline-start: calc(var(--bibliography-builder-marker-width) + 0.75em);
 	}
 
 	.bibliography-builder-list-numeric > .bibliography-builder-entry::before {
 		position: absolute;
-		left: 0.5em;
+		inset-inline-start: 0.5em;
 		top: 0.5em;
 		min-width: var(--bibliography-builder-marker-width);
 		text-indent: 0;
@@ -180,7 +178,7 @@
 
 	.bibliography-builder-list-unordered > .bibliography-builder-entry .bibliography-builder-entry-text {
 		display: block;
-		padding-left: 2em;
+		padding-inline-start: 2em;
 		text-indent: -2em;
 	}
 
@@ -259,7 +257,7 @@
 		width: 100%;
 		min-width: 0;
 		text-indent: 0;
-		padding-left: 0;
+		padding-inline-start: 0;
 		margin: 0;
 		box-sizing: border-box;
 		font-size: 13px;
@@ -288,6 +286,30 @@
 			border: 1px solid #8c8f94;
 			border-radius: 2px;
 			box-sizing: border-box;
+		}
+
+		// Checkbox first, label beside it, help text below.
+		.bibliography-builder-structured-checkbox {
+			display: grid;
+			grid-template-columns: auto 1fr;
+			align-items: center;
+			column-gap: 0.5em;
+
+			input[type="checkbox"] {
+				width: auto;
+				margin: 0;
+			}
+
+			label {
+				margin: 0;
+			}
+		}
+
+		.bibliography-builder-structured-help {
+			grid-column: 2;
+			margin: 0.25em 0 0;
+			font-size: 0.85em;
+			color: #50575e;
 		}
 	}
 

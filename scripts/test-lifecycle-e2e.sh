@@ -35,31 +35,38 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+# Wait for a Playground server to answer, or print both logs and fail.
+wait_for_server() {
+	attempt=0
+	until curl -fsS "$1" >/dev/null 2>&1; do
+		attempt=$((attempt + 1))
+		if [ "$attempt" -gt 60 ]; then
+			echo "Timed out waiting for Playground at $1" >&2
+			cat "$LOG_MOUNT" "$LOG_ZIP" >&2 || true
+			exit 1
+		fi
+		sleep 2
+	done
+}
+
+# The servers start one after the other, not together. On a runner with no
+# cached WordPress ZIP, both would download it to the same
+# ~/.wordpress-playground/<version>.zip.partial, and the second rename fails
+# with ENOENT. Once server 1 is up the ZIP is cached and server 2 reuses it.
+
 # Start server 1 (auto-mount — plugin source is read-write mounted).
 CI=1 npx @wp-playground/cli@3.1.40 server \
 	--auto-mount --login --port="$PORT_MOUNT" \
 	>"$LOG_MOUNT" 2>&1 &
 PID_MOUNT=$!
+wait_for_server "$BASE_URL_MOUNT"
 
 # Start server 2 (plain — no plugin pre-installed; test uploads the zip).
 CI=1 npx @wp-playground/cli@3.1.40 server \
 	--login --port="$PORT_ZIP" \
 	>"$LOG_ZIP" 2>&1 &
 PID_ZIP=$!
-
-# Wait for both servers.
-for url in "$BASE_URL_MOUNT" "$BASE_URL_ZIP"; do
-	attempt=0
-	until curl -fsS "$url" >/dev/null 2>&1; do
-		attempt=$((attempt + 1))
-		if [ "$attempt" -gt 60 ]; then
-			echo "Timed out waiting for Playground at $url" >&2
-			cat "$LOG_MOUNT" "$LOG_ZIP" >&2 || true
-			exit 1
-		fi
-		sleep 2
-	done
-done
+wait_for_server "$BASE_URL_ZIP"
 
 echo "Both Playground servers ready."
 

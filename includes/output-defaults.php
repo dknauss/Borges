@@ -73,7 +73,35 @@ function bibliography_builder_get_output_defaults() {
 }
 
 /**
- * Pass the output defaults to the block editor.
+ * The heading level a newly inserted bibliography starts with.
+ *
+ * `block.json` defaults to 0 (a paragraph), and stays that way so blocks
+ * saved with it keep validating. New blocks start with a real `<h2>`
+ * instead, which puts the bibliography in the page's heading outline.
+ *
+ * @since 1.18.0
+ *
+ * @return int 0 for a paragraph, or 2 to 6.
+ */
+function bibliography_builder_get_new_block_heading_level() {
+	/**
+	 * Filters the heading level a newly inserted bibliography starts with.
+	 *
+	 * Return 2 to 6 for that heading, or 0 for a paragraph (the pre-1.18.0
+	 * default). Any other value keeps 2. Authors can still change each block,
+	 * and existing blocks keep what they were saved with.
+	 *
+	 * @since 1.18.0
+	 *
+	 * @param int $level Heading level. Default 2.
+	 */
+	$level = apply_filters( 'bibliography_builder_new_block_heading_level', 2 );
+
+	return is_int( $level ) && in_array( $level, array( 0, 2, 3, 4, 5, 6 ), true ) ? $level : 2;
+}
+
+/**
+ * Pass the defaults for new blocks to the block editor.
  *
  * @since 1.13.0
  *
@@ -85,7 +113,8 @@ function bibliography_builder_editor_output_defaults( $settings ) {
 		return $settings;
 	}
 
-	$settings['bibliographyBuilderOutputDefaults'] = bibliography_builder_get_output_defaults();
+	$settings['bibliographyBuilderOutputDefaults'] = bibliography_builder_get_output_defaults()
+		+ array( 'headingLevel' => bibliography_builder_get_new_block_heading_level() );
 
 	return $settings;
 }

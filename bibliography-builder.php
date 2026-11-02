@@ -3,7 +3,7 @@
  * Plugin Name:       Borges Bibliography Builder
  * Plugin URI:        https://github.com/dknauss/Borges/
  * Description:       Create accessible bibliographies from DOI, PubMed, BibTeX, CSL-JSON, and free text; export RIS.
- * Version:           1.17.0
+ * Version:           1.18.0
  * Requires at least: 6.4
  * Tested up to:      7.1
  * Requires PHP:      7.4
@@ -652,7 +652,10 @@ add_action( 'rest_api_init', 'bibliography_builder_register_rest_routes' );
 require_once __DIR__ . '/includes/styles.php';
 require_once __DIR__ . '/includes/block-data.php';
 require_once __DIR__ . '/includes/csl-sanitize.php';
+require_once __DIR__ . '/includes/format-timing.php';
 require_once __DIR__ . '/includes/formatter.php';
+require_once __DIR__ . '/includes/sentence-case-proper-nouns.php';
+require_once __DIR__ . '/includes/sentence-case.php';
 require_once __DIR__ . '/includes/read-routes.php';
 require_once __DIR__ . '/includes/google-books-key.php';
 require_once __DIR__ . '/includes/resolvers.php';
@@ -665,6 +668,8 @@ require_once __DIR__ . '/includes/save-json-ld-coins.php';
 require_once __DIR__ . '/includes/save-cite-export.php';
 require_once __DIR__ . '/includes/frontend-labels.php';
 require_once __DIR__ . '/includes/list-semantics.php';
+require_once __DIR__ . '/includes/citation-link-rel.php';
+require_once __DIR__ . '/includes/heading-label.php';
 require_once __DIR__ . '/includes/frontend-json-ld.php';
 require_once __DIR__ . '/includes/json-ld-enrichment.php';
 require_once __DIR__ . '/includes/coins-enrichment.php';

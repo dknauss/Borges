@@ -494,3 +494,38 @@ describe( 'validateAndSanitizeCsl', () => {
 		expect( result[ 'custom-field' ] ).toBe( 'value' );
 	} );
 } );
+
+describe( 'validateAndSanitizeCsl journal abbreviations', () => {
+	const short = ( fields ) =>
+		validateAndSanitizeCsl( { ...MINIMAL_VALID, ...fields } )[
+			'container-title-short'
+		];
+
+	it( 'keeps container-title-short as one plain string', () => {
+		expect( short( { 'container-title-short': 'Phys. Rev. Lett.' } ) ).toBe(
+			'Phys. Rev. Lett.'
+		);
+		expect(
+			short( { 'container-title-short': [ 'J Biol Chem', 'JBC' ] } )
+		).toBe( 'J Biol Chem' );
+		expect( short( { 'container-title-short': ' <b>Nature</b> ' } ) ).toBe(
+			'Nature'
+		);
+	} );
+
+	it( "reads Zotero's journalAbbreviation and drops the original key", () => {
+		const csl = validateAndSanitizeCsl( {
+			...MINIMAL_VALID,
+			journalAbbreviation: 'J. Libr. Syst.',
+		} );
+
+		expect( csl[ 'container-title-short' ] ).toBe( 'J. Libr. Syst.' );
+		expect( csl ).not.toHaveProperty( 'journalAbbreviation' );
+	} );
+
+	it( 'drops a value that is not text, without refusing the item', () => {
+		expect( short( { 'container-title-short': 42 } ) ).toBeUndefined();
+		expect( short( { 'container-title-short': '' } ) ).toBeUndefined();
+		expect( short( { 'container-title-short': [] } ) ).toBeUndefined();
+	} );
+} );

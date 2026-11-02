@@ -130,7 +130,7 @@
           <group delimiter=", " suffix=".">
             <text macro="creators"/>
             <text variable="title" quotes="true"/>
-            <text variable="container-title"/>
+            <text variable="container-title" form="short"/>
             <group delimiter=" ">
               <text term="volume" form="short"/>
               <text variable="volume"/>

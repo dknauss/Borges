@@ -16,9 +16,15 @@ import {
 } from './lib/jsonld';
 import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
-import { getGroupLabelTag, groupCitations } from './lib/bibliography-groups';
+import { isStableBlockId } from './lib/stable-ids';
 import {
-	REPEATED_AUTHOR_MARK,
+	getGroupIndex,
+	getGroupLabelTag,
+	getStyleGroups,
+	groupCitations,
+} from './lib/bibliography-groups';
+import {
+	getRepeatedAuthorMark,
 	getRepeatedAuthorPrefixes,
 } from './lib/repeated-authors';
 import {
@@ -89,6 +95,24 @@ function getCiteExportData( citation, inlineMarkup ) {
 	};
 }
 
+/**
+ * The `id` of a bibliography's visible heading, which names the section
+ * through `aria-labelledby`. Built from the block's stable `bibliographyId`,
+ * which stays unique when a block is duplicated. Mirrored by
+ * bibliography_builder_save_heading_id() in includes/save-markup.php.
+ *
+ * A block saved before it had an ID, or one whose ID `isStableBlockId()`
+ * rejects, gets no heading ID, and keeps `aria-label`.
+ *
+ * @param {unknown} bibliographyId The block's stable ID.
+ * @return {string|null} The heading's `id`, or null.
+ */
+export function getBibliographyHeadingId( bibliographyId ) {
+	return isStableBlockId( bibliographyId )
+		? `bibliography-heading-${ bibliographyId }`
+		: null;
+}
+
 export function renderBibliographySave(
 	attributes,
 	{
@@ -104,17 +128,25 @@ export function renderBibliographySave(
 		quoteAwareItalics = false,
 		urlAwareItalics = false,
 		quoteFoldedItalics = false,
+		shortContainerItalics = false,
+		caseFoldedItalics = false,
 		particleAwareSort = false,
 		localeArticles = false,
 		notesAuthorChains = false,
 		sourceGroups = false,
+		chronologicalAuthors = false,
+		undatedTitles = false,
+		firstAuthorDash = false,
 		citeExportData = false,
 		canonicalDoiUrl = false,
 		jsonLdItemList = false,
+		citationLinkRel = 'nofollow noopener noreferrer',
+		headingLabelledBy = false,
 		labels: labelOverrides = null,
 	} = {}
 ) {
 	const {
+		bibliographyId,
 		citationStyle,
 		citations,
 		headingText,
@@ -129,22 +161,38 @@ export function renderBibliographySave(
 
 	const labels = labelOverrides || getLocalizedSaveLabels();
 	const blockProps = useBlockProps.save();
+	const headingId =
+		headingLabelledBy && headingText
+			? getBibliographyHeadingId( bibliographyId )
+			: null;
 	const renderedCitations = sortEntries
 		? sortCitations( citations, citationStyle, {
 				particleAwareSort,
 				localeArticles,
 				notesAuthorChains,
 				sourceGroups,
+				chronologicalAuthors,
+				undatedTitles,
 			} )
 		: citations;
 	const cslArray = renderedCitations.map( ( c ) => c.csl );
+	const styleGroups =
+		sortEntries && sourceGroups ? getStyleGroups( citationStyle ) : null;
 	const repeatedAuthorPrefixes = repeatedAuthors
 		? getRepeatedAuthorPrefixes(
 				renderedCitations,
 				citationStyle,
-				inlineMarkup ? getPlainDisplayText : getDisplayText
+				inlineMarkup ? getPlainDisplayText : getDisplayText,
+				{
+					firstAuthorDash,
+					listOf: ( citation ) =>
+						styleGroups
+							? getGroupIndex( citation.csl, styleGroups )
+							: null,
+				}
 			)
 		: [];
+	const repeatedAuthorMark = getRepeatedAuthorMark( citationStyle );
 	const styleDefinition = getStyleDefinition( citationStyle );
 	const ListTag = getListSemantics( citationStyle );
 	const listClassName = `bibliography-builder-list bibliography-builder-list-${
@@ -164,6 +212,8 @@ export function renderBibliographySave(
 			quoteAwareItalics,
 			urlAwareItalics,
 			quoteFoldedItalics,
+			shortContainerItalics,
+			caseFoldedItalics,
 			romanTitles,
 		} );
 		const repeatedPrefix = repeatedAuthorPrefixes[ citationIndex ] || null;
@@ -207,7 +257,7 @@ export function renderBibliographySave(
 								className="bibliography-builder-repeated-author-mark"
 								aria-hidden="true"
 							>
-								{ REPEATED_AUTHOR_MARK }
+								{ repeatedAuthorMark }
 							</span>
 							<span className="bibliography-builder-visually-hidden screen-reader-text">
 								{ repeatedPrefix }
@@ -230,7 +280,7 @@ export function renderBibliographySave(
 										<a
 											key={ `${ citation.id }-${ index }-${ partIndex }` }
 											href={ part.href }
-											rel="nofollow noopener noreferrer"
+											rel={ citationLinkRel }
 											aria-label={
 												linkLabel
 													? `${ part.label } — ${ part.href }`
@@ -348,10 +398,18 @@ export function renderBibliographySave(
 		<section
 			{ ...blockProps }
 			role="doc-bibliography"
-			aria-label={ ariaLabel || headingText || 'Bibliography' }
+			aria-label={
+				headingId
+					? undefined
+					: ariaLabel || headingText || 'Bibliography'
+			}
+			aria-labelledby={ headingId || undefined }
 		>
 			{ headingText ? (
-				<HeadingTag className="bibliography-builder-heading">
+				<HeadingTag
+					className="bibliography-builder-heading"
+					id={ headingId || undefined }
+				>
 					{ headingText }
 				</HeadingTag>
 			) : null }
