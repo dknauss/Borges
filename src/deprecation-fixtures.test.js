@@ -140,6 +140,23 @@ const FIXTURE_ATTRIBUTES = {
  * so its fixture is one; under FIXTURE_ATTRIBUTES it would match v00 exactly.
  */
 const FIXTURE_ATTRIBUTES_BY_VERSION = {
+	// v18 froze save() from before the Cite / Export RIS carried a `J2` line
+	// with the journal abbreviation. Only an entry with one changes, so its
+	// fixture gives the article a `container-title-short`; under
+	// FIXTURE_ATTRIBUTES it would match v00 exactly.
+	18: {
+		...FIXTURE_ATTRIBUTES,
+		citations: [
+			{
+				...FIXTURE_ATTRIBUTES.citations[ 0 ],
+				csl: {
+					...FIXTURE_ATTRIBUTES.citations[ 0 ].csl,
+					'container-title-short': 'J. Block Test.',
+				},
+			},
+			FIXTURE_ATTRIBUTES.citations[ 1 ],
+		],
+	},
 	// v17 froze save() from before OSCOLA listed one author's works oldest
 	// first and replaced the name with a double em dash after the first
 	// (OSCOLA 5 §1.7). Only an OSCOLA list with two works by one author

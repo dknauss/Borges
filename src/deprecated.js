@@ -125,6 +125,39 @@ function migrateSortedAttributes( attributes ) {
 
 export const deprecated = [
 	{
+		// Freezes the save() shape of 1.18.0: the Cite / Export RIS had no
+		// `J2` line, so a journal abbreviation (`container-title-short`) did
+		// not reach a reference manager that imported it.
+		attributes: deprecatedAttributes,
+		save: ( { attributes } ) =>
+			renderBibliographySave( attributes, {
+				sortEntries: true,
+				headingTag: getHeadingTag( attributes.headingLevel ),
+				entryTag: 'span',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				inlineMarkup: true,
+				quoteAwareItalics: true,
+				urlAwareItalics: true,
+				quoteFoldedItalics: true,
+				shortContainerItalics: true,
+				caseFoldedItalics: true,
+				particleAwareSort: true,
+				localeArticles: true,
+				notesAuthorChains: true,
+				sourceGroups: true,
+				chronologicalAuthors: true,
+				undatedTitles: true,
+				firstAuthorDash: true,
+				citeExportData: true,
+				canonicalDoiUrl: true,
+				jsonLdItemList: true,
+				citationLinkRel: 'noopener',
+				headingLabelledBy: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			} ),
+	},
+	{
 		// Freezes the save() shape of 1.17.0: OSCOLA listed one author's
 		// works by title with the name written out each time, where OSCOLA 5
 		// §1.7 lists them oldest first and replaces the name with a double

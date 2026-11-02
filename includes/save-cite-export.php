@@ -99,7 +99,26 @@ function bibliography_builder_save_ris_name( $name ) {
 }
 
 /**
- * `cslToRisEntry()`.
+ * `getRisJournalAbbreviation()`: CSL `container-title-short`, or Zotero's
+ * `journalAbbreviation` on a record stored before the sanitizers mapped it.
+ *
+ * @param array $csl CSL-JSON item.
+ * @return mixed The abbreviation, or null.
+ */
+function bibliography_builder_save_ris_journal_abbreviation( $csl ) {
+	$short = bibliography_builder_csl_field( $csl, 'container-title-short' );
+
+	if ( is_string( $short ) && '' !== $short ) {
+		return $short;
+	}
+
+	$zotero = bibliography_builder_csl_field( $csl, 'journalAbbreviation' );
+
+	return is_string( $zotero ) ? $zotero : null;
+}
+
+/**
+ * `cslToRisEntry()`, with the `J2` line current save() writes.
  *
  * @param array $csl CSL-JSON item.
  * @return string
@@ -166,6 +185,7 @@ function bibliography_builder_save_ris_entry( $csl ) {
 
 	$add( 'TI', $field( 'title' ) );
 	$add( 'book' === $type ? 'BT' : 'T2', $field( 'container-title' ) );
+	$add( 'J2', bibliography_builder_save_ris_journal_abbreviation( $csl ) );
 	$add( 'PB', $field( 'publisher' ) );
 	$add( 'PY', $year );
 	$add( 'DA', $year );
