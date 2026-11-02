@@ -5,6 +5,7 @@ How Borges checks that each bundled citation style is **correct** (an entry read
 ## Status
 
 - **Drafted:** 2026-10-29
+- **Rerun:** 2026-11-02, on `main` after #236 (sentence case for APA, Vancouver, IEEE; IEEE and Vancouver journal abbreviations; OSCOLA 5 repeated authors)
 - **State:** Phase 1 in progress. The citeproc-js and AnyStyle checks (`tools/style-reference/`) and this plan are in the same pull request. Nothing below changes a style or a golden yet; every finding is listed for review against the manual first.
 - **Canonical path:** `docs/planning/style-verification-plan.md`
 
@@ -57,13 +58,13 @@ Every non-exact entry in a `compare.mjs` report gets one label, recorded in Phas
 - **Borges gap:** the manual agrees with the reference. Fix the style or formatter, regenerate the golden, review the diff.
 - **Reference gap:** the manual agrees with Borges (the official style or engine is wrong or incomplete).
 - **Edition gap:** the reference follows another edition (official Harvard is Cite Them Right 12th, Borges the 13th; official OSCOLA is the 4th, Borges the 5th).
-- **Deliberate deviation:** listed in `docs/csl-styles.md` (stored title case, linkable URLs, no citation numbers, unabbreviated journal titles).
+- **Deliberate deviation:** listed in `docs/csl-styles.md` (linkable URLs, no citation numbers; titles keep stored capitalization except where a style's `sentenceCase` applies).
 - **Engine:** citeproc-js and citeproc-php read the same CSL differently; covered by the formatter adaptations.
 - **Data:** the corpus item itself is ambiguous (for example, a thesis whose place is only implied).
 
-### First run (2026-10-29)
+### Latest run (2026-11-02)
 
-Full output: `tools/style-reference/results/2026-10-29.md`. Exact matches out of 20 against the official style: Chicago notes-bibliography 11, Chicago author-date 9, APA 13, MLA 14, Harvard 7, IEEE 8, Vancouver 7 (plus 4 differing only by dash form), OSCOLA 8, ABNT 3. Against Borges's own CSL in citeproc-js, every style matches except the two documented adaptations.
+Full output: `tools/style-reference/results/2026-11-02.md`. Entries out of 20 that match the official style exactly or differ only in typography or letter case: Chicago notes-bibliography 11, Chicago author-date 9, APA 13, MLA 14, Harvard 7, IEEE 8, Vancouver 11, OSCOLA 10, ABNT 4. APA, IEEE, and Vancouver now show most entries as letter-case differences: since #236 Borges prints those titles in sentence case, while the official styles (and Borges's own CSL run in citeproc-js) print them as stored. Against Borges's own CSL in citeproc-js, every style matches except those case differences and the two documented adaptations.
 
 Initial triage. Each "likely" item needs a check against the manual before anything changes.
 
@@ -82,9 +83,10 @@ Initial triage. Each "likely" item needs a check against the manual before anyth
 | OSCOLA | report | official quotes the title, Borges italicizes | Check OSCOLA 5 (reports are cited like books in the 4th). |
 | ABNT | translated book | `Tradução de Helen Wright` vs `Tradução: Helen Wright` | Check NBR 6023:2025. |
 | ABNT | articles | official prints no DOI | Likely reference gap: NBR 6023 includes the DOI; check the 2025 section. |
+| IEEE | preprint, webpages | Borges quotes `“Learning Citation Formats from Examples”` and `“Guide to Persistent Identifiers”` in title case, while articles and chapters are now sentence case | **Check.** The `parts` scope in `includes/sentence-case.php` converts only types with a container title, so a quoted preprint or webpage title keeps title case. Check the IEEE Reference Guide for preprints and web pages. |
 | All | legal case, statute | widely different | Out of scope for the general styles; OSCOLA's tables are the legal path (`docs/planning/oscola-grouping-plan.md`). |
 
-### AnyStyle baseline (2026-10-29)
+### AnyStyle baseline (2026-11-02)
 
 Fields recovered from the golden text are high for the author-date and numeric styles (title 15–18 of 20, first author 15 of 15, DOI 8 of 8). The low scores are AnyStyle's limits, not Borges's: OSCOLA (no year 9 of 18, no volume or page; AnyStyle was not trained on legal citation) and ABNT volume (`v. 27`, 0 of 4). Organizations as authors and the conference paper's container are the entries most often misread in every style. Track the table per run; act on a drop, not on the absolute number.
 

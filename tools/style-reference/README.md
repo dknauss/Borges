@@ -35,13 +35,16 @@ They are CC BY-SA 3.0, so they never enter the repository or the plugin (see
 `docs/csl-styles.md`). To move to newer styles, change the two SHAs, delete
 `out/`, and rerun.
 
-Expected "engine" differences, both formatter adaptations documented in
+Expected "engine" differences, all formatter adaptations documented in
 `docs/csl-styles.md`:
 
 - hyphenated given names: citeproc-php's output is fixed to `J.-W.`;
-  citeproc-js gives `J.`;
+  citeproc-js gives `J.`.
 - Vancouver page ranges: citeproc-php joins a `page-range-format` range with a
   hyphen, which Vancouver wants; citeproc-js uses an en dash.
+- sentence case (APA, IEEE, Vancouver): `includes/sentence-case.php` converts
+  a copy of each title before citeproc-php renders it, so citeproc-js prints
+  the stored title case. The report counts these as typography.
 
 ## `anystyle.mjs`: round trip through a reference parser
 
@@ -64,4 +67,4 @@ Set `ANYSTYLE` to the CLI's path when it is not on `PATH`.
 ## Results
 
 `results/` keeps dated snapshots of both reports, with the triage of each
-difference in the plan. The first run is `results/2026-10-29.md`.
+difference in the plan. The latest run is `results/2026-11-02.md`.
