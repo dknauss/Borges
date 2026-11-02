@@ -94,6 +94,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.18.0** — Sentence case in APA 7, Vancouver, and IEEE, with a per-entry opt-out; journal abbreviations in IEEE and Vancouver; OSCOLA repeated authors; new bibliographies start with an h2 that takes the theme's heading styles; citation links without `nofollow` or `noreferrer`; the bibliography named by its visible heading.
 - **1.17.0** — OSCOLA 5 tables of cases, legislation, and treaties; JSON-LD that passes Google's Rich Results Test, with cited works linked from the page on every site; COinS item types for Zotero; VoiceOver reads the bibliography as a list again in Safari; arXiv numbers print once in APA 7 and IEEE.
 - **1.16.0** — RIS import from Zotero, Mendeley, EndNote, and other reference managers; BC dates and years before 1000 in every style; fuller JSON-LD containers and COinS author lists as published posts render; single-author-first sorting in Chicago notes and OSCOLA and Portuguese leading articles skipped in ABNT; `wp borges duplicates`.
 - **1.15.0** — Opt-in bulk reformat and bulk deduplicate across posts through REST, abilities, and `wp borges reformat` / `deduplicate`, with a per-user rate limit; editing a citation can no longer turn it into a duplicate.

@@ -11,6 +11,7 @@ import {
 	normalizeUrlValue,
 	validateIdentifierFields,
 } from '../lib/manual-entry';
+import { keepsTitleCase, setKeepTitleCase } from '../lib/keep-title-case';
 import { findDuplicateCitation } from '../lib/deduplicate';
 import { sortCitations } from '../lib/sorter';
 import {
@@ -267,6 +268,13 @@ export function useCitationEditorState( {
 				authors: formatAuthorListForField( entry.csl.author ),
 				title: entry.csl.title || '',
 				containerTitle: entry.csl[ 'container-title' ] || '',
+				// Zotero's name, in records stored before the sanitizers
+				// mapped it.
+				containerTitleShort:
+					entry.csl[ 'container-title-short' ] ||
+					( typeof entry.csl.journalAbbreviation === 'string'
+						? entry.csl.journalAbbreviation
+						: '' ),
 				publisher: entry.csl.publisher || '',
 				year:
 					String(
@@ -281,6 +289,7 @@ export function useCitationEditorState( {
 						: '',
 				doi: entry.csl.DOI || '',
 				url: entry.csl.URL || '',
+				keepTitleCase: keepsTitleCase( entry.csl ),
 			};
 
 			structuredEditingIdRef.current = id;
@@ -382,10 +391,11 @@ export function useCitationEditorState( {
 			fieldText( field ) !==
 				String( initialFields[ field ] ?? '' ).trim();
 
-		const updatedCsl = { ...citation.csl };
+		let updatedCsl = { ...citation.csl };
 		const textFields = [
 			[ 'title', 'title' ],
 			[ 'containerTitle', 'container-title' ],
+			[ 'containerTitleShort', 'container-title-short' ],
 			[ 'publisher', 'publisher' ],
 			[ 'page', 'page' ],
 		];
@@ -401,6 +411,12 @@ export function useCitationEditorState( {
 				updatedCsl[ cslKey ] = text;
 			} else if ( cslKey !== 'title' ) {
 				delete updatedCsl[ cslKey ];
+			}
+
+			// The field edits Zotero's copy too, so a cleared abbreviation
+			// is not printed from it.
+			if ( cslKey === 'container-title-short' ) {
+				delete updatedCsl.journalAbbreviation;
 			}
 		}
 
@@ -474,6 +490,13 @@ export function useCitationEditorState( {
 			} else {
 				updatedCsl.issued = { 'date-parts': [ [ Number( year ) ] ] };
 			}
+		}
+
+		if ( isEdited( 'keepTitleCase' ) ) {
+			updatedCsl = setKeepTitleCase(
+				updatedCsl,
+				Boolean( structuredFields.keepTitleCase )
+			);
 		}
 
 		// Saving unchanged fields keeps a hand-edited display line; saving an

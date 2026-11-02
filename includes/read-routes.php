@@ -37,6 +37,15 @@ function bibliography_builder_get_request_params( WP_REST_Request $request ) {
  * @return WP_REST_Response|WP_Error
  */
 function bibliography_builder_rest_format_citations( WP_REST_Request $request ) {
+	$started = microtime( true );
+
+	// Drop timings from any earlier call in the same process.
+	bibliography_builder_format_timing();
+
+	if ( function_exists( 'timer_float' ) ) {
+		bibliography_builder_format_timing( 'wp', timer_float() * 1000.0, 'WordPress before the route' );
+	}
+
 	/**
 	 * WordPress documents a string, but the body is null until one is set.
 	 *
@@ -75,7 +84,10 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 		);
 	}
 
+	$sanitize_started    = microtime( true );
 	$sanitized_csl_items = bibliography_builder_validate_and_sanitize_csl_items( $csl_items );
+
+	bibliography_builder_format_timing( 'sanitize', bibliography_builder_format_timing_since( $sanitize_started ) );
 
 	if ( is_wp_error( $sanitized_csl_items ) ) {
 		return $sanitized_csl_items;
@@ -87,7 +99,7 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 		return $formatted;
 	}
 
-	return rest_ensure_response(
+	$response = new WP_REST_Response(
 		array(
 			'style'   => $style_key,
 			'entries' => array_map(
@@ -102,6 +114,14 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 			),
 		)
 	);
+
+	bibliography_builder_format_timing( 'callback', bibliography_builder_format_timing_since( $started ) );
+	$response->header(
+		'Server-Timing',
+		bibliography_builder_server_timing_header( bibliography_builder_format_timing() )
+	);
+
+	return $response;
 }
 
 /**

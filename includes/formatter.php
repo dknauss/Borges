@@ -15,17 +15,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Formatter style definitions, keyed by style key, from `styles.json`.
  *
- * @return array<string, array{template: string, locale: string, family: string, yearSuffix: bool}>
+ * `sentenceCase` is the style's optional sentence-case settings, or null;
+ * see includes/sentence-case.php.
+ *
+ * @return array<string, array{
+ *     template: string,
+ *     locale: string,
+ *     family: string,
+ *     yearSuffix: bool,
+ *     sentenceCase: array|null
+ * }>
  */
 function bibliography_builder_get_formatter_style_definitions() {
 	$definitions = array();
 
 	foreach ( bibliography_builder_get_style_data()['styles'] as $key => $style ) {
 		$definitions[ $key ] = array(
-			'template'   => (string) $style['cslTemplate'],
-			'locale'     => (string) $style['locale'],
-			'family'     => (string) $style['family'],
-			'yearSuffix' => (bool) $style['yearSuffix'],
+			'template'     => (string) $style['cslTemplate'],
+			'locale'       => (string) $style['locale'],
+			'family'       => (string) $style['family'],
+			'yearSuffix'   => (bool) $style['yearSuffix'],
+			'sentenceCase' => isset( $style['sentenceCase'] ) && is_array( $style['sentenceCase'] )
+				? $style['sentenceCase']
+				: null,
 		);
 	}
 
@@ -264,7 +276,18 @@ function bibliography_builder_get_formatter_style_cache_payload( $style_key, $st
 		// served after an upgrade.
 		'style_hash' => bibliography_builder_get_formatter_style_hash( $template ),
 		'locale'     => isset( $style['locale'] ) ? (string) $style['locale'] : '',
-	);
+	)
+	// Sentence case changes the text too, so a change to its settings
+	// (styles.json `sentenceCase`) or its rules never serves an entry cased
+	// the old way.
+	+ ( empty( $style['sentenceCase'] ) ? array() : array(
+		'sentence_case' => array(
+			'version'      => BIBLIOGRAPHY_BUILDER_SENTENCE_CASE_VERSION,
+			// A site's `bibliography_builder_sentence_case_proper_nouns`
+			// filter changes the text as well.
+			'proper_nouns' => md5( implode( ' ', array_keys( bibliography_builder_sentence_case_proper_nouns() ) ) ),
+		) + $style['sentenceCase'],
+	) );
 }
 
 /**
@@ -276,7 +299,7 @@ function bibliography_builder_get_formatter_style_cache_payload( $style_key, $st
  * @return string
  */
 function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style ) {
-	$payload = array( 'version' => 5 )
+	$payload = array( 'version' => 6 )
 		+ bibliography_builder_get_formatter_style_cache_payload( $style_key, $style )
 		+ array( 'csl_items' => bibliography_builder_sort_for_cache_key( array_values( $csl_items ) ) );
 
@@ -295,7 +318,7 @@ function bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $
  * @return string
  */
 function bibliography_builder_get_formatter_entry_map_key( $style_key, $style ) {
-	$payload = array( 'version' => 3 ) + bibliography_builder_get_formatter_style_cache_payload( $style_key, $style );
+	$payload = array( 'version' => 4 ) + bibliography_builder_get_formatter_style_cache_payload( $style_key, $style );
 
 	return 'entries_' . bibliography_builder_hash_cache_payload( $payload );
 }
@@ -758,10 +781,17 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		$csl_items = bibliography_builder_assign_year_suffixes( $csl_items, sanitize_key( $style_key ) );
 	}
 
+	$started   = microtime( true );
 	$cache_key = bibliography_builder_get_formatter_cache_key( $csl_items, $style_key, $style );
 	$cached    = bibliography_builder_cache_get( $cache_key, 'bibliography_builder_formatter' );
 
 	if ( $cached['hit'] && is_array( $cached['value'] ) ) {
+		bibliography_builder_format_timing(
+			'cache',
+			bibliography_builder_format_timing_since( $started ),
+			'whole list'
+		);
+
 		return $cached['value'];
 	}
 
@@ -783,8 +813,21 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		}
 	}
 
+	bibliography_builder_format_timing(
+		'cache',
+		bibliography_builder_format_timing_since( $started ),
+		( count( $hashes ) - count( $missing ) ) . ' of ' . count( $hashes ) . ' entries'
+	);
+
 	if ( array() !== $missing ) {
+		$started  = microtime( true );
 		$rendered = bibliography_builder_render_csl_items( $missing, $style );
+
+		bibliography_builder_format_timing(
+			'render',
+			bibliography_builder_format_timing_since( $started ),
+			count( $missing ) . ' entries'
+		);
 
 		if ( is_wp_error( $rendered ) ) {
 			return $rendered;
@@ -794,6 +837,8 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		$entries    = array();
 
 		ksort( $formatted );
+
+		$started = microtime( true );
 
 		foreach ( $hashes as $index => $hash ) {
 			$entries[ $hash ] = $formatted[ $index ];
@@ -805,9 +850,11 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 			'bibliography_builder_formatter',
 			BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
 		);
+		bibliography_builder_format_timing( 'store', bibliography_builder_format_timing_since( $started ) );
 	}
 
 	$formatted = array_values( $formatted );
+	$started   = microtime( true );
 
 	bibliography_builder_cache_set(
 		$cache_key,
@@ -815,6 +862,7 @@ function bibliography_builder_format_csl_items( $csl_items, $style_key ) {
 		'bibliography_builder_formatter',
 		BIBLIOGRAPHY_BUILDER_FORMAT_CACHE_TTL
 	);
+	bibliography_builder_format_timing( 'store', bibliography_builder_format_timing_since( $started ) );
 
 	return $formatted;
 }
@@ -857,13 +905,27 @@ function bibliography_builder_render_csl_items( $csl_items, $style ) {
 
 	$prepared_items  = array();
 	$demote_particle = 1 === preg_match( '/demote-non-dropping-particle="display-and-sort"/', $style_xml );
+	// citeproc-php ignores `strip-periods` on <text>, so a style that asks for
+	// it on the journal abbreviation (Vancouver: NLM's "Phys Rev Lett") gets
+	// the periods removed here.
+	$strip_short = 1 === preg_match( '/variable="container-title" form="short" strip-periods="true"/', $style_xml );
 
 	foreach ( $csl_items as $index => $item ) {
-		$item_array               = bibliography_builder_prepare_csl_for_formatter(
+		$item_array = bibliography_builder_prepare_csl_for_formatter(
 			is_array( $item ) ? $item : array(),
 			$demote_particle,
 			isset( $style['locale'] ) ? (string) $style['locale'] : 'en-US'
 		);
+		// Titles the style prints in sentence case (APA, Vancouver, IEEE).
+		$item_array = bibliography_builder_sentence_case_item(
+			$item_array,
+			isset( $style['sentenceCase'] ) ? $style['sentenceCase'] : null
+		);
+		if ( $strip_short && isset( $item_array['container-title-short'] )
+			&& is_string( $item_array['container-title-short'] ) ) {
+			$item_array['container-title-short'] = str_replace( '.', '', $item_array['container-title-short'] );
+		}
+
 		$item_array['id']         = 'bibliography-builder-format-' . $index;
 		$prepared_items[ $index ] = $item_array;
 	}

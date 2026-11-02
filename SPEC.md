@@ -324,8 +324,8 @@ The `save()` function produces the following HTML structure. All content is bake
 
 ### 2. Semantic HTML Details
 
--   **`<section role="doc-bibliography" aria-label="Bibliography">`** — DPUB-ARIA landmark with explicit label for screen reader landmark navigation. The `aria-label` ensures discoverability even when no visible heading is present.
--   **`<p class="bibliography-builder-heading">`, or `<h2>`–`<h6>` with the same class** — the visible heading, printed only when `headingText` is set; the same text is the section's `aria-label`. `headingLevel` chooses the element. `0`, the default, is a paragraph, which is what the block printed before the setting existed, so older saved blocks stay valid without a deprecation. `2` to `6` print a heading that is part of the page's heading outline; pick the level that fits the page (level 2 under the page title, for example). There is no level 1, and any other value falls back to the paragraph. The level does not change the heading's size: the block's stylesheet sets its font size, weight, margin, and alignment on the class, with a selector more specific than a theme's `h2`–`h6` rules. Properties the block does not set, such as a theme's heading font family, color, or line height, do apply to a heading-level heading.
+-   **`<section role="doc-bibliography" aria-labelledby="bibliography-heading-{bibliographyId}">`** — DPUB-ARIA landmark, named for screen reader landmark navigation by its visible heading. A block with no heading, or with no stable `bibliographyId`, carries `aria-label` instead (the heading text, else "Bibliography"), so the landmark always has a name.
+-   **`<p class="bibliography-builder-heading">`, or `<h2>`–`<h6>` with the same class** — the visible heading, printed only when `headingText` is set; it carries `id="bibliography-heading-{bibliographyId}"`, which the section's `aria-labelledby` points at. Blocks saved by 1.17.0 and earlier name the section with an `aria-label` copy of the heading; a render filter (`includes/heading-label.php`) gives them the same `id` and `aria-labelledby` on the front end. `headingLevel` chooses the element. `0`, the default, is a paragraph, which is what the block printed before the setting existed, so older saved blocks stay valid without a deprecation. `2` to `6` print a heading that is part of the page's heading outline; pick the level that fits the page (level 2 under the page title, for example). There is no level 1, and any other value falls back to the paragraph. The level does not change the heading's size: the block's stylesheet sets its font size, weight, margin, and alignment on the class, with a selector more specific than a theme's `h2`–`h6` rules. Properties the block does not set, such as a theme's heading font family, color, or line height, do apply to a heading-level heading.
 -   **`<ul>`** — unordered list for notes-based and author-date bibliography styles such as Chicago Notes-Bibliography, Chicago Author-Date, and APA.
 -   **`<ol>`** — ordered list for numbered styles such as Vancouver and IEEE.
 -   **`<li id="ref-{uuid}" lang="...">`** — each entry has a stable ID for potential future deep-linking. The `lang` attribute is set from CSL-JSON `language` when present, enabling correct screen reader pronunciation of foreign-language titles and author names. Newly saved output intentionally omits the older `doc-biblioentry` role; deprecated block versions retain it only so existing saved posts continue to validate.
@@ -631,7 +631,7 @@ Scholarly content serves users across a wide range of abilities and assistive te
 
 #### Semantic Landmarks
 
--   **`<section role="doc-bibliography">`** — DPUB-ARIA landmark. Screen readers with landmark navigation (NVDA: `d`, VoiceOver: rotor) can jump directly to the bibliography. Include an `aria-label="Bibliography"` on the section for clarity, since the block may not always have a visible heading.
+-   **`<section role="doc-bibliography">`** — DPUB-ARIA landmark. Screen readers with landmark navigation (NVDA: `d`, VoiceOver: rotor) can jump directly to the bibliography. The section is named by its visible heading through `aria-labelledby`, or by an `aria-label` when the block has no heading.
 -   **`<li id="ref-{uuid}">`** — gives each entry a durable target for future in-page linking from inline citations. Current saved output relies on native list semantics instead of the older `doc-biblioentry` role; deprecated block versions preserve that role only for existing saved markup.
 
 #### Language Attributes
@@ -815,7 +815,7 @@ Testing framework: `@wordpress/scripts` includes Jest for unit/integration tests
 -   **Security — JSON-LD breakout:** citation with title `</script><script>alert(1)</script>` does not break out of the JSON-LD script block
 -   **Security — CSL-JSON breakout:** same test for the CSL-JSON script block
 -   **Security — COinS attribute:** citation with title containing `" onclick="alert(1)` does not inject attributes
--   `aria-label="Bibliography"` present on section element
+-   The section is named: `aria-labelledby` pointing at the heading's `id`, or `aria-label="Bibliography"` when there is no heading
 -   `aria-hidden="true"` present on all COinS spans
 -   `lang` attribute present on entries where CSL-JSON includes `language` field
 -   `lang` attribute absent when CSL-JSON has no `language` field

@@ -119,7 +119,7 @@
 	],
 	"features": [
 		"<strong>Citation Style</strong> (block sidebar): nine styles, Chicago Notes-Bibliography and Author-Date, APA 7, MLA 9, Harvard, IEEE, Vancouver, OSCOLA, and ABNT. Section 3 has an example of each. Switching reformats the generated text and keeps your manual edits.",
-		"<strong>Heading</strong>: type the heading in the block, and choose its level in the sidebar: <em>Paragraph</em> (the default, styled text) or H2 to H6. Leave it empty for no heading.",
+		"<strong>Heading</strong>: type the heading in the block, and choose its level in the sidebar: H2 (where a new block starts) to H6, or <em>Paragraph</em> for styled text that stays out of the page outline. Leave it empty for no heading.",
 		"<strong>Edit fields</strong>: click any citation to correct its authors, title, year, DOI, and other fields; only the fields you change are saved. The pencil edits the displayed text instead, and <em>Reset edits</em> restores the generated text.",
 		"<strong>Manual Entry</strong>: next to <em>Paste / Import</em>, add a citation field by field when there is nothing to paste.",
 		"<strong>Duplicates</strong>: paste a DOI that is already in the list; it is skipped, not added twice.",
@@ -261,7 +261,7 @@
 		},
 		{
 			"title": "APA 7",
-			"description": "Journal articles and an arXiv preprint, with DOIs as links. <strong>Settings:</strong> the defaults (JSON-LD only), with the heading at the default <em>Paragraph</em> level, so it is styled text rather than a heading.",
+			"description": "Journal articles and an arXiv preprint, with DOIs as links. <strong>Settings:</strong> the default output (JSON-LD only), with the heading at the <em>Paragraph</em> level, so it is styled text rather than a heading.",
 			"attributes": {
 				"bibliographyId": "demo-apa-7",
 				"citationStyle": "apa-7",
@@ -406,7 +406,7 @@
 		},
 		{
 			"title": "IEEE",
-			"description": "Numbered entries keep the order you give them. Select the block and use <em>Move citation up/down</em> to renumber. <strong>Settings:</strong> the defaults, in a numbered list.",
+			"description": "Numbered entries keep the order you give them. Select the block and use <em>Move citation up/down</em> to renumber. Journals print by their abbreviated titles, from each record's short title. <strong>Settings:</strong> the defaults, in a numbered list.",
 			"attributes": {
 				"bibliographyId": "demo-ieee",
 				"citationStyle": "ieee",
@@ -422,6 +422,7 @@
 					"title": "A Mathematical Theory of Communication",
 					"author": [{ "family": "Shannon", "given": "Claude E." }],
 					"container-title": "Bell System Technical Journal",
+					"container-title-short": "Bell Syst. Tech. J.",
 					"volume": "27",
 					"issue": "3",
 					"page": "379-423",
@@ -433,6 +434,7 @@
 					"title": "Computing Machinery and Intelligence",
 					"author": [{ "family": "Turing", "given": "A. M." }],
 					"container-title": "Mind",
+					"container-title-short": "Mind",
 					"volume": "59",
 					"issue": "236",
 					"page": "433-460",
@@ -444,6 +446,7 @@
 					"title": "Literate Programming",
 					"author": [{ "family": "Knuth", "given": "Donald E." }],
 					"container-title": "The Computer Journal",
+					"container-title-short": "Comput. J.",
 					"volume": "27",
 					"issue": "2",
 					"page": "97-111",

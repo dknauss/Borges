@@ -33,16 +33,22 @@
 #   MAX_MS     fail if any request takes longer, and give up on it at that
 #              point (default: 0, no limit)
 #   OUTPUT     also append the result lines to this file
+#   SERVER_TIMING  1 to print each /format request's Server-Timing header
 #
 # Prints one line for the baseline and two per style:
 #   route-timing route=users-me runs=<n> p50_ms=<n> max_ms=<n>
 #   format-timing style=<key> mode=cold|edit items=<n> runs=<n> p50_ms=<n> max_ms=<n>
+#     [server_p50_ms=<n> wp_p50_ms=<n>]
+# The bracketed fields come from the route's Server-Timing header (Borges
+# 1.18.0+): server is the route callback alone, wp is WordPress's time before
+# it. The rest of the round trip is the network and the host's own handling.
+# Run with SERVER_TIMING=1 to also print each request's full header.
 # and exits non-zero if a request fails, returns the wrong entry count, or
 # exceeds MAX_MS.
 set -eu
 
 if [ "$#" -ne 3 ]; then
-	sed -n '2,41p' "$0" | sed 's/^# \{0,1\}//' >&2
+	sed -n '2,48p' "$0" | sed 's/^# \{0,1\}//' >&2
 	exit 2
 fi
 
@@ -80,9 +86,11 @@ request() {
 	if [ -n "$body" ]; then
 		result=$(curl -sS -X "$method" -u "$AUTH_USER:$AUTH_PASSWORD" $MAX_TIME_ARGS \
 			-H 'Content-Type: application/json' --data-binary "@$body" \
+			-D "$WORK_DIR/headers" \
 			-o "$WORK_DIR/response.json" -w '%{http_code} %{time_total}' "$url") || result=""
 	else
 		result=$(curl -sS -X "$method" -u "$AUTH_USER:$AUTH_PASSWORD" $MAX_TIME_ARGS \
+			-D "$WORK_DIR/headers" \
 			-o "$WORK_DIR/response.json" -w '%{http_code} %{time_total}' "$url") || result=""
 	fi
 
@@ -107,6 +115,30 @@ request() {
 	fi
 
 	echo "$ms" >> "$WORK_DIR/times-${label%% *}"
+
+	# The route's own Server-Timing, when it sends one.
+	timing=$(tr -d '\r' < "$WORK_DIR/headers" | grep -i '^server-timing:' | tail -n 1 | cut -d: -f2- || true)
+
+	if [ -n "$timing" ]; then
+		if [ "${SERVER_TIMING:-0}" = "1" ]; then
+			echo "server-timing $label:$timing" >&2
+		fi
+
+		for metric in callback wp; do
+			value=$(printf '%s' "$timing" | grep -o "$metric;dur=[0-9.]*" | head -n 1 | cut -d= -f2 || true)
+
+			if [ -n "$value" ]; then
+				awk -v v="$value" 'BEGIN { printf "%d\n", v + 0.5 }' >> "$WORK_DIR/times-${label%% *}-$metric"
+			fi
+		done
+	fi
+}
+
+# p50 <times-file>: the median of a file of numbers, or nothing if it is missing.
+p50() {
+	if [ -s "$1" ]; then
+		sort -n "$1" | awk '{ t[NR] = $1 } END { printf "%d", t[int((NR + 1) / 2)] }'
+	fi
 }
 
 # summary <prefix> <times-label>: "<prefix> runs=<n> p50_ms=<n> max_ms=<n>"
@@ -116,6 +148,17 @@ summary() {
 		END {
 			printf "%s runs=%d p50_ms=%d max_ms=%d\n", prefix, NR, t[int((NR + 1) / 2)], t[NR]
 		}')
+	server=$(p50 "$WORK_DIR/times-$2-callback")
+	wp=$(p50 "$WORK_DIR/times-$2-wp")
+
+	if [ -n "$server" ]; then
+		line="$line server_p50_ms=$server"
+	fi
+
+	if [ -n "$wp" ]; then
+		line="$line wp_p50_ms=$wp"
+	fi
+
 	echo "$line"
 
 	if [ -n "$OUTPUT" ]; then
@@ -144,7 +187,7 @@ for style in $STYLES; do
 		'{style: $style, cslItems: map(.title += " " + $token)}' \
 		"$FIXTURE" > "$WORK_DIR/cold.json"
 	request "warmup style=$style" POST "$REST_URL/bibliography/v1/format" "$WORK_DIR/cold.json"
-	rm -f "$WORK_DIR/times-warmup"
+	rm -f "$WORK_DIR"/times-warmup*
 	run=1
 
 	while [ "$run" -le "$RUNS" ]; do
@@ -166,7 +209,7 @@ for style in $STYLES; do
 
 	summary "format-timing style=$style mode=cold items=$ITEM_COUNT" cold
 	summary "format-timing style=$style mode=edit items=$ITEM_COUNT" edit
-	rm -f "$WORK_DIR/times-cold" "$WORK_DIR/times-edit"
+	rm -f "$WORK_DIR"/times-cold* "$WORK_DIR"/times-edit*
 done
 
 exit "$status"

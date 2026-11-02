@@ -5,7 +5,7 @@
 
 .wp-block-bibliography-builder-bibliography .bibliography-builder-list {
 	margin: 0;
-	padding-left: 0;
+	padding-inline-start: 0;
 }
 
 .wp-block-bibliography-builder-bibliography .bibliography-builder-list-unordered {
@@ -14,8 +14,6 @@
 
 .wp-block-bibliography-builder-bibliography .bibliography-builder-heading {
 	margin: 0 0 0.75em;
-	font-size: 1.25em;
-	font-weight: 600;
 	text-align: center;
 }
 
@@ -38,7 +36,7 @@
 }
 
 .wp-block-bibliography-builder-bibliography .bibliography-builder-list-unordered > li {
-	padding-left: 2em;
+	padding-inline-start: 2em;
 	text-indent: -2em;
 }
 
@@ -50,7 +48,7 @@
 
 .wp-block-bibliography-builder-bibliography .bibliography-builder-list-numeric > li {
 	counter-increment: bibliography-item;
-	padding-left: var(--bibliography-builder-marker-width);
+	padding-inline-start: var(--bibliography-builder-marker-width);
 	text-indent: calc(-1 * var(--bibliography-builder-marker-width));
 }
 
@@ -89,7 +87,7 @@
 .wp-block-bibliography-builder-bibliography
 details.bibliography-builder-cite-export {
 	text-indent: 0;
-	padding-left: 0;
+	padding-inline-start: 0;
 	margin-top: 0.4em;
 	font-size: 0.875em;
 }

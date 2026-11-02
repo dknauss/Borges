@@ -266,5 +266,26 @@
       { "id": "ash", "csl": { "type": "webpage", "title": "Ash", "author": [{ "family": "Ashworth", "given": "Andrew" }], "issued": { "date-parts": [[2020]] } } }
     ],
     "expectedOrder": ["ash", "zed"]
+  },
+  {
+    "id": "case-oscola-author-chronological",
+    "style": "oscola",
+    "citations": [
+      { "id": "punishment", "csl": { "type": "book", "title": "Punishment and Responsibility", "author": [{ "family": "Hart", "given": "H. L. A." }], "issued": { "date-parts": [[1968]] } } },
+      { "id": "causation", "csl": { "type": "book", "title": "Causation in the Law", "author": [{ "family": "Hart", "given": "H. L. A." }, { "family": "Honoré", "given": "A. M." }], "issued": { "date-parts": [[1959]] } } },
+      { "id": "concept", "csl": { "type": "book", "title": "The Concept of Law", "author": [{ "family": "Hart", "given": "H. L. A." }], "issued": { "date-parts": [[1961]] } } },
+      { "id": "essays-b", "csl": { "type": "book", "title": "Essays on Bentham", "author": [{ "family": "Hart", "given": "H. L. A." }], "issued": { "date-parts": [[1982]] } } },
+      { "id": "essays-a", "csl": { "type": "book", "title": "An Essay in Jurisprudence", "author": [{ "family": "Hart", "given": "H. L. A." }], "issued": { "date-parts": [[1982]] } } }
+    ],
+    "expectedOrder": ["concept", "punishment", "essays-a", "essays-b", "causation"]
+  },
+  {
+    "id": "case-author-date-undated-titles",
+    "style": "apa-7",
+    "citations": [
+      { "id": "beta", "csl": { "type": "book", "title": "Beta notes", "author": [{ "family": "Smith", "given": "Jane" }] } },
+      { "id": "alpha", "csl": { "type": "book", "title": "Alpha notes", "author": [{ "family": "Smith", "given": "Jane" }] } }
+    ],
+    "expectedOrder": ["alpha", "beta"]
   }
 ]

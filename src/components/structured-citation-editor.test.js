@@ -77,3 +77,27 @@ describe( 'StructuredCitationEditor', () => {
 		expect( screen.getByLabelText( 'Article number' ) ).toBeInTheDocument();
 	} );
 } );
+
+describe( 'StructuredCitationEditor keep-title-case checkbox', () => {
+	it( 'reports the checkbox state as a boolean', () => {
+		const onFieldChange = jest.fn();
+
+		renderEditor( {
+			citation: { id: 'c', csl: { type: 'book' } },
+			fields: { keepTitleCase: false },
+			onFieldChange,
+		} );
+
+		const checkbox = screen.getByLabelText(
+			'Keep title capitalization as entered'
+		);
+
+		expect( checkbox ).not.toBeChecked();
+		expect( checkbox ).toHaveAccessibleDescription(
+			'APA, IEEE, and Vancouver otherwise print the title in sentence case.'
+		);
+
+		checkbox.click();
+		expect( onFieldChange ).toHaveBeenCalledWith( 'keepTitleCase', true );
+	} );
+} );

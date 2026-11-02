@@ -67,13 +67,13 @@ final class YearSuffixTest extends TestCase {
 	public function test_apa_letters_follow_the_saved_order_not_the_request_order() {
 		$this->assertSame(
 			array(
-				'Jones, T. (2020b). Beta Study.',
-				'Jones, T. (2020a). Alpha Study.',
+				'Jones, T. (2020b). Beta study.',
+				'Jones, T. (2020a). Alpha study.',
 			),
 			self::text(
 				array(
-					self::book( 'Jones', 'Beta Study', 2020 ),
-					self::book( 'Jones', 'Alpha Study', 2020 ),
+					self::book( 'Jones', 'Beta study', 2020 ),
+					self::book( 'Jones', 'Alpha study', 2020 ),
 				),
 				'apa-7'
 			)
@@ -83,15 +83,15 @@ final class YearSuffixTest extends TestCase {
 	public function test_a_leading_article_is_skipped_as_the_sorter_skips_it() {
 		$this->assertSame(
 			array(
-				'Jones, T. (2020b). Alpha Study.',
-				'Jones, T. (2020a). An Aardvark Study.',
-				'Jones, T. (2020c). The Zebra Study.',
+				'Jones, T. (2020b). Alpha study.',
+				'Jones, T. (2020a). An aardvark study.',
+				'Jones, T. (2020c). The zebra study.',
 			),
 			self::text(
 				array(
-					self::book( 'Jones', 'Alpha Study', 2020 ),
-					self::book( 'Jones', 'An Aardvark Study', 2020 ),
-					self::book( 'Jones', 'The Zebra Study', 2020 ),
+					self::book( 'Jones', 'Alpha study', 2020 ),
+					self::book( 'Jones', 'An aardvark study', 2020 ),
+					self::book( 'Jones', 'The zebra study', 2020 ),
 				),
 				'apa-7'
 			)
@@ -101,17 +101,17 @@ final class YearSuffixTest extends TestCase {
 	public function test_only_same_authors_in_the_same_year_get_letters() {
 		$this->assertSame(
 			array(
-				'Jones, T. (2020). Alpha Study.',
-				'Jones, T. (2021). Beta Study.',
-				'Jones, R. (2020). Gamma Study.',
-				'Smith, T. (2020). Delta Study.',
+				'Jones, T. (2020). Alpha study.',
+				'Jones, T. (2021). Beta study.',
+				'Jones, R. (2020). Gamma study.',
+				'Smith, T. (2020). Delta study.',
 			),
 			self::text(
 				array(
-					self::book( 'Jones', 'Alpha Study', 2020 ),
-					self::book( 'Jones', 'Beta Study', 2021 ),
-					self::book( 'Jones', 'Gamma Study', 2020, 'Robin' ),
-					self::book( 'Smith', 'Delta Study', 2020 ),
+					self::book( 'Jones', 'Alpha study', 2020 ),
+					self::book( 'Jones', 'Beta study', 2021 ),
+					self::book( 'Jones', 'Gamma study', 2020, 'Robin' ),
+					self::book( 'Smith', 'Delta study', 2020 ),
 				),
 				'apa-7'
 			)
@@ -119,13 +119,13 @@ final class YearSuffixTest extends TestCase {
 	}
 
 	public function test_a_shared_first_author_with_different_coauthors_gets_no_letter() {
-		$with_coauthor             = self::book( 'Jones', 'Beta Study', 2020 );
+		$with_coauthor             = self::book( 'Jones', 'Beta study', 2020 );
 		$with_coauthor['author'][] = array(
 			'family' => 'Brown',
 			'given'  => 'Sam',
 		);
 
-		$texts = self::text( array( self::book( 'Jones', 'Alpha Study', 2020 ), $with_coauthor ), 'apa-7' );
+		$texts = self::text( array( self::book( 'Jones', 'Alpha study', 2020 ), $with_coauthor ), 'apa-7' );
 
 		$this->assertStringContainsString( '(2020).', $texts[0] );
 		$this->assertStringContainsString( '(2020).', $texts[1] );
@@ -134,19 +134,19 @@ final class YearSuffixTest extends TestCase {
 	public function test_undated_works_get_no_letter() {
 		$texts = self::text(
 			array(
-				self::book( 'Jones', 'Alpha Study', null ),
-				self::book( 'Jones', 'Beta Study', null ),
+				self::book( 'Jones', 'Alpha study', null ),
+				self::book( 'Jones', 'Beta study', null ),
 			),
 			'apa-7'
 		);
 
-		$this->assertSame( array( 'Jones, T. (n.d.). Alpha Study.', 'Jones, T. (n.d.). Beta Study.' ), $texts );
+		$this->assertSame( array( 'Jones, T. (n.d.). Alpha study.', 'Jones, T. (n.d.). Beta study.' ), $texts );
 	}
 
 	public function test_the_other_author_date_styles_print_the_letter_after_the_year() {
 		$items = array(
-			self::book( 'Jones', 'Beta Study', 2020 ),
-			self::book( 'Jones', 'Alpha Study', 2020 ),
+			self::book( 'Jones', 'Beta study', 2020 ),
+			self::book( 'Jones', 'Alpha study', 2020 ),
 		);
 
 		foreach ( array( 'chicago-author-date', 'harvard', 'abnt' ) as $style ) {
@@ -159,8 +159,8 @@ final class YearSuffixTest extends TestCase {
 
 	public function test_styles_without_year_suffixes_are_unchanged() {
 		$items = array(
-			self::book( 'Jones', 'Beta Study', 2020 ),
-			self::book( 'Jones', 'Alpha Study', 2020 ),
+			self::book( 'Jones', 'Beta study', 2020 ),
+			self::book( 'Jones', 'Alpha study', 2020 ),
 		);
 
 		foreach ( array( 'mla-9', 'chicago-notes-bibliography', 'oscola', 'ieee', 'vancouver' ) as $style ) {
@@ -172,34 +172,34 @@ final class YearSuffixTest extends TestCase {
 	}
 
 	public function test_a_sent_suffix_is_replaced_and_a_lone_work_loses_its_letter() {
-		$alone                = self::book( 'Jones', 'Alpha Study', 2020 );
+		$alone                = self::book( 'Jones', 'Alpha study', 2020 );
 		$alone['year-suffix'] = 'q';
 
-		$this->assertSame( array( 'Jones, T. (2020). Alpha Study.' ), self::text( array( $alone ), 'apa-7' ) );
+		$this->assertSame( array( 'Jones, T. (2020). Alpha study.' ), self::text( array( $alone ), 'apa-7' ) );
 	}
 
 	public function test_the_entry_cache_does_not_keep_a_letter_after_its_sibling_is_removed() {
-		$alpha = self::book( 'Jones', 'Alpha Study', 2020 );
-		$beta  = self::book( 'Jones', 'Beta Study', 2020 );
+		$alpha = self::book( 'Jones', 'Alpha study', 2020 );
+		$beta  = self::book( 'Jones', 'Beta study', 2020 );
 
 		$this->assertSame(
-			array( 'Jones, T. (2020a). Alpha Study.', 'Jones, T. (2020b). Beta Study.' ),
+			array( 'Jones, T. (2020a). Alpha study.', 'Jones, T. (2020b). Beta study.' ),
 			self::text( array( $alpha, $beta ), 'apa-7' )
 		);
-		$this->assertSame( array( 'Jones, T. (2020). Alpha Study.' ), self::text( array( $alpha ), 'apa-7' ) );
+		$this->assertSame( array( 'Jones, T. (2020). Alpha study.' ), self::text( array( $alpha ), 'apa-7' ) );
 	}
 
 	public function test_assignment_keeps_request_order_and_other_fields() {
 		$items = bibliography_builder_assign_year_suffixes(
 			array(
-				self::book( 'Jones', 'Beta Study', 2020 ),
-				self::book( 'Jones', 'Alpha Study', 2020 ),
-				self::book( 'Smith', 'Gamma Study', 2020 ),
+				self::book( 'Jones', 'Beta study', 2020 ),
+				self::book( 'Jones', 'Alpha study', 2020 ),
+				self::book( 'Smith', 'Gamma study', 2020 ),
 			),
 			'apa-7'
 		);
 
-		$this->assertSame( array( 'Beta Study', 'Alpha Study', 'Gamma Study' ), array_column( $items, 'title' ) );
+		$this->assertSame( array( 'Beta study', 'Alpha study', 'Gamma study' ), array_column( $items, 'title' ) );
 		$this->assertSame( 'b', $items[0]['year-suffix'] );
 		$this->assertSame( 'a', $items[1]['year-suffix'] );
 		$this->assertArrayNotHasKey( 'year-suffix', $items[2] );

@@ -198,4 +198,68 @@ final class RepeatedAuthorsTest extends TestCase {
 			)
 		);
 	}
+
+	public function test_oscola_replaces_the_first_author_with_a_double_em_dash() {
+		$hart   = array(
+			'family' => 'Hart',
+			'given'  => 'H. L. A.',
+		);
+		$honore = array(
+			'family' => 'Honoré',
+			'given'  => 'A. M.',
+		);
+		$gogh   = array(
+			'family'                => 'Gogh',
+			'non-dropping-particle' => 'van',
+			'given'                 => 'Vincent',
+		);
+
+		$this->assertSame( "\u{2014}\u{2014}", bibliography_builder_save_repeated_author_mark( 'oscola' ) );
+		$this->assertSame( "\u{2011}\u{2011}\u{2011}", bibliography_builder_save_repeated_author_mark( 'mla-9' ) );
+		$this->assertSame(
+			array( null, 'Hart HLA,', 'Hart HLA', null, 'van Gogh V' ),
+			self::prefixes(
+				array(
+					self::entry( 'a', array( $hart ), 'Hart HLA, The Concept of Law (OUP 1961)' ),
+					self::entry( 'b', array( $hart ), 'Hart HLA, Punishment and Responsibility (OUP 1968)' ),
+					self::entry( 'c', array( $hart, $honore ), 'Hart HLA and Honoré AM, Causation in the Law (OUP 1959)' ),
+					self::entry( 'd', array( $gogh ), 'van Gogh V, Letters (Penguin 1996)' ),
+					self::entry( 'e', array( $gogh, $hart, $honore, $hart ), 'van Gogh V and others, Sketches (Penguin 1997)' ),
+				),
+				'oscola'
+			)
+		);
+	}
+
+	public function test_oscola_keeps_full_names_whenever_in_doubt() {
+		$hart   = array(
+			'family' => 'Hart',
+			'given'  => 'H. L. A.',
+		);
+		$junior = array_merge( $hart, array( 'suffix' => 'Jr' ) );
+
+		$this->assertSame(
+			array( null, null, null, null, null, null ),
+			self::prefixes(
+				array(
+					self::entry( 'a', array( $hart ), 'Hart HLA, The Concept of Law (OUP 1961)' ),
+					self::entry(
+						'b',
+						array(
+							array(
+								'family' => 'Hart',
+								'given'  => 'Jenifer',
+							),
+						),
+						'Hart J, Law and Order (Blackwell 1950)'
+					),
+					self::entry( 'c', array( $junior ), 'Hart HLA Jr, One (OUP 1990)' ),
+					self::entry( 'd', array( $junior ), 'Hart HLA Jr, Two (OUP 1991)' ),
+					self::entry( 'e', array( $hart ), 'Hart HLA, Essays (OUP 1983)' ),
+					self::entry( 'f', array( $hart ), 'H. L. A. Hart, Essays (OUP 1984)' ),
+				),
+				'oscola'
+			)
+		);
+	}
 }

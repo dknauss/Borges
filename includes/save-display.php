@@ -146,6 +146,27 @@ function bibliography_builder_save_plain_display_text( $citation ) {
 }
 
 /**
+ * `CONTAINER_TITLE_TYPES`: types whose container title, not their own title,
+ * is italicized.
+ *
+ * @return string[]
+ */
+function bibliography_builder_save_container_title_types() {
+	return array(
+		'article-journal',
+		'article-magazine',
+		'article-newspaper',
+		'chapter',
+		'entry',
+		'paper-conference',
+		'post',
+		'post-weblog',
+		'review',
+		'review-book',
+	);
+}
+
+/**
  * `getItalicizedFields()`.
  *
  * @param array $csl CSL-JSON item.
@@ -181,18 +202,7 @@ function bibliography_builder_save_italic_fields( $csl ) {
 		'treaty',
 		'webpage',
 	);
-	$container_types = array(
-		'article-journal',
-		'article-magazine',
-		'article-newspaper',
-		'chapter',
-		'entry',
-		'paper-conference',
-		'post',
-		'post-weblog',
-		'review',
-		'review-book',
-	);
+	$container_types = bibliography_builder_save_container_title_types();
 	$type            = bibliography_builder_csl_field( $csl, 'type' );
 
 	if ( in_array( $type, $title_types, true ) ) {
@@ -204,6 +214,36 @@ function bibliography_builder_save_italic_fields( $csl ) {
 	}
 
 	return array();
+}
+
+/**
+ * `getShortContainerTitle()`: the journal abbreviation, for a type whose
+ * container title is italicized, without inline markup; null when there is
+ * none. A record stored before the sanitizers mapped Zotero's
+ * `journalAbbreviation` still has it under that name, which the formatter
+ * prints.
+ *
+ * @param array $csl CSL-JSON item.
+ * @return string|null
+ */
+function bibliography_builder_save_short_container_title( $csl ) {
+	$short = bibliography_builder_csl_field( $csl, 'container-title-short' );
+	$type  = bibliography_builder_csl_field( $csl, 'type' );
+
+	$zotero = bibliography_builder_csl_field( $csl, 'journalAbbreviation' );
+
+	if ( ! bibliography_builder_js_truthy( $short ) && is_string( $zotero ) ) {
+		$short = $zotero;
+	}
+
+	if ( ! in_array( $type, bibliography_builder_save_container_title_types(), true )
+		|| ! bibliography_builder_js_truthy( $short ) ) {
+		return null;
+	}
+
+	$needle = bibliography_builder_save_strip_inline_markup( bibliography_builder_js_string( $short ) );
+
+	return '' === $needle ? null : $needle;
 }
 
 /**
@@ -308,6 +348,45 @@ function bibliography_builder_save_fold_quotes( $text ) {
 }
 
 /**
+ * `foldCase()`, on text `bibliography_builder_save_fold_quotes()` folded:
+ * each character whose lowercase is one character is lowercased. A few
+ * change their UTF-8 length (the Kelvin sign is three bytes, k one), so the
+ * offset map is carried through: each byte of a folded character maps to the
+ * original offset of the matching byte, or the character's last byte.
+ *
+ * @param array{text: string, offsets: array<int, int>} $folded Text folded by
+ *                                                              bibliography_builder_save_fold_quotes().
+ * @return array{text: string, offsets: array<int, int>}
+ */
+function bibliography_builder_save_fold_case( $folded ) {
+	$text    = '';
+	$offsets = array();
+	$cursor  = 0;
+
+	foreach ( (array) preg_split( '//u', $folded['text'], -1, PREG_SPLIT_NO_EMPTY ) as $character ) {
+		$character = (string) $character;
+		$lower     = mb_strtolower( $character, 'UTF-8' );
+		$lower     = 1 === mb_strlen( $lower, 'UTF-8' ) ? $lower : $character;
+		$bytes     = strlen( $character );
+		$length    = strlen( $lower );
+
+		for ( $byte = 0; $byte < $length; $byte++ ) {
+			$offsets[] = $folded['offsets'][ $cursor + min( $byte, $bytes - 1 ) ];
+		}
+
+		$text   .= $lower;
+		$cursor += $bytes;
+	}
+
+	$offsets[] = $folded['offsets'][ $cursor ];
+
+	return array(
+		'text'    => $text,
+		'offsets' => $offsets,
+	);
+}
+
+/**
  * Append each byte offset from $from up to, not including, $to.
  *
  * @param array<int, int> $offsets Offset map, appended to in place.
@@ -331,15 +410,31 @@ function bibliography_builder_save_append_offsets( &$offsets, $from, $to ) {
  * UTF-8 substring search finds the same occurrences as JavaScript's UTF-16
  * search.
  *
+ * With `$fold_case`, case is folded too (`caseFoldedItalics`).
+ *
  * @param string $text       Display text.
  * @param string $value      Field value.
  * @param array  $ranges     Ranges found so far.
  * @param array  $url_ranges URL ranges in the text.
+ * @param bool   $fold_case  Match without regard to case.
  * @return array|null
  */
-function bibliography_builder_save_find_last_range( $text, $value, $ranges, $url_ranges = array() ) {
+function bibliography_builder_save_find_last_range(
+	$text,
+	$value,
+	$ranges,
+	$url_ranges = array(),
+	$fold_case = false
+) {
 	$folded = bibliography_builder_save_fold_quotes( $text );
-	$needle = bibliography_builder_save_fold_quotes( $value )['text'];
+	$needle = bibliography_builder_save_fold_quotes( $value );
+
+	if ( $fold_case ) {
+		$folded = bibliography_builder_save_fold_case( $folded );
+		$needle = bibliography_builder_save_fold_case( $needle );
+	}
+
+	$needle = $needle['text'];
 	$search = $folded['text'];
 	$at     = strrpos( $search, $needle );
 
@@ -417,7 +512,30 @@ function bibliography_builder_save_display_segments( $citation, $roman_titles = 
 			continue;
 		}
 
+		// `caseFoldedItalics`: not as stored, perhaps as the style cased it
+		// ("The origin of species" for a stored "The Origin of Species").
 		$range = bibliography_builder_save_find_last_range( $text, $needle, $title_ranges, $url_ranges );
+		$range = null === $range
+			? bibliography_builder_save_find_last_range( $text, $needle, $title_ranges, $url_ranges, true )
+			: $range;
+
+		if ( null !== $range ) {
+			$title_ranges[] = $range;
+		}
+	}
+
+	// `shortContainerItalics`: a container title not in the text is looked
+	// for as its abbreviation, which IEEE and Vancouver print.
+	$short = $roman_titles || array() !== $title_ranges
+		? null
+		: bibliography_builder_save_short_container_title( bibliography_builder_citation_csl( $citation ) );
+
+	// As stored ("J. Libr. Syst."), else without its periods, as Vancouver
+	// prints NLM abbreviations ("J Libr Syst").
+	foreach ( null === $short ? array() : array( $short, str_replace( '.', '', $short ) ) as $needle ) {
+		$range = array() === $title_ranges && '' !== $needle
+			? bibliography_builder_save_find_last_range( $text, $needle, $title_ranges, $url_ranges )
+			: null;
 
 		if ( null !== $range ) {
 			$title_ranges[] = $range;
@@ -520,7 +638,18 @@ function bibliography_builder_save_build_segments( $text, $ranges ) {
 	return $segments;
 }
 
-// ── MLA repeated authors: src/lib/repeated-authors.js ───────────────────────
+// ── MLA and OSCOLA repeated authors: src/lib/repeated-authors.js ────────────
+
+/**
+ * `getRepeatedAuthorMark()`: three U+2011 non-breaking hyphens (MLA), or
+ * OSCOLA's double em dash.
+ *
+ * @param mixed $style_key Citation style.
+ * @return string
+ */
+function bibliography_builder_save_repeated_author_mark( $style_key ) {
+	return 'oscola' === $style_key ? "\u{2014}\u{2014}" : "\u{2011}\u{2011}\u{2011}";
+}
 
 /**
  * `namePart()`.
@@ -540,10 +669,11 @@ function bibliography_builder_save_name_part( $name, $key ) {
 /**
  * `getAuthorKey()`.
  *
- * @param mixed $citation Citation record.
+ * @param mixed $citation   Citation record.
+ * @param bool  $first_only Key only the first author.
  * @return string|null
  */
-function bibliography_builder_save_author_key( $citation ) {
+function bibliography_builder_save_author_key( $citation, $first_only = false ) {
 	$csl     = bibliography_builder_citation_csl( $citation );
 	$authors = isset( $csl['author'] ) ? $csl['author'] : null;
 
@@ -553,6 +683,10 @@ function bibliography_builder_save_author_key( $citation ) {
 
 	$keys  = array( 'family', 'given', 'literal', 'suffix', 'dropping-particle', 'non-dropping-particle', 'ORCID' );
 	$names = array();
+
+	if ( $first_only ) {
+		$authors = array_slice( $authors, 0, 1 );
+	}
 
 	foreach ( $authors as $name ) {
 		$parts = array();
@@ -720,21 +854,77 @@ function bibliography_builder_save_is_unformatted( $citation ) {
 }
 
 /**
+ * `getFirstAuthorPrefix()`: the text OSCOLA's dash replaces, the first
+ * author as the style writes it ("Hart HLA"), with the comma the dash drops
+ * before a title ("Hart HLA,"), or null.
+ *
+ * @param mixed  $name CSL name.
+ * @param string $text Display text.
+ * @return string|null
+ */
+function bibliography_builder_save_first_author_prefix( $name, $text ) {
+	if ( '' !== bibliography_builder_save_name_part( $name, 'suffix' )
+		|| '' !== bibliography_builder_save_name_part( $name, 'dropping-particle' ) ) {
+		return null;
+	}
+
+	$literal = bibliography_builder_save_name_part( $name, 'literal' );
+	$head    = '' !== $literal
+		? $literal
+		: bibliography_builder_save_join_name_parts(
+			array(
+				bibliography_builder_save_name_part( $name, 'non-dropping-particle' ),
+				bibliography_builder_save_name_part( $name, 'family' ),
+			)
+		);
+
+	if ( '' === $head || 0 !== strncmp( $text, $head, strlen( $head ) ) ) {
+		return null;
+	}
+
+	$prefix = $head;
+
+	$after_head = substr( $text, strlen( $head ) );
+
+	if ( '' === $literal && '' !== bibliography_builder_save_name_part( $name, 'given' )
+		&& preg_match( '/^ ([^' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ',]+)/u', $after_head, $initials ) ) {
+		$prefix = $head . ' ' . $initials[1];
+	}
+
+	$rest = substr( $text, strlen( $prefix ) );
+
+	if ( 0 === strncmp( $rest, ', ', 2 ) ) {
+		return $prefix . ',';
+	}
+
+	return 0 === strncmp( $rest, ' and ', 5 ) ? $prefix : null;
+}
+
+/**
  * `getRepeatedAuthorPrefixes()`: for each citation in display order, the
- * author names MLA 9 replaces with three hyphens, or null.
+ * author names MLA 9 replaces with three hyphens, or the first author OSCOLA
+ * replaces with a double em dash, or null. OSCOLA's dash never crosses from
+ * one of its tables to the next.
  *
  * @param array  $citations Citations in display order.
  * @param string $style_key Citation style.
  * @return array<int, string|null>
  */
 function bibliography_builder_save_repeated_author_prefixes( $citations, $style_key ) {
-	$citations = array_values( $citations );
-	$prefixes  = array();
+	$citations    = array_values( $citations );
+	$prefixes     = array();
+	$first_author = 'oscola' === $style_key;
+	$groups       = $first_author ? bibliography_builder_save_style_groups( $style_key ) : null;
+	$list_of      = static function ( array $citation ) use ( $groups ): ?int {
+		return null === $groups
+			? null
+			: bibliography_builder_save_group_index( bibliography_builder_citation_csl( $citation ), $groups );
+	};
 
 	foreach ( $citations as $index => $citation ) {
 		$prefixes[ $index ] = null;
 
-		if ( 'mla-9' !== $style_key || 0 === $index ) {
+		if ( ( 'mla-9' !== $style_key && ! $first_author ) || 0 === $index ) {
 			continue;
 		}
 
@@ -755,9 +945,29 @@ function bibliography_builder_save_repeated_author_prefixes( $citations, $style_
 			continue;
 		}
 
-		$key = bibliography_builder_save_author_key( $citation );
+		$key = bibliography_builder_save_author_key( $citation, $first_author );
 
-		if ( null === $key || bibliography_builder_save_author_key( $previous ) !== $key ) {
+		if ( null === $key || bibliography_builder_save_author_key( $previous, $first_author ) !== $key
+			|| $list_of( $citation ) !== $list_of( $previous ) ) {
+			continue;
+		}
+
+		if ( $first_author ) {
+			$prefix   = bibliography_builder_save_first_author_prefix(
+				bibliography_builder_citation_csl( $citation )['author'][0],
+				bibliography_builder_save_plain_display_text( $citation )
+			);
+			$previous = bibliography_builder_save_first_author_prefix(
+				bibliography_builder_citation_csl( $previous )['author'][0],
+				bibliography_builder_save_plain_display_text( $previous )
+			);
+
+			// The same name, whatever follows it ("," or " and ").
+			if ( null !== $prefix && null !== $previous
+				&& preg_replace( '/,$/', '', $prefix ) === preg_replace( '/,$/', '', $previous ) ) {
+				$prefixes[ $index ] = $prefix;
+			}
+
 			continue;
 		}
 
