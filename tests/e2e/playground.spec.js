@@ -304,6 +304,54 @@ test( 'bibliography block imports a PubMed Central PMCID', async ( {
 	await importCitations( editorFrame, 'PMCID: PMC3531190', 1 );
 } );
 
+// Live check that CrossRef (through the DOI) and PubMed (through the PMID
+// proxy) records keep their journal abbreviation, which IEEE and Vancouver
+// print and the RIS export writes as J2. Read from the block's stored CSL,
+// so it covers the resolvers, normalization, and both sanitizers.
+test( 'imported DOI and PMID records keep the journal abbreviation', async ( {
+	page,
+} ) => {
+	test.setTimeout( 150_000 );
+
+	const editorFrame = await createPostWithBibliographyBlock( page );
+
+	await importCitations(
+		editorFrame,
+		`${ DOI_SAMPLES[ 1 ] }\n\nPMID:26673779`,
+		2
+	);
+
+	const records = await page.evaluate( () =>
+		window.wp.data
+			.select( 'core/block-editor' )
+			.getBlocks()
+			.filter(
+				( block ) => block.name === 'bibliography-builder/bibliography'
+			)
+			.flatMap( ( block ) => block.attributes.citations || [] )
+			.map( ( citation ) => ( {
+				DOI: citation.csl?.DOI,
+				PMID: citation.csl?.PMID,
+				containerTitle: citation.csl?.[ 'container-title' ],
+				short: citation.csl?.[ 'container-title-short' ],
+			} ) )
+	);
+
+	test.info().annotations.push( {
+		type: 'journal abbreviations',
+		description: JSON.stringify( records ),
+	} );
+
+	expect( records ).toHaveLength( 2 );
+
+	for ( const record of records ) {
+		expect(
+			typeof record.short === 'string' && record.short !== '',
+			`no container-title-short: ${ JSON.stringify( record ) }`
+		).toBe( true );
+	}
+} );
+
 // Live check of the arXiv proxy against export.arxiv.org. The direct proxy
 // call comes first so a failure reports the proxy's error code and upstream
 // status rather than only "no entry appeared". An upstream outage or rate
