@@ -422,6 +422,22 @@ function bibliography_builder_save_inline_style( $style ) {
 }
 
 /**
+ * The `id` of a bibliography's visible heading, which names the section
+ * through `aria-labelledby`. Port of getBibliographyHeadingId() in
+ * src/save-markup.js: a block with no usable ID (see
+ * bibliography_builder_get_stable_block_id()) gets none, and the section
+ * keeps `aria-label`.
+ *
+ * @param array $attrs Block attributes.
+ * @return string|null
+ */
+function bibliography_builder_save_heading_id( $attrs ) {
+	$id = bibliography_builder_get_stable_block_id( $attrs );
+
+	return null !== $id ? 'bibliography-heading-' . $id : null;
+}
+
+/**
  * The `<section>` attributes `useBlockProps.save()` produces.
  *
  * @param array $attrs Block attributes.
@@ -520,7 +536,7 @@ function bibliography_builder_save_entry(
 				? '<a' . bibliography_builder_save_attributes(
 					array(
 						'href'       => $part['href'],
-						'rel'        => 'nofollow noopener noreferrer',
+						'rel'        => 'noopener',
 						'aria-label' => '' !== $link_label ? $part['label'] . ' — ' . $part['href'] : null,
 					)
 				) . '>' . bibliography_builder_escape_save_text( $part['text'] ) . '</a>'
@@ -619,12 +635,17 @@ function bibliography_builder_render_save_markup( $attrs ) {
 	$list_tag  = $style['listType'];
 	$style_css = is_string( $style_key ) && '' !== $style_key ? $style_key : 'undefined';
 
+	$heading_id = '' !== $heading
+		? bibliography_builder_save_heading_id( $attrs )
+		: null;
+
 	$html = '<section' . bibliography_builder_save_attributes(
 		array_merge(
 			bibliography_builder_save_block_props( $attrs ),
 			array(
-				'role'       => 'doc-bibliography',
-				'aria-label' => '' !== $heading ? $heading : 'Bibliography',
+				'role'            => 'doc-bibliography',
+				'aria-label'      => null !== $heading_id ? null : ( '' !== $heading ? $heading : 'Bibliography' ),
+				'aria-labelledby' => $heading_id,
 			)
 		)
 	) . '>';
@@ -634,7 +655,12 @@ function bibliography_builder_render_save_markup( $attrs ) {
 			isset( $attrs['headingLevel'] ) ? $attrs['headingLevel'] : 0
 		);
 
-		$html .= '<' . $heading_tag . ' class="bibliography-builder-heading">'
+		$html .= '<' . $heading_tag . bibliography_builder_save_attributes(
+			array(
+				'class' => 'bibliography-builder-heading',
+				'id'    => $heading_id,
+			)
+		) . '>'
 			. bibliography_builder_escape_save_text( $heading )
 			. '</' . $heading_tag . '>';
 	}

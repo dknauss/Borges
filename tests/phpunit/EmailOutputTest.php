@@ -52,7 +52,7 @@ final class EmailOutputTest extends TestCase {
 
 		self::assert_portable( $html );
 		$this->assertStringContainsString(
-			'<p class="bibliography-builder-heading" style="margin:0 0 0.75em;font-size:1.25em;font-weight:600;text-align:center"><strong>Works &amp; &lt;Sources></strong></p>',
+			'<p class="bibliography-builder-heading" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01" style="margin:0 0 0.75em;font-size:1.25em;font-weight:600;text-align:center"><strong>Works &amp; &lt;Sources></strong></p>',
 			$html
 		);
 		$this->assertStringContainsString(
@@ -67,13 +67,13 @@ final class EmailOutputTest extends TestCase {
 
 	public function test_a_real_heading_is_left_to_the_email_client(): void {
 		$html = str_replace(
-			'<p class="bibliography-builder-heading">Works &amp; &lt;Sources></p>',
-			'<h3 class="bibliography-builder-heading">Works &amp; &lt;Sources></h3>',
+			'<p class="bibliography-builder-heading" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01">Works &amp; &lt;Sources></p>',
+			'<h3 class="bibliography-builder-heading" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01">Works &amp; &lt;Sources></h3>',
 			self::current_markup()
 		);
 
 		$this->assertStringContainsString(
-			'<h3 class="bibliography-builder-heading">Works &amp; &lt;Sources></h3>',
+			'<h3 class="bibliography-builder-heading" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01">Works &amp; &lt;Sources></h3>',
 			bibliography_builder_portable_markup( $html )
 		);
 	}

@@ -61,10 +61,10 @@ function bibliography_builder_portable_markup( $html ) {
 	// for feed readers that drop style attributes. A heading level other than
 	// "paragraph" saves an <h2>-<h6>, which clients style on their own.
 	$html = (string) preg_replace(
-		'#<p class="bibliography-builder-heading">(.*?)</p>#s',
-		'<p class="bibliography-builder-heading" style="'
+		'#<p class="bibliography-builder-heading"( id="[^"]*")?>(.*?)</p>#s',
+		'<p class="bibliography-builder-heading"$1 style="'
 			. 'margin:0 0 0.75em;font-size:1.25em;font-weight:600;text-align:center'
-			. '"><strong>$1</strong></p>',
+			. '"><strong>$2</strong></p>',
 		$html,
 		1
 	);
