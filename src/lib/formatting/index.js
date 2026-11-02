@@ -520,8 +520,8 @@ function getShortContainerTitle( citation ) {
  * Vancouver print; without it, the shape save() had through 1.17.0.
  *
  * With `caseFoldedItalics`, a title that is not in the text as stored is
- * looked for without regard to case, since APA, Vancouver, and IEEE print
- * titles in sentence case (see includes/sentence-case.php); without it, the
+ * looked for without regard to case, since APA, Harvard, Vancouver, and
+ * IEEE print titles in sentence case (see includes/sentence-case.php); without it, the
  * shape save() had through 1.17.0.
  *
  * With `romanTitles`, no title is italicized; only inline `<i>`/`<em>` in the

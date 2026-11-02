@@ -192,7 +192,7 @@ final class StyleDataTest extends TestCase {
 			$this->assertContains( $style['sentenceCase']['subtitle'], array( 'capitalize', 'lowercase' ), $key );
 		}
 
-		$this->assertSame( array( 'apa-7', 'ieee', 'vancouver' ), $on );
+		$this->assertSame( array( 'apa-7', 'harvard', 'ieee', 'vancouver' ), $on );
 	}
 
 	/**

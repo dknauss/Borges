@@ -96,7 +96,8 @@
 			"yearSuffix": true,
 			"locale": "en-GB",
 			"inlineCitationMode": "parenthetical",
-			"headingPlaceholder": "References"
+			"headingPlaceholder": "References",
+			"sentenceCase": { "scope": "works", "subtitle": "lowercase" }
 		},
 		"ieee": {
 			"label": "IEEE",

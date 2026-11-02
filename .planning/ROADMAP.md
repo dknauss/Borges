@@ -476,17 +476,22 @@ Chicago author-date 1%.
     1. **Journal abbreviations for IEEE and Vancouver** (both manuals require
        them; about 19% of use). **Built 2026-10-29**: the record's
        `container-title-short` when it has one, the full title otherwise.
-       Follow-ups: confirm on the live resolver checks that CrossRef and
-       PubMed records carry it, and add RIS `J2` to the per-entry export
-       (saved markup, so it needs a deprecation).
+       Follow-ups done 2026-11-02 (#249): RIS `J2` in the per-entry export
+       and the RIS download (behind a 1.18.0 deprecation), and a Playground
+       E2E test that a live CrossRef DOI and PubMed ID keep
+       `container-title-short`.
     2. **APA sentence case** for article, chapter, and book titles (56% of
        use; Vancouver and IEEE need it too). **Built 2026-10-29**, as the
        owner chose: the formatter converts a copy of the title
        (`includes/sentence-case.php`), the stored title never changes, and a
        per-entry "Keep title capitalization as entered" checkbox covers the
-       proper nouns the heuristic cannot see. Follow-ups if users ask: a way
-       to protect one word rather than the whole title, and checking Harvard
-       (Cite Them Right) and ABNT against their manuals.
+       proper nouns the heuristic cannot see. Harvard joined on 2026-11-02
+       (#249): Cite Them Right capitalizes only the first word and proper
+       nouns, with the subtitle in lowercase. ABNT is unchanged: the guides
+       to NBR 6023 show Portuguese titles, already in sentence case, and no
+       rule for English ones; NBR 6023's own text is still to be checked.
+       Follow-up if users ask: a way to protect one word rather than the
+       whole title.
     3. **Nature and AMA**, the most-used styles Borges does not ship. Written
        from their manuals, as the other styles were; AMA is close to
        Vancouver.

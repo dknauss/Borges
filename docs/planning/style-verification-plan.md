@@ -64,7 +64,7 @@ Every non-exact entry in a `compare.mjs` report gets one label, recorded in Phas
 
 ### Latest run (2026-11-02)
 
-Full output: `tools/style-reference/results/2026-11-02.md`. Entries out of 20 that match the official style exactly or differ only in typography or letter case: Chicago notes-bibliography 11, Chicago author-date 9, APA 13, MLA 14, Harvard 7, IEEE 8, Vancouver 11, OSCOLA 10, ABNT 4. APA, IEEE, and Vancouver now show most entries as letter-case differences: since #236 Borges prints those titles in sentence case, while the official styles (and Borges's own CSL run in citeproc-js) print them as stored. Against Borges's own CSL in citeproc-js, every style matches except those case differences and the two documented adaptations.
+Full output: `tools/style-reference/results/2026-11-02.md`. Entries out of 20 that match the official style exactly or differ only in typography or letter case: Chicago notes-bibliography 11, Chicago author-date 9, APA 13, MLA 14, Harvard 7, IEEE 8, Vancouver 11, OSCOLA 10, ABNT 4. APA, IEEE, and Vancouver now show most entries as letter-case differences: since #236 Borges prints those titles in sentence case, while the official styles (and Borges's own CSL run in citeproc-js) print them as stored. Harvard joins them from #249 (Cite Them Right capitalizes only the first word and proper nouns). Against Borges's own CSL in citeproc-js, every style matches except those case differences and the two documented adaptations.
 
 Initial triage. Each "likely" item needs a check against the manual before anything changes.
 

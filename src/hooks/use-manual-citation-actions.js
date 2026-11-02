@@ -110,7 +110,7 @@ export function useManualCitationActions( {
 					'borges-bibliography-builder'
 				),
 				help: __(
-					'APA, IEEE, and Vancouver otherwise print the title in sentence case.',
+					'APA, Harvard, IEEE, and Vancouver otherwise print the title in sentence case.',
 					'borges-bibliography-builder'
 				),
 				control: 'checkbox',

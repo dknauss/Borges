@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Journal abbreviations in the RIS export.** The per-entry Cite / Export RIS and the bibliography's RIS download now carry a record's journal abbreviation (CSL `container-title-short`, or Zotero's `journalAbbreviation`) as a `J2` line after the journal's full title, where Zotero, Mendeley, and EndNote read it. A record without one has no `J2` line.
 
+- **Sentence case in Harvard.** Cite Them Right asks for titles with only the first word and proper nouns capitalized, the subtitle included ("Cite them right: the essential referencing guide"), so Harvard now prints titles of works and of the book a chapter is in the way APA and Vancouver do, from a converted copy; journal names keep their capitals, and the stored title never changes. The "Keep title capitalization as entered" checkbox covers the proper nouns the conversion can't recognize. Existing blocks keep their stored text until their entries are next formatted.
+
 ### Changed
 
 - The Cite / Export RIS change alters saved markup for entries with a journal abbreviation, so the block gains a deprecation for the 1.18.0 shape (`tests/fixtures/deprecations/v18-deprecated.html`). Existing blocks stay valid.
