@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The Playground demo page now has one example bibliography per citation style (nine, adding Chicago Author-Date, MLA 9, Harvard, Vancouver, OSCOLA with its tables of primary sources, and ABNT), and each names the block settings it shows: per-entry Cite / Export, every machine-readable output on and off, heading levels from Paragraph to H4 and an empty heading, and a block font size. The Cite / Export example links straight to its place on the published page. The paste samples add RIS records and a CSL-JSON document, so every input format is there to try.
+
 ## [1.18.0] - 2026-11-01
 
 ### Added

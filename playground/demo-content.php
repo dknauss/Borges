@@ -139,7 +139,7 @@ $content = $borges_demo_paragraph( $borges_demo_intro );
 
 $content .= $borges_demo_heading( '1. Paste any supported format', 2 );
 $content .= $borges_demo_paragraph(
-	'Select the empty <strong>Bibliography</strong> block at the end of this section, open <em>Paste / Import</em>, paste one or more samples, and choose <em>Add</em>. Separate entries with a blank line; up to 50 go in one paste, so you can copy several groups at once.'
+	'Select the empty <strong>Bibliography</strong> block at the end of this section, open <em>Paste / Import</em>, paste one or more samples, and choose <em>Add</em>. Separate entries with a blank line; up to 50 go in one paste, so you can copy several groups at once. A CSL-JSON document goes in a paste of its own.'
 );
 
 foreach ( $borges_demo['sampleGroups'] as $group ) {
@@ -177,7 +177,7 @@ foreach ( $borges_demo['examples'] as $example ) {
 }
 
 $content .= '' !== $borges_demo_examples
-	? $borges_demo_paragraph( 'Each block below was built from CSL-JSON. Select one to change its style or settings.' ) . $borges_demo_examples
+	? $borges_demo_paragraph( 'One example per citation style, each built from CSL-JSON. Under each title, <strong>Settings</strong> names the block settings it shows. Select a block to change them, or <a href="/?p=1">view the published page</a> to see them as readers do.' ) . $borges_demo_examples
 	: $borges_demo_paragraph( 'Pre-built examples need Borges 1.7.0 or later. Paste a few samples from section 1 to build your own.' );
 
 wp_update_post(
