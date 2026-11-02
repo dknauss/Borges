@@ -1,0 +1,10 @@
+{
+	"name": "borges-style-reference",
+	"private": true,
+	"description": "Checks the CSL style goldens against citeproc-js with the official CSL styles, and round-trips them through AnyStyle. Uses the root's citeproc devDependency. See README.md.",
+	"type": "module",
+	"scripts": {
+		"compare": "node compare.mjs",
+		"anystyle": "node anystyle.mjs"
+	}
+}
