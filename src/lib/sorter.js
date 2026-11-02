@@ -236,11 +236,14 @@ function compareAuthorChainsOrKeys( a, b, locale, rule ) {
 /**
  * Styles that list one author's works by date, oldest first, then by title
  * within a year: OSCOLA 5 §1.7. Chicago (CMOS 18 14.67) keeps them by title.
- *
- * Mirrored by BIBLIOGRAPHY_BUILDER_CHRONOLOGICAL_AUTHOR_STYLES in
- * includes/save-sort.php.
+ * A style opts in with `chronologicalAuthors` in includes/styles.json, which
+ * includes/save-sort.php reads too.
  */
-export const CHRONOLOGICAL_AUTHOR_STYLES = Object.freeze( [ 'oscola' ] );
+export const CHRONOLOGICAL_AUTHOR_STYLES = Object.freeze(
+	Object.keys( styleData.styles ).filter(
+		( key ) => true === styleData.styles[ key ].chronologicalAuthors
+	)
+);
 
 /**
  * Notes-bibliography order: authors, then title, then year.

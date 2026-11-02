@@ -82,7 +82,8 @@
 			"yearSuffix": false,
 			"locale": "en-US",
 			"inlineCitationMode": "parenthetical",
-			"headingPlaceholder": "Works Cited"
+			"headingPlaceholder": "Works Cited",
+			"repeatedAuthors": "allAuthors"
 		},
 		"harvard": {
 			"label": "Harvard",
@@ -137,6 +138,8 @@
 			"locale": "en-GB",
 			"inlineCitationMode": "note",
 			"headingPlaceholder": "Bibliography",
+			"repeatedAuthors": "firstAuthor",
+			"chronologicalAuthors": true,
 			"groups": [
 				{
 					"key": "cases",

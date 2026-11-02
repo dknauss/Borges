@@ -18,11 +18,34 @@
  * as strict about the first author, which must match field for field, and
  * which both entries must start with as OSCOLA writes it ("Hart HLA").
  *
+ * Which styles do either is set in includes/styles.json, by a style's
+ * `repeatedAuthors`: `allAuthors` (MLA) or `firstAuthor` (OSCOLA).
+ *
  * Mirrored by bibliography_builder_save_repeated_author_prefixes() in
  * includes/save-markup.php; the save-parity fixtures pin the two together.
  */
 
-export const REPEATED_AUTHOR_STYLES = Object.freeze( [ 'mla-9' ] );
+import styleData from '../../includes/styles.json';
+
+/**
+ * The style keys whose `repeatedAuthors` in styles.json is the given rule.
+ *
+ * @param {string} rule `allAuthors` or `firstAuthor`.
+ * @return {readonly string[]} Style keys.
+ */
+function stylesWithRepeatedAuthors( rule ) {
+	return Object.freeze(
+		Object.keys( styleData.styles ).filter(
+			( key ) => styleData.styles[ key ].repeatedAuthors === rule
+		)
+	);
+}
+
+/**
+ * Styles that replace an entry's authors with REPEATED_AUTHOR_MARK when they
+ * repeat the previous entry's.
+ */
+export const REPEATED_AUTHOR_STYLES = stylesWithRepeatedAuthors( 'allAuthors' );
 
 /**
  * The mark as saved: three U+2011 non-breaking hyphens, written as plain text.
@@ -35,7 +58,8 @@ export const REPEATED_AUTHOR_MARK = '\u2011\u2011\u2011';
 /**
  * Styles that replace a repeated first author with FIRST_AUTHOR_DASH.
  */
-export const FIRST_AUTHOR_DASH_STYLES = Object.freeze( [ 'oscola' ] );
+export const FIRST_AUTHOR_DASH_STYLES =
+	stylesWithRepeatedAuthors( 'firstAuthor' );
 
 /**
  * OSCOLA's double em dash, as saved. wptexturize leaves em dashes alone.

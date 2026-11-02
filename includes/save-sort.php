@@ -17,12 +17,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Front-end style definitions the save markup depends on.
  *
- * The `listType`, `family`, `locale`, and `demoteNonDroppingParticle` fields
- * of `styles.json`, which `STYLE_DEFINITIONS` in
+ * The `listType`, `family`, `locale`, `demoteNonDroppingParticle`,
+ * `repeatedAuthors` (`allAuthors` for MLA's hyphens, `firstAuthor` for
+ * OSCOLA's dash, else empty), and `chronologicalAuthors` fields of
+ * `styles.json`, which `STYLE_DEFINITIONS` in
  * `src/lib/formatting/style-registry.js` is built from.
  *
  * @param mixed $style_key Style key.
- * @return array{key: string, listType: string, family: string, locale: string, demoteNonDroppingParticle: string}
+ * @return array{
+ *     key: string,
+ *     listType: string,
+ *     family: string,
+ *     locale: string,
+ *     demoteNonDroppingParticle: string,
+ *     repeatedAuthors: string,
+ *     chronologicalAuthors: bool
+ * }
  */
 function bibliography_builder_get_save_style_definition( $style_key ) {
 	$styles = bibliography_builder_get_style_data()['styles'];
@@ -36,6 +46,10 @@ function bibliography_builder_get_save_style_definition( $style_key ) {
 		'family'                    => (string) $styles[ $key ]['family'],
 		'locale'                    => (string) $styles[ $key ]['locale'],
 		'demoteNonDroppingParticle' => (string) $styles[ $key ]['demoteNonDroppingParticle'],
+		'repeatedAuthors'           => isset( $styles[ $key ]['repeatedAuthors'] )
+			? (string) $styles[ $key ]['repeatedAuthors']
+			: '',
+		'chronologicalAuthors'      => ! empty( $styles[ $key ]['chronologicalAuthors'] ),
 	);
 }
 
@@ -423,13 +437,6 @@ function bibliography_builder_sort_compare_chains( $collator, $chain_a, $chain_b
 }
 
 /**
- * Styles that list one author's works by date, oldest first, then by title
- * within a year (OSCOLA 5 §1.7): `CHRONOLOGICAL_AUTHOR_STYLES` in
- * `src/lib/sorter.js`.
- */
-const BIBLIOGRAPHY_BUILDER_CHRONOLOGICAL_AUTHOR_STYLES = array( 'oscola' );
-
-/**
  * The comparator for a style family: `compareNotes()` or `compareAuthorDate()`.
  *
  * @param string   $family        Style family.
@@ -748,7 +755,7 @@ function bibliography_builder_sort_citations_for_save( $citations, $style_key ) 
 				$csl_b,
 				$demote,
 				$articles,
-				in_array( $style['key'], BIBLIOGRAPHY_BUILDER_CHRONOLOGICAL_AUTHOR_STYLES, true )
+				$style['chronologicalAuthors']
 			);
 
 			return 0 !== $comparison ? $comparison : $left[0] - $right[0];
