@@ -52,7 +52,7 @@ final class EmailOutputTest extends TestCase {
 
 		self::assert_portable( $html );
 		$this->assertStringContainsString(
-			'<p class="bibliography-builder-heading" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01" style="margin:0 0 0.75em;font-size:1.25em;font-weight:600;text-align:center"><strong>Works &amp; &lt;Sources></strong></p>',
+			'<p class="bibliography-builder-heading" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01" style="margin:0 0 0.75em;font-size:1.25em;font-weight:600;text-align:start"><strong>Works &amp; &lt;Sources></strong></p>',
 			$html
 		);
 		$this->assertStringContainsString(
