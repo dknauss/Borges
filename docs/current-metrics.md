@@ -12,7 +12,7 @@ Source and LOC figures last verified: **2026-10-06** against the heading-level b
 | Metric | Value | Re-derivation command |
 |---|---|---|
 | Main plugin file (`bibliography-builder.php`) | **822** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **17577** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **17763** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
 | JS source (`src/`, excl. `*.test.js`) | **13608** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **3,183 bytes** | `npm run build` then `wc -c < build/view.js` |
 
@@ -110,8 +110,11 @@ Persistence/hook audit — no persistent settings, options, cron, CPTs, or custo
 
 ```
 grep -rEl "add_option|update_option|register_setting|register_post_type|dbDelta|wp_schedule_event" \
-  --include='*.php' . | grep -vE 'vendor|tests|node_modules'
+  --include='*.php' . | grep -vE 'vendor|tests|node_modules|^\./tools/'
 ```
+
+`tools/` is excluded because it is not in the release package (`.distignore`); the
+Yoast/NLWeb trace in `tools/yoast-nlweb-trace/` sets options on the throwaway site it builds.
 
 **One caveat on `wp_options`.** On every store, the plugin's editor-time cache
 (`bibliography_builder_cache_set()`) calls **both** `wp_cache_set()` and `set_transient()` —
