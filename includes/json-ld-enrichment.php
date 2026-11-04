@@ -694,8 +694,8 @@ function bibliography_builder_enrich_rendered_json_ld( $block_content, $parsed_b
  *
  * @since 1.13.0
  *
- * @param WP_Post|null $post     The post; defaults to the queried post.
- * @param string|null  $page_url Page URL; defaults to its permalink.
+ * @param WP_Post|object|null $post     The post (any object with `post_content`); defaults to the queried post.
+ * @param string|null         $page_url Page URL; defaults to its permalink.
  * @return array<int, array{'@type': string, '@id': string, name?: string}>
  */
 function bibliography_builder_get_cited_work_refs( $post = null, $page_url = null ) {
