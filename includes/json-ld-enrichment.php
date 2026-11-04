@@ -18,12 +18,16 @@
  *   baseline maps to plain CreativeWork.
  *
  * The cited works also need an edge from the page that cites them. Yoast SEO
- * and Rank Math build the page's Article graph, so a short reference to each
- * work (type, `@id`, name) is added to it as schema.org `citation`. Every
- * work keeps its full description in the bibliography's own ItemList; the
- * shared `@id` is what joins the two. On a site with neither plugin, Borges
- * prints that edge itself: a `WebPage` node for the page, with the same
- * `citation` references, in the document head.
+ * and Rank Math build the page's Article graph, so the works are added to it
+ * as schema.org `citation`. Rank Math gets a short reference to each work
+ * (type, `@id`, name), joined by the shared `@id` to its full description in
+ * the bibliography's own ItemList. Yoast gets the full description itself,
+ * because Yoast's schema aggregator (the feed NLWeb reads) and plugins that
+ * ask Yoast for a post's graph see that graph alone; the
+ * `bibliography_builder_yoast_citation_records` filter switches it back to
+ * short references. On a site with neither plugin, Borges prints the edge
+ * itself: a `WebPage` node for the page, with short references, in the
+ * document head.
  *
  * Both layers are on by default. `bibliography_builder_enrich_json_ld` and
  * `bibliography_builder_link_page_citations` turn them off.
@@ -686,19 +690,20 @@ function bibliography_builder_enrich_rendered_json_ld( $block_content, $parsed_b
 }
 
 /**
- * Short references to every work the current page's bibliographies cite.
+ * The full JSON-LD description of every work a post's bibliographies cite.
  *
- * Only bibliographies that output JSON-LD count, since a reference whose full
- * description is not on the page would point nowhere. Works are deduplicated
- * by `@id`.
+ * Each work is the one the bibliography's own `ItemList` carries (the saved
+ * baseline plus the render-time enrichment), with the same `@id`. Only
+ * bibliographies that output JSON-LD count, and works are deduplicated by
+ * `@id`, keeping the first.
  *
- * @since 1.13.0
+ * @since 1.19.0
  *
  * @param WP_Post|object|null $post     The post (any object with `post_content`); defaults to the queried post.
  * @param string|null         $page_url Page URL; defaults to its permalink.
- * @return array<int, array{'@type': string, '@id': string, name?: string}>
+ * @return array<int, array<string, mixed>>
  */
-function bibliography_builder_get_cited_work_refs( $post = null, $page_url = null ) {
+function bibliography_builder_get_cited_works( $post = null, $page_url = null ) {
 	$can_query = function_exists( 'is_singular' ) && function_exists( 'get_queried_object' );
 
 	if ( null === $post && $can_query && is_singular() ) {
@@ -725,7 +730,7 @@ function bibliography_builder_get_cited_work_refs( $post = null, $page_url = nul
 		return $cache[ $cache_key ];
 	}
 
-	$refs = array();
+	$works = array();
 
 	foreach ( bibliography_builder_collect_blocks( parse_blocks( (string) $post->post_content ) ) as $bibliography ) {
 		if ( empty( $bibliography['outputJsonLd'] ) || empty( $bibliography['citations'] ) ) {
@@ -745,26 +750,54 @@ function bibliography_builder_get_cited_work_refs( $post = null, $page_url = nul
 				$page_url
 			);
 
-			if ( ! isset( $work['@id'] ) || isset( $refs[ $work['@id'] ] ) ) {
+			if ( ! isset( $work['@id'] ) || isset( $works[ $work['@id'] ] ) ) {
 				continue;
 			}
 
-			$ref = array(
-				'@type' => $work['@type'],
-				'@id'   => $work['@id'],
-			);
-
-			if ( isset( $work['name'] ) && '' !== $work['name'] ) {
-				$ref['name'] = $work['name'];
-			}
-
-			$refs[ $work['@id'] ] = $ref;
+			// A node inside another graph takes its context from the graph.
+			unset( $work['@context'] );
+			$works[ $work['@id'] ] = $work;
 		}
 	}
 
-	$cache[ $cache_key ] = array_values( $refs );
+	$cache[ $cache_key ] = array_values( $works );
 
 	return $cache[ $cache_key ];
+}
+
+/**
+ * A short reference (type, `@id`, name) to every work a post's
+ * bibliographies cite.
+ *
+ * The page's `citation` edge for graphs that sit beside the bibliography's
+ * `ItemList` on the same page; the shared `@id` joins each reference to its
+ * full description there. Only bibliographies that output JSON-LD count,
+ * since a reference whose full description is not on the page would point
+ * nowhere. Works are deduplicated by `@id`.
+ *
+ * @since 1.13.0
+ *
+ * @param WP_Post|object|null $post     The post (any object with `post_content`); defaults to the queried post.
+ * @param string|null         $page_url Page URL; defaults to its permalink.
+ * @return array<int, array{'@type': string, '@id': string, name?: string}>
+ */
+function bibliography_builder_get_cited_work_refs( $post = null, $page_url = null ) {
+	$refs = array();
+
+	foreach ( bibliography_builder_get_cited_works( $post, $page_url ) as $work ) {
+		$ref = array(
+			'@type' => $work['@type'],
+			'@id'   => $work['@id'],
+		);
+
+		if ( isset( $work['name'] ) && '' !== $work['name'] ) {
+			$ref['name'] = $work['name'];
+		}
+
+		$refs[] = $ref;
+	}
+
+	return $refs;
 }
 
 /**
@@ -831,21 +864,49 @@ function bibliography_builder_yoast_context_post( $context ) {
 }
 
 /**
- * The cited-work references for the post a Yoast SEO graph describes.
+ * Whether the cited works go into Yoast SEO's graph as full records.
+ *
+ * Yoast's schema aggregator (the feed NLWeb reads) and plugins that call
+ * `YoastSEO()->meta->for_post()` see only Yoast's graph, never the
+ * bibliography's own `ItemList`, so short references would reach them as
+ * titles alone.
+ *
+ * @since 1.19.0
+ *
+ * @return bool
+ */
+function bibliography_builder_yoast_citation_records() {
+	/**
+	 * Filters whether the Article (or WebPage) Yoast SEO builds lists each
+	 * cited work in full, or as a short reference (type, `@id`, name) to its
+	 * description in the bibliography's `ItemList`.
+	 *
+	 * @since 1.19.0
+	 *
+	 * @param bool $full Whether to embed full records. Default true.
+	 */
+	return (bool) apply_filters( 'bibliography_builder_yoast_citation_records', true );
+}
+
+/**
+ * The cited works for the post a Yoast SEO graph describes: full records,
+ * or short references when `bibliography_builder_yoast_citation_records`
+ * returns false.
  *
  * @since 1.19.0
  *
  * @param mixed $context Yoast's meta tags context.
- * @return array<int, array{'@type': string, '@id': string, name?: string}>
+ * @return array<int, array<string, mixed>>
  */
-function bibliography_builder_yoast_cited_work_refs( $context ) {
-	$post = bibliography_builder_yoast_context_post( $context );
+function bibliography_builder_yoast_cited_works( $context ) {
+	$post     = bibliography_builder_yoast_context_post( $context );
+	$page_url = null === $post ? null : bibliography_builder_json_ld_page_url( $post );
 
-	if ( null === $post ) {
-		return bibliography_builder_get_cited_work_refs();
+	if ( bibliography_builder_yoast_citation_records() ) {
+		return bibliography_builder_get_cited_works( $post, $page_url );
 	}
 
-	return bibliography_builder_get_cited_work_refs( $post, bibliography_builder_json_ld_page_url( $post ) );
+	return bibliography_builder_get_cited_work_refs( $post, $page_url );
 }
 
 /**
@@ -863,7 +924,7 @@ function bibliography_builder_yoast_schema_article( $data, $context = null ) {
 		return $data;
 	}
 
-	return bibliography_builder_add_citations_to_node( $data, bibliography_builder_yoast_cited_work_refs( $context ) );
+	return bibliography_builder_add_citations_to_node( $data, bibliography_builder_yoast_cited_works( $context ) );
 }
 
 /**
@@ -883,7 +944,7 @@ function bibliography_builder_yoast_schema_webpage( $data, $context = null ) {
 		return $data;
 	}
 
-	return bibliography_builder_add_citations_to_node( $data, bibliography_builder_yoast_cited_work_refs( $context ) );
+	return bibliography_builder_add_citations_to_node( $data, bibliography_builder_yoast_cited_works( $context ) );
 }
 
 /**
