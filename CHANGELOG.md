@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MLA's repeated-author hyphens, OSCOLA's double em dash, and OSCOLA's date order for one author's works are now set per style in `includes/styles.json` (`repeatedAuthors`, `chronologicalAuthors`), which the editor and the PHP port of `save()` both read, instead of being written into the code by style name. Output is unchanged.
 - The Playground demo page now has one example bibliography per citation style (nine, adding Chicago Author-Date, MLA 9, Harvard, Vancouver, OSCOLA with its tables of primary sources, and ABNT), and each names the block settings it shows: per-entry Cite / Export, every machine-readable output on and off, heading levels from Paragraph to H4 and an empty heading, and a block font size. The Cite / Export example links straight to its place on the published page. The paste samples add RIS records and a CSL-JSON document, so every input format is there to try.
 
+### Fixed
+
+- **Citations in Yoast SEO graphs built outside the page request.** Borges adds the cited works to Yoast's Article (or WebPage) piece as schema.org `citation`, but it looked the post up from the main query, so a graph Yoast built for another caller came without them. NLWeb's WordPress plugin is one such caller: it asks Yoast for each post's graph (`YoastSEO()->meta->for_post()`) to answer agents over MCP, and its answers carried no citations. Borges now reads the post from the context Yoast passes with each piece. The page's own JSON-LD and Yoast's schema aggregator were not affected. The `bibliography_builder_json_ld_page_url` filter gains the post as a second argument.
+
 ## [1.18.0] - 2026-11-01
 
 ### Added

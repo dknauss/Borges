@@ -72,11 +72,17 @@ function bibliography_builder_json_ld_refined_types() {
  * The page URL that `@id`s and entry anchors hang from, or '' when unknown.
  *
  * @since 1.13.0
+ * @since 1.19.0 Takes an optional post, for graphs built outside the main query.
  *
+ * @param WP_Post|object|null $post The post; defaults to the current post.
  * @return string
  */
-function bibliography_builder_json_ld_page_url() {
-	$url = function_exists( 'get_permalink' ) ? get_permalink() : '';
+function bibliography_builder_json_ld_page_url( $post = null ) {
+	$url = '';
+
+	if ( function_exists( 'get_permalink' ) ) {
+		$url = null === $post ? get_permalink() : get_permalink( $post );
+	}
 
 	/**
 	 * Filters the page URL the bibliography's JSON-LD identifiers use.
@@ -84,10 +90,13 @@ function bibliography_builder_json_ld_page_url() {
 	 * Return '' to leave out every page-relative `@id` and `url`.
 	 *
 	 * @since 1.13.0
+	 * @since 1.19.0 The `$post` parameter was added.
 	 *
-	 * @param string $url The current post's permalink.
+	 * @param string       $url  The post's permalink.
+	 * @param WP_Post|null $post The post the URL belongs to, when the caller
+	 *                           named one; null for the current post.
 	 */
-	$url = apply_filters( 'bibliography_builder_json_ld_page_url', is_string( $url ) ? $url : '' );
+	$url = apply_filters( 'bibliography_builder_json_ld_page_url', is_string( $url ) ? $url : '', $post );
 
 	return is_string( $url ) ? (string) preg_replace( '/#.*$/s', '', $url ) : '';
 }
@@ -699,7 +708,7 @@ function bibliography_builder_get_cited_work_refs( $post = null, $page_url = nul
 	}
 
 	if ( null === $page_url ) {
-		$page_url = bibliography_builder_json_ld_page_url();
+		$page_url = bibliography_builder_json_ld_page_url( $post );
 	}
 
 	// Yoast asks twice per page (Article, then WebPage), so parse once.
@@ -792,25 +801,69 @@ function bibliography_builder_add_citations_to_node( $node, $refs ) {
 }
 
 /**
+ * The post a Yoast SEO schema graph describes, from the context Yoast passes.
+ *
+ * Yoast also builds graphs outside the main query, for example when another
+ * plugin calls `YoastSEO()->meta->for_post()`, as NLWeb's WordPress plugin
+ * does to answer agents. There `is_singular()` is false and the queried
+ * object is not the post, so the post must come from Yoast's context.
+ *
+ * @since 1.19.0
+ *
+ * @param mixed $context Yoast's meta tags context.
+ * @return WP_Post|null The post, or null to fall back to the queried post.
+ */
+function bibliography_builder_yoast_context_post( $context ) {
+	if ( ! is_object( $context ) || ! property_exists( $context, 'post' ) ) {
+		return null;
+	}
+
+	$post = $context->post;
+
+	return is_object( $post ) && isset( $post->post_content ) ? $post : null;
+}
+
+/**
+ * The cited-work references for the post a Yoast SEO graph describes.
+ *
+ * @since 1.19.0
+ *
+ * @param mixed $context Yoast's meta tags context.
+ * @return array<int, array{'@type': string, '@id': string, name?: string}>
+ */
+function bibliography_builder_yoast_cited_work_refs( $context ) {
+	$post = bibliography_builder_yoast_context_post( $context );
+
+	if ( null === $post ) {
+		return bibliography_builder_get_cited_work_refs();
+	}
+
+	return bibliography_builder_get_cited_work_refs( $post, bibliography_builder_json_ld_page_url( $post ) );
+}
+
+/**
  * Yoast SEO: add the cited works to the Article piece.
  *
  * @since 1.13.0
+ * @since 1.19.0 Reads the post from Yoast's context when it has one.
  *
- * @param mixed $data Article piece.
+ * @param mixed $data    Article piece.
+ * @param mixed $context Yoast's meta tags context.
  * @return mixed
  */
-function bibliography_builder_yoast_schema_article( $data ) {
+function bibliography_builder_yoast_schema_article( $data, $context = null ) {
 	if ( ! bibliography_builder_should_link_page_citations() ) {
 		return $data;
 	}
 
-	return bibliography_builder_add_citations_to_node( $data, bibliography_builder_get_cited_work_refs() );
+	return bibliography_builder_add_citations_to_node( $data, bibliography_builder_yoast_cited_work_refs( $context ) );
 }
 
 /**
  * Yoast SEO: add the cited works to the WebPage piece on pages without an Article.
  *
  * @since 1.13.0
+ * @since 1.19.0 Reads the post from Yoast's context when it has one.
  *
  * @param mixed $data    WebPage piece.
  * @param mixed $context Yoast's meta tags context.
@@ -823,7 +876,7 @@ function bibliography_builder_yoast_schema_webpage( $data, $context = null ) {
 		return $data;
 	}
 
-	return bibliography_builder_add_citations_to_node( $data, bibliography_builder_get_cited_work_refs() );
+	return bibliography_builder_add_citations_to_node( $data, bibliography_builder_yoast_cited_work_refs( $context ) );
 }
 
 /**
@@ -974,7 +1027,7 @@ function bibliography_builder_print_page_citation_node() {
 
 // After the pre-1.11.0 nesting filter, which runs at the default priority.
 add_filter( 'render_block_bibliography-builder/bibliography', 'bibliography_builder_enrich_rendered_json_ld', 11, 2 );
-add_filter( 'wpseo_schema_article', 'bibliography_builder_yoast_schema_article' );
+add_filter( 'wpseo_schema_article', 'bibliography_builder_yoast_schema_article', 10, 2 );
 add_filter( 'wpseo_schema_webpage', 'bibliography_builder_yoast_schema_webpage', 10, 2 );
 add_filter( 'rank_math/json_ld', 'bibliography_builder_rank_math_json_ld', 99 );
 add_action( 'wp_head', 'bibliography_builder_print_page_citation_node', 99 );

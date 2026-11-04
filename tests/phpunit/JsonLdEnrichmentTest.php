@@ -256,6 +256,56 @@ final class JsonLdEnrichmentTest extends TestCase {
 		$this->assertSame( $data, bibliography_builder_rank_math_json_ld( $data ) );
 	}
 
+	/**
+	 * Yoast also builds graphs outside the main query, as when NLWeb's
+	 * WordPress plugin calls `YoastSEO()->meta->for_post()`. There no post is
+	 * queried, so the citations must come from the post in Yoast's context.
+	 */
+	public function test_yoast_pieces_read_the_post_from_yoast_context(): void {
+		$post = (object) array(
+			'ID'           => 7,
+			'post_content' => $this->content(),
+		);
+		bibliography_builder_test_set_parsed_blocks( $post->post_content, ( new WP_Block_Parser() )->parse( $post->post_content ) );
+		$refs = bibliography_builder_get_cited_work_refs( $post, self::PAGE );
+		$this->assertNotEmpty( $refs );
+
+		$article = array( '@type' => 'Article' );
+		$context = (object) array(
+			'post'        => $post,
+			'has_article' => true,
+		);
+
+		// No queried post: before 1.19.0 both pieces came back unchanged.
+		$this->assertSame( $article, bibliography_builder_yoast_schema_article( $article ) );
+		$this->assertSame( $refs, bibliography_builder_yoast_schema_article( $article, $context )['citation'] );
+
+		// The WebPage piece takes them only when the page has no Article.
+		$webpage = array( '@type' => 'WebPage' );
+		$this->assertSame( $webpage, bibliography_builder_yoast_schema_webpage( $webpage, $context ) );
+		$context->has_article = false;
+		$this->assertSame( $refs, bibliography_builder_yoast_schema_webpage( $webpage, $context )['citation'] );
+
+		// A context without a post, or with something else in it, falls back.
+		$this->assertNull( bibliography_builder_yoast_context_post( (object) array( 'post' => null ) ) );
+		$this->assertNull( bibliography_builder_yoast_context_post( (object) array( 'post' => 7 ) ) );
+		$this->assertNull( bibliography_builder_yoast_context_post( null ) );
+
+		// The page URL filter learns which post it is asked about.
+		$seen = 'unset';
+		add_filter(
+			'bibliography_builder_json_ld_page_url',
+			static function ( $url, $for_post = null ) use ( &$seen ) {
+				$seen = $for_post;
+				return $url;
+			},
+			20,
+			2
+		);
+		bibliography_builder_yoast_schema_article( $article, $context );
+		$this->assertSame( $post, $seen );
+	}
+
 	private function enrich( array $csl ): array {
 		return bibliography_builder_enrich_json_ld_work( bibliography_builder_save_csl_to_json_ld( $csl ), $csl, 'x', '' );
 	}
