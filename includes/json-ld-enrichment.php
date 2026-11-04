@@ -81,7 +81,13 @@ function bibliography_builder_json_ld_page_url( $post = null ) {
 	$url = '';
 
 	if ( function_exists( 'get_permalink' ) ) {
-		$url = null === $post ? get_permalink() : get_permalink( $post );
+		if ( $post instanceof WP_Post ) {
+			$url = get_permalink( $post );
+		} elseif ( is_object( $post ) && isset( $post->ID ) && (int) $post->ID > 0 ) {
+			$url = get_permalink( (int) $post->ID );
+		} else {
+			$url = get_permalink();
+		}
 	}
 
 	/**
@@ -811,7 +817,8 @@ function bibliography_builder_add_citations_to_node( $node, $refs ) {
  * @since 1.19.0
  *
  * @param mixed $context Yoast's meta tags context.
- * @return WP_Post|null The post, or null to fall back to the queried post.
+ * @return object|null The post (a `WP_Post` on a live site), or null to fall
+ *                     back to the queried post.
  */
 function bibliography_builder_yoast_context_post( $context ) {
 	if ( ! is_object( $context ) || ! property_exists( $context, 'post' ) ) {
