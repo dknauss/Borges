@@ -1,5 +1,10 @@
 <?php
 require_once '/wordpress/wp-load.php';
+// Save as the admin with WordPress's HTML filter off: the bibliography's
+// JSON-LD and CSL-JSON <script> elements must survive, as they do when the
+// block is saved in the editor by a user who may post unfiltered HTML.
+wp_set_current_user( 1 );
+kses_remove_filters();
 $cite = static function ( $id, $text ) {
 	return '<a class="bibliography-builder-citation h-cite" href="#ref-' . $id . '" data-bibliography-ref="' . $id . '">' . $text . '</a>';
 };
