@@ -5,15 +5,15 @@ Each source metric carries the exact command used to re-derive it. Package-size 
 identify their measurement or release-artifact source. Re-run the relevant command and update the
 number **in the same commit** whenever the underlying quantity changes.
 
-Source and LOC figures last verified: **2026-10-06** against the heading-level branch. The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.6.0 release asset.
+Source and LOC figures last verified: **2026-11-06** against the annotations branch. The footprint rows are hand-measured packaging references; the distributed ZIP row records the published v1.6.0 release asset.
 
 ## Lines of code
 
 | Metric | Value | Re-derivation command |
 |---|---|---|
 | Main plugin file (`bibliography-builder.php`) | **822** | `wc -l bibliography-builder.php` |
-| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **17577** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
-| JS source (`src/`, excl. `*.test.js`) | **13608** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
+| All first-party PHP (excl. vendor, tests, scripts, playground, packages, output, node_modules, generated `build/`) | **17707** | `find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -not -path './tests/*' -not -path './packages/*' -not -path './scripts/*' -not -path './playground/*' -not -path './output/*' -not -path './build/*' -print0 \| xargs -0 wc -l \| tail -1` |
+| JS source (`src/`, excl. `*.test.js`) | **13971** | `find ./src -name '*.js' -not -name '*.test.js' -print0 \| xargs -0 wc -l \| tail -1` |
 | Shipped frontend runtime (`build/view.js`, minified) | **3,183 bytes** | `npm run build` then `wc -c < build/view.js` |
 
 The only PHP that executes at runtime on a visitor request path is `bibliography-builder.php`
