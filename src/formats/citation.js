@@ -188,6 +188,11 @@ function buildCitationValue( entry, locator ) {
 }
 
 /**
+ * Core's link format, which a citation replaces over the text it cites.
+ */
+const LINK_FORMAT_NAME = 'core/link';
+
+/**
  * Apply a citation to a rich-text value.
  *
  * @param {Object}  value                 Rich-text value.
@@ -209,8 +214,11 @@ export function applyCitation(
 	const hasText = end > start;
 
 	if ( hasText && ! replaceText ) {
+		// A citation is a link, and links cannot nest: drop any ordinary
+		// link over the cited text first, or the saved markup would hold an
+		// `<a>` inside an `<a>`, which browsers split apart on reload.
 		return applyFormat(
-			value,
+			removeFormat( value, LINK_FORMAT_NAME, start, end ),
 			getCitationFormat( entry.id, locator ),
 			start,
 			end

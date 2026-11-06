@@ -55,12 +55,20 @@ beforeAll( () => {
 		className: null,
 		edit: () => null,
 	} );
+	registerFormatType( 'core/link', {
+		title: 'Link',
+		tagName: 'a',
+		className: null,
+		attributes: { url: 'href' },
+		edit: () => null,
+	} );
 	registerCitationFormat();
 } );
 
 afterAll( () => {
 	unregisterFormatType( CITATION_FORMAT_NAME );
 	unregisterFormatType( 'core/italic' );
+	unregisterFormatType( 'core/link' );
 } );
 
 describe( 'applyCitation', () => {
@@ -84,6 +92,20 @@ describe( 'applyCitation', () => {
 		expect( toHTMLString( { value: applyCitation( value, entry ) } ) ).toBe(
 			`${ LINK }Illich</a> says so.`
 		);
+	} );
+
+	it( 'replaces an ordinary link over the cited text instead of nesting in it', () => {
+		const value = valueOf(
+			'<a href="https://example.com/">Illich says</a> so.',
+			0,
+			6
+		);
+		const html = toHTMLString( { value: applyCitation( value, entry ) } );
+
+		expect( html ).toBe(
+			`${ LINK }Illich</a><a href="https://example.com/"> says</a> so.`
+		);
+		expect( html ).not.toMatch( /<a[^>]*>[^<]*<a/ );
 	} );
 
 	it( 'replaces selected text when asked', () => {
