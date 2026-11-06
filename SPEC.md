@@ -971,6 +971,19 @@ PMID support shipped in 1.2; PMCID, arXiv, and ISBN in 1.6.0; library catalog nu
 -   **Anchor links.** Frontend `<a href="#ref-{id}">` links from inline citations to bibliography entries, and back-links from entries to their in-text occurrences.
 -   **Automatic inline citation formatting.** The inline element auto-formats based on the bibliography block's style (e.g., `(Smith 2024)` for Chicago author-date, `[1]` for IEEE).
 
+-   **Margin citations (sidenotes).** A variant of the inline citation for themes with a margin column, as in Tufte-style layouts and Marginalia's glosses: a short note-form citation (Chicago short note by default: author, short title, page) set in the margin, linking to the full entry's `#ref-{id}`. The margin holds the reference and the bibliography holds the record. Needs the same entry picker and stable entry IDs as the inline element; ids must survive re-sorting, style changes, and re-imports. Proposed 2026-11-05 alongside Marginalia's gloss block.
+-   **Microformats.** Mark each entry `h-cite` (with `p-name`, `p-author`, `dt-published`, `u-url`/`u-uid` for DOI and URL) so IndieWeb parsers read the bibliography as citations, and an inline or margin citation can be an `h-cite` that points at it. Borges already emits JSON-LD and COinS from the same CSL-JSON; this is a third view of it, and the entry markup belongs here, not in themes (Ollie Child Kit's `microformats` module leaves bibliography entries to Borges).
+
+### Future: Annotated Bibliographies
+
+An annotated bibliography gives each entry a short note of the compiler's own: what the work argues, why it matters, how it was used. It is a long-standing scholarly and teaching genre, and the common hand-built alternative in WordPress (a "reading list" pattern of paragraphs per book) has no metadata, sorting, or export. Free-text input that carries an annotation after the citation is currently unsupported (`docs/free-text-unsupported-samples.md`, "Annotated bibliography entry").
+
+-   **Storage:** CSL-JSON's standard `annote` variable ("reader's notes about the item content", CSL 1.0.2 Appendix IV), so annotations round-trip through CSL-JSON export and reference managers that map it (Zotero's "Extra"/notes mapping to be checked). Plain text with paragraph breaks; no HTML, consistent with the rule against storing formatter HTML.
+-   **Editor:** an "Annotation" textarea in the per-entry field editor, and a block setting "Show annotations" (off by default, so existing bibliographies render unchanged).
+-   **Output:** the annotation as a `<p class="…__annotation">` inside the entry's `<li>`, after the formatted citation, indented under it as style manuals show it; excluded from COinS, from the copied citation text, and from JSON-LD `citation` items unless a schema.org mapping is chosen (`description` is the likely candidate; decide).
+-   **Import:** BibTeX `annote` and RIS `N1`/`AB` mapping to be decided per source (an abstract is not an annotation); free-text input may split a trailing sentence into `annote` only when the user confirms.
+-   **Exports:** CSL-JSON keeps `annote`; BibTeX/BibLaTeX write `annote`/`annotation`; RIS writes `N1`.
+
 ### Future: Google Scholar / Highwire Companion Plugin
 
 A **separate plugin** that registers a scholarly article post type and injects Highwire Press meta tags for Google Scholar discoverability. See the Technical Notes section for why this is a separate concern from the bibliography block.
