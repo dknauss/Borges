@@ -692,6 +692,60 @@ describe( 'handleStructuredEditSave guard branches', () => {
 		).toEqual( { 'borges-keep-title-case': true } );
 	} );
 
+	it( 'stores an annotation without replacing the display line or warnings', async () => {
+		const citation = makeCitation( {
+			displayOverride: 'Smith, Ada. A Book (hand-edited). 2024.',
+			parseWarnings: [ 'review-metadata-incomplete' ],
+			csl: {
+				...makeCitation().csl,
+				annote: 'Old note.',
+			},
+		} );
+		const args = makeHookArgs( [ citation ] );
+		const { result } = renderHook( () => useCitationEditorState( args ) );
+
+		act( () => result.current.handleStructuredEditStart( 'cit-1' ) );
+		expect( result.current.structuredFields.annotation ).toBe(
+			'Old note.'
+		);
+
+		act( () =>
+			result.current.handleStructuredFieldChange(
+				'annotation',
+				' First <b>idea</b>.\r\n\r\n\r\nSecond. '
+			)
+		);
+		await act( () => result.current.handleStructuredEditSave() );
+
+		const [ saved ] = args.setAttributes.mock.calls[ 0 ][ 0 ].citations;
+		expect( saved.csl.annote ).toBe( 'First idea.\n\nSecond.' );
+		expect( saved.displayOverride ).toBe(
+			'Smith, Ada. A Book (hand-edited). 2024.'
+		);
+		expect( saved.parseWarnings ).toEqual( [
+			'review-metadata-incomplete',
+		] );
+	} );
+
+	it( 'clears an annotation emptied in the form', async () => {
+		const args = makeHookArgs( [
+			makeCitation( {
+				csl: { ...makeCitation().csl, annote: 'Note.' },
+			} ),
+		] );
+		const { result } = renderHook( () => useCitationEditorState( args ) );
+
+		act( () => result.current.handleStructuredEditStart( 'cit-1' ) );
+		act( () =>
+			result.current.handleStructuredFieldChange( 'annotation', '  ' )
+		);
+		await act( () => result.current.handleStructuredEditSave() );
+
+		expect(
+			args.setAttributes.mock.calls[ 0 ][ 0 ].citations[ 0 ].csl
+		).not.toHaveProperty( 'annote' );
+	} );
+
 	it( 'edits a journal article number through its own field', async () => {
 		const save = async ( csl, articleNumber ) => {
 			const args = makeHookArgs( [ makeCitation( { csl } ) ] );

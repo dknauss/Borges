@@ -58,7 +58,7 @@ final class Bibliography_Builder_CLI_Command {
 	 * : Post ID.
 	 *
 	 * [--fields=<fields>]
-	 * : Columns to show. Also available: headingLevel, outputJsonLd, outputCoins, outputCslJson.
+	 * : Columns to show. Also available: headingLevel, outputJsonLd, outputCoins, outputCslJson, showAnnotations.
 	 *
 	 * [--format=<format>]
 	 * : Output format.

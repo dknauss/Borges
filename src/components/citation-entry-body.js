@@ -8,6 +8,7 @@ import {
 	StructuredEditIcon,
 } from '../lib/wp-icons';
 import { getDisplaySegments } from '../lib/formatting';
+import { getAnnotationParagraphs } from '../lib/annotation';
 import { StructuredCitationEditor } from './structured-citation-editor';
 import { CitationReorderControls } from './citation-reorder-controls';
 
@@ -31,6 +32,7 @@ export function CitationEntryBody( {
 	handleStructuredFieldChange,
 	isNumericFamily = false,
 	romanTitles = false,
+	showAnnotations = false,
 	onEditTextChange,
 	onMoveDown,
 	onMoveUp,
@@ -113,6 +115,17 @@ export function CitationEntryBody( {
 							)
 						) }
 					</span>
+					{ showAnnotations &&
+						getAnnotationParagraphs( citation.csl ).map(
+							( paragraph, index ) => (
+								<span
+									key={ `${ citation.id }-annotation-${ index }` }
+									className="bibliography-builder-annotation"
+								>
+									{ paragraph }
+								</span>
+							)
+						) }
 					{ citationWarnings.map( ( warningMessage ) => (
 						<span
 							key={ `${ citation.id }-${ warningMessage }` }

@@ -44,6 +44,7 @@ export default function save( { attributes } ) {
 		jsonLdItemList: true,
 		citationLinkRel: 'noopener',
 		headingLabelledBy: true,
+		annotations: true,
 		labels: LOCALE_INDEPENDENT_SAVE_LABELS,
 	} );
 }

@@ -861,6 +861,7 @@ function bibliography_builder_write_setting_defaults() {
 		'outputCoins'      => false,
 		'outputCslJson'    => false,
 		'outputCiteExport' => false,
+		'showAnnotations'  => false,
 	);
 }
 
@@ -889,7 +890,7 @@ function bibliography_builder_write_set_attribute( $attrs, $name, $value, $defau
  *
  * Body: any of `headingText` (string), `headingLevel` (0 for a paragraph, or
  * 2 to 6), and the booleans `outputJsonLd`, `outputCoins`, `outputCslJson`,
- * and `outputCiteExport`. Citations are not
+ * `outputCiteExport`, and `showAnnotations`. Citations are not
  * touched. `citationStyle` is refused with a pointer to POST …/reformat.
  *
  * @param WP_REST_Request $request REST request.

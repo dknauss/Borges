@@ -36,6 +36,12 @@ function isLikelyOrganizationAuthor( author ) {
 export function cslToJsonLd( csl, { canonicalDoiUrl = true } = {} ) {
 	const schemaType = TYPE_MAP[ csl.type ] || 'CreativeWork';
 
+	// An annotation (CSL `annote`) is deliberately left out: it is the
+	// compiler's note on the work, not a property of the work. schema.org
+	// `description` is the likely mapping if one is chosen later; adding it
+	// here would change the JSON-LD of blocks already saved, so it belongs in
+	// the render-time enrichment (includes/json-ld-enrichment.php) instead.
+
 	const result = {
 		'@context': 'https://schema.org',
 		'@type': schemaType,

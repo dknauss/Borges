@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { StructuredCitationEditor } from './structured-citation-editor';
 
 jest.mock( '@wordpress/components', () => {
@@ -75,6 +75,43 @@ describe( 'StructuredCitationEditor', () => {
 			/>
 		);
 		expect( screen.getByLabelText( 'Article number' ) ).toBeInTheDocument();
+	} );
+} );
+
+describe( 'StructuredCitationEditor annotation field', () => {
+	it( 'edits the annotation in a described textarea', () => {
+		const onFieldChange = jest.fn();
+
+		renderEditor( {
+			citation: { id: 'd', csl: { type: 'book' } },
+			fields: { annotation: 'One.\n\nTwo.' },
+			onFieldChange,
+		} );
+
+		const textarea = screen.getByLabelText( 'Annotation' );
+
+		expect( textarea.tagName ).toBe( 'TEXTAREA' );
+		expect( textarea ).toHaveValue( 'One.\n\nTwo.' );
+		expect( textarea ).toHaveAccessibleDescription(
+			/Leave a blank line between paragraphs/u
+		);
+
+		fireEvent.change( textarea, { target: { value: 'Three.' } } );
+		expect( onFieldChange ).toHaveBeenCalledWith( 'annotation', 'Three.' );
+	} );
+
+	it( 'cancels on Escape from the textarea', () => {
+		const onCancel = jest.fn();
+
+		renderEditor( {
+			citation: { id: 'e', csl: { type: 'book' } },
+			onCancel,
+		} );
+
+		fireEvent.keyDown( screen.getByLabelText( 'Annotation' ), {
+			key: 'Escape',
+		} );
+		expect( onCancel ).toHaveBeenCalled();
 	} );
 } );
 

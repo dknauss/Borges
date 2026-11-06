@@ -17,6 +17,11 @@
  *   instead of `address` or `location`, so citation-js drops it. It is renamed
  *   before parsing (`renameBibtexCityField()`), so citation-js decodes it
  *   like any other field.
+ * - `annote` (BibTeX) and `annotation` (BibLaTeX) reach CSL `annote`, but
+ *   citation-js joins their paragraphs into one. A blank line is marked as
+ *   TeX's `\par` before parsing (`markBibtexAnnotationParagraphs()`), and
+ *   every `\par` becomes a blank line again after it. An abstract is not an
+ *   annotation, so `abstract` stays CSL `abstract`.
  */
 
 // Babel and polyglossia language names, lowercased, mapped to BCP 47 tags.
@@ -270,6 +275,13 @@ export function normalizeBibtexCsl( csl, rawEntry ) {
 		}
 	}
 
+	if ( typeof normalized.annote === 'string' ) {
+		normalized.annote = normalized.annote.replace(
+			TEX_PARAGRAPH_REGEX,
+			'\n\n'
+		);
+	}
+
 	if ( ! normalized.URL ) {
 		const arxivUrl = getArxivUrlFromRawEntry( rawEntry );
 
@@ -404,6 +416,126 @@ function getBibtexFieldNames( value, open ) {
 	}
 
 	return fields;
+}
+
+const ANNOTATION_FIELD_NAMES = new Set( [ 'annote', 'annotation' ] );
+const TEX_PARAGRAPH_REGEX = /\s*\\par(?![a-z])\s*/giu;
+
+/**
+ * Mark the paragraph breaks in an entry's annotation as TeX's `\par`, which
+ * citation-js keeps, so normalizeBibtexCsl() can restore them.
+ *
+ * Only the `annote` and `annotation` fields change, from each name to the
+ * next field (or the end of the entry).
+ *
+ * @param {string} value BibTeX segment text.
+ * @return {string} The segment with annotation paragraph breaks marked.
+ */
+export function markBibtexAnnotationParagraphs( value ) {
+	const open = findBibtexEntryOpenBrace( value );
+
+	if ( open === -1 ) {
+		return value;
+	}
+
+	const fields = getBibtexFieldNames( value, open );
+	const end = findBibtexBlockEnd( value, open );
+	let result = value;
+
+	for ( let index = fields.length - 1; index >= 0; index-- ) {
+		if ( ! ANNOTATION_FIELD_NAMES.has( fields[ index ].name ) ) {
+			continue;
+		}
+
+		const stop =
+			index + 1 < fields.length ? fields[ index + 1 ].index : end;
+		const range = findBibtexFieldValueRange(
+			result,
+			fields[ index ].index,
+			stop
+		);
+
+		if ( ! range ) {
+			continue;
+		}
+
+		result =
+			result.slice( 0, range.start ) +
+			result
+				.slice( range.start, range.end )
+				.replace( /\r?\n[ \t]*\r?\n\s*/gu, ' \\par ' ) +
+			result.slice( range.end );
+	}
+
+	return result;
+}
+
+/**
+ * The inside of a field's braced or quoted value, so that only the value
+ * changes and the `=`, the comma, and any blank lines around the value stay
+ * as they are.
+ *
+ * @param {string} value BibTeX segment text.
+ * @param {number} from  Index of the field name.
+ * @param {number} limit Index where the next field (or the entry) ends.
+ * @return {{start: number, end: number}|null} Range inside the delimiters,
+ *     or null for a bare value (a number or macro, which has no paragraphs)
+ *     or a value that does not close before `limit`.
+ */
+export function findBibtexFieldValueRange( value, from, limit ) {
+	const equals = value.indexOf( '=', from );
+
+	if ( equals === -1 || equals >= limit ) {
+		return null;
+	}
+
+	let open = equals + 1;
+
+	while ( open < limit && /\s/u.test( value[ open ] ) ) {
+		open++;
+	}
+
+	const delimiter = value[ open ];
+
+	if ( delimiter === '"' ) {
+		for ( let index = open + 1, depth = 0; index < limit; index++ ) {
+			const char = value[ index ];
+
+			if ( char === '\\' ) {
+				index++;
+			} else if ( char === '{' ) {
+				depth++;
+			} else if ( char === '}' ) {
+				depth--;
+			} else if ( char === '"' && depth <= 0 ) {
+				return { start: open + 1, end: index };
+			}
+		}
+
+		return null;
+	}
+
+	if ( delimiter !== '{' ) {
+		return null;
+	}
+
+	for ( let index = open + 1, depth = 1; index < limit; index++ ) {
+		const char = value[ index ];
+
+		if ( char === '\\' ) {
+			index++;
+		} else if ( char === '{' ) {
+			depth++;
+		} else if ( char === '}' ) {
+			depth--;
+
+			if ( depth === 0 ) {
+				return { start: open + 1, end: index };
+			}
+		}
+	}
+
+	return null;
 }
 
 /**
