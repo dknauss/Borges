@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Full citation records in Yoast SEO's graph.** With Yoast SEO, the Article's (or WebPage's) schema.org `citation` now carries each cited work's whole record, the same one the bibliography's `ItemList` has: authors, DOI, ISBN, journal, volume, pages, publisher, and `sameAs` links. It used to carry only the type, `@id`, and title, and Yoast's schema aggregator and NLWeb (both the crawler and its WordPress plugin's MCP answers) read only Yoast's graph, so a local trace with nine works found 12 of 78 field values reached them; now all 78 do. Yoast's script grows accordingly (7.6 KB to about 29 KB on the test page). The `bibliography_builder_yoast_citation_records` filter returns to the short references when it returns false. Rank Math and the WebPage node Borges prints without an SEO plugin keep the short references.
+
 - **The bibliography heading is start-aligned.** It was centered by the block's stylesheet, which sat oddly above left-aligned entries and next to a theme's left-aligned section headings. The editor preview and the email output follow. A heading you had styled yourself is unaffected.
 
 - The Cite / Export RIS change alters saved markup for entries with a journal abbreviation, so the block gains a deprecation for the 1.18.0 shape (`tests/fixtures/deprecations/v18-deprecated.html`). Existing blocks stay valid.

@@ -267,8 +267,8 @@ final class JsonLdEnrichmentTest extends TestCase {
 			'post_content' => $this->content(),
 		);
 		bibliography_builder_test_set_parsed_blocks( $post->post_content, ( new WP_Block_Parser() )->parse( $post->post_content ) );
-		$refs = bibliography_builder_get_cited_work_refs( $post, self::PAGE );
-		$this->assertNotEmpty( $refs );
+		$works = bibliography_builder_get_cited_works( $post, self::PAGE );
+		$this->assertNotEmpty( $works );
 
 		$article = array( '@type' => 'Article' );
 		$context = (object) array(
@@ -278,13 +278,14 @@ final class JsonLdEnrichmentTest extends TestCase {
 
 		// No queried post: before 1.19.0 both pieces came back unchanged.
 		$this->assertSame( $article, bibliography_builder_yoast_schema_article( $article ) );
-		$this->assertSame( $refs, bibliography_builder_yoast_schema_article( $article, $context )['citation'] );
+		$this->assertSame( $works, bibliography_builder_yoast_schema_article( $article, $context )['citation'] );
 
 		// The WebPage piece takes them only when the page has no Article.
 		$webpage = array( '@type' => 'WebPage' );
 		$this->assertSame( $webpage, bibliography_builder_yoast_schema_webpage( $webpage, $context ) );
 		$context->has_article = false;
-		$this->assertSame( $refs, bibliography_builder_yoast_schema_webpage( $webpage, $context )['citation'] );
+		$this->assertSame( $works, bibliography_builder_yoast_schema_webpage( $webpage, $context )['citation'] );
+		$context->has_article = true;
 
 		// A context without a post, or with something else in it, falls back.
 		$this->assertNull( bibliography_builder_yoast_context_post( (object) array( 'post' => null ) ) );
@@ -304,6 +305,42 @@ final class JsonLdEnrichmentTest extends TestCase {
 		);
 		bibliography_builder_yoast_schema_article( $article, $context );
 		$this->assertSame( $post, $seen );
+	}
+
+	/**
+	 * Yoast's graph is all its schema aggregator (the feed NLWeb reads) and
+	 * `YoastSEO()->meta->for_post()` callers see, so each cited work goes into
+	 * it in full: the same description, under the same `@id`, as the
+	 * bibliography's `ItemList`. A filter switches back to short references.
+	 */
+	public function test_yoast_citations_carry_full_records(): void {
+		$post = (object) array(
+			'ID'           => 8,
+			'post_content' => $this->content(),
+		);
+		bibliography_builder_test_set_parsed_blocks( $post->post_content, ( new WP_Block_Parser() )->parse( $post->post_content ) );
+		$context = (object) array( 'post' => $post );
+		$listed  = array_column( $this->json_ld( $this->render( $this->fixture() ) )['itemListElement'], 'item' );
+		$cited   = bibliography_builder_yoast_schema_article( array( '@type' => 'Article' ), $context )['citation'];
+
+		// The list is in display order, the citations in stored order.
+		$by_id = static function ( array $works ): array {
+			return array_combine( array_column( $works, '@id' ), $works );
+		};
+		$this->assertEqualsCanonicalizing( array_keys( $by_id( $listed ) ), array_keys( $by_id( $cited ) ) );
+		foreach ( $by_id( $listed ) as $id => $work ) {
+			$this->assertSame( $work, $by_id( $cited )[ $id ] );
+		}
+		$this->assertArrayHasKey( 'author', $cited[0] );
+		$this->assertArrayNotHasKey( '@context', $cited[0] );
+
+		// Each record is a short reference trimmed down.
+		$refs = bibliography_builder_get_cited_work_refs( $post, self::PAGE );
+		$this->assertSame( array_column( $cited, '@id' ), array_column( $refs, '@id' ) );
+
+		add_filter( 'bibliography_builder_yoast_citation_records', '__return_false' );
+		$this->assertSame( $refs, bibliography_builder_yoast_schema_article( array( '@type' => 'Article' ), $context )['citation'] );
+		remove_all_filters( 'bibliography_builder_yoast_citation_records' );
 	}
 
 	private function enrich( array $csl ): array {
