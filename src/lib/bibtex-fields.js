@@ -447,19 +447,95 @@ export function markBibtexAnnotationParagraphs( value ) {
 			continue;
 		}
 
-		const start = fields[ index ].index;
 		const stop =
 			index + 1 < fields.length ? fields[ index + 1 ].index : end;
+		const range = findBibtexFieldValueRange(
+			result,
+			fields[ index ].index,
+			stop
+		);
+
+		if ( ! range ) {
+			continue;
+		}
 
 		result =
-			result.slice( 0, start ) +
+			result.slice( 0, range.start ) +
 			result
-				.slice( start, stop )
+				.slice( range.start, range.end )
 				.replace( /\r?\n[ \t]*\r?\n\s*/gu, ' \\par ' ) +
-			result.slice( stop );
+			result.slice( range.end );
 	}
 
 	return result;
+}
+
+/**
+ * The inside of a field's braced or quoted value, so that only the value
+ * changes and the `=`, the comma, and any blank lines around the value stay
+ * as they are.
+ *
+ * @param {string} value BibTeX segment text.
+ * @param {number} from  Index of the field name.
+ * @param {number} limit Index where the next field (or the entry) ends.
+ * @return {{start: number, end: number}|null} Range inside the delimiters,
+ *     or null for a bare value (a number or macro, which has no paragraphs)
+ *     or a value that does not close before `limit`.
+ */
+export function findBibtexFieldValueRange( value, from, limit ) {
+	const equals = value.indexOf( '=', from );
+
+	if ( equals === -1 || equals >= limit ) {
+		return null;
+	}
+
+	let open = equals + 1;
+
+	while ( open < limit && /\s/u.test( value[ open ] ) ) {
+		open++;
+	}
+
+	const delimiter = value[ open ];
+
+	if ( delimiter === '"' ) {
+		for ( let index = open + 1, depth = 0; index < limit; index++ ) {
+			const char = value[ index ];
+
+			if ( char === '\\' ) {
+				index++;
+			} else if ( char === '{' ) {
+				depth++;
+			} else if ( char === '}' ) {
+				depth--;
+			} else if ( char === '"' && depth <= 0 ) {
+				return { start: open + 1, end: index };
+			}
+		}
+
+		return null;
+	}
+
+	if ( delimiter !== '{' ) {
+		return null;
+	}
+
+	for ( let index = open + 1, depth = 1; index < limit; index++ ) {
+		const char = value[ index ];
+
+		if ( char === '\\' ) {
+			index++;
+		} else if ( char === '{' ) {
+			depth++;
+		} else if ( char === '}' ) {
+			depth--;
+
+			if ( depth === 0 ) {
+				return { start: open + 1, end: index };
+			}
+		}
+	}
+
+	return null;
 }
 
 /**

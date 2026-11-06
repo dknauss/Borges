@@ -221,6 +221,33 @@ describe( 'annotation imports (real citation-js)', () => {
 		);
 	} );
 
+	it( 'changes only the inside of the annotation value', () => {
+		// A blank line after the value, before the closing brace, and between
+		// `=` and the value stays as it is, so the entry stays valid BibTeX.
+		expect(
+			markBibtexAnnotationParagraphs(
+				'@book{k,\n  annote = {Note.},\n\n  year = {2001}\n}'
+			)
+		).toBe( '@book{k,\n  annote = {Note.},\n\n  year = {2001}\n}' );
+		expect(
+			markBibtexAnnotationParagraphs(
+				'@book{k,\n  annote =\n\n  {One.\n\nTwo.}\n\n}'
+			)
+		).toBe( '@book{k,\n  annote =\n\n  {One. \\par Two.}\n\n}' );
+		expect(
+			markBibtexAnnotationParagraphs(
+				'@book{k, annotation = "A {nested\n\n} one.\n\nB.",\n\n year = 1}'
+			)
+		).toBe(
+			'@book{k, annotation = "A {nested \\par } one. \\par B.",\n\n year = 1}'
+		);
+		expect(
+			markBibtexAnnotationParagraphs(
+				'@book{k, annote = macro,\n\n year = 1}'
+			)
+		).toBe( '@book{k, annote = macro,\n\n year = 1}' );
+	} );
+
 	it( 'maps BibTeX annote to annote, keeping paragraphs, and leaves abstract alone', async () => {
 		const csl = await parseSingle( `@book{ngai2005,
   author = {Ngai, Sianne},
