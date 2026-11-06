@@ -37,6 +37,59 @@ function bibliography_builder_citation_csl( $citation ) {
 		: array();
 }
 
+// ── Annotations: src/lib/annotation.js ──────────────────────────────────────
+
+/**
+ * `getAnnotationParagraphs()`: an entry's annotation (CSL `annote`) split
+ * into paragraphs on blank lines, each trimmed, empty ones dropped.
+ *
+ * @param array $csl CSL-JSON item.
+ * @return string[]
+ */
+function bibliography_builder_save_annotation_paragraphs( $csl ) {
+	$annote = bibliography_builder_csl_field( $csl, 'annote' );
+
+	if ( ! is_string( $annote ) ) {
+		return array();
+	}
+
+	$paragraphs = preg_split( '/\n[ \t]*\n/', (string) preg_replace( '/\r\n?/', "\n", $annote ) );
+
+	return array_values(
+		array_filter(
+			array_map( 'bibliography_builder_js_trim', false === $paragraphs ? array() : $paragraphs ),
+			static function ( string $paragraph ): bool {
+				return '' !== $paragraph;
+			}
+		)
+	);
+}
+
+/**
+ * `getRisAnnotation()`: the annotation as one RIS line's value, its
+ * paragraphs joined with a space.
+ *
+ * @param array $csl CSL-JSON item.
+ * @return string|null
+ */
+function bibliography_builder_save_ris_annotation( $csl ) {
+	$paragraphs = bibliography_builder_save_annotation_paragraphs( $csl );
+
+	if ( array() === $paragraphs ) {
+		return null;
+	}
+
+	return implode(
+		' ',
+		array_map(
+			static function ( string $paragraph ): string {
+				return (string) preg_replace( '/[' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ']+/u', ' ', $paragraph );
+			},
+			$paragraphs
+		)
+	);
+}
+
 // ── Display text: src/lib/formatting/index.js ────────────────────────────────
 
 /**

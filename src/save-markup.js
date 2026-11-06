@@ -17,6 +17,7 @@ import {
 import { cslToRisEntry, getCitationExportBasename } from './lib/export';
 import { sortCitations } from './lib/sorter';
 import { isStableBlockId } from './lib/stable-ids';
+import { getAnnotationParagraphs } from './lib/annotation';
 import {
 	getGroupIndex,
 	getGroupLabelTag,
@@ -83,13 +84,23 @@ function getCopyText( citation, inlineMarkup ) {
  * @param {Object}  citation            Citation record.
  * @param {boolean} inlineMarkup        Whether display text may carry `<i>`/`<em>`.
  * @param {boolean} journalAbbreviation Whether the RIS carries a `J2` line.
+ * @param {boolean} annotation          Whether the RIS carries an `N1` line
+ *                                      with the annotation (shown ones only).
  * @return {Object} Attributes, in serialized order.
  */
-function getCiteExportData( citation, inlineMarkup, journalAbbreviation ) {
+function getCiteExportData(
+	citation,
+	inlineMarkup,
+	journalAbbreviation,
+	annotation = false
+) {
 	return {
 		'data-cite-text': getCopyText( citation, inlineMarkup ),
 		'data-cite-filename': getCitationExportBasename( citation.csl ),
-		'data-cite-ris': cslToRisEntry( citation.csl, { journalAbbreviation } ),
+		'data-cite-ris': cslToRisEntry( citation.csl, {
+			journalAbbreviation,
+			annotation,
+		} ),
 		'data-cite-csl-json': `${ JSON.stringify( citation.csl, null, 2 ) }\n`,
 		'data-cite-bibtex': citation.exportBibtex || undefined,
 		'data-cite-biblatex': citation.exportBiblatex || undefined,
@@ -144,6 +155,7 @@ export function renderBibliographySave(
 		jsonLdItemList = false,
 		citationLinkRel = 'nofollow noopener noreferrer',
 		headingLabelledBy = false,
+		annotations = false,
 		labels: labelOverrides = null,
 	} = {}
 ) {
@@ -155,6 +167,7 @@ export function renderBibliographySave(
 		outputJsonLd = true,
 		outputCoins = false,
 		outputCslJson = false,
+		showAnnotations = false,
 	} = attributes;
 
 	if ( ! citations || citations.length === 0 ) {
@@ -162,6 +175,11 @@ export function renderBibliographySave(
 	}
 
 	const labels = labelOverrides || getLocalizedSaveLabels();
+	// Annotations (CSL `annote`) print only when the block asks for them, so
+	// a block saved before they existed, or with the setting off, saves
+	// exactly what it did. They stay out of the copied citation text, COinS,
+	// and JSON-LD; CSL-JSON carries `annote` as it always has.
+	const printAnnotations = annotations && Boolean( showAnnotations );
 	const blockProps = useBlockProps.save();
 	const headingId =
 		headingLabelledBy && headingText
@@ -252,7 +270,8 @@ export function renderBibliographySave(
 					? getCiteExportData(
 							citation,
 							inlineMarkup,
-							risJournalAbbreviation
+							risJournalAbbreviation,
+							printAnnotations
 						)
 					: {} ) }
 			>
@@ -310,6 +329,18 @@ export function renderBibliographySave(
 						);
 					} ) }
 				</EntryTag>
+				{ printAnnotations
+					? getAnnotationParagraphs( citation.csl ).map(
+							( paragraph, index ) => (
+								<p
+									key={ `${ citation.id }-annotation-${ index }` }
+									className="bibliography-builder-annotation"
+								>
+									{ paragraph }
+								</p>
+							)
+						)
+					: null }
 				{ outputCoins ? (
 					<span
 						className="Z3988"

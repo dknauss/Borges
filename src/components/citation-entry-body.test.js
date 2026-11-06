@@ -75,6 +75,7 @@ function renderEntry( overrides = {} ) {
 			handleStructuredEditStart={ jest.fn() }
 			handleStructuredFieldChange={ jest.fn() }
 			onEditTextChange={ jest.fn() }
+			showAnnotations={ overrides.showAnnotations }
 			structuredEditingId={ null }
 			structuredFields={ {} }
 		/>
@@ -97,5 +98,30 @@ describe( 'CitationEntryBody', () => {
 		).toBe( 'SPAN' );
 		expect( trigger ).toHaveTextContent( 'Alpha citation' );
 		expect( trigger ).toHaveTextContent( 'Review before publishing.' );
+	} );
+
+	it( 'shows annotation paragraphs only when annotations are shown', () => {
+		const annotated = {
+			citation: {
+				csl: { title: 'Alpha citation', annote: 'First.\n\nSecond.' },
+			},
+		};
+
+		renderEntry( annotated );
+		expect(
+			document.querySelectorAll( '.bibliography-builder-annotation' )
+		).toHaveLength( 0 );
+		document.body.innerHTML = '';
+
+		renderEntry( { ...annotated, showAnnotations: true } );
+		const paragraphs = document.querySelectorAll(
+			'.bibliography-builder-annotation'
+		);
+
+		expect( [ ...paragraphs ].map( ( node ) => node.textContent ) ).toEqual(
+			[ 'First.', 'Second.' ]
+		);
+		// Inside the row's button, so phrasing content only.
+		expect( paragraphs[ 0 ].tagName ).toBe( 'SPAN' );
 	} );
 } );

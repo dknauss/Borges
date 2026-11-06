@@ -173,6 +173,13 @@ foreach ( $borges_demo['examples'] as $example ) {
 
 	$borges_demo_examples .= $borges_demo_heading( $example['title'], 3 );
 	$borges_demo_examples .= $borges_demo_paragraph( $example['description'] );
+
+	// Paragraphs that cite the example's entries with the "Cite" format, as
+	// it saves them: links to `#ref-{bibliographyId}-{n}`, the IDs given above.
+	foreach ( isset( $example['prose'] ) ? $example['prose'] : array() as $prose ) {
+		$borges_demo_examples .= $borges_demo_paragraph( $prose );
+	}
+
 	$borges_demo_examples .= $block;
 }
 

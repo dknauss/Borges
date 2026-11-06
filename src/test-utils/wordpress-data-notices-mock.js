@@ -13,7 +13,9 @@ export function createWordpressDataNoticesMock() {
 		return () => listeners.delete( listener );
 	};
 
+	// Block-editor reads see an empty post: no other blocks.
 	const getSelectApi = () => ( {
+		getBlocks: () => [],
 		getNotices: ( context ) =>
 			notices.filter( ( notice ) => notice.context === context ),
 	} );
@@ -70,7 +72,10 @@ export function createWordpressDataNoticesMock() {
 		},
 		// Block-editor reads (stable IDs) see an empty editor: no other blocks.
 		useRegistry: () => ( {
-			select: () => ( { getClientIdsWithDescendants: () => [] } ),
+			select: () => ( {
+				getBlocks: () => [],
+				getClientIdsWithDescendants: () => [],
+			} ),
 			dispatch: () => ( {} ),
 		} ),
 		__unstableResetNotices: () => {

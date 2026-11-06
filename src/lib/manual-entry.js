@@ -43,6 +43,7 @@ export const DEFAULT_MANUAL_ENTRY_FIELDS = {
 	doi: '',
 	url: '',
 	keepTitleCase: false,
+	annotation: '',
 };
 
 function normalizeFieldValue( value ) {
@@ -224,6 +225,11 @@ export function buildManualCsl( fields ) {
 		csl.issued = {
 			'date-parts': [ [ Number( normalizeFieldValue( fields.year ) ) ] ],
 		};
+	}
+
+	// CSL `annote`; validateAndSanitizeCsl() cleans it or drops it.
+	if ( typeof fields.annotation === 'string' && fields.annotation.trim() ) {
+		csl.annote = fields.annotation;
 	}
 
 	return validateAndSanitizeCsl(

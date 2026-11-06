@@ -2,7 +2,7 @@
  * Editor component for the Bibliography block.
  */
 
-import { __, sprintf } from '@wordpress/i18n';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import {
 	useBlockProps,
 	InspectorControls,
@@ -27,7 +27,11 @@ import {
 	useEffect,
 	useMemo,
 } from '@wordpress/element';
+import { useDispatch } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
 import { EditorCanvasNotices } from './components/editor-canvas-notices';
+import { CitationUpdatePanel } from './components/citation-update-panel';
+import { useCitationUpdates } from './hooks/use-citation-updates';
 import { CitationEntryBody } from './components/citation-entry-body';
 import { useBlockNotices } from './hooks/use-block-notices';
 import { useCitationEditorState } from './hooks/use-citation-editor-state';
@@ -97,6 +101,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		outputCoins = false,
 		outputCslJson = false,
 		outputCiteExport = false,
+		showAnnotations = false,
 	} = attributes;
 	const selectableStyles = useMemo( () => getSelectableStyles(), [] );
 	const blockProps = useBlockProps();
@@ -193,6 +198,56 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		citationsRef,
 		queueFocus,
 	} );
+
+	const { getPlan, updateCitations } = useCitationUpdates( clientId );
+	const { createNotice } = useDispatch( noticesStore );
+
+	// After a style change, offer to bring the post's citations along.
+	const handleStyleSelect = useCallback(
+		async ( nextStyle ) => {
+			await handleCitationStyleChange( nextStyle );
+
+			const { counts } = getPlan();
+
+			if ( ! counts.stale ) {
+				return;
+			}
+
+			createNotice(
+				'info',
+				sprintf(
+					/* translators: %d: number of citations. */
+					_n(
+						'Citation style changed. %d citation in this post still uses the old style.',
+						'Citation style changed. %d citations in this post still use the old style.',
+						counts.stale,
+						'borges-bibliography-builder'
+					),
+					counts.stale
+				),
+				{
+					id: `borges-citation-style-${ clientId }`,
+					type: 'snackbar',
+					actions: [
+						{
+							label: __(
+								'Update citations',
+								'borges-bibliography-builder'
+							),
+							onClick: () => updateCitations( false ),
+						},
+					],
+				}
+			);
+		},
+		[
+			clientId,
+			createNotice,
+			getPlan,
+			handleCitationStyleChange,
+			updateCitations,
+		]
+	);
 
 	useEffect( () => {
 		citationsRef.current = citations;
@@ -624,6 +679,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				handleStructuredFieldChange={ handleStructuredFieldChange }
 				isNumericFamily={ isNumericFamily }
 				romanTitles={ romanTitles }
+				showAnnotations={ showAnnotations }
 				canMoveUp={ index > 0 }
 				canMoveDown={ index < sortedCitations.length - 1 }
 				onMoveUp={ () =>
@@ -702,7 +758,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						) }
 						value={ citationStyle }
 						options={ selectableStyles }
-						onChange={ handleCitationStyleChange }
+						onChange={ handleStyleSelect }
 						help={
 							isNumericFamily
 								? __(
@@ -770,6 +826,20 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					/>
 					<ToggleControl
 						label={ __(
+							'Show annotations',
+							'borges-bibliography-builder'
+						) }
+						checked={ showAnnotations }
+						onChange={ ( value ) =>
+							setAttributes( { showAnnotations: value } )
+						}
+						help={ __(
+							'Print each entry’s annotation under it, for an annotated bibliography. Add annotations with the Edit fields button.',
+							'borges-bibliography-builder'
+						) }
+					/>
+					<ToggleControl
+						label={ __(
 							'Output JSON-LD',
 							'borges-bibliography-builder'
 						) }
@@ -825,6 +895,10 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						) }
 					/>
 				</PanelBody>
+				<CitationUpdatePanel
+					clientId={ clientId }
+					onUpdate={ updateCitations }
+				/>
 				<PanelBody
 					title={ __( 'Exports', 'borges-bibliography-builder' ) }
 				>

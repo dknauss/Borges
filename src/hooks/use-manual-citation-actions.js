@@ -11,6 +11,7 @@ import {
 import { sortCitations } from '../lib/sorter';
 import { computeExportStrings } from './compute-export-strings';
 import { createCitationId } from '../lib/citation-id';
+import { ANNOTATION_FIELD_DEFINITION } from '../lib/annotation';
 import {
 	MAX_CITATIONS_PER_BIBLIOGRAPHY,
 	getBibliographyLimitReachedMessage,
@@ -115,6 +116,7 @@ export function useManualCitationActions( {
 				),
 				control: 'checkbox',
 			},
+			ANNOTATION_FIELD_DEFINITION,
 		],
 		[]
 	);
