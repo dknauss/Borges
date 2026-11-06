@@ -1,0 +1,57 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"meta": {
+		"title": "Borges preview: citations, annotations and h-cite",
+		"description": "Unmerged Borges PRs #256, #257 and #258 combined, with a demo post.",
+		"author": "danknauss",
+		"categories": [
+			"plugin"
+		]
+	},
+	"landingPage": "/?p=1000",
+	"preferredVersions": {
+		"php": "8.3",
+		"wp": "latest"
+	},
+	"phpExtensionBundles": [
+		"kitchen-sink"
+	],
+	"features": {
+		"networking": true,
+		"intl": true
+	},
+	"login": true,
+	"steps": [
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/dknauss/Borges/playground-preview/borges-bibliography-builder.zip"
+			},
+			"options": {
+				"activate": true,
+				"targetFolderName": "borges-bibliography-builder"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/mu-plugins/demo-gloss.php",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/dknauss/Borges/playground-preview/gloss.php"
+			}
+		},
+		{
+			"step": "writeFile",
+			"path": "/tmp/make-post.php",
+			"data": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/dknauss/Borges/playground-preview/make-post.php"
+			}
+		},
+		{
+			"step": "runPHP",
+			"code": "<?php require '/tmp/make-post.php';"
+		}
+	]
+}
