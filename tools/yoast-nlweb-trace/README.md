@@ -166,15 +166,36 @@ needs PHP 8.x with `pdo_sqlite`, Python 3.10+, git, and composer:
 ```sh
 export TRACE_STACK=/tmp/borges-trace          # any empty folder
 tools/yoast-nlweb-trace/setup.sh             # clones, installs, serves :8890 and :8891
-tools/yoast-nlweb-trace/run-variants.sh "$TRACE_STACK/out"   # as-is, embed, pieces
-python3 tools/yoast-nlweb-trace/probe.py "$TRACE_STACK/out"/*/
+tools/yoast-nlweb-trace/run-variants.sh "$TRACE_STACK/out/main" as-is   # today's Borges
+python3 tools/yoast-nlweb-trace/probe.py "$TRACE_STACK/out/main"/*/
+```
+
+`setup.sh` links this checkout into the site, so the run measures whatever
+Borges code is checked out. That baseline is the `main-as-is` row of the
+tables. The `pr-252-*` rows need the context fix from #252, because without
+it Borges's Yoast filters find no citations in the graph NLWeb's plugin asks
+for over REST, and the `embed` prototype has nothing to fill. Run them on a
+separate branch with #252 applied (its head when these results were taken,
+`78947a5`, or any later commit of `claude/project-thread-6zozsp-yoast-context`):
+
+```sh
+git switch -c trace-252 && git merge 78947a5
+tools/yoast-nlweb-trace/run-variants.sh "$TRACE_STACK/out/pr-252"   # as-is, embed, pieces
+```
+
+`measure.py` can also recompute the committed tables without the stack:
+
+```sh
+python3 tools/yoast-nlweb-trace/measure.py tools/markup-value/corpus.json \
+  http://localhost:8890/what-a-bibliography-tells-machines/ \
+  tools/yoast-nlweb-trace/results/2026-11-04/*/
 ```
 
 `capture.sh OUT_DIR` captures one state of the site. `measure.py` and
 `probe.py` read captures. `variant.php` sets the `borges_trace_variant`
-option that `trace-variants.php` reads (`''`, `embed`, or `pieces`). For the
-pre-#252 baseline, check out an older `includes/json-ld-enrichment.php` and
-run `run-variants.sh OUT as-is`.
+option that `trace-variants.php` reads (`''`, `embed`, or `pieces`). It reads either
+the full `1-page.html` that `capture.sh` saves or the `1-page-json-ld.json`
+kept in `results/`.
 
 Two things to know about the setup: Yoast-dist ships without an autoloader,
 so `setup.sh` makes one with `composer dump-autoload --no-scripts` (Yoast's

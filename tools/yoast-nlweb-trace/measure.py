@@ -154,11 +154,21 @@ def prompt_reach(prompt, stage5):
 
 
 def stage_roots(run):
-    page = open(os.path.join(run, '1-page.html'), encoding='utf-8').read()
-    scripts = re.findall(r'<script type="application/ld\+json"([^>]*)>(.*?)</script>', page, re.S)
+    page_file = os.path.join(run, '1-page.html')
+    if os.path.exists(page_file):
+        page = open(page_file, encoding='utf-8').read()
+        scripts = re.findall(r'<script type="application/ld\+json"([^>]*)>(.*?)</script>', page, re.S)
+        page_roots = [json.loads(s) for _, s in scripts]
+        yoast_roots = [json.loads(s) for a, s in scripts if 'yoast-schema-graph' in a]
+    else:
+        # Committed runs keep only the page's JSON-LD blocks, in page order
+        # (results/README note). Yoast prints its graph as the one block with
+        # an @graph; Borges's ItemList and WebPage blocks have none.
+        page_roots = json.load(open(os.path.join(run, '1-page-json-ld.json'), encoding='utf-8'))
+        yoast_roots = [r for r in page_roots if isinstance(r, dict) and '@graph' in r]
     stages = {
-        '1 page HTML (all JSON-LD)': [json.loads(s) for _, s in scripts],
-        '2 Yoast graph only': [json.loads(s) for a, s in scripts if 'yoast-schema-graph' in a],
+        '1 page HTML (all JSON-LD)': page_roots,
+        '2 Yoast graph only': yoast_roots,
         '3 Yoast aggregator feed': [json.loads(l) for l in open(os.path.join(run, '3-yoast-aggregator.ndjson')) if l.strip()],
         '4a NLWeb index, crawled page': [d['schema_json'] for d in json.load(open(os.path.join(run, '4a-nlweb-crawl-docs.json')))],
         '4b NLWeb index, aggregator feed': [d['schema_json'] for d in json.load(open(os.path.join(run, '4b-nlweb-aggregator-docs.json')))],

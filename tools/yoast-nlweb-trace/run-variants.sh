@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Captures and measures the checked-out Borges as it is ("as-is") and with
 # the two full-record prototypes from trace-variants.php, into OUT_DIR.
-# For the pre-#252 baseline, check out an older commit and pass "as-is" only.
+# The embed and pieces prototypes need #252's context fix checked out (README, "Running it").
 # Usage: TRACE_STACK=… run-variants.sh OUT_DIR [variant ...]
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
