@@ -68,6 +68,10 @@
 			"type": "boolean",
 			"default": false
 		},
+		"showAnnotations": {
+			"type": "boolean",
+			"default": false
+		},
 		"bibliographyId": {
 			"type": "string",
 			"default": ""

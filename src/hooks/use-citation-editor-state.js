@@ -12,6 +12,7 @@ import {
 	validateIdentifierFields,
 } from '../lib/manual-entry';
 import { keepsTitleCase, setKeepTitleCase } from '../lib/keep-title-case';
+import { getAnnotationText, setAnnotation } from '../lib/annotation';
 import { findDuplicateCitation } from '../lib/deduplicate';
 import { sortCitations } from '../lib/sorter';
 import {
@@ -290,6 +291,7 @@ export function useCitationEditorState( {
 				doi: entry.csl.DOI || '',
 				url: entry.csl.URL || '',
 				keepTitleCase: keepsTitleCase( entry.csl ),
+				annotation: getAnnotationText( entry.csl ),
 			};
 
 			structuredEditingIdRef.current = id;
@@ -499,10 +501,21 @@ export function useCitationEditorState( {
 			);
 		}
 
+		// The annotation is the compiler's note, not part of the citation: a
+		// changed one is stored, but keeps the display line, the warnings, and
+		// the duplicate check as they were.
+		if ( isEdited( 'annotation' ) ) {
+			updatedCsl = setAnnotation(
+				updatedCsl,
+				structuredFields.annotation
+			);
+		}
+
 		// Saving unchanged fields keeps a hand-edited display line; saving an
 		// edit reformats the entry from its fields, replacing that line.
-		const fieldsChanged =
-			Object.keys( structuredFields ).some( needsWrite );
+		const fieldsChanged = Object.keys( structuredFields )
+			.filter( ( field ) => field !== 'annotation' )
+			.some( needsWrite );
 
 		// No bibliography holds two copies of a work: an edit that would make
 		// this entry match another is refused, and the form stays open.

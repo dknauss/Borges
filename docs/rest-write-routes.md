@@ -109,6 +109,7 @@ The `changes` object depends on the route:
 | `outputCoins` | boolean | `false` | Output COinS |
 | `outputCslJson` | boolean | `false` | Output CSL-JSON |
 | `outputCiteExport` | boolean | `false` | Per-entry Cite / Export |
+| `showAnnotations` | boolean | `false` | Show annotations |
 
 Citations are not touched. An unknown setting or a wrong type gets `400`. A setting sent with its default value is left out of the block comment, as the editor leaves it out. `citationStyle` is refused with `400` (`bibliography_builder_style_needs_reformat`), because changing the style means reformatting every entry. Use `…/reformat` for that.
 

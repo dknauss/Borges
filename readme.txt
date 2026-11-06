@@ -21,11 +21,15 @@ The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibT
 
 **Nine citation styles.** Choose from Chicago Notes-Bibliography, Chicago Author-Date, APA 7, MLA 9, Harvard, Vancouver, IEEE, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) — all with automatic sorting per style rules, following each manual's current edition. Each style is a [Citation Style Language](https://citationstyles.org/) (CSL) file written for Borges and rendered by the citeproc-php engine.
 
+**In-text and margin citations.** Choose Cite in any paragraph to link a short citation, such as "(Illich 1973, 12)" or a Chicago short note, to its entry in a bibliography on the same post. It works in running text and in a theme's margin-note paragraph style, and it is a plain link, so readers need no JavaScript. When you change the bibliography's style, Update citations rewrites them to match, keeping each page number and leaving citations you reworded alone.
+
 **Portable.** Static HTML output survives plugin deactivation. No shortcodes. No database tables.
 
 **Accessible by default.** Semantic list markup, keyboard-operable editing and entry reordering (Alt+Arrow for numeric styles), visible focus, and optional Block Accessibility Checks integration (requires that plugin at version 4.0 or later) help your bibliographies meet accessibility expectations.
 
 **Reference-manager friendly.** Export and reuse your bibliography in common research workflows. Borges supports CSL-JSON, BibTeX, BibLaTeX, RIS, DOI links, JSON-LD, and optional COinS metadata for compatibility with tools such as Zotero, Mendeley, EndNote, JabRef, BibDesk, and other citation managers.
+
+**Annotated bibliographies.** Add your own note to any entry, in as many paragraphs as you need, and turn on "Show annotations" to print each note under its entry. Notes are stored with the citation data (CSL `annote`), so they travel with CSL-JSON, BibTeX, BibLaTeX, and RIS. Off by default; existing bibliographies are unchanged.
 
 **Reader-facing cite & export.** Optionally add a per-entry Cite / Export panel to the published bibliography: a disclosure under each entry with a copy button and one-click downloads in RIS, CSL-JSON, BibTeX, and BibLaTeX. The panel is built on the page, so newsletters and feeds carry a clean bibliography without it. Off by default; enable it per block.
 
@@ -120,7 +124,7 @@ Version 4.0 replaced the plugin's registration API, so the integration requires 
 
 Borges is a static-output block. Formatted bibliography HTML, JSON-LD, and COinS are baked into your post content when you save, so the citeproc formatting engine and the DOI/PubMed lookups run **only in the editor** — never on the front end.
 
-As a page renders, a light filter adds what the saved JSON-LD cannot know, such as the page's own URL for each entry's identifier, and extra identifiers and fields from the stored citations. It makes no database queries or remote requests.
+As a page renders, a light filter adds what the saved JSON-LD cannot know, such as the page's own URL for each entry's identifier, and extra identifiers and fields from the stored citations. It also marks each entry as an `h-cite` microformat for IndieWeb tools. It makes no database queries or remote requests.
 
 What this means for a published page:
 
