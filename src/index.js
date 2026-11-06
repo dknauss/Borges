@@ -4,6 +4,7 @@ import './style.scss';
 import Edit from './edit';
 import save from './save';
 import { deprecated } from './deprecated';
+import { registerCitationFormat } from './formats/citation';
 import metadata from '../block.json';
 import {
 	DEFAULT_CITATION_STYLE,
@@ -25,3 +26,5 @@ registerBlockType( metadata.name, {
 		},
 	],
 } );
+
+registerCitationFormat();

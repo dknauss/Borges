@@ -168,3 +168,28 @@ details.bibliography-builder-cite-export
 	white-space: nowrap;
 	border: 0;
 }
+
+/*
+ * In-text and margin citations (the "Cite" format, src/formats/citation.js).
+ * They live in paragraphs, not in the bibliography block, so these rules are
+ * not scoped to it. A dotted underline marks a citation as a link without
+ * relying on colour, and long citations wrap inside a narrow margin note.
+ */
+.bibliography-builder-citation {
+	text-decoration-line: underline;
+	text-decoration-style: dotted;
+	text-decoration-thickness: from-font;
+	text-underline-offset: 0.2em;
+	overflow-wrap: anywhere;
+}
+
+// The entry a citation jumped to: an outline, not a colour change, and room
+// above it for a sticky header.
+.wp-block-bibliography-builder-bibliography .bibliography-builder-list > li {
+	scroll-margin-top: 4em;
+}
+
+.wp-block-bibliography-builder-bibliography .bibliography-builder-list > li:target {
+	outline: 2px dotted currentcolor;
+	outline-offset: 0.25em;
+}
