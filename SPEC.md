@@ -114,6 +114,10 @@ OSCOLA bibliographies that hold primary sources are saved as OSCOLA 5's tables: 
 		"type": "boolean",
 		"default": false
 	},
+	"showAnnotations": {
+		"type": "boolean",
+		"default": false
+	},
 	"citations": {
 		"type": "array",
 		"default": [],
@@ -212,6 +216,7 @@ Three buttons in the block toolbar control the add-citation form:
 -   **Citation Style** — selectable. The default is **Chicago Notes-Bibliography**.
 -   **Visible Heading** — optional text shown above the bibliography on the front end only when at least one citation exists.
 -   **Heading Level** — the element the visible heading is printed as: a paragraph (the default) or a heading, level 2 to 6.
+-   **Show annotations** — prints each entry's annotation (CSL `annote`) under it; off by default. See "Annotated Bibliographies".
 -   **Metadata output controls** — JSON-LD on by default, with optional COinS and CSL-JSON toggles.
 -   **Entry count** — e.g., "Settings (12 sources)"
 -   **Exports** — Copy bibliography, Download CSL-JSON, Download BibTeX, Download RIS.
@@ -376,6 +381,10 @@ The COinS `title` attribute encodes:
 -   `rft.date` (publication date)
 -   `rft.volume`, `rft.issue`, `rft.spage`, `rft.epage`
 -   `rft_id` (DOI URL)
+
+### 6. Microformats (h-cite)
+
+Added as the block renders, not by `save()` (`includes/microformats.php`), so stored posts are unchanged and need no deprecation. Each entry `<li id="ref-…">` gets the class `h-cite`, and inside it, before the visible text, an empty hidden span (`bibliography-builder-microformats`) holds `<data>` elements built from the stored CSL-JSON: `p-name` (title), one `p-author h-card` per author (`p-name`, `p-given-name`, `p-family-name`, and a `u-url` for an ORCID iD; an organization gets `p-name` and `p-org`), `dt-published` (only the date parts the record has: `2018`, `2018-05`, or `2018-05-14`), `u-uid u-url` (the DOI as `https://doi.org/…`), `u-url` (the URL), `p-publication` (container title), and `p-publisher`. The visible text is not restructured, since a style decides where each field falls and some fields have no element to mark. Entries are matched to citations by the ID in their anchor, so the Cite / Export panel is never marked, and an entry already marked `h-cite` is left alone. Feeds and email leave the data out. The `bibliography_builder_enrich_microformats` filter turns it off. An inline or margin citation can later be an `h-cite` that points at the entry's `#ref-…`.
 
 ---
 
@@ -1041,17 +1050,26 @@ The inline and margin citation format shipped (see [In-Text and Margin Citations
 -   **Editor navigation.** Selecting a citation in the editor could scroll to and highlight its entry in the bibliography block.
 -   **Keeping citations current automatically.** **Update citations** (see [Updating citations](#updating-citations)) is run by hand or from the notice after a style change. It could also be offered after an entry is edited or a numeric list is reordered, and the editor could mark a citation whose `ref-…` target is gone.
 -   **Fuller short forms.** Year suffixes (2020a) in author-date styles, APA's "&" and comma ("(Smith & Jones, 2020)"), a locator label ("p.") per style, and ibid.-free consecutive-note handling.
--   **Microformats.** Mark each entry `h-cite` (with `p-name`, `p-author`, `dt-published`, `u-url`/`u-uid` for DOI and URL) so IndieWeb parsers read the bibliography as citations, and an inline or margin citation can be an `h-cite` that points at it. Borges already emits JSON-LD and COinS from the same CSL-JSON; this is a third view of it, and the entry markup belongs here, not in themes (Ollie Child Kit's `microformats` module leaves bibliography entries to Borges).
 
-### Future: Annotated Bibliographies
+### Annotated Bibliographies (implemented)
 
-An annotated bibliography gives each entry a short note of the compiler's own: what the work argues, why it matters, how it was used. It is a long-standing scholarly and teaching genre, and the common hand-built alternative in WordPress (a "reading list" pattern of paragraphs per book) has no metadata, sorting, or export. Free-text input that carries an annotation after the citation is currently unsupported (`docs/free-text-unsupported-samples.md`, "Annotated bibliography entry").
+An annotated bibliography gives each entry a short note of the compiler's own: what the work argues, why it matters, how it was used. It is a long-standing scholarly and teaching genre, and the common hand-built alternative in WordPress (a "reading list" pattern of paragraphs per book) has no metadata, sorting, or export.
 
--   **Storage:** CSL-JSON's standard `annote` variable ("reader's notes about the item content", CSL 1.0.2 Appendix IV), so annotations round-trip through CSL-JSON export and reference managers that map it (Zotero's "Extra"/notes mapping to be checked). Plain text with paragraph breaks; no HTML, consistent with the rule against storing formatter HTML.
--   **Editor:** an "Annotation" textarea in the per-entry field editor, and a block setting "Show annotations" (off by default, so existing bibliographies render unchanged).
--   **Output:** the annotation as a `<p class="…__annotation">` inside the entry's `<li>`, after the formatted citation, indented under it as style manuals show it; excluded from COinS, from the copied citation text, and from JSON-LD `citation` items unless a schema.org mapping is chosen (`description` is the likely candidate; decide).
--   **Import:** BibTeX `annote` and RIS `N1`/`AB` mapping to be decided per source (an abstract is not an annotation); free-text input may split a trailing sentence into `annote` only when the user confirms.
--   **Exports:** CSL-JSON keeps `annote`; BibTeX/BibLaTeX write `annote`/`annotation`; RIS writes `N1`.
+-   **Storage:** CSL-JSON's standard `annote` variable ("reader's notes about the item content", CSL 1.0.2 Appendix IV), so annotations round-trip through CSL-JSON. Plain text: paragraphs are separated by one blank line (`\n\n`), and it never holds HTML. Both sanitizers (`sanitizeAnnote()` in `src/lib/csl-sanitize.js`, `bibliography_builder_sanitize_csl_annote()` in `includes/csl-sanitize.php`) strip markup, normalize line endings and blank lines, trim, and drop a value that is not a string or ends up empty, rather than refusing the item. Helpers live in `src/lib/annotation.js`.
+-   **Editor:** an "Annotation" textarea in the per-entry field editor and in manual entry. Changing only the annotation stores it without resetting a hand-edited display line or parse warnings, and without the duplicate check. A block setting, **Show annotations** (`showAnnotations`, boolean, default `false`), prints them; the editor list previews them under each entry while it is on.
+-   **Output:** when `showAnnotations` is on, each paragraph is a `<p class="bibliography-builder-annotation">` inside the entry's `<li>`, after the entry text and before the COinS span, indented by `style.scss` to line up with the entry's wrapped lines. The per-entry Cite / Export RIS gains an `N1` line (paragraphs joined by a space). Annotations stay out of the copied citation text, COinS, and JSON-LD (schema.org `description` is the likely mapping if one is chosen; it would belong in the render-time enrichment, since changing `save()`'s JSON-LD would need a deprecation). The PHP port (`bibliography_builder_save_annotation_paragraphs()`, `…_save_ris_annotation()`) matches the JS; the `annotations-*` save-parity fixtures pin both. Email and feed output keep the annotations with an inline indent.
+-   **Existing blocks:** with the setting off (or absent), or with no annotations, `save()` writes exactly what 1.18.0 wrote, so no deprecation is needed. The `annotations-hidden` and `annotations-off` save-parity fixtures were committed from the 1.18.0 `save()` and still match. Entries that already carried `annote` (BibTeX imports did, through citation-js) keep it in their CSL-JSON data, as before.
+-   **Hidden is not private:** an annotation is part of the entry's data, so the CSL-JSON and BibTeX/BibLaTeX exports (and the CSL-JSON script and Cite / Export data, when those are on) carry it even while annotations are hidden. The field's help text says so.
+-   **Import:** BibTeX `annote` and BibLaTeX `annotation` become `annote`, with paragraph breaks kept (`markBibtexAnnotationParagraphs()` marks blank lines as `\par` before citation-js joins them); pasted CSL-JSON keeps `annote`. RIS `N1` stays CSL `note` (citation-js already maps it there), and abstracts (`AB`, `abstract`) stay `abstract`: an abstract is not an annotation.
+-   **Exports:** CSL-JSON keeps `annote`; BibTeX writes `annote`, BibLaTeX `annotation` (both through citation-js); the RIS download writes `N1`.
+-   **Read model:** `GET …/bibliographies` and the abilities report `showAnnotations`; CSL-JSON output keeps `annote`. The plain-text format leaves annotations out, matching the editor's "Copy bibliography". `PATCH …/bibliographies/{ref}` accepts `showAnnotations`, and `wp borges list --fields=` can show it.
+
+Still open:
+
+-   Free-text input that carries an annotation after the citation is unsupported (`docs/free-text-unsupported-samples.md`, "Annotated bibliography entry"); a split into `annote` should happen only when the user confirms.
+-   Whether hidden annotations should be left out of published CSL-JSON and Cite / Export data (changing that for blocks that already carry `annote` would need a deprecation).
+-   A schema.org mapping (`description`) for JSON-LD, and whether RIS `N1` should import as an annotation.
+-   How Zotero, Mendeley, and EndNote import `annote`, `annotation`, and `N1` from Borges' exports is not yet checked.
 
 ### Future: Google Scholar / Highwire Companion Plugin
 

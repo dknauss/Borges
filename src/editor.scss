@@ -182,6 +182,14 @@
 		text-indent: -2em;
 	}
 
+	// An entry's annotation, shown under it when "Show annotations" is on.
+	.bibliography-builder-annotation {
+		display: block;
+		margin: 0.4em 0 0;
+		padding-inline-start: 2em;
+		text-indent: 0;
+	}
+
 	.bibliography-builder-entry-warning {
 		display: block;
 		margin: 0.35rem 0 0;
@@ -277,7 +285,8 @@
 		}
 
 		select,
-		input {
+		input,
+		textarea {
 			width: 100%;
 			max-width: 100%;
 			min-width: 0;
@@ -310,6 +319,10 @@
 			margin: 0.25em 0 0;
 			font-size: 0.85em;
 			color: #50575e;
+		}
+
+		.bibliography-builder-structured-textarea textarea {
+			resize: vertical;
 		}
 	}
 

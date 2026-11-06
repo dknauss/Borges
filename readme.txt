@@ -29,6 +29,8 @@ The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibT
 
 **Reference-manager friendly.** Export and reuse your bibliography in common research workflows. Borges supports CSL-JSON, BibTeX, BibLaTeX, RIS, DOI links, JSON-LD, and optional COinS metadata for compatibility with tools such as Zotero, Mendeley, EndNote, JabRef, BibDesk, and other citation managers.
 
+**Annotated bibliographies.** Add your own note to any entry, in as many paragraphs as you need, and turn on "Show annotations" to print each note under its entry. Notes are stored with the citation data (CSL `annote`), so they travel with CSL-JSON, BibTeX, BibLaTeX, and RIS. Off by default; existing bibliographies are unchanged.
+
 **Reader-facing cite & export.** Optionally add a per-entry Cite / Export panel to the published bibliography: a disclosure under each entry with a copy button and one-click downloads in RIS, CSL-JSON, BibTeX, and BibLaTeX. The panel is built on the page, so newsletters and feeds carry a clean bibliography without it. Off by default; enable it per block.
 
 **Try it first.** Launch a disposable demo in [WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json) before installing it on your site.
@@ -122,7 +124,7 @@ Version 4.0 replaced the plugin's registration API, so the integration requires 
 
 Borges is a static-output block. Formatted bibliography HTML, JSON-LD, and COinS are baked into your post content when you save, so the citeproc formatting engine and the DOI/PubMed lookups run **only in the editor** — never on the front end.
 
-As a page renders, a light filter adds what the saved JSON-LD cannot know, such as the page's own URL for each entry's identifier, and extra identifiers and fields from the stored citations. It makes no database queries or remote requests.
+As a page renders, a light filter adds what the saved JSON-LD cannot know, such as the page's own URL for each entry's identifier, and extra identifiers and fields from the stored citations. It also marks each entry as an `h-cite` microformat for IndieWeb tools. It makes no database queries or remote requests.
 
 What this means for a published page:
 

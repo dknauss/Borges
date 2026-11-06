@@ -118,12 +118,14 @@ function bibliography_builder_save_ris_journal_abbreviation( $csl ) {
 }
 
 /**
- * `cslToRisEntry()`, with the `J2` line current save() writes.
+ * `cslToRisEntry()`, with the `J2` line current save() writes, and the `N1`
+ * annotation line when the block shows annotations.
  *
- * @param array $csl CSL-JSON item.
+ * @param array $csl        CSL-JSON item.
+ * @param bool  $annotation Add the annotation as an `N1` line.
  * @return string
  */
-function bibliography_builder_save_ris_entry( $csl ) {
+function bibliography_builder_save_ris_entry( $csl, $annotation = false ) {
 	$types = array(
 		'article-journal'   => 'JOUR',
 		'article-magazine'  => 'MGZN',
@@ -200,6 +202,10 @@ function bibliography_builder_save_ris_entry( $csl ) {
 	$isbn = bibliography_builder_get_primary_identifier( $field( 'ISBN' ) );
 	$add( 'SN', '' !== $isbn ? $isbn : bibliography_builder_get_primary_identifier( $field( 'ISSN' ) ) );
 
+	if ( $annotation ) {
+		$add( 'N1', bibliography_builder_save_ris_annotation( $csl ) );
+	}
+
 	$lines[] = 'ER  - ';
 
 	return implode( "\n", $lines );
@@ -213,10 +219,11 @@ function bibliography_builder_save_ris_entry( $csl ) {
  * readers, which show post content without the script and stylesheet, see
  * only the bibliography.
  *
- * @param array $citation Citation record.
+ * @param array $citation   Citation record.
+ * @param bool  $annotation Whether the RIS carries the annotation (shown ones only).
  * @return array Attribute name => value, in serialized order.
  */
-function bibliography_builder_save_cite_export_data( $citation ) {
+function bibliography_builder_save_cite_export_data( $citation, $annotation = false ) {
 	$csl       = bibliography_builder_citation_csl( $citation );
 	$cite_text = '';
 
@@ -234,7 +241,7 @@ function bibliography_builder_save_cite_export_data( $citation ) {
 		// tags copies as empty rather than falling through to the formatted text.
 		'data-cite-text'     => bibliography_builder_save_strip_inline_markup( $cite_text ),
 		'data-cite-filename' => bibliography_builder_save_export_basename( $csl ),
-		'data-cite-ris'      => bibliography_builder_save_ris_entry( $csl ),
+		'data-cite-ris'      => bibliography_builder_save_ris_entry( $csl, $annotation ),
 		'data-cite-csl-json' => $csl_json . "\n",
 		'data-cite-bibtex'   => null,
 		'data-cite-biblatex' => null,

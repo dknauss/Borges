@@ -76,6 +76,13 @@
 	display: inline;
 }
 
+// Annotations: each paragraph sits under its entry, lined up with the
+// entry's indented lines rather than hanging out with its first line.
+.wp-block-bibliography-builder-bibliography .bibliography-builder-list > li > .bibliography-builder-annotation {
+	margin: 0.4em 0 0;
+	text-indent: 0;
+}
+
 // Hide COinS spans.
 /* stylelint-disable-next-line selector-class-pattern */
 .wp-block-bibliography-builder-bibliography .Z3988 {

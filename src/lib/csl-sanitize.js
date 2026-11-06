@@ -330,7 +330,47 @@ export function validateAndSanitizeCsl( csl ) {
 		}
 	}
 
-	return sanitizeShortContainerTitle( sanitizedCsl );
+	return sanitizeAnnote( sanitizeShortContainerTitle( sanitizedCsl ) );
+}
+
+/**
+ * Clean annotation text for storage: plain text, Unix line endings, no
+ * leading or trailing white space, and paragraphs separated by exactly one
+ * blank line. Re-exported by src/lib/annotation.js.
+ *
+ * @param {unknown} value Text typed or imported.
+ * @return {string} Clean text; empty when there is no annotation.
+ */
+export function normalizeAnnotationText( value ) {
+	if ( typeof value !== 'string' ) {
+		return '';
+	}
+
+	return stripHtmlTags( value.replace( /\r\n?/gu, '\n' ) )
+		.trim()
+		.replace( /\n[ \t]*\n\s*/gu, '\n\n' );
+}
+
+/**
+ * Keep an annotation (CSL `annote`) as clean plain text, or drop it. A value
+ * that is not a string, or that holds nothing but white space or markup, is
+ * dropped rather than refused, since an annotation is never needed.
+ *
+ * Mirrored by bibliography_builder_sanitize_csl_annote() in
+ * includes/csl-sanitize.php.
+ *
+ * @param {Object} csl Sanitized CSL-JSON object.
+ * @return {Object} The object, with a clean string `annote` or none.
+ */
+function sanitizeAnnote( csl ) {
+	if ( ! Object.prototype.hasOwnProperty.call( csl, 'annote' ) ) {
+		return csl;
+	}
+
+	const { annote, ...rest } = csl;
+	const text = normalizeAnnotationText( annote );
+
+	return text ? { ...rest, annote: text } : rest;
 }
 
 /**

@@ -2191,6 +2191,16 @@ describe( 'Edit focus management', () => {
 		expect( screen.getByLabelText( 'Output JSON-LD' ) ).not.toBeChecked();
 	} );
 
+	it( 'turns annotations on and off in block settings', async () => {
+		render( <EditHarness /> );
+
+		const toggle = screen.getByLabelText( 'Show annotations' );
+
+		expect( toggle ).not.toBeChecked();
+		await userEvent.click( toggle );
+		expect( screen.getByLabelText( 'Show annotations' ) ).toBeChecked();
+	} );
+
 	it( 'clears the current notice when typing into the add form again', async () => {
 		render( <EditHarness /> );
 
