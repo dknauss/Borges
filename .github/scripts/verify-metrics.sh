@@ -85,11 +85,13 @@ check "JS source lines" "$(doc_value 'JS source')" "$actual_js"
 #
 # The doc claims zero persistent settings, options, cron events, CPTs, or custom
 # tables. That claim underpins the "0 additional queries" runtime figure, so it is
-# worth enforcing rather than trusting.
+# worth enforcing rather than trusting. tools/ is left out: it is not in the
+# release package (.distignore), and the trace site it builds
+# (tools/yoast-nlweb-trace) has to configure WordPress and the plugins it tests.
 
 persistence_hits="$(grep -rEl \
 	'add_option|update_option|register_setting|register_post_type|dbDelta|wp_schedule_event' \
-	--include='*.php' . 2>/dev/null | grep -vE 'vendor|tests|node_modules' || true)"
+	--include='*.php' . 2>/dev/null | grep -vE 'vendor|tests|node_modules|^\./tools/' || true)"
 
 if [[ -z "$persistence_hits" ]]; then
 	printf '  ok    %-38s NONE\n' "persistence/hook audit"

@@ -1,0 +1,718 @@
+[
+{
+	    "@context": "https:\/\/schema.org",
+	    "@graph": [
+	        {
+	            "@type": "Article",
+	            "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#article",
+	            "isPartOf": {
+	                "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/"
+	            },
+	            "author": {
+	                "name": "admin",
+	                "@id": "http:\/\/localhost:8890\/#\/schema\/person\/136ec3c36fa9af648f2fe6e38bb2eda6"
+	            },
+	            "headline": "What a bibliography tells machines",
+	            "datePublished": "2026-11-04T05:51:33+00:00",
+	            "mainEntityOfPage": {
+	                "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/"
+	            },
+	            "wordCount": 292,
+	            "commentCount": 0,
+	            "inLanguage": "en-US",
+	            "potentialAction": [
+	                {
+	                    "@type": "CommentAction",
+	                    "name": "Comment",
+	                    "target": [
+	                        "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#respond"
+	                    ]
+	                }
+	            ],
+	            "citation": [
+	                {
+	                    "@type": "Article",
+	                    "@id": "https:\/\/doi.org\/10.1038\/scientificamerican0501-34",
+	                    "name": "The Semantic Web"
+	                },
+	                {
+	                    "@type": "Book",
+	                    "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#ref-borges1962",
+	                    "name": "Labyrinths: Selected stories and other writings"
+	                },
+	                {
+	                    "@type": "Chapter",
+	                    "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#ref-borges1962babel",
+	                    "name": "The library of Babel"
+	                },
+	                {
+	                    "@type": "Book",
+	                    "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#ref-cormen2009",
+	                    "name": "Introduction to algorithms"
+	                },
+	                {
+	                    "@type": "ScholarlyArticle",
+	                    "@id": "https:\/\/doi.org\/10.18653\/v1\/N19-1423",
+	                    "name": "BERT: Pre-training of deep bidirectional transformers for language understanding"
+	                },
+	                {
+	                    "@type": "ScholarlyArticle",
+	                    "@id": "https:\/\/doi.org\/10.1038\/s41586-020-2649-2",
+	                    "name": "Array programming with NumPy"
+	                },
+	                {
+	                    "@type": "ScholarlyArticle",
+	                    "@id": "https:\/\/doi.org\/10.1093\/comjnl\/27.2.97",
+	                    "name": "Literate programming"
+	                },
+	                {
+	                    "@type": "ScholarlyArticle",
+	                    "@id": "https:\/\/doi.org\/10.1038\/nature14539",
+	                    "name": "Deep learning"
+	                },
+	                {
+	                    "@type": "ScholarlyArticle",
+	                    "@id": "https:\/\/doi.org\/10.4310\/ATMP.1998.v2.n2.a1",
+	                    "name": "The large N limit of superconformal field theories and supergravity"
+	                },
+	                {
+	                    "@type": "ScholarlyArticle",
+	                    "@id": "https:\/\/doi.org\/10.48550\/arXiv.1706.03762",
+	                    "name": "Attention is all you need"
+	                },
+	                {
+	                    "@type": "ScholarlyArticle",
+	                    "@id": "https:\/\/doi.org\/10.1038\/sdata.2016.18",
+	                    "name": "The FAIR Guiding Principles for scientific data management and stewardship"
+	                },
+	                {
+	                    "@type": "WebPage",
+	                    "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#ref-wporg-handbook",
+	                    "name": "Block Editor Handbook"
+	                }
+	            ]
+	        },
+	        {
+	            "@type": "WebPage",
+	            "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/",
+	            "url": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/",
+	            "name": "What a bibliography tells machines - Borges trace",
+	            "isPartOf": {
+	                "@id": "http:\/\/localhost:8890\/#website"
+	            },
+	            "datePublished": "2026-11-04T05:51:33+00:00",
+	            "author": {
+	                "@id": "http:\/\/localhost:8890\/#\/schema\/person\/136ec3c36fa9af648f2fe6e38bb2eda6"
+	            },
+	            "breadcrumb": {
+	                "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#breadcrumb"
+	            },
+	            "inLanguage": "en-US",
+	            "potentialAction": [
+	                {
+	                    "@type": "ReadAction",
+	                    "target": [
+	                        "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/"
+	                    ]
+	                }
+	            ]
+	        },
+	        {
+	            "@type": "BreadcrumbList",
+	            "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#breadcrumb",
+	            "itemListElement": [
+	                {
+	                    "@type": "ListItem",
+	                    "position": 1,
+	                    "name": "Home",
+	                    "item": "http:\/\/localhost:8890\/"
+	                },
+	                {
+	                    "@type": "ListItem",
+	                    "position": 2,
+	                    "name": "What a bibliography tells machines"
+	                }
+	            ]
+	        },
+	        {
+	            "@type": "WebSite",
+	            "@id": "http:\/\/localhost:8890\/#website",
+	            "url": "http:\/\/localhost:8890\/",
+	            "name": "Borges trace",
+	            "description": "",
+	            "potentialAction": [
+	                {
+	                    "@type": "SearchAction",
+	                    "target": {
+	                        "@type": "EntryPoint",
+	                        "urlTemplate": "http:\/\/localhost:8890\/?s={search_term_string}"
+	                    },
+	                    "query-input": {
+	                        "@type": "PropertyValueSpecification",
+	                        "valueRequired": true,
+	                        "valueName": "search_term_string"
+	                    }
+	                }
+	            ],
+	            "inLanguage": "en-US"
+	        },
+	        {
+	            "@type": "Person",
+	            "@id": "http:\/\/localhost:8890\/#\/schema\/person\/136ec3c36fa9af648f2fe6e38bb2eda6",
+	            "name": "admin",
+	            "image": {
+	                "@type": "ImageObject",
+	                "inLanguage": "en-US",
+	                "@id": "https:\/\/secure.gravatar.com\/avatar\/9387ed9432ec25ef93df84b8a0b9697ddef435a945e7f244670c4f79f88363e9?s=96&d=mm&r=g",
+	                "url": "https:\/\/secure.gravatar.com\/avatar\/9387ed9432ec25ef93df84b8a0b9697ddef435a945e7f244670c4f79f88363e9?s=96&d=mm&r=g",
+	                "contentUrl": "https:\/\/secure.gravatar.com\/avatar\/9387ed9432ec25ef93df84b8a0b9697ddef435a945e7f244670c4f79f88363e9?s=96&d=mm&r=g",
+	                "caption": "admin"
+	            },
+	            "sameAs": [
+	                "http:\/\/localhost:8890"
+	            ],
+	            "url": "http:\/\/localhost:8890\/author\/admin\/"
+	        },
+	        {
+	            "@type": "Article",
+	            "@id": "https:\/\/doi.org\/10.1038\/scientificamerican0501-34",
+	            "@context": "https:\/\/schema.org",
+	            "name": "The Semantic Web",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Tim Berners-Lee",
+	                    "familyName": "Berners-Lee",
+	                    "givenName": "Tim"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "James Hendler",
+	                    "familyName": "Hendler",
+	                    "givenName": "James"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Ora Lassila",
+	                    "familyName": "Lassila",
+	                    "givenName": "Ora"
+	                }
+	            ],
+	            "datePublished": "2001-05",
+	            "identifier": {
+	                "@type": "PropertyValue",
+	                "propertyID": "DOI",
+	                "value": "10.1038\/scientificamerican0501-34"
+	            },
+	            "url": "https:\/\/doi.org\/10.1038\/scientificamerican0501-34",
+	            "isPartOf": {
+	                "@type": "PublicationIssue",
+	                "issueNumber": "5",
+	                "isPartOf": {
+	                    "@type": "PublicationVolume",
+	                    "volumeNumber": "284",
+	                    "isPartOf": {
+	                        "@type": "Periodical",
+	                        "name": "Scientific American"
+	                    }
+	                }
+	            },
+	            "pagination": "34-43",
+	            "pageStart": "34",
+	            "pageEnd": "43"
+	        },
+	        {
+	            "@type": "Book",
+	            "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#ref-borges1962",
+	            "@context": "https:\/\/schema.org",
+	            "name": "Labyrinths: Selected stories and other writings",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Jorge Luis Borges",
+	                    "familyName": "Borges",
+	                    "givenName": "Jorge Luis"
+	                }
+	            ],
+	            "datePublished": "1962",
+	            "publisher": {
+	                "@type": "Organization",
+	                "name": "New Directions",
+	                "location": "New York"
+	            },
+	            "isbn": "9780811200127",
+	            "identifier": {
+	                "@type": "PropertyValue",
+	                "propertyID": "ISBN",
+	                "value": "9780811200127"
+	            },
+	            "editor": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Donald A. Yates",
+	                    "familyName": "Yates",
+	                    "givenName": "Donald A."
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "James E. Irby",
+	                    "familyName": "Irby",
+	                    "givenName": "James E."
+	                }
+	            ]
+	        },
+	        {
+	            "@type": "Chapter",
+	            "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#ref-borges1962babel",
+	            "@context": "https:\/\/schema.org",
+	            "name": "The library of Babel",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Jorge Luis Borges",
+	                    "familyName": "Borges",
+	                    "givenName": "Jorge Luis"
+	                }
+	            ],
+	            "datePublished": "1962",
+	            "isPartOf": {
+	                "@type": "Book",
+	                "name": "Labyrinths: Selected stories and other writings"
+	            },
+	            "publisher": {
+	                "@type": "Organization",
+	                "name": "New Directions",
+	                "location": "New York"
+	            },
+	            "pagination": "51-58",
+	            "pageStart": "51",
+	            "pageEnd": "58",
+	            "editor": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Donald A. Yates",
+	                    "familyName": "Yates",
+	                    "givenName": "Donald A."
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "James E. Irby",
+	                    "familyName": "Irby",
+	                    "givenName": "James E."
+	                }
+	            ],
+	            "translator": [
+	                {
+	                    "@type": "Person",
+	                    "name": "James E. Irby",
+	                    "familyName": "Irby",
+	                    "givenName": "James E."
+	                }
+	            ]
+	        },
+	        {
+	            "@type": "Book",
+	            "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#ref-cormen2009",
+	            "@context": "https:\/\/schema.org",
+	            "name": "Introduction to algorithms",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Thomas H. Cormen",
+	                    "familyName": "Cormen",
+	                    "givenName": "Thomas H."
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Charles E. Leiserson",
+	                    "familyName": "Leiserson",
+	                    "givenName": "Charles E."
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Ronald L. Rivest",
+	                    "familyName": "Rivest",
+	                    "givenName": "Ronald L."
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Clifford Stein",
+	                    "familyName": "Stein",
+	                    "givenName": "Clifford"
+	                }
+	            ],
+	            "datePublished": "2009",
+	            "publisher": {
+	                "@type": "Organization",
+	                "name": "MIT Press",
+	                "location": "Cambridge, MA"
+	            },
+	            "isbn": "9780262033848",
+	            "identifier": {
+	                "@type": "PropertyValue",
+	                "propertyID": "ISBN",
+	                "value": "9780262033848"
+	            },
+	            "bookEdition": "3"
+	        },
+	        {
+	            "@type": "ScholarlyArticle",
+	            "@id": "https:\/\/doi.org\/10.18653\/v1\/N19-1423",
+	            "@context": "https:\/\/schema.org",
+	            "name": "BERT: Pre-training of deep bidirectional transformers for language understanding",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Jacob Devlin",
+	                    "familyName": "Devlin",
+	                    "givenName": "Jacob"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Ming-Wei Chang",
+	                    "familyName": "Chang",
+	                    "givenName": "Ming-Wei"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Kenton Lee",
+	                    "familyName": "Lee",
+	                    "givenName": "Kenton"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Kristina Toutanova",
+	                    "familyName": "Toutanova",
+	                    "givenName": "Kristina"
+	                }
+	            ],
+	            "datePublished": "2019",
+	            "isPartOf": {
+	                "@type": "Book",
+	                "name": "Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies"
+	            },
+	            "publisher": {
+	                "@type": "Organization",
+	                "name": "Association for Computational Linguistics"
+	            },
+	            "identifier": {
+	                "@type": "PropertyValue",
+	                "propertyID": "DOI",
+	                "value": "10.18653\/v1\/N19-1423"
+	            },
+	            "url": "https:\/\/doi.org\/10.18653\/v1\/N19-1423",
+	            "pagination": "4171-4186",
+	            "pageStart": "4171",
+	            "pageEnd": "4186"
+	        },
+	        {
+	            "@type": "ScholarlyArticle",
+	            "@id": "https:\/\/doi.org\/10.1038\/s41586-020-2649-2",
+	            "@context": "https:\/\/schema.org",
+	            "name": "Array programming with NumPy",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Charles R. Harris",
+	                    "familyName": "Harris",
+	                    "givenName": "Charles R."
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "K. Jarrod Millman",
+	                    "familyName": "Millman",
+	                    "givenName": "K. Jarrod"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Stéfan J. van der Walt",
+	                    "familyName": "van der Walt",
+	                    "givenName": "Stéfan J."
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Ralf Gommers",
+	                    "familyName": "Gommers",
+	                    "givenName": "Ralf"
+	                }
+	            ],
+	            "datePublished": "2020-09-16",
+	            "isPartOf": {
+	                "@type": "PublicationIssue",
+	                "issueNumber": "7825",
+	                "isPartOf": {
+	                    "@type": "PublicationVolume",
+	                    "volumeNumber": "585",
+	                    "isPartOf": {
+	                        "@type": "Periodical",
+	                        "name": "Nature"
+	                    }
+	                }
+	            },
+	            "identifier": {
+	                "@type": "PropertyValue",
+	                "propertyID": "DOI",
+	                "value": "10.1038\/s41586-020-2649-2"
+	            },
+	            "url": "https:\/\/doi.org\/10.1038\/s41586-020-2649-2",
+	            "pagination": "357-362",
+	            "pageStart": "357",
+	            "pageEnd": "362"
+	        },
+	        {
+	            "@type": "ScholarlyArticle",
+	            "@id": "https:\/\/doi.org\/10.1093\/comjnl\/27.2.97",
+	            "@context": "https:\/\/schema.org",
+	            "name": "Literate programming",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Donald E. Knuth",
+	                    "familyName": "Knuth",
+	                    "givenName": "Donald E."
+	                }
+	            ],
+	            "datePublished": "1984",
+	            "isPartOf": {
+	                "@type": "PublicationIssue",
+	                "issueNumber": "2",
+	                "isPartOf": {
+	                    "@type": "PublicationVolume",
+	                    "volumeNumber": "27",
+	                    "isPartOf": {
+	                        "@type": "Periodical",
+	                        "name": "The Computer Journal"
+	                    }
+	                }
+	            },
+	            "identifier": {
+	                "@type": "PropertyValue",
+	                "propertyID": "DOI",
+	                "value": "10.1093\/comjnl\/27.2.97"
+	            },
+	            "url": "https:\/\/doi.org\/10.1093\/comjnl\/27.2.97",
+	            "pagination": "97-111",
+	            "pageStart": "97",
+	            "pageEnd": "111"
+	        },
+	        {
+	            "@type": "ScholarlyArticle",
+	            "@id": "https:\/\/doi.org\/10.1038\/nature14539",
+	            "@context": "https:\/\/schema.org",
+	            "name": "Deep learning",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Yann LeCun",
+	                    "familyName": "LeCun",
+	                    "givenName": "Yann"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Yoshua Bengio",
+	                    "familyName": "Bengio",
+	                    "givenName": "Yoshua"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Geoffrey Hinton",
+	                    "familyName": "Hinton",
+	                    "givenName": "Geoffrey"
+	                }
+	            ],
+	            "datePublished": "2015-05-28",
+	            "isPartOf": {
+	                "@type": "PublicationIssue",
+	                "issueNumber": "7553",
+	                "isPartOf": {
+	                    "@type": "PublicationVolume",
+	                    "volumeNumber": "521",
+	                    "isPartOf": {
+	                        "@type": "Periodical",
+	                        "name": "Nature"
+	                    }
+	                }
+	            },
+	            "identifier": {
+	                "@type": "PropertyValue",
+	                "propertyID": "DOI",
+	                "value": "10.1038\/nature14539"
+	            },
+	            "url": "https:\/\/doi.org\/10.1038\/nature14539",
+	            "pagination": "436-444",
+	            "pageStart": "436",
+	            "pageEnd": "444"
+	        },
+	        {
+	            "@type": "ScholarlyArticle",
+	            "@id": "https:\/\/doi.org\/10.4310\/ATMP.1998.v2.n2.a1",
+	            "@context": "https:\/\/schema.org",
+	            "name": "The large N limit of superconformal field theories and supergravity",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Juan Maldacena",
+	                    "familyName": "Maldacena",
+	                    "givenName": "Juan"
+	                }
+	            ],
+	            "datePublished": "1998",
+	            "isPartOf": {
+	                "@type": "PublicationIssue",
+	                "issueNumber": "2",
+	                "isPartOf": {
+	                    "@type": "PublicationVolume",
+	                    "volumeNumber": "2",
+	                    "isPartOf": {
+	                        "@type": "Periodical",
+	                        "name": "Advances in Theoretical and Mathematical Physics"
+	                    }
+	                }
+	            },
+	            "identifier": {
+	                "@type": "PropertyValue",
+	                "propertyID": "DOI",
+	                "value": "10.4310\/ATMP.1998.v2.n2.a1"
+	            },
+	            "url": "https:\/\/doi.org\/10.4310\/ATMP.1998.v2.n2.a1",
+	            "pagination": "231-252",
+	            "pageStart": "231",
+	            "pageEnd": "252"
+	        },
+	        {
+	            "@type": "ScholarlyArticle",
+	            "@id": "https:\/\/doi.org\/10.48550\/arXiv.1706.03762",
+	            "@context": "https:\/\/schema.org",
+	            "name": "Attention is all you need",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Ashish Vaswani",
+	                    "familyName": "Vaswani",
+	                    "givenName": "Ashish"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Noam Shazeer",
+	                    "familyName": "Shazeer",
+	                    "givenName": "Noam"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Niki Parmar",
+	                    "familyName": "Parmar",
+	                    "givenName": "Niki"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Jakob Uszkoreit",
+	                    "familyName": "Uszkoreit",
+	                    "givenName": "Jakob"
+	                }
+	            ],
+	            "datePublished": "2017-06-12",
+	            "publisher": {
+	                "@type": "Organization",
+	                "name": "arXiv"
+	            },
+	            "identifier": [
+	                {
+	                    "@type": "PropertyValue",
+	                    "propertyID": "DOI",
+	                    "value": "10.48550\/arXiv.1706.03762"
+	                },
+	                {
+	                    "@type": "PropertyValue",
+	                    "propertyID": "arXiv",
+	                    "value": "1706.03762"
+	                }
+	            ],
+	            "url": "https:\/\/doi.org\/10.48550\/arXiv.1706.03762",
+	            "sameAs": "https:\/\/arxiv.org\/abs\/1706.03762"
+	        },
+	        {
+	            "@type": "ScholarlyArticle",
+	            "@id": "https:\/\/doi.org\/10.1038\/sdata.2016.18",
+	            "@context": "https:\/\/schema.org",
+	            "name": "The FAIR Guiding Principles for scientific data management and stewardship",
+	            "author": [
+	                {
+	                    "@type": "Person",
+	                    "name": "Mark D. Wilkinson",
+	                    "familyName": "Wilkinson",
+	                    "givenName": "Mark D."
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Michel Dumontier",
+	                    "familyName": "Dumontier",
+	                    "givenName": "Michel"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "IJsbrand Jan Aalbersberg",
+	                    "familyName": "Aalbersberg",
+	                    "givenName": "IJsbrand Jan"
+	                },
+	                {
+	                    "@type": "Person",
+	                    "name": "Gabrielle Appleton",
+	                    "familyName": "Appleton",
+	                    "givenName": "Gabrielle"
+	                }
+	            ],
+	            "datePublished": "2016-03-15",
+	            "isPartOf": {
+	                "@type": "PublicationVolume",
+	                "volumeNumber": "3",
+	                "isPartOf": {
+	                    "@type": "Periodical",
+	                    "name": "Scientific Data"
+	                }
+	            },
+	            "identifier": [
+	                {
+	                    "@type": "PropertyValue",
+	                    "propertyID": "DOI",
+	                    "value": "10.1038\/sdata.2016.18"
+	                },
+	                {
+	                    "@type": "PropertyValue",
+	                    "propertyID": "PMID",
+	                    "value": "26978244"
+	                },
+	                {
+	                    "@type": "PropertyValue",
+	                    "propertyID": "PMCID",
+	                    "value": "PMC4792175"
+	                }
+	            ],
+	            "url": "https:\/\/doi.org\/10.1038\/sdata.2016.18",
+	            "sameAs": [
+	                "https:\/\/pubmed.ncbi.nlm.nih.gov\/26978244\/",
+	                "https:\/\/pmc.ncbi.nlm.nih.gov\/articles\/PMC4792175\/"
+	            ],
+	            "pagination": "160018",
+	            "pageStart": "160018"
+	        },
+	        {
+	            "@type": "WebPage",
+	            "@id": "http:\/\/localhost:8890\/what-a-bibliography-tells-machines\/#ref-wporg-handbook",
+	            "@context": "https:\/\/schema.org",
+	            "name": "Block Editor Handbook",
+	            "author": [
+	                {
+	                    "@type": "Organization",
+	                    "name": "WordPress.org"
+	                }
+	            ],
+	            "url": "https:\/\/developer.wordpress.org\/block-editor\/",
+	            "isPartOf": {
+	                "@type": "WebSite",
+	                "name": "WordPress Developer Resources"
+	            }
+	        }
+	    ]
+	},
+{"@context":"https://schema.org","@type":"ItemList","@id":"http://localhost:8890/what-a-bibliography-tells-machines/#bibliography-markup-value","numberOfItems":12,"itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"Article","@id":"https://doi.org/10.1038/scientificamerican0501-34","name":"The Semantic Web","author":[{"@type":"Person","name":"Tim Berners-Lee","familyName":"Berners-Lee","givenName":"Tim"},{"@type":"Person","name":"James Hendler","familyName":"Hendler","givenName":"James"},{"@type":"Person","name":"Ora Lassila","familyName":"Lassila","givenName":"Ora"}],"datePublished":"2001-05","identifier":{"@type":"PropertyValue","propertyID":"DOI","value":"10.1038/scientificamerican0501-34"},"url":"https://doi.org/10.1038/scientificamerican0501-34","isPartOf":{"@type":"PublicationIssue","issueNumber":"5","isPartOf":{"@type":"PublicationVolume","volumeNumber":"284","isPartOf":{"@type":"Periodical","name":"Scientific American"}}},"pagination":"34-43","pageStart":"34","pageEnd":"43"}},{"@type":"ListItem","position":2,"item":{"@type":"Book","@id":"http://localhost:8890/what-a-bibliography-tells-machines/#ref-borges1962","name":"Labyrinths: Selected stories and other writings","author":[{"@type":"Person","name":"Jorge Luis Borges","familyName":"Borges","givenName":"Jorge Luis"}],"datePublished":"1962","publisher":{"@type":"Organization","name":"New Directions","location":"New York"},"isbn":"9780811200127","identifier":{"@type":"PropertyValue","propertyID":"ISBN","value":"9780811200127"},"editor":[{"@type":"Person","name":"Donald A. Yates","familyName":"Yates","givenName":"Donald A."},{"@type":"Person","name":"James E. Irby","familyName":"Irby","givenName":"James E."}]}},{"@type":"ListItem","position":3,"item":{"@type":"Chapter","@id":"http://localhost:8890/what-a-bibliography-tells-machines/#ref-borges1962babel","name":"The library of Babel","author":[{"@type":"Person","name":"Jorge Luis Borges","familyName":"Borges","givenName":"Jorge Luis"}],"datePublished":"1962","isPartOf":{"@type":"Book","name":"Labyrinths: Selected stories and other writings"},"publisher":{"@type":"Organization","name":"New Directions","location":"New York"},"pagination":"51-58","pageStart":"51","pageEnd":"58","editor":[{"@type":"Person","name":"Donald A. Yates","familyName":"Yates","givenName":"Donald A."},{"@type":"Person","name":"James E. Irby","familyName":"Irby","givenName":"James E."}],"translator":[{"@type":"Person","name":"James E. Irby","familyName":"Irby","givenName":"James E."}]}},{"@type":"ListItem","position":4,"item":{"@type":"Book","@id":"http://localhost:8890/what-a-bibliography-tells-machines/#ref-cormen2009","name":"Introduction to algorithms","author":[{"@type":"Person","name":"Thomas H. Cormen","familyName":"Cormen","givenName":"Thomas H."},{"@type":"Person","name":"Charles E. Leiserson","familyName":"Leiserson","givenName":"Charles E."},{"@type":"Person","name":"Ronald L. Rivest","familyName":"Rivest","givenName":"Ronald L."},{"@type":"Person","name":"Clifford Stein","familyName":"Stein","givenName":"Clifford"}],"datePublished":"2009","publisher":{"@type":"Organization","name":"MIT Press","location":"Cambridge, MA"},"isbn":"9780262033848","identifier":{"@type":"PropertyValue","propertyID":"ISBN","value":"9780262033848"},"bookEdition":"3"}},{"@type":"ListItem","position":5,"item":{"@type":"ScholarlyArticle","@id":"https://doi.org/10.18653/v1/N19-1423","name":"BERT: Pre-training of deep bidirectional transformers for language understanding","author":[{"@type":"Person","name":"Jacob Devlin","familyName":"Devlin","givenName":"Jacob"},{"@type":"Person","name":"Ming-Wei Chang","familyName":"Chang","givenName":"Ming-Wei"},{"@type":"Person","name":"Kenton Lee","familyName":"Lee","givenName":"Kenton"},{"@type":"Person","name":"Kristina Toutanova","familyName":"Toutanova","givenName":"Kristina"}],"datePublished":"2019","isPartOf":{"@type":"Book","name":"Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies"},"publisher":{"@type":"Organization","name":"Association for Computational Linguistics"},"identifier":{"@type":"PropertyValue","propertyID":"DOI","value":"10.18653/v1/N19-1423"},"url":"https://doi.org/10.18653/v1/N19-1423","pagination":"4171-4186","pageStart":"4171","pageEnd":"4186"}},{"@type":"ListItem","position":6,"item":{"@type":"ScholarlyArticle","@id":"https://doi.org/10.1038/s41586-020-2649-2","name":"Array programming with NumPy","author":[{"@type":"Person","name":"Charles R. Harris","familyName":"Harris","givenName":"Charles R."},{"@type":"Person","name":"K. Jarrod Millman","familyName":"Millman","givenName":"K. Jarrod"},{"@type":"Person","name":"Stéfan J. van der Walt","familyName":"van der Walt","givenName":"Stéfan J."},{"@type":"Person","name":"Ralf Gommers","familyName":"Gommers","givenName":"Ralf"}],"datePublished":"2020-09-16","isPartOf":{"@type":"PublicationIssue","issueNumber":"7825","isPartOf":{"@type":"PublicationVolume","volumeNumber":"585","isPartOf":{"@type":"Periodical","name":"Nature"}}},"identifier":{"@type":"PropertyValue","propertyID":"DOI","value":"10.1038/s41586-020-2649-2"},"url":"https://doi.org/10.1038/s41586-020-2649-2","pagination":"357-362","pageStart":"357","pageEnd":"362"}},{"@type":"ListItem","position":7,"item":{"@type":"ScholarlyArticle","@id":"https://doi.org/10.1093/comjnl/27.2.97","name":"Literate programming","author":[{"@type":"Person","name":"Donald E. Knuth","familyName":"Knuth","givenName":"Donald E."}],"datePublished":"1984","isPartOf":{"@type":"PublicationIssue","issueNumber":"2","isPartOf":{"@type":"PublicationVolume","volumeNumber":"27","isPartOf":{"@type":"Periodical","name":"The Computer Journal"}}},"identifier":{"@type":"PropertyValue","propertyID":"DOI","value":"10.1093/comjnl/27.2.97"},"url":"https://doi.org/10.1093/comjnl/27.2.97","pagination":"97-111","pageStart":"97","pageEnd":"111"}},{"@type":"ListItem","position":8,"item":{"@type":"ScholarlyArticle","@id":"https://doi.org/10.1038/nature14539","name":"Deep learning","author":[{"@type":"Person","name":"Yann LeCun","familyName":"LeCun","givenName":"Yann"},{"@type":"Person","name":"Yoshua Bengio","familyName":"Bengio","givenName":"Yoshua"},{"@type":"Person","name":"Geoffrey Hinton","familyName":"Hinton","givenName":"Geoffrey"}],"datePublished":"2015-05-28","isPartOf":{"@type":"PublicationIssue","issueNumber":"7553","isPartOf":{"@type":"PublicationVolume","volumeNumber":"521","isPartOf":{"@type":"Periodical","name":"Nature"}}},"identifier":{"@type":"PropertyValue","propertyID":"DOI","value":"10.1038/nature14539"},"url":"https://doi.org/10.1038/nature14539","pagination":"436-444","pageStart":"436","pageEnd":"444"}},{"@type":"ListItem","position":9,"item":{"@type":"ScholarlyArticle","@id":"https://doi.org/10.4310/ATMP.1998.v2.n2.a1","name":"The large N limit of superconformal field theories and supergravity","author":[{"@type":"Person","name":"Juan Maldacena","familyName":"Maldacena","givenName":"Juan"}],"datePublished":"1998","isPartOf":{"@type":"PublicationIssue","issueNumber":"2","isPartOf":{"@type":"PublicationVolume","volumeNumber":"2","isPartOf":{"@type":"Periodical","name":"Advances in Theoretical and Mathematical Physics"}}},"identifier":{"@type":"PropertyValue","propertyID":"DOI","value":"10.4310/ATMP.1998.v2.n2.a1"},"url":"https://doi.org/10.4310/ATMP.1998.v2.n2.a1","pagination":"231-252","pageStart":"231","pageEnd":"252"}},{"@type":"ListItem","position":10,"item":{"@type":"ScholarlyArticle","@id":"https://doi.org/10.48550/arXiv.1706.03762","name":"Attention is all you need","author":[{"@type":"Person","name":"Ashish Vaswani","familyName":"Vaswani","givenName":"Ashish"},{"@type":"Person","name":"Noam Shazeer","familyName":"Shazeer","givenName":"Noam"},{"@type":"Person","name":"Niki Parmar","familyName":"Parmar","givenName":"Niki"},{"@type":"Person","name":"Jakob Uszkoreit","familyName":"Uszkoreit","givenName":"Jakob"}],"datePublished":"2017-06-12","publisher":{"@type":"Organization","name":"arXiv"},"identifier":[{"@type":"PropertyValue","propertyID":"DOI","value":"10.48550/arXiv.1706.03762"},{"@type":"PropertyValue","propertyID":"arXiv","value":"1706.03762"}],"url":"https://doi.org/10.48550/arXiv.1706.03762","sameAs":"https://arxiv.org/abs/1706.03762"}},{"@type":"ListItem","position":11,"item":{"@type":"ScholarlyArticle","@id":"https://doi.org/10.1038/sdata.2016.18","name":"The FAIR Guiding Principles for scientific data management and stewardship","author":[{"@type":"Person","name":"Mark D. Wilkinson","familyName":"Wilkinson","givenName":"Mark D."},{"@type":"Person","name":"Michel Dumontier","familyName":"Dumontier","givenName":"Michel"},{"@type":"Person","name":"IJsbrand Jan Aalbersberg","familyName":"Aalbersberg","givenName":"IJsbrand Jan"},{"@type":"Person","name":"Gabrielle Appleton","familyName":"Appleton","givenName":"Gabrielle"}],"datePublished":"2016-03-15","isPartOf":{"@type":"PublicationVolume","volumeNumber":"3","isPartOf":{"@type":"Periodical","name":"Scientific Data"}},"identifier":[{"@type":"PropertyValue","propertyID":"DOI","value":"10.1038/sdata.2016.18"},{"@type":"PropertyValue","propertyID":"PMID","value":"26978244"},{"@type":"PropertyValue","propertyID":"PMCID","value":"PMC4792175"}],"url":"https://doi.org/10.1038/sdata.2016.18","sameAs":["https://pubmed.ncbi.nlm.nih.gov/26978244/","https://pmc.ncbi.nlm.nih.gov/articles/PMC4792175/"],"pagination":"160018","pageStart":"160018"}},{"@type":"ListItem","position":12,"item":{"@type":"WebPage","@id":"http://localhost:8890/what-a-bibliography-tells-machines/#ref-wporg-handbook","name":"Block Editor Handbook","author":[{"@type":"Organization","name":"WordPress.org"}],"url":"https://developer.wordpress.org/block-editor/","isPartOf":{"@type":"WebSite","name":"WordPress Developer Resources"}}}]}
+]
