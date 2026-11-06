@@ -366,3 +366,57 @@
 		}
 	}
 }
+
+// The "Cite" format's entry picker (src/formats/citation.js).
+.bibliography-builder-citation-popover .components-popover__content {
+	width: min(24rem, calc(100vw - 2rem));
+}
+
+.bibliography-builder-citation-picker {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 12px;
+
+	p {
+		margin: 0;
+	}
+}
+
+.bibliography-builder-citation-picker__results {
+	max-height: 16rem;
+	overflow-y: auto;
+
+	ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+}
+
+.bibliography-builder-citation-picker__group-label {
+	padding: 4px 0;
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+}
+
+.bibliography-builder-citation-picker .bibliography-builder-citation-picker__entry {
+	width: 100%;
+	height: auto;
+	min-height: 40px;
+	padding-block: 6px;
+	text-align: start;
+	white-space: normal;
+	line-height: 1.4;
+}
+
+.bibliography-builder-citation-picker__preview:empty {
+	display: none;
+}
+
+.bibliography-builder-citation-picker__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}

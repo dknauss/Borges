@@ -405,6 +405,54 @@ The plugin provides minimal, opinionated base styles. Theme authors can override
 
 ---
 
+## In-Text and Margin Citations
+
+A rich-text format, `bibliography-builder/citation`, links a short citation in any paragraph (or heading, list item, or quote) to an entry in a Borges bibliography on the same post. It works in a theme's margin-note paragraph style, such as a Tufte-style sidenote or Marginalia's Gloss, with no extra block: the margin holds the reference and the bibliography holds the record. The code is `src/formats/citation.js`, with the pure helpers `src/lib/citation-entries.js` and `src/lib/citation-short-form.js`.
+
+### Editor flow
+
+1. Select text, or place the cursor, in a paragraph, and choose **Cite** from the block toolbar's rich-text controls (the "More" menu, reachable by keyboard like any toolbar control).
+2. A popover lists every entry of every bibliography block in the post (nested ones included), grouped by bibliography heading when there is more than one, as "Author Year. Title" (with "[n]" first in numeric styles). A search field narrows the list by author, year, title, or number; every word must match, ignoring case and accents.
+3. Pick an entry, optionally type a page or other locator, and choose **Insert citation**. With the cursor alone, the short form is inserted. With text selected, the selection becomes the link and keeps its words, unless "Replace the text with a short citation" is ticked. A preview shows the text that will be inserted.
+4. With the cursor in an existing citation, **Cite** reopens the popover on its entry: pick another entry to **Update citation** (replacing the text by default), or **Remove citation** to keep the text and drop the link.
+
+If the post has no bibliography with entries, the popover says so.
+
+### Markup
+
+```html
+<a class="bibliography-builder-citation h-cite" href="#ref-{id}" data-bibliography-ref="{id}">Illich, <em>Tools for Conviviality</em>, 12</a>
+```
+
+`{id}` is the entry's citation ID, and `#ref-{id}` is the `<li id="ref-{id}">` that `save()` writes for it, so the citation is a plain fragment link that needs no script on the page. The format is matched by its `bibliography-builder-citation` class; `h-cite` is kept as an extra class. The text is ordinary post content, which the writer can edit after inserting it; italics are core `<em>`. `class`, the `href` fragment, and `data-*` attributes all survive `wp_kses_post()`, so the link is unchanged when a user without `unfiltered_html` saves it (`data-*` is one of WordPress's global attributes for post content).
+
+The bibliography block's `save()` is unchanged; no deprecation is involved.
+
+### Short form
+
+Built in the editor from the entry's CSL-JSON, by the bibliography's style family (`includes/styles.json`):
+
+| Family | Styles | Short form |
+|---|---|---|
+| `notes` | Chicago Notes-Bibliography, OSCOLA | Chicago short note: `Family, Short Title, 12`. Book-like types (book, report, dataset, software, map, and similar) italicize the title; articles, chapters, theses, web pages, and the rest put it in quotation marks, with the comma inside: `Family, "Short Title," 12`. |
+| `author-date` | Chicago Author-Date, APA 7, Harvard, ABNT, MLA 9 | `(Family Year, 12)`; MLA leaves out the year: `(Family 12)`. |
+| `numeric` | IEEE, Vancouver | `[n]` or `[n, 12]`, where n is the entry's position in its list, in `save()` order. |
+
+-   **Names:** authors, else editors; the family name with any non-dropping particle ("van Gogh"), or an organization's literal name. One name gives "A", two "A and B", three or more "A et al." (Chicago 18th ed.).
+-   **Short title:** CSL `title-short`, else the title up to the first colon. With no names, the short title stands in for them; with no year, "n.d.".
+-   **Locator:** added as typed ("12", "p. 12", "chap. 3").
+-   **Safety:** the formatter returns plain text segments with any inline markup in entry data stripped; the editor builds rich text from them, so no HTML is ever built from entry data.
+
+### Citation ID stability
+
+Citation IDs are random UUIDs set once, when an entry is added (by paste, manual entry, CSL-JSON import, or the write routes), and stored in the block's `citations` attribute. They survive re-sorting (`sortCitations()` reorders the array but keeps each object), style changes (`handleCitationStyleChange` and the reformat route format each entry again and keep its ID), edits to an entry, deduplication (the earlier copy is kept, with its ID), and re-importing an entry that is already there (the new copy is dropped as a duplicate). A citation link breaks when its entry is deleted, including deleting and pasting it again (the new copy gets a new ID), and when a block is duplicated or copied within a post, since the later copy is re-keyed so element IDs stay unique (`src/lib/stable-ids.js`). Citations copied to another post point at entries that are not on that page.
+
+### Styles
+
+`src/style.scss` gives citations a dotted underline that marks them as links without relying on colour, lets them wrap inside a narrow margin note, and outlines the bibliography entry a reader has jumped to (`li:target`), with `scroll-margin-top` so a sticky header does not cover it. The stylesheet loads wherever the bibliography block does, which is every page these citations can point into.
+
+---
+
 ## File Structure
 
 ```
@@ -419,6 +467,8 @@ bibliography/
 │   ├── deprecated.js             # Block deprecation migrations
 │   ├── editor.scss               # Editor-only styles
 │   ├── style.scss                # Frontend bibliography styles
+│   ├── formats/
+│   │   └── citation.js           # "Cite" rich-text format (in-text and margin citations)
 │   ├── components/
 │   │   ├── citation-entry-body.js    # Per-citation row UI
 │   │   ├── editor-canvas-notices.js  # Block-local notice display
@@ -437,6 +487,8 @@ bibliography/
 │       ├── export.js             # CSL-JSON, BibTeX, RIS export
 │       ├── clipboard.js          # Copy-to-clipboard utility
 │       ├── wp-icons.js           # Wrapped Gutenberg icon imports
+│       ├── citation-entries.js   # Entries an in-text citation can link to
+│       ├── citation-short-form.js  # Short in-text citation text by style family
 │       └── formatting/           # Style registry + CSL-backed formatting
 ├── package.json
 └── readme.txt                    # WordPress.org readme
@@ -967,11 +1019,12 @@ PMID support shipped in 1.2; PMCID, arXiv, and ISBN in 1.6.0; library catalog nu
 
 ### Future: In-Text Citation Integration
 
--   **Companion inline citation block or format.** A small inline element (e.g., `(Smith 2024)`) that references an entry in the bibliography block by ID. Clicking it in the editor scrolls to/highlights the bibliography entry.
--   **Anchor links.** Frontend `<a href="#ref-{id}">` links from inline citations to bibliography entries, and back-links from entries to their in-text occurrences.
--   **Automatic inline citation formatting.** The inline element auto-formats based on the bibliography block's style (e.g., `(Smith 2024)` for Chicago author-date, `[1]` for IEEE).
+The inline and margin citation format shipped (see [In-Text and Margin Citations](#in-text-and-margin-citations)). Still to do:
 
--   **Margin citations (sidenotes).** A variant of the inline citation for themes with a margin column, as in Tufte-style layouts and Marginalia's glosses: a short note-form citation (Chicago short note by default: author, short title, page) set in the margin, linking to the full entry's `#ref-{id}`. The margin holds the reference and the bibliography holds the record. Needs the same entry picker and stable entry IDs as the inline element; ids must survive re-sorting, style changes, and re-imports. Proposed 2026-11-05 alongside Marginalia's gloss block.
+-   **Back-links.** A link from each bibliography entry back to its first (or every) in-text citation. It needs an `id` on each citation link, unique per occurrence, which the format does not write; a render-time filter could add both without changing `save()`.
+-   **Editor navigation.** Selecting a citation in the editor could scroll to and highlight its entry in the bibliography block.
+-   **Keeping citations current.** The short form is inserted as plain text, so it does not follow a later style change, an edit to the entry, or (for numeric styles) a reordered list. A check could flag citations whose text no longer matches their entry's short form, or whose `ref-…` target is gone, and offer to update them.
+-   **Fuller short forms.** Year suffixes (2020a) in author-date styles, APA's "&" and comma ("(Smith & Jones, 2020)"), a locator label ("p.") per style, and ibid.-free consecutive-note handling.
 -   **Microformats.** Mark each entry `h-cite` (with `p-name`, `p-author`, `dt-published`, `u-url`/`u-uid` for DOI and URL) so IndieWeb parsers read the bibliography as citations, and an inline or margin citation can be an `h-cite` that points at it. Borges already emits JSON-LD and COinS from the same CSL-JSON; this is a third view of it, and the entry markup belongs here, not in themes (Ollie Child Kit's `microformats` module leaves bibliography entries to Borges).
 
 ### Future: Annotated Bibliographies

@@ -21,6 +21,8 @@ The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibT
 
 **Nine citation styles.** Choose from Chicago Notes-Bibliography, Chicago Author-Date, APA 7, MLA 9, Harvard, Vancouver, IEEE, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) — all with automatic sorting per style rules, following each manual's current edition. Each style is a [Citation Style Language](https://citationstyles.org/) (CSL) file written for Borges and rendered by the citeproc-php engine.
 
+**In-text and margin citations.** Choose Cite in any paragraph to link a short citation, such as "(Illich 1973, 12)" or a Chicago short note, to its entry in a bibliography on the same post. It works in running text and in a theme's margin-note paragraph style, and it is a plain link, so readers need no JavaScript.
+
 **Portable.** Static HTML output survives plugin deactivation. No shortcodes. No database tables.
 
 **Accessible by default.** Semantic list markup, keyboard-operable editing and entry reordering (Alt+Arrow for numeric styles), visible focus, and optional Block Accessibility Checks integration (requires that plugin at version 4.0 or later) help your bibliographies meet accessibility expectations.
