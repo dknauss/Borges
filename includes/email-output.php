@@ -13,9 +13,9 @@
  *   MailPoet, Jetpack's newsletters, and Newspack Newsletters share; and
  * - a feed filter, for RSS and Atom.
  *
- * Both keep the bibliography (heading, entries, links) and drop what only
- * works on the site: the Cite / Export panel or its data, the copy button,
- * JSON-LD and CSL-JSON scripts, and COinS spans.
+ * Both keep the bibliography (heading, entries, links, shown annotations)
+ * and drop what only works on the site: the Cite / Export panel or its data,
+ * the copy button, JSON-LD and CSL-JSON scripts, and COinS spans.
  *
  * @package BibliographyBuilder
  */
@@ -69,10 +69,21 @@ function bibliography_builder_portable_markup( $html ) {
 		1
 	);
 
-	// Legacy entries in <cite>; current ones are already spans. Both get an
-	// inline style, the only kind of style most email clients keep.
+	// Annotations are readable prose, so they stay; an inline style indents
+	// them under their entry, as the stylesheet does. Their text is escaped,
+	// so it holds no "<".
+	$html = (string) preg_replace(
+		'#<p class="bibliography-builder-annotation">#',
+		'<p class="bibliography-builder-annotation" style="margin:0.4em 0 0 2em">',
+		$html
+	);
+
+	// Legacy entries in <cite>; current ones are already spans, followed by
+	// any annotations. Both get an inline style, the only kind of style most
+	// email clients keep.
 	return (string) preg_replace(
-		'#<(?:cite|span) class="bibliography-builder-entry-text">(.*?)</(?:cite|span)>(?=</li>)#s',
+		'#<(?:cite|span) class="bibliography-builder-entry-text">(.*?)</(?:cite|span)>'
+			. '(?=(?:<p class="bibliography-builder-annotation"[^>]*>[^<]*</p>)*</li>)#s',
 		'<span class="bibliography-builder-entry-text" style="font-style:normal">$1</span>',
 		$html
 	);

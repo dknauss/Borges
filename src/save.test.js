@@ -33,6 +33,61 @@ function createCitation( overrides = {} ) {
 	};
 }
 
+describe( 'save annotations', () => {
+	const plain = createCitation();
+	const annotated = {
+		...plain,
+		csl: { ...plain.csl, annote: 'First & <only>.\n\nSecond.' },
+	};
+	const render = ( extra ) =>
+		renderToStaticMarkup(
+			save( {
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					outputCoins: true,
+					outputCiteExport: true,
+					citations: [ annotated ],
+					...extra,
+				},
+			} )
+		);
+
+	it( 'prints nothing new while annotations are hidden', () => {
+		const withoutAnnote = renderToStaticMarkup(
+			save( {
+				attributes: {
+					citationStyle: 'chicago-notes-bibliography',
+					outputCoins: true,
+					outputCiteExport: true,
+					citations: [ createCitation() ],
+				},
+			} )
+		);
+		const hidden = render( {} );
+
+		expect( hidden ).not.toContain( 'bibliography-builder-annotation' );
+		expect( hidden ).not.toContain( 'N1  -' );
+		expect( render( { showAnnotations: false } ) ).toBe( hidden );
+		// Only the CSL-JSON data differs: it carries annote, as it always has.
+		expect( hidden.replace( / data-cite-csl-json="[^"]*"/u, '' ) ).toBe(
+			withoutAnnote.replace( / data-cite-csl-json="[^"]*"/u, '' )
+		);
+	} );
+
+	it( 'prints one paragraph per annotation paragraph after the entry text', () => {
+		const shown = render( { showAnnotations: true } );
+
+		expect( shown ).toContain(
+			'Example formatted citation</span><p class="bibliography-builder-annotation">First &amp; &lt;only&gt;.</p><p class="bibliography-builder-annotation">Second.</p><span class="Z3988"'
+		);
+		expect( shown ).toContain( 'N1  - First &amp; &lt;only&gt;. Second.' );
+		expect( shown ).toContain(
+			'data-cite-text="Example formatted citation"'
+		);
+		expect( shown.match( /First/gu ) ).toHaveLength( 3 );
+	} );
+} );
+
 describe( 'save', () => {
 	it( 'returns null when there are no citations', () => {
 		expect(

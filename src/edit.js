@@ -97,6 +97,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		outputCoins = false,
 		outputCslJson = false,
 		outputCiteExport = false,
+		showAnnotations = false,
 	} = attributes;
 	const selectableStyles = useMemo( () => getSelectableStyles(), [] );
 	const blockProps = useBlockProps();
@@ -624,6 +625,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				handleStructuredFieldChange={ handleStructuredFieldChange }
 				isNumericFamily={ isNumericFamily }
 				romanTitles={ romanTitles }
+				showAnnotations={ showAnnotations }
 				canMoveUp={ index > 0 }
 				canMoveDown={ index < sortedCitations.length - 1 }
 				onMoveUp={ () =>
@@ -765,6 +767,20 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						}
 						help={ __(
 							'Choose a heading level to put the visible heading in the page outline, where screen reader users navigate by headings. The size does not change with the level.',
+							'borges-bibliography-builder'
+						) }
+					/>
+					<ToggleControl
+						label={ __(
+							'Show annotations',
+							'borges-bibliography-builder'
+						) }
+						checked={ showAnnotations }
+						onChange={ ( value ) =>
+							setAttributes( { showAnnotations: value } )
+						}
+						help={ __(
+							'Print each entry’s annotation under it, for an annotated bibliography. Add annotations with the Edit fields button.',
 							'borges-bibliography-builder'
 						) }
 					/>

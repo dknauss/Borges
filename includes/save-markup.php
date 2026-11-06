@@ -485,6 +485,7 @@ function bibliography_builder_save_block_props( $attrs ) {
  * @param mixed  $repeated_prefix Author names to show as the repeated-author mark, or null.
  * @param bool   $roman_titles Leave titles roman (a table of cases).
  * @param string $repeated_mark The style's mark: `bibliography_builder_save_repeated_author_mark()`.
+ * @param bool   $annotations  Print the entry's annotation (the block's `showAnnotations`).
  * @return string
  */
 function bibliography_builder_save_entry(
@@ -493,7 +494,8 @@ function bibliography_builder_save_entry(
 	$cite_export,
 	$repeated_prefix = null,
 	$roman_titles = false,
-	$repeated_mark = "\u{2011}\u{2011}\u{2011}"
+	$repeated_mark = "\u{2011}\u{2011}\u{2011}",
+	$annotations = false
 ) {
 	$csl        = bibliography_builder_citation_csl( $citation );
 	$link_label = '';
@@ -555,9 +557,17 @@ function bibliography_builder_save_entry(
 				'id'   => 'ref-' . $id,
 				'lang' => $language,
 			),
-			$cite_export ? bibliography_builder_save_cite_export_data( $citation ) : array()
+			$cite_export ? bibliography_builder_save_cite_export_data( $citation, $annotations ) : array()
 		)
 	) . '><span class="bibliography-builder-entry-text">' . $text . '</span>';
+
+	if ( $annotations ) {
+		foreach ( bibliography_builder_save_annotation_paragraphs( $csl ) as $paragraph ) {
+			$html .= '<p class="bibliography-builder-annotation">'
+				. bibliography_builder_escape_save_text( $paragraph )
+				. '</p>';
+		}
+	}
 
 	if ( $output_coins ) {
 		$html .= '<span' . bibliography_builder_save_attributes(
@@ -687,7 +697,8 @@ function bibliography_builder_render_save_markup( $attrs ) {
 				$flag( 'outputCiteExport', false ),
 				false === $index ? null : $repeated[ $index ],
 				$roman_titles,
-				bibliography_builder_save_repeated_author_mark( $style_key )
+				bibliography_builder_save_repeated_author_mark( $style_key ),
+				$flag( 'showAnnotations', false )
 			);
 		};
 	$groups = bibliography_builder_save_group_citations( $sorted, $style_key );

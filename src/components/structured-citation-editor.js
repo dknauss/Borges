@@ -2,6 +2,7 @@ import { Button } from '@wordpress/components';
 import { CancelIcon, ConfirmIcon } from '../lib/wp-icons';
 import { useEffect, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { ANNOTATION_FIELD_DEFINITION } from '../lib/annotation';
 
 export const STRUCTURED_FIELD_DEFINITIONS = [
 	{
@@ -62,6 +63,7 @@ export const STRUCTURED_FIELD_DEFINITIONS = [
 		),
 		control: 'checkbox',
 	},
+	ANNOTATION_FIELD_DEFINITION,
 ];
 
 export function StructuredCitationEditor( {
@@ -152,8 +154,57 @@ export function StructuredCitationEditor( {
 				.filter(
 					( { types } ) => ! types || types.includes( entryType )
 				)
-				.map( ( { key, label, help, control }, index ) =>
-					control === 'checkbox' ? (
+				.map( ( { key, label, help, control }, index ) => {
+					if ( control === 'textarea' ) {
+						return (
+							<div
+								key={ key }
+								className="bibliography-builder-structured-field bibliography-builder-structured-textarea"
+							>
+								<label
+									htmlFor={ getStructuredFieldId(
+										citation.id,
+										key
+									) }
+								>
+									{ label }
+								</label>
+								<textarea
+									id={ getStructuredFieldId(
+										citation.id,
+										key
+									) }
+									rows={ 4 }
+									value={ fields[ key ] || '' }
+									aria-describedby={
+										help
+											? getStructuredFieldId(
+													citation.id,
+													`${ key }-help`
+												)
+											: undefined
+									}
+									onChange={ ( event ) =>
+										onFieldChange( key, event.target.value )
+									}
+									onKeyDown={ handleKeyDown }
+								/>
+								{ help && (
+									<p
+										id={ getStructuredFieldId(
+											citation.id,
+											`${ key }-help`
+										) }
+										className="bibliography-builder-structured-help"
+									>
+										{ help }
+									</p>
+								) }
+							</div>
+						);
+					}
+
+					return control === 'checkbox' ? (
 						<div
 							key={ key }
 							className="bibliography-builder-structured-field bibliography-builder-structured-checkbox"
@@ -223,8 +274,8 @@ export function StructuredCitationEditor( {
 								onKeyDown={ handleKeyDown }
 							/>
 						</div>
-					)
-				) }
+					);
+				} ) }
 			<div className="bibliography-builder-structured-actions">
 				<Button
 					variant="primary"

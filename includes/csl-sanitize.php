@@ -606,7 +606,48 @@ function bibliography_builder_validate_and_sanitize_csl_item( $csl ) {
 		}
 	}
 
-	return bibliography_builder_sanitize_short_container_title( $sanitized_csl );
+	return bibliography_builder_sanitize_csl_annote(
+		bibliography_builder_sanitize_short_container_title( $sanitized_csl )
+	);
+}
+
+/**
+ * Keep an annotation (CSL `annote`) as clean plain text, or drop it:
+ * `sanitizeAnnote()` in `src/lib/csl-sanitize.js`. The text keeps its
+ * paragraphs (separated by one blank line) and loses any markup, Windows line
+ * endings, and surrounding white space. A value that is not a string, or that
+ * is left empty, is dropped rather than refused, since an annotation is never
+ * needed.
+ *
+ * @param array $csl Sanitized CSL-JSON item.
+ * @return array
+ */
+function bibliography_builder_sanitize_csl_annote( $csl ) {
+	if ( ! array_key_exists( 'annote', $csl ) ) {
+		return $csl;
+	}
+
+	$annote = $csl['annote'];
+	unset( $csl['annote'] );
+
+	if ( ! is_string( $annote ) ) {
+		return $csl;
+	}
+
+	$text = bibliography_builder_js_trim(
+		bibliography_builder_strip_csl_html( (string) preg_replace( '/\r\n?/', "\n", $annote ) )
+	);
+	$text = (string) preg_replace(
+		'/\n[ \t]*\n[' . BIBLIOGRAPHY_BUILDER_JS_WHITESPACE . ']*/u',
+		"\n\n",
+		$text
+	);
+
+	if ( '' !== $text ) {
+		$csl['annote'] = $text;
+	}
+
+	return $csl;
 }
 
 /**

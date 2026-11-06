@@ -17,6 +17,11 @@
  *   instead of `address` or `location`, so citation-js drops it. It is renamed
  *   before parsing (`renameBibtexCityField()`), so citation-js decodes it
  *   like any other field.
+ * - `annote` (BibTeX) and `annotation` (BibLaTeX) reach CSL `annote`, but
+ *   citation-js joins their paragraphs into one. A blank line is marked as
+ *   TeX's `\par` before parsing (`markBibtexAnnotationParagraphs()`), and
+ *   every `\par` becomes a blank line again after it. An abstract is not an
+ *   annotation, so `abstract` stays CSL `abstract`.
  */
 
 // Babel and polyglossia language names, lowercased, mapped to BCP 47 tags.
@@ -270,6 +275,13 @@ export function normalizeBibtexCsl( csl, rawEntry ) {
 		}
 	}
 
+	if ( typeof normalized.annote === 'string' ) {
+		normalized.annote = normalized.annote.replace(
+			TEX_PARAGRAPH_REGEX,
+			'\n\n'
+		);
+	}
+
 	if ( ! normalized.URL ) {
 		const arxivUrl = getArxivUrlFromRawEntry( rawEntry );
 
@@ -404,6 +416,50 @@ function getBibtexFieldNames( value, open ) {
 	}
 
 	return fields;
+}
+
+const ANNOTATION_FIELD_NAMES = new Set( [ 'annote', 'annotation' ] );
+const TEX_PARAGRAPH_REGEX = /\s*\\par(?![a-z])\s*/giu;
+
+/**
+ * Mark the paragraph breaks in an entry's annotation as TeX's `\par`, which
+ * citation-js keeps, so normalizeBibtexCsl() can restore them.
+ *
+ * Only the `annote` and `annotation` fields change, from each name to the
+ * next field (or the end of the entry).
+ *
+ * @param {string} value BibTeX segment text.
+ * @return {string} The segment with annotation paragraph breaks marked.
+ */
+export function markBibtexAnnotationParagraphs( value ) {
+	const open = findBibtexEntryOpenBrace( value );
+
+	if ( open === -1 ) {
+		return value;
+	}
+
+	const fields = getBibtexFieldNames( value, open );
+	const end = findBibtexBlockEnd( value, open );
+	let result = value;
+
+	for ( let index = fields.length - 1; index >= 0; index-- ) {
+		if ( ! ANNOTATION_FIELD_NAMES.has( fields[ index ].name ) ) {
+			continue;
+		}
+
+		const start = fields[ index ].index;
+		const stop =
+			index + 1 < fields.length ? fields[ index + 1 ].index : end;
+
+		result =
+			result.slice( 0, start ) +
+			result
+				.slice( start, stop )
+				.replace( /\r?\n[ \t]*\r?\n\s*/gu, ' \\par ' ) +
+			result.slice( stop );
+	}
+
+	return result;
 }
 
 /**

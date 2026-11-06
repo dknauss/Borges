@@ -2,6 +2,7 @@ import { getPlainDisplayText } from './formatting';
 import { getPrimaryIdentifierValue } from './csl-utils';
 import { sortCitations } from './sorter';
 import { groupCitations } from './bibliography-groups';
+import { getRisAnnotation } from './annotation';
 
 export const CSL_JSON_EXPORT_FILENAME = 'bibliography.csl.json';
 export const CSL_JSON_EXPORT_MIME_TYPE =
@@ -191,9 +192,19 @@ function getRisJournalAbbreviation( csl ) {
  *                                                data of blocks saved by
  *                                                1.18.0 and earlier has none
  *                                                (src/deprecated.js).
+ * @param {boolean} [options.annotation]          Add an `N1` line with the
+ *                                                entry's annotation (CSL
+ *                                                `annote`). Off by default:
+ *                                                save() adds it only when the
+ *                                                block shows annotations, so
+ *                                                blocks saved before then are
+ *                                                unchanged.
  * @return {string} RIS record.
  */
-export function cslToRisEntry( csl, { journalAbbreviation = false } = {} ) {
+export function cslToRisEntry(
+	csl,
+	{ journalAbbreviation = false, annotation = false } = {}
+) {
 	const lines = [];
 	const { start, end } = splitPageRange( csl.page );
 
@@ -232,6 +243,9 @@ export function cslToRisEntry( csl, { journalAbbreviation = false } = {} ) {
 		getPrimaryIdentifierValue( csl.ISBN ) ||
 			getPrimaryIdentifierValue( csl.ISSN )
 	);
+	if ( annotation ) {
+		appendRisLine( lines, 'N1', getRisAnnotation( csl ) );
+	}
 
 	lines.push( 'ER  - ' );
 
@@ -470,7 +484,12 @@ export function buildRisExportContent( citations, citationStyle ) {
 	const cslArray = sortedCitations.map( ( citation ) => citation.csl );
 
 	return `${ cslArray
-		.map( ( csl ) => cslToRisEntry( csl, { journalAbbreviation: true } ) )
+		.map( ( csl ) =>
+			cslToRisEntry( csl, {
+				journalAbbreviation: true,
+				annotation: true,
+			} )
+		)
 		.join( '\n\n' ) }\n`;
 }
 
