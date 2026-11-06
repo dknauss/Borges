@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array
  */
 function bibliography_builder_save_csl_to_json_ld( $csl ) {
+	// No annotation (CSL `annote`): see cslToJsonLd() in src/lib/jsonld.js.
 	$types = array(
 		'article-journal'  => 'ScholarlyArticle',
 		'book'             => 'Book',

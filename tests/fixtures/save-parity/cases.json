@@ -2706,6 +2706,400 @@
 					}
 				]
 			}
+		},
+		{
+			"name": "annotations-hidden",
+			"note": "Entries carry CSL annote, but the block has no showAnnotations attribute (every block saved before annotations existed): the markup is what 1.18.0 saved, with no annotation paragraphs and no RIS N1 line. CSL-JSON keeps annote as it always did. Committed from the 1.18.0 save() before annotations were added.",
+			"attributes": {
+				"citationStyle": "chicago-notes-bibliography",
+				"headingText": "Annotated Bibliography",
+				"headingLevel": 2,
+				"bibliographyId": "bib-annotated",
+				"outputCoins": true,
+				"outputCslJson": true,
+				"outputCiteExport": true,
+				"citations": [
+					{
+						"id": "ahmed",
+						"csl": {
+							"type": "book",
+							"title": "The Promise of Happiness",
+							"author": [
+								{
+									"family": "Ahmed",
+									"given": "Sara"
+								}
+							],
+							"publisher": "Duke University Press",
+							"publisher-place": "Durham",
+							"issued": {
+								"date-parts": [
+									[
+										2010
+									]
+								]
+							},
+							"annote": "Reads happiness as a promise that directs us towards some objects & away from others.\n\nChapter 2 on \"feminist killjoys\" is the most useful <here>.\r\n\r\n\r\nShort third paragraph,\nwith a line break."
+						},
+						"formattedText": "Ahmed, Sara. <i>The Promise of Happiness</i>. Durham: Duke University Press, 2010."
+					},
+					{
+						"id": "berlant",
+						"csl": {
+							"type": "article-journal",
+							"title": "Cruel Optimism",
+							"author": [
+								{
+									"family": "Berlant",
+									"given": "Lauren"
+								}
+							],
+							"container-title": "Differences",
+							"volume": "17",
+							"issue": "3",
+							"page": "20-36",
+							"issued": {
+								"date-parts": [
+									[
+										2006
+									]
+								]
+							},
+							"DOI": "10.1215/10407391-2006-009",
+							"annote": "   \n\n  "
+						},
+						"formattedText": "Berlant, Lauren. “Cruel Optimism.” <i>Differences</i> 17, no. 3 (2006): 20–36. https://doi.org/10.1215/10407391-2006-009."
+					},
+					{
+						"id": "cvetkovich",
+						"csl": {
+							"type": "book",
+							"title": "Depression: A Public Feeling",
+							"author": [
+								{
+									"family": "Cvetkovich",
+									"given": "Ann"
+								}
+							],
+							"publisher": "Duke University Press",
+							"issued": {
+								"date-parts": [
+									[
+										2012
+									]
+								]
+							}
+						},
+						"formattedText": "Cvetkovich, Ann. <i>Depression: A Public Feeling</i>. Durham: Duke University Press, 2012."
+					},
+					{
+						"id": "ngai",
+						"csl": {
+							"type": "book",
+							"title": "Ugly Feelings",
+							"author": [
+								{
+									"family": "Ngai",
+									"given": "Sianne"
+								}
+							],
+							"publisher": "Harvard University Press",
+							"issued": {
+								"date-parts": [
+									[
+										2005
+									]
+								]
+							},
+							"annote": "A one-paragraph note."
+						},
+						"formattedText": "Ngai, Sianne. <i>Ugly Feelings</i>. Cambridge, MA: Harvard University Press, 2005.",
+						"displayOverride": "Ngai, Sianne. Ugly Feelings. Harvard University Press, 2005."
+					}
+				]
+			}
+		},
+		{
+			"name": "annotations-off",
+			"note": "showAnnotations set to false: identical to annotations-hidden (committed from the 1.18.0 save()).",
+			"attributes": {
+				"citationStyle": "chicago-notes-bibliography",
+				"headingText": "Annotated Bibliography",
+				"headingLevel": 2,
+				"bibliographyId": "bib-annotated",
+				"outputCoins": true,
+				"outputCslJson": true,
+				"outputCiteExport": true,
+				"showAnnotations": false,
+				"citations": [
+					{
+						"id": "ahmed",
+						"csl": {
+							"type": "book",
+							"title": "The Promise of Happiness",
+							"author": [
+								{
+									"family": "Ahmed",
+									"given": "Sara"
+								}
+							],
+							"publisher": "Duke University Press",
+							"publisher-place": "Durham",
+							"issued": {
+								"date-parts": [
+									[
+										2010
+									]
+								]
+							},
+							"annote": "Reads happiness as a promise that directs us towards some objects & away from others.\n\nChapter 2 on \"feminist killjoys\" is the most useful <here>.\r\n\r\n\r\nShort third paragraph,\nwith a line break."
+						},
+						"formattedText": "Ahmed, Sara. <i>The Promise of Happiness</i>. Durham: Duke University Press, 2010."
+					},
+					{
+						"id": "berlant",
+						"csl": {
+							"type": "article-journal",
+							"title": "Cruel Optimism",
+							"author": [
+								{
+									"family": "Berlant",
+									"given": "Lauren"
+								}
+							],
+							"container-title": "Differences",
+							"volume": "17",
+							"issue": "3",
+							"page": "20-36",
+							"issued": {
+								"date-parts": [
+									[
+										2006
+									]
+								]
+							},
+							"DOI": "10.1215/10407391-2006-009",
+							"annote": "   \n\n  "
+						},
+						"formattedText": "Berlant, Lauren. “Cruel Optimism.” <i>Differences</i> 17, no. 3 (2006): 20–36. https://doi.org/10.1215/10407391-2006-009."
+					},
+					{
+						"id": "cvetkovich",
+						"csl": {
+							"type": "book",
+							"title": "Depression: A Public Feeling",
+							"author": [
+								{
+									"family": "Cvetkovich",
+									"given": "Ann"
+								}
+							],
+							"publisher": "Duke University Press",
+							"issued": {
+								"date-parts": [
+									[
+										2012
+									]
+								]
+							}
+						},
+						"formattedText": "Cvetkovich, Ann. <i>Depression: A Public Feeling</i>. Durham: Duke University Press, 2012."
+					},
+					{
+						"id": "ngai",
+						"csl": {
+							"type": "book",
+							"title": "Ugly Feelings",
+							"author": [
+								{
+									"family": "Ngai",
+									"given": "Sianne"
+								}
+							],
+							"publisher": "Harvard University Press",
+							"issued": {
+								"date-parts": [
+									[
+										2005
+									]
+								]
+							},
+							"annote": "A one-paragraph note."
+						},
+						"formattedText": "Ngai, Sianne. <i>Ugly Feelings</i>. Cambridge, MA: Harvard University Press, 2005.",
+						"displayOverride": "Ngai, Sianne. Ugly Feelings. Harvard University Press, 2005."
+					}
+				]
+			}
+		},
+		{
+			"name": "annotations-shown",
+			"note": "showAnnotations on: each annotation paragraph is a <p class=\"bibliography-builder-annotation\"> after the entry text and before COinS; blank-only annotations print nothing; the Cite / Export RIS gains an N1 line; the copied text, COinS, and JSON-LD leave the annotation out.",
+			"attributes": {
+				"citationStyle": "chicago-notes-bibliography",
+				"headingText": "Annotated Bibliography",
+				"headingLevel": 2,
+				"bibliographyId": "bib-annotated",
+				"outputCoins": true,
+				"outputCslJson": true,
+				"outputCiteExport": true,
+				"citations": [
+					{
+						"id": "ahmed",
+						"csl": {
+							"type": "book",
+							"title": "The Promise of Happiness",
+							"author": [
+								{
+									"family": "Ahmed",
+									"given": "Sara"
+								}
+							],
+							"publisher": "Duke University Press",
+							"publisher-place": "Durham",
+							"issued": {
+								"date-parts": [
+									[
+										2010
+									]
+								]
+							},
+							"annote": "Reads happiness as a promise that directs us towards some objects & away from others.\n\nChapter 2 on \"feminist killjoys\" is the most useful <here>.\r\n\r\n\r\nShort third paragraph,\nwith a line break."
+						},
+						"formattedText": "Ahmed, Sara. <i>The Promise of Happiness</i>. Durham: Duke University Press, 2010."
+					},
+					{
+						"id": "berlant",
+						"csl": {
+							"type": "article-journal",
+							"title": "Cruel Optimism",
+							"author": [
+								{
+									"family": "Berlant",
+									"given": "Lauren"
+								}
+							],
+							"container-title": "Differences",
+							"volume": "17",
+							"issue": "3",
+							"page": "20-36",
+							"issued": {
+								"date-parts": [
+									[
+										2006
+									]
+								]
+							},
+							"DOI": "10.1215/10407391-2006-009",
+							"annote": "   \n\n  "
+						},
+						"formattedText": "Berlant, Lauren. “Cruel Optimism.” <i>Differences</i> 17, no. 3 (2006): 20–36. https://doi.org/10.1215/10407391-2006-009."
+					},
+					{
+						"id": "cvetkovich",
+						"csl": {
+							"type": "book",
+							"title": "Depression: A Public Feeling",
+							"author": [
+								{
+									"family": "Cvetkovich",
+									"given": "Ann"
+								}
+							],
+							"publisher": "Duke University Press",
+							"issued": {
+								"date-parts": [
+									[
+										2012
+									]
+								]
+							}
+						},
+						"formattedText": "Cvetkovich, Ann. <i>Depression: A Public Feeling</i>. Durham: Duke University Press, 2012."
+					},
+					{
+						"id": "ngai",
+						"csl": {
+							"type": "book",
+							"title": "Ugly Feelings",
+							"author": [
+								{
+									"family": "Ngai",
+									"given": "Sianne"
+								}
+							],
+							"publisher": "Harvard University Press",
+							"issued": {
+								"date-parts": [
+									[
+										2005
+									]
+								]
+							},
+							"annote": "A one-paragraph note."
+						},
+						"formattedText": "Ngai, Sianne. <i>Ugly Feelings</i>. Cambridge, MA: Harvard University Press, 2005.",
+						"displayOverride": "Ngai, Sianne. Ugly Feelings. Harvard University Press, 2005."
+					}
+				],
+				"showAnnotations": true
+			}
+		},
+		{
+			"name": "annotations-shown-numeric",
+			"note": "showAnnotations on in a numbered list with no other layers. A non-string annote prints nothing.",
+			"attributes": {
+				"citationStyle": "ieee",
+				"showAnnotations": true,
+				"outputJsonLd": false,
+				"citations": [
+					{
+						"id": "one",
+						"csl": {
+							"type": "article-journal",
+							"title": "Signals",
+							"author": [
+								{
+									"family": "Oduya",
+									"given": "Kemi"
+								}
+							],
+							"container-title": "Journal of Signals",
+							"issued": {
+								"date-parts": [
+									[
+										2019
+									]
+								]
+							},
+							"annote": "Short note: 3 < 4 & 5 > 2."
+						},
+						"formattedText": "[1] K. Oduya, “Signals,” <i>Journal of Signals</i>, 2019."
+					},
+					{
+						"id": "two",
+						"csl": {
+							"type": "book",
+							"title": "Noise",
+							"author": [
+								{
+									"family": "Park",
+									"given": "Ji-woo"
+								}
+							],
+							"issued": {
+								"date-parts": [
+									[
+										2021
+									]
+								]
+							},
+							"annote": 42
+						},
+						"formattedText": "[2] J. Park, <i>Noise</i>. 2021."
+					}
+				]
+			}
 		}
 	]
 }
