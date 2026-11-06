@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Microformats for each entry.** As a page renders, each bibliography entry becomes an `h-cite`, so IndieWeb tools (webmention receivers, readers, and other microformats parsers) read the bibliography as a list of citations: its title, each author as an `h-card` (with an ORCID iD as its link), the date to the precision the record has, the DOI as `https://doi.org/…`, the URL, the journal or book it is in, and the publisher. The values sit in hidden `<data>` elements, so the visible entry and what screen readers announce are unchanged. Published posts get it without being re-saved, and feeds and email leave it out. The new `bibliography_builder_enrich_microformats` filter turns it off.
+
 - **Journal abbreviations in the RIS export.** The per-entry Cite / Export RIS and the bibliography's RIS download now carry a record's journal abbreviation (CSL `container-title-short`, or Zotero's `journalAbbreviation`) as a `J2` line after the journal's full title, where Zotero, Mendeley, and EndNote read it. A record without one has no `J2` line.
 
 - **Sentence case in Harvard.** Cite Them Right asks for titles with only the first word and proper nouns capitalized, the subtitle included ("Cite them right: the essential referencing guide"), so Harvard now prints titles of works and of the book a chapter is in the way APA and Vancouver do, from a converted copy; journal names keep their capitals, and the stored title never changes. The "Keep title capitalization as entered" checkbox covers the proper nouns the conversion can't recognize. Existing blocks keep their stored text until their entries are next formatted.
