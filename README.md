@@ -126,6 +126,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 - **Structured editing** — Per-field editing for every citation, whatever its source, plus a plain-text override for the displayed line.
 - **Semantic output** — `role="doc-bibliography"`, `lang` attributes, and hanging-indent styling without deprecated bibliography-entry ARIA roles.
 - **JSON-LD** — Schema.org structured data for search engines, AI systems, and semantic consumers (on by default). The cited works are nested in one `ItemList`, so none is mistaken for the page itself.
+- **Microformats** — Each entry is an `h-cite` with its title, authors, date, DOI, URL, and container, so IndieWeb tools read the bibliography as citations. Added as the page renders; the `bibliography_builder_enrich_microformats` filter turns it off.
 - **COinS** — Optional OpenURL spans for browser-based citation manager detection, especially Zotero and legacy OpenURL workflows.
 - **CSL-JSON output** — Optional machine-readable metadata for citation-manager, citeproc, and scholarly-service interoperability.
 - **Export** — Download the current bibliography as CSL-JSON, UTF-8 BibTeX, BibLaTeX, or RIS; copy individual citations or the full bibliography as plain text.
