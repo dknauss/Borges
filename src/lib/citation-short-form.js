@@ -358,6 +358,18 @@ export function getShortFormText( csl, styleKey, options = {} ) {
 }
 
 /**
+ * A locator as citations use and store it: plain text, spaces collapsed,
+ * trimmed. The short form adds it in this form, and the "Cite" format saves
+ * the same string in the link's `data-locator`.
+ *
+ * @param {unknown} value Locator as typed.
+ * @return {string} Normalized locator, or an empty string.
+ */
+export function normalizeLocator( value ) {
+	return clean( value );
+}
+
+/**
  * A field as trimmed plain text, without inline markup.
  *
  * @param {unknown} value Field value.

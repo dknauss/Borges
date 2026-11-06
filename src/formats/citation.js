@@ -6,9 +6,12 @@
  * plain fragment link, which needs no script on the page:
  *
  *     <a class="bibliography-builder-citation h-cite"
- *        href="#ref-{id}" data-bibliography-ref="{id}">…</a>
+ *        href="#ref-{id}" data-bibliography-ref="{id}"
+ *        data-locator="{locator}">…</a>
  *
- * `#ref-{id}` is the `<li>` ID save() writes for the entry. The text is
+ * `#ref-{id}` is the `<li>` ID save() writes for the entry. `data-locator`
+ * holds the page or other locator, when there is one, so the citation can be
+ * rebuilt after a style change (src/lib/citation-update.js). The text is
  * ordinary post content; the short form inserted here is only a starting
  * point (src/lib/citation-short-form.js).
  */
@@ -46,6 +49,7 @@ import {
 import {
 	getShortFormSegments,
 	getShortFormText,
+	normalizeLocator,
 } from '../lib/citation-short-form';
 
 export const CITATION_FORMAT_NAME = 'bibliography-builder/citation';
@@ -64,15 +68,21 @@ const ANCHOR_SETTINGS = {
 /**
  * The format object for one entry.
  *
- * @param {string} id Citation ID.
+ * @param {string} id        Citation ID.
+ * @param {string} [locator] Locator; saved as `data-locator` when not empty.
  * @return {Object} Rich-text format.
  */
-export function getCitationFormat( id ) {
+export function getCitationFormat( id, locator = '' ) {
+	const cleanLocator = normalizeLocator( locator );
+
 	return {
 		type: CITATION_FORMAT_NAME,
+		// In the order of the format's `attributes` setting, which is the
+		// order saved markup is read back in.
 		attributes: {
 			href: getEntryHref( id ),
 			ref: id,
+			...( cleanLocator ? { locator: cleanLocator } : {} ),
 		},
 		// Written first, as it is when saved markup is read back, so the
 		// attribute order does not change when a post is saved again.
@@ -85,35 +95,56 @@ export function getCitationFormat( id ) {
 /**
  * The extent of the citation at or around the selection.
  *
+ * A citation is a run of characters linked to the same entry, so italics
+ * inside it do not split it, and two citations side by side ("[1][2]") stay
+ * apart: the run grows only over characters that cite the same `ref`.
+ *
  * @param {Object} value Rich-text value.
+ * @param {string} [ref] The active citation's entry ID, when known. With a
+ *                       caret between two citations, it picks the one the
+ *                       toolbar shows as active.
  * @return {{start: number, end: number}|null} Range, or null when the
  *     selection is not in a citation.
  */
-export function getCitationRange( value ) {
+export function getCitationRange( value, ref ) {
 	const { formats = [], start = 0, end = 0 } = value;
-	const has = ( index ) =>
-		Array.isArray( formats[ index ] ) &&
-		formats[ index ].some(
-			( format ) => format.type === CITATION_FORMAT_NAME
-		);
-	let from = start;
-	let to = end;
+	const refAt = ( index ) => {
+		const format = Array.isArray( formats[ index ] )
+			? formats[ index ].find(
+					( candidate ) => candidate.type === CITATION_FORMAT_NAME
+				)
+			: undefined;
 
-	if ( start === end ) {
-		if ( has( start ) ) {
-			to = start + 1;
-		} else if ( start > 0 && has( start - 1 ) ) {
-			from = start - 1;
-		} else {
-			return null;
+		return format ? String( format.attributes?.ref ?? '' ) : null;
+	};
+	const candidates =
+		start === end ? [ start, start - 1 ] : [ start, end - 1 ];
+	let anchor = -1;
+	let anchorRef = null;
+
+	for ( const index of candidates ) {
+		const found = index >= 0 ? refAt( index ) : null;
+
+		if ( found !== null && ( ref === undefined || found === ref ) ) {
+			anchor = index;
+			anchorRef = found;
+			break;
 		}
 	}
 
-	while ( from > 0 && has( from - 1 ) ) {
+	if ( anchorRef === null ) {
+		return start === end ? null : { start, end };
+	}
+
+	const isSame = ( index ) => refAt( index ) === anchorRef;
+	let from = start === end ? anchor : start;
+	let to = start === end ? anchor + 1 : end;
+
+	while ( from > 0 && isSame( from - 1 ) ) {
 		from -= 1;
 	}
 
-	while ( to < formats.length && has( to ) ) {
+	while ( to < formats.length && isSame( to ) ) {
 		to += 1;
 	}
 
@@ -150,7 +181,7 @@ function buildCitationValue( entry, locator ) {
 
 	return applyFormat(
 		value,
-		getCitationFormat( entry.id ),
+		getCitationFormat( entry.id, locator ),
 		0,
 		value.text.length
 	);
@@ -162,7 +193,8 @@ function buildCitationValue( entry, locator ) {
  * @param {Object}  value                 Rich-text value.
  * @param {Object}  entry                 Citable entry.
  * @param {Object}  options               Options.
- * @param {string}  [options.locator]     Locator.
+ * @param {string}  [options.locator]     Locator. Saved as `data-locator`,
+ *                                        also when the selected text is kept.
  * @param {boolean} [options.replaceText] Replace the text with the short form.
  * @param {Object}  [options.range]       Range to cite (an existing citation's
  *                                        extent); defaults to the selection.
@@ -177,7 +209,12 @@ export function applyCitation(
 	const hasText = end > start;
 
 	if ( hasText && ! replaceText ) {
-		return applyFormat( value, getCitationFormat( entry.id ), start, end );
+		return applyFormat(
+			value,
+			getCitationFormat( entry.id, locator ),
+			start,
+			end
+		);
 	}
 
 	const next = insert(
@@ -198,10 +235,11 @@ export function applyCitation(
  * Remove the citation at the selection, keeping its text.
  *
  * @param {Object} value Rich-text value.
+ * @param {string} [ref] The active citation's entry ID, when known.
  * @return {Object} New value.
  */
-export function removeCitation( value ) {
-	const range = getCitationRange( value );
+export function removeCitation( value, ref ) {
+	const range = getCitationRange( value, ref );
 
 	return range
 		? removeFormat( value, CITATION_FORMAT_NAME, range.start, range.end )
@@ -229,9 +267,10 @@ function getEntryLabel( entry, family ) {
 	return lead ? `${ lead.replace( /\.$/, '' ) }. ${ title }` : title;
 }
 
-function CitationPicker( {
+export function CitationPicker( {
 	bibliographies,
 	initialRef,
+	initialLocator = '',
 	hasText,
 	isActive,
 	onApply,
@@ -239,7 +278,7 @@ function CitationPicker( {
 } ) {
 	const [ query, setQuery ] = useState( '' );
 	const [ selectedId, setSelectedId ] = useState( initialRef || '' );
-	const [ locator, setLocator ] = useState( '' );
+	const [ locator, setLocator ] = useState( initialLocator );
 	const [ replaceText, setReplaceText ] = useState( isActive );
 	const shown = filterCitableBibliographies( bibliographies, query );
 	const selected = findCitableEntry( bibliographies, selectedId );
@@ -272,7 +311,12 @@ function CitationPicker( {
 				event.preventDefault();
 
 				if ( selected ) {
-					onApply( selected, { locator, replaceText } );
+					// The locator field shows only when the text is replaced;
+					// otherwise keep the citation's saved locator, if any.
+					onApply( selected, {
+						locator: willInsert ? locator : initialLocator,
+						replaceText,
+					} );
 				}
 			} }
 		>
@@ -342,7 +386,11 @@ function CitationPicker( {
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
 					label={ __(
-						'Page or other locator (optional)',
+						'Page, chapter or section (optional)',
+						'borges-bibliography-builder'
+					) }
+					help={ __(
+						'Added to the end of the citation as typed, e.g. 22, chap. 3, § 4.',
 						'borges-bibliography-builder'
 					) }
 					value={ locator }
@@ -428,8 +476,9 @@ function CitationEdit( {
 		value,
 		settings: ANCHOR_SETTINGS,
 	} );
+	const activeRef = isActive ? activeAttributes?.ref : undefined;
 	const range = isActive
-		? getCitationRange( value )
+		? getCitationRange( value, activeRef )
 		: { start: value.start, end: value.end };
 	const hasText = Boolean( range ) && range.end > range.start;
 	const close = () => {
@@ -456,6 +505,9 @@ function CitationEdit( {
 					<CitationPicker
 						bibliographies={ bibliographies }
 						initialRef={ isActive ? activeAttributes.ref : '' }
+						initialLocator={
+							isActive ? activeAttributes.locator || '' : ''
+						}
 						hasText={ hasText }
 						isActive={ isActive }
 						onApply={ ( entry, options ) => {
@@ -468,7 +520,7 @@ function CitationEdit( {
 							close();
 						} }
 						onRemove={ () => {
-							onChange( removeCitation( value ) );
+							onChange( removeCitation( value, activeRef ) );
 							close();
 						} }
 					/>
@@ -482,9 +534,12 @@ const citationSettings = {
 	title: __( 'Citation', 'borges-bibliography-builder' ),
 	tagName: 'a',
 	className: CITATION_CLASS_NAME,
+	// `locator` is last, so a new data-locator follows the attributes that
+	// were already there and older markup keeps its order when saved again.
 	attributes: {
 		href: 'href',
 		ref: 'data-bibliography-ref',
+		locator: 'data-locator',
 	},
 	interactive: true,
 	edit: CitationEdit,

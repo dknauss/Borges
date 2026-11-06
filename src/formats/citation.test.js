@@ -5,9 +5,13 @@ import {
 	unregisterFormatType,
 } from '@wordpress/rich-text';
 
+import { render, screen } from '@testing-library/react';
+
 import {
 	CITATION_FORMAT_NAME,
+	CitationPicker,
 	applyCitation,
+	getCitationFormat,
 	getCitationRange,
 	registerCitationFormat,
 	removeCitation,
@@ -35,6 +39,16 @@ const valueOf = ( html, start, end = start ) => ( {
 } );
 
 beforeAll( () => {
+	// jsdom has no matchMedia; @wordpress/components asks for it.
+	window.matchMedia =
+		window.matchMedia ||
+		( () => ( {
+			matches: false,
+			addListener: () => {},
+			removeListener: () => {},
+			addEventListener: () => {},
+			removeEventListener: () => {},
+		} ) );
 	registerFormatType( 'core/italic', {
 		title: 'Italic',
 		tagName: 'em',
@@ -55,7 +69,10 @@ describe( 'applyCitation', () => {
 		const next = applyCitation( value, entry, { locator: '12' } );
 
 		expect( toHTMLString( { value: next } ) ).toBe(
-			`As argued ${ LINK }Illich, <em>Tools for Conviviality</em>, 12</a>.`
+			`As argued ${ LINK.replace(
+				'">',
+				'" data-locator="12">'
+			) }Illich, <em>Tools for Conviviality</em>, 12</a>.`
 		);
 		expect( next.start ).toBe( next.end );
 		expect( next.activeFormats ).toEqual( [] );
@@ -144,5 +161,193 @@ describe( 'getCitationRange and removeCitation', () => {
 		const outside = valueOf( html, 2 );
 
 		expect( removeCitation( outside ) ).toBe( outside );
+	} );
+} );
+
+describe( 'data-locator', () => {
+	const withLocator = ( locator ) =>
+		LINK.replace( '">', `" data-locator="${ locator }">` );
+
+	it( 'is left out when there is no locator', () => {
+		expect( getCitationFormat( ID ).attributes ).toEqual( {
+			href: `#ref-${ ID }`,
+			ref: ID,
+		} );
+		expect( getCitationFormat( ID, '  ' ).attributes ).not.toHaveProperty(
+			'locator'
+		);
+	} );
+
+	it( 'saves the locator as typed, spaces collapsed, and escaped', () => {
+		const next = applyCitation( valueOf( 'See ', 4 ), entry, {
+			locator: ' chap.  3 & "notes" ',
+		} );
+
+		expect( toHTMLString( { value: next } ) ).toBe(
+			`See ${ withLocator(
+				'chap. 3 &amp; &quot;notes&quot;'
+			) }Illich, <em>Tools for Conviviality</em>, chap. 3 &amp; "notes"</a>`
+		);
+	} );
+
+	it( 'reads back and saves again with the same attribute order', () => {
+		const html = `A ${ withLocator(
+			'22'
+		) }Illich, <em>Tools for Conviviality</em>, 22</a> b.`;
+		const value = valueOf( html, 4 );
+		const format = value.formats[ 4 ].find(
+			( candidate ) => candidate.type === CITATION_FORMAT_NAME
+		);
+
+		expect( format.attributes ).toEqual( {
+			href: `#ref-${ ID }`,
+			ref: ID,
+			locator: '22',
+		} );
+		expect( toHTMLString( { value } ) ).toBe( html );
+	} );
+
+	it( 'keeps the locator when wrapping text without replacing it', () => {
+		const next = applyCitation( valueOf( 'Illich says.', 0, 6 ), entry, {
+			locator: '9',
+		} );
+
+		expect( toHTMLString( { value: next } ) ).toBe(
+			`${ withLocator( '9' ) }Illich</a> says.`
+		);
+	} );
+} );
+
+describe( 'adjacent citations', () => {
+	const OTHER = '9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
+	const link = ( id ) =>
+		`<a class="bibliography-builder-citation h-cite" href="#ref-${ id }" data-bibliography-ref="${ id }">`;
+	const html = `See ${ link( ID ) }[1]</a>${ link( OTHER ) }[2]</a>.`;
+	const ieee = { ...entry, styleKey: 'ieee' };
+
+	it( 'treats two citations side by side as two ranges', () => {
+		expect( getCitationRange( valueOf( html, 5 ) ) ).toEqual( {
+			start: 4,
+			end: 7,
+		} );
+		expect( getCitationRange( valueOf( html, 8 ) ) ).toEqual( {
+			start: 7,
+			end: 10,
+		} );
+		// At the boundary, the active ref picks the citation.
+		expect( getCitationRange( valueOf( html, 7 ), ID ) ).toEqual( {
+			start: 4,
+			end: 7,
+		} );
+		expect( getCitationRange( valueOf( html, 7 ), OTHER ) ).toEqual( {
+			start: 7,
+			end: 10,
+		} );
+	} );
+
+	it( 'replaces only the active citation', () => {
+		const value = valueOf( html, 5 );
+		const next = applyCitation(
+			value,
+			{ ...ieee, number: 3 },
+			{ replaceText: true, range: getCitationRange( value, ID ) }
+		);
+
+		expect( toHTMLString( { value: next } ) ).toBe(
+			`See ${ link( ID ) }[3]</a>${ link( OTHER ) }[2]</a>.`
+		);
+	} );
+
+	it( 'retargets only the active citation when keeping the text', () => {
+		const value = valueOf( html, 5 );
+		const next = applyCitation(
+			value,
+			{ ...ieee, id: 'third' },
+			{ range: getCitationRange( value, ID ) }
+		);
+
+		expect( toHTMLString( { value: next } ) ).toBe(
+			`See ${ link( 'third' ) }[1]</a>${ link( OTHER ) }[2]</a>.`
+		);
+	} );
+
+	it( 'removes only the active citation', () => {
+		expect(
+			toHTMLString( {
+				value: removeCitation( valueOf( html, 8 ), OTHER ),
+			} )
+		).toBe( `See ${ link( ID ) }[1]</a>[2].` );
+	} );
+
+	it( 'keeps one citation whole when italics split its text', () => {
+		const split = `See ${ link(
+			ID
+		) }Illich, <em>Tools</em>, 12</a> and more.`;
+
+		// "Illich, Tools, 12" is 17 characters, from 4 to 21.
+		expect( getCitationRange( valueOf( split, 6 ), ID ) ).toEqual( {
+			start: 4,
+			end: 21,
+		} );
+		expect( getCitationRange( valueOf( split, 21 ) ) ).toEqual( {
+			start: 4,
+			end: 21,
+		} );
+	} );
+} );
+
+describe( 'CitationPicker', () => {
+	const bibliographies = [
+		{
+			clientId: 'b1',
+			family: 'notes',
+			label: 'Bibliography',
+			entries: [ { ...entry, author: 'Illich', year: '1973' } ],
+		},
+	];
+
+	it( 'prefills the locator of the citation it was opened on', () => {
+		render(
+			<CitationPicker
+				bibliographies={ bibliographies }
+				initialRef={ ID }
+				initialLocator="chap. 3"
+				hasText
+				isActive
+				onApply={ () => {} }
+				onRemove={ () => {} }
+			/>
+		);
+
+		expect(
+			screen.getByLabelText( 'Page, chapter or section (optional)' )
+		).toHaveProperty( 'value', 'chap. 3' );
+		expect(
+			screen.getByText(
+				'Added to the end of the citation as typed, e.g. 22, chap. 3, § 4.'
+			)
+		).toBeTruthy();
+		expect(
+			screen.getByText(
+				/Inserts: Illich, Tools for Conviviality, chap\. 3/
+			)
+		).toBeTruthy();
+	} );
+
+	it( 'starts empty for a new citation', () => {
+		render(
+			<CitationPicker
+				bibliographies={ bibliographies }
+				initialRef=""
+				hasText={ false }
+				isActive={ false }
+				onApply={ () => {} }
+				onRemove={ () => {} }
+			/>
+		);
+
+		expect(
+			screen.getByLabelText( 'Page, chapter or section (optional)' )
+		).toHaveProperty( 'value', '' );
 	} );
 } );
