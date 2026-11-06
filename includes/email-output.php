@@ -15,7 +15,8 @@
  *
  * Both keep the bibliography (heading, entries, links, shown annotations)
  * and drop what only works on the site: the Cite / Export panel or its data,
- * the copy button, JSON-LD and CSL-JSON scripts, and COinS spans.
+ * the copy button, JSON-LD and CSL-JSON scripts, COinS spans, and the hidden
+ * microformats data.
  *
  * @package BibliographyBuilder
  */
@@ -47,6 +48,11 @@ function bibliography_builder_portable_markup( $html ) {
 			'#<script\b[^>]*>.*?</script>#s',
 			// COinS: an empty span read only by browser reference managers.
 			'#<span class="Z3988"[^>]*></span>#',
+			// Microformats (includes/microformats.php): `<data>` elements,
+			// some in an author's `h-card` span, in one hidden span.
+			'#<span class="bibliography-builder-microformats" hidden>'
+				. '(?:<data [^>]*></data>|<span class="p-author h-card">(?:<data [^>]*></data>)*</span>)*'
+				. '</span>#',
 			// The panel's data for view.js. Values are attribute-escaped, so
 			// they contain no double quote.
 			'# data-cite-[a-z-]+="[^"]*"#',

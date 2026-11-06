@@ -382,6 +382,10 @@ The COinS `title` attribute encodes:
 -   `rft.volume`, `rft.issue`, `rft.spage`, `rft.epage`
 -   `rft_id` (DOI URL)
 
+### 6. Microformats (h-cite)
+
+Added as the block renders, not by `save()` (`includes/microformats.php`), so stored posts are unchanged and need no deprecation. Each entry `<li id="ref-…">` gets the class `h-cite`, and inside it, before the visible text, an empty hidden span (`bibliography-builder-microformats`) holds `<data>` elements built from the stored CSL-JSON: `p-name` (title), one `p-author h-card` per author (`p-name`, `p-given-name`, `p-family-name`, and a `u-url` for an ORCID iD; an organization gets `p-name` and `p-org`), `dt-published` (only the date parts the record has: `2018`, `2018-05`, or `2018-05-14`), `u-uid u-url` (the DOI as `https://doi.org/…`), `u-url` (the URL), `p-publication` (container title), and `p-publisher`. The visible text is not restructured, since a style decides where each field falls and some fields have no element to mark. Entries are matched to citations by the ID in their anchor, so the Cite / Export panel is never marked, and an entry already marked `h-cite` is left alone. Feeds and email leave the data out. The `bibliography_builder_enrich_microformats` filter turns it off. An inline or margin citation can later be an `h-cite` that points at the entry's `#ref-…`.
+
 ---
 
 ## Frontend Styles
@@ -977,7 +981,7 @@ PMID support shipped in 1.2; PMCID, arXiv, and ISBN in 1.6.0; library catalog nu
 -   **Automatic inline citation formatting.** The inline element auto-formats based on the bibliography block's style (e.g., `(Smith 2024)` for Chicago author-date, `[1]` for IEEE).
 
 -   **Margin citations (sidenotes).** A variant of the inline citation for themes with a margin column, as in Tufte-style layouts and Marginalia's glosses: a short note-form citation (Chicago short note by default: author, short title, page) set in the margin, linking to the full entry's `#ref-{id}`. The margin holds the reference and the bibliography holds the record. Needs the same entry picker and stable entry IDs as the inline element; ids must survive re-sorting, style changes, and re-imports. Proposed 2026-11-05 alongside Marginalia's gloss block.
--   **Microformats.** Mark each entry `h-cite` (with `p-name`, `p-author`, `dt-published`, `u-url`/`u-uid` for DOI and URL) so IndieWeb parsers read the bibliography as citations, and an inline or margin citation can be an `h-cite` that points at it. Borges already emits JSON-LD and COinS from the same CSL-JSON; this is a third view of it, and the entry markup belongs here, not in themes (Ollie Child Kit's `microformats` module leaves bibliography entries to Borges).
+-   **Microformats in inline and margin citations.** Bibliography entries are already `h-cite` (see Frontend Render § 6); an inline or margin citation can be an `h-cite` too, pointing at the entry it cites. The entry markup belongs to Borges, not to themes (Ollie Child Kit's `microformats` module leaves bibliography entries to Borges).
 
 ### Annotated Bibliographies (implemented)
 

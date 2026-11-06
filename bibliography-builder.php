@@ -673,6 +673,7 @@ require_once __DIR__ . '/includes/heading-label.php';
 require_once __DIR__ . '/includes/frontend-json-ld.php';
 require_once __DIR__ . '/includes/json-ld-enrichment.php';
 require_once __DIR__ . '/includes/coins-enrichment.php';
+require_once __DIR__ . '/includes/microformats.php';
 require_once __DIR__ . '/includes/output-defaults.php';
 require_once __DIR__ . '/includes/email-output.php';
 require_once __DIR__ . '/includes/block-locator.php';
