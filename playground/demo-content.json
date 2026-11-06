@@ -211,6 +211,83 @@
 			]
 		},
 		{
+			"title": "In-text citations and an annotated bibliography",
+			"description": "Three books with the compiler's own notes, and a paragraph that cites them. <strong>Settings:</strong> <em>Show annotations</em> on, Chicago Notes-Bibliography. Select a citation in the paragraph and choose <strong>Cite</strong> in the toolbar to see its entry and page, or select any text and cite it yourself. Then switch the style to IEEE in the block's sidebar and choose <em>Update citations</em> in its <em>Citations in this post</em> panel: every citation becomes a numbered one, pages kept. A theme's margin-note style turns the same citations into sidenotes.",
+			"prose": [
+				"The footnote is how a historian shows the work: <a class=\"bibliography-builder-citation h-cite\" href=\"#ref-demo-cite-annotate-2\" data-bibliography-ref=\"demo-cite-annotate-2\">Grafton, <em>The Footnote</em></a>. Print made that kind of checking possible at scale, by fixing texts so that every reader saw the same page: <a class=\"bibliography-builder-citation h-cite\" href=\"#ref-demo-cite-annotate-3\" data-bibliography-ref=\"demo-cite-annotate-3\">Eisenstein, <em>The Printing Press as an Agent of Change</em></a>. A citation is also a tool in Ivan Illich's sense, one that serves the reader only while it stays small enough to follow: <a class=\"bibliography-builder-citation h-cite\" href=\"#ref-demo-cite-annotate-1\" data-bibliography-ref=\"demo-cite-annotate-1\" data-locator=\"chap. 3\">Illich, <em>Tools for Conviviality</em>, chap. 3</a>."
+			],
+			"attributes": {
+				"bibliographyId": "demo-cite-annotate",
+				"citationStyle": "chicago-notes-bibliography",
+				"headingText": "Bibliography",
+				"headingLevel": 4,
+				"anchor": "demo-cite-annotate",
+				"showAnnotations": true
+			},
+			"citations": [
+				{
+					"type": "book",
+					"title": "Tools for Conviviality",
+					"author": [
+						{
+							"family": "Illich",
+							"given": "Ivan"
+						}
+					],
+					"publisher": "Harper & Row",
+					"publisher-place": "New York",
+					"issued": {
+						"date-parts": [
+							[
+								1973
+							]
+						]
+					},
+					"annote": "Argues that past a certain scale, tools begin to serve themselves rather than the people who use them, and proposes limits that keep them convivial.\n\nThe source of the idea of counterfoil research."
+				},
+				{
+					"type": "book",
+					"title": "The Footnote: A Curious History",
+					"author": [
+						{
+							"family": "Grafton",
+							"given": "Anthony"
+						}
+					],
+					"publisher": "Harvard University Press",
+					"publisher-place": "Cambridge, MA",
+					"issued": {
+						"date-parts": [
+							[
+								1997
+							]
+						]
+					},
+					"annote": "A history of the scholarly footnote, from Ranke and Gibbon back to the early modern antiquaries: how notes became the way historians make their work checkable."
+				},
+				{
+					"type": "book",
+					"title": "The Printing Press as an Agent of Change: Communications and Cultural Transformations in Early-Modern Europe",
+					"author": [
+						{
+							"family": "Eisenstein",
+							"given": "Elizabeth L."
+						}
+					],
+					"publisher": "Cambridge University Press",
+					"publisher-place": "Cambridge",
+					"issued": {
+						"date-parts": [
+							[
+								1979
+							]
+						]
+					},
+					"annote": "Argues that printing changed how knowledge was preserved, standardized, and spread, and so helped shape the Renaissance, the Reformation, and the Scientific Revolution."
+				}
+			]
+		},
+		{
 			"title": "Chicago Author-Date: same author, same year",
 			"description": "Three of Einstein’s 1905 papers. Author-date styles letter works by one author in one year (1905a, 1905b, 1905c) so in-text citations stay unambiguous. <strong>Settings:</strong> the default output (JSON-LD only); heading <em>References</em> at level H4.",
 			"attributes": {
