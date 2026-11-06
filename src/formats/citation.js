@@ -96,8 +96,9 @@ export function getCitationFormat( id, locator = '' ) {
  * The extent of the citation at or around the selection.
  *
  * A citation is a run of characters linked to the same entry, so italics
- * inside it do not split it, and two citations side by side ("[1][2]") stay
- * apart: the run grows only over characters that cite the same `ref`.
+ * inside it do not split it, and two citations side by side stay apart: the
+ * run grows only over characters that cite the same `ref` with the same
+ * `locator`, so "[1][2]" and "[1, 12][1, 20]" are each two citations.
  *
  * @param {Object} value Rich-text value.
  * @param {string} [ref] The active citation's entry ID, when known. With a
@@ -108,14 +109,27 @@ export function getCitationFormat( id, locator = '' ) {
  */
 export function getCitationRange( value, ref ) {
 	const { formats = [], start = 0, end = 0 } = value;
-	const refAt = ( index ) => {
-		const format = Array.isArray( formats[ index ] )
+	const formatAt = ( index ) =>
+		Array.isArray( formats[ index ] )
 			? formats[ index ].find(
 					( candidate ) => candidate.type === CITATION_FORMAT_NAME
 				)
 			: undefined;
+	const refAt = ( index ) => {
+		const format = formatAt( index );
 
 		return format ? String( format.attributes?.ref ?? '' ) : null;
+	};
+	// What makes a citation itself: its entry and its locator.
+	const keyAt = ( index ) => {
+		const format = formatAt( index );
+
+		return format
+			? JSON.stringify( [
+					String( format.attributes?.ref ?? '' ),
+					String( format.attributes?.locator ?? '' ),
+				] )
+			: null;
 	};
 	const candidates =
 		start === end ? [ start, start - 1 ] : [ start, end - 1 ];
@@ -136,7 +150,8 @@ export function getCitationRange( value, ref ) {
 		return start === end ? null : { start, end };
 	}
 
-	const isSame = ( index ) => refAt( index ) === anchorRef;
+	const anchorKey = keyAt( anchor );
+	const isSame = ( index ) => keyAt( index ) === anchorKey;
 	let from = start === end ? anchor : start;
 	let to = start === end ? anchor + 1 : end;
 

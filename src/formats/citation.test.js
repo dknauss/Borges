@@ -267,6 +267,26 @@ describe( 'adjacent citations', () => {
 		} );
 	} );
 
+	it( 'keeps two citations of one entry apart when their locators differ', () => {
+		const at = ( locator ) =>
+			link( ID ).replace( '">', `" data-locator="${ locator }">` );
+		const pages = `See ${ at( '12' ) }[1, 12]</a>${ at( '20' ) }[1, 20]</a>.`;
+
+		expect( getCitationRange( valueOf( pages, 6 ), ID ) ).toEqual( {
+			start: 4,
+			end: 11,
+		} );
+		expect( getCitationRange( valueOf( pages, 13 ), ID ) ).toEqual( {
+			start: 11,
+			end: 18,
+		} );
+		expect(
+			toHTMLString( {
+				value: removeCitation( valueOf( pages, 13 ), ID ),
+			} )
+		).toBe( `See ${ at( '12' ) }[1, 12]</a>[1, 20].` );
+	} );
+
 	it( 'replaces only the active citation', () => {
 		const value = valueOf( html, 5 );
 		const next = applyCitation(
