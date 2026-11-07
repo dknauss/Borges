@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The `readme.txt` changelog lists 1.10.0 onward and links to this file for earlier versions. At 5,202 words it was over wordpress.org's 5,000-word limit, so the plugin page was silently cutting off the oldest entries.
+
 ### Fixed
 
 - After **Update citations**, the "Citation style changed" snackbar is dismissed, so it no longer sits beside the result still saying citations use the old style.
