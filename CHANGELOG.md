@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-11-06
+
 ### Added
 
 - **In-text and margin citations.** A new **Cite** control in the rich-text toolbar links a short citation in any paragraph, heading, list item, or quote to an entry in a bibliography on the same post, so it works in a theme's margin-note paragraph style (a sidenote or gloss) as well as in running text. It lists every entry of every bibliography in the post, searchable by author, year, or title, with an optional page or other locator. The short form follows the bibliography's style: a Chicago short note ("Illich, *Tools for Conviviality*, 12") for Chicago notes and OSCOLA, "(Illich 1973, 12)" for author-date styles ("(Illich 12)" in MLA), and "[2]" for IEEE and Vancouver. The citation is a plain link to the entry's `#ref-…` anchor, so it works with no script on the page and survives WordPress's HTML filtering for every role; it is ordinary post text you can edit after inserting it. Selected text can be kept as the link text or replaced. The bibliography block's saved markup is unchanged. A link breaks if its entry is deleted (even if pasted again) or its block is duplicated, since those entries get new IDs; style changes, re-sorting, and edits keep them.

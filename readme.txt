@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.18.0
+Stable tag: 1.19.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -198,6 +198,16 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 * Internet Archive terms of use: https://archive.org/about/terms.php
 
 == Changelog ==
+
+= 1.19.0 =
+* **Added:** in-text and margin citations. A **Cite** control in the toolbar links a short citation in any paragraph, heading, list item, or quote (including a theme's margin-note or gloss style) to an entry in a bibliography on the same post, with an optional page, chapter, or section. The short form follows the bibliography's style: a Chicago short note, "(Author Year, page)", or "[2]". Citations are plain links to their entries, so they work with no script on the page.
+* **Added:** **Update citations**. After a style change, a notice and the bibliography's new "Citations in this post" panel rewrite every citation the editor wrote in the new style and numbering, keeping its page, as one step you can undo. Citations you reworded are left alone unless you choose otherwise.
+* **Added:** annotated bibliographies. Each entry can carry your own note on the work, stored in CSL `annote`, and a new "Show annotations" setting prints the notes under their entries. They import from BibTeX and BibLaTeX and export to CSL-JSON, BibTeX, BibLaTeX, and RIS.
+* **Added:** microformats. Each entry is marked up as an `h-cite`, with authors, date, DOI, URL, container, and publisher, so IndieWeb tools read the bibliography as citations. Nothing visible changes.
+* **Added:** journal abbreviations in the RIS export (`J2`), and sentence case in Harvard.
+* **Changed:** with Yoast SEO, the page's schema.org `citation` now carries each cited work's full record, so Yoast's schema aggregator and NLWeb receive authors, identifiers, journals, and pages, not just titles. The `bibliography_builder_yoast_citation_records` filter restores the short references.
+* **Changed:** the bibliography heading is start-aligned by default.
+* **Fixed:** cited works were missing from Yoast SEO graphs built outside the page request, such as NLWeb's answers over MCP.
 
 = 1.18.0 =
 * **Added:** sentence case in APA 7, Vancouver, and IEEE. Titles imported in title case print in sentence case, as the manuals ask; the stored title never changes, so switching styles brings the capitals back. Languages, nationalities, countries, provinces, states, months, and days keep their capitals, and the `bibliography_builder_sentence_case_proper_nouns` filter adds your own. Other names can come out lowercase ("Darwin and wallace"), so each entry has a "Keep title capitalization as entered" checkbox. Existing blocks change only when their entries are next formatted.
@@ -425,6 +435,9 @@ The three changes below are hardening. None of them was exploitable; each was a 
 * Confirm compatibility wording through WordPress 7.0 testing.
 
 == Upgrade Notice ==
+
+= 1.19.0 =
+In-text and margin citations with Update citations after a style change; annotated bibliographies; microformats for each entry; full citation records in Yoast SEO's graph. Existing blocks stay valid. No configuration changes required.
 
 = 1.18.0 =
 Sentence case in APA, Vancouver, and IEEE (check personal names, and tick "Keep title capitalization as entered" where needed); journal abbreviations; OSCOLA repeated authors; citation links without nofollow; new blocks start with an h2. Existing blocks stay valid. No configuration changes required.
