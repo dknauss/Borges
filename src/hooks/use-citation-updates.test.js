@@ -7,6 +7,7 @@ import {
 
 const mockUpdateBlockAttributes = jest.fn();
 const mockCreateNotice = jest.fn();
+const mockRemoveNotice = jest.fn();
 let mockBlocks = [];
 
 jest.mock( '@wordpress/data', () => ( {
@@ -14,7 +15,10 @@ jest.mock( '@wordpress/data', () => ( {
 		select: () => ( { getBlocks: () => mockBlocks } ),
 		dispatch: ( store ) =>
 			store === 'core/notices'
-				? { createNotice: mockCreateNotice }
+				? {
+						createNotice: mockCreateNotice,
+						removeNotice: mockRemoveNotice,
+					}
 				: { updateBlockAttributes: mockUpdateBlockAttributes },
 	} ),
 } ) );
@@ -61,6 +65,7 @@ describe( 'useCitationUpdates', () => {
 	beforeEach( () => {
 		mockUpdateBlockAttributes.mockClear();
 		mockCreateNotice.mockClear();
+		mockRemoveNotice.mockClear();
 		mockBlocks = [
 			{
 				clientId: 'p1',
@@ -122,6 +127,19 @@ describe( 'useCitationUpdates', () => {
 			'success',
 			'No citations needed updating.',
 			expect.anything()
+		);
+	} );
+
+	it( 'dismisses the style-change snackbar once citations are updated', () => {
+		const { result } = renderHook( () => useCitationUpdates( 'bib' ) );
+
+		result.current.updateCitations( false );
+
+		expect( mockRemoveNotice ).toHaveBeenCalledWith(
+			'borges-citation-style-bib'
+		);
+		expect( mockRemoveNotice.mock.invocationCallOrder[ 0 ] ).toBeLessThan(
+			mockCreateNotice.mock.invocationCallOrder[ 0 ]
 		);
 	} );
 } );
