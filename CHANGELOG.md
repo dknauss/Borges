@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- After **Update citations**, the "Citation style changed" snackbar is dismissed, so it no longer sits beside the result still saying citations use the old style.
+
 ## [1.19.0] - 2026-11-06
 
 ### Added
