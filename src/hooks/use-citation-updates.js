@@ -108,6 +108,12 @@ export function useCitationUpdates( clientId ) {
 				);
 			}
 
+			// The style-change snackbar (edit.js) says citations still use the
+			// old style; once they are updated it is out of date, so drop it.
+			registry
+				.dispatch( noticesStore )
+				.removeNotice( `borges-citation-style-${ clientId }` );
+
 			registry
 				.dispatch( noticesStore )
 				.createNotice(
