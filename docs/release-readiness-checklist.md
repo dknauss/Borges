@@ -96,6 +96,7 @@ miss — nothing in CI checks any of them.
 -   [ ] `package.json` and `package-lock.json` — not shipped, but keep in sync
 -   [ ] `CHANGELOG.md` has a section for this version
 -   [ ] `readme.txt` has both a Changelog entry and an Upgrade Notice
+-   [ ] `readme.txt`'s Changelog section stays under wordpress.org's 5,000-word limit (it truncates longer ones): keep the last ten or so versions and move the oldest out, leaving the "Earlier versions" link to `CHANGELOG.md`. Count with `awk '/^== Changelog ==/{f=1} /^== Upgrade Notice ==/{f=0} f' readme.txt | wc -w`
 
 ## Docs and fixtures
 
