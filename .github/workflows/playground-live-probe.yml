@@ -45,6 +45,14 @@ jobs:
                   PROBE_RUNS: ${{ github.event.inputs.runs || '5' }}
               run: node scripts/playground-live-probe.mjs
 
+            - name: Probe a control blueprint (no plugins)
+              if: matrix.browser == 'chromium'
+              env:
+                  PROBE_BROWSER: chromium
+                  PROBE_RUNS: ${{ github.event.inputs.runs || '5' }}
+                  PROBE_ANY_BLOCK: '1'
+              run: node scripts/playground-live-probe.mjs "https://raw.githubusercontent.com/dknauss/Borges/${{ github.sha }}/scripts/probe-fixtures/control-blueprint.json"
+
             - name: Upload screenshots
               if: always()
               uses: actions/upload-artifact@v4

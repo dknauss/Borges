@@ -16,6 +16,7 @@
  * Environment:
  *   PROBE_RUNS     Fresh-profile loads per blueprint (default 3).
  *   PROBE_TIMEOUT  Milliseconds to wait for the editor (default 90000).
+ *   PROBE_ANY_BLOCK  Count any block as ready (for control blueprints).
  *   PROBE_BROWSER  chromium (default), firefox, or webkit (Safari's engine).
  *
  * It needs a browser that can reach playground.wordpress.net, so it is run
@@ -51,7 +52,7 @@ async function editorReady( page ) {
 			// The editor initialized and the block store holds a Borges
 			// block: markup alone can be present while the editor's scripts
 			// failed to load.
-			const ready = await frame.evaluate( () => {
+			const ready = await frame.evaluate( ( anyBlock ) => {
 				const data = window.wp && window.wp.data;
 				if ( ! data || ! data.select ) {
 					return false;
@@ -62,10 +63,10 @@ async function editorReady( page ) {
 					editor
 						.getBlocks()
 						.some( ( block ) =>
-							block.name.startsWith( 'bibliography-builder/' )
+							anyBlock || block.name.startsWith( 'bibliography-builder/' )
 						)
 				);
-			} );
+			}, !! process.env.PROBE_ANY_BLOCK );
 			if ( ready ) {
 				return true;
 			}
