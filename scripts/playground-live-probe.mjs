@@ -20,6 +20,9 @@
  *   PROBE_BROWSER    chromium (default), firefox, or webkit (Safari's engine).
  *   PROBE_ANY_BLOCK  Count any block as ready, for a control blueprint
  *                    without Borges (scripts/probe-fixtures/).
+ *   PROBE_PLAYGROUND Playground to open the blueprints in (default
+ *                    https://playground.wordpress.net/), such as a
+ *                    self-hosted copy on http://localhost:8080/.
  *   PROBE_RESULTS    File to append one JSON line per load to, for
  *                    scripts/playground-probe-report.mjs (the scheduled
  *                    monitor reads them to decide whether to open an issue).
@@ -206,7 +209,9 @@ async function probe( browser, blueprint, run, retryInTab ) {
 	} );
 
 	// Encoded, so a blueprint URL's own query string stays part of it.
-	const url = new URL( 'https://playground.wordpress.net/' );
+	const url = new URL(
+		process.env.PROBE_PLAYGROUND || 'https://playground.wordpress.net/'
+	);
 	url.searchParams.set( 'blueprint-url', blueprint );
 	console.log( `\n=== run ${ run }: ${ url }` );
 
@@ -285,6 +290,9 @@ for ( const blueprint of blueprints ) {
 					browser: browserName,
 					blueprint: name,
 					control: !! process.env.PROBE_ANY_BLOCK,
+					playground:
+						process.env.PROBE_PLAYGROUND ||
+						'https://playground.wordpress.net/',
 					run,
 					ok: outcome.startsWith( 'ok' ),
 					outcome,

@@ -81,17 +81,29 @@ if ( borges.length && passShare < minPass ) {
 const healthy = reasons.length === 0;
 
 const rows = [];
+const host = ( load ) =>
+	new URL( load.playground || 'https://playground.wordpress.net/' ).host;
 const keys = [
 	...new Set(
-		loads.map( ( load ) => `${ load.blueprint }|${ load.browser }` )
+		loads.map(
+			( load ) =>
+				`${ host( load ) }|${ load.blueprint }|${ load.browser }`
+		)
 	),
 ];
 for ( const key of keys.sort() ) {
-	const [ blueprint, browser ] = key.split( '|' );
+	const [ playground, blueprint, browser ] = key.split( '|' );
 	const group = loads.filter(
-		( load ) => load.blueprint === blueprint && load.browser === browser
+		( load ) =>
+			host( load ) === playground &&
+			load.blueprint === blueprint &&
+			load.browser === browser
 	);
-	rows.push( `| \`${ blueprint }\` | ${ browser } | ${ rate( group ) } |` );
+	rows.push(
+		`| ${ playground } | \`${ blueprint }\` | ${ browser } | ${ rate(
+			group
+		) } |`
+	);
 }
 
 const report = [
@@ -107,8 +119,8 @@ const report = [
 			) }. When it fails as often, the cause is Playground itself.`
 		: 'No control blueprint loads were recorded.',
 	'',
-	'| Blueprint | Browser | Loads that reached the editor |',
-	'| --- | --- | --- |',
+	'| Playground | Blueprint | Browser | Loads that reached the editor |',
+	'| --- | --- | --- | --- |',
 	...rows,
 ];
 if ( blueprintErrors.length ) {
