@@ -90,7 +90,7 @@ async function formatParsedEntries( entries, styleKey ) {
  * Resolvers per input kind. Each takes the raw value, plus an optional
  * `fetchFn` for the backends that call the network directly.
  *
- * @type {Record<string, (value: string, options?: {fetchFn?: typeof fetch}) => Promise<Object>>}
+ * @type {Record<string, (value: string, options?: {fetchFn?: typeof fetch, styleKey?: string}) => Promise<Object>>}
  */
 const PARSER_BACKENDS = {
 	pmid: async ( value, { fetchFn } = {} ) => {
@@ -222,8 +222,8 @@ const PARSER_BACKENDS = {
 				.map( ( csl ) => normalizeRisCsl( csl, value ) ),
 		};
 	},
-	freetext: async ( value ) => {
-		const parsedCitation = parseFreeTextCitation( value );
+	freetext: async ( value, { styleKey } = {} ) => {
+		const parsedCitation = parseFreeTextCitation( value, { styleKey } );
 
 		if ( ! parsedCitation ) {
 			throw new Error( SUPPORTED_INPUT_MESSAGE );
@@ -554,7 +554,7 @@ export async function parsePastedInput(
 			try {
 				const { cslItems, parseWarnings } = await PARSER_BACKENDS[
 					item.format
-				]( item.value, { fetchFn } );
+				]( item.value, { fetchFn, styleKey } );
 
 				return {
 					item,
@@ -571,7 +571,8 @@ export async function parsePastedInput(
 					try {
 						const { cslItems, parseWarnings } =
 							await PARSER_BACKENDS.freetext(
-								item.fallbackValue
+								item.fallbackValue,
+								{ styleKey }
 							);
 
 						return {
