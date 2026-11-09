@@ -906,6 +906,24 @@ describe( 'parsePastedInput', () => {
 		expect( formatBibliographyEntries ).not.toHaveBeenCalled();
 	} );
 
+	it( 'reads a Harvard citation pasted into a Harvard bibliography', async () => {
+		const result = await parsePastedInput(
+			'Grafton, A. (1997) The footnote: a curious history. Harvard University Press.',
+			'harvard'
+		);
+
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries[ 0 ] ).toMatchObject( {
+			inputFormat: 'freetext',
+			csl: {
+				type: 'book',
+				title: 'The footnote: a curious history',
+				publisher: 'Harvard University Press',
+			},
+			parseWarnings: [ 'free-text-low-confidence' ],
+		} );
+	} );
+
 	it( 'flags a low-confidence free-text parse for review', async () => {
 		const result = await parsePastedInput(
 			'Amy J. Binder and Jeffrey L. Kidder, “Student Politics and Institutional Change,” in The Channels of Student Activism, ed. Carla Reyes (University of Chicago Press, 2022), 117–18.'

@@ -3,48 +3,21 @@ import {
 	parseApaAuthors,
 	parseAuthors,
 } from './free-text-authors';
+import {
+	MONTH_INDEX,
+	getIssuedYear,
+	getPublisherFields,
+	normalizeDoi,
+	normalizeEdition,
+	normalizeTitle,
+	normalizeTrailingSentence,
+} from './free-text-common';
+import { parseHarvardCitation } from './free-text-harvard';
 
-const DOI_URL_PREFIX =
-	/^(?:https?:\/\/(?:dx\.)?doi\.org\/|https?:\/\/doi:|doi:)/i;
 const QUOTED_TITLE_PATTERN = /[“"](?<title>.+?)(?:,)?[”"]/u;
-const MONTH_INDEX = {
-	january: 1,
-	february: 2,
-	march: 3,
-	april: 4,
-	may: 5,
-	june: 6,
-	july: 7,
-	august: 8,
-	september: 9,
-	october: 10,
-	november: 11,
-	december: 12,
-};
-
-function normalizeDoi( doiValue ) {
-	return doiValue
-		.trim()
-		.replace( DOI_URL_PREFIX, '' )
-		.replace( /[).,;:\s]+$/u, '' );
-}
-
-function normalizeTitle( title ) {
-	return title.trim().replace( /[.,]\s*$/u, '' );
-}
-
-function normalizeTrailingSentence( value ) {
-	return value.trim().replace( /[.;,:\s]+$/u, '' );
-}
 
 function extractQuotedTitle( input ) {
 	return input.match( QUOTED_TITLE_PATTERN )?.groups?.title || null;
-}
-
-function getIssuedYear( yearText ) {
-	return {
-		'date-parts': [ [ Number( yearText ) ] ],
-	};
 }
 
 function parseNamedDate( dateText ) {
@@ -90,50 +63,6 @@ function getTrailingCslFields( trailingText ) {
 
 	return {
 		medium: normalizedTrailing,
-	};
-}
-
-function normalizeEdition( editionText ) {
-	if ( ! editionText ) {
-		return undefined;
-	}
-
-	const numberMatch = editionText.match( /\b(\d+)(?:st|nd|rd|th)?\b/iu );
-
-	if ( numberMatch ) {
-		return numberMatch[ 1 ];
-	}
-
-	return normalizeTrailingSentence(
-		editionText.replace( /\bed\.?$/iu, '' ).trim()
-	);
-}
-
-/**
- * Split Chicago-style "Place: Publisher" publication data.
- *
- * Bibliographies give the place and publisher together, colon-separated
- * ("London: Boyars"); without this the whole string lands in one CSL field.
- * The part before the colon counts as a place only when it is short, starts
- * with a capital, and has no digits, so a publisher name that happens to
- * contain a colon stays whole.
- *
- * @param {string} text Publication text before the year.
- * @return {Object} `publisher`, plus `publisher-place` when a place was split off.
- */
-function getPublisherFields( text ) {
-	const value = text.trim();
-	const match = value.match(
-		/^(?<place>[\p{Lu}][^:\d]{0,60}?)\s*:\s*(?<publisher>\S.*)$/u
-	);
-
-	if ( ! match?.groups ) {
-		return { publisher: value };
-	}
-
-	return {
-		'publisher-place': match.groups.place.trim(),
-		publisher: match.groups.publisher.trim(),
 	};
 }
 
@@ -873,8 +802,9 @@ function isMisreadParse( csl ) {
 const LIST_NUMBER_PREFIX = /^(?:\[\d{1,3}\]|\(\d{1,3}\)|\d{1,3}[.)])\s+/u;
 
 /**
- * The patterns, in the order they are tried. The first match that is not a
- * misread wins.
+ * The patterns, in the order they are tried when no style hint applies. The
+ * first match that is not a misread wins. Harvard comes last, so it only
+ * reads what the Chicago and APA patterns turn away.
  */
 const FREE_TEXT_PATTERNS = [
 	parseChapterCitation,
@@ -892,17 +822,57 @@ const FREE_TEXT_PATTERNS = [
 	parseThesisCitation,
 	parseSentenceBookCitation,
 	parseBookCitation,
+	parseHarvardCitation,
 ];
+
+/**
+ * Patterns written for one style, by the style keys in `styles.json`. When
+ * the block's style has a group, its patterns are tried first and the rest
+ * follow in the usual order: an author pasting into a Harvard bibliography
+ * most likely has Harvard citations, but may have copied others.
+ */
+const STYLE_PATTERN_GROUPS = {
+	'apa-7': [
+		parseApaJournalCitation,
+		parseApaVolumePageCitation,
+		parseApaBookCitation,
+	],
+	harvard: [ parseHarvardCitation ],
+};
+
+/**
+ * The patterns to try, hinted style first.
+ *
+ * @param {string} [styleKey] The block's citation style key.
+ * @return {Array<(input: string) => ?{csl: Object, confidence: string}>} Pattern functions in order.
+ */
+function getPatternOrder( styleKey ) {
+	const hinted = STYLE_PATTERN_GROUPS[ styleKey ];
+
+	if ( ! hinted ) {
+		return FREE_TEXT_PATTERNS;
+	}
+
+	return [
+		...hinted,
+		...FREE_TEXT_PATTERNS.filter(
+			( pattern ) => ! hinted.includes( pattern )
+		),
+	];
+}
 
 /**
  * Read one formatted citation that has no identifier into CSL-JSON.
  *
- * @param {string} input One pasted citation.
+ * @param {string} input              One pasted citation.
+ * @param {Object} [options]          Options.
+ * @param {string} [options.styleKey] The block's citation style key; that
+ *                                    style's patterns are tried first.
  * @return {{csl: Object, confidence: string}|null} The record and how sure
  *     the matching pattern is (`low` or `medium`), or null when no pattern
  *     reads it.
  */
-export function parseFreeTextCitation( input ) {
+export function parseFreeTextCitation( input, { styleKey } = {} ) {
 	const normalizedInput = input
 		.replace( /\s+/gu, ' ' )
 		.trim()
@@ -912,7 +882,7 @@ export function parseFreeTextCitation( input ) {
 		return null;
 	}
 
-	for ( const parsePattern of FREE_TEXT_PATTERNS ) {
+	for ( const parsePattern of getPatternOrder( styleKey ) ) {
 		const result = parsePattern( normalizedInput );
 
 		if ( result && ! isMisreadParse( result.csl ) ) {

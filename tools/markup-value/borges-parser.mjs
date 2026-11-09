@@ -12,6 +12,9 @@
  * identifier resolution), so pasting these lists gives better records than
  * the parser does by itself.
  *
+ * The rendered style (MV_STYLE) is passed as the parser's style hint, as the
+ * editor passes the block's style.
+ *
  * Run after render.php: `node borges-parser.mjs` (or `npm run borges-parser`).
  * Writes borges-parser.json to MV_OUT (default out/).
  */
@@ -54,6 +57,12 @@ function fromParsed( csl ) {
 	};
 }
 
+/**
+ * The style the page was rendered in (set by sweep.mjs), passed to the parser
+ * as the editor passes the block's style: that style's patterns go first.
+ */
+const styleKey = process.env.MV_STYLE;
+
 async function main() {
 	const { items } = await readCorpus();
 	const { order } = await readManifest();
@@ -77,7 +86,7 @@ async function main() {
 
 	order.forEach( ( id, index ) => {
 		const expected = truth( items.find( ( i ) => i.id === id ) );
-		const parsed = parseFreeTextCitation( entries[ index ] );
+		const parsed = parseFreeTextCitation( entries[ index ], { styleKey } );
 		if ( ! parsed ) {
 			unparsed++;
 		}

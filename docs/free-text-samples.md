@@ -107,6 +107,57 @@ Expected:
 - URL captured
 - parse confidence: `low`
 
+## Supported Harvard samples
+
+Read by `parseHarvardCitation()` (`src/lib/free-text-harvard.js`), first in a
+Harvard bibliography and after the other patterns elsewhere.
+
+### Harvard article
+
+```text
+Knuth, D.E. (1984) ‘Literate programming’, The Computer Journal, 27(2), pp. 97–111.
+```
+
+Expected:
+
+- type: `article-journal`
+- container-title: `The Computer Journal`
+- volume `27`, issue `2`, page `97–111`
+
+### Harvard book
+
+```text
+Cormen, T.H. et al. (2009) Introduction to algorithms. 3rd edn. Cambridge, MA: MIT Press.
+```
+
+Expected:
+
+- type: `book`
+- edition: `3`
+- publisher-place: `Cambridge, MA`; publisher: `MIT Press`
+
+### Harvard chapter
+
+```text
+Borges, J.L. (1962) ‘The library of Babel’, in Yates, D.A. and Irby, J.E. (eds) Labyrinths. New Directions, pp. 51–58.
+```
+
+Expected:
+
+- type: `chapter`
+- container-title: `Labyrinths`; two editors
+
+### Harvard web page
+
+```text
+WordPress.org (no date) Block editor handbook. Available at: https://developer.wordpress.org/block-editor/ (Accessed: 27 October 2026).
+```
+
+Expected:
+
+- type: `webpage`
+- author: `WordPress.org`; accessed `2026-10-27`; no issued date
+
 ## Supported embedded-identifier samples
 
 When a citation carries an inline DOI (`10.\d{4,}/…`) or a labeled PMID, the
