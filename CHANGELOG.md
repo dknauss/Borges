@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Harvard citations can be pasted as text.** A Harvard reference with no DOI or other identifier, in the Cite Them Right form Borges's Harvard style prints, is now read into its fields: journal articles, books (with edition and place), chapters in edited books, conference papers, arXiv preprints, encyclopedia entries, and web pages with or without an author, along with their `Available at:` links and access dates. Before, every Harvard reference got the "Paste a DOI…" notice. Pasting into a Harvard bibliography tries the Harvard reading first; in other styles it is tried after the others, so APA citations (with a full stop after the year) are read as before. Like APA, these show "Check the fields before publishing" under the entry. ([#231](https://github.com/dknauss/Borges/issues/231))
+
 ### Fixed
 
 - **Pasted citations the editor can't read are turned away instead of read wrongly.** A labelled journal article in IEEE, ABNT, or MLA form ("vol. 12, no. 3, pp. 34–43") pasted with no DOI was read as a book, with the volume and issue in its title and the page range as its publisher. It now gets the "Paste a DOI…" notice, as other citations the editor doesn't read do. A numbered entry ("[1] …", "12. …") is read without its number, which used to end up in the first author's name. Citations read by the parser's less certain patterns (chapters, web pages, APA-style books and articles, and articles with "et al." or semicolon-separated authors) now show "Read from pasted text without an identifier. Check the fields before publishing." under the entry and count toward the import notice's "Review N imported records"; editing the entry's fields clears it. ([#231](https://github.com/dknauss/Borges/issues/231))

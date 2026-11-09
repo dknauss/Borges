@@ -146,7 +146,9 @@ HTML: APA prints no ISBN, and a reference with no clear publisher slot
 Borges's free-text parser, `parseFreeTextCitation()` from
 `src/lib/free-text-parser.js`, in place of AnyStyle, and writes
 `borges-parser.json`. It needs only Node: `src-esm-hooks.mjs` lets Node load
-the webpack-style source modules. It measures the parser alone; the editor
+the webpack-style source modules. It passes the rendered style (`MV_STYLE`)
+as the parser's style hint, as the editor passes the block's style. It
+measures the parser alone; the editor
 resolves an entry's DOI or PMID before parsing. `npm run sweep` reports both
 parsers for every style. See `docs/free-text-parsing.md`.
 

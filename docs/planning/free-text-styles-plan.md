@@ -7,8 +7,9 @@ read back. Proposed 2026-11-09.
 
 **Status:** On 2026-11-09 Dan chose Phase 0 first, then Phases 1 and 2, with
 ABNT and OSCOLA waiting for demand. The other open questions take the
-recommended answers unless he says otherwise. Phase 0 is built (see its
-section for the measured result); Phases 1 and 2 are next.
+recommended answers unless he says otherwise. Phase 0 is merged (#267);
+Phase 1 is built (see each section for the measured result); Phase 2 is
+next.
 
 The issue already lays out the per-style patterns, the size estimate, and the
 collision risk. This plan adds what a closer look at the current code turned
@@ -164,6 +165,43 @@ score, so gate 1 holds in spirit: no correctly read entry was lost.
 About 250 to 350 lines (the move itself is net zero). This phase is the
 collision test: Harvard and APA differ by a few characters, so a Harvard
 pattern can claim an APA citation and parse it worse.
+
+**Built 2026-11-09**, with one change to the layout above. Moving every
+Chicago and APA pattern into `src/lib/free-text/` would have been a large
+diff that changes nothing, so the new code follows the repository's flat
+naming instead: `free-text-common.js` holds the shared helpers (moved out of
+`free-text-parser.js` unchanged), `free-text-harvard.js` holds the Harvard
+reader, and `free-text-parser.js` keeps the Chicago and APA patterns and the
+entry point. Phase 2 adds `free-text-ieee.js` and `free-text-vancouver.js`
+the same way. The hint is `parseFreeTextCitation( input, { styleKey } )`,
+passed from `parsePastedInput()`: `STYLE_PATTERN_GROUPS` lists each style's
+patterns (APA's three and Harvard's one so far), which run first; with no
+group, or no hint, Harvard runs last, after every pattern that was there
+before, so it only reads what they turned away.
+
+Harvard is one function, `parseHarvardCitation()`. It splits on the year
+(`(1997)` or `(no date)` with no full stop after it, which leaves APA's
+`(1997).` alone), takes `Available at:` and `(Accessed: …)` off the end, and
+reads what is left as a journal article (`‘Title’, Journal, 27(2), pp. 1–2`
+or `…, May, p. 44`), a chapter or conference paper (`‘Title’, in Editor, A.
+(eds) Book. Publisher, pp. 1–2`), a preprint (`‘Title’. arXiv
+[Preprint]`), an encyclopedia entry with no author, a book (`Title. 3rd
+edn. Place: Publisher.`), or a web page (a title with a link, with or
+without an author). Everything is `low` confidence.
+
+`npm run borges-parser` now passes the rendered style as the hint, as the
+editor does. Before and after, details recovered:
+
+| Corpus | Harvard | Every other style |
+|---|---|---|
+| 12 works | 0 → 59 of 67 (59 printed; AnyStyle 51) | unchanged |
+| 36 works | 0 → 108 of 130 (113 printed; AnyStyle 82) | unchanged |
+
+On AnyStyle's labelled references, with no hint: 110 more accepted, 2 more
+wrong titles (2,240 accepted, 8.2% wrong → 2,350, 7.9%), and 30 of the 55
+Harvard-like references read with no wrong title. The two new misreads (a
+title standing where the author goes, and an original date in brackets,
+`(1968) [1916].`) are now declined, and covered by tests.
 
 ### Phase 2: IEEE and Vancouver
 
