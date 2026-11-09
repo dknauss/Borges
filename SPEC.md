@@ -226,11 +226,14 @@ Three buttons in the block toolbar control the add-citation form:
 -   **Citation Style** — selectable. The default is **Chicago Notes-Bibliography**.
 -   **Visible Heading** — optional text shown above the bibliography on the front end only when at least one citation exists.
 -   **Heading Level** — the element the visible heading is printed as: a paragraph (the default) or a heading, level 2 to 6.
--   **Heading Alignment** (`headingAlign`, since 1.20.0) — Center (the default, which APA 7, MLA 9, Chicago, Turabian, and ABNT ask for) or Start (left in left-to-right languages), in line with the entries.
 -   **Show annotations** — prints each entry's annotation (CSL `annote`) under it; off by default. See "Annotated Bibliographies".
 -   **Metadata output controls** — JSON-LD on by default, with optional COinS and CSL-JSON toggles.
 -   **Entry count** — e.g., "Settings (12 sources)"
 -   **Exports** — Copy bibliography, Download CSL-JSON, Download BibTeX, Download RIS.
+
+The block toolbar has one more setting, shown while the block has a visible heading:
+
+-   **Align heading** (`headingAlign`, since 1.20.0; in the toolbar since 1.21.0, before that a "Heading Alignment" sidebar setting) — Center (the default, which APA 7, MLA 9, Chicago, Turabian, and ABNT ask for) or Start (left in left-to-right languages), in line with the entries. It aligns only the heading; the citation list stays start-aligned.
 
 ---
 
