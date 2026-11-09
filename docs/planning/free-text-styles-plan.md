@@ -197,11 +197,13 @@ editor does. Before and after, details recovered:
 | 12 works | 0 → 59 of 67 (59 printed; AnyStyle 51) | unchanged |
 | 36 works | 0 → 108 of 130 (113 printed; AnyStyle 82) | unchanged |
 
-On AnyStyle's labelled references, with no hint: 110 more accepted, 2 more
-wrong titles (2,240 accepted, 8.2% wrong → 2,350, 7.9%), and 30 of the 55
+On AnyStyle's labelled references, with no hint: 106 more accepted, 2 more
+wrong titles (2,240 accepted, 8.2% wrong → 2,346, 7.9%), and 30 of the 55
 Harvard-like references read with no wrong title. The two new misreads (a
 title standing where the author goes, and an original date in brackets,
-`(1968) [1916].`) are now declined, and covered by tests.
+`(1968) [1916].`) are now declined, and covered by tests. So are two found
+while covering every branch: lower-case prose read as an editor ("in a few
+friends of mine (eds)") and an empty quoted title (`‘’`).
 
 ### Phase 2: IEEE and Vancouver
 
