@@ -7,9 +7,15 @@ name: Playground Live Probe
 # blueprint without Borges runs in Chromium beside them, so a failure in both
 # points at Playground rather than at Borges.
 #
-# Manual only: it depends on live third-party hosts. Use it when a demo link
-# misbehaves (see scripts/playground-live-probe.mjs). demo-links.yml is the
-# cheap weekly check that the install URLs still resolve.
+# Run it by hand when a demo link misbehaves (see
+# scripts/playground-live-probe.mjs). It also runs daily as a monitor: the
+# report job (scripts/playground-probe-report.mjs) opens an issue labelled
+# `playground-monitor` when the demos look unhealthy (a blueprint step error,
+# or too few loads reaching the editor), comments on it while they stay that
+# way, and closes it when they recover. Playground fails some cold loads on its
+# own, so on the schedule a failed load does not turn the run red; the report
+# decides. demo-links.yml is the cheap weekly check that the install URLs
+# still resolve.
 
 on:
     workflow_dispatch:
@@ -17,6 +23,8 @@ on:
             runs:
                 description: Fresh-profile loads per blueprint
                 default: '5'
+    schedule:
+        - cron: '41 6 * * *' # daily, 06:41 UTC
 
 permissions:
     contents: read
@@ -39,19 +47,33 @@ jobs:
             - name: Install the browser
               run: npx playwright install --with-deps ${{ matrix.browser }}
 
+            # Scheduled runs use 3 loads per blueprint and leave the verdict to
+            # the report job; manual runs fail on any failed load, as before.
             - name: Probe the demo links
+              continue-on-error: ${{ github.event_name == 'schedule' }}
               env:
                   PROBE_BROWSER: ${{ matrix.browser }}
-                  PROBE_RUNS: ${{ github.event.inputs.runs || '5' }}
+                  PROBE_RUNS: ${{ github.event.inputs.runs || '3' }}
+                  PROBE_RESULTS: probe-results-${{ matrix.browser }}.jsonl
               run: node scripts/playground-live-probe.mjs
 
             - name: Probe a control blueprint (no plugins)
               if: always() && matrix.browser == 'chromium'
+              continue-on-error: ${{ github.event_name == 'schedule' }}
               env:
                   PROBE_BROWSER: chromium
-                  PROBE_RUNS: ${{ github.event.inputs.runs || '5' }}
+                  PROBE_RUNS: ${{ github.event.inputs.runs || '3' }}
                   PROBE_ANY_BLOCK: '1'
+                  PROBE_RESULTS: probe-results-${{ matrix.browser }}.jsonl
               run: node scripts/playground-live-probe.mjs "https://raw.githubusercontent.com/dknauss/Borges/${{ github.sha }}/scripts/probe-fixtures/control-blueprint.json"
+
+            - name: Upload results
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: playground-probe-results-${{ matrix.browser }}
+                  path: probe-results-*.jsonl
+                  if-no-files-found: ignore
 
             - name: Upload screenshots
               if: always()
@@ -60,3 +82,59 @@ jobs:
                   name: playground-probe-${{ matrix.browser }}
                   path: probe-*.png
                   if-no-files-found: ignore
+
+    # Reads every browser's results and, on the schedule, keeps one issue
+    # labelled `playground-monitor` in step with the verdict. Only this job
+    # can write issues.
+    report:
+        name: Report
+        needs: probe
+        if: always()
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        permissions:
+            contents: read
+            issues: write
+        steps:
+            - uses: actions/checkout@v5
+
+            - name: Download results
+              uses: actions/download-artifact@v6
+              with:
+                  pattern: playground-probe-results-*
+                  merge-multiple: true
+                  path: results
+
+            - name: Judge the demos
+              id: judge
+              run: |
+                  shopt -s nullglob
+                  files=(results/*.jsonl)
+                  node scripts/playground-probe-report.mjs "${files[@]}" > report.md
+                  cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+            - name: Open, update, or close the monitor issue
+              if: github.event_name == 'schedule'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
+                  HEALTHY: ${{ steps.judge.outputs.healthy }}
+                  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+              run: |
+                  label=playground-monitor
+                  gh label create "$label" --color FBCA04 \
+                      --description "Opened by the daily Playground live probe" 2>/dev/null || true
+                  issue="$(gh issue list --label "$label" --state open --json number --jq '.[0].number // empty')"
+                  body="$(printf '%s\n\n[Probe run](%s)\n' "$(cat report.md)" "$RUN_URL")"
+                  if [ "$HEALTHY" = "true" ]; then
+                      if [ -n "$issue" ]; then
+                          gh issue comment "$issue" --body "$body"
+                          gh issue close "$issue" --reason completed
+                      fi
+                  elif [ -n "$issue" ]; then
+                      gh issue comment "$issue" --body "$body"
+                  else
+                      gh issue create --label "$label" \
+                          --title "Playground demos are failing the daily live probe" \
+                          --body "$(printf 'The daily Playground live probe found the README demos unhealthy. See docs/playground-main-preview-hosting.md and the probe log for the failing step. This issue updates on each daily run and closes when the demos recover.\n\n%s' "$body")"
+                  fi
