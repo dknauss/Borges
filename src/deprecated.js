@@ -1,6 +1,6 @@
 import metadata from '../block.json';
 import { sortCitations } from './lib/sorter';
-import { getHeadingTag } from './lib/heading-level';
+import { getHeadingAlignClass, getHeadingTag } from './lib/heading-level';
 import {
 	LOCALE_INDEPENDENT_SAVE_LABELS,
 	getLocalizedSaveLabels,
@@ -132,6 +132,46 @@ function migrateSortedAttributes( attributes ) {
 }
 
 export const deprecated = [
+	{
+		// Freezes the save() shape of 1.20.0: unordered lists carried no
+		// inline style, so an email built from the saved post without the
+		// block's stylesheet (WordPress.com and Jetpack newsletters) showed
+		// bullets and an indent.
+		attributes: deprecatedAttributes,
+		save: ( { attributes } ) =>
+			renderBibliographySave( attributes, {
+				sortEntries: true,
+				headingTag: getHeadingTag( attributes.headingLevel ),
+				headingAlignClass: getHeadingAlignClass(
+					attributes.headingAlign
+				),
+				entryTag: 'span',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				repeatedAuthorMarkSetting: true,
+				inlineMarkup: true,
+				quoteAwareItalics: true,
+				urlAwareItalics: true,
+				quoteFoldedItalics: true,
+				shortContainerItalics: true,
+				caseFoldedItalics: true,
+				particleAwareSort: true,
+				localeArticles: true,
+				notesAuthorChains: true,
+				sourceGroups: true,
+				chronologicalAuthors: true,
+				undatedTitles: true,
+				firstAuthorDash: true,
+				citeExportData: true,
+				risJournalAbbreviation: true,
+				canonicalDoiUrl: true,
+				jsonLdItemList: true,
+				citationLinkRel: 'noopener',
+				headingLabelledBy: true,
+				annotations: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			} ),
+	},
 	{
 		// Freezes the save() shape of 1.19.0: OSCOLA's tables of legislation
 		// and of treaties italicized the titles of Acts, statutory

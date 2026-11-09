@@ -281,6 +281,12 @@ describe( 'save', () => {
 				listTag === 'ol'
 					? 'bibliography-builder-list-numeric'
 					: 'bibliography-builder-list-unordered';
+			// Unordered lists carry the no-bullet style inline for email;
+			// numbered lists keep their numbers.
+			const listStyle =
+				listTag === 'ol'
+					? ''
+					: ' style="list-style:none;padding-left:0;margin-left:0"';
 			const markup = renderToStaticMarkup(
 				save( {
 					attributes: {
@@ -306,7 +312,7 @@ describe( 'save', () => {
 			expect( markup ).toContain( 'role="doc-bibliography"' );
 			expect( markup ).toContain( `aria-label="Heading for ${ style }"` );
 			expect( markup ).toContain(
-				`<${ listTag } class="bibliography-builder-list ${ listClass } bibliography-builder-list-${ style }">`
+				`<${ listTag } class="bibliography-builder-list ${ listClass } bibliography-builder-list-${ style }"${ listStyle }>`
 			);
 			expect( markup ).toContain( `id="ref-matrix-${ style }"` );
 			expect( markup ).toContain( 'lang="en"' );

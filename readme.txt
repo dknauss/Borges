@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.20.0
+Stable tag: 1.21.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -201,6 +201,10 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 
 == Changelog ==
 
+= 1.21.0 =
+* **Fixed:** bibliographies sent by email, such as WordPress.com and Jetpack newsletters, which build emails from the saved post, no longer show bullets and an indent. Saved lists now carry the no-bullet style inline; numbered lists keep their numbers, and nothing changes on the web. Existing posts stay valid and pick up the change when next saved in the editor.
+* **Changed:** heading alignment moved from the sidebar to an "Align heading" menu in the block toolbar. The setting and saved markup are unchanged.
+
 = 1.20.0 =
 * **Added:** a "Repeated authors" setting. MLA 9 and OSCOLA blocks can write repeated names out instead of using their marks, Chicago blocks can use the 17th edition's 3-em dash ("———."), and ABNT blocks NBR 6023:2002's underscore line ("______."). Screen readers hear the names, and copied text and exports keep them.
 * **Added:** Harvard, IEEE, and Vancouver citations can be pasted as text with no DOI or other identifier, and are read into their fields: journal articles, books, chapters, conference papers, preprints, encyclopedia entries, and web pages (and theses in IEEE). Check the fields before publishing, as the note under each such entry asks.
@@ -293,6 +297,9 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 For 1.9.1 and earlier, see the full [changelog on GitHub](https://github.com/dknauss/Borges/blob/main/CHANGELOG.md).
 
 == Upgrade Notice ==
+
+= 1.21.0 =
+Bibliographies in emails built from the saved post (WordPress.com and Jetpack newsletters) no longer show bullets. Existing blocks stay valid and pick up the change when next saved. No configuration changes required.
 
 = 1.20.0 =
 Repeated authors setting; Harvard, IEEE, and Vancouver citations paste as text; the heading is centered again, with a Heading Alignment setting; cleaner PubMed records. Existing blocks stay valid. No configuration changes required.
