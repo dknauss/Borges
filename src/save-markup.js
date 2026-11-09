@@ -130,12 +130,18 @@ export function renderBibliographySave(
 	{
 		sortEntries = true,
 		headingTag = 'p',
+		// Extra heading class from the block's `headingAlign` (1.20.0). Empty
+		// for deprecations, which save the heading as their release did.
+		headingAlignClass = '',
 		entryTag = 'cite',
 		linkVisibleUrls = true,
 		ariaLabel = null,
 		includeDeprecatedBiblioEntryRole = false,
 		includeCiteExport = false,
 		repeatedAuthors = false,
+		// Honour the block's `repeatedAuthorMark` setting (1.20.0). Off for
+		// deprecations, which save marks as their release did.
+		repeatedAuthorMarkSetting = false,
 		inlineMarkup = false,
 		quoteAwareItalics = false,
 		urlAwareItalics = false,
@@ -172,6 +178,7 @@ export function renderBibliographySave(
 		outputCoins = false,
 		outputCslJson = false,
 		showAnnotations = false,
+		repeatedAuthorMark = 'style',
 	} = attributes;
 
 	if ( ! citations || citations.length === 0 ) {
@@ -202,6 +209,9 @@ export function renderBibliographySave(
 	const cslArray = renderedCitations.map( ( c ) => c.csl );
 	const styleGroups =
 		sortEntries && sourceGroups ? getStyleGroups( citationStyle ) : null;
+	const markSetting = repeatedAuthorMarkSetting
+		? repeatedAuthorMark
+		: 'style';
 	const repeatedAuthorPrefixes = repeatedAuthors
 		? getRepeatedAuthorPrefixes(
 				renderedCitations,
@@ -209,6 +219,7 @@ export function renderBibliographySave(
 				inlineMarkup ? getPlainDisplayText : getDisplayText,
 				{
 					firstAuthorDash,
+					markSetting,
 					listOf: ( citation ) =>
 						styleGroups
 							? getGroupIndex( citation.csl, styleGroups )
@@ -216,7 +227,10 @@ export function renderBibliographySave(
 				}
 			)
 		: [];
-	const repeatedAuthorMark = getRepeatedAuthorMark( citationStyle );
+	const repeatedAuthorText = getRepeatedAuthorMark(
+		citationStyle,
+		markSetting
+	);
 	const styleDefinition = getStyleDefinition( citationStyle );
 	const ListTag = getListSemantics( citationStyle );
 	const listClassName = `bibliography-builder-list bibliography-builder-list-${
@@ -286,7 +300,7 @@ export function renderBibliographySave(
 								className="bibliography-builder-repeated-author-mark"
 								aria-hidden="true"
 							>
-								{ repeatedAuthorMark }
+								{ repeatedAuthorText }
 							</span>
 							<span className="bibliography-builder-visually-hidden screen-reader-text">
 								{ repeatedPrefix }
@@ -448,7 +462,11 @@ export function renderBibliographySave(
 		>
 			{ headingText ? (
 				<HeadingTag
-					className="bibliography-builder-heading"
+					className={
+						headingAlignClass
+							? `bibliography-builder-heading ${ headingAlignClass }`
+							: 'bibliography-builder-heading'
+					}
 					id={ headingId || undefined }
 				>
 					{ headingText }

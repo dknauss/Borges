@@ -31,6 +31,8 @@ The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibT
 
 **Annotated bibliographies.** Add your own note to any entry, in as many paragraphs as you need, and turn on "Show annotations" to print each note under its entry. Notes are stored with the citation data (CSL `annote`), so they travel with CSL-JSON, BibTeX, BibLaTeX, and RIS. Off by default; existing bibliographies are unchanged.
 
+**Repeated authors your way.** MLA's three hyphens and OSCOLA's double em dash apply by default. A block setting can write the names out instead, or use Chicago 17's 3-em dash or ABNT's pre-2018 underscore line. Screen readers always hear the names.
+
 **Reader-facing cite & export.** Optionally add a per-entry Cite / Export panel to the published bibliography: a disclosure under each entry with a copy button and one-click downloads in RIS, CSL-JSON, BibTeX, and BibLaTeX. The panel is built on the page, so newsletters and feeds carry a clean bibliography without it. Off by default; enable it per block.
 
 **Try it first.** Launch a disposable demo in [WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json) before installing it on your site.

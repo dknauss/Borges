@@ -452,6 +452,42 @@ final class WriteRoutesTest extends TestCase {
 		$this->assert_blocks_are_valid();
 	}
 
+	public function test_settings_patch_sets_the_heading_alignment() {
+		$request = self::block_request( 'PATCH', 'notes-block', array( 'headingAlign' => 'start' ) );
+		$data    = bibliography_builder_rest_update_bibliography_settings( self::commit( $request ) )->get_data();
+		$attrs   = bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] );
+
+		$this->assertSame( array( 'headingAlign' ), $data['changes']['updated'] );
+		$this->assertSame( 'start', $attrs['headingAlign'] );
+		$this->assertStringContainsString( '<p class="bibliography-builder-heading bibliography-builder-heading-align-start" id="bibliography-heading-notes-block">Works Cited</p>', get_post( self::POST_ID )->post_content );
+		$this->assert_blocks_are_valid();
+
+		// Back to the default: left out of the block comment, as the editor does.
+		bibliography_builder_rest_update_bibliography_settings(
+			self::commit( self::block_request( 'PATCH', 'notes-block', array( 'headingAlign' => 'center' ) ) )
+		);
+		$this->assertArrayNotHasKey( 'headingAlign', bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] ) );
+		$this->assertStringContainsString( '<p class="bibliography-builder-heading" id="bibliography-heading-notes-block">Works Cited</p>', get_post( self::POST_ID )->post_content );
+		$this->assert_blocks_are_valid();
+	}
+
+	public function test_settings_patch_sets_the_repeated_author_mark() {
+		$request = self::block_request( 'PATCH', 'notes-block', array( 'repeatedAuthorMark' => 'none' ) );
+		$data    = bibliography_builder_rest_update_bibliography_settings( self::commit( $request ) )->get_data();
+		$attrs   = bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] );
+
+		$this->assertSame( array( 'repeatedAuthorMark' ), $data['changes']['updated'] );
+		$this->assertSame( 'none', $attrs['repeatedAuthorMark'] );
+		$this->assert_blocks_are_valid();
+
+		// Back to the default: left out of the block comment, as the editor does.
+		bibliography_builder_rest_update_bibliography_settings(
+			self::commit( self::block_request( 'PATCH', 'notes-block', array( 'repeatedAuthorMark' => 'style' ) ) )
+		);
+		$this->assertArrayNotHasKey( 'repeatedAuthorMark', bibliography_builder_write_to_arrays( $this->saved_blocks()[0]['attrs'] ) );
+		$this->assert_blocks_are_valid();
+	}
+
 	public function test_settings_patch_refuses_bad_settings() {
 		$cases = array(
 			'bibliography_builder_style_needs_reformat' => array( 'citationStyle' => 'apa-7' ),
@@ -462,7 +498,7 @@ final class WriteRoutesTest extends TestCase {
 			$this->assertSame( $code, bibliography_builder_rest_update_bibliography_settings( self::block_request( 'PATCH', 0, $body ) )->get_error_code() );
 		}
 
-		foreach ( array( array( 'outputCoins' => 'yes' ), array( 'headingText' => 5 ), array( 'headingText' => "Two\nlines" ), array( 'headingLevel' => 1 ), array( 'headingLevel' => 7 ), array( 'headingLevel' => '2' ), array( 'headingLevel' => 2.5 ), array( 'headingLevel' => true ) ) as $body ) {
+		foreach ( array( array( 'outputCoins' => 'yes' ), array( 'headingText' => 5 ), array( 'headingText' => "Two\nlines" ), array( 'headingLevel' => 1 ), array( 'headingLevel' => 7 ), array( 'headingLevel' => '2' ), array( 'headingLevel' => 2.5 ), array( 'headingLevel' => true ), array( 'repeatedAuthorMark' => 'hyphens' ), array( 'repeatedAuthorMark' => true ), array( 'headingAlign' => 'left' ), array( 'headingAlign' => 'right' ), array( 'headingAlign' => true ) ) as $body ) {
 			$this->assertSame( 400, bibliography_builder_rest_update_bibliography_settings( self::block_request( 'PATCH', 0, $body ) )->get_error_data()['status'] );
 		}
 

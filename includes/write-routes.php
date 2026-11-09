@@ -855,14 +855,41 @@ function bibliography_builder_write_default_heading( $style_key ) {
  */
 function bibliography_builder_write_setting_defaults() {
 	return array(
-		'headingText'      => '',
-		'headingLevel'     => 0,
-		'outputJsonLd'     => true,
-		'outputCoins'      => false,
-		'outputCslJson'    => false,
-		'outputCiteExport' => false,
-		'showAnnotations'  => false,
+		'headingText'        => '',
+		'headingLevel'       => 0,
+		'headingAlign'       => 'center',
+		'outputJsonLd'       => true,
+		'outputCoins'        => false,
+		'outputCslJson'      => false,
+		'outputCiteExport'   => false,
+		'showAnnotations'    => false,
+		'repeatedAuthorMark' => 'style',
 	);
+}
+
+/**
+ * Values of the `repeatedAuthorMark` block setting (`block.json`, since
+ * 1.20.0): follow the style, Chicago 17's 3-em dash, NBR 6023:2002's
+ * underscore line, or always write names out. A mark the block's style does
+ * not offer is stored as sent and ignored by `save()`, as the editor does.
+ *
+ * @return string[]
+ */
+function bibliography_builder_repeated_author_mark_values() {
+	return array( 'style', 'dash', 'underscore', 'none' );
+}
+
+/**
+ * Values of the `headingAlign` block setting (`block.json`, since 1.20.0):
+ * center the heading, as APA, MLA, Chicago, and ABNT do, or align it to the
+ * start of the line with the entries.
+ *
+ * @since 1.20.0
+ *
+ * @return string[]
+ */
+function bibliography_builder_heading_align_values() {
+	return array( 'center', 'start' );
 }
 
 /**
@@ -889,7 +916,8 @@ function bibliography_builder_write_set_attribute( $attrs, $name, $value, $defau
  * PATCH …/bibliographies/{ref}: change block settings.
  *
  * Body: any of `headingText` (string), `headingLevel` (0 for a paragraph, or
- * 2 to 6), and the booleans `outputJsonLd`, `outputCoins`, `outputCslJson`,
+ * 2 to 6), `headingAlign` (`center` or `start`), `repeatedAuthorMark` (`style`, `dash`, `underscore`, or
+ * `none`), and the booleans `outputJsonLd`, `outputCoins`, `outputCslJson`,
  * `outputCiteExport`, and `showAnnotations`. Citations are not
  * touched. `citationStyle` is refused with a pointer to POST …/reformat.
  *
@@ -941,6 +969,20 @@ function bibliography_builder_rest_update_bibliography_settings( WP_REST_Request
 		if ( is_bool( $defaults[ $name ] ) ) {
 			$valid    = is_bool( $value );
 			$expected = __( 'true or false', 'borges-bibliography-builder' );
+		} elseif ( 'repeatedAuthorMark' === $name ) {
+			$valid    = in_array( $value, bibliography_builder_repeated_author_mark_values(), true );
+			$expected = sprintf(
+				/* translators: %s: comma-separated setting values. */
+				__( 'one of %s', 'borges-bibliography-builder' ),
+				implode( ', ', bibliography_builder_repeated_author_mark_values() )
+			);
+		} elseif ( 'headingAlign' === $name ) {
+			$valid    = in_array( $value, bibliography_builder_heading_align_values(), true );
+			$expected = sprintf(
+				/* translators: %s: comma-separated setting values. */
+				__( 'one of %s', 'borges-bibliography-builder' ),
+				implode( ', ', bibliography_builder_heading_align_values() )
+			);
 		} elseif ( is_int( $defaults[ $name ] ) ) {
 			// headingLevel: 0 or a level bibliography_builder_save_heading_tag() prints.
 			$valid    = is_int( $value ) && ( 0 === $value || 'p' !== bibliography_builder_save_heading_tag( $value ) );

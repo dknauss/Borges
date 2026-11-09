@@ -9,7 +9,7 @@
 			"source": "block.json",
 			"design_owner": "Repository source files",
 			"data_owner": "WordPress editorial content",
-			"editable": "Declared attributes: citationStyle, headingText, headingLevel, outputJsonLd, outputCoins, outputCslJson, outputCiteExport, showAnnotations, bibliographyId, citations; existing style controls are listed in supports. Attribute declarations are not proof of visible UI controls.",
+			"editable": "Declared attributes: citationStyle, headingText, headingLevel, headingAlign, outputJsonLd, outputCoins, outputCslJson, outputCiteExport, showAnnotations, repeatedAuthorMark, bibliographyId, citations; existing style controls are listed in supports. Attribute declarations are not proof of visible UI controls.",
 			"updates": "Saved output remains in post content; existing instances require compatibility/deprecations before markup changes",
 			"verification": "Source validation plus editor and frontend checks on a local site",
 			"attributes": {
@@ -25,6 +25,11 @@
 					"type": "integer",
 					"enum": [ 0, 2, 3, 4, 5, 6 ],
 					"default": 0
+				},
+				"headingAlign": {
+					"type": "string",
+					"enum": [ "start", "center" ],
+					"default": "center"
 				},
 				"outputJsonLd": {
 					"type": "boolean",
@@ -45,6 +50,11 @@
 				"showAnnotations": {
 					"type": "boolean",
 					"default": false
+				},
+				"repeatedAuthorMark": {
+					"type": "string",
+					"enum": [ "style", "dash", "underscore", "none" ],
+					"default": "style"
 				},
 				"bibliographyId": {
 					"type": "string",

@@ -75,7 +75,11 @@
 
 	.bibliography-builder-heading-preview {
 		margin: 0 0 0.75em;
-		text-align: start;
+		text-align: center;
+
+		&.bibliography-builder-heading-align-start {
+			text-align: start;
+		}
 	}
 
 	.bibliography-builder-actions {

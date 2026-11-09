@@ -14,7 +14,12 @@
 
 .wp-block-bibliography-builder-bibliography .bibliography-builder-heading {
 	margin: 0 0 0.75em;
-	text-align: start;
+	text-align: center;
+
+	/* The block's Heading Alignment setting (`headingAlign: "start"`). */
+	&.bibliography-builder-heading-align-start {
+		text-align: start;
+	}
 }
 
 /* OSCOLA tables: a label above each group's list (bibliography-groups.js). */

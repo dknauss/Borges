@@ -691,19 +691,55 @@ function bibliography_builder_save_build_segments( $text, $ranges ) {
 	return $segments;
 }
 
-// ── MLA and OSCOLA repeated authors: src/lib/repeated-authors.js ────────────
+// ── Repeated authors (MLA, OSCOLA, and the block's setting): src/lib/repeated-authors.js
 
 /**
- * `getRepeatedAuthorMark()`: three U+2011 non-breaking hyphens (MLA), or
- * OSCOLA's double em dash.
+ * `getRepeatedAuthorRule()`: the rule a block follows, its style's
+ * `repeatedAuthors` unless its `repeatedAuthorMark` setting (since 1.20.0)
+ * turns marks off (`none`) or picks an older mark the style lists in
+ * `repeatedAuthorMarks` (`dash` for Chicago, `underscore` for ABNT). A mark
+ * the style does not offer falls back to `style`.
  *
  * @param mixed $style_key Citation style.
+ * @param mixed $setting   The block's `repeatedAuthorMark`.
+ * @return string `allAuthors`, `firstAuthor`, `dash`, `underscore`, or ''
+ *                for full names.
+ */
+function bibliography_builder_save_repeated_author_rule( $style_key, $setting = 'style' ) {
+	$style = bibliography_builder_get_save_style_definition( $style_key );
+
+	if ( 'none' === $setting ) {
+		return '';
+	}
+
+	if ( is_string( $setting ) && 'style' !== $setting
+		&& in_array( $setting, $style['repeatedAuthorMarks'], true ) ) {
+		return $setting;
+	}
+
+	return $style['repeatedAuthors'];
+}
+
+/**
+ * `getRepeatedAuthorMark()`: three U+2011 non-breaking hyphens (MLA),
+ * OSCOLA's double em dash, Chicago 17's 3-em dash (three U+2014), or
+ * NBR 6023:2002's line of six underscores.
+ *
+ * @param mixed $style_key Citation style.
+ * @param mixed $setting   The block's `repeatedAuthorMark`.
  * @return string
  */
-function bibliography_builder_save_repeated_author_mark( $style_key ) {
-	return 'firstAuthor' === bibliography_builder_get_save_style_definition( $style_key )['repeatedAuthors']
-		? "\u{2014}\u{2014}"
-		: "\u{2011}\u{2011}\u{2011}";
+function bibliography_builder_save_repeated_author_mark( $style_key, $setting = 'style' ) {
+	switch ( bibliography_builder_save_repeated_author_rule( $style_key, $setting ) ) {
+		case 'firstAuthor':
+			return "\u{2014}\u{2014}";
+		case 'dash':
+			return "\u{2014}\u{2014}\u{2014}";
+		case 'underscore':
+			return '______';
+		default:
+			return "\u{2011}\u{2011}\u{2011}";
+	}
 }
 
 /**
@@ -775,12 +811,15 @@ function bibliography_builder_save_join_name_parts( $parts ) {
 }
 
 /**
- * `getInvertedName()`: a name as the MLA style writes the first author.
+ * `getInvertedName()`: a name as the MLA style writes the first author, or,
+ * with `$demote`, as Chicago does, the non-dropping particle after the given
+ * name ("Gogh, Vincent van").
  *
- * @param mixed $name CSL name.
+ * @param mixed $name   CSL name.
+ * @param bool  $demote Demote a non-dropping particle.
  * @return string
  */
-function bibliography_builder_save_inverted_name( $name ) {
+function bibliography_builder_save_inverted_name( $name, $demote = false ) {
 	$literal = bibliography_builder_save_name_part( $name, 'literal' );
 
 	if ( '' !== $literal ) {
@@ -791,10 +830,11 @@ function bibliography_builder_save_inverted_name( $name ) {
 		return '';
 	}
 
-	$parts = array(
+	$particle = bibliography_builder_save_name_part( $name, 'non-dropping-particle' );
+	$parts    = array(
 		bibliography_builder_save_join_name_parts(
 			array(
-				bibliography_builder_save_name_part( $name, 'non-dropping-particle' ),
+				$demote ? '' : $particle,
 				bibliography_builder_save_name_part( $name, 'family' ),
 			)
 		),
@@ -802,6 +842,7 @@ function bibliography_builder_save_inverted_name( $name ) {
 			array(
 				bibliography_builder_save_name_part( $name, 'given' ),
 				bibliography_builder_save_name_part( $name, 'dropping-particle' ),
+				$demote ? $particle : '',
 			)
 		),
 		bibliography_builder_save_name_part( $name, 'suffix' ),
@@ -868,7 +909,118 @@ function bibliography_builder_save_author_prefix( $authors ) {
 		return null;
 	}
 
+	return bibliography_builder_save_without_final_period( $block );
+}
+
+/**
+ * `withoutFinalPeriod()`: a name block without its final period, which a
+ * name ending in one ("Jr.", "et al.") shares with the entry.
+ *
+ * @param string $block Names.
+ * @return string
+ */
+function bibliography_builder_save_without_final_period( $block ) {
 	return '.' === substr( $block, -1 ) ? substr( $block, 0, -1 ) : $block;
+}
+
+/**
+ * `getChicagoAuthorPrefix()`: the author names a Chicago entry starts with,
+ * the first inverted, the others in display order, a comma before "and", and
+ * seven or more cut to three and "et al.", or null.
+ *
+ * @param array $authors CSL names.
+ * @param bool  $demote  The style demotes non-dropping particles.
+ * @return string|null
+ */
+function bibliography_builder_save_chicago_author_prefix( $authors, $demote ) {
+	$authors = array_values( $authors );
+	$cut     = count( $authors ) >= 7;
+	$names   = array();
+
+	foreach ( $cut ? array_slice( $authors, 0, 3 ) : $authors as $index => $name ) {
+		$names[] = 0 === $index
+			? bibliography_builder_save_inverted_name( $name, $demote )
+			: bibliography_builder_save_display_name( $name );
+	}
+
+	if ( in_array( '', $names, true ) ) {
+		return null;
+	}
+
+	$block = $names[0];
+
+	if ( $cut ) {
+		$block = implode( ', ', $names ) . ', et al.';
+	} elseif ( count( $names ) >= 2 ) {
+		$block = implode( ', ', array_slice( $names, 0, -1 ) ) . ', and ' . $names[ count( $names ) - 1 ];
+	}
+
+	return bibliography_builder_save_without_final_period( $block );
+}
+
+/**
+ * `getAbntAuthorPrefix()`: the author names an ABNT entry starts with, every
+ * name inverted with its family name (or a literal name) in capitals,
+ * separated by semicolons, and four or more cut to the first and "et al.".
+ * Null for a name with a particle or suffix.
+ *
+ * @param array $authors CSL names.
+ * @return string|null
+ */
+function bibliography_builder_save_abnt_author_prefix( $authors ) {
+	$authors = array_values( $authors );
+	$cut     = count( $authors ) >= 4;
+	$names   = array();
+
+	foreach ( $cut ? array_slice( $authors, 0, 1 ) : $authors as $name ) {
+		if ( '' !== bibliography_builder_save_name_part( $name, 'suffix' )
+			|| '' !== bibliography_builder_save_name_part( $name, 'dropping-particle' )
+			|| '' !== bibliography_builder_save_name_part( $name, 'non-dropping-particle' ) ) {
+			return null;
+		}
+
+		$literal = bibliography_builder_save_name_part( $name, 'literal' );
+		$family  = bibliography_builder_save_name_part( $name, 'family' );
+		$given   = bibliography_builder_save_name_part( $name, 'given' );
+
+		if ( '' !== $literal ) {
+			$names[] = mb_strtoupper( $literal, 'UTF-8' );
+		} elseif ( '' === $family ) {
+			return null;
+		} else {
+			$names[] = mb_strtoupper( $family, 'UTF-8' ) . ( '' === $given ? '' : ', ' . $given );
+		}
+	}
+
+	if ( array() === $names ) {
+		return null;
+	}
+
+	$block = $cut ? $names[0] . ' et al.' : implode( '; ', $names );
+
+	return bibliography_builder_save_without_final_period( $block );
+}
+
+/**
+ * `getRuleAuthorPrefix()`: the names a whole-author-list rule replaces.
+ *
+ * @param array  $authors   CSL names.
+ * @param string $rule      `allAuthors`, `dash`, or `underscore`.
+ * @param string $style_key Citation style.
+ * @return string|null
+ */
+function bibliography_builder_save_rule_author_prefix( $authors, $rule, $style_key ) {
+	if ( 'dash' === $rule ) {
+		$demote = bibliography_builder_get_save_style_definition( $style_key )['demoteNonDroppingParticle'];
+
+		return bibliography_builder_save_chicago_author_prefix( $authors, 'display-and-sort' === $demote );
+	}
+
+	if ( 'underscore' === $rule ) {
+		return bibliography_builder_save_abnt_author_prefix( $authors );
+	}
+
+	return bibliography_builder_save_author_prefix( $authors );
 }
 
 /**
@@ -959,16 +1111,19 @@ function bibliography_builder_save_first_author_prefix( $name, $text ) {
  * `getRepeatedAuthorPrefixes()`: for each citation in display order, the
  * author names MLA 9 replaces with three hyphens, or the first author OSCOLA
  * replaces with a double em dash, or null. OSCOLA's dash never crosses from
- * one of its tables to the next.
+ * one of its tables to the next. The block's `repeatedAuthorMark` setting
+ * can turn marks off or pick Chicago's 3-em dash or ABNT's underscore line
+ * (`bibliography_builder_save_repeated_author_rule()`).
  *
  * @param array  $citations Citations in display order.
  * @param string $style_key Citation style.
+ * @param mixed  $setting   The block's `repeatedAuthorMark`.
  * @return array<int, string|null>
  */
-function bibliography_builder_save_repeated_author_prefixes( $citations, $style_key ) {
+function bibliography_builder_save_repeated_author_prefixes( $citations, $style_key, $setting = 'style' ) {
 	$citations    = array_values( $citations );
 	$prefixes     = array();
-	$rule         = bibliography_builder_get_save_style_definition( $style_key )['repeatedAuthors'];
+	$rule         = bibliography_builder_save_repeated_author_rule( $style_key, $setting );
 	$first_author = 'firstAuthor' === $rule;
 	$groups       = $first_author ? bibliography_builder_save_style_groups( $style_key ) : null;
 	$list_of      = static function ( array $citation ) use ( $groups ): ?int {
@@ -1027,7 +1182,11 @@ function bibliography_builder_save_repeated_author_prefixes( $citations, $style_
 			continue;
 		}
 
-		$prefix = bibliography_builder_save_author_prefix( bibliography_builder_citation_csl( $citation )['author'] );
+		$prefix = bibliography_builder_save_rule_author_prefix(
+			bibliography_builder_citation_csl( $citation )['author'],
+			$rule,
+			$style_key
+		);
 
 		if ( null === $prefix ) {
 			continue;
