@@ -17,3 +17,7 @@ coverage:
         patch:
             default:
                 informational: true
+
+# Storybook stories are documentation, not plugin code (see docs/storybook.md).
+ignore:
+    - 'src/**/*.stories.js'

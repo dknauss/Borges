@@ -9,6 +9,7 @@ packages/
 playground/*.json
 package-lock.json
 composer.lock
+storybook-static/
 
 # Fixtures are compared byte for byte; formatting would change them.
 tests/fixtures/

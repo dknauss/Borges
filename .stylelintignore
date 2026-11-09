@@ -1,0 +1,6 @@
+# The wp-scripts default ignores (node_modules is always ignored)...
+build
+vendor
+
+# ...plus Storybook's static build (npm run storybook:build).
+storybook-static

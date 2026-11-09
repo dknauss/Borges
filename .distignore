@@ -10,10 +10,13 @@
 .eslintrc.*
 .prettierrc.*
 .stylelintrc.*
+.stylelintignore
 node_modules
 vendor
 src
 scripts
+.storybook
+storybook-static
 tests
 output
 test-results

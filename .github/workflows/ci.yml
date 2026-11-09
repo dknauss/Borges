@@ -189,6 +189,21 @@ jobs:
               if: matrix.suite == 'a11y'
               run: npm run test:a11y
 
+            # Builds Storybook, then loads every story in Chromium and fails
+            # on a render error or an axe violation (scripts/storybook-a11y.mjs).
+            - name: Check Storybook stories
+              if: matrix.suite == 'a11y'
+              run: npm run test:storybook
+
+            # publish-main-preview-pages serves it at /storybook/.
+            - name: Upload Storybook for Pages
+              if: matrix.suite == 'a11y' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+              uses: actions/upload-artifact@v6
+              with:
+                  name: storybook-static
+                  path: storybook-static
+                  retention-days: 7
+
             - name: Package release zip (for lifecycle tests)
               if: matrix.suite == 'lifecycle'
               run: npm run package:release
@@ -439,8 +454,15 @@ jobs:
                   name: bibliography-release
                   path: site/main-preview
 
+            - name: Download Storybook
+              if: steps.tip.outputs.current == 'true'
+              uses: actions/download-artifact@v6
+              with:
+                  name: storybook-static
+                  path: site/storybook
+
             # A plain index page, so the site root explains itself instead of
-            # answering 404. The commit is recorded beside the ZIP.
+            # answering 404, and links the ZIP and Storybook. The commit is recorded beside the ZIP.
             - name: Add an index page and the build's commit
               if: steps.tip.outputs.current == 'true'
               run: |
@@ -455,6 +477,8 @@ jobs:
                   for its WordPress Playground demo:
                   <a href="main-preview/borges-bibliography-builder.zip">main-preview/borges-bibliography-builder.zip</a>.
                   It is not a stable release.</p>
+                  <p>The same build's component stories are in
+                  <a href="storybook/">Storybook</a>.</p>
                   </html>
                   HTML
 
