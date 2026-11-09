@@ -777,6 +777,113 @@ final class RestEdgeCasesTest extends TestCase {
 		$this->assertSame( 400, $result->get_error_data()['status'] );
 	}
 
+	/**
+	 * A body with no list of items is an error, not an empty bibliography (#272).
+	 *
+	 * @param array<string, mixed> $body Request body.
+	 */
+	#[DataProvider( 'provide_format_bodies_without_items' )]
+	public function test_format_citations_rejects_a_body_without_items( array $body ): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+
+		$request = new WP_REST_Request( 'POST', '/bibliography/v1/format' );
+		$request->set_body_params( $body );
+
+		$result = bibliography_builder_rest_format_citations( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_formatter_missing_items', $result->get_error_code() );
+		$this->assertSame( 400, $result->get_error_data()['status'] );
+		$this->assertStringContainsString( 'cslItems', $result->get_error_message() );
+	}
+
+	/**
+	 * Bodies that send no list of CSL items.
+	 *
+	 * @return array<string, array{0: array<string, mixed>}>
+	 */
+	public static function provide_format_bodies_without_items(): array {
+		return array(
+			'empty body'           => array( array() ),
+			'style only'           => array( array( 'style' => 'apa-7' ) ),
+			'misspelled key'       => array( array( 'cslitems' => array( array( 'type' => 'book' ) ) ) ),
+			'cslItems not a list'  => array( array( 'cslItems' => 'Alpha' ) ),
+			'items not a list'     => array( array( 'items' => null ) ),
+			'cslItems null, items' => array(
+				array(
+					'cslItems' => null,
+					'items'    => array( array( 'type' => 'book' ) ),
+				),
+			),
+		);
+	}
+
+	public function test_format_citations_rejects_a_missing_body(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+
+		$request = new WP_REST_Request( 'POST', '/bibliography/v1/format' );
+
+		$result = bibliography_builder_rest_format_citations( $request );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bibliography_builder_formatter_missing_items', $result->get_error_code() );
+	}
+
+	public function test_format_citations_accepts_items_as_an_alias(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+
+		$request = new WP_REST_Request( 'POST', '/bibliography/v1/format' );
+		$request->set_body_params(
+			array(
+				'style' => 'apa-7',
+				'items' => array(
+					array(
+						'type'   => 'book',
+						'title'  => 'Alias key book',
+						'author' => array(
+							array(
+								'family' => 'Alpha',
+								'given'  => 'Ada',
+							),
+						),
+					),
+				),
+			)
+		);
+
+		$data = bibliography_builder_rest_format_citations( $request )->get_data();
+
+		$this->assertCount( 1, $data['entries'] );
+		$this->assertStringContainsString( 'Alias key book', $data['entries'][0]['text'] );
+	}
+
+	public function test_format_request_items_prefers_csl_items_over_items(): void {
+		$this->assertSame(
+			array( 'first' ),
+			bibliography_builder_get_format_request_items(
+				array(
+					'items'    => array( 'second' ),
+					'cslItems' => array( 'first' ),
+				)
+			)
+		);
+		$this->assertSame( array(), bibliography_builder_get_format_request_items( array( 'items' => array() ) ) );
+		$this->assertNull( bibliography_builder_get_format_request_items( array() ) );
+	}
+
+	public function test_format_route_lists_its_body_parameters(): void {
+		bibliography_builder_register_rest_routes();
+		$args = $GLOBALS['bibliography_builder_test_rest_routes'][0]['args']['args'];
+
+		$this->assertSame( 'array', $args['cslItems']['type'] );
+		$this->assertSame( 'array', $args['items']['type'] );
+		$this->assertSame( 'string', $args['style']['type'] );
+		$this->assertArrayNotHasKey( 'required', $args['cslItems'] );
+	}
+
 	public function test_format_citations_defaults_style_to_chicago_when_absent(): void {
 		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
 		bibliography_builder_test_set_current_user( 7 );
