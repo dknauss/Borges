@@ -49,7 +49,11 @@ import {
 	getSelectableStyles,
 	getStyleDefinition,
 } from './lib/formatting';
-import { HEADING_LEVELS, getHeadingTag } from './lib/heading-level';
+import {
+	HEADING_LEVELS,
+	getHeadingAlignClass,
+	getHeadingTag,
+} from './lib/heading-level';
 import {
 	FREE_TEXT_LOW_CONFIDENCE_WARNING,
 	SUPPORTED_INPUT_MESSAGE,
@@ -105,6 +109,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		citationStyle,
 		headingText,
 		headingLevel = 0,
+		headingAlign = 'center',
 		outputJsonLd = true,
 		outputCoins = false,
 		outputCslJson = false,
@@ -840,6 +845,36 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 							'borges-bibliography-builder'
 						) }
 					/>
+					<SelectControl
+						label={ __(
+							'Heading Alignment',
+							'borges-bibliography-builder'
+						) }
+						value={ headingAlign === 'start' ? 'start' : 'center' }
+						options={ [
+							{
+								label: __(
+									'Center',
+									'borges-bibliography-builder'
+								),
+								value: 'center',
+							},
+							{
+								label: __(
+									'Start (left in left-to-right languages)',
+									'borges-bibliography-builder'
+								),
+								value: 'start',
+							},
+						] }
+						onChange={ ( value ) =>
+							setAttributes( { headingAlign: value } )
+						}
+						help={ __(
+							'APA, MLA, Chicago, and ABNT center the reference list heading. Choose Start to line it up with the entries and your theme’s headings.',
+							'borges-bibliography-builder'
+						) }
+					/>
 					<ToggleControl
 						label={ __(
 							'Show annotations',
@@ -1000,7 +1035,15 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 			{ /* Heading */ }
 			{ headingText ? (
-				<HeadingTag className="bibliography-builder-heading bibliography-builder-heading-preview">
+				<HeadingTag
+					className={ [
+						'bibliography-builder-heading',
+						'bibliography-builder-heading-preview',
+						getHeadingAlignClass( headingAlign ),
+					]
+						.filter( Boolean )
+						.join( ' ' ) }
+				>
 					{ headingText }
 				</HeadingTag>
 			) : null }

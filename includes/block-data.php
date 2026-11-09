@@ -59,6 +59,11 @@ function bibliography_builder_collect_blocks( $blocks, $results = array() ) {
 					),
 					1
 				),
+				// The heading's alignment (1.20.0): `center` unless the block
+				// chose `start`, the one value save() marks with a class.
+				'headingAlign'       => isset( $attrs['headingAlign'] ) && 'start' === $attrs['headingAlign']
+					? 'start'
+					: 'center',
 				'outputJsonLd'       => isset( $attrs['outputJsonLd'] ) ? (bool) $attrs['outputJsonLd'] : true,
 				'outputCoins'        => ! empty( $attrs['outputCoins'] ),
 				'outputCslJson'      => ! empty( $attrs['outputCslJson'] ),

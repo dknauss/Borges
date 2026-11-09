@@ -1364,6 +1364,50 @@ describe( 'Edit focus management', () => {
 		expect( setAttributes ).toHaveBeenCalledWith( { headingLevel: 3 } );
 	} );
 
+	it( 'centers the heading preview until Heading Alignment chooses Start', async () => {
+		const setAttributes = jest.fn();
+		const props = {
+			citationStyle: 'apa-7',
+			headingText: 'References',
+			citations: [],
+		};
+		const { container, rerender } = render(
+			<Edit
+				attributes={ props }
+				setAttributes={ setAttributes }
+				clientId="heading-align"
+			/>
+		);
+
+		expect( screen.getByLabelText( 'Heading Alignment' ) ).toHaveValue(
+			'center'
+		);
+		expect(
+			container.querySelector( '.bibliography-builder-heading-preview' )
+		).not.toHaveClass( 'bibliography-builder-heading-align-start' );
+
+		await userEvent.selectOptions(
+			screen.getByLabelText( 'Heading Alignment' ),
+			'start'
+		);
+
+		expect( setAttributes ).toHaveBeenCalledWith( {
+			headingAlign: 'start',
+		} );
+
+		rerender(
+			<Edit
+				attributes={ { ...props, headingAlign: 'start' } }
+				setAttributes={ setAttributes }
+				clientId="heading-align"
+			/>
+		);
+
+		expect(
+			container.querySelector( '.bibliography-builder-heading-preview' )
+		).toHaveClass( 'bibliography-builder-heading-align-start' );
+	} );
+
 	it( 'renders notices inline within the block UI', async () => {
 		render( <EditHarness /> );
 

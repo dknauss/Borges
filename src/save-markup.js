@@ -130,6 +130,9 @@ export function renderBibliographySave(
 	{
 		sortEntries = true,
 		headingTag = 'p',
+		// Extra heading class from the block's `headingAlign` (1.20.0). Empty
+		// for deprecations, which save the heading as their release did.
+		headingAlignClass = '',
 		entryTag = 'cite',
 		linkVisibleUrls = true,
 		ariaLabel = null,
@@ -459,7 +462,11 @@ export function renderBibliographySave(
 		>
 			{ headingText ? (
 				<HeadingTag
-					className="bibliography-builder-heading"
+					className={
+						headingAlignClass
+							? `bibliography-builder-heading ${ headingAlignClass }`
+							: 'bibliography-builder-heading'
+					}
 					id={ headingId || undefined }
 				>
 					{ headingText }

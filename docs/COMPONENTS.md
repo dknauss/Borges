@@ -12,7 +12,7 @@ Follow [the shared workflow](COMPONENT-WORKFLOW.md). `components.json` is the ch
 
 ## `bibliography-builder/bibliography`
 
-Declared attributes: citationStyle, headingText, headingLevel, outputJsonLd, outputCoins, outputCslJson, outputCiteExport, bibliographyId, citations; existing style controls are listed in supports. Attribute declarations are not proof of visible UI controls.
+Declared attributes: citationStyle, headingText, headingLevel, headingAlign, outputJsonLd, outputCoins, outputCslJson, outputCiteExport, bibliographyId, citations; existing style controls are listed in supports. Attribute declarations are not proof of visible UI controls.
 
 Saved output remains in post content; existing instances require compatibility/deprecations before markup changes
 
