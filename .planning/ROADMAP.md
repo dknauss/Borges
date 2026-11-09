@@ -518,7 +518,9 @@ Chicago author-date 1%.
    import chunk, never on the front end. Scoped in
    `docs/planning/free-text-styles-plan.md`, which adds a Phase 0 first: the
    parser misreads labelled IEEE and ABNT articles as books today, and drops
-   the confidence it computes
+   the confidence it computes. Phases 0 (#267) and 1 (#274) are merged and
+   Phase 2 (IEEE and Vancouver) is built; that is the stop-or-go point, and
+   ABNT and OSCOLA wait for demand
 4. **Decide whether the write routes should ever be on by default.** The
    Phase 05 memo left this open; today they need the
    `bibliography_builder_enable_write_routes` filter

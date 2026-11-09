@@ -1,7 +1,8 @@
 /**
  * Helpers shared by the free-text citation patterns: DOI, title, year,
  * edition, and publisher clean-up. Used by `free-text-parser.js` and the
- * per-style pattern modules (`free-text-harvard.js`).
+ * per-style pattern modules (`free-text-harvard.js`, `free-text-ieee.js`,
+ * `free-text-vancouver.js`).
  */
 
 const DOI_URL_PREFIX =
@@ -21,6 +22,27 @@ export const MONTH_INDEX = {
 	november: 11,
 	december: 12,
 };
+
+/**
+ * The month number for a full or abbreviated English month name: "May",
+ * "Sept.", "Oct", "sep".
+ *
+ * @param {string} name Month name, with or without a full stop.
+ * @return {number|undefined} 1 to 12, or undefined when it is not a month.
+ */
+export function getMonthNumber( name ) {
+	const key = name.toLowerCase().replace( /\.$/u, '' );
+
+	if ( key.length < 3 ) {
+		return undefined;
+	}
+
+	const month = Object.keys( MONTH_INDEX ).find( ( full ) =>
+		full.startsWith( key )
+	);
+
+	return month ? MONTH_INDEX[ month ] : undefined;
+}
 
 export function normalizeDoi( doiValue ) {
 	return doiValue
