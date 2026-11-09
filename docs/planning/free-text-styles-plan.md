@@ -3,8 +3,12 @@
 Scoping for [#231](https://github.com/dknauss/Borges/issues/231): teaching
 `parseFreeTextCitation()` (`src/lib/free-text-parser.js`) to read Harvard,
 IEEE, Vancouver, ABNT, and OSCOLA citations, which Borges formats but cannot
-read back. Proposed 2026-11-09. Nothing here is built yet; the decisions in
-[Open questions](#open-questions) are Dan's.
+read back. Proposed 2026-11-09.
+
+**Status:** On 2026-11-09 Dan chose Phase 0 first, then Phases 1 and 2, with
+ABNT and OSCOLA waiting for demand. The other open questions take the
+recommended answers unless he says otherwise. Phase 0 is built (see its
+section for the measured result); Phases 1 and 2 are next.
 
 The issue already lays out the per-style patterns, the size estimate, and the
 collision risk. This plan adds what a closer look at the current code turned
@@ -95,9 +99,10 @@ Independent of the new styles.
    `parseWarnings` entry (say `free-text-low-confidence`) in
    `PARSER_BACKENDS.freetext`, so the editor's existing review count and
    notice cover it. Decide whether `medium` is flagged too (question 3).
-3. **Strip list numbering** (`[12]`, `12.`, `12)`) from the start of a
-   free-text entry before parsing, in `parser.js`, not in the segmenter.
-   Keep it in `rawValue` so the notice shows what was pasted.
+3. **Strip list numbering** (`[12]`, `12.`, `12)`, `(12)`) from the start
+   of a free-text entry before parsing, in `parseFreeTextCitation()` (not in
+   the segmenter, so `rawValue` and the notice keep what was pasted, and the
+   measurement tools see the same input the editor does).
 4. **Add the precision check** from Appendix A as a tool
    (`tools/markup-value/anystyle-precision.mjs` or similar, reading AnyStyle's
    XML at a pinned gem version), reported beside `npm run sweep`.
@@ -105,6 +110,40 @@ Independent of the new styles.
 About 80 to 150 lines plus 20 to 30 tests. Expected effect: IEEE and ABNT
 acceptance drops toward zero on the sweep (fewer details, but no wrong ones),
 and the overall wrong-title rate on AnyStyle's data drops below 13%.
+
+**Built 2026-11-09.** `isMisreadParse()` in `free-text-parser.js` discards a
+pattern's result, and the next pattern is tried, when the title holds
+`vol. 12, no. 3` / `v. 12, n. 3` or ends in a cut-off `, pp`; the publisher is
+only a page number or range; a name holds a quotation mark; or a book's title
+holds a quoted article title (`"Title,"`) or starts with a second ABNT author
+(`CHABERT, Catherine`). `npm run anystyle-precision`, before and after:
+
+| Subset | Accepted | Wrong title |
+|---|---|---|
+| All (7,846) | 2,412 → 2,240 | 311 (12.9%) → 184 (8.2%) |
+| IEEE-like | 146 → 58 | 77 (52.7%) → 0 |
+| Labelled `vol. … pp.` | 32 → 0 | 22 (68.8%) → 0 |
+| ABNT-like | 84 → 71 | 20 (23.8%) → 7 (9.9%) |
+| Numbered (`[n]`, `n.`) | 196 → 148 | 59 (30.1%) → 12 (8.1%) |
+
+Of the 172 references no longer accepted, nearly all were wrong records
+(chapters and articles read as books, page ranges as publishers); a few with
+a right title also carried a wrong type or field. One correct book is lost,
+"Novels: “The Scarlet Letter,” …", whose title quotes other titles.
+
+The sweep, on the same rendered pages (details recovered):
+
+| Corpus, style | Before | After | What changed |
+|---|---|---|---|
+| 12 works, Chicago N-B / A-D, APA, MLA | 40, 18, 38, 13 | same | – |
+| 12 works, ABNT | 3 | 1 | 1 article no longer read as a book |
+| 36 works, Chicago N-B / A-D, APA | 60, 17, 49 | same | – |
+| 36 works, MLA | 37 | 35 | 1 article declined: it was a book titled "“Widow, Orphan, …” Journal of Near Eastern Studies, vol" published by "21" |
+| 36 works, IEEE | 7 | 6 | 10 web pages declined: each was a book titled "Accessed: Oct" published by "27" |
+| 36 works, ABNT | 31 | 29 | 1 article declined, as for MLA |
+
+Every drop is a declined wrong record whose author or year happened to
+score, so gate 1 holds in spirit: no correctly read entry was lost.
 
 ### Phase 1: style hint, module layout, Harvard
 
