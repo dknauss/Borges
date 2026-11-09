@@ -8,6 +8,7 @@
  */
 
 import { KNOWN_CSL_TYPES } from './csl-sanitize';
+import { normalizeNcbiCsl } from './ncbi-normalize';
 import { Cite } from '@citation-js/core';
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
@@ -76,7 +77,9 @@ async function resolveNcbiViaFetch( source, id, fetchFn ) {
  * Resolve a PubMed or PubMed Central record to CSL-JSON.
  *
  * Prefers an injected fetch (tests, benchmarks), then the authenticated
- * WordPress REST proxy, then a direct browser fetch.
+ * WordPress REST proxy, then a direct browser fetch. Every path returns the
+ * record with NLM's initials, "Pt" issues, and journal subtitles cleaned up
+ * (src/lib/ncbi-normalize.js).
  *
  * @param {'pmid'|'pmcid'} sourceKey Which NCBI source to query.
  * @param {string}         id        Digits only (no `PMC` prefix).
@@ -86,18 +89,26 @@ async function resolveNcbiViaFetch( source, id, fetchFn ) {
 export async function resolveNcbiCsl( sourceKey, id, fetchFn ) {
 	const source = NCBI_SOURCES[ sourceKey ];
 
+	// The REST proxy already applies these cleanups; running them again is a
+	// no-op, and covers the direct-fetch paths.
 	if ( typeof fetchFn === 'function' ) {
-		return resolveNcbiViaFetch( source, id, fetchFn );
+		return normalizeNcbiCsl(
+			await resolveNcbiViaFetch( source, id, fetchFn )
+		);
 	}
 
 	if ( typeof apiFetch === 'function' ) {
-		return apiFetch( { path: source.restPath( id ) } );
+		return normalizeNcbiCsl(
+			await apiFetch( { path: source.restPath( id ) } )
+		);
 	}
 
 	const defaultFetchFn = getDefaultFetchFn();
 
 	if ( typeof defaultFetchFn === 'function' ) {
-		return resolveNcbiViaFetch( source, id, defaultFetchFn );
+		return normalizeNcbiCsl(
+			await resolveNcbiViaFetch( source, id, defaultFetchFn )
+		);
 	}
 
 	throw new Error(

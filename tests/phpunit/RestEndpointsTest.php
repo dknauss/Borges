@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class RestEndpointsTest extends TestCase {
 	private $published_post_id = 101;
@@ -349,6 +350,108 @@ final class RestEndpointsTest extends TestCase {
 
 		$this->assertSame( $data, $cached->get_data() );
 		$this->assertCount( 1, bibliography_builder_test_get_http_requests() );
+	}
+
+	/**
+	 * NLM conventions are cleaned up before the record reaches the editor or a
+	 * REST client (#270, #271), matching src/lib/ncbi-normalize.js.
+	 */
+	public function test_pmid_endpoint_cleans_up_nlm_initials_issue_and_journal(): void {
+		bibliography_builder_test_grant_cap( 7, 'edit_posts', 0 );
+		bibliography_builder_test_set_current_user( 7 );
+		bibliography_builder_test_set_http_response(
+			array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode(
+					array(
+						'id'                    => 'pmid:16714318',
+						'type'                  => 'article-journal',
+						'author'                => array(
+							array(
+								'family' => 'Zhao',
+								'given'  => 'C',
+							),
+							array(
+								'family' => 'Claeys',
+								'given'  => 'KG',
+							),
+							array(
+								'family' => 'Verhoeven',
+								'given'  => 'Kristien G',
+							),
+							array( 'literal' => 'CMT Consortium' ),
+						),
+						'issue'                 => 'Pt 8',
+						'container-title'       => 'Brain : a journal of neurology',
+						'container-title-short' => 'Brain',
+					)
+				),
+			)
+		);
+
+		$request         = new WP_REST_Request( 'GET', '/bibliography/v1/pmid/16714318' );
+		$request['pmid'] = '16714318';
+		$data            = bibliography_builder_rest_resolve_pmid( $request )->get_data();
+
+		$this->assertSame(
+			array( 'C.', 'K. G.', 'Kristien G.' ),
+			array_column( array_slice( $data['author'], 0, 3 ), 'given' )
+		);
+		$this->assertSame( array( 'literal' => 'CMT Consortium' ), $data['author'][3] );
+		$this->assertSame( '8', $data['issue'] );
+		$this->assertSame( 'Brain', $data['container-title'] );
+		$this->assertSame( 'Brain', $data['container-title-short'] );
+
+		// Served from the cache, the record is cleaned the same way.
+		$this->assertSame( $data, bibliography_builder_rest_resolve_pmid( $request )->get_data() );
+	}
+
+	/**
+	 * @param array<string, mixed> $input    Record fields.
+	 * @param array<string, mixed> $expected Cleaned fields.
+	 */
+	#[DataProvider( 'ncbi_cleanup_cases' )]
+	public function test_ncbi_cleanup_matches_the_editor_rules( array $input, array $expected ): void {
+		$this->assertSame( $expected, bibliography_builder_normalize_ncbi_csl( $input ) );
+		$this->assertSame( $expected, bibliography_builder_normalize_ncbi_csl( $expected ), 'Cleaning twice changes nothing.' );
+	}
+
+	/**
+	 * @return array<string, array{0: array<string, mixed>, 1: array<string, mixed>}>
+	 */
+	public static function ncbi_cleanup_cases(): array {
+		return array(
+			'three initials'                 => array(
+				array( 'author' => array( array( 'given' => 'JRR' ) ) ),
+				array( 'author' => array( array( 'given' => 'J. R. R.' ) ) ),
+			),
+			'full names and dotted initials' => array(
+				array( 'author' => array( array( 'given' => 'Kristien' ), array( 'given' => 'K. G.' ), array( 'given' => 'ABCD' ), array( 'given' => 'É' ) ) ),
+				array( 'author' => array( array( 'given' => 'Kristien' ), array( 'given' => 'K. G.' ), array( 'given' => 'ABCD' ), array( 'given' => 'É.' ) ) ),
+			),
+			'issue labels'                   => array(
+				array( 'issue' => 'Suppl 2' ),
+				array( 'issue' => 'Suppl 2' ),
+			),
+			'issue with a dotted Pt'         => array(
+				array( 'issue' => 'pt. 2-3' ),
+				array( 'issue' => '2-3' ),
+			),
+			'abbreviated short title'        => array(
+				array(
+					'container-title'       => 'Journal of virology : an example subtitle',
+					'container-title-short' => 'J Virol',
+				),
+				array(
+					'container-title'       => 'Journal of virology : an example subtitle',
+					'container-title-short' => 'J Virol',
+				),
+			),
+			'no short title'                 => array(
+				array( 'container-title' => 'Brain : a journal of neurology' ),
+				array( 'container-title' => 'Brain : a journal of neurology' ),
+			),
+		);
 	}
 
 	public function test_pmid_endpoint_caches_successful_csl_json(): void {
