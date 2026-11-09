@@ -484,7 +484,7 @@ function bibliography_builder_save_block_props( $attrs ) {
  * @param bool   $cite_export  Whether to emit the Cite / Export data.
  * @param mixed  $repeated_prefix Author names to show as the repeated-author mark, or null.
  * @param bool   $roman_titles Leave titles roman (a table of cases).
- * @param string $repeated_mark The style's mark: `bibliography_builder_save_repeated_author_mark()`.
+ * @param string $repeated_mark The block's mark: `bibliography_builder_save_repeated_author_mark()`.
  * @param bool   $annotations  Print the entry's annotation (the block's `showAnnotations`).
  * @return string
  */
@@ -675,11 +675,15 @@ function bibliography_builder_render_save_markup( $attrs ) {
 			. '</' . $heading_tag . '>';
 	}
 
+	// The block's `repeatedAuthorMark` (1.20.0): `style` unless set.
+	$mark_setting = isset( $attrs['repeatedAuthorMark'] ) ? $attrs['repeatedAuthorMark'] : 'style';
+	$mark         = bibliography_builder_save_repeated_author_mark( $style_key, $mark_setting );
+
 	$list_class = 'bibliography-builder-list bibliography-builder-list-'
 		. ( 'ol' === $list_tag ? 'numeric' : 'unordered' )
 		. ' bibliography-builder-list-' . $style_css;
 	$sorted     = array_values( $sorted );
-	$repeated   = bibliography_builder_save_repeated_author_prefixes( $sorted, $style_key );
+	$repeated   = bibliography_builder_save_repeated_author_prefixes( $sorted, $style_key, $mark_setting );
 	$entry      =
 		/**
 		 * One entry, with its repeated-author prefix from the flat order.
@@ -688,7 +692,7 @@ function bibliography_builder_render_save_markup( $attrs ) {
 		 * @param bool  $roman_titles Leave titles roman.
 		 * @return string
 		 */
-		static function ( $citation, bool $roman_titles ) use ( $sorted, $repeated, $flag, $style_key ): string {
+		static function ( $citation, bool $roman_titles ) use ( $sorted, $repeated, $flag, $mark ): string {
 			$index = array_search( $citation, $sorted, true );
 
 			return bibliography_builder_save_entry(
@@ -697,7 +701,7 @@ function bibliography_builder_render_save_markup( $attrs ) {
 				$flag( 'outputCiteExport', false ),
 				false === $index ? null : $repeated[ $index ],
 				$roman_titles,
-				bibliography_builder_save_repeated_author_mark( $style_key ),
+				$mark,
 				$flag( 'showAnnotations', false )
 			);
 		};

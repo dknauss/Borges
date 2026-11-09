@@ -21,6 +21,15 @@
  * Which styles do either is set in includes/styles.json, by a style's
  * `repeatedAuthors`: `allAuthors` (MLA) or `firstAuthor` (OSCOLA).
  *
+ * A block can override the style with its `repeatedAuthorMark` setting
+ * (since 1.20.0): `style` (the default) keeps the rule above, `none` writes
+ * every name out, and a style may offer an older mark from its tradition,
+ * listed in its `repeatedAuthorMarks` in includes/styles.json: `dash`, the
+ * 3-em dash of Chicago 17 (Chicago styles), or `underscore`, the underscore
+ * line of NBR 6023:2002 (ABNT). Both replace the whole author list, under the
+ * same strict rules as MLA's hyphens; a mark the style does not offer falls
+ * back to `style`, so switching styles never leaves a foreign mark behind.
+ *
  * Mirrored by bibliography_builder_save_repeated_author_prefixes() in
  * includes/save-markup.php; the save-parity fixtures pin the two together.
  */
@@ -67,15 +76,87 @@ export const FIRST_AUTHOR_DASH_STYLES =
 export const FIRST_AUTHOR_DASH = '\u2014\u2014';
 
 /**
- * The mark a style replaces repeated authors with.
+ * Chicago 17's 3-em dash, as saved: three U+2014 em dashes, which run
+ * together in nearly every font (U+2E3B, the single three-em dash, is missing
+ * from many) and which wptexturize leaves alone.
+ */
+export const THREE_EM_DASH = '———';
+
+/**
+ * NBR 6023:2002's underscore line, as saved: six underscores, the "traço
+ * sublinear equivalente a seis espaços". wptexturize leaves them alone.
+ */
+export const UNDERSCORE_LINE = '______';
+
+/**
+ * Values of the block's `repeatedAuthorMark` attribute (block.json).
+ */
+export const REPEATED_AUTHOR_MARK_SETTINGS = Object.freeze( [
+	'style',
+	'dash',
+	'underscore',
+	'none',
+] );
+
+/**
+ * The repeated-author rule a block follows: its style's `repeatedAuthors`,
+ * unless its `repeatedAuthorMark` setting turns marks off (`none`) or picks
+ * an older mark the style offers in `repeatedAuthorMarks`.
+ *
+ * @param {string} styleKey          Citation style.
+ * @param {string} [setting='style'] The block's `repeatedAuthorMark`.
+ * @return {string|null} `allAuthors`, `firstAuthor`, `dash`, `underscore`,
+ *                       or null for full names.
+ */
+export function getRepeatedAuthorRule( styleKey, setting = 'style' ) {
+	const style = styleData.styles[ styleKey ] || {};
+
+	if ( setting === 'none' ) {
+		return null;
+	}
+
+	if (
+		setting !== 'style' &&
+		Array.isArray( style.repeatedAuthorMarks ) &&
+		style.repeatedAuthorMarks.includes( setting )
+	) {
+		return setting;
+	}
+
+	return style.repeatedAuthors || null;
+}
+
+/**
+ * The marks a style offers besides its own rule, for the block setting.
  *
  * @param {string} styleKey Citation style.
- * @return {string} Three non-breaking hyphens, or OSCOLA's double em dash.
+ * @return {string[]} `dash`, `underscore`, or neither.
  */
-export function getRepeatedAuthorMark( styleKey ) {
-	return FIRST_AUTHOR_DASH_STYLES.includes( styleKey )
-		? FIRST_AUTHOR_DASH
-		: REPEATED_AUTHOR_MARK;
+export function getOptionalRepeatedAuthorMarks( styleKey ) {
+	const marks = styleData.styles[ styleKey ]?.repeatedAuthorMarks;
+
+	return Array.isArray( marks ) ? marks : [];
+}
+
+/**
+ * The mark a style replaces repeated authors with.
+ *
+ * @param {string} styleKey          Citation style.
+ * @param {string} [setting='style'] The block's `repeatedAuthorMark`.
+ * @return {string} Three non-breaking hyphens, OSCOLA's double em dash,
+ *                  Chicago's 3-em dash, or ABNT's underscore line.
+ */
+export function getRepeatedAuthorMark( styleKey, setting = 'style' ) {
+	switch ( getRepeatedAuthorRule( styleKey, setting ) ) {
+		case 'firstAuthor':
+			return FIRST_AUTHOR_DASH;
+		case 'dash':
+			return THREE_EM_DASH;
+		case 'underscore':
+			return UNDERSCORE_LINE;
+		default:
+			return REPEATED_AUTHOR_MARK;
+	}
 }
 
 const NAME_KEYS = [
@@ -124,10 +205,15 @@ function joinParts( parts ) {
  * A name as the MLA style writes the first author: "van Gogh, Vincent",
  * "Beauvoir, Simone de", "King, Martin Luther, Jr.".
  *
- * @param {Object} name CSL name.
+ * With `demote`, a non-dropping particle moves after the given name, as
+ * Chicago's `demote-non-dropping-particle="display-and-sort"` writes it:
+ * "Gogh, Vincent van".
+ *
+ * @param {Object}  name           CSL name.
+ * @param {boolean} [demote=false] Demote a non-dropping particle.
  * @return {string} Name, or '' when it has no family name or literal.
  */
-function getInvertedName( name ) {
+function getInvertedName( name, demote = false ) {
 	const literal = namePart( name, 'literal' );
 
 	if ( literal !== '' ) {
@@ -138,14 +224,14 @@ function getInvertedName( name ) {
 		return '';
 	}
 
+	const particle = namePart( name, 'non-dropping-particle' );
+
 	return [
-		joinParts( [
-			namePart( name, 'non-dropping-particle' ),
-			namePart( name, 'family' ),
-		] ),
+		joinParts( [ demote ? '' : particle, namePart( name, 'family' ) ] ),
 		joinParts( [
 			namePart( name, 'given' ),
 			namePart( name, 'dropping-particle' ),
+			demote ? particle : '',
 		] ),
 		namePart( name, 'suffix' ),
 	]
@@ -205,8 +291,124 @@ function getAuthorPrefix( authors ) {
 		return null;
 	}
 
-	// A name ending in a period ("Jr.", "et al.") shares it with the entry.
+	return withoutFinalPeriod( block );
+}
+
+/**
+ * A name block without its final period: a name ending in one ("Jr.",
+ * "et al.") shares it with the entry.
+ *
+ * @param {string} block Names.
+ * @return {string} Names.
+ */
+function withoutFinalPeriod( block ) {
 	return block.endsWith( '.' ) ? block.slice( 0, -1 ) : block;
+}
+
+/**
+ * The author names a Chicago bibliography entry starts with (the bundled
+ * Chicago CSL files): the first author inverted, the others in display order,
+ * a comma before "and" ("Becker, Thomas J., and Yuki Nakamura"), and seven or
+ * more cut to three and "et al.". Null when a name cannot be written.
+ *
+ * @param {Array}   authors CSL names.
+ * @param {boolean} demote  The style demotes non-dropping particles.
+ * @return {string|null} Names, without the period after them.
+ */
+function getChicagoAuthorPrefix( authors, demote ) {
+	const shown = authors.length >= 7 ? authors.slice( 0, 3 ) : authors;
+	const names = shown.map( ( name, index ) =>
+		index === 0 ? getInvertedName( name, demote ) : getDisplayName( name )
+	);
+
+	if ( names.includes( '' ) ) {
+		return null;
+	}
+
+	let block = names[ 0 ];
+
+	if ( authors.length >= 7 ) {
+		block = `${ names.join( ', ' ) }, et al.`;
+	} else if ( names.length >= 2 ) {
+		block = `${ names.slice( 0, -1 ).join( ', ' ) }, and ${
+			names[ names.length - 1 ]
+		}`;
+	}
+
+	return withoutFinalPeriod( block );
+}
+
+/**
+ * The author names an ABNT entry starts with (the bundled ABNT CSL): every
+ * name inverted with the family name in capitals, separated by semicolons
+ * ("BECKER, Thomas J.; NAKAMURA, Yuki"), and four or more cut to the first
+ * and "et al.". A literal name is written in capitals too. Null for a name
+ * with a particle or suffix, whose capitals the CSL processor decides.
+ *
+ * @param {Array} authors CSL names.
+ * @return {string|null} Names, without the period after them.
+ */
+function getAbntAuthorPrefix( authors ) {
+	const shown = authors.length >= 4 ? authors.slice( 0, 1 ) : authors;
+	const names = shown.map( ( name ) => {
+		if (
+			namePart( name, 'suffix' ) !== '' ||
+			namePart( name, 'dropping-particle' ) !== '' ||
+			namePart( name, 'non-dropping-particle' ) !== ''
+		) {
+			return '';
+		}
+
+		const literal = namePart( name, 'literal' );
+
+		if ( literal !== '' ) {
+			return literal.toUpperCase();
+		}
+
+		const family = namePart( name, 'family' );
+
+		if ( family === '' ) {
+			return '';
+		}
+
+		return [ family.toUpperCase(), namePart( name, 'given' ) ]
+			.filter( ( part ) => part !== '' )
+			.join( ', ' );
+	} );
+
+	if ( names.includes( '' ) ) {
+		return null;
+	}
+
+	const block =
+		authors.length >= 4 ? `${ names[ 0 ] } et al.` : names.join( '; ' );
+
+	return withoutFinalPeriod( block );
+}
+
+/**
+ * The names a whole-author-list rule replaces, written as its style writes
+ * them, without the period after them.
+ *
+ * @param {Array}  authors  CSL names.
+ * @param {string} rule     `allAuthors`, `dash`, or `underscore`.
+ * @param {string} styleKey Citation style.
+ * @return {string|null} Names.
+ */
+function getRuleAuthorPrefix( authors, rule, styleKey ) {
+	if ( rule === 'dash' ) {
+		return getChicagoAuthorPrefix(
+			authors,
+			styleData.styles[ styleKey ]?.demoteNonDroppingParticle ===
+				'display-and-sort'
+		);
+	}
+
+	if ( rule === 'underscore' ) {
+		return getAbntAuthorPrefix( authors );
+	}
+
+	return getAuthorPrefix( authors );
 }
 
 /**
@@ -294,18 +496,21 @@ function isUnformatted( citation ) {
  *                                                                                names in full).
  * @param {(citation: Object) => (number|boolean|null)} [options.listOf]          Gives the list a citation is shown
  *                                                                                in; no mark crosses lists.
+ * @param {string}                                      [options.markSetting]     The block's `repeatedAuthorMark`
+ *                                                                                (default `style`: save() through
+ *                                                                                1.19.x had no setting).
  * @return {Array<string|null>} Per-citation prefix.
  */
 export function getRepeatedAuthorPrefixes(
 	citations,
 	styleKey,
 	displayText,
-	{ firstAuthorDash = false, listOf = () => null } = {}
+	{ firstAuthorDash = false, listOf = () => null, markSetting = 'style' } = {}
 ) {
-	const firstAuthor =
-		firstAuthorDash && FIRST_AUTHOR_DASH_STYLES.includes( styleKey );
+	const rule = getRepeatedAuthorRule( styleKey, markSetting );
+	const firstAuthor = firstAuthorDash && rule === 'firstAuthor';
 
-	if ( ! firstAuthor && ! REPEATED_AUTHOR_STYLES.includes( styleKey ) ) {
+	if ( ! firstAuthor && ( rule === null || rule === 'firstAuthor' ) ) {
 		return citations.map( () => null );
 	}
 
@@ -352,7 +557,11 @@ export function getRepeatedAuthorPrefixes(
 				: null;
 		}
 
-		const prefix = getAuthorPrefix( citation.csl.author );
+		const prefix = getRuleAuthorPrefix(
+			citation.csl.author,
+			rule,
+			styleKey
+		);
 
 		if (
 			prefix === null ||

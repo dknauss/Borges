@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Repeated authors setting.** A new block setting, "Repeated authors" (`repeatedAuthorMark`), chooses how an entry by the same authors as the entry before it begins. MLA 9 and OSCOLA 5 blocks can write the names out instead of using their marks; Chicago blocks can use the 17th edition's 3-em dash (`———.`), and ABNT blocks NBR 6023:2002's underscore line (`______.`), for writers and journals that still ask for them. Screen readers hear the names, and copied text and exports keep them. Existing blocks save exactly as before. The write routes' settings `PATCH`, the read routes, the abilities, and `wp borges list` carry the setting. ([#242](https://github.com/dknauss/Borges/issues/242))
 - **Harvard citations can be pasted as text.** A Harvard reference with no DOI or other identifier, in the Cite Them Right form Borges's Harvard style prints, is now read into its fields: journal articles, books (with edition and place), chapters in edited books, conference papers, arXiv preprints, encyclopedia entries, and web pages with or without an author, along with their `Available at:` links and access dates. Before, every Harvard reference got the "Paste a DOI…" notice. Pasting into a Harvard bibliography tries the Harvard reading first; in other styles it is tried after the others, so APA citations (with a full stop after the year) are read as before. Like APA, these show "Check the fields before publishing" under the entry. ([#231](https://github.com/dknauss/Borges/issues/231))
+
+### Changed
+
+- **Clearer "Citations in this post" panel.** It now says "in-text citations", "out of date with the current style or numbering", and "edited by hand" instead of code-side terms; with no citations yet it says where Cite is (the block toolbar's More menu); and the checkbox, now "Also update citations I edited by hand", says that your wording will be replaced. The update notice says "hand-edited" to match. ([#269](https://github.com/dknauss/Borges/pull/269))
 
 ### Fixed
 

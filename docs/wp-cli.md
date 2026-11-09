@@ -15,7 +15,7 @@ The code is in `includes/cli.php` (helpers that return data) and `includes/class
 
 ## `wp borges list <post-id>`
 
-One row per bibliography block in the post: `index`, `bibliographyId`, `citationStyle`, `entryCount`, and `headingText`. `--fields=` can add `headingLevel`, `outputJsonLd`, `outputCoins`, `outputCslJson`, and `showAnnotations`. `--format=` is `table` (default), `json`, `csv`, `yaml`, or `count`.
+One row per bibliography block in the post: `index`, `bibliographyId`, `citationStyle`, `entryCount`, and `headingText`. `--fields=` can add `headingLevel`, `outputJsonLd`, `outputCoins`, `outputCslJson`, `showAnnotations`, and `repeatedAuthorMark`. `--format=` is `table` (default), `json`, `csv`, `yaml`, or `count`.
 
 ```
 $ wp borges list 42

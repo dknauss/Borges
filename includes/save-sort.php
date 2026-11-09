@@ -19,8 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * The `listType`, `family`, `locale`, `demoteNonDroppingParticle`,
  * `repeatedAuthors` (`allAuthors` for MLA's hyphens, `firstAuthor` for
- * OSCOLA's dash, else empty), and `chronologicalAuthors` fields of
- * `styles.json`, which `STYLE_DEFINITIONS` in
+ * OSCOLA's dash, else empty), `repeatedAuthorMarks` (the older marks a
+ * block's `repeatedAuthorMark` setting may pick, else empty), and
+ * `chronologicalAuthors` fields of `styles.json`, which `STYLE_DEFINITIONS` in
  * `src/lib/formatting/style-registry.js` is built from.
  *
  * @param mixed $style_key Style key.
@@ -31,6 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *     locale: string,
  *     demoteNonDroppingParticle: string,
  *     repeatedAuthors: string,
+ *     repeatedAuthorMarks: list<string>,
  *     chronologicalAuthors: bool
  * }
  */
@@ -49,6 +51,10 @@ function bibliography_builder_get_save_style_definition( $style_key ) {
 		'repeatedAuthors'           => isset( $styles[ $key ]['repeatedAuthors'] )
 			? (string) $styles[ $key ]['repeatedAuthors']
 			: '',
+		'repeatedAuthorMarks'       => isset( $styles[ $key ]['repeatedAuthorMarks'] )
+			&& is_array( $styles[ $key ]['repeatedAuthorMarks'] )
+			? array_values( array_map( 'strval', $styles[ $key ]['repeatedAuthorMarks'] ) )
+			: array(),
 		'chronologicalAuthors'      => ! empty( $styles[ $key ]['chronologicalAuthors'] ),
 	);
 }

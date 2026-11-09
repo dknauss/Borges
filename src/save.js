@@ -25,6 +25,7 @@ export default function save( { attributes } ) {
 		entryTag: 'span',
 		includeCiteExport: attributes.outputCiteExport ?? false,
 		repeatedAuthors: true,
+		repeatedAuthorMarkSetting: true,
 		inlineMarkup: true,
 		quoteAwareItalics: true,
 		urlAwareItalics: true,
