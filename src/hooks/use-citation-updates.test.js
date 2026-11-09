@@ -47,7 +47,7 @@ describe( 'getCitationUpdateMessage', () => {
 				false
 			)
 		).toBe(
-			'Updated 3 citations. Left 1 reworded citation as it is. 2 citations point at entries no longer in the bibliography.'
+			'Updated 3 citations. Left 1 hand-edited citation as it is. 2 citations point at entries no longer in the bibliography.'
 		);
 	} );
 

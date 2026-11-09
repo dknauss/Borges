@@ -35,10 +35,10 @@ export function getCitationUpdateMessage( counts, includeReworded ) {
 	if ( counts.reworded && ! includeReworded ) {
 		parts.push(
 			sprintf(
-				/* translators: %d: number of reworded citations left alone. */
+				/* translators: %d: number of hand-edited citations left alone. */
 				_n(
-					'Left %d reworded citation as it is.',
-					'Left %d reworded citations as they are.',
+					'Left %d hand-edited citation as it is.',
+					'Left %d hand-edited citations as they are.',
 					counts.reworded,
 					'borges-bibliography-builder'
 				),
