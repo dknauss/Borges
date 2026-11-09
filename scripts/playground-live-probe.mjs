@@ -41,8 +41,28 @@ const DEFAULT_BLUEPRINTS = [
 const blueprints = process.argv.slice( 2 ).length
 	? process.argv.slice( 2 )
 	: DEFAULT_BLUEPRINTS;
-const runs = Number( process.env.PROBE_RUNS || 3 );
-const timeout = Number( process.env.PROBE_TIMEOUT || 90000 );
+/**
+ * Reads a positive whole number from the environment, or exits: a run count of
+ * 0 or "five" would otherwise probe nothing and still pass.
+ *
+ * @param {string} name     Variable name.
+ * @param {number} fallback Value when the variable is unset or empty.
+ * @return {number} The value.
+ */
+function positiveInteger( name, fallback ) {
+	const raw = process.env[ name ];
+	const value = raw === undefined || raw === '' ? fallback : Number( raw );
+	if ( ! Number.isInteger( value ) || value < 1 ) {
+		console.error(
+			`${ name } must be a positive whole number, not "${ raw }".`
+		);
+		process.exit( 2 );
+	}
+	return value;
+}
+
+const runs = positiveInteger( 'PROBE_RUNS', 3 );
+const timeout = positiveInteger( 'PROBE_TIMEOUT', 90000 );
 
 // Requests worth logging: everything a blueprint fetches, not Playground's own
 // static assets.
@@ -166,49 +186,58 @@ async function probe( browser, blueprint, run, retryInTab ) {
 		log( `pageerror: ${ String( err ).slice( 0, 600 ) }` )
 	);
 
-	const url = `https://playground.wordpress.net/?blueprint-url=${ blueprint }`;
+	// Encoded, so a blueprint URL's own query string stays part of it.
+	const url = new URL( 'https://playground.wordpress.net/' );
+	url.searchParams.set( 'blueprint-url', blueprint );
 	console.log( `\n=== run ${ run }: ${ url }` );
-	await page.goto( url );
 
 	let attempt = 1;
 	let outcome = 'timeout';
-	while ( Date.now() - started < timeout ) {
-		if ( await editorReady( page ) ) {
-			outcome = `ok (attempt ${ attempt }, ${ since() })`;
-			break;
-		}
-		const error = await errorScreen( page );
-		if ( error ) {
-			log( `ERROR SCREEN: ${ error }` );
-			if ( retryInTab && attempt === 1 ) {
-				attempt++;
-				log( 'clicking Try again' );
-				for ( const frame of page.frames() ) {
-					const button = frame.getByRole( 'button', {
-						name: /try again/i,
-					} );
-					if ( ( await button.count() ) > 0 ) {
-						await button.first().click();
-						break;
-					}
-				}
-				await page.waitForTimeout( 3000 );
-				continue;
+	// A navigation error (a reset connection, a timeout) is a failed load,
+	// not a reason to stop probing the rest.
+	try {
+		await page.goto( url.toString() );
+		while ( Date.now() - started < timeout ) {
+			if ( await editorReady( page ) ) {
+				outcome = `ok (attempt ${ attempt }, ${ since() })`;
+				break;
 			}
-			outcome = `error screen (attempt ${ attempt }, ${ since() })`;
-			break;
+			const error = await errorScreen( page );
+			if ( error ) {
+				log( `ERROR SCREEN: ${ error }` );
+				if ( retryInTab && attempt === 1 ) {
+					attempt++;
+					log( 'clicking Try again' );
+					for ( const frame of page.frames() ) {
+						const button = frame.getByRole( 'button', {
+							name: /try again/i,
+						} );
+						if ( ( await button.count() ) > 0 ) {
+							await button.first().click();
+							break;
+						}
+					}
+					await page.waitForTimeout( 3000 );
+					continue;
+				}
+				outcome = `error screen (attempt ${ attempt }, ${ since() })`;
+				break;
+			}
+			await page.waitForTimeout( 1000 );
 		}
-		await page.waitForTimeout( 1000 );
-	}
 
-	if ( outcome === 'timeout' ) {
-		await page.screenshot( {
-			path: `probe-timeout-${ browserName }-${ run }.png`,
-			fullPage: true,
-		} );
+		if ( outcome === 'timeout' ) {
+			await page.screenshot( {
+				path: `probe-timeout-${ browserName }-${ run }.png`,
+				fullPage: true,
+			} );
+		}
+	} catch ( error ) {
+		outcome = `navigation error (${ String( error ).split( '\n' )[ 0 ] })`;
+	} finally {
+		await context.close();
 	}
 	log( `OUTCOME: ${ outcome }` );
-	await context.close();
 	return outcome;
 }
 
@@ -220,7 +249,7 @@ const summary = [];
 for ( const blueprint of blueprints ) {
 	for ( let run = 1; run <= runs; run++ ) {
 		summary.push( [
-			blueprint.split( '/' ).pop(),
+			new URL( blueprint ).pathname.split( '/' ).pop(),
 			run,
 			await probe( browser, blueprint, run, true ),
 		] );
