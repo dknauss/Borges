@@ -779,29 +779,146 @@ function parseWebpageCitation( input ) {
 	};
 }
 
+/**
+ * Volume and issue labels in a row: "vol. 12, no. 3" (IEEE) or "v. 12, n. 3"
+ * (ABNT). No real title holds them, so a title that does was cut from a
+ * labelled journal article.
+ */
+const VOLUME_ISSUE_LABELS = /\b(?:vol|v)\.\s*\d+\s*,\s*(?:no|n|iss)\.\s*\d/iu;
+
+/**
+ * A title that ends in a page label the full stop cut off ("…, pp" or "…, p").
+ */
+const TRAILING_PAGE_LABEL = /,\s*pp?$/iu;
+
+/**
+ * A publisher that is only a page number or page range.
+ */
+const PAGE_RANGE_PUBLISHER = /^\d+(?:\s*[-–—]\s*\d+)?$/u;
+
+/**
+ * A quoted title closed with a comma or full stop inside the quotes
+ * ("Title," or “Title.”), the way Chicago, MLA, and IEEE print an article or
+ * chapter title. A book title that holds one was cut from an article.
+ */
+const QUOTED_PART_TITLE = /[“"][^”"]+[,.][”"]/u;
+
+/**
+ * An ABNT-style name ("CHABERT, Catherine") at the start of a title: the
+ * full stops between ABNT authors made the next author look like the title.
+ */
+const CAPITALIZED_NAME_TITLE = /^[\p{Lu}][\p{Lu}'’-]+,\s+[\p{Lu}]\p{Ll}/u;
+
+/**
+ * Quotation marks, which never belong in a personal name.
+ */
+const QUOTE_MARK = /["“”]/u;
+
+/**
+ * Whether a parse misread its input, so the parser should keep looking or
+ * decline.
+ *
+ * Each pattern is tried in turn and the first match wins, so a broad book
+ * pattern can claim a citation in a style it was not written for and return
+ * a wrong record instead of declining. A labelled IEEE or ABNT article
+ * ("vol. 12, no. 3, pp. 34–43") is the known case: the title runs into the
+ * labels, the page range becomes the publisher, and the quoted article title
+ * becomes part of an author's name. A book whose title holds a quoted article
+ * title, or starts with a second ABNT author, is the same mistake. Rejecting
+ * those shapes turns the input back into a notice, which is better than a
+ * quietly wrong citation.
+ *
+ * @param {Object} csl CSL-JSON from one pattern.
+ * @return {boolean} True when the result should be discarded.
+ */
+function isMisreadParse( csl ) {
+	const title = typeof csl.title === 'string' ? csl.title : '';
+
+	if (
+		VOLUME_ISSUE_LABELS.test( title ) ||
+		TRAILING_PAGE_LABEL.test( title )
+	) {
+		return true;
+	}
+
+	if (
+		[ 'book', 'collection' ].includes( csl.type ) &&
+		( QUOTED_PART_TITLE.test( title ) ||
+			CAPITALIZED_NAME_TITLE.test( title ) )
+	) {
+		return true;
+	}
+
+	if (
+		typeof csl.publisher === 'string' &&
+		PAGE_RANGE_PUBLISHER.test( csl.publisher.trim() )
+	) {
+		return true;
+	}
+
+	return [ ...( csl.author || [] ), ...( csl.editor || [] ) ].some(
+		( name ) =>
+			QUOTE_MARK.test( name.family || '' ) ||
+			QUOTE_MARK.test( name.given || '' ) ||
+			QUOTE_MARK.test( name.literal || '' )
+	);
+}
+
+/**
+ * List numbering at the start of an entry: "[12] ", "12. ", "12) ", "(12) ".
+ * IEEE and Vancouver lists number their entries, and a pasted list keeps the
+ * numbers. Up to three digits, so a leading year ("2001. A Space Odyssey") is
+ * left alone.
+ */
+const LIST_NUMBER_PREFIX = /^(?:\[\d{1,3}\]|\(\d{1,3}\)|\d{1,3}[.)])\s+/u;
+
+/**
+ * The patterns, in the order they are tried. The first match that is not a
+ * misread wins.
+ */
+const FREE_TEXT_PATTERNS = [
+	parseChapterCitation,
+	parseSentenceChapterCitation,
+	parseReviewCitation,
+	parseSentenceJournalArticleCitation,
+	parseJournalArticleCitation,
+	parseSeasonJournalArticleCitation,
+	parseApaJournalCitation,
+	parseApaVolumePageCitation,
+	parseApaBookCitation,
+	parseWebpageCitation,
+	parseSentenceEditedBookCitation,
+	parseSentencePlaceYearBookCitation,
+	parseThesisCitation,
+	parseSentenceBookCitation,
+	parseBookCitation,
+];
+
+/**
+ * Read one formatted citation that has no identifier into CSL-JSON.
+ *
+ * @param {string} input One pasted citation.
+ * @return {{csl: Object, confidence: string}|null} The record and how sure
+ *     the matching pattern is (`low` or `medium`), or null when no pattern
+ *     reads it.
+ */
 export function parseFreeTextCitation( input ) {
-	const normalizedInput = input.replace( /\s+/gu, ' ' ).trim();
+	const normalizedInput = input
+		.replace( /\s+/gu, ' ' )
+		.trim()
+		.replace( LIST_NUMBER_PREFIX, '' );
 
 	if ( ! normalizedInput ) {
 		return null;
 	}
 
-	return (
-		parseChapterCitation( normalizedInput ) ||
-		parseSentenceChapterCitation( normalizedInput ) ||
-		parseReviewCitation( normalizedInput ) ||
-		parseSentenceJournalArticleCitation( normalizedInput ) ||
-		parseJournalArticleCitation( normalizedInput ) ||
-		parseSeasonJournalArticleCitation( normalizedInput ) ||
-		parseApaJournalCitation( normalizedInput ) ||
-		parseApaVolumePageCitation( normalizedInput ) ||
-		parseApaBookCitation( normalizedInput ) ||
-		parseWebpageCitation( normalizedInput ) ||
-		parseSentenceEditedBookCitation( normalizedInput ) ||
-		parseSentencePlaceYearBookCitation( normalizedInput ) ||
-		parseThesisCitation( normalizedInput ) ||
-		parseSentenceBookCitation( normalizedInput ) ||
-		parseBookCitation( normalizedInput ) ||
-		null
-	);
+	for ( const parsePattern of FREE_TEXT_PATTERNS ) {
+		const result = parsePattern( normalizedInput );
+
+		if ( result && ! isMisreadParse( result.csl ) ) {
+			return result;
+		}
+	}
+
+	return null;
 }
