@@ -503,4 +503,95 @@ final class JsonLdEnrichmentTest extends TestCase {
 		$this->assertSame( 'Book', $chapter['isPartOf']['@type'] );
 		$this->assertArrayNotHasKey( 'recordedAt', $chapter );
 	}
+
+	/**
+	 * save() builds a person's `name` from `given` and `family` alone; the
+	 * enrichment puts the particles back (#248).
+	 */
+	public function test_author_names_keep_their_particles(): void {
+		$csl = array(
+			'type'       => 'book',
+			'title'      => 'Raízes do Brasil',
+			'author'     => array(
+				array(
+					'family'            => 'Holanda',
+					'given'             => 'Sérgio Buarque',
+					'dropping-particle' => 'de',
+				),
+				array(
+					'family'                => 'Beethoven',
+					'given'                 => 'Ludwig',
+					'non-dropping-particle' => 'van',
+					'ORCID'                 => '0000-0002-1825-0097',
+				),
+				array(
+					'family' => 'King',
+					'given'  => 'Martin Luther',
+					'suffix' => 'Jr.',
+				),
+				array( 'literal' => 'Instituto Brasileiro de Geografia e Estatística' ),
+				array( 'given' => 'Plato' ),
+			),
+			'translator' => array(
+				array(
+					'family'            => 'Assis',
+					'given'             => 'Machado',
+					'dropping-particle' => 'de',
+				),
+			),
+		);
+
+		$saved = bibliography_builder_save_csl_to_json_ld( $csl );
+		$this->assertSame( 'Sérgio Buarque Holanda', $saved['author'][0]['name'], 'save() itself is unchanged' );
+
+		$work    = $this->enrich( $csl );
+		$authors = $work['author'];
+
+		$this->assertSame(
+			array(
+				'@type'      => 'Person',
+				'name'       => 'Sérgio Buarque de Holanda',
+				'familyName' => 'Holanda',
+				'givenName'  => 'Sérgio Buarque',
+			),
+			$authors[0]
+		);
+		$this->assertSame( 'Ludwig van Beethoven', $authors[1]['name'] );
+		$this->assertSame( 'van Beethoven', $authors[1]['familyName'] );
+		$this->assertSame( 'https://orcid.org/0000-0002-1825-0097', $authors[1]['sameAs'], 'what save() wrote is kept' );
+		$this->assertSame( 'Martin Luther King Jr.', $authors[2]['name'] );
+		$this->assertSame( 'King', $authors[2]['familyName'] );
+		$this->assertSame(
+			array(
+				'@type' => 'Organization',
+				'name'  => 'Instituto Brasileiro de Geografia e Estatística',
+			),
+			$authors[3]
+		);
+		$this->assertSame( 'Plato', $authors[4]['name'] );
+		$this->assertSame( 'Machado de Assis', $work['translator'][0]['name'] );
+	}
+
+	public function test_author_particles_leave_misaligned_authors_alone(): void {
+		$names   = array(
+			array(
+				'family'            => 'Holanda',
+				'given'             => 'Sérgio Buarque',
+				'dropping-particle' => 'de',
+			),
+		);
+		$authors = array(
+			array(
+				'@type' => 'Person',
+				'name'  => 'Someone Else',
+			),
+			array(
+				'@type' => 'Person',
+				'name'  => 'Another',
+			),
+		);
+
+		$this->assertSame( $authors, bibliography_builder_json_ld_author_particles( $authors, $names ) );
+		$this->assertSame( 'not a list', bibliography_builder_json_ld_author_particles( 'not a list', $names ) );
+	}
 }

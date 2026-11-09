@@ -140,6 +140,67 @@ const FIXTURE_ATTRIBUTES = {
  * so its fixture is one; under FIXTURE_ATTRIBUTES it would match v00 exactly.
  */
 const FIXTURE_ATTRIBUTES_BY_VERSION = {
+	// v19 froze save() from before OSCOLA's tables of legislation and of
+	// treaties left their titles roman (#246). Only an OSCOLA list holding a
+	// statute, a statutory instrument, or a treaty changes, so its fixture is
+	// one of each beside an article; under FIXTURE_ATTRIBUTES it would match
+	// v00 exactly.
+	19: {
+		...FIXTURE_ATTRIBUTES,
+		citationStyle: 'oscola',
+		headingText: 'Bibliography',
+		citations: [
+			{
+				id: 'craig2005',
+				csl: {
+					id: 'craig2005',
+					type: 'article-journal',
+					title: 'Theory, “Pure Theory” and Values in Public Law',
+					'container-title': 'Public Law',
+					page: '440',
+					author: [ { family: 'Craig', given: 'Paul' } ],
+					issued: { 'date-parts': [ [ 2005 ] ] },
+				},
+				formattedText:
+					'Craig P, ‘Theory, “Pure Theory” and Values in Public Law’ [2005] PL 440',
+				displayOverride: null,
+			},
+			{
+				id: 'hra1998',
+				csl: {
+					id: 'hra1998',
+					type: 'legislation',
+					title: 'Human Rights Act',
+					issued: { 'date-parts': [ [ 1998 ] ] },
+				},
+				formattedText: 'Human Rights Act 1998',
+				displayOverride: null,
+			},
+			{
+				id: 'ano2016',
+				csl: {
+					id: 'ano2016',
+					type: 'regulation',
+					title: 'Air Navigation Order 2016',
+					number: 'SI 2016/765',
+				},
+				formattedText: 'Air Navigation Order 2016, SI 2016/765',
+				displayOverride: null,
+			},
+			{
+				id: 'echr1950',
+				csl: {
+					id: 'echr1950',
+					type: 'treaty',
+					title: 'Convention for the Protection of Human Rights and Fundamental Freedoms',
+					issued: { 'date-parts': [ [ 1950 ] ] },
+				},
+				formattedText:
+					'Convention for the Protection of Human Rights and Fundamental Freedoms (1950)',
+				displayOverride: null,
+			},
+		],
+	},
 	// v18 froze save() from before the Cite / Export RIS carried a `J2` line
 	// with the journal abbreviation. Only an entry with one changes, so its
 	// fixture gives the article a `container-title-short`; under

@@ -205,7 +205,66 @@ function bibliography_builder_json_ld_identifiers( $csl ) {
 }
 
 /**
- * CSL names as schema.org people and organizations, the way save() maps authors.
+ * One CSL name as a schema.org Person, with its particles, or null for an
+ * organization (a literal name only) or an empty name.
+ *
+ * `name` is the name as save() displays it in an entry (`getDisplayName()`):
+ * given name, dropping particle, non-dropping particle, family name, and
+ * suffix, so "Sérgio Buarque de Holanda" and "Ludwig van Beethoven" keep
+ * their particles. `familyName` keeps a non-dropping particle ("van
+ * Beethoven"), which is part of the surname as written, but not a dropping
+ * one ("Holanda"), which is not; microformats' `p-family-name` does the same.
+ * A one-part name in `given` ("Plato") is its own `name`.
+ *
+ * @since 1.19.1
+ *
+ * @param mixed $name CSL name object.
+ * @return array|null
+ */
+function bibliography_builder_json_ld_person( $name ) {
+	$literal = bibliography_builder_name_part( $name, 'literal' );
+	$family  = bibliography_builder_name_part( $name, 'family' );
+	$given   = bibliography_builder_name_part( $name, 'given' );
+
+	if ( '' !== $literal && '' === $family && '' === $given ) {
+		return null;
+	}
+
+	$display = bibliography_builder_save_display_name( $name );
+
+	if ( '' === $display ) {
+		$display = $given;
+	}
+
+	if ( '' === $display ) {
+		return null;
+	}
+
+	$person = array(
+		'@type' => 'Person',
+		'name'  => $display,
+	);
+
+	if ( '' !== $family ) {
+		$person['familyName'] = bibliography_builder_save_join_name_parts(
+			array(
+				bibliography_builder_name_part( $name, 'non-dropping-particle' ),
+				$family,
+			)
+		);
+	}
+
+	if ( '' !== $given ) {
+		$person['givenName'] = $given;
+	}
+
+	return $person;
+}
+
+/**
+ * CSL names as schema.org people and organizations, the way save() maps
+ * authors, but with each person's name particles (see
+ * bibliography_builder_json_ld_person()).
  *
  * @param mixed $names CSL name list.
  * @return array
@@ -230,29 +289,65 @@ function bibliography_builder_json_ld_names( $names ) {
 			continue;
 		}
 
-		$display = '' !== $literal ? $literal : implode( ' ', array_filter( array( $given, $family ), 'strlen' ) );
+		$person = bibliography_builder_json_ld_person( $name );
 
-		if ( '' === $display ) {
-			continue;
+		if ( null !== $person ) {
+			$result[] = $person;
 		}
-
-		$person = array(
-			'@type' => 'Person',
-			'name'  => $display,
-		);
-
-		if ( '' !== $family ) {
-			$person['familyName'] = $family;
-		}
-
-		if ( '' !== $given ) {
-			$person['givenName'] = $given;
-		}
-
-		$result[] = $person;
 	}
 
 	return $result;
+}
+
+/**
+ * Put back the name particles save() leaves out of each author.
+ *
+ * The JS save() (`cslToJsonLd()`) builds a person's `name` from `given` and `family`
+ * alone, so "Sérgio Buarque de Holanda" was saved as "Sérgio Buarque
+ * Holanda" (#248). Changing save() would alter every saved block, so the
+ * names are corrected here instead: `name` and `familyName` are rewritten
+ * from the CSL name, and everything else save() wrote (an ORCID `sameAs`)
+ * is kept. save() writes one author per CSL name, in order; when the counts
+ * differ the markup is not what save() wrote, and it is left alone.
+ *
+ * @since 1.19.1
+ *
+ * @param mixed $authors The `author` save() wrote.
+ * @param mixed $names   The CSL `author` list.
+ * @return mixed
+ */
+function bibliography_builder_json_ld_author_particles( $authors, $names ) {
+	if ( ! is_array( $authors ) || ! is_array( $names ) ) {
+		return $authors;
+	}
+
+	$names = array_values( $names );
+
+	if ( count( $authors ) !== count( $names ) || array_values( $authors ) !== $authors ) {
+		return $authors;
+	}
+
+	foreach ( $authors as $index => $author ) {
+		if ( ! is_array( $author ) || ! isset( $author['@type'] ) || 'Person' !== $author['@type'] ) {
+			continue;
+		}
+
+		$person = bibliography_builder_json_ld_person( $names[ $index ] );
+
+		if ( null === $person ) {
+			continue;
+		}
+
+		$author['name'] = $person['name'];
+
+		if ( isset( $person['familyName'] ) ) {
+			$author['familyName'] = $person['familyName'];
+		}
+
+		$authors[ $index ] = $author;
+	}
+
+	return $authors;
 }
 
 /**
@@ -488,6 +583,13 @@ function bibliography_builder_enrich_json_ld_work( $work, $csl, $citation_id, $p
 		$work,
 		bibliography_builder_json_ld_pagination( bibliography_builder_json_ld_csl_string( $csl, 'page' ) )
 	);
+
+	if ( isset( $work['author'] ) ) {
+		$work['author'] = bibliography_builder_json_ld_author_particles(
+			$work['author'],
+			bibliography_builder_csl_field( $csl, 'author' )
+		);
+	}
 
 	foreach ( array( 'editor', 'translator' ) as $role ) {
 		$names = bibliography_builder_json_ld_names( bibliography_builder_csl_field( $csl, $role ) );

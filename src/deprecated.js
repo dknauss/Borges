@@ -9,6 +9,14 @@ import {
 
 const deprecatedAttributes = metadata.attributes;
 
+/**
+ * The OSCOLA tables whose titles 1.17.0 through 1.19.0 saved roman: only the
+ * table of cases. In later releases the tables of legislation and of treaties are
+ * roman too (includes/styles.json, #246), so the deprecations of those
+ * releases pin the older set rather than reading styles.json.
+ */
+const LEGACY_ROMAN_TITLE_GROUPS = Object.freeze( [ 'cases' ] );
+
 function sourcedText( selector ) {
 	return { type: 'string', source: 'text', selector };
 }
@@ -125,6 +133,43 @@ function migrateSortedAttributes( attributes ) {
 
 export const deprecated = [
 	{
+		// Freezes the save() shape of 1.19.0: OSCOLA's tables of legislation
+		// and of treaties italicized the titles of Acts, statutory
+		// instruments, and treaties, where OSCOLA 5 leaves them roman, as it
+		// does case names in the table of cases (#246).
+		attributes: deprecatedAttributes,
+		save: ( { attributes } ) =>
+			renderBibliographySave( attributes, {
+				sortEntries: true,
+				headingTag: getHeadingTag( attributes.headingLevel ),
+				entryTag: 'span',
+				includeCiteExport: attributes.outputCiteExport ?? false,
+				repeatedAuthors: true,
+				inlineMarkup: true,
+				quoteAwareItalics: true,
+				urlAwareItalics: true,
+				quoteFoldedItalics: true,
+				shortContainerItalics: true,
+				caseFoldedItalics: true,
+				particleAwareSort: true,
+				localeArticles: true,
+				notesAuthorChains: true,
+				sourceGroups: true,
+				romanTitleGroups: LEGACY_ROMAN_TITLE_GROUPS,
+				chronologicalAuthors: true,
+				undatedTitles: true,
+				firstAuthorDash: true,
+				citeExportData: true,
+				risJournalAbbreviation: true,
+				canonicalDoiUrl: true,
+				jsonLdItemList: true,
+				citationLinkRel: 'noopener',
+				headingLabelledBy: true,
+				annotations: true,
+				labels: LOCALE_INDEPENDENT_SAVE_LABELS,
+			} ),
+	},
+	{
 		// Freezes the save() shape of 1.18.0: the Cite / Export RIS had no
 		// `J2` line, so a journal abbreviation (`container-title-short`) did
 		// not reach a reference manager that imported it.
@@ -146,6 +191,7 @@ export const deprecated = [
 				localeArticles: true,
 				notesAuthorChains: true,
 				sourceGroups: true,
+				romanTitleGroups: LEGACY_ROMAN_TITLE_GROUPS,
 				chronologicalAuthors: true,
 				undatedTitles: true,
 				firstAuthorDash: true,
@@ -183,6 +229,7 @@ export const deprecated = [
 				localeArticles: true,
 				notesAuthorChains: true,
 				sourceGroups: true,
+				romanTitleGroups: LEGACY_ROMAN_TITLE_GROUPS,
 				citeExportData: true,
 				canonicalDoiUrl: true,
 				jsonLdItemList: true,
