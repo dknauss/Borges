@@ -18,6 +18,7 @@ import {
 	getPublisherFields,
 	normalizeDoi,
 	normalizeEdition,
+	trimTrailing,
 } from './free-text-common';
 
 /**
@@ -257,7 +258,7 @@ function takeTrailingFields( input ) {
 		text = text.replace( CITED, '' );
 	}
 
-	return { text: text.trim().replace( /[.\s]+$/u, '' ) + '.', fields };
+	return { text: trimTrailing( text, '.' ) + '.', fields };
 }
 
 /**

@@ -256,8 +256,23 @@ describe( 'parseIeeeCitation', () => {
 			'A. Grafton, The footnote. Journal of the ACM, 38(2), 1997.',
 		],
 		[ 'an empty title', 'D. Knauss, “,” Nature, vol. 1, 2001.' ],
+		[
+			'editors with no container before them',
+			'J. L. Borges, “The library of Babel,” in Labyrinths, Eds. New Directions, 1962.',
+		],
 	] )( 'declines %s', ( _, input ) => {
 		expect( parseIeeeCitation( input ) ).toBeNull();
+	} );
+} );
+
+describe( 'IEEE patterns on hostile input', () => {
+	it( 'reads a long run of commas before "Eds." in linear time', () => {
+		const input = `J. L. Borges, “T,” in a${ ', '.repeat( 20000 ) }x, Eds. P, 1962.`;
+		const start = Date.now();
+
+		parseIeeeCitation( input );
+
+		expect( Date.now() - start ).toBeLessThan( 1000 );
 	} );
 } );
 

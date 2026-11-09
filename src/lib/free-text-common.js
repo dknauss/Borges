@@ -44,6 +44,29 @@ export function getMonthNumber( name ) {
 	return month ? MONTH_INDEX[ month ] : undefined;
 }
 
+/**
+ * Remove trailing characters from a set ("., ;"), scanning back from the end.
+ *
+ * A pattern such as `/[.,\s]+$/` tries every start position in a long run
+ * of those characters, which is quadratic; this is linear.
+ *
+ * @param {string} text  Text to trim.
+ * @param {string} chars Characters to remove; white space is always removed.
+ * @return {string} Text without them at the end.
+ */
+export function trimTrailing( text, chars ) {
+	let end = text.length;
+
+	while (
+		end > 0 &&
+		( chars.includes( text[ end - 1 ] ) || /\s/u.test( text[ end - 1 ] ) )
+	) {
+		end--;
+	}
+
+	return text.slice( 0, end );
+}
+
 export function normalizeDoi( doiValue ) {
 	return doiValue
 		.trim()

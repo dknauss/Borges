@@ -18,6 +18,7 @@ import {
 	getPublisherFields,
 	normalizeDoi,
 	normalizeEdition,
+	trimTrailing,
 } from './free-text-common';
 
 /**
@@ -205,7 +206,7 @@ function takeAccessFields( input ) {
 		text = text.slice( 0, doi.index );
 	}
 
-	return { text: text.trim().replace( /[.,;\s]+$/u, '' ), fields };
+	return { text: trimTrailing( text, '.,;' ), fields };
 }
 
 /**
@@ -279,25 +280,31 @@ function readContainer( text, hasAuthor ) {
 		rest = rest.slice( 0, date.index );
 	}
 
-	const edited = rest.match(
-		/^(?<container>.+?),\s+(?<editors>[^,]+(?:,\s+[^,]+)*?),\s+Eds?\.\s*(?<publisher>.*)$/u
-	);
+	// "Container, Editors, Eds. Publisher": found with plain string steps,
+	// since a single pattern for the comma-separated editors backtracks
+	// exponentially on long runs of commas.
+	const eds = rest.match( /,\s+Eds?\.\s*/u );
+	const firstComma = eds ? rest.slice( 0, eds.index ).search( /,\s+/u ) : -1;
 
-	if ( edited ) {
-		const editors = parseIeeeNames( edited.groups.editors );
+	if ( eds && firstComma > 0 ) {
+		const before = rest.slice( 0, eds.index );
+		const editors = parseIeeeNames(
+			before.slice( firstComma ).replace( /^,\s+/u, '' )
+		);
+		const publisher = rest.slice( eds.index + eds[ 0 ].length );
 
 		if ( ! editors.length ) {
 			return null;
 		}
 
 		fields.editor = editors;
-		fields[ 'container-title' ] = edited.groups.container;
+		fields[ 'container-title' ] = before.slice( 0, firstComma );
 		Object.assign(
 			fields,
-			edited.groups.publisher
-				? getPublisherFields( edited.groups.publisher )
-				: {}
+			publisher ? getPublisherFields( publisher ) : {}
 		);
+	} else if ( eds ) {
+		return null;
 	} else {
 		const parts = rest.split( /,\s+/u );
 		const last = parts.at( -1 );
