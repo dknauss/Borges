@@ -45,28 +45,34 @@ function bibliography_builder_collect_blocks( $blocks, $results = array() ) {
 			$attrs = isset( $block['attrs'] ) && is_array( $block['attrs'] ) ? $block['attrs'] : array();
 
 			$results[] = array(
-				'bibliographyId'  => bibliography_builder_get_stable_block_id( $attrs ),
-				'citationStyle'   => isset( $attrs['citationStyle'] )
+				'bibliographyId'     => bibliography_builder_get_stable_block_id( $attrs ),
+				'citationStyle'      => isset( $attrs['citationStyle'] )
 					? (string) $attrs['citationStyle']
 					: bibliography_builder_default_style_key(),
-				'headingText'     => isset( $attrs['headingText'] )
+				'headingText'        => isset( $attrs['headingText'] )
 					? (string) $attrs['headingText']
 					: '',
 				// The level save() prints: "h3" gives 3, and "p" gives 0.
-				'headingLevel'    => (int) substr(
+				'headingLevel'       => (int) substr(
 					bibliography_builder_save_heading_tag(
 						isset( $attrs['headingLevel'] ) ? $attrs['headingLevel'] : 0
 					),
 					1
 				),
-				'outputJsonLd'    => isset( $attrs['outputJsonLd'] ) ? (bool) $attrs['outputJsonLd'] : true,
-				'outputCoins'     => ! empty( $attrs['outputCoins'] ),
-				'outputCslJson'   => ! empty( $attrs['outputCslJson'] ),
+				'outputJsonLd'       => isset( $attrs['outputJsonLd'] ) ? (bool) $attrs['outputJsonLd'] : true,
+				'outputCoins'        => ! empty( $attrs['outputCoins'] ),
+				'outputCslJson'      => ! empty( $attrs['outputCslJson'] ),
 				// Whether save() prints annotations (CSL `annote`). The CSL-JSON
 				// keeps them either way; the plain text, like the editor's
 				// "Copy bibliography", leaves them out.
-				'showAnnotations' => ! empty( $attrs['showAnnotations'] ),
-				'citations'       => isset( $attrs['citations'] )
+				'showAnnotations'    => ! empty( $attrs['showAnnotations'] ),
+				// How save() marks a repeated author (1.20.0): `style` unless
+				// the block chose `dash`, `underscore`, or `none`.
+				'repeatedAuthorMark' => isset( $attrs['repeatedAuthorMark'] )
+					&& is_string( $attrs['repeatedAuthorMark'] )
+						? $attrs['repeatedAuthorMark']
+						: 'style',
+				'citations'          => isset( $attrs['citations'] )
 					&& is_array( $attrs['citations'] )
 						? array_values(
 							array_filter( $attrs['citations'], 'is_array' )

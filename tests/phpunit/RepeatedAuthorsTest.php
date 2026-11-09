@@ -262,4 +262,216 @@ final class RepeatedAuthorsTest extends TestCase {
 			)
 		);
 	}
+
+	private static function with_mark( $citations, $style, $setting ) {
+		return bibliography_builder_save_repeated_author_prefixes( $citations, $style, $setting );
+	}
+
+	public function test_the_setting_picks_a_mark_the_style_offers() {
+		$this->assertSame( 'dash', bibliography_builder_save_repeated_author_rule( 'chicago-notes-bibliography', 'dash' ) );
+		$this->assertSame( 'dash', bibliography_builder_save_repeated_author_rule( 'chicago-author-date', 'dash' ) );
+		$this->assertSame( '', bibliography_builder_save_repeated_author_rule( 'chicago-notes-bibliography', 'underscore' ) );
+		$this->assertSame( 'underscore', bibliography_builder_save_repeated_author_rule( 'abnt', 'underscore' ) );
+		$this->assertSame( 'allAuthors', bibliography_builder_save_repeated_author_rule( 'mla-9', 'dash' ) );
+		$this->assertSame( '', bibliography_builder_save_repeated_author_rule( 'mla-9', 'none' ) );
+		$this->assertSame( 'firstAuthor', bibliography_builder_save_repeated_author_rule( 'oscola', array( 'bogus' ) ) );
+		$this->assertSame( '', bibliography_builder_save_repeated_author_rule( 'apa-7', 'dash' ) );
+
+		$this->assertSame( "\u{2014}\u{2014}\u{2014}", bibliography_builder_save_repeated_author_mark( 'chicago-notes-bibliography', 'dash' ) );
+		$this->assertSame( '______', bibliography_builder_save_repeated_author_mark( 'abnt', 'underscore' ) );
+		$this->assertSame( "\u{2014}\u{2014}", bibliography_builder_save_repeated_author_mark( 'oscola' ) );
+		$this->assertSame( "\u{2011}\u{2011}\u{2011}", bibliography_builder_save_repeated_author_mark( 'mla-9', 'dash' ) );
+	}
+
+	public function test_none_writes_the_names_out_even_in_mla() {
+		$borges = array(
+			array(
+				'family' => 'Borges',
+				'given'  => 'Jorge Luis',
+			),
+		);
+		$list   = array(
+			self::entry( 'a', $borges, 'Borges, Jorge Luis. Ficciones. 1944.' ),
+			self::entry( 'b', $borges, 'Borges, Jorge Luis. Labyrinths. 1962.' ),
+		);
+
+		$this->assertSame( array( null, null ), self::with_mark( $list, 'mla-9', 'none' ) );
+		$this->assertSame( array( null, 'Borges, Jorge Luis' ), self::with_mark( $list, 'mla-9', 'style' ) );
+	}
+
+	public function test_dash_writes_names_as_chicago_does() {
+		$two   = array(
+			array(
+				'family' => 'Becker',
+				'given'  => 'Thomas J.',
+			),
+			array(
+				'family' => 'Nakamura',
+				'given'  => 'Yuki',
+			),
+		);
+		$three = array(
+			array(
+				'family' => 'Hughes',
+				'given'  => 'Rebecca',
+			),
+			array(
+				'family' => 'Iqbal',
+				'given'  => 'Omar',
+			),
+			array(
+				'family' => 'Jensen',
+				'given'  => 'Lars',
+			),
+		);
+		$eight = array(
+			array(
+				'family' => 'Kim',
+				'given'  => 'Ji-woo',
+			),
+			array(
+				'family' => 'Lopez',
+				'given'  => 'Ana',
+			),
+			array(
+				'family' => 'Moreau',
+				'given'  => 'Paul',
+			),
+		);
+
+		foreach ( array( 'N', 'O', 'P', 'Q', 'R' ) as $family ) {
+			$eight[] = array(
+				'family' => $family,
+				'given'  => 'X',
+			);
+		}
+
+		$gogh       = array(
+			array(
+				'family'                => 'Gogh',
+				'given'                 => 'Vincent',
+				'non-dropping-particle' => 'van',
+			),
+		);
+		$king       = array(
+			array(
+				'family' => 'King',
+				'given'  => 'Martin Luther',
+				'suffix' => 'Jr.',
+			),
+		);
+		$two_text   = 'Becker, Thomas J., and Yuki Nakamura';
+		$three_text = 'Hughes, Rebecca, Omar Iqbal, and Lars Jensen';
+		$eight_text = 'Kim, Ji-woo, Ana Lopez, Paul Moreau, et al';
+
+		$this->assertSame(
+			array( null, $two_text, null, $three_text, null, $eight_text, null, 'Gogh, Vincent van', null, 'King, Martin Luther, Jr', null, null ),
+			self::with_mark(
+				array(
+					self::entry( 'a', $two, $two_text . '. One. 2020.' ),
+					self::entry( 'b', $two, $two_text . '. 2021. Two.' ),
+					self::entry( 'c', $three, $three_text . '. Three.' ),
+					self::entry( 'd', $three, $three_text . '. Four.' ),
+					self::entry( 'e', $eight, $eight_text . '. Five.' ),
+					self::entry( 'f', $eight, $eight_text . '. Six.' ),
+					self::entry( 'g', $gogh, 'Gogh, Vincent van. Seven.' ),
+					self::entry( 'h', $gogh, 'Gogh, Vincent van. Eight.' ),
+					self::entry( 'i', $king, 'King, Martin Luther, Jr. Nine.' ),
+					self::entry( 'j', $king, 'King, Martin Luther, Jr. Ten.' ),
+					// Editors only: Chicago 17's "———, ed." is not applied.
+					self::entry( 'k', array(), 'Okafor, Chidi, ed. Eleven.' ),
+					self::entry( 'l', array(), 'Okafor, Chidi, ed. Twelve.' ),
+				),
+				'chicago-notes-bibliography',
+				'dash'
+			)
+		);
+	}
+
+	public function test_underscore_writes_names_as_abnt_does() {
+		$two      = array(
+			array(
+				'family' => 'Becker',
+				'given'  => 'Thomas J.',
+			),
+			array(
+				'family' => 'Nakamura',
+				'given'  => 'Yuki',
+			),
+		);
+		$four     = array(
+			array(
+				'family' => 'Kim',
+				'given'  => 'Ji-woo',
+			),
+			array(
+				'family' => 'Lopez',
+				'given'  => 'Ana',
+			),
+			array(
+				'family' => 'Moreau',
+				'given'  => 'Paul',
+			),
+			array(
+				'family' => 'Novak',
+				'given'  => 'Eva',
+			),
+		);
+		$org      = array( array( 'literal' => 'Open Research Alliance' ) );
+		$accented = array(
+			array(
+				'family' => 'Álvarez',
+				'given'  => 'Marta Inés',
+			),
+		);
+		$gogh     = array(
+			array(
+				'family'                => 'Gogh',
+				'given'                 => 'Vincent',
+				'non-dropping-particle' => 'van',
+			),
+		);
+		$two_text = 'BECKER, Thomas J.; NAKAMURA, Yuki';
+
+		$this->assertSame(
+			array( null, $two_text, null, 'KIM, Ji-woo et al', null, 'OPEN RESEARCH ALLIANCE', null, 'ÁLVAREZ, Marta Inés', null, null ),
+			self::with_mark(
+				array(
+					self::entry( 'a', $two, $two_text . '. One.' ),
+					self::entry( 'b', $two, $two_text . '. Two.' ),
+					self::entry( 'c', $four, 'KIM, Ji-woo et al. Three.' ),
+					self::entry( 'd', $four, 'KIM, Ji-woo et al. Four.' ),
+					self::entry( 'e', $org, 'OPEN RESEARCH ALLIANCE. Five.' ),
+					self::entry( 'f', $org, 'OPEN RESEARCH ALLIANCE. Six.' ),
+					self::entry( 'g', $accented, 'ÁLVAREZ, Marta Inés. Seven.' ),
+					self::entry( 'h', $accented, 'ÁLVAREZ, Marta Inés. Eight.' ),
+					// Particles: the CSL processor decides their capitals.
+					self::entry( 'i', $gogh, 'VAN GOGH, Vincent. Nine.' ),
+					self::entry( 'j', $gogh, 'VAN GOGH, Vincent. Ten.' ),
+				),
+				'abnt',
+				'underscore'
+			)
+		);
+	}
+
+	public function test_the_read_model_and_write_settings_carry_the_setting() {
+		$blocks = bibliography_builder_collect_blocks(
+			array(
+				array(
+					'blockName' => 'bibliography-builder/bibliography',
+					'attrs'     => array( 'repeatedAuthorMark' => 'dash' ),
+				),
+				array(
+					'blockName' => 'bibliography-builder/bibliography',
+					'attrs'     => array(),
+				),
+			)
+		);
+
+		$this->assertSame( 'dash', $blocks[0]['repeatedAuthorMark'] );
+		$this->assertSame( 'style', $blocks[1]['repeatedAuthorMark'] );
+		$this->assertSame( 'style', bibliography_builder_write_setting_defaults()['repeatedAuthorMark'] );
+		$this->assertSame( array( 'style', 'dash', 'underscore', 'none' ), bibliography_builder_repeated_author_mark_values() );
+	}
 }

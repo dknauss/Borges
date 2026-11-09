@@ -3100,6 +3100,474 @@
 					}
 				]
 			}
+		},
+		{
+			"name": "chicago-repeated-author-dash",
+			"note": "Chicago notes-bibliography with repeatedAuthorMark \"dash\": Chicago 17's 3-em dash (three U+2014) replaces an author list that repeats the entry before it, names kept for screen readers. Covers one author, two authors, manual display text, and editors only (no \"———, ed.\" form).",
+			"attributes": {
+				"citationStyle": "chicago-notes-bibliography",
+				"headingText": "Bibliography",
+				"outputJsonLd": false,
+				"repeatedAuthorMark": "dash",
+				"citations": [
+					{
+						"id": "c1",
+						"csl": {
+							"id": "c1",
+							"type": "book",
+							"title": "Ficciones",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1944
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Jorge Luis. Ficciones. Delta Academic, 1944."
+					},
+					{
+						"id": "c2",
+						"csl": {
+							"id": "c2",
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1962
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Jorge Luis. Labyrinths. Delta Academic, 1962."
+					},
+					{
+						"id": "c3",
+						"csl": {
+							"id": "c3",
+							"type": "book",
+							"title": "The Aleph",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1949
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Jorge Luis. The Aleph. Delta Academic, 1949.",
+						"displayOverride": "Borges, Jorge Luis. The Aleph and Other Stories. Manual text."
+					},
+					{
+						"id": "c4",
+						"csl": {
+							"id": "c4",
+							"type": "book",
+							"title": "Reading Machines",
+							"author": [
+								{
+									"family": "Becker",
+									"given": "Thomas J."
+								},
+								{
+									"family": "Nakamura",
+									"given": "Yuki"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										2021
+									]
+								]
+							}
+						},
+						"formattedText": "Becker, Thomas J., and Yuki Nakamura. Reading Machines. Delta Academic, 2021."
+					},
+					{
+						"id": "c5",
+						"csl": {
+							"id": "c5",
+							"type": "book",
+							"title": "Writing Machines",
+							"author": [
+								{
+									"family": "Becker",
+									"given": "Thomas J."
+								},
+								{
+									"family": "Nakamura",
+									"given": "Yuki"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										2022
+									]
+								]
+							}
+						},
+						"formattedText": "Becker, Thomas J., and Yuki Nakamura. Writing Machines. Delta Academic, 2022."
+					},
+					{
+						"id": "c6",
+						"csl": {
+							"id": "c6",
+							"type": "book",
+							"title": "Essays on Classification",
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										2018
+									]
+								]
+							},
+							"editor": [
+								{
+									"family": "Okafor",
+									"given": "Chidi"
+								}
+							]
+						},
+						"formattedText": "Okafor, Chidi, ed. Essays on Classification. Delta Academic, 2018."
+					},
+					{
+						"id": "c7",
+						"csl": {
+							"id": "c7",
+							"type": "book",
+							"title": "More Essays on Classification",
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										2019
+									]
+								]
+							},
+							"editor": [
+								{
+									"family": "Okafor",
+									"given": "Chidi"
+								}
+							]
+						},
+						"formattedText": "Okafor, Chidi, ed. More Essays on Classification. Delta Academic, 2019."
+					}
+				]
+			}
+		},
+		{
+			"name": "chicago-author-date-repeated-author-dash",
+			"note": "Chicago author-date with repeatedAuthorMark \"dash\": the dash stands before the year.",
+			"attributes": {
+				"citationStyle": "chicago-author-date",
+				"headingText": "References",
+				"outputJsonLd": false,
+				"repeatedAuthorMark": "dash",
+				"citations": [
+					{
+						"id": "d1",
+						"csl": {
+							"id": "d1",
+							"type": "book",
+							"title": "Ficciones",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1944
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Jorge Luis. 1944. Ficciones. Delta Academic."
+					},
+					{
+						"id": "d2",
+						"csl": {
+							"id": "d2",
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1962
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Jorge Luis. 1962. Labyrinths. Delta Academic."
+					}
+				]
+			}
+		},
+		{
+			"name": "abnt-repeated-author-underscore",
+			"note": "ABNT with repeatedAuthorMark \"underscore\": NBR 6023:2002's line of six underscores replaces a repeated author list (capitalized family names, semicolons, et al. from four authors).",
+			"attributes": {
+				"citationStyle": "abnt",
+				"headingText": "Referências",
+				"outputJsonLd": false,
+				"repeatedAuthorMark": "underscore",
+				"citations": [
+					{
+						"id": "a1",
+						"csl": {
+							"id": "a1",
+							"type": "book",
+							"title": "Ficciones",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1944
+									]
+								]
+							}
+						},
+						"formattedText": "BORGES, Jorge Luis. Ficciones. Oxford: Delta Academic, 1944."
+					},
+					{
+						"id": "a2",
+						"csl": {
+							"id": "a2",
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1962
+									]
+								]
+							}
+						},
+						"formattedText": "BORGES, Jorge Luis. Labyrinths. Oxford: Delta Academic, 1962."
+					},
+					{
+						"id": "a3",
+						"csl": {
+							"id": "a3",
+							"type": "book",
+							"title": "Reading Machines",
+							"author": [
+								{
+									"family": "Becker",
+									"given": "Thomas J."
+								},
+								{
+									"family": "Nakamura",
+									"given": "Yuki"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										2021
+									]
+								]
+							}
+						},
+						"formattedText": "BECKER, Thomas J.; NAKAMURA, Yuki. Reading Machines. Oxford: Delta Academic, 2021."
+					},
+					{
+						"id": "a4",
+						"csl": {
+							"id": "a4",
+							"type": "book",
+							"title": "Writing Machines",
+							"author": [
+								{
+									"family": "Becker",
+									"given": "Thomas J."
+								},
+								{
+									"family": "Nakamura",
+									"given": "Yuki"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										2022
+									]
+								]
+							}
+						},
+						"formattedText": "BECKER, Thomas J.; NAKAMURA, Yuki. Writing Machines. Oxford: Delta Academic, 2022."
+					}
+				]
+			}
+		},
+		{
+			"name": "mla-repeated-authors-none",
+			"note": "MLA 9 with repeatedAuthorMark \"none\": the names are written out, no hyphens.",
+			"attributes": {
+				"citationStyle": "mla-9",
+				"headingText": "Works Cited",
+				"outputJsonLd": false,
+				"repeatedAuthorMark": "none",
+				"citations": [
+					{
+						"id": "n1",
+						"csl": {
+							"id": "n1",
+							"type": "book",
+							"title": "Ficciones",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1944
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Jorge Luis. Ficciones. Delta Academic, 1944."
+					},
+					{
+						"id": "n2",
+						"csl": {
+							"id": "n2",
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1962
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, Jorge Luis. Labyrinths. Delta Academic, 1962."
+					}
+				]
+			}
+		},
+		{
+			"name": "apa-repeated-author-dash-ignored",
+			"note": "APA 7 with repeatedAuthorMark \"dash\" left over from a Chicago block: APA offers no mark, so the names stay.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "References",
+				"outputJsonLd": false,
+				"repeatedAuthorMark": "dash",
+				"citations": [
+					{
+						"id": "p1",
+						"csl": {
+							"id": "p1",
+							"type": "book",
+							"title": "Ficciones",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1944
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, J. L. (1944). Ficciones. Delta Academic."
+					},
+					{
+						"id": "p2",
+						"csl": {
+							"id": "p2",
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"publisher": "Delta Academic",
+							"issued": {
+								"date-parts": [
+									[
+										1962
+									]
+								]
+							}
+						},
+						"formattedText": "Borges, J. L. (1962). Labyrinths. Delta Academic."
+					}
+				]
+			}
 		}
 	]
 }

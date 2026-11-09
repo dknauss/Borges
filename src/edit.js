@@ -33,6 +33,7 @@ import { EditorCanvasNotices } from './components/editor-canvas-notices';
 import { CitationUpdatePanel } from './components/citation-update-panel';
 import { useCitationUpdates } from './hooks/use-citation-updates';
 import { CitationEntryBody } from './components/citation-entry-body';
+import { RepeatedAuthorMarkControl } from './components/repeated-author-mark-control';
 import { useBlockNotices } from './hooks/use-block-notices';
 import { useCitationEditorState } from './hooks/use-citation-editor-state';
 import { useEntryFocus } from './hooks/use-entry-focus';
@@ -102,6 +103,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		outputCslJson = false,
 		outputCiteExport = false,
 		showAnnotations = false,
+		repeatedAuthorMark = 'style',
 	} = attributes;
 	const selectableStyles = useMemo( () => getSelectableStyles(), [] );
 	const blockProps = useBlockProps();
@@ -769,6 +771,13 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 										'Changing styles reformats auto-generated citations and keeps manual overrides intact.',
 										'borges-bibliography-builder'
 									)
+						}
+					/>
+					<RepeatedAuthorMarkControl
+						citationStyle={ citationStyle }
+						value={ repeatedAuthorMark }
+						onChange={ ( value ) =>
+							setAttributes( { repeatedAuthorMark: value } )
 						}
 					/>
 					<TextControl

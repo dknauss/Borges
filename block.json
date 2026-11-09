@@ -72,6 +72,11 @@
 			"type": "boolean",
 			"default": false
 		},
+		"repeatedAuthorMark": {
+			"type": "string",
+			"enum": [ "style", "dash", "underscore", "none" ],
+			"default": "style"
+		},
 		"bibliographyId": {
 			"type": "string",
 			"default": ""

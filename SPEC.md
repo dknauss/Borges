@@ -118,6 +118,11 @@ OSCOLA bibliographies that hold primary sources are saved as OSCOLA 5's tables: 
 		"type": "boolean",
 		"default": false
 	},
+	"repeatedAuthorMark": {
+		"type": "string",
+		"enum": [ "style", "dash", "underscore", "none" ],
+		"default": "style"
+	},
 	"citations": {
 		"type": "array",
 		"default": [],
@@ -1050,6 +1055,17 @@ The inline and margin citation format shipped (see [In-Text and Margin Citations
 -   **Editor navigation.** Selecting a citation in the editor could scroll to and highlight its entry in the bibliography block.
 -   **Keeping citations current automatically.** **Update citations** (see [Updating citations](#updating-citations)) is run by hand or from the notice after a style change. It could also be offered after an entry is edited or a numeric list is reordered, and the editor could mark a citation whose `ref-…` target is gone.
 -   **Fuller short forms.** Year suffixes (2020a) in author-date styles, APA's "&" and comma ("(Smith & Jones, 2020)"), a locator label ("p.") per style, and ibid.-free consecutive-note handling.
+
+### Repeated-Author Mark (implemented, 1.20.0)
+
+Some writers, editors, and journals still want the mark an earlier edition of their style used for an entry by the same authors as the one before it; others find any mark unclear. A block setting, **Repeated authors** (`repeatedAuthorMark`, string, default `style`), chooses ([#242](https://github.com/dknauss/Borges/issues/242)).
+
+-   **Values:** `style` applies the style's own rule (MLA 9's three hyphens, OSCOLA 5's double em dash, names written out elsewhere); `none` writes names out everywhere; `dash` is Chicago 17's 3-em dash (three U+2014), offered by both Chicago styles; `underscore` is NBR 6023:2002's six underscores, offered by ABNT. Which style offers which is `repeatedAuthorMarks` in `includes/styles.json`, and a mark a style does not offer falls back to `style` (`getRepeatedAuthorRule()` / `bibliography_builder_save_repeated_author_rule()`).
+-   **Editor:** a select under Citation Style, shown only for a style with a choice (MLA, OSCOLA, Chicago, ABNT; `src/components/repeated-author-mark-control.js`).
+-   **Output:** the existing repeated-author markup (`bibliography-builder-repeated-author`, the mark `aria-hidden`, the names in `screen-reader-text`) with the chosen mark. Names are matched as strictly as MLA's, written as the bundled Chicago or ABNT CSL writes them. Editors-only entries and titles are never replaced. The PHP port matches the JS; the `*-repeated-author-*` save-parity fixtures pin both.
+-   **Existing blocks:** an absent setting is `style`, so `save()` writes what 1.19.x wrote and no deprecation is needed. Deprecations ignore the setting (`repeatedAuthorMarkSetting` is passed only by `save.js`).
+-   **Read model:** `GET …/bibliographies`, the abilities, and `wp borges list --fields=` report `repeatedAuthorMark`; `PATCH …/bibliographies/{ref}` accepts it.
+-   **Not done:** Chicago 17's `———, ed.` for editors, and NBR 6023:2002's replacement of a repeated title.
 
 ### Annotated Bibliographies (implemented)
 
