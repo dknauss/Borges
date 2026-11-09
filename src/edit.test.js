@@ -25,6 +25,7 @@ import {
 
 jest.mock( '@wordpress/i18n', () => ( {
 	__: ( text ) => text,
+	isRTL: () => false,
 	_n: ( single, plural, count ) => ( count === 1 ? single : plural ),
 	sprintf: ( template, ...values ) =>
 		template.replace( /%((\d+)\$)?[sd]/g, ( match, _pos, index ) => {
@@ -210,10 +211,31 @@ jest.mock( '@wordpress/components', () => {
 				},
 				icon ? ReactLocal.createElement( icon ) : label
 			),
+		ToolbarDropdownMenu: ( { label, controls } ) =>
+			ReactLocal.createElement(
+				'div',
+				{ role: 'menu', 'aria-label': label },
+				controls.map( ( control ) =>
+					ReactLocal.createElement(
+						'button',
+						{
+							key: control.title,
+							type: 'button',
+							role: control.role,
+							'aria-checked': control.isActive ? 'true' : 'false',
+							onClick: control.onClick,
+						},
+						control.title
+					)
+				)
+			),
 	};
 } );
 
 jest.mock( '@wordpress/icons', () => ( {
+	alignCenter: 'align-center',
+	alignLeft: 'align-left',
+	alignRight: 'align-right',
 	chevronDown: 'chevron-down',
 	chevronUp: 'chevron-up',
 } ) );
@@ -1364,7 +1386,25 @@ describe( 'Edit focus management', () => {
 		expect( setAttributes ).toHaveBeenCalledWith( { headingLevel: 3 } );
 	} );
 
-	it( 'centers the heading preview until Heading Alignment chooses Start', async () => {
+	it( 'offers heading alignment in the toolbar only when there is a heading', () => {
+		render(
+			<Edit
+				attributes={ {
+					citationStyle: 'apa-7',
+					headingText: '',
+					citations: [],
+				} }
+				setAttributes={ jest.fn() }
+				clientId="heading-align-empty"
+			/>
+		);
+
+		expect(
+			screen.queryByRole( 'menu', { name: 'Align heading' } )
+		).toBeNull();
+	} );
+
+	it( 'centers the heading preview until the toolbar aligns it to the start', async () => {
 		const setAttributes = jest.fn();
 		const props = {
 			citationStyle: 'apa-7',
@@ -1379,16 +1419,18 @@ describe( 'Edit focus management', () => {
 			/>
 		);
 
-		expect( screen.getByLabelText( 'Heading Alignment' ) ).toHaveValue(
-			'center'
-		);
+		expect( screen.queryByLabelText( 'Heading Alignment' ) ).toBeNull();
+		expect(
+			screen.getByRole( 'menuitemradio', { name: 'Center heading' } )
+		).toHaveAttribute( 'aria-checked', 'true' );
 		expect(
 			container.querySelector( '.bibliography-builder-heading-preview' )
 		).not.toHaveClass( 'bibliography-builder-heading-align-start' );
 
-		await userEvent.selectOptions(
-			screen.getByLabelText( 'Heading Alignment' ),
-			'start'
+		await userEvent.click(
+			screen.getByRole( 'menuitemradio', {
+				name: 'Align heading to the start (in line with the entries)',
+			} )
 		);
 
 		expect( setAttributes ).toHaveBeenCalledWith( {

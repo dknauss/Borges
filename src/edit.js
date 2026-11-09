@@ -34,6 +34,7 @@ import { CitationUpdatePanel } from './components/citation-update-panel';
 import { useCitationUpdates } from './hooks/use-citation-updates';
 import { CitationEntryBody } from './components/citation-entry-body';
 import { RepeatedAuthorMarkControl } from './components/repeated-author-mark-control';
+import { HeadingAlignControl } from './components/heading-align-control';
 import { useBlockNotices } from './hooks/use-block-notices';
 import { useCitationEditorState } from './hooks/use-citation-editor-state';
 import { useEntryFocus } from './hooks/use-entry-focus';
@@ -743,6 +744,14 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						/>
 					) }
 				</ToolbarGroup>
+				{ headingText ? (
+					<HeadingAlignControl
+						value={ headingAlign }
+						onChange={ ( value ) =>
+							setAttributes( { headingAlign: value } )
+						}
+					/>
+				) : null }
 			</BlockControls>
 			<InspectorControls>
 				<PanelBody
@@ -842,36 +851,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						}
 						help={ __(
 							'Choose a heading level to put the visible heading in the page outline, where screen reader users navigate by headings. The size does not change with the level.',
-							'borges-bibliography-builder'
-						) }
-					/>
-					<SelectControl
-						label={ __(
-							'Heading Alignment',
-							'borges-bibliography-builder'
-						) }
-						value={ headingAlign === 'start' ? 'start' : 'center' }
-						options={ [
-							{
-								label: __(
-									'Center',
-									'borges-bibliography-builder'
-								),
-								value: 'center',
-							},
-							{
-								label: __(
-									'Start (left in left-to-right languages)',
-									'borges-bibliography-builder'
-								),
-								value: 'start',
-							},
-						] }
-						onChange={ ( value ) =>
-							setAttributes( { headingAlign: value } )
-						}
-						help={ __(
-							'APA, MLA, Chicago, and ABNT center the reference list heading. Choose Start to line it up with the entries and your theme’s headings.',
 							'borges-bibliography-builder'
 						) }
 					/>

@@ -118,7 +118,7 @@ Source page: `post=15`
 -   [ ] View the post on the frontend
 -   [ ] Confirm bibliography markup renders
 -   [ ] Confirm heading styling matches the editor default (semibold, larger, centered)
--   [ ] Set Heading Alignment to Start and confirm the heading lines up with the entries in the editor and on the frontend
+-   [ ] Use the block toolbar's Align heading menu to choose Start, and confirm the heading lines up with the entries in the editor and on the frontend
 -   [ ] Confirm citation text is readable and only intended segments are italicized
 -   [ ] Confirm long URLs wrap instead of overflowing the container
 -   [ ] Confirm COinS spans remain hidden visually
