@@ -92,7 +92,11 @@ What this shows:
   OSCOLA, or ABNT.
 - **Declining is the intended failure.** An entry the parser doesn't accept
   gets a notice in the editor, not a wrong record, so the zeros are entries
-  turned away, not entries mangled.
+  turned away, not entries mangled. IEEE and ABNT are the exception: their labelled
+  journal articles (`vol. 12, no. 3, pp. 34–43`) can match a book pattern
+  and come back as a book with the labels in its title, which is why IEEE
+  accepts 16 of 36 entries but recovers 7 details. See
+  [`planning/free-text-styles-plan.md`](planning/free-text-styles-plan.md).
 - **Even where it parses, it trails AnyStyle.** On the twelve Chicago
   notes-bibliography entries it gets every title but only 5 of 12 author
   lists, 7 of 11 years, 4 of 8 DOIs, and 4 of 8 page ranges; AnyStyle gets
