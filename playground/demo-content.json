@@ -87,7 +87,7 @@
 		},
 		{
 			"title": "Formatted citations",
-			"description": "Plain-text citations for books, journal articles, chapters, and webpages, in Chicago, APA, or Harvard shape. A citation that contains a DOI, PMID, PMCID, or arXiv ID is looked up by that identifier instead. Borges is less sure of some shapes, such as the chapter, webpage, and Harvard samples here, and marks them for review: check their fields before publishing.",
+			"description": "Plain-text citations for books, journal articles, chapters, and webpages, in Chicago, APA, Harvard, IEEE, or Vancouver shape. A citation that contains a DOI, PMID, PMCID, or arXiv ID is looked up by that identifier instead. Borges is less sure of some shapes, such as the chapter, webpage, Harvard, IEEE, and Vancouver samples here, and marks them for review: check their fields before publishing.",
 			"samples": [
 				{
 					"format": "freetext",
@@ -112,6 +112,14 @@
 				{
 					"format": "freetext",
 					"input": "Grafton, A. (1997) The footnote: a curious history. Cambridge, MA: Harvard University Press."
+				},
+				{
+					"format": "freetext",
+					"input": "T. Berners-Lee, J. Hendler, and O. Lassila, “The semantic web,” Scientific American, vol. 284, no. 5, pp. 34–43, May 2001."
+				},
+				{
+					"format": "freetext",
+					"input": "Geertz C. Thick description: toward an interpretive theory of culture. In: The interpretation of cultures. New York: Basic Books; 1973. p. 3-30."
 				},
 				{
 					"format": "doi",

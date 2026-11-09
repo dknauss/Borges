@@ -7,9 +7,10 @@ read back. Proposed 2026-11-09.
 
 **Status:** On 2026-11-09 Dan chose Phase 0 first, then Phases 1 and 2, with
 ABNT and OSCOLA waiting for demand. The other open questions take the
-recommended answers unless he says otherwise. Phase 0 is merged (#267);
-Phase 1 is built (see each section for the measured result); Phase 2 is
-next.
+recommended answers unless he says otherwise. Phase 0 is merged (#267),
+Phase 1 is merged (#274), and Phase 2 is built (see each section for the
+measured result). That is the stop-or-go point: Phases 3 and 4 wait for
+demand.
 
 The issue already lays out the per-style patterns, the size estimate, and the
 collision risk. This plan adds what a closer look at the current code turned
@@ -219,6 +220,57 @@ friends of mine (eds)") and an empty quoted title (`‘’`).
 About 350 to 500 lines. **Stop-or-go point:** after this phase the numeric
 styles most likely to be pasted without a DOI are covered. Phases 3 and 4
 should wait for evidence that someone needs them (question 4).
+
+**Built 2026-11-09**, as `free-text-ieee.js` (`parseIeeeCitation()`) and
+`free-text-vancouver.js` (`parseVancouverCitation()`), about 510 lines each
+with their comments. Each keeps its own name reader (`parseIeeeNames()`,
+`parseVancouverNames()`) in the same file rather than in
+`free-text-authors.js`, since neither is shared. Both are in
+`STYLE_PATTERN_GROUPS` and run last without a hint, after Harvard.
+
+- IEEE needs an initials-first first author ("C. R. Harris", "M.-W. Chang",
+  "S. J. van der Walt"), which no other style prints, so it never claims a
+  Chicago, MLA, APA, or Harvard citation. It reads `“Title,”` followed by a
+  journal (`vol.`, `no.`, `pp.`, `Art. no.`, a date), `in` a book with
+  `Eds.` or proceedings with a publisher, `arXiv:…`, a thesis, or a site with
+  `[Online]. Available:` and `Accessed:`; an unquoted book
+  (`Title, 3rd ed. Place: Publisher, Year`); and an encyclopedia entry or
+  web page with no author. An organization is read only before a quoted
+  title, so "Adobe, Structured Data Validator. GitHub, n.d." is declined.
+- Vancouver reads `Surname AB` names (with `et al`, `Jr`, and hyphenated
+  initials), an article by its `Year[ Mon[ DD]];Vol(Issue):Pages` tail, a
+  book by `Place: Publisher; Year`, a chapter by `In:` (with `editors`), and
+  a web page or preprint by `[Internet]` or `[Preprint]`, plus
+  `[cited …]`, `Available from:`, `doi:`, and `PMID:` (kept as `PMID`). A
+  marker decides the form, so a chapter that does not read is declined
+  rather than read as a book with "In:" in its title. Shortened page ranges
+  are written out ("357-62" → 357-362). An organization author is a short
+  run of capitalized words with no commas ("University of Chicago Press").
+- `container-title-short` is not set: whether a printed journal name is
+  already the abbreviation can't be told from the text alone, so the name is
+  kept as printed in `container-title`.
+
+Details recovered, before and after:
+
+| Corpus | IEEE | Vancouver | Every other style |
+|---|---|---|---|
+| 12 works | 2 → 64 of 67 (64 printed; AnyStyle 59) | 0 → 63 of 67 (58 printed; AnyStyle 46) | unchanged |
+| 36 works | 6 → 107 of 130 (120 printed; AnyStyle 95) | 0 → 124 of 130 (123 printed; AnyStyle 76) | unchanged |
+
+Vancouver passes "printed" because the written-out page ranges now match.
+Most of what IEEE misses is not printed (years of web pages, publishers of
+sites) or is one of three organization-authored books it declines.
+
+On AnyStyle's labelled references, with no hint: 2,346 accepted with 184
+wrong titles (7.9%) before, 2,636 with 184 (7.0%) after, so 290 more
+references are read and none of them gets a wrong title; wrong years go
+from 44 to 44. The IEEE-like subset reads 174 of 478 with no wrong title.
+The first build added 50 wrong titles, all from one shape: names closed by
+a full stop before an unquoted title ("R. Fagin, J. Halpern, and M. Vardi. A
+model-theoretic analysis…", common in ACM and Springer lists, and
+"Dietz, R. S., McHone, J. F., Volcanic…" read as Vancouver). Both readers
+now decline a title that starts inside a name list, and a Vancouver
+organization must have no commas or lone initials.
 
 ### Phase 3: ABNT
 

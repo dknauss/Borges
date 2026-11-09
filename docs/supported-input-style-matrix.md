@@ -44,6 +44,8 @@ These are raw formatted citation categories with active parser support.
 | ------------------------- | --------- | ------------------------------------------------------------------------------------ |
 | Books                     | Supported | Includes many Chicago and APA-like book patterns                                     |
 | Harvard (Cite Them Right) | Supported | Articles, books, chapters, conference papers, preprints, encyclopedia entries, and web pages; read first in a Harvard bibliography |
+| IEEE | Supported | Initials-first names; articles, books, chapters, conference papers, preprints, theses, encyclopedia entries, and web pages; read first in an IEEE bibliography |
+| Vancouver (NLM) | Supported | `Surname AB` names; articles, books, chapters, conference papers, preprints, encyclopedia entries, and web pages; PMIDs kept; read first in a Vancouver bibliography |
 | Journal articles          | Supported | Includes DOI/no-DOI variants and several APA-like forms                              |
 | Chapters                  | Supported | Includes common sentence-style chapter citations                                     |
 | Webpages                  | Supported | Includes organization-authored pages and common access/modified/effective date forms |

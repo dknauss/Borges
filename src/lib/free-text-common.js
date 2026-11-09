@@ -1,7 +1,8 @@
 /**
  * Helpers shared by the free-text citation patterns: DOI, title, year,
  * edition, and publisher clean-up. Used by `free-text-parser.js` and the
- * per-style pattern modules (`free-text-harvard.js`).
+ * per-style pattern modules (`free-text-harvard.js`, `free-text-ieee.js`,
+ * `free-text-vancouver.js`).
  */
 
 const DOI_URL_PREFIX =
@@ -21,6 +22,80 @@ export const MONTH_INDEX = {
 	november: 11,
 	december: 12,
 };
+
+/**
+ * The month number for a full or abbreviated English month name: "May",
+ * "Sept.", "Oct", "sep".
+ *
+ * @param {string} name Month name, with or without a full stop.
+ * @return {number|undefined} 1 to 12, or undefined when it is not a month.
+ */
+export function getMonthNumber( name ) {
+	const key = name.toLowerCase().replace( /\.$/u, '' );
+
+	if ( key.length < 3 ) {
+		return undefined;
+	}
+
+	const month = Object.keys( MONTH_INDEX ).find( ( full ) =>
+		full.startsWith( key )
+	);
+
+	return month ? MONTH_INDEX[ month ] : undefined;
+}
+
+/**
+ * Remove trailing characters from a set ("., ;"), scanning back from the end.
+ *
+ * A pattern such as `/[.,\s]+$/` tries every start position in a long run
+ * of those characters, which is quadratic; this is linear.
+ *
+ * @param {string} text  Text to trim.
+ * @param {string} chars Characters to remove; white space is always removed.
+ * @return {string} Text without them at the end.
+ */
+export function trimTrailing( text, chars ) {
+	let end = text.length;
+
+	while (
+		end > 0 &&
+		( chars.includes( text[ end - 1 ] ) || /\s/u.test( text[ end - 1 ] ) )
+	) {
+		end--;
+	}
+
+	return text.slice( 0, end );
+}
+
+/**
+ * Remove the punctuation a citation puts after a URL: full stops, commas,
+ * semicolons, and a closing parenthesis that closes nothing in the URL, so
+ * `…/wiki/Test_(assessment)` keeps its own.
+ *
+ * @param {string} url URL as printed.
+ * @return {string} URL without the citation's punctuation.
+ */
+export function trimUrlEnd( url ) {
+	let end = url.length;
+
+	while ( end > 0 ) {
+		const char = url[ end - 1 ];
+
+		if ( '.,;'.includes( char ) ) {
+			end--;
+		} else if (
+			char === ')' &&
+			url.slice( 0, end ).split( ')' ).length >
+				url.slice( 0, end ).split( '(' ).length
+		) {
+			end--;
+		} else {
+			break;
+		}
+	}
+
+	return url.slice( 0, end );
+}
 
 export function normalizeDoi( doiValue ) {
 	return doiValue
