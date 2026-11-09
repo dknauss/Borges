@@ -78,4 +78,8 @@ replaces the whole site.
 
 To check either host, run the **Demo Link Monitor** (`demo-links.yml`, which
 requests every blueprint's install URL) and, for a real browser load, the
-**Playground Live Probe** (`playground-live-probe.yml`) from the Actions tab.
+**Playground Live Probe** (`playground-live-probe.yml`) from the Actions tab. The live probe also runs daily and opens a `playground-monitor` issue when the demos look unhealthy, so a broken host shows up there first.
+
+The remaining demo failures come from Playground itself, not from either host.
+`docs/playground-self-hosting.md` covers serving our own copy of Playground
+instead, and what a first experiment found.

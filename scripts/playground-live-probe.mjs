@@ -20,6 +20,12 @@
  *   PROBE_BROWSER    chromium (default), firefox, or webkit (Safari's engine).
  *   PROBE_ANY_BLOCK  Count any block as ready, for a control blueprint
  *                    without Borges (scripts/probe-fixtures/).
+ *   PROBE_PLAYGROUND Playground to open the blueprints in (default
+ *                    https://playground.wordpress.net/), such as a
+ *                    self-hosted copy on http://localhost:8080/.
+ *   PROBE_RESULTS    File to append one JSON line per load to, for
+ *                    scripts/playground-probe-report.mjs (the scheduled
+ *                    monitor reads them to decide whether to open an issue).
  *
  * A load passes when the block editor initializes with a Borges block in it,
  * not merely when its markup appears: in November 2026 some Chromium loads
@@ -69,6 +75,12 @@ const timeout = positiveInteger( 'PROBE_TIMEOUT', 90000 );
 // install from (docs/playground-main-preview-hosting.md).
 const INTERESTING =
 	/cors-proxy|github\.com|github\.io|githubusercontent|wordpress\.org\/plugins|downloads\.wordpress\.org|api\.wordpress\.org|blueprint/i;
+
+// Messages Playground logs when a blueprint step fails, such as the plugin ZIP
+// not downloading. These point at the blueprint or what it fetches, which the
+// repository can do something about, rather than at Playground's own runtime.
+const BLUEPRINT_ERROR =
+	/BlueprintStepExecutionError|ResourceDownloadError|Could not download/i;
 
 /**
  * Finds the WordPress frame and reports whether the block editor is up.
@@ -137,9 +149,16 @@ async function errorScreen( page ) {
  * @param {string}                       blueprint  Blueprint URL.
  * @param {number}                       run        Run number.
  * @param {boolean}                      retryInTab Whether to reload once on failure, like "Try again".
- * @return {Promise<string>} Outcome.
+ * @return {Promise<{outcome: string, blueprintError: string}>} Outcome, and
+ *     the first blueprint step error Playground logged ('' when none).
  */
 async function probe( browser, blueprint, run, retryInTab ) {
+	let blueprintError = '';
+	const noteBlueprintError = ( text ) => {
+		if ( ! blueprintError && BLUEPRINT_ERROR.test( text ) ) {
+			blueprintError = text.split( '\n' )[ 0 ].slice( 0, 300 );
+		}
+	};
 	const context = await browser.newContext();
 	const page = await context.newPage();
 	const started = Date.now();
@@ -181,14 +200,18 @@ async function probe( browser, blueprint, run, retryInTab ) {
 	page.on( 'console', ( msg ) => {
 		if ( [ 'error', 'warning' ].includes( msg.type() ) ) {
 			log( `console.${ msg.type() }: ${ msg.text().slice( 0, 600 ) }` );
+			noteBlueprintError( msg.text() );
 		}
 	} );
-	page.on( 'pageerror', ( err ) =>
-		log( `pageerror: ${ String( err ).slice( 0, 600 ) }` )
-	);
+	page.on( 'pageerror', ( err ) => {
+		log( `pageerror: ${ String( err ).slice( 0, 600 ) }` );
+		noteBlueprintError( String( err ) );
+	} );
 
 	// Encoded, so a blueprint URL's own query string stays part of it.
-	const url = new URL( 'https://playground.wordpress.net/' );
+	const url = new URL(
+		process.env.PROBE_PLAYGROUND || 'https://playground.wordpress.net/'
+	);
 	url.searchParams.set( 'blueprint-url', blueprint );
 	console.log( `\n=== run ${ run }: ${ url }` );
 
@@ -239,7 +262,10 @@ async function probe( browser, blueprint, run, retryInTab ) {
 		await context.close();
 	}
 	log( `OUTCOME: ${ outcome }` );
-	return outcome;
+	if ( blueprintError ) {
+		log( `BLUEPRINT ERROR: ${ blueprintError }` );
+	}
+	return { outcome, blueprintError };
 }
 
 const engines = { chromium, firefox, webkit };
@@ -249,11 +275,31 @@ const browser = await engines[ browserName ].launch();
 const summary = [];
 for ( const blueprint of blueprints ) {
 	for ( let run = 1; run <= runs; run++ ) {
-		summary.push( [
-			new URL( blueprint ).pathname.split( '/' ).pop(),
+		const name = new URL( blueprint ).pathname.split( '/' ).pop();
+		const { outcome, blueprintError } = await probe(
+			browser,
+			blueprint,
 			run,
-			await probe( browser, blueprint, run, true ),
-		] );
+			true
+		);
+		summary.push( [ name, run, outcome ] );
+		if ( process.env.PROBE_RESULTS ) {
+			appendFileSync(
+				process.env.PROBE_RESULTS,
+				JSON.stringify( {
+					browser: browserName,
+					blueprint: name,
+					control: !! process.env.PROBE_ANY_BLOCK,
+					playground:
+						process.env.PROBE_PLAYGROUND ||
+						'https://playground.wordpress.net/',
+					run,
+					ok: outcome.startsWith( 'ok' ),
+					outcome,
+					blueprintError,
+				} ) + '\n'
+			);
+		}
 		// Space the loads out: playground.wordpress.net answers a burst of
 		// fresh visitors with 429 Too Many Requests.
 		await new Promise( ( resolve ) => setTimeout( resolve, 5000 ) );

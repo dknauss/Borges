@@ -820,6 +820,32 @@ email and feeds (`includes/email-output.php`).
 
 Status: backlog only; no design or code yet. Track the work in #243.
 
+### Self-hosted Playground for the demos (to consider, added 2026-11-09)
+
+Some cold loads of the README demos never reach the editor because
+Playground's own service worker fails to serve WordPress's core scripts
+(WordPress/wordpress-playground#4419). The daily probe (#282) reports it, but
+cannot prevent it. Serving our own build of Playground might: in a first CI
+experiment a same-origin copy on localhost booted 30 of 30 loads against 27 of
+30 for the public site, and faster. Findings, constraints, and how to rerun it
+are in `docs/playground-self-hosting.md`.
+
+Next steps, in order:
+
+1.  **Rerun with more loads** (10 or more per browser and blueprint, at a
+    busier hour) to see whether the gap holds.
+2.  **Pick a host** (Dan's call): a new GitHub user or organization Pages site
+    at a domain root, a custom subdomain, or Netlify. The build must sit at a
+    domain root and must be trimmed to one WordPress and one PHP version to fit
+    GitHub Pages' 1 GB cap. Cloudflare Pages is ruled out (25 MB per file).
+3.  **Build and deploy a trimmed copy** from CI, pinned to a Playground commit,
+    with a scheduled rebuild so it picks up Playground fixes.
+4.  **Probe it beside the public site** with `PROBE_PLAYGROUND` for a week
+    before pointing any README link at it, and keep the public links as the
+    fallback.
+
+Drop it if the rerun shows no real gap, or if #4419 is fixed upstream.
+
 ### Option B: citation child blocks
 
 Explore a future architecture where each citation becomes a child block instead
