@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Storybook for the editor components** (development only). `npm run storybook` shows the structured citation editor, the reorder controls, the editor notices, the heading alignment menu, and the repeated-authors setting in their different states, such as a journal article, a book, and manual entry, or each style's repeated-author choices, without a WordPress site. `npm run test:storybook` builds it and renders every story in Chromium, failing on an error or an axe accessibility violation; CI runs it in the a11y job. Nothing ships in the plugin: the release ZIP copies only its runtime files. See `docs/storybook.md`.
+- **Storybook for the editor components** (development only). `npm run storybook` shows the structured citation editor, the reorder controls, the editor notices, the heading alignment menu, and the repeated-authors setting in their different states, such as a journal article, a book, and manual entry, or each style's repeated-author choices, without a WordPress site. `npm run test:storybook` builds it and renders every story in Chromium, failing on an error or an axe accessibility violation; CI runs it in the a11y job, and on `main` deploys the checked build to GitHub Pages (the README's Storybook badge, https://dknauss.github.io/Borges/storybook/). Nothing ships in the plugin: the release ZIP copies only its runtime files. See `docs/storybook.md`.
 
 ### Changed
 

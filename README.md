@@ -12,6 +12,7 @@
 [![Playground: Release](https://img.shields.io/badge/Playground-Release-3858e9.svg?logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json)
 [![Playground: Main build](https://img.shields.io/badge/Playground-Main%20build-8858e9.svg?logo=wordpress&logoColor=white)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint-main.json)
 [![WordPress.org](https://img.shields.io/badge/WordPress.org-Install-21759b.svg?logo=wordpress&logoColor=white)](https://wordpress.org/plugins/borges-bibliography-builder/)
+[![Storybook](https://img.shields.io/badge/Storybook-Components-ff4785.svg?logo=storybook&logoColor=white)](https://dknauss.github.io/Borges/storybook/)
 
 Borges Bibliography Builder is named after Jorge Luis Borges (1899–1986), the Argentine writer, essayist, poet, and librarian whose work imagined infinite libraries, invented books, and self-referential labyrinths.
 

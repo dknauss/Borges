@@ -11,6 +11,13 @@ npm run storybook:build   # static build in storybook-static/
 npm run test:storybook    # build, then check every story
 ```
 
+The `main` branch's Storybook is online at
+<https://dknauss.github.io/Borges/storybook/> (the README's Storybook badge).
+On a push to `main`, the Playwright `a11y` job uploads the build it checked, and
+`publish-main-preview-pages` deploys it to GitHub Pages beside the main-preview
+ZIP, after the full CI suite passes and only while the commit is still `main`'s
+tip.
+
 ## What the check does
 
 `npm run test:storybook` builds Storybook, then `scripts/storybook-a11y.mjs`

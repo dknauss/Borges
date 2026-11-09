@@ -42,7 +42,7 @@ npm run storybook:build   # Static build in storybook-static/
 npm run test:storybook    # Build, then render every story in Chromium and fail on errors or axe violations
 ```
 
-Stories sit beside their components as `src/components/*.stories.js`. Storybook uses Vite, not wp-scripts' webpack: `.storybook/main.mjs` makes `.js` files JSX with the automatic runtime, and `.storybook/preview.jsx` loads the `@wordpress/components` CSS and `src/editor.scss` and wraps every story in `.wp-block-bibliography-builder-bibliography`, since the editor styles are scoped to it. Only components that read no data store have stories so far; see `docs/storybook.md`. None of it ships: `scripts/package-release.sh` copies only runtime files, and `.distignore` lists `.storybook/` and `storybook-static/`.
+Stories sit beside their components as `src/components/*.stories.js`. Storybook uses Vite, not wp-scripts' webpack: `.storybook/main.mjs` makes `.js` files JSX with the automatic runtime, and `.storybook/preview.jsx` loads the `@wordpress/components` CSS and `src/editor.scss` and wraps every story in `.wp-block-bibliography-builder-bibliography`, since the editor styles are scoped to it. Only components that read no data store have stories so far; see `docs/storybook.md`. On a push to `main`, the a11y job uploads the checked build and `publish-main-preview-pages` serves it at `https://dknauss.github.io/Borges/storybook/` (the README's Storybook badge). None of it ships: `scripts/package-release.sh` copies only runtime files, and `.distignore` lists `.storybook/` and `storybook-static/`.
 
 ### E2E / Integration
 
