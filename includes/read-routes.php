@@ -31,6 +31,30 @@ function bibliography_builder_get_request_params( WP_REST_Request $request ) {
 }
 
 /**
+ * Reads the citations to format from a `/format` request body.
+ *
+ * The editor sends them as `cslItems`. The write routes and abilities call
+ * the same list `items`, so `items` is accepted too; `cslItems` wins when a
+ * body has both. A missing key, or one that is not a list, returns null, so
+ * the route can answer 400 instead of an empty bibliography that looks like
+ * "nothing to format" (#272).
+ *
+ * @since 1.20.0
+ *
+ * @param array<array-key, mixed> $params Request parameters.
+ * @return array<array-key, mixed>|null The items, or null when none were sent.
+ */
+function bibliography_builder_get_format_request_items( array $params ) {
+	foreach ( array( 'cslItems', 'items' ) as $key ) {
+		if ( array_key_exists( $key, $params ) ) {
+			return is_array( $params[ $key ] ) ? $params[ $key ] : null;
+		}
+	}
+
+	return null;
+}
+
+/**
  * REST callback that formats CSL-JSON items as plain text.
  *
  * @param WP_REST_Request $request REST request.
@@ -65,7 +89,15 @@ function bibliography_builder_rest_format_citations( WP_REST_Request $request ) 
 	$style_key = isset( $params['style'] )
 		? sanitize_key( $params['style'] )
 		: bibliography_builder_default_style_key();
-	$csl_items = isset( $params['cslItems'] ) && is_array( $params['cslItems'] ) ? $params['cslItems'] : array();
+	$csl_items = bibliography_builder_get_format_request_items( $params );
+
+	if ( null === $csl_items ) {
+		return new WP_Error(
+			'bibliography_builder_formatter_missing_items',
+			__( 'Send "cslItems": a list of CSL-JSON objects to format.', 'borges-bibliography-builder' ),
+			array( 'status' => 400 )
+		);
+	}
 
 	if ( empty( $csl_items ) ) {
 		return rest_ensure_response(

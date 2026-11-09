@@ -65,7 +65,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
 
 - `bibliography_builder_block_init()` — registers block type from `block.json` on `init`
 - REST routes registered on `rest_api_init` at namespace `/bibliography/v1`:
-  - `POST /format` — formats CSL items via citeproc-php; requires `edit_posts`
+  - `POST /format` — formats CSL items via citeproc-php; requires `edit_posts`. The body's list is `cslItems` (`items`, the write routes' name, is accepted as an alias; `cslItems` wins); a body with neither, or a non-list, gets `400` `bibliography_builder_formatter_missing_items` (#272), while an empty list still returns `200` with no entries
   - `GET /pmid/{pmid}` — resolves PubMed/PMID records through a fixed NCBI/PMC CSL endpoint; requires `edit_posts`
   - `GET /pmcid/{pmcid}` — resolves PubMed Central/PMCID records through NCBI's fixed PMC CSL endpoint via the same shared resolver; requires `edit_posts`
   - Both NCBI routes return the record after `bibliography_builder_normalize_ncbi_csl()` dots bare initials, drops a "Pt" issue label, and drops an NLM journal subtitle that matches `container-title-short` (#270, #271); the editor applies the same rules in `src/lib/ncbi-normalize.js` to every NCBI path. Keep the two in step.

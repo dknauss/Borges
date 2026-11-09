@@ -244,6 +244,31 @@ function bibliography_builder_register_rest_routes() {
 			'methods'             => WP_REST_Server::CREATABLE,
 			'callback'            => 'bibliography_builder_rest_format_citations',
 			'permission_callback' => 'bibliography_builder_rest_format_permissions_check',
+			// Listed for the REST index. Items carry no schema here, so the callback's
+			// CSL validation still names the position of a bad one.
+			'args'                => array(
+				'cslItems' => array(
+					'description' => __(
+						'CSL-JSON items to format, up to 200. Send this or "items"; a request with neither gets a 400.',
+						'borges-bibliography-builder'
+					),
+					'type'        => 'array',
+				),
+				'items'    => array(
+					'description' => __(
+						'Alias of "cslItems", the name the write routes use. "cslItems" wins when both are sent.',
+						'borges-bibliography-builder'
+					),
+					'type'        => 'array',
+				),
+				'style'    => array(
+					'description' => __(
+						'Citation style key. Defaults to the plugin\'s default style.',
+						'borges-bibliography-builder'
+					),
+					'type'        => 'string',
+				),
+			),
 		)
 	);
 
