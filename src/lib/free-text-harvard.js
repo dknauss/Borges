@@ -92,9 +92,12 @@ export function parseHarvardNames( text ) {
 	}
 
 	if ( ! normalized.includes( ',' ) ) {
-		// An organization ("WordPress.org", "Mozilla"). A sentence ending in a
-		// full stop is a title that lost its author, not a name.
-		return /\.$/u.test( normalized ) ? [] : [ { literal: normalized } ];
+		// An organization ("WordPress.org", "Mozilla", "eBay"). A sentence
+		// ending in a full stop is a title that lost its author, and words
+		// starting in lower case ("a few friends") are prose, not a name.
+		return /\.$/u.test( normalized ) || /^\p{Ll}\S*\s/u.test( normalized )
+			? []
+			: [ { literal: normalized } ];
 	}
 
 	const parts = normalized
@@ -376,7 +379,8 @@ export function parseHarvardCitation( input ) {
 		}
 	}
 
-	if ( ! csl.title ) {
+	// A title needs a letter or digit: "‘’" is an empty pair of quotes.
+	if ( ! /[\p{L}\p{N}]/u.test( csl.title || '' ) ) {
 		return null;
 	}
 

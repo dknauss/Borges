@@ -165,7 +165,45 @@ describe( 'parseHarvardCitation', () => {
 		} );
 	} );
 
+	it( 'reads a quoted web page title and skips an unreadable access date', () => {
+		expect(
+			parseHarvardCitation(
+				'Knauss, D. (2026) ‘The page is an interface’. Available at: https://example.com/page (Accessed: sometime last week).'
+			)?.csl
+		).toEqual( {
+			type: 'webpage',
+			title: 'The page is an interface',
+			author: [ { family: 'Knauss', given: 'D.' } ],
+			issued: { 'date-parts': [ [ 2026 ] ] },
+			URL: 'https://example.com/page',
+		} );
+	} );
+
 	it.each( [
+		[
+			'a name list that is only "et al."',
+			'et al. (2001) Some book. Penguin.',
+		],
+		[
+			'a journal part that is not a volume, page, or month',
+			'Knuth, D.E. (1984) ‘Literate programming’, The Computer Journal, supplement.',
+		],
+		[
+			'editors that are not names',
+			'Borges, J.L. (1962) ‘The library of Babel’, in a few friends of mine (eds) Labyrinths. New Directions.',
+		],
+		[
+			'a quoted title followed by something unknown',
+			'Knuth, D.E. (1984) ‘Literate programming’ and other essays. Addison-Wesley.',
+		],
+		[
+			'a page with no author and no link',
+			'Structured data is valid (2019) Available at:',
+		],
+		[
+			'an empty quoted title',
+			'Structured data is valid (2019) ‘’. Available at: https://example.com/',
+		],
 		[
 			'APA, with a full stop after the year',
 			'Grafton, A. (1997). The footnote: A curious history. Harvard University Press.',
