@@ -216,7 +216,7 @@ function bibliography_builder_json_ld_identifiers( $csl ) {
  * one ("Holanda"), which is not; microformats' `p-family-name` does the same.
  * A one-part name in `given` ("Plato") is its own `name`.
  *
- * @since 1.20.0
+ * @since 1.19.1
  *
  * @param mixed $name CSL name object.
  * @return array|null
@@ -310,7 +310,7 @@ function bibliography_builder_json_ld_names( $names ) {
  * is kept. save() writes one author per CSL name, in order; when the counts
  * differ the markup is not what save() wrote, and it is left alone.
  *
- * @since 1.20.0
+ * @since 1.19.1
  *
  * @param mixed $authors The `author` save() wrote.
  * @param mixed $names   The CSL `author` list.
