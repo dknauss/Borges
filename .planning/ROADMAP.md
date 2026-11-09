@@ -758,6 +758,53 @@ Status:
 -   prefer a design memo before implementation because this changes Borges from
     read-mostly output tooling into remote content management infrastructure
 
+### Note and footnote mode (to consider, added 2026-11-09)
+
+Many writers cite with numbered notes rather than a bibliography: a
+superscript number in the text and the note at the foot of the post. iA's
+essays (ia.net, studied 2026-11-09) are a clean example: Markdown-style
+endnotes, `role="doc-noteref"` on each marker, a `role="doc-endnotes"` list
+after a rule, and a ↩ `role="doc-backlink"` from each note to its marker, but
+no bibliography, no structured data, and sources only as links inside the
+notes. Borges today has the bibliography and the in-text **Cite** format, whose
+short forms (including the Chicago short note) appear in the text itself, not
+in a numbered note. A note mode would give notes-family users (Chicago
+Notes-Bibliography, OSCOLA) the form their manuals expect, and give everyone
+else footnotes that carry real citation records.
+
+Possible shape, to decide before building:
+
+-   **Build on core's Footnotes block** (WordPress 6.3+), not a second footnote
+    system. Core stores notes in the `footnotes` post meta and writes
+    `<sup data-fn="…" class="fn"><a href="#…" id="…-link">n</a></sup>` markers
+    with a `core/footnotes` list and ↩ backlinks. A Borges citation could be
+    inserted as, or inside, a core footnote, with the note's text the full
+    note form for the first citation of a work and the short form after it.
+    Check how core numbers, renumbers, and sanitizes notes before relying on
+    it, and whether its markup can carry `data-bibliography-ref`.
+-   **Note text by style.** Chicago 18th ed. full note on first citation, short
+    note after (CMOS 13.32); OSCOLA full citation first, then the short form
+    with a cross-reference ("n 3"). citeproc-php can render CSL citations as
+    well as bibliography entries; whether the bundled styles' `<citation>`
+    layouts are complete enough is to be checked.
+-   **Bibliography optional.** In a note mode the bibliography block could be
+    hidden or omitted, with the notes still carrying JSON-LD and COinS through
+    the render-time enrichment, or kept as a "Works cited" list.
+-   **Accessibility.** `role="doc-noteref"` and `doc-endnotes` on the notes,
+    `role="doc-biblioref"` on links into the bibliography, and backlinks from
+    note to marker. Two smaller items stand on their own and could come
+    first, both in render-time filters so `save()` is unchanged:
+    `role="doc-biblioref"` on the **Cite** format's links (they have no role
+    today), and the bibliography back-links already listed in SPEC.md
+    ("Future: In-Text Citation Integration").
+
+Open questions: whether to depend on core Footnotes or write Borges's own
+note list; how note numbering interacts with numeric styles' `[n]`; whether to use ibid. at
+all (Chicago prefers short notes to it; check OSCOLA 5's rule); and how notes appear in
+email and feeds (`includes/email-output.php`).
+
+Status: backlog only; no design or code yet.
+
 ### Option B: citation child blocks
 
 Explore a future architecture where each citation becomes a child block instead
