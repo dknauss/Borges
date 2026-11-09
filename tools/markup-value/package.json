@@ -10,6 +10,7 @@
 		"zotero": "node zotero-coins.mjs",
 		"parser": "node parser-baseline.mjs",
 		"borges-parser": "node borges-parser.mjs",
+		"anystyle-precision": "node anystyle-precision.mjs",
 		"llm": "node llm-baseline.mjs",
 		"sweep": "node sweep.mjs",
 		"zotero-ts": "node zotero-translate.mjs",

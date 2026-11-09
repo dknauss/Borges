@@ -964,6 +964,71 @@ describe( 'parseFreeTextCitation', () => {
 		} );
 	} );
 
+	describe( 'labelled articles in styles the parser does not read', () => {
+		it.each( [
+			[
+				'IEEE',
+				'A. B. Smith and C. D. Jones, "A study of things," IEEE Trans. Softw. Eng., vol. 12, no. 3, pp. 34–43, 2001.',
+			],
+			[
+				'ABNT',
+				'SMITH, João. Estudo das coisas. Revista de Coisas, v. 12, n. 3, p. 34-43, 2001.',
+			],
+			[
+				'MLA',
+				'Hayes, Tom. “William Blake’s Androgynous Ego-Ideal.” ELH, vol. 71, no. 1, 2004, pp. 141-65.',
+			],
+			[
+				'an article title quoted inside a book title',
+				'Andrews, Victor L. "Captive Finance Companies," Harvard Business Review, Volume 42 (July-August, 1964).',
+			],
+			[
+				'a second ABNT author read as the title',
+				'BERNARD, Paul. TROUVE, Simone. Sémiologie psychiatrique. Paris : MASSON, 1997. 259 p.',
+			],
+			[
+				'an IEEE web page',
+				'“citation.” Schema.org. Accessed: Oct. 27, 2026. [Online]. Available: https://schema.org/citation',
+			],
+			[
+				'a page range read as the publisher',
+				'J. P. Callan, "Document Filtering With Inference Networks," Proceedings of SIGIR, 262-269, 1996.',
+			],
+		] )(
+			'declines %s instead of returning a wrong record',
+			( _, input ) => {
+				expect( parseFreeTextCitation( input ) ).toBeNull();
+			}
+		);
+
+		it( 'keeps a book whose title names a volume', () => {
+			expect(
+				parseFreeTextCitation(
+					'Karl Marx, Capital, vol. 1 (Penguin, 1976), 125.'
+				)?.csl
+			).toMatchObject( {
+				type: 'book',
+				title: 'Capital, vol. 1',
+				publisher: 'Penguin',
+			} );
+		} );
+	} );
+
+	describe( 'list numbering', () => {
+		const book =
+			'Binder, Amy J., and Jeffrey L. Kidder. The Channels of Student Activism. University of Chicago Press, 2022.';
+
+		it.each( [ '[1] ', '12. ', '3) ', '(40) ' ] )(
+			'ignores a leading "%s"',
+			( prefix ) => {
+				expect( parseFreeTextCitation( book ) ).not.toBeNull();
+				expect( parseFreeTextCitation( prefix + book ) ).toEqual(
+					parseFreeTextCitation( book )
+				);
+			}
+		);
+	} );
+
 	describe( 'Chicago "Place: Publisher" publication data', () => {
 		it( 'splits the place from the publisher before a URL tail', () => {
 			expect(

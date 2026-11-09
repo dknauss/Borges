@@ -906,6 +906,38 @@ describe( 'parsePastedInput', () => {
 		expect( formatBibliographyEntries ).not.toHaveBeenCalled();
 	} );
 
+	it( 'flags a low-confidence free-text parse for review', async () => {
+		const result = await parsePastedInput(
+			'Amy J. Binder and Jeffrey L. Kidder, “Student Politics and Institutional Change,” in The Channels of Student Activism, ed. Carla Reyes (University of Chicago Press, 2022), 117–18.'
+		);
+
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ] ).toMatchObject( {
+			inputFormat: 'freetext',
+			csl: { type: 'chapter' },
+			parseWarnings: [ 'free-text-low-confidence' ],
+		} );
+	} );
+
+	it( 'does not flag a medium-confidence free-text parse', async () => {
+		const result = await parsePastedInput(
+			'Binder, Amy J., and Jeffrey L. Kidder. The Channels of Student Activism. University of Chicago Press, 2022.'
+		);
+
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.entries[ 0 ].parseWarnings ).toEqual( [] );
+	} );
+
+	it( 'declines a labelled IEEE article instead of reading it as a book', async () => {
+		const result = await parsePastedInput(
+			'[1] A. B. Smith and C. D. Jones, "A study of things," IEEE Trans. Softw. Eng., vol. 12, no. 3, pp. 34–43, 2001.'
+		);
+
+		expect( result.entries ).toEqual( [] );
+		expect( result.errors ).toHaveLength( 1 );
+	} );
+
 	it( 'parses sentence-style free-text book citations via the parser backend', async () => {
 		const result = await parsePastedInput(
 			'Binder, Amy J., and Jeffrey L. Kidder. The Channels of Student Activism: How the Left and Right Are Winning (and Losing) in Campus Politics Today. University of Chicago Press, 2022.'

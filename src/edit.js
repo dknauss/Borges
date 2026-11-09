@@ -49,7 +49,10 @@ import {
 	getStyleDefinition,
 } from './lib/formatting';
 import { HEADING_LEVELS, getHeadingTag } from './lib/heading-level';
-import { SUPPORTED_INPUT_MESSAGE } from './lib/input-support';
+import {
+	FREE_TEXT_LOW_CONFIDENCE_WARNING,
+	SUPPORTED_INPUT_MESSAGE,
+} from './lib/input-support';
 import { sortCitations } from './lib/sorter';
 import { getGroupLabelTag, groupCitations } from './lib/bibliography-groups';
 import { computeExportStrings } from './hooks/compute-export-strings';
@@ -70,6 +73,10 @@ import {
 const WARNING_MESSAGES = {
 	'review-metadata-incomplete': __(
 		'Imported metadata may be incomplete. Verify before publishing.',
+		'borges-bibliography-builder'
+	),
+	[ FREE_TEXT_LOW_CONFIDENCE_WARNING ]: __(
+		'Read from pasted text without an identifier. Check the fields before publishing.',
 		'borges-bibliography-builder'
 	),
 };

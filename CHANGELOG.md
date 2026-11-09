@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Pasted citations the editor can't read are turned away instead of read wrongly.** A labelled journal article in IEEE, ABNT, or MLA form ("vol. 12, no. 3, pp. 34–43") pasted with no DOI was read as a book, with the volume and issue in its title and the page range as its publisher. It now gets the "Paste a DOI…" notice, as other citations the editor doesn't read do. A numbered entry ("[1] …", "12. …") is read without its number, which used to end up in the first author's name. Citations read by the parser's less certain patterns (chapters, web pages, APA-style books and articles, and articles with "et al." or semicolon-separated authors) now show "Read from pasted text without an identifier. Check the fields before publishing." under the entry and count toward the import notice's "Review N imported records"; editing the entry's fields clears it. ([#231](https://github.com/dknauss/Borges/issues/231))
+
 ## [1.19.1] - 2026-11-09
 
 ### Changed

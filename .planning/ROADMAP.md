@@ -515,7 +515,10 @@ Chicago author-date 1%.
    (1) pass the block's style to `parseFreeTextCitation()` as a hint, plus
    Harvard; (2) IEEE and Vancouver; (3) ABNT; (4) OSCOLA secondary sources.
    The risk is degrading APA and Chicago, not size: the parser is in the lazy
-   import chunk, never on the front end
+   import chunk, never on the front end. Scoped in
+   `docs/planning/free-text-styles-plan.md`, which adds a Phase 0 first: the
+   parser misreads labelled IEEE and ABNT articles as books today, and drops
+   the confidence it computes
 4. **Decide whether the write routes should ever be on by default.** The
    Phase 05 memo left this open; today they need the
    `bibliography_builder_enable_write_routes` filter
