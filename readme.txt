@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.19.0
+Stable tag: 1.19.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -201,6 +201,12 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 
 == Changelog ==
 
+= 1.19.1 =
+* **Fixed:** OSCOLA tables of legislation and treaties print titles in roman, as OSCOLA 5 asks, not italics.
+* **Fixed:** OSCOLA statutory instruments keep their SI number ("Air Navigation Order 2016, SI 2016/765").
+* **Fixed:** JSON-LD author names keep their particles ("Ludwig van Beethoven"). Published posts are corrected without being re-saved.
+* **Fixed:** after **Update citations**, the "Citation style changed" notice is dismissed.
+
 = 1.19.0 =
 * **Added:** in-text and margin citations. A **Cite** control in the toolbar links a short citation in any paragraph, heading, list item, or quote (including a theme's margin-note or gloss style) to an entry in a bibliography on the same post, with an optional page, chapter, or section. The short form follows the bibliography's style: a Chicago short note, "(Author Year, page)", or "[2]". Citations are plain links to their entries, so they work with no script on the page.
 * **Added:** **Update citations**. After a style change, a notice and the bibliography's new "Citations in this post" panel rewrite every citation the editor wrote in the new style and numbering, keeping its page, as one step you can undo. Citations you reworded are left alone unless you choose otherwise.
@@ -278,6 +284,9 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 For 1.9.1 and earlier, see the full [changelog on GitHub](https://github.com/dknauss/Borges/blob/main/CHANGELOG.md).
 
 == Upgrade Notice ==
+
+= 1.19.1 =
+OSCOLA fixes (roman titles in tables of legislation and treaties, SI numbers) and name particles in JSON-LD author names. Existing blocks stay valid. No configuration changes required.
 
 = 1.19.0 =
 In-text and margin citations with Update citations after a style change; annotated bibliographies; microformats for each entry; full citation records in Yoast SEO's graph. Existing blocks stay valid. No configuration changes required.
