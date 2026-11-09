@@ -4,7 +4,7 @@ Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citation, doi, bibtex, academic
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 1.19.1
+Stable tag: 1.20.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -201,6 +201,15 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 
 == Changelog ==
 
+= 1.20.0 =
+* **Added:** a "Repeated authors" setting. MLA 9 and OSCOLA blocks can write repeated names out instead of using their marks, Chicago blocks can use the 17th edition's 3-em dash ("———."), and ABNT blocks NBR 6023:2002's underscore line ("______."). Screen readers hear the names, and copied text and exports keep them.
+* **Added:** Harvard, IEEE, and Vancouver citations can be pasted as text with no DOI or other identifier, and are read into their fields: journal articles, books, chapters, conference papers, preprints, encyclopedia entries, and web pages (and theses in IEEE). Check the fields before publishing, as the note under each such entry asks.
+* **Changed:** the bibliography heading is centered again, as APA, MLA, Chicago, Turabian, and ABNT ask, with a new "Heading Alignment" setting to put it at the start of the line. A theme can still set its own alignment.
+* **Changed:** clearer wording in the "Citations in this post" panel ("in-text citations", "edited by hand").
+* **Fixed:** PubMed and PubMed Central records print cleanly: bare initials get their periods, an issue sent as "Pt 8" prints as "8", and an NLM journal subtitle ("Brain : a journal of neurology") is dropped when the record's short title says so.
+* **Fixed:** pasted citations the editor can't read are turned away instead of read wrongly, numbered entries ("[1] …") lose their numbers, and citations read by the parser's less certain patterns ask you to check their fields.
+* **Fixed:** `POST /bibliography/v1/format` answers `400` when a request sends no `cslItems` list, instead of an empty bibliography, and accepts `items` as an alias.
+
 = 1.19.1 =
 * **Fixed:** OSCOLA tables of legislation and treaties print titles in roman, as OSCOLA 5 asks, not italics.
 * **Fixed:** OSCOLA statutory instruments keep their SI number ("Air Navigation Order 2016, SI 2016/765").
@@ -284,6 +293,9 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 For 1.9.1 and earlier, see the full [changelog on GitHub](https://github.com/dknauss/Borges/blob/main/CHANGELOG.md).
 
 == Upgrade Notice ==
+
+= 1.20.0 =
+Repeated authors setting; Harvard, IEEE, and Vancouver citations paste as text; the heading is centered again, with a Heading Alignment setting; cleaner PubMed records. Existing blocks stay valid. No configuration changes required.
 
 = 1.19.1 =
 OSCOLA fixes (roman titles in tables of legislation and treaties, SI numbers) and name particles in JSON-LD author names. Existing blocks stay valid. No configuration changes required.

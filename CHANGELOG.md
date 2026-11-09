@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-11-09
+
 ### Added
 
 - **Repeated authors setting.** A new block setting, "Repeated authors" (`repeatedAuthorMark`), chooses how an entry by the same authors as the entry before it begins. MLA 9 and OSCOLA 5 blocks can write the names out instead of using their marks; Chicago blocks can use the 17th edition's 3-em dash (`———.`), and ABNT blocks NBR 6023:2002's underscore line (`______.`), for writers and journals that still ask for them. Screen readers hear the names, and copied text and exports keep them. Existing blocks save exactly as before. The write routes' settings `PATCH`, the read routes, the abilities, and `wp borges list` carry the setting. ([#242](https://github.com/dknauss/Borges/issues/242))
