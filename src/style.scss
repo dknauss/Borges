@@ -26,6 +26,14 @@
 	text-align: center;
 }
 
+/*
+ * The block's Heading Alignment setting (`headingAlign: "start"`). A choice
+ * made on the block keeps the full selector, so it beats a theme's default.
+ */
+.wp-block-bibliography-builder-bibliography .bibliography-builder-heading-align-start {
+	text-align: start;
+}
+
 /* OSCOLA tables: a label above each group's list (bibliography-groups.js). */
 .wp-block-bibliography-builder-bibliography {
 

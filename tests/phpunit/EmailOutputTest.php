@@ -65,7 +65,7 @@ final class EmailOutputTest extends TestCase {
 		);
 	}
 
-	public function test_a_real_heading_is_left_to_the_email_client(): void {
+	public function test_a_real_heading_gets_only_its_alignment(): void {
 		$html = str_replace(
 			'<p class="bibliography-builder-heading" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01">Works &amp; &lt;Sources></p>',
 			'<h3 class="bibliography-builder-heading" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01">Works &amp; &lt;Sources></h3>',
@@ -73,8 +73,30 @@ final class EmailOutputTest extends TestCase {
 		);
 
 		$this->assertStringContainsString(
-			'<h3 class="bibliography-builder-heading" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01">Works &amp; &lt;Sources></h3>',
+			'<h3 class="bibliography-builder-heading" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01" style="text-align:center">Works &amp; &lt;Sources></h3>',
 			bibliography_builder_portable_markup( $html )
+		);
+	}
+
+	public function test_a_start_aligned_heading_stays_start_aligned(): void {
+		$paragraph = str_replace(
+			'<p class="bibliography-builder-heading" id=',
+			'<p class="bibliography-builder-heading bibliography-builder-heading-align-start" id=',
+			self::current_markup()
+		);
+		$heading   = str_replace(
+			array( '<p class="bibliography-builder-heading" id=', 'Works &amp; &lt;Sources></p>' ),
+			array( '<h2 class="bibliography-builder-heading bibliography-builder-heading-align-start" id=', 'Works &amp; &lt;Sources></h2>' ),
+			self::current_markup()
+		);
+
+		$this->assertStringContainsString(
+			'<p class="bibliography-builder-heading bibliography-builder-heading-align-start" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01" style="margin:0 0 0.75em;font-size:1.25em;font-weight:600;text-align:start"><strong>Works &amp; &lt;Sources></strong></p>',
+			bibliography_builder_portable_markup( $paragraph )
+		);
+		$this->assertStringContainsString(
+			'<h2 class="bibliography-builder-heading bibliography-builder-heading-align-start" id="bibliography-heading-3f1c2b7e-9a4d-4c1e-8f2a-5b6c7d8e9f01" style="text-align:start">Works &amp; &lt;Sources></h2>',
+			bibliography_builder_portable_markup( $heading )
 		);
 	}
 

@@ -947,13 +947,47 @@ describe( 'parsePastedInput', () => {
 		expect( result.entries[ 0 ].parseWarnings ).toEqual( [] );
 	} );
 
-	it( 'declines a labelled IEEE article instead of reading it as a book', async () => {
+	it( 'reads a numbered, labelled IEEE article as an article, not a book', async () => {
 		const result = await parsePastedInput(
-			'[1] A. B. Smith and C. D. Jones, "A study of things," IEEE Trans. Softw. Eng., vol. 12, no. 3, pp. 34–43, 2001.'
+			'[1] A. B. Smith and C. D. Jones, "A study of things," IEEE Trans. Softw. Eng., vol. 12, no. 3, pp. 34–43, 2001.',
+			'ieee'
 		);
 
-		expect( result.entries ).toEqual( [] );
-		expect( result.errors ).toHaveLength( 1 );
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries[ 0 ] ).toMatchObject( {
+			inputFormat: 'freetext',
+			parseWarnings: [ 'free-text-low-confidence' ],
+			csl: {
+				type: 'article-journal',
+				title: 'A study of things',
+				author: [
+					{ given: 'A. B.', family: 'Smith' },
+					{ given: 'C. D.', family: 'Jones' },
+				],
+				page: '34–43',
+			},
+		} );
+	} );
+
+	it( 'reads a numbered Vancouver article pasted into a Vancouver bibliography', async () => {
+		const result = await parsePastedInput(
+			'1. Smith AB, Jones CD. A study of things. Lancet. 2001;284(5):34-43.',
+			'vancouver'
+		);
+
+		expect( result.errors ).toEqual( [] );
+		expect( result.entries[ 0 ] ).toMatchObject( {
+			inputFormat: 'freetext',
+			parseWarnings: [ 'free-text-low-confidence' ],
+			csl: {
+				type: 'article-journal',
+				title: 'A study of things',
+				'container-title': 'Lancet',
+				volume: '284',
+				issue: '5',
+				page: '34-43',
+			},
+		} );
 	} );
 
 	it( 'parses sentence-style free-text book citations via the parser backend', async () => {

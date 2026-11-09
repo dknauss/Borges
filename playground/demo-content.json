@@ -87,7 +87,7 @@
 		},
 		{
 			"title": "Formatted citations",
-			"description": "Plain-text citations for books, journal articles, chapters, and webpages, in Chicago, APA, or Harvard shape. A citation that contains a DOI, PMID, PMCID, or arXiv ID is looked up by that identifier instead. Borges is less sure of some shapes, such as the chapter, webpage, and Harvard samples here, and marks them for review: check their fields before publishing.",
+			"description": "Plain-text citations for books, journal articles, chapters, and webpages, in Chicago, APA, Harvard, IEEE, or Vancouver shape. A citation that contains a DOI, PMID, PMCID, or arXiv ID is looked up by that identifier instead. Borges is less sure of some shapes, such as the chapter, webpage, Harvard, IEEE, and Vancouver samples here, and marks them for review: check their fields before publishing.",
 			"samples": [
 				{
 					"format": "freetext",
@@ -114,6 +114,14 @@
 					"input": "Grafton, A. (1997) The footnote: a curious history. Cambridge, MA: Harvard University Press."
 				},
 				{
+					"format": "freetext",
+					"input": "T. Berners-Lee, J. Hendler, and O. Lassila, “The semantic web,” Scientific American, vol. 284, no. 5, pp. 34–43, May 2001."
+				},
+				{
+					"format": "freetext",
+					"input": "Geertz C. Thick description: toward an interpretive theory of culture. In: The interpretation of cultures. New York: Basic Books; 1973. p. 3-30."
+				},
+				{
 					"format": "doi",
 					"embedded": true,
 					"input": "Dittmar, Emily L., and Douglas W. Schemske. “Temporal Variation in Selection Influences Microgeographic Local Adaptation.” American Naturalist 202, no. 4 (2023): 471–85. https://doi.org/10.1086/725865."
@@ -123,7 +131,7 @@
 	],
 	"features": [
 		"<strong>Citation Style</strong> (block sidebar): nine styles, Chicago Notes-Bibliography and Author-Date, APA 7, MLA 9, Harvard, IEEE, Vancouver, OSCOLA, and ABNT. Section 3 has an example of each. Switching reformats the generated text and keeps your manual edits.",
-		"<strong>Heading</strong>: type the heading in the block, and choose its level in the sidebar: H2 (where a new block starts) to H6, or <em>Paragraph</em> for styled text that stays out of the page outline. Leave it empty for no heading.",
+		"<strong>Heading</strong>: type the heading in the block, and choose its level in the sidebar: H2 (where a new block starts) to H6, or <em>Paragraph</em> for styled text that stays out of the page outline. <em>Heading Alignment</em> centers it, as APA, MLA, Chicago, and ABNT ask, or sets it to the start of the line; the Vancouver example in section 3 uses Start. Leave it empty for no heading.",
 		"<strong>Edit fields</strong>: click any citation to correct its authors, title, year, DOI, and other fields; only the fields you change are saved. The pencil edits the displayed text instead, and <em>Reset edits</em> restores the generated text.",
 		"<strong>Manual Entry</strong>: next to <em>Paste / Import</em>, add a citation field by field when there is nothing to paste.",
 		"<strong>Duplicates</strong>: paste a DOI that is already in the list; it is skipped, not added twice.",
@@ -541,12 +549,13 @@
 		},
 		{
 			"title": "Vancouver: biomedical references",
-			"description": "Numbered entries with PubMed IDs; authors after the sixth become “et al.” <strong>Settings:</strong> embedded CSL-JSON on (a <code>script</code> tag other tools can read), beside the default JSON-LD; heading <em>References</em> at level H4.",
+			"description": "Numbered entries with PubMed IDs; authors after the sixth become “et al.” <strong>Settings:</strong> embedded CSL-JSON on (a <code>script</code> tag other tools can read), beside the default JSON-LD; heading <em>References</em> at level H4, with <em>Heading Alignment</em> set to <em>Start</em> so it lines up with the numbered entries (Vancouver leaves the heading to each journal; the other examples keep the centered default, needs Borges 1.20.0 or later).",
 			"attributes": {
 				"bibliographyId": "demo-vancouver",
 				"citationStyle": "vancouver",
 				"headingText": "References",
 				"headingLevel": 4,
+				"headingAlign": "start",
 				"outputJsonLd": true,
 				"outputCoins": false,
 				"outputCslJson": true,

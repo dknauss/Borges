@@ -154,6 +154,7 @@ function bibliography_builder_cli_list_rows( $post ) {
 				'entryCount'         => $bibliography['entryCount'],
 				'headingText'        => $bibliography['headingText'],
 				'headingLevel'       => $bibliography['headingLevel'],
+				'headingAlign'       => $bibliography['headingAlign'],
 				'outputJsonLd'       => $bibliography['outputJsonLd'],
 				'outputCoins'        => $bibliography['outputCoins'],
 				'outputCslJson'      => $bibliography['outputCslJson'],

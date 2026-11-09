@@ -967,10 +967,6 @@ describe( 'parseFreeTextCitation', () => {
 	describe( 'labelled articles in styles the parser does not read', () => {
 		it.each( [
 			[
-				'IEEE',
-				'A. B. Smith and C. D. Jones, "A study of things," IEEE Trans. Softw. Eng., vol. 12, no. 3, pp. 34–43, 2001.',
-			],
-			[
 				'ABNT',
 				'SMITH, João. Estudo das coisas. Revista de Coisas, v. 12, n. 3, p. 34-43, 2001.',
 			],
@@ -987,10 +983,6 @@ describe( 'parseFreeTextCitation', () => {
 				'BERNARD, Paul. TROUVE, Simone. Sémiologie psychiatrique. Paris : MASSON, 1997. 259 p.',
 			],
 			[
-				'an IEEE web page',
-				'“citation.” Schema.org. Accessed: Oct. 27, 2026. [Online]. Available: https://schema.org/citation',
-			],
-			[
 				'a page range read as the publisher',
 				'J. P. Callan, "Document Filtering With Inference Networks," Proceedings of SIGIR, 262-269, 1996.',
 			],
@@ -1000,6 +992,30 @@ describe( 'parseFreeTextCitation', () => {
 				expect( parseFreeTextCitation( input ) ).toBeNull();
 			}
 		);
+
+		it( 'reads the IEEE ones with the IEEE pattern, not as books', () => {
+			expect(
+				parseFreeTextCitation(
+					'A. B. Smith and C. D. Jones, "A study of things," IEEE Trans. Softw. Eng., vol. 12, no. 3, pp. 34–43, 2001.'
+				)?.csl
+			).toMatchObject( {
+				type: 'article-journal',
+				title: 'A study of things',
+				'container-title': 'IEEE Trans. Softw. Eng.',
+				volume: '12',
+				issue: '3',
+			} );
+			expect(
+				parseFreeTextCitation(
+					'“citation.” Schema.org. Accessed: Oct. 27, 2026. [Online]. Available: https://schema.org/citation'
+				)?.csl
+			).toMatchObject( {
+				type: 'webpage',
+				title: 'citation',
+				'container-title': 'Schema.org',
+				URL: 'https://schema.org/citation',
+			} );
+		} );
 
 		it( 'keeps a book whose title names a volume', () => {
 			expect(

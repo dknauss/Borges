@@ -600,6 +600,23 @@ function bibliography_builder_save_heading_tag( $heading_level ) {
 }
 
 /**
+ * The extra class for the block heading at a `headingAlign` attribute value:
+ * `bibliography-builder-heading-align-start` for `start`, or an empty string
+ * for `center` (the default) and anything else, so blocks saved before the
+ * setting existed print the same markup.
+ *
+ * `getHeadingAlignClass()` from `src/lib/heading-level.js`.
+ *
+ * @since 1.20.0
+ *
+ * @param mixed $heading_align The `headingAlign` attribute.
+ * @return string
+ */
+function bibliography_builder_save_heading_align_class( $heading_align ) {
+	return 'start' === $heading_align ? 'bibliography-builder-heading-align-start' : '';
+}
+
+/**
  * The element for group labels: one level below the block heading, or `p`
  * when the block heading is `p` or `h6`. `getGroupLabelTag()` from
  * `src/lib/bibliography-groups.js`.
@@ -665,9 +682,16 @@ function bibliography_builder_render_save_markup( $attrs ) {
 			isset( $attrs['headingLevel'] ) ? $attrs['headingLevel'] : 0
 		);
 
+		// The block's `headingAlign` (1.20.0): no extra class unless `start`.
+		$align_class = bibliography_builder_save_heading_align_class(
+			isset( $attrs['headingAlign'] ) ? $attrs['headingAlign'] : 'center'
+		);
+
 		$html .= '<' . $heading_tag . bibliography_builder_save_attributes(
 			array(
-				'class' => 'bibliography-builder-heading',
+				'class' => '' !== $align_class
+					? 'bibliography-builder-heading ' . $align_class
+					: 'bibliography-builder-heading',
 				'id'    => $heading_id,
 			)
 		) . '>'
