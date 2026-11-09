@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console, import/no-extraneous-dependencies -- a CLI report; playwright comes with @playwright/test */
 /**
  * Live Playground probe.
  *
@@ -14,14 +15,22 @@
  *   node scripts/playground-live-probe.mjs [blueprint-url ...]
  *
  * Environment:
- *   PROBE_RUNS     Fresh-profile loads per blueprint (default 3).
- *   PROBE_TIMEOUT  Milliseconds to wait for the editor (default 90000).
- *   PROBE_ANY_BLOCK  Count any block as ready (for control blueprints).
- *   PROBE_BROWSER  chromium (default), firefox, or webkit (Safari's engine).
+ *   PROBE_RUNS       Fresh-profile loads per blueprint (default 3).
+ *   PROBE_TIMEOUT    Milliseconds to wait for the editor (default 90000).
+ *   PROBE_BROWSER    chromium (default), firefox, or webkit (Safari's engine).
+ *   PROBE_ANY_BLOCK  Count any block as ready, for a control blueprint
+ *                    without Borges (scripts/probe-fixtures/).
+ *
+ * A load passes when the block editor initializes with a Borges block in it,
+ * not merely when its markup appears: in November 2026 some Chromium loads
+ * rendered the page while Playground's service worker failed to serve core
+ * editor scripts (a11y.min.js, url.min.js), so the editor never started. The
+ * exit code is 1 when any load fails.
  *
  * It needs a browser that can reach playground.wordpress.net, so it is run
  * by .github/workflows/playground-live-probe.yml, not in CI's normal jobs.
  */
+import { appendFileSync } from 'node:fs';
 import { chromium, firefox, webkit } from 'playwright';
 
 const DEFAULT_BLUEPRINTS = [
@@ -62,15 +71,17 @@ async function editorReady( page ) {
 					editor &&
 					editor
 						.getBlocks()
-						.some( ( block ) =>
-							anyBlock || block.name.startsWith( 'bibliography-builder/' )
+						.some(
+							( block ) =>
+								anyBlock ||
+								block.name.startsWith( 'bibliography-builder/' )
 						)
 				);
 			}, !! process.env.PROBE_ANY_BLOCK );
 			if ( ready ) {
 				return true;
 			}
-		} catch ( e ) {
+		} catch {
 			// Frame navigated away; try the next one.
 		}
 	}
@@ -91,7 +102,7 @@ async function errorScreen( page ) {
 				const text = await frame.locator( 'body' ).innerText();
 				return text.replace( /\s+/g, ' ' ).slice( 0, 1500 );
 			}
-		} catch ( e ) {
+		} catch {
 			// Ignore detached frames.
 		}
 	}
@@ -111,7 +122,8 @@ async function probe( browser, blueprint, run, retryInTab ) {
 	const context = await browser.newContext();
 	const page = await context.newPage();
 	const started = Date.now();
-	const since = () => `${ ( ( Date.now() - started ) / 1000 ).toFixed( 1 ) }s`;
+	const since = () =>
+		`${ ( ( Date.now() - started ) / 1000 ).toFixed( 1 ) }s`;
 	const log = ( line ) => console.log( `  [${ since() }] ${ line }` );
 	const requestStart = new Map();
 
@@ -127,9 +139,7 @@ async function probe( browser, blueprint, run, retryInTab ) {
 		}
 		const res = await req.response();
 		const ms = Date.now() - requestStart.get( req );
-		log(
-			`← ${ res ? res.status() : '???' } ${ ms }ms ${ req.url() }`
-		);
+		log( `← ${ res ? res.status() : '???' } ${ ms }ms ${ req.url() }` );
 	} );
 	// Every failed request, whatever its host: a script the editor needs
 	// failing to load is as fatal as a blueprint fetch failing.
@@ -214,11 +224,32 @@ for ( const blueprint of blueprints ) {
 			run,
 			await probe( browser, blueprint, run, true ),
 		] );
+		// Space the loads out: playground.wordpress.net answers a burst of
+		// fresh visitors with 429 Too Many Requests.
+		await new Promise( ( resolve ) => setTimeout( resolve, 5000 ) );
 	}
 }
 await browser.close();
 
+const failed = summary.filter(
+	( [ , , outcome ] ) => ! outcome.startsWith( 'ok' )
+);
+const lines = summary.map(
+	( [ name, run, outcome ] ) => `- ${ name } run ${ run }: ${ outcome }`
+);
 console.log( '\n=== Summary' );
-for ( const [ name, run, outcome ] of summary ) {
-	console.log( `${ name } run ${ run }: ${ outcome }` );
+console.log( lines.join( '\n' ) );
+
+// On GitHub Actions, put the summary on the run's page too.
+if ( process.env.GITHUB_STEP_SUMMARY ) {
+	appendFileSync(
+		process.env.GITHUB_STEP_SUMMARY,
+		`### ${ browserName }: ${ summary.length - failed.length } of ${
+			summary.length
+		} loads booted the editor\n\n${ lines.join( '\n' ) }\n\n`
+	);
 }
+
+// Any load that never reached the editor fails the job, so a run's status
+// says whether Playground was healthy. The log above says why.
+process.exitCode = failed.length ? 1 : 0;

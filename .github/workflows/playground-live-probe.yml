@@ -1,22 +1,22 @@
 name: Playground Live Probe
 
 # Opens the README's Playground demo links on playground.wordpress.net in a
-# fresh browser profile and reports whether each boots first time or shows
-# Playground's "Try again" screen, with the blueprint's network requests and
-# console errors. Manual only: it depends on live third-party hosts.
+# fresh browser profile, in Chromium, Firefox, and WebKit, and reports whether
+# each load reaches a working block editor or shows Playground's "Try again"
+# screen, with the blueprint's network requests and console errors. A control
+# blueprint without Borges runs in Chromium beside them, so a failure in both
+# points at Playground rather than at Borges.
+#
+# Manual only: it depends on live third-party hosts. Use it when a demo link
+# misbehaves (see scripts/playground-live-probe.mjs). demo-links.yml is the
+# cheap weekly check that the install URLs still resolve.
 
 on:
     workflow_dispatch:
         inputs:
             runs:
                 description: Fresh-profile loads per blueprint
-                default: '3'
-    push:
-        branches:
-            - 'claude/project-thread-hnhxfv'
-        paths:
-            - 'scripts/playground-live-probe.mjs'
-            - '.github/workflows/playground-live-probe.yml'
+                default: '5'
 
 permissions:
     contents: read
@@ -36,7 +36,7 @@ jobs:
             - name: Set up Node.js and dependencies
               uses: ./.github/actions/setup-node-deps
 
-            - name: Install Chromium
+            - name: Install the browser
               run: npx playwright install --with-deps ${{ matrix.browser }}
 
             - name: Probe the demo links
@@ -46,7 +46,7 @@ jobs:
               run: node scripts/playground-live-probe.mjs
 
             - name: Probe a control blueprint (no plugins)
-              if: matrix.browser == 'chromium'
+              if: always() && matrix.browser == 'chromium'
               env:
                   PROBE_BROWSER: chromium
                   PROBE_RUNS: ${{ github.event.inputs.runs || '5' }}
