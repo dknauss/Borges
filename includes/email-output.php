@@ -95,6 +95,30 @@ function bibliography_builder_portable_markup( $html ) {
 		$html
 	);
 
+	// Unordered lists saved before 1.21.0 have no inline list style, so
+	// email clients show bullets and an indent. Add the style save() now
+	// writes (bibliography_builder_save_unordered_list_style()), after the
+	// class, unless the list already has a style. Numeric lists keep their
+	// numbers.
+	$html = (string) preg_replace_callback(
+		'#<ul\b([^>]*)>#',
+		static function ( $tag ) {
+			if (
+				1 !== preg_match( '#\sclass="[^"]*\bbibliography-builder-list-unordered\b[^"]*"#', $tag[1], $class )
+				|| 1 === preg_match( '#\sstyle=#', $tag[1] )
+			) {
+				return $tag[0];
+			}
+
+			return '<ul' . str_replace(
+				$class[0],
+				$class[0] . ' style="' . bibliography_builder_save_unordered_list_style() . '"',
+				$tag[1]
+			) . '>';
+		},
+		$html
+	);
+
 	// Legacy entries in <cite>; current ones are already spans, followed by
 	// any annotations. Both get an inline style, the only kind of style most
 	// email clients keep.

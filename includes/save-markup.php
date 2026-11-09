@@ -629,6 +629,18 @@ function bibliography_builder_save_group_label_tag( $heading_tag ) {
 }
 
 /**
+ * Inline style `save()` writes on unordered lists (1.21.0,
+ * `UNORDERED_LIST_INLINE_STYLE`), so an email built from the saved post
+ * without the block's stylesheet shows no bullets and no indent. Numeric
+ * lists keep their markers.
+ *
+ * @return string
+ */
+function bibliography_builder_save_unordered_list_style() {
+	return 'list-style:none;padding-left:0;margin-left:0';
+}
+
+/**
  * Render the block's saved inner HTML from its attributes, as the current
  * `save()` would. Returns an empty string when there are no citations, where
  * `save()` returns null.
@@ -706,6 +718,7 @@ function bibliography_builder_render_save_markup( $attrs ) {
 	$list_class = 'bibliography-builder-list bibliography-builder-list-'
 		. ( 'ol' === $list_tag ? 'numeric' : 'unordered' )
 		. ' bibliography-builder-list-' . $style_css;
+	$list_style = 'ol' === $list_tag ? null : bibliography_builder_save_unordered_list_style();
 	$sorted     = array_values( $sorted );
 	$repeated   = bibliography_builder_save_repeated_author_prefixes( $sorted, $style_key, $mark_setting );
 	$entry      =
@@ -732,7 +745,12 @@ function bibliography_builder_render_save_markup( $attrs ) {
 	$groups = bibliography_builder_save_group_citations( $sorted, $style_key );
 
 	if ( null === $groups ) {
-		$html .= '<' . $list_tag . bibliography_builder_save_attributes( array( 'class' => $list_class ) ) . '>';
+		$html .= '<' . $list_tag . bibliography_builder_save_attributes(
+			array(
+				'class' => $list_class,
+				'style' => $list_style,
+			)
+		) . '>';
 
 		foreach ( $sorted as $citation ) {
 			$html .= $entry( $citation, false );
@@ -765,6 +783,7 @@ function bibliography_builder_render_save_markup( $attrs ) {
 				. '<' . $list_tag . bibliography_builder_save_attributes(
 					array(
 						'class'           => $list_class,
+						'style'           => $list_style,
 						'aria-labelledby' => $label_id,
 					)
 				) . '>';

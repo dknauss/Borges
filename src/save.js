@@ -47,6 +47,7 @@ export default function save( { attributes } ) {
 		citationLinkRel: 'noopener',
 		headingLabelledBy: true,
 		annotations: true,
+		inlineListStyle: true,
 		labels: LOCALE_INDEPENDENT_SAVE_LABELS,
 	} );
 }

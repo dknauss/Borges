@@ -125,6 +125,18 @@ export function getBibliographyHeadingId( bibliographyId ) {
 		: null;
 }
 
+/**
+ * Inline style saved on unordered lists, so an email built from the saved post
+ * (WordPress.com and Jetpack newsletters) shows no bullets and no indent. The
+ * block stylesheet already sets the same on the web. Never put spacing on the
+ * `<li>`: inline styles there would override the hanging indent.
+ */
+export const UNORDERED_LIST_INLINE_STYLE = {
+	listStyle: 'none',
+	paddingLeft: '0',
+	marginLeft: '0',
+};
+
 export function renderBibliographySave(
 	attributes,
 	{
@@ -166,6 +178,11 @@ export function renderBibliographySave(
 		citationLinkRel = 'nofollow noopener noreferrer',
 		headingLabelledBy = false,
 		annotations = false,
+		// Save the no-bullet list style inline on unordered lists (1.21.0),
+		// for email built from the saved post without the block's
+		// stylesheet. Off for deprecations, which save lists as their
+		// release did.
+		inlineListStyle = false,
 		labels: labelOverrides = null,
 	} = {}
 ) {
@@ -236,6 +253,11 @@ export function renderBibliographySave(
 	const listClassName = `bibliography-builder-list bibliography-builder-list-${
 		styleDefinition.listType === 'ol' ? 'numeric' : 'unordered'
 	} bibliography-builder-list-${ citationStyle }`;
+	// Numeric lists keep their markers, so email shows the numbers.
+	const listStyle =
+		inlineListStyle && styleDefinition.listType !== 'ol'
+			? UNORDERED_LIST_INLINE_STYLE
+			: undefined;
 	const HeadingTag = headingTag;
 	const EntryTag = entryTag;
 	const groups =
@@ -489,6 +511,7 @@ export function renderBibliographySave(
 							</GroupLabelTag>
 							<ListTag
 								className={ listClassName }
+								style={ listStyle }
 								aria-labelledby={ labelId }
 							>
 								{ group.citations.map( ( citation ) =>
@@ -507,7 +530,7 @@ export function renderBibliographySave(
 					);
 				} )
 			) : (
-				<ListTag className={ listClassName }>
+				<ListTag className={ listClassName } style={ listStyle }>
 					{ renderedCitations.map( ( citation, citationIndex ) =>
 						renderEntry( citation, citationIndex )
 					) }

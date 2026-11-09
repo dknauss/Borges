@@ -122,6 +122,55 @@ final class EmailOutputTest extends TestCase {
 		}
 	}
 
+	public function test_legacy_unordered_lists_get_the_inline_list_style(): void {
+		$style = 'style="list-style:none;padding-left:0;margin-left:0"';
+
+		// The 1.20.0 save() shape: one unordered list with no inline style.
+		$html = bibliography_builder_portable_markup( self::legacy_markup( '20' ) );
+
+		$this->assertStringContainsString(
+			'<ul class="bibliography-builder-list bibliography-builder-list-unordered bibliography-builder-list-chicago-notes-bibliography" ' . $style . '>',
+			$html
+		);
+		$this->assertSame( 1, substr_count( $html, $style ) );
+	}
+
+	public function test_the_list_style_follows_the_class_and_keeps_other_attributes(): void {
+		$style = 'style="list-style:none;padding-left:0;margin-left:0"';
+
+		// Grouped OSCOLA lists, after the list-semantics filter added a role.
+		$this->assertSame(
+			'<ul role="list" class="bibliography-builder-list bibliography-builder-list-unordered bibliography-builder-list-oscola" ' . $style . ' aria-labelledby="bibliography-group-cases-a"><li id="ref-a">A</li></ul>',
+			bibliography_builder_portable_markup(
+				'<ul role="list" class="bibliography-builder-list bibliography-builder-list-unordered bibliography-builder-list-oscola" aria-labelledby="bibliography-group-cases-a"><li id="ref-a">A</li></ul>'
+			)
+		);
+	}
+
+	public function test_current_unordered_lists_are_not_styled_twice(): void {
+		$markup = self::current_markup();
+		$style  = 'list-style:none;padding-left:0;margin-left:0';
+
+		$this->assertSame( 1, substr_count( $markup, $style ) );
+		$this->assertSame( 1, substr_count( bibliography_builder_portable_markup( $markup ), $style ) );
+	}
+
+	public function test_numeric_lists_and_other_lists_keep_their_markers(): void {
+		$numeric = rtrim( (string) file_get_contents( self::PARITY . '/numeric-with-supports.html' ), "\n" );
+		$html    = bibliography_builder_portable_markup( $numeric );
+
+		$this->assertStringNotContainsString( 'list-style:none', $html );
+		$this->assertStringContainsString( '<ol class="bibliography-builder-list bibliography-builder-list-numeric', $html );
+
+		// A hand-styled list and a list that is not a bibliography list.
+		$this->assertSame(
+			'<ul class="bibliography-builder-list bibliography-builder-list-unordered" style="color:red"></ul><ul class="other"></ul>',
+			bibliography_builder_portable_markup(
+				'<ul class="bibliography-builder-list bibliography-builder-list-unordered" style="color:red"></ul><ul class="other"></ul>'
+			)
+		);
+	}
+
 	public function test_repeated_author_spans_stay_inside_the_entry(): void {
 		$golden = rtrim( (string) file_get_contents( self::PARITY . '/mla-repeated-authors.html' ), "\n" );
 		$html   = bibliography_builder_portable_markup( $golden );

@@ -32,7 +32,7 @@ final class ListSemanticsTest extends TestCase {
 
 		$this->assertNotSame( $html, $rendered );
 		$this->assertSame( $html, str_replace( ' role="list"', '', $rendered ) );
-		$this->assertStringContainsString( 'role="list" class="bibliography-builder-list bibliography-builder-list-unordered bibliography-builder-list-oscola" aria-labelledby=', $rendered );
+		$this->assertStringContainsString( 'role="list" class="bibliography-builder-list bibliography-builder-list-unordered bibliography-builder-list-oscola" style="list-style:none;padding-left:0;margin-left:0" aria-labelledby=', $rendered );
 	}
 
 	public function test_numbered_lists_get_the_role(): void {
