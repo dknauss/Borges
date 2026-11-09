@@ -43,6 +43,7 @@ These are raw formatted citation categories with active parser support.
 | Category                  | Status    | Notes                                                                                |
 | ------------------------- | --------- | ------------------------------------------------------------------------------------ |
 | Books                     | Supported | Includes many Chicago and APA-like book patterns                                     |
+| Harvard (Cite Them Right) | Supported | Articles, books, chapters, conference papers, preprints, encyclopedia entries, and web pages; read first in a Harvard bibliography |
 | Journal articles          | Supported | Includes DOI/no-DOI variants and several APA-like forms                              |
 | Chapters                  | Supported | Includes common sentence-style chapter citations                                     |
 | Webpages                  | Supported | Includes organization-authored pages and common access/modified/effective date forms |
