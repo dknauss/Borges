@@ -15,7 +15,7 @@
  *
  * Environment:
  *   PROBE_RUNS     Fresh-profile loads per blueprint (default 3).
- *   PROBE_TIMEOUT  Milliseconds to wait for the editor (default 240000).
+ *   PROBE_TIMEOUT  Milliseconds to wait for the editor (default 90000).
  *   PROBE_BROWSER  chromium (default), firefox, or webkit (Safari's engine).
  *
  * It needs a browser that can reach playground.wordpress.net, so it is run
@@ -32,7 +32,7 @@ const blueprints = process.argv.slice( 2 ).length
 	? process.argv.slice( 2 )
 	: DEFAULT_BLUEPRINTS;
 const runs = Number( process.env.PROBE_RUNS || 3 );
-const timeout = Number( process.env.PROBE_TIMEOUT || 240000 );
+const timeout = Number( process.env.PROBE_TIMEOUT || 90000 );
 
 // Requests worth logging: everything a blueprint fetches, not Playground's own
 // static assets.
@@ -48,11 +48,25 @@ const INTERESTING =
 async function editorReady( page ) {
 	for ( const frame of page.frames() ) {
 		try {
-			if (
-				( await frame
-					.locator( '.wp-block-bibliography-builder-bibliography' )
-					.count() ) > 0
-			) {
+			// The editor initialized and the block store holds a Borges
+			// block: markup alone can be present while the editor's scripts
+			// failed to load.
+			const ready = await frame.evaluate( () => {
+				const data = window.wp && window.wp.data;
+				if ( ! data || ! data.select ) {
+					return false;
+				}
+				const editor = data.select( 'core/block-editor' );
+				return !! (
+					editor &&
+					editor
+						.getBlocks()
+						.some( ( block ) =>
+							block.name.startsWith( 'bibliography-builder/' )
+						)
+				);
+			} );
+			if ( ready ) {
 				return true;
 			}
 		} catch ( e ) {
@@ -116,11 +130,20 @@ async function probe( browser, blueprint, run, retryInTab ) {
 			`← ${ res ? res.status() : '???' } ${ ms }ms ${ req.url() }`
 		);
 	} );
+	// Every failed request, whatever its host: a script the editor needs
+	// failing to load is as fatal as a blueprint fetch failing.
 	context.on( 'requestfailed', ( req ) => {
-		if ( requestStart.has( req ) || INTERESTING.test( req.url() ) ) {
+		if ( ! /google-analytics|googletagmanager/.test( req.url() ) ) {
 			log(
-				`✗ FAILED ${ req.url() } (${ req.failure()?.errorText })`
+				`✗ FAILED ${ req.resourceType() } ${ req.url() } (${
+					req.failure()?.errorText
+				})`
 			);
+		}
+	} );
+	context.on( 'response', ( res ) => {
+		if ( res.status() >= 400 ) {
+			log( `✗ HTTP ${ res.status() } ${ res.url() }` );
 		}
 	} );
 	page.on( 'console', ( msg ) => {

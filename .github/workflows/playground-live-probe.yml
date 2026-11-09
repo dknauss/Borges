@@ -42,7 +42,7 @@ jobs:
             - name: Probe the demo links
               env:
                   PROBE_BROWSER: ${{ matrix.browser }}
-                  PROBE_RUNS: ${{ github.event.inputs.runs || '3' }}
+                  PROBE_RUNS: ${{ github.event.inputs.runs || '5' }}
               run: node scripts/playground-live-probe.mjs
 
             - name: Upload screenshots
