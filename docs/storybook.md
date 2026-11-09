@@ -50,10 +50,10 @@ same axe results for the story on screen.
 | `HeadingAlignControl` | Centred, start, unknown value |
 | `RepeatedAuthorMarkControl` | Chicago, MLA, OSCOLA, ABNT, APA (renders nothing) |
 
-`CitationEntryBody` reads no store either, but takes about 25 handlers from the
-editor state hook; it is the next candidate. `CitationUpdatePanel` reads the
-block editor store, so its stories would need a mocked registry
-(`RegistryProvider` from `@wordpress/data`).
+The next stories, in order, are in `.planning/ROADMAP.md` under "More
+Storybook stories": `CitationEntryBody`, the "Cite" format's picker, the saved
+bibliography in each style, the components that read a store (with a mocked
+registry), and the front-end Cite / Export panel.
 
 ## Adding a story
 
