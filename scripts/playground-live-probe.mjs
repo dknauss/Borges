@@ -16,11 +16,12 @@
  * Environment:
  *   PROBE_RUNS     Fresh-profile loads per blueprint (default 3).
  *   PROBE_TIMEOUT  Milliseconds to wait for the editor (default 240000).
+ *   PROBE_BROWSER  chromium (default), firefox, or webkit (Safari's engine).
  *
  * It needs a browser that can reach playground.wordpress.net, so it is run
  * by .github/workflows/playground-live-probe.yml, not in CI's normal jobs.
  */
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 
 const DEFAULT_BLUEPRINTS = [
 	'https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json',
@@ -168,7 +169,7 @@ async function probe( browser, blueprint, run, retryInTab ) {
 
 	if ( outcome === 'timeout' ) {
 		await page.screenshot( {
-			path: `probe-timeout-${ run }.png`,
+			path: `probe-timeout-${ browserName }-${ run }.png`,
 			fullPage: true,
 		} );
 	}
@@ -177,7 +178,10 @@ async function probe( browser, blueprint, run, retryInTab ) {
 	return outcome;
 }
 
-const browser = await chromium.launch();
+const engines = { chromium, firefox, webkit };
+const browserName = process.env.PROBE_BROWSER || 'chromium';
+console.log( `Browser: ${ browserName }` );
+const browser = await engines[ browserName ].launch();
 const summary = [];
 for ( const blueprint of blueprints ) {
 	for ( let run = 1; run <= runs; run++ ) {

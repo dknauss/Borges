@@ -23,7 +23,12 @@ permissions:
 
 jobs:
     probe:
+        name: Probe (${{ matrix.browser }})
         runs-on: ubuntu-24.04
+        strategy:
+            fail-fast: false
+            matrix:
+                browser: [chromium, firefox, webkit]
         timeout-minutes: 45
         steps:
             - uses: actions/checkout@v5
@@ -32,10 +37,11 @@ jobs:
               uses: ./.github/actions/setup-node-deps
 
             - name: Install Chromium
-              run: npx playwright install --with-deps chromium
+              run: npx playwright install --with-deps ${{ matrix.browser }}
 
             - name: Probe the demo links
               env:
+                  PROBE_BROWSER: ${{ matrix.browser }}
                   PROBE_RUNS: ${{ github.event.inputs.runs || '3' }}
               run: node scripts/playground-live-probe.mjs
 
@@ -43,6 +49,6 @@ jobs:
               if: always()
               uses: actions/upload-artifact@v4
               with:
-                  name: playground-probe
+                  name: playground-probe-${{ matrix.browser }}
                   path: probe-*.png
                   if-no-files-found: ignore
