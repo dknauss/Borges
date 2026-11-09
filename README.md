@@ -346,6 +346,8 @@ npm run test:rest:local      # Local REST endpoint smoke test (Studio site)
 npm run test:e2e             # Playwright smoke suite against local site
 npm run test:e2e:playground  # Playground-based Playwright smoke suite
 npm run test:e2e:lifecycle   # Plugin lifecycle e2e tests (activate/deactivate/delete)
+npm run storybook            # Storybook for the editor components, at localhost:6006
+npm run test:storybook       # Build Storybook, then render and axe-check every story
 npm run test:runtime:local   # Docker-based runtime smoke environment
 npm run test:interop:zotero  # Zotero + citation format interoperability checks
 composer test:php            # PHPUnit REST and bootstrap tests

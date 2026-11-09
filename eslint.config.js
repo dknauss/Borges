@@ -31,6 +31,9 @@ const usesVitest = ( entry ) =>
 const baseConfig = defaultConfig.filter( ( entry ) => ! usesVitest( entry ) );
 
 module.exports = [
+	// Storybook's static build (npm run storybook:build) is minified output.
+	{ ignores: [ 'storybook-static/**' ] },
+
 	...baseConfig,
 
 	// Jest rules for tests, as `wp-scripts lint-js` applied them before 37.

@@ -189,6 +189,12 @@ jobs:
               if: matrix.suite == 'a11y'
               run: npm run test:a11y
 
+            # Builds Storybook, then loads every story in Chromium and fails
+            # on a render error or an axe violation (scripts/storybook-a11y.mjs).
+            - name: Check Storybook stories
+              if: matrix.suite == 'a11y'
+              run: npm run test:storybook
+
             - name: Package release zip (for lifecycle tests)
               if: matrix.suite == 'lifecycle'
               run: npm run package:release

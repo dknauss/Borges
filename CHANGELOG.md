@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Storybook for the editor components** (development only). `npm run storybook` shows the structured citation editor, the reorder controls, the editor notices, the heading alignment menu, and the repeated-authors setting in their different states, such as a journal article, a book, and manual entry, or each style's repeated-author choices, without a WordPress site. `npm run test:storybook` builds it and renders every story in Chromium, failing on an error or an axe accessibility violation; CI runs it in the a11y job. Nothing ships in the plugin: the release ZIP copies only its runtime files. See `docs/storybook.md`.
+
 ### Changed
 
 - **Heading alignment moved to the block toolbar.** The "Heading Alignment" sidebar setting from 1.20.0 is now an "Align heading" menu in the block toolbar, where core blocks such as Heading and Paragraph keep text alignment, which also shortens the block's sidebar. It shows while the block has a visible heading and offers the same two choices, Center (the default) and Start. Only the control moved: the setting is still stored as `headingAlign`, saved markup is unchanged, and the write routes, read routes, and `wp borges list` work as before. Core's `typography.textAlign` support was considered and not used, since it would store the alignment differently and its support key has changed names across the WordPress versions Borges supports.

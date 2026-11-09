@@ -77,7 +77,7 @@ actual_php="$(find . -name '*.php' \
 	-print0 | xargs -0 wc -l | tail -1 | awk '{print $1}')"
 check "all first-party PHP lines" "$(doc_value 'All first-party PHP')" "$actual_php"
 
-actual_js="$(find ./src -name '*.js' -not -name '*.test.js' \
+actual_js="$(find ./src -name '*.js' -not -name '*.test.js' -not -name '*.stories.js' \
 	-print0 | xargs -0 wc -l | tail -1 | awk '{print $1}')"
 check "JS source lines" "$(doc_value 'JS source')" "$actual_js"
 

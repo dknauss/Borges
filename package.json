@@ -32,7 +32,10 @@
 		"assets:icons": "node scripts/generate-icons.js",
 		"assets:banners": "python3 scripts/generate_brand_assets.py",
 		"assets:banners:quick": "python3 scripts/generate_brand_assets.py --skip-render",
-		"playground:build": "node ./scripts/build-playground-blueprints.js"
+		"playground:build": "node ./scripts/build-playground-blueprints.js",
+		"storybook": "storybook dev -p 6006",
+		"storybook:build": "storybook build -o storybook-static",
+		"test:storybook": "storybook build --quiet --disable-telemetry -o storybook-static && node scripts/storybook-a11y.mjs storybook-static"
 	},
 	"jest": {
 		"testEnvironment": "jsdom",
@@ -79,6 +82,9 @@
 	"devDependencies": {
 		"@axe-core/playwright": "^4.11.3",
 		"@playwright/test": "^1.54.2",
+		"@storybook/addon-a11y": "10.6.3",
+		"@storybook/addon-docs": "10.6.3",
+		"@storybook/react-vite": "10.6.3",
 		"@testing-library/dom": "^10.4.1",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@testing-library/react": "^16.3.0",
@@ -106,7 +112,9 @@
 		"prettier": "npm:wp-prettier@^3.9.6",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
-		"typescript": "~5.3.3"
+		"storybook": "10.6.3",
+		"typescript": "~5.3.3",
+		"vite": "7.3.7"
 	},
 	"overrides": {
 		"typescript": "~5.3.3",
