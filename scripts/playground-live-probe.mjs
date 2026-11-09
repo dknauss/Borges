@@ -65,9 +65,10 @@ const runs = positiveInteger( 'PROBE_RUNS', 3 );
 const timeout = positiveInteger( 'PROBE_TIMEOUT', 90000 );
 
 // Requests worth logging: everything a blueprint fetches, not Playground's own
-// static assets.
+// static assets. github.io is the GitHub Pages host the main-build blueprints
+// install from (docs/playground-main-preview-hosting.md).
 const INTERESTING =
-	/cors-proxy|github\.com|githubusercontent|wordpress\.org\/plugins|downloads\.wordpress\.org|api\.wordpress\.org|blueprint/i;
+	/cors-proxy|github\.com|github\.io|githubusercontent|wordpress\.org\/plugins|downloads\.wordpress\.org|api\.wordpress\.org|blueprint/i;
 
 /**
  * Finds the WordPress frame and reports whether the block editor is up.
