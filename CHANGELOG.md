@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Clearer "Citations in this post" panel.** It now says "in-text citations", "out of date with the current style or numbering", and "edited by hand" instead of code-side terms; with no citations yet it says where Cite is (the block toolbar's More menu); and the checkbox, now "Also update citations I edited by hand", says that your wording will be replaced. The update notice says "hand-edited" to match. ([#269](https://github.com/dknauss/Borges/pull/269))
 
+### Fixed
+
+- **Pasted citations the editor can't read are turned away instead of read wrongly.** A labelled journal article in IEEE, ABNT, or MLA form ("vol. 12, no. 3, pp. 34–43") pasted with no DOI was read as a book, with the volume and issue in its title and the page range as its publisher. It now gets the "Paste a DOI…" notice, as other citations the editor doesn't read do. A numbered entry ("[1] …", "12. …") is read without its number, which used to end up in the first author's name. Citations read by the parser's less certain patterns (chapters, web pages, APA-style books and articles, and articles with "et al." or semicolon-separated authors) now show "Read from pasted text without an identifier. Check the fields before publishing." under the entry and count toward the import notice's "Review N imported records"; editing the entry's fields clears it. ([#231](https://github.com/dknauss/Borges/issues/231))
+
 ## [1.19.1] - 2026-11-09
 
 ### Changed

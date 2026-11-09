@@ -150,6 +150,18 @@ the webpack-style source modules. It measures the parser alone; the editor
 resolves an entry's DOI or PMID before parsing. `npm run sweep` reports both
 parsers for every style. See `docs/free-text-parsing.md`.
 
+`npm run anystyle-precision` (`anystyle-precision.mjs`) measures the other
+side: how often the parser returns a wrong record. It runs
+`parseFreeTextCitation()` over the 7,846 hand-labelled references AnyStyle
+ships as training data (`res/parser/core.xml`, `gold.xml`, `good.xml` in the
+`anystyle` gem, BSD-2-Clause) and reports, for everything it accepts, how many
+titles and years differ from the labels, overall and for rough style subsets.
+Nothing is committed: the gem is fetched at a pinned version into
+`out/anystyle-gem/` on the first run (needs Ruby's `gem`), or read from
+`ANYSTYLE_RES`. Writes `anystyle-precision.json`. A parser change should not
+raise the wrong-title rate (`docs/planning/free-text-styles-plan.md`,
+"Gates").
+
 ## Zotero translation server
 
 `zotero-translate.mjs` (`npm run zotero-ts`) asks a running

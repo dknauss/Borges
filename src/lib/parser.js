@@ -16,7 +16,10 @@ import { MAX_ENTRIES_PER_PASTE } from './citation-limits';
 import { validateAndSanitizeCsl } from './csl-sanitize';
 import { DEFAULT_CITATION_STYLE } from './formatting';
 import { parseFreeTextCitation } from './free-text-parser';
-import { SUPPORTED_INPUT_MESSAGE } from './input-support';
+import {
+	FREE_TEXT_LOW_CONFIDENCE_WARNING,
+	SUPPORTED_INPUT_MESSAGE,
+} from './input-support';
 import { Cite } from '@citation-js/core';
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
@@ -228,6 +231,12 @@ const PARSER_BACKENDS = {
 
 		return {
 			cslItems: [ parsedCitation.csl ],
+			// A low-confidence pattern asks the author to check the fields,
+			// through the same review notice as incomplete DOI metadata.
+			parseWarnings:
+				parsedCitation.confidence === 'low'
+					? [ FREE_TEXT_LOW_CONFIDENCE_WARNING ]
+					: [],
 		};
 	},
 };
@@ -515,16 +524,16 @@ export async function parsePastedInput(
 	/**
 	 * Map resolved CSL items to bibliography entry objects.
 	 *
-	 * @param {Array}  cslItems    Raw CSL items from a backend.
-	 * @param {string} inputFormat The format key used to produce these items.
+	 * @param {Array}    cslItems          Raw CSL items from a backend.
+	 * @param {string}   inputFormat       The format key used to produce these items.
+	 * @param {string[]} [backendWarnings] Review warnings the backend raised for every item.
 	 * @return {Array} Normalized entry objects.
 	 */
-	function mapCslToEntries( cslItems, inputFormat ) {
+	function mapCslToEntries( cslItems, inputFormat, backendWarnings = [] ) {
 		return cslItems.map( ( csl ) => {
-			const { csl: normalizedCsl, parseWarnings } = normalizeResolvedCsl(
-				csl,
-				inputFormat
-			);
+			const { csl: normalizedCsl, parseWarnings: normalizeWarnings } =
+				normalizeResolvedCsl( csl, inputFormat );
+			const parseWarnings = [ ...backendWarnings, ...normalizeWarnings ];
 			const sanitizedCsl = validateAndSanitizeCsl( normalizedCsl );
 
 			return {
@@ -543,27 +552,35 @@ export async function parsePastedInput(
 		PARSE_CONCURRENCY,
 		async ( item ) => {
 			try {
-				const { cslItems } = await PARSER_BACKENDS[ item.format ](
-					item.value,
-					{ fetchFn }
-				);
+				const { cslItems, parseWarnings } = await PARSER_BACKENDS[
+					item.format
+				]( item.value, { fetchFn } );
 
 				return {
 					item,
-					entries: mapCslToEntries( cslItems, item.format ),
+					entries: mapCslToEntries(
+						cslItems,
+						item.format,
+						parseWarnings
+					),
 				};
 			} catch ( err ) {
 				// When an embedded identifier was extracted from free text, try
 				// the freetext backend before surfacing any resolver error.
 				if ( item.fallbackValue !== undefined ) {
 					try {
-						const { cslItems } = await PARSER_BACKENDS.freetext(
-							item.fallbackValue
-						);
+						const { cslItems, parseWarnings } =
+							await PARSER_BACKENDS.freetext(
+								item.fallbackValue
+							);
 
 						return {
 							item,
-							entries: mapCslToEntries( cslItems, 'freetext' ),
+							entries: mapCslToEntries(
+								cslItems,
+								'freetext',
+								parseWarnings
+							),
 						};
 					} catch {
 						// Both resolver and freetext failed — report as

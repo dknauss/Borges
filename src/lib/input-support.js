@@ -4,3 +4,10 @@ export const SUPPORTED_INPUT_MESSAGE = __(
 	'Paste a DOI, PMID (PubMed ID), PMCID, arXiv ID, ISBN, OCLC or LCCN number, Open Library ID, Internet Archive link, BibTeX entry, RIS record, CSL-JSON, or supported citation for a book, article, chapter, or webpage. Separate multiple formatted citations with a blank line.',
 	'borges-bibliography-builder'
 );
+
+/**
+ * Review warning for a citation read from pasted text by a low-confidence
+ * free-text pattern. Stored in the entry's `parseWarnings`; `edit.js` shows
+ * its message and the import notice counts it.
+ */
+export const FREE_TEXT_LOW_CONFIDENCE_WARNING = 'free-text-low-confidence';
