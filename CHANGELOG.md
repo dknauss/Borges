@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The "Try the current main build" Playground demo no longer fails with "Could not download required files".** Its blueprint fetched the main build's ZIP through Playground's CORS proxy, which sometimes stalls. CI now also deploys that ZIP to GitHub Pages, which sends CORS headers, and the Main build and write-API blueprints install it from there directly. See `docs/playground-main-preview-hosting.md`.
 - **Pasted citations the editor can't read are turned away instead of read wrongly.** A labelled journal article in IEEE, ABNT, or MLA form ("vol. 12, no. 3, pp. 34–43") pasted with no DOI was read as a book, with the volume and issue in its title and the page range as its publisher. ABNT and MLA ones now get the "Paste a DOI…" notice, as other citations the editor doesn't read do, and IEEE ones are read as articles (see Added). A numbered entry ("[1] …", "12. …") is read without its number, which used to end up in the first author's name. Citations read by the parser's less certain patterns (chapters, web pages, APA-style books and articles, and articles with "et al." or semicolon-separated authors) now show "Read from pasted text without an identifier. Check the fields before publishing." under the entry and count toward the import notice's "Review N imported records"; editing the entry's fields clears it. ([#231](https://github.com/dknauss/Borges/issues/231))
 
 ## [1.19.1] - 2026-11-09

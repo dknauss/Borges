@@ -28,7 +28,7 @@
 			"step": "installPlugin",
 			"pluginData": {
 				"resource": "url",
-				"url": "https://wordpress-playground-cors-proxy.net/?https://github.com/dknauss/Borges/releases/download/main-preview/borges-bibliography-builder.zip"
+				"url": "https://dknauss.github.io/Borges/main-preview/borges-bibliography-builder.zip"
 			},
 			"options": {
 				"activate": true,

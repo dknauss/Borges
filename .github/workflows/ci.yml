@@ -372,3 +372,85 @@ jobs:
                           --notes "Automated rolling build of the \`main\` branch, refreshed on every push. This is **not** a stable release — for production use install the latest tagged release or the WordPress.org listing."
                   fi
                   gh release upload main-preview output/release/borges-bibliography-builder.zip --clobber
+
+    # Also serve the same main-preview ZIP from GitHub Pages, at
+    # https://dknauss.github.io/Borges/main-preview/borges-bibliography-builder.zip.
+    # Pages answers with `Access-Control-Allow-Origin: *`, so the Main build
+    # and write-API Playground blueprints fetch it directly instead of through
+    # Playground's CORS proxy, which sometimes stalls and makes the demo fail
+    # with "Could not download" (GitHub's release downloads send no CORS
+    # header, which is why the proxy was needed). The release asset above stays
+    # as the fallback; docs/playground-main-preview-hosting.md compares the two.
+    #
+    # Needs Settings -> Pages -> Source: "GitHub Actions". Runs after the
+    # release publish, with the Pages permissions only in this job, and repeats
+    # its stale-commit guard so an older run never replaces a newer ZIP.
+    publish-main-preview-pages:
+        name: Publish main preview to GitHub Pages
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        needs:
+            - publish-main-preview
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
+        environment:
+            name: github-pages
+            url: ${{ steps.deploy.outputs.page_url }}main-preview/borges-bibliography-builder.zip
+        # One Pages deployment at a time; never cancel one that has started.
+        concurrency:
+            group: github-pages
+            cancel-in-progress: false
+
+        steps:
+            - name: Check that this commit is still main's tip
+              id: tip
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  tip="$(gh api "repos/${{ github.repository }}/commits/main" --jq .sha)"
+                  if [ "$tip" != "${{ github.sha }}" ]; then
+                      echo "::notice::main advanced to ${tip}; skipping stale Pages publish for ${{ github.sha }}"
+                      echo "current=false" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "current=true" >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Download packaged plugin artifact
+              if: steps.tip.outputs.current == 'true'
+              uses: actions/download-artifact@v6
+              with:
+                  name: bibliography-release
+                  path: site/main-preview
+
+            # A plain index page, so the site root explains itself instead of
+            # answering 404. The commit is recorded beside the ZIP.
+            - name: Add an index page and the build's commit
+              if: steps.tip.outputs.current == 'true'
+              run: |
+                  echo "${{ github.sha }}" > site/main-preview/COMMIT
+                  cat > site/index.html <<'HTML'
+                  <!doctype html>
+                  <html lang="en">
+                  <meta charset="utf-8">
+                  <title>Borges main preview</title>
+                  <p>This site serves the rolling build of the <code>main</code> branch of
+                  <a href="https://github.com/dknauss/Borges">Borges Bibliography Builder</a>
+                  for its WordPress Playground demo:
+                  <a href="main-preview/borges-bibliography-builder.zip">main-preview/borges-bibliography-builder.zip</a>.
+                  It is not a stable release.</p>
+                  </html>
+                  HTML
+
+            - name: Upload the Pages site
+              if: steps.tip.outputs.current == 'true'
+              uses: actions/upload-pages-artifact@v4
+              with:
+                  path: site
+
+            - name: Deploy to GitHub Pages
+              id: deploy
+              if: steps.tip.outputs.current == 'true'
+              uses: actions/deploy-pages@v4
