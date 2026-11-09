@@ -339,6 +339,11 @@ jobs:
             - package-release
         permissions:
             contents: write
+        # `published` is 'true' only when this run uploaded the ZIP (it was
+        # still main's tip). publish-main-preview-pages runs only then, so a
+        # stale run never reaches the Pages concurrency group below.
+        outputs:
+            published: ${{ steps.publish.outputs.published }}
 
         steps:
             - name: Download packaged plugin artifact
@@ -354,6 +359,7 @@ jobs:
             # run publishes. Correct regardless of job-scheduling order, unlike
             # job-level concurrency (which can cancel the newer run instead).
             - name: Publish rolling main preview
+              id: publish
               # This job has no checkout, so gh cannot infer the repo from a local
               # git remote; GH_REPO gives `gh release`/`gh api` their repo context.
               env:
@@ -372,6 +378,7 @@ jobs:
                           --notes "Automated rolling build of the \`main\` branch, refreshed on every push. This is **not** a stable release — for production use install the latest tagged release or the WordPress.org listing."
                   fi
                   gh release upload main-preview output/release/borges-bibliography-builder.zip --clobber
+                  echo "published=true" >> "$GITHUB_OUTPUT"
 
     # Also serve the same main-preview ZIP from GitHub Pages, at
     # https://dknauss.github.io/Borges/main-preview/borges-bibliography-builder.zip.
@@ -382,14 +389,21 @@ jobs:
     # header, which is why the proxy was needed). The release asset above stays
     # as the fallback; docs/playground-main-preview-hosting.md compares the two.
     #
-    # Needs Settings -> Pages -> Source: "GitHub Actions". Runs after the
-    # release publish, with the Pages permissions only in this job, and repeats
-    # its stale-commit guard so an older run never replaces a newer ZIP.
+    # Needs Settings -> Pages -> Source: "GitHub Actions". Runs only when
+    # publish-main-preview uploaded this commit's ZIP, with the Pages
+    # permissions only in this job.
+    #
+    # Staleness is checked before the job starts, not in a step: GitHub's
+    # concurrency keeps one pending job per group and cancels the one already
+    # pending when another arrives, even with cancel-in-progress: false. If a
+    # stale run could enter the group, it would cancel the newest run's pending
+    # deployment and then skip its own, leaving Pages on an older build. The
+    # step-level check stays for a run that becomes stale while it waits.
     publish-main-preview-pages:
         name: Publish main preview to GitHub Pages
         runs-on: ubuntu-latest
         timeout-minutes: 10
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.publish-main-preview.outputs.published == 'true'
         needs:
             - publish-main-preview
         permissions:
