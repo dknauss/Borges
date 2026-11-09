@@ -48,25 +48,31 @@ describe( 'Playground blueprints', () => {
 		);
 	} );
 
-	test( 'main-build blueprint installs from the rolling main-preview pre-release via Playground CORS proxy', () => {
-		const blueprint = JSON.parse(
-			fs.readFileSync(
-				path.join( rootDir, 'playground/blueprint-main.json' ),
-				'utf8'
-			)
-		);
+	// The main build is served from GitHub Pages, which sends CORS headers, so
+	// these blueprints skip Playground's CORS proxy (it sometimes stalls). See
+	// docs/playground-main-preview-hosting.md.
+	test.each( [
+		'playground/blueprint-main.json',
+		'playground/blueprint-write-api.json',
+	] )(
+		'%s installs the main-preview ZIP from GitHub Pages without the CORS proxy',
+		( relativePath ) => {
+			const blueprint = JSON.parse(
+				fs.readFileSync( path.join( rootDir, relativePath ), 'utf8' )
+			);
 
-		const installStep = blueprint.steps.find(
-			( step ) => step.step === 'installPlugin'
-		);
+			const installStep = blueprint.steps.find(
+				( step ) => step.step === 'installPlugin'
+			);
 
-		expect( installStep ).toEqual(
-			expect.objectContaining( {
-				pluginData: {
-					resource: 'url',
-					url: 'https://wordpress-playground-cors-proxy.net/?https://github.com/dknauss/Borges/releases/download/main-preview/borges-bibliography-builder.zip',
-				},
-			} )
-		);
-	} );
+			expect( installStep ).toEqual(
+				expect.objectContaining( {
+					pluginData: {
+						resource: 'url',
+						url: 'https://dknauss.github.io/Borges/main-preview/borges-bibliography-builder.zip',
+					},
+				} )
+			);
+		}
+	);
 } );

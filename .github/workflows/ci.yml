@@ -339,6 +339,11 @@ jobs:
             - package-release
         permissions:
             contents: write
+        # `published` is 'true' only when this run uploaded the ZIP (it was
+        # still main's tip). publish-main-preview-pages runs only then, so a
+        # stale run never reaches the Pages concurrency group below.
+        outputs:
+            published: ${{ steps.publish.outputs.published }}
 
         steps:
             - name: Download packaged plugin artifact
@@ -354,6 +359,7 @@ jobs:
             # run publishes. Correct regardless of job-scheduling order, unlike
             # job-level concurrency (which can cancel the newer run instead).
             - name: Publish rolling main preview
+              id: publish
               # This job has no checkout, so gh cannot infer the repo from a local
               # git remote; GH_REPO gives `gh release`/`gh api` their repo context.
               env:
@@ -372,3 +378,93 @@ jobs:
                           --notes "Automated rolling build of the \`main\` branch, refreshed on every push. This is **not** a stable release — for production use install the latest tagged release or the WordPress.org listing."
                   fi
                   gh release upload main-preview output/release/borges-bibliography-builder.zip --clobber
+                  echo "published=true" >> "$GITHUB_OUTPUT"
+
+    # Also serve the same main-preview ZIP from GitHub Pages, at
+    # https://dknauss.github.io/Borges/main-preview/borges-bibliography-builder.zip.
+    # Pages answers with `Access-Control-Allow-Origin: *`, so the Main build
+    # and write-API Playground blueprints fetch it directly instead of through
+    # Playground's CORS proxy, which sometimes stalls and makes the demo fail
+    # with "Could not download" (GitHub's release downloads send no CORS
+    # header, which is why the proxy was needed). The release asset above stays
+    # as the fallback; docs/playground-main-preview-hosting.md compares the two.
+    #
+    # Needs Settings -> Pages -> Source: "GitHub Actions". Runs only when
+    # publish-main-preview uploaded this commit's ZIP, with the Pages
+    # permissions only in this job.
+    #
+    # Staleness is checked before the job starts, not in a step: GitHub's
+    # concurrency keeps one pending job per group and cancels the one already
+    # pending when another arrives, even with cancel-in-progress: false. If a
+    # stale run could enter the group, it would cancel the newest run's pending
+    # deployment and then skip its own, leaving Pages on an older build. The
+    # step-level check stays for a run that becomes stale while it waits.
+    publish-main-preview-pages:
+        name: Publish main preview to GitHub Pages
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.publish-main-preview.outputs.published == 'true'
+        needs:
+            - publish-main-preview
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
+        environment:
+            name: github-pages
+            url: ${{ steps.deploy.outputs.page_url }}main-preview/borges-bibliography-builder.zip
+        # One Pages deployment at a time; never cancel one that has started.
+        concurrency:
+            group: github-pages
+            cancel-in-progress: false
+
+        steps:
+            - name: Check that this commit is still main's tip
+              id: tip
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  tip="$(gh api "repos/${{ github.repository }}/commits/main" --jq .sha)"
+                  if [ "$tip" != "${{ github.sha }}" ]; then
+                      echo "::notice::main advanced to ${tip}; skipping stale Pages publish for ${{ github.sha }}"
+                      echo "current=false" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "current=true" >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Download packaged plugin artifact
+              if: steps.tip.outputs.current == 'true'
+              uses: actions/download-artifact@v6
+              with:
+                  name: bibliography-release
+                  path: site/main-preview
+
+            # A plain index page, so the site root explains itself instead of
+            # answering 404. The commit is recorded beside the ZIP.
+            - name: Add an index page and the build's commit
+              if: steps.tip.outputs.current == 'true'
+              run: |
+                  echo "${{ github.sha }}" > site/main-preview/COMMIT
+                  cat > site/index.html <<'HTML'
+                  <!doctype html>
+                  <html lang="en">
+                  <meta charset="utf-8">
+                  <title>Borges main preview</title>
+                  <p>This site serves the rolling build of the <code>main</code> branch of
+                  <a href="https://github.com/dknauss/Borges">Borges Bibliography Builder</a>
+                  for its WordPress Playground demo:
+                  <a href="main-preview/borges-bibliography-builder.zip">main-preview/borges-bibliography-builder.zip</a>.
+                  It is not a stable release.</p>
+                  </html>
+                  HTML
+
+            - name: Upload the Pages site
+              if: steps.tip.outputs.current == 'true'
+              uses: actions/upload-pages-artifact@v4
+              with:
+                  path: site
+
+            - name: Deploy to GitHub Pages
+              id: deploy
+              if: steps.tip.outputs.current == 'true'
+              uses: actions/deploy-pages@v4
