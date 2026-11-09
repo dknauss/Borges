@@ -67,6 +67,36 @@ export function trimTrailing( text, chars ) {
 	return text.slice( 0, end );
 }
 
+/**
+ * Remove the punctuation a citation puts after a URL: full stops, commas,
+ * semicolons, and a closing parenthesis that closes nothing in the URL, so
+ * `…/wiki/Test_(assessment)` keeps its own.
+ *
+ * @param {string} url URL as printed.
+ * @return {string} URL without the citation's punctuation.
+ */
+export function trimUrlEnd( url ) {
+	let end = url.length;
+
+	while ( end > 0 ) {
+		const char = url[ end - 1 ];
+
+		if ( '.,;'.includes( char ) ) {
+			end--;
+		} else if (
+			char === ')' &&
+			url.slice( 0, end ).split( ')' ).length >
+				url.slice( 0, end ).split( '(' ).length
+		) {
+			end--;
+		} else {
+			break;
+		}
+	}
+
+	return url.slice( 0, end );
+}
+
 export function normalizeDoi( doiValue ) {
 	return doiValue
 		.trim()

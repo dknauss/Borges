@@ -313,3 +313,34 @@ describe( 'Vancouver style hint', () => {
 		).toEqual( parseFreeTextCitation( article ) );
 	} );
 } );
+
+describe( 'Vancouver edge cases from review', () => {
+	it( 'keeps the PMID of a PubMed export trailer', () => {
+		expect(
+			parseVancouverCitation(
+				'Smith AB. A trial. Nature. 2020;12(1):10-20. PubMed PMID: 12345678.'
+			).csl
+		).toMatchObject( { PMID: '12345678', title: 'A trial' } );
+		expect(
+			parseVancouverCitation(
+				'Smith AB. A trial. Nature. 2020;12(1):10-20. PubMed PMID: 12345678; PMCID: PMC1234567.'
+			).csl
+		).toMatchObject( { PMID: '12345678' } );
+	} );
+
+	it( 'keeps a closing parenthesis that belongs to the URL', () => {
+		expect(
+			parseVancouverCitation(
+				'Smith AB. Test [Internet]. Wikipedia; 2020. Available from: https://en.wikipedia.org/wiki/Test_(assessment)'
+			).csl.URL
+		).toBe( 'https://en.wikipedia.org/wiki/Test_(assessment)' );
+	} );
+
+	it( 'declines a journal abbreviated with full stops rather than splitting it', () => {
+		expect(
+			parseVancouverCitation(
+				'Smith AB. A trial. N. Engl. J. Med. 2020;12(1):10-20.'
+			)
+		).toBeNull();
+	} );
+} );

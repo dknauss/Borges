@@ -19,6 +19,7 @@ import {
 	normalizeDoi,
 	normalizeEdition,
 	trimTrailing,
+	trimUrlEnd,
 } from './free-text-common';
 
 /**
@@ -32,7 +33,10 @@ const VANCOUVER_NAME =
 /** @type {Array<[RegExp, function(Object): Object]>} */
 const TRAILING_FIELDS = [
 	[ /\.?\s*\[PMCID:\s*PMC\d+\]\.?$/iu, () => ( {} ) ],
-	[ /\.?\s*PubMed PMID:\s*\d+(?:;\s*PMCID:\s*PMC\d+)?\.?$/iu, () => ( {} ) ],
+	[
+		/\.?\s*PubMed PMID:\s*(?<pmid>\d+)(?:;\s*PMCID:\s*PMC\d+)?\.?$/iu,
+		( g ) => ( { PMID: g.pmid } ),
+	],
 	[ /\.?\s*PMID:\s*(?<pmid>\d+)\.?$/iu, ( g ) => ( { PMID: g.pmid } ) ],
 	[
 		/\.?\s*doi:\s*(?<doi>10\.\S+?)\.?$/iu,
@@ -40,7 +44,7 @@ const TRAILING_FIELDS = [
 	],
 	[
 		/\.?\s*Available from:\s*(?<url>https?:\/\/\S+?)\.?$/iu,
-		( g ) => ( { URL: g.url.replace( /[).,;]+$/u, '' ) } ),
+		( g ) => ( { URL: trimUrlEnd( g.url ) } ),
 	],
 ];
 
@@ -56,6 +60,14 @@ const CITED = /\s*\[cited\s+(?<date>[^\]]+)\]/iu;
  */
 const JOURNAL =
 	/^(?<head>.*[.?!])\s+(?<journal>[^.?!:;[\]]+?)(?:\s\[Internet\])?\.?\s+(?<date>\d{4}(?:\s+[A-Z][a-z]{2}(?:\s+\d{1,2})?)?)(?:;(?<volume>[^:();]+)?(?:\((?<issue>[^)]+)\))?(?::\s?(?<page>[\w–-]+))?)?\.?$/u;
+
+/**
+ * Two or more short dotted words ending the title part, as in
+ * `A trial. N. Engl. J.`: a journal abbreviated with full stops, which the
+ * journal pattern (no full stops in a Vancouver journal name) would split
+ * inside. Such a citation is declined rather than read with a broken title.
+ */
+const DOTTED_JOURNAL_END = /\.\s(?:\p{Lu}\p{L}{0,5}\.\s?){2,}$/u;
 
 /**
  * `Publisher; 2009` or `Place: Publisher; 2009` closing a book.
@@ -405,6 +417,10 @@ function readArticle( text ) {
 	}
 
 	const { head, journal, date, volume, issue, page } = match.groups;
+
+	if ( DOTTED_JOURNAL_END.test( head ) ) {
+		return null;
+	}
 
 	if ( ! volume && ! /\s/u.test( date ) ) {
 		// A bare year with no volume reads as a book, not a journal.

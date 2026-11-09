@@ -19,6 +19,7 @@ import {
 	normalizeDoi,
 	normalizeEdition,
 	trimTrailing,
+	trimUrlEnd,
 } from './free-text-common';
 
 /**
@@ -67,7 +68,7 @@ const DATE_PART =
  * Words that mark a proceedings volume rather than a book.
  */
 const PROCEEDINGS =
-	/\b(?:Proc\.|Proceedings|Conf\.|Conference|Symposium|Workshop)\b/u;
+	/\b(?:Proc\.|Conf\.|(?:Proceedings|Conference|Symposium|Workshop)\b)/u;
 
 /**
  * Words that mark the last part of an `in …` container as its publisher.
@@ -175,7 +176,7 @@ function takeAccessFields( input ) {
 	const online = text.match( ONLINE_AVAILABLE );
 
 	if ( online ) {
-		fields.URL = online.groups.url.replace( /[).,;]+$/u, '' );
+		fields.URL = trimUrlEnd( online.groups.url );
 		text = text.slice( 0, online.index );
 	}
 

@@ -290,3 +290,13 @@ describe( 'IEEE style hint', () => {
 		);
 	} );
 } );
+
+describe( 'IEEE edge cases from review', () => {
+	it( 'reads "in Proc. …" as a conference paper', () => {
+		const { csl } = parseIeeeCitation(
+			'J. Devlin, “BERT,” in Proc. NAACL-HLT, Association for Computational Linguistics, 2019, pp. 4171–4186.'
+		);
+
+		expect( csl ).toMatchObject( { type: 'paper-conference' } );
+	} );
+} );
