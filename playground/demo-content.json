@@ -13,9 +13,11 @@
 		},
 		{
 			"title": "PubMed and PubMed Central",
-			"description": "A PMID needs its <code>PMID:</code> label. A PMCID starts with <code>PMC</code>, with or without a <code>PMCID:</code> label.",
+			"description": "A PMID needs its <code>PMID:</code> label. A PMCID starts with <code>PMC</code>, with or without a <code>PMCID:</code> label. Borges tidies NCBI's MEDLINE habits as the record arrives: bare initials get their periods (Zhao et al. 2001 lists “Zhao, C.”, not “Zhao, C”), an issue sent as “Pt 8” becomes “8”, and “Brain : a journal of neurology” prints as “Brain” (Verhoeven et al. 2006). Needs Borges 1.20.0 or later.",
 			"samples": [
 				{ "format": "pmid", "input": "PMID:26673779" },
+				{ "format": "pmid", "input": "PMID:11389829" },
+				{ "format": "pmid", "input": "PMID:16714318" },
 				{ "format": "pmcid", "input": "PMC3531190" }
 			]
 		},

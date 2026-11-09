@@ -68,6 +68,7 @@ A Gutenberg block plugin that accepts DOI identifiers, PubMed/PMID records, BibT
   - `POST /format` — formats CSL items via citeproc-php; requires `edit_posts`
   - `GET /pmid/{pmid}` — resolves PubMed/PMID records through a fixed NCBI/PMC CSL endpoint; requires `edit_posts`
   - `GET /pmcid/{pmcid}` — resolves PubMed Central/PMCID records through NCBI's fixed PMC CSL endpoint via the same shared resolver; requires `edit_posts`
+  - Both NCBI routes return the record after `bibliography_builder_normalize_ncbi_csl()` dots bare initials, drops a "Pt" issue label, and drops an NLM journal subtitle that matches `container-title-short` (#270, #271); the editor applies the same rules in `src/lib/ncbi-normalize.js` to every NCBI path. Keep the two in step.
   - `GET /arxiv?id={id}` — resolves arXiv IDs through the fixed arXiv API, mapping Atom to a CSL preprint in PHP; requires `edit_posts`
   - `GET /isbn/{isbn}` — resolves checksum-valid ISBNs through Open Library's fixed ISBN edition endpoint (author names from its search endpoint), falling back to Google Books, mapping to a CSL book in PHP; requires `edit_posts`
   - `GET /catalog?id={OCLC:|LCCN:|OLID:key}` — resolves OCLC numbers, LCCNs, and Open Library edition IDs through Open Library's fixed Books API (`jscmd=data`), mapping to a CSL book in PHP; requires `edit_posts`

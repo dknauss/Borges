@@ -192,7 +192,7 @@ function bibliography_builder_get_cached_ncbi_result( $cache_key, $fallback_code
  * @return WP_REST_Response|WP_Error
  */
 function bibliography_builder_resolve_ncbi_csl( $endpoint, $id, $cache_key, $code_prefix, $messages ) {
-	return bibliography_builder_resolve_remote_csl(
+	$response = bibliography_builder_resolve_remote_csl(
 		add_query_arg(
 			array(
 				'format' => 'csl',
@@ -209,6 +209,98 @@ function bibliography_builder_resolve_ncbi_csl( $endpoint, $id, $cache_key, $cod
 			return is_array( $decoded ) && ! empty( $decoded ) ? $decoded : null;
 		}
 	);
+
+	// Cleaned after the cache, so records cached before the cleanup existed
+	// are served cleaned too.
+	if ( $response instanceof WP_REST_Response ) {
+		$data = $response->get_data();
+
+		if ( is_array( $data ) ) {
+			return rest_ensure_response( bibliography_builder_normalize_ncbi_csl( $data ) );
+		}
+	}
+
+	return $response;
+}
+
+/**
+ * Clean up NLM conventions in a PubMed or PubMed Central CSL-JSON record.
+ *
+ * NCBI's CSL exporter passes MEDLINE habits through, and the formatter prints
+ * CSL verbatim. This dots bare initials in given names ("KG" becomes "K. G.",
+ * "Kristien G" becomes "Kristien G."), drops MEDLINE's "Pt" (part) label from
+ * an issue ("Pt 8" becomes "8"; "Suppl 2" is kept), and drops an NLM subtitle
+ * from the journal title when the part before " : " is the record's own
+ * `container-title-short` ("Brain : a journal of neurology" becomes "Brain").
+ *
+ * Only NCBI records come through here; other sources and hand-entered CSL may
+ * use capitals for other reasons. The editor applies the same rules in
+ * src/lib/ncbi-normalize.js; keep the two in step. Running it twice changes
+ * nothing.
+ *
+ * @param array<array-key, mixed> $csl CSL-JSON record from NCBI.
+ * @return array<array-key, mixed> Cleaned record.
+ */
+function bibliography_builder_normalize_ncbi_csl( array $csl ) {
+	foreach ( array( 'author', 'editor' ) as $field ) {
+		if ( ! isset( $csl[ $field ] ) || ! is_array( $csl[ $field ] ) ) {
+			continue;
+		}
+
+		foreach ( $csl[ $field ] as $index => $name ) {
+			if ( is_array( $name ) && isset( $name['given'] ) && is_string( $name['given'] ) ) {
+				$csl[ $field ][ $index ]['given'] = bibliography_builder_dot_bare_initials( $name['given'] );
+			}
+		}
+	}
+
+	if ( isset( $csl['issue'] ) && is_string( $csl['issue'] ) ) {
+		$csl['issue'] = (string) preg_replace( '/^\s*pt\.?\s+(?=\S)/iu', '', $csl['issue'] );
+	}
+
+	if (
+		isset( $csl['container-title'], $csl['container-title-short'] )
+		&& is_string( $csl['container-title'] )
+		&& is_string( $csl['container-title-short'] )
+	) {
+		$colon = strpos( $csl['container-title'], ' : ' );
+
+		if ( false !== $colon && $colon > 0 ) {
+			$main = trim( substr( $csl['container-title'], 0, $colon ) );
+
+			if ( mb_strtolower( $main, 'UTF-8' ) === mb_strtolower( trim( $csl['container-title-short'] ), 'UTF-8' ) ) {
+				$csl['container-title'] = $main;
+			}
+		}
+	}
+
+	return $csl;
+}
+
+/**
+ * Dot the bare initials in a given name from NCBI.
+ *
+ * Each whitespace-separated token of one to three capital letters becomes
+ * dotted, spaced initials; other tokens are kept.
+ *
+ * @param string $given Given name.
+ * @return string Given name with bare initials dotted.
+ */
+function bibliography_builder_dot_bare_initials( $given ) {
+	$tokens = preg_split( '/\s+/u', trim( $given ) );
+
+	if ( false === $tokens ) {
+		return $given;
+	}
+
+	foreach ( $tokens as $index => $token ) {
+		if ( preg_match( '/^\p{Lu}{1,3}$/u', $token ) ) {
+			$letters          = preg_split( '//u', $token, -1, PREG_SPLIT_NO_EMPTY );
+			$tokens[ $index ] = false === $letters ? $token : implode( '. ', $letters ) . '.';
+		}
+	}
+
+	return implode( ' ', $tokens );
 }
 
 /**

@@ -1515,6 +1515,32 @@ describe( 'PMID input resolution', () => {
 		expect( result.entries ).toHaveLength( 1 );
 	} );
 
+	it( 'cleans up NLM initials, "Pt" issues, and journal subtitles (#270, #271)', async () => {
+		const fetchFn = makeFetchFn( 200, {
+			...SAMPLE_CSL,
+			author: [
+				{ family: 'Zhao', given: 'C' },
+				{ family: 'Claeys', given: 'Kristien G' },
+			],
+			issue: 'Pt 8',
+			'container-title': 'Brain : a journal of neurology',
+			'container-title-short': 'Brain',
+		} );
+
+		const result = await parsePastedInput( 'PMID:16714318', 'apa', {
+			fetchFn,
+		} );
+
+		expect( result.entries[ 0 ].csl ).toMatchObject( {
+			author: [
+				{ family: 'Zhao', given: 'C.' },
+				{ family: 'Claeys', given: 'Kristien G.' },
+			],
+			issue: '8',
+			'container-title': 'Brain',
+		} );
+	} );
+
 	it( 'maps NCBI CSL-JSON to a citation entry with inputFormat pmid', async () => {
 		const fetchFn = makeFetchFn();
 
