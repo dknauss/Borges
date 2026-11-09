@@ -37,7 +37,7 @@ describe( 'deprecated block versions', () => {
 
 	it( 'freezes the current pre-Phase-4 save shape: <li> with no <details>', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[ 12 ].save( {
+			deprecated[ 13 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -58,7 +58,7 @@ describe( 'deprecated block versions', () => {
 
 	it( 'supports the immediate prior save markup with deprecated entry roles', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[ 13 ].save( {
+			deprecated[ 14 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -93,7 +93,7 @@ describe( 'deprecated block versions', () => {
 
 	it( 'supports the prior save markup with linked URLs and static aria-label', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[ 14 ].save( {
+			deprecated[ 15 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					headingText: 'References',
@@ -126,7 +126,7 @@ describe( 'deprecated block versions', () => {
 
 	it( 'supports the prior save markup variant without linked visible URLs', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[ 15 ].save( {
+			deprecated[ 16 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
@@ -155,7 +155,7 @@ describe( 'deprecated block versions', () => {
 	} );
 
 	it( 'migrate re-sorts citations into style order', () => {
-		const migrated = deprecated[ 16 ].migrate( {
+		const migrated = deprecated[ 17 ].migrate( {
 			citationStyle: 'chicago-author-date',
 			citations: [
 				createCitation( {
@@ -176,14 +176,14 @@ describe( 'deprecated block versions', () => {
 	} );
 
 	it( 'migrate handles missing citations attribute with empty array fallback', () => {
-		const migrated = deprecated[ 16 ].migrate( { citationStyle: 'apa-7' } );
+		const migrated = deprecated[ 17 ].migrate( { citationStyle: 'apa-7' } );
 
 		expect( migrated.citations ).toEqual( [] );
 	} );
 
 	it( 'supports the prior unsorted save markup variant', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[ 16 ].save( {
+			deprecated[ 17 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [
@@ -208,7 +208,7 @@ describe( 'deprecated block versions', () => {
 	} );
 } );
 
-describe( 'locale-independence deprecation (deprecated[11])', () => {
+describe( 'locale-independence deprecation (deprecated[12])', () => {
 	const untitled = {
 		id: 'untitled',
 		csl: { type: 'webpage', author: [ { family: 'Beta' } ] },
@@ -217,7 +217,7 @@ describe( 'locale-independence deprecation (deprecated[11])', () => {
 
 	it( 'falls back to the current translations when the markup gave no labels', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[ 11 ].save( {
+			deprecated[ 12 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [ untitled ],
@@ -234,7 +234,7 @@ describe( 'locale-independence deprecation (deprecated[11])', () => {
 
 	it( 'reads the fallback label from a matching link and skips one that does not match', () => {
 		const markup = renderToStaticMarkup(
-			deprecated[ 11 ].save( {
+			deprecated[ 12 ].save( {
 				attributes: {
 					citationStyle: 'chicago-notes-bibliography',
 					citations: [ untitled ],
@@ -261,14 +261,14 @@ describe( 'locale-independence deprecation (deprecated[11])', () => {
 
 	it( 'renders nothing when the block has no citations', () => {
 		expect(
-			deprecated[ 11 ].save( {
+			deprecated[ 12 ].save( {
 				attributes: { citationStyle: 'chicago-notes-bibliography' },
 			} )
 		).toBeNull();
 	} );
 } );
 
-describe( 'pre-repeated-author deprecation (deprecated[10])', () => {
+describe( 'pre-repeated-author deprecation (deprecated[11])', () => {
 	const borges = ( id, title ) => ( {
 		id,
 		csl: {
@@ -286,7 +286,7 @@ describe( 'pre-repeated-author deprecation (deprecated[10])', () => {
 
 	it( 'writes repeated MLA authors in full, as save() did before', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 10 ].save( { attributes } )
+			deprecated[ 11 ].save( { attributes } )
 		);
 		const current = renderToStaticMarkup( save( { attributes } ) );
 
@@ -297,7 +297,7 @@ describe( 'pre-repeated-author deprecation (deprecated[10])', () => {
 	} );
 } );
 
-describe( 'pre-inline-markup deprecation (deprecated[9])', () => {
+describe( 'pre-inline-markup deprecation (deprecated[10])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -313,7 +313,7 @@ describe( 'pre-inline-markup deprecation (deprecated[9])', () => {
 
 	it( 'showed tags in stored text as text; save() now reads them', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 9 ].save( { attributes } )
+			deprecated[ 10 ].save( { attributes } )
 		);
 		const current = renderToStaticMarkup( save( { attributes } ) );
 
@@ -338,21 +338,21 @@ describe( 'pre-inline-markup deprecation (deprecated[9])', () => {
 			],
 		};
 
-		// Compared with save() as of 1.10.x (deprecated[6]): 1.11.0 changed only
+		// Compared with save() as of 1.10.x (deprecated[7]): 1.11.0 changed only
 		// the JSON-LD shape, which this deprecation predates.
 		expect(
 			renderToStaticMarkup(
-				deprecated[ 9 ].save( { attributes: plain } )
+				deprecated[ 10 ].save( { attributes: plain } )
 			)
 		).toBe(
 			renderToStaticMarkup(
-				deprecated[ 6 ].save( { attributes: plain } )
+				deprecated[ 7 ].save( { attributes: plain } )
 			)
 		);
 	} );
 } );
 
-describe( 'pre-1.9.1 deprecation (deprecated[8])', () => {
+describe( 'pre-1.9.1 deprecation (deprecated[9])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -381,7 +381,7 @@ describe( 'pre-1.9.1 deprecation (deprecated[8])', () => {
 
 	it( 'italicized a quoted title and encoded the DOI slash; save() does neither', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 8 ].save( { attributes } )
+			deprecated[ 9 ].save( { attributes } )
 		);
 		const current = renderToStaticMarkup( save( { attributes } ) );
 
@@ -395,7 +395,7 @@ describe( 'pre-1.9.1 deprecation (deprecated[8])', () => {
 	} );
 } );
 
-describe( 'pre-1.10.0 deprecation (deprecated[7])', () => {
+describe( 'pre-1.10.0 deprecation (deprecated[8])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -416,7 +416,7 @@ describe( 'pre-1.10.0 deprecation (deprecated[7])', () => {
 
 	it( 'split the eLife DOI link with an italic journal name; save() keeps it whole', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 7 ].save( { attributes } )
+			deprecated[ 8 ].save( { attributes } )
 		);
 		const current = renderToStaticMarkup( save( { attributes } ) );
 
@@ -430,7 +430,7 @@ describe( 'pre-1.10.0 deprecation (deprecated[7])', () => {
 	} );
 } );
 
-describe( 'pre-1.11.0 deprecation (deprecated[6])', () => {
+describe( 'pre-1.11.0 deprecation (deprecated[7])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		outputJsonLd: true,
@@ -459,11 +459,11 @@ describe( 'pre-1.11.0 deprecation (deprecated[6])', () => {
 
 	it( 'wrote cited works as top-level JSON-LD; 1.11.0 nested them in an ItemList', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 6 ].save( { attributes } )
+			deprecated[ 7 ].save( { attributes } )
 		);
-		// Compared with 1.11.0 (deprecated[5]), which changed only the JSON-LD.
+		// Compared with 1.11.0 (deprecated[6]), which changed only the JSON-LD.
 		const current = renderToStaticMarkup(
-			deprecated[ 5 ].save( { attributes } )
+			deprecated[ 6 ].save( { attributes } )
 		);
 
 		expect( jsonLd( old ) ).toEqual( [
@@ -495,7 +495,7 @@ describe( 'pre-1.11.0 deprecation (deprecated[6])', () => {
 	} );
 } );
 
-describe( '1.11.0 deprecation (deprecated[5])', () => {
+describe( '1.11.0 deprecation (deprecated[6])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -524,7 +524,7 @@ describe( '1.11.0 deprecation (deprecated[5])', () => {
 
 	it( 'filed a particle name under the particle; save() files it under the surname in Chicago', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 5 ].save( { attributes } )
+			deprecated[ 6 ].save( { attributes } )
 		);
 		const current = renderToStaticMarkup( save( { attributes } ) );
 
@@ -546,14 +546,14 @@ describe( '1.11.0 deprecation JSON-LD', () => {
 			],
 		};
 		const old = renderToStaticMarkup(
-			deprecated[ 5 ].save( { attributes } )
+			deprecated[ 6 ].save( { attributes } )
 		);
 
 		expect( old ).toContain( '"@type":"ItemList"' );
 	} );
 } );
 
-describe( 'email-safe markup deprecation (deprecated[4])', () => {
+describe( 'email-safe markup deprecation (deprecated[5])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		outputCiteExport: true,
@@ -574,7 +574,7 @@ describe( 'email-safe markup deprecation (deprecated[4])', () => {
 
 	it( 'saved entries in <cite> and the Cite / Export panel in the post', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 4 ].save( { attributes } )
+			deprecated[ 5 ].save( { attributes } )
 		);
 
 		expect( old ).toContain(
@@ -613,7 +613,7 @@ describe( 'email-safe markup deprecation (deprecated[4])', () => {
 	} );
 } );
 
-describe( '1.15.0 deprecation italics (deprecated[3])', () => {
+describe( '1.15.0 deprecation italics (deprecated[4])', () => {
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
 		citations: [
@@ -633,7 +633,7 @@ describe( '1.15.0 deprecation italics (deprecated[3])', () => {
 
 	it( 'left a title with a straight apostrophe roman; save() italicizes it', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 3 ].save( { attributes } )
+			deprecated[ 4 ].save( { attributes } )
 		);
 		const current = renderToStaticMarkup( save( { attributes } ) );
 
@@ -644,7 +644,7 @@ describe( '1.15.0 deprecation italics (deprecated[3])', () => {
 	} );
 } );
 
-describe( '1.15.0 deprecation notes order (deprecated[3])', () => {
+describe( '1.15.0 deprecation notes order (deprecated[4])', () => {
 	const gessner = { family: 'Gessner', given: 'Conrad' };
 	const attributes = {
 		citationStyle: 'chicago-notes-bibliography',
@@ -680,7 +680,7 @@ describe( '1.15.0 deprecation notes order (deprecated[3])', () => {
 
 	it( 'sorted by first surname then title; save() puts the single author first (#212)', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 3 ].save( { attributes } )
+			deprecated[ 4 ].save( { attributes } )
 		);
 		const current = renderToStaticMarkup( save( { attributes } ) );
 
@@ -689,7 +689,81 @@ describe( '1.15.0 deprecation notes order (deprecated[3])', () => {
 	} );
 } );
 
-describe( '1.18.0 deprecation RIS J2 (deprecated[0])', () => {
+describe( '1.19.0 deprecation OSCOLA roman tables (deprecated[0])', () => {
+	const attributes = {
+		citationStyle: 'oscola',
+		headingText: 'Bibliography',
+		headingLevel: 2,
+		citations: [
+			{
+				id: 'donoghue',
+				csl: { type: 'legal_case', title: 'Donoghue v Stevenson' },
+				formattedText: 'Donoghue v Stevenson [1932] AC 562 (HL)',
+				displayOverride: null,
+			},
+			{
+				id: 'hra',
+				csl: { type: 'legislation', title: 'Human Rights Act 1998' },
+				formattedText: 'Human Rights Act 1998',
+				displayOverride: null,
+			},
+			{
+				id: 'ano',
+				csl: {
+					type: 'regulation',
+					title: 'Air Navigation Order 2016',
+					number: 'SI 2016/765',
+				},
+				formattedText: 'Air Navigation Order 2016, SI 2016/765',
+				displayOverride: null,
+			},
+			{
+				id: 'echr',
+				csl: {
+					type: 'treaty',
+					title: 'Convention for the Protection of Human Rights and Fundamental Freedoms',
+				},
+				formattedText:
+					'Convention for the Protection of Human Rights and Fundamental Freedoms (1950)',
+				displayOverride: null,
+			},
+		],
+	};
+
+	it( 'italicized statutes, SIs, and treaties; save() leaves every table roman (#246)', () => {
+		const old = renderToStaticMarkup(
+			deprecated[ 0 ].save( { attributes } )
+		);
+		const current = renderToStaticMarkup( save( { attributes } ) );
+
+		expect( old ).toContain( '<i>Human Rights Act 1998</i>' );
+		expect( old ).toContain( '<i>Air Navigation Order 2016</i>' );
+		expect( old ).toContain(
+			'<i>Convention for the Protection of Human Rights and Fundamental Freedoms</i>'
+		);
+		expect( old ).not.toContain( '<i>Donoghue' );
+
+		expect( current ).not.toContain( '<i>' );
+		expect( current.replace( /<\/?i>/g, '' ) ).toBe(
+			old.replace( /<\/?i>/g, '' )
+		);
+	} );
+
+	it( 'matches save() for OSCOLA without legislation or treaties', () => {
+		const casesOnly = {
+			...attributes,
+			citations: [ attributes.citations[ 0 ] ],
+		};
+
+		expect(
+			renderToStaticMarkup(
+				deprecated[ 0 ].save( { attributes: casesOnly } )
+			)
+		).toBe( renderToStaticMarkup( save( { attributes: casesOnly } ) ) );
+	} );
+} );
+
+describe( '1.18.0 deprecation RIS J2 (deprecated[1])', () => {
 	const attributes = {
 		citationStyle: 'ieee',
 		headingText: 'References',
@@ -712,7 +786,7 @@ describe( '1.18.0 deprecation RIS J2 (deprecated[0])', () => {
 
 	it( 'saved RIS without J2; save() adds the journal abbreviation', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 0 ].save( { attributes } )
+			deprecated[ 1 ].save( { attributes } )
 		);
 		const current = renderToStaticMarkup( save( { attributes } ) );
 
@@ -723,7 +797,7 @@ describe( '1.18.0 deprecation RIS J2 (deprecated[0])', () => {
 	} );
 } );
 
-describe( '1.16.0 deprecation OSCOLA tables (deprecated[2])', () => {
+describe( '1.16.0 deprecation OSCOLA tables (deprecated[3])', () => {
 	const attributes = {
 		citationStyle: 'oscola',
 		headingText: 'Bibliography',
@@ -761,7 +835,7 @@ describe( '1.16.0 deprecation OSCOLA tables (deprecated[2])', () => {
 
 	it( 'saved one alphabetical list; save() writes OSCOLA 5 tables first', () => {
 		const old = renderToStaticMarkup(
-			deprecated[ 2 ].save( { attributes } )
+			deprecated[ 3 ].save( { attributes } )
 		);
 		const current = renderToStaticMarkup( save( { attributes } ) );
 
@@ -778,7 +852,8 @@ describe( '1.16.0 deprecation OSCOLA tables (deprecated[2])', () => {
 		);
 		expect( current ).toContain( 'Donoghue v Stevenson [1932]' );
 		expect( current ).not.toContain( '<i>Donoghue' );
-		expect( current ).toContain( '<i>Human Rights Act 1998</i>' );
+		expect( current ).toContain( 'Human Rights Act 1998' );
+		expect( current ).not.toContain( '<i>Human Rights Act' );
 		expect( current ).toContain( '>Secondary Sources</h3>' );
 	} );
 
@@ -790,7 +865,7 @@ describe( '1.16.0 deprecation OSCOLA tables (deprecated[2])', () => {
 
 		expect(
 			renderToStaticMarkup(
-				deprecated[ 2 ].save( { attributes: secondary } )
+				deprecated[ 3 ].save( { attributes: secondary } )
 			)
 		).toBe( renderToStaticMarkup( save( { attributes: secondary } ) ) );
 	} );

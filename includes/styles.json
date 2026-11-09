@@ -151,12 +151,14 @@
 				{
 					"key": "legislation",
 					"label": "Table of Legislation",
-					"types": [ "legislation", "bill", "regulation" ]
+					"types": [ "legislation", "bill", "regulation" ],
+					"romanTitles": true
 				},
 				{
 					"key": "treaties",
 					"label": "Table of Treaties",
-					"types": [ "treaty" ]
+					"types": [ "treaty" ],
+					"romanTitles": true
 				},
 				{
 					"key": "secondary",

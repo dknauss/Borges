@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **OSCOLA tables of legislation and treaties print titles in roman.** The short titles of Acts and statutory instruments and the names of treaties were italicized in their tables; OSCOLA 5 leaves them roman, as it does case names in the table of cases. OSCOLA blocks saved by 1.17.0 through 1.19.0 still open without a validation error and switch to roman the next time they are saved. ([#246](https://github.com/dknauss/Borges/issues/246))
+- **OSCOLA statutory instruments keep their SI number.** A `regulation` printed only its title; it now reads "Air Navigation Order 2016, SI 2016/765" (OSCOLA 5 §2.5). Saved entries keep their text until they are formatted again, for example by switching the style or editing the entry. ([#247](https://github.com/dknauss/Borges/issues/247))
+- **JSON-LD author names keep their particles.** A person's `name` in the structured data left out a name particle, so "Sérgio Buarque de Holanda" read "Sérgio Buarque Holanda" and "Ludwig van Beethoven" read "Ludwig Beethoven". As the page renders, `name` now carries the given name, particles, family name, and suffix as the entry shows them, and `familyName` keeps a non-dropping particle ("van Beethoven"); editors and translators get the same. Published posts are corrected without being re-saved, and the saved markup is unchanged. ([#248](https://github.com/dknauss/Borges/issues/248))
 - After **Update citations**, the "Citation style changed" snackbar is dismissed, so it no longer sits beside the result still saying citations use the old style.
 
 ## [1.19.0] - 2026-11-06

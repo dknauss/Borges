@@ -18,3 +18,4 @@ preprint	Young G and Zhao W, ‘Learning Citation Formats from Examples’ (arXi
 book-no-author-no-date	A Handbook of Bookbinding (Guild Press)
 legal-case	Smith v Jones [2019] UKSC 12
 legislation	Copyright, Designs and Patents Act 1988
+regulation	Air Navigation Order 2016, SI 2016/765

@@ -245,5 +245,12 @@
 		"type": "legislation",
 		"title": "Copyright, Designs and Patents Act",
 		"issued": { "date-parts": [[1988]] }
+	},
+	{
+		"id": "regulation",
+		"type": "regulation",
+		"title": "Air Navigation Order 2016",
+		"number": "SI 2016/765",
+		"issued": { "date-parts": [[2016]] }
 	}
 ]

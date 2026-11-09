@@ -169,6 +169,15 @@
             <text macro="year"/>
           </group>
         </else-if>
+        <else-if type="regulation">
+          <!-- OSCOLA 5 §2.5: a statutory instrument's title (which carries
+               its year) is followed by its SI number, as in "Air Navigation
+               Order 2016, SI 2016/765". -->
+          <group delimiter=", ">
+            <text variable="title"/>
+            <text variable="number"/>
+          </group>
+        </else-if>
         <else-if type="article-journal review review-book" match="any">
           <group delimiter=" ">
             <group delimiter=", ">

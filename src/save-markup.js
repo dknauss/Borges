@@ -146,6 +146,10 @@ export function renderBibliographySave(
 		localeArticles = false,
 		notesAuthorChains = false,
 		sourceGroups = false,
+		// Group keys whose titles stay roman, overriding each group's
+		// `romanTitles` from includes/styles.json. Only deprecations pass it,
+		// to freeze a table's italics as an older release saved them.
+		romanTitleGroups = null,
 		chronologicalAuthors = false,
 		undatedTitles = false,
 		firstAuthorDash = false,
@@ -473,7 +477,11 @@ export function renderBibliographySave(
 									renderEntry(
 										citation,
 										renderedCitations.indexOf( citation ),
-										group.romanTitles
+										romanTitleGroups
+											? romanTitleGroups.includes(
+													group.key
+												)
+											: group.romanTitles
 									)
 								) }
 							</ListTag>
