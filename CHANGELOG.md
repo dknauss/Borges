@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The bibliography heading is centered again, with a Heading Alignment setting.** APA 7, MLA 9, Chicago, Turabian, and ABNT all center the reference list heading, so it is centered by default once more, including in bibliographies saved by 1.19.x. A new block setting, "Heading Alignment" (`headingAlign`), sets it back to the start of the line (left in left-to-right languages), in line with the entries and a theme's section headings, as 1.19.0 had it. Saved markup is unchanged unless you choose Start, so existing blocks stay valid without a deprecation. Email and feed output follow the setting, and an `<h2>`–`<h6>` heading now carries its alignment inline too. The write routes' settings `PATCH`, the read routes, and `wp borges list` carry the setting.
 - **Clearer "Citations in this post" panel.** It now says "in-text citations", "out of date with the current style or numbering", and "edited by hand" instead of code-side terms; with no citations yet it says where Cite is (the block toolbar's More menu); and the checkbox, now "Also update citations I edited by hand", says that your wording will be replaced. The update notice says "hand-edited" to match. ([#269](https://github.com/dknauss/Borges/pull/269))
 
 ### Fixed

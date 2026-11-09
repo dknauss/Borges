@@ -1619,6 +1619,91 @@
 			}
 		},
 		{
+			"name": "heading-align-start",
+			"note": "headingAlign start (1.20.0): the paragraph heading gets the bibliography-builder-heading-align-start class.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "Sources",
+				"headingAlign": "start",
+				"citations": [
+					{
+						"id": "c1",
+						"csl": {
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"issued": {
+								"date-parts": [[1962]]
+							}
+						},
+						"formattedText": "Borges, J. L. (1962). Labyrinths."
+					}
+				]
+			}
+		},
+		{
+			"name": "heading-align-start-h3",
+			"note": "headingAlign start with headingLevel 3: the class goes on the <h3>.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "Sources",
+				"headingLevel": 3,
+				"headingAlign": "start",
+				"citations": [
+					{
+						"id": "c1",
+						"csl": {
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"issued": {
+								"date-parts": [[1962]]
+							}
+						},
+						"formattedText": "Borges, J. L. (1962). Labyrinths."
+					}
+				]
+			}
+		},
+		{
+			"name": "heading-align-center",
+			"note": "headingAlign center, stored explicitly: no class, the same markup as a block saved before the setting existed.",
+			"attributes": {
+				"citationStyle": "apa-7",
+				"headingText": "Sources",
+				"headingAlign": "center",
+				"citations": [
+					{
+						"id": "c1",
+						"csl": {
+							"type": "book",
+							"title": "Labyrinths",
+							"author": [
+								{
+									"family": "Borges",
+									"given": "Jorge Luis"
+								}
+							],
+							"issued": {
+								"date-parts": [[1962]]
+							}
+						},
+						"formattedText": "Borges, J. L. (1962). Labyrinths."
+					}
+				]
+			}
+		},
+		{
 			"name": "heading-level-6",
 			"note": "headingLevel 6: the deepest heading level.",
 			"attributes": {

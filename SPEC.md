@@ -102,6 +102,11 @@ OSCOLA bibliographies that hold primary sources are saved as OSCOLA 5's tables: 
 		"enum": [0, 2, 3, 4, 5, 6],
 		"default": 0
 	},
+	"headingAlign": {
+		"type": "string",
+		"enum": ["start", "center"],
+		"default": "center"
+	},
 	"outputJsonLd": {
 		"type": "boolean",
 		"default": true
@@ -221,6 +226,7 @@ Three buttons in the block toolbar control the add-citation form:
 -   **Citation Style** — selectable. The default is **Chicago Notes-Bibliography**.
 -   **Visible Heading** — optional text shown above the bibliography on the front end only when at least one citation exists.
 -   **Heading Level** — the element the visible heading is printed as: a paragraph (the default) or a heading, level 2 to 6.
+-   **Heading Alignment** (`headingAlign`, since 1.20.0) — Center (the default, which APA 7, MLA 9, Chicago, Turabian, and ABNT ask for) or Start (left in left-to-right languages), in line with the entries.
 -   **Show annotations** — prints each entry's annotation (CSL `annote`) under it; off by default. See "Annotated Bibliographies".
 -   **Metadata output controls** — JSON-LD on by default, with optional COinS and CSL-JSON toggles.
 -   **Entry count** — e.g., "Settings (12 sources)"
@@ -335,7 +341,7 @@ The `save()` function produces the following HTML structure. All content is bake
 ### 2. Semantic HTML Details
 
 -   **`<section role="doc-bibliography" aria-labelledby="bibliography-heading-{bibliographyId}">`** — DPUB-ARIA landmark, named for screen reader landmark navigation by its visible heading. A block with no heading, or with no stable `bibliographyId`, carries `aria-label` instead (the heading text, else "Bibliography"), so the landmark always has a name.
--   **`<p class="bibliography-builder-heading">`, or `<h2>`–`<h6>` with the same class** — the visible heading, printed only when `headingText` is set; it carries `id="bibliography-heading-{bibliographyId}"`, which the section's `aria-labelledby` points at. Blocks saved by 1.17.0 and earlier name the section with an `aria-label` copy of the heading; a render filter (`includes/heading-label.php`) gives them the same `id` and `aria-labelledby` on the front end. `headingLevel` chooses the element. `0`, the default, is a paragraph, which is what the block printed before the setting existed, so older saved blocks stay valid without a deprecation. `2` to `6` print a heading that is part of the page's heading outline; pick the level that fits the page (level 2 under the page title, for example). There is no level 1, and any other value falls back to the paragraph. The level does not change the heading's size: the block's stylesheet sets its font size, weight, margin, and alignment on the class, with a selector more specific than a theme's `h2`–`h6` rules. Properties the block does not set, such as a theme's heading font family, color, or line height, do apply to a heading-level heading.
+-   **`<p class="bibliography-builder-heading">`, or `<h2>`–`<h6>` with the same class** — the visible heading, printed only when `headingText` is set; it carries `id="bibliography-heading-{bibliographyId}"`, which the section's `aria-labelledby` points at. Blocks saved by 1.17.0 and earlier name the section with an `aria-label` copy of the heading; a render filter (`includes/heading-label.php`) gives them the same `id` and `aria-labelledby` on the front end. `headingLevel` chooses the element. `0`, the default, is a paragraph, which is what the block printed before the setting existed, so older saved blocks stay valid without a deprecation. `2` to `6` print a heading that is part of the page's heading outline; pick the level that fits the page (level 2 under the page title, for example). There is no level 1, and any other value falls back to the paragraph. The level does not change the heading's size: the block's stylesheet sets its font size, weight, margin, and alignment on the class, with a selector more specific than a theme's `h2`–`h6` rules. Properties the block does not set, such as a theme's heading font family, color, or line height, do apply to a heading-level heading. `headingAlign: "start"` adds the class `bibliography-builder-heading-align-start`, which the stylesheet aligns to the start of the line; `center`, the default, adds nothing, so blocks saved before the setting existed are unchanged and center.
 -   **`<ul>`** — unordered list for notes-based and author-date bibliography styles such as Chicago Notes-Bibliography, Chicago Author-Date, and APA.
 -   **`<ol>`** — ordered list for numbered styles such as Vancouver and IEEE.
 -   **`<li id="ref-{uuid}" lang="...">`** — each entry has a stable ID for potential future deep-linking. The `lang` attribute is set from CSL-JSON `language` when present, enabling correct screen reader pronunciation of foreign-language titles and author names. Newly saved output intentionally omits the older `doc-biblioentry` role; deprecated block versions retain it only so existing saved posts continue to validate.

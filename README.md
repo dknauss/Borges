@@ -205,6 +205,7 @@ Returns every Borges Bibliography block found in the post, including nested bloc
       "citationStyle": "chicago-notes-bibliography",
       "headingText": "References",
       "headingLevel": 0,
+      "headingAlign": "center",
       "outputJsonLd": true,
       "outputCoins": false,
       "outputCslJson": false,

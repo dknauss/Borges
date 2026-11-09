@@ -62,15 +62,26 @@ function bibliography_builder_portable_markup( $html ) {
 	);
 
 	// The default heading is a paragraph the block's stylesheet sets larger,
-	// semibold, and start-aligned; without it, it reads as body text. Repeat those
+	// semibold, and centered (start-aligned with the `headingAlign: "start"`
+	// class, since 1.20.0); without it, it reads as body text. Repeat those
 	// styles inline (the only kind most email clients keep) and add <strong>
 	// for feed readers that drop style attributes. A heading level other than
-	// "paragraph" saves an <h2>-<h6>, which clients style on their own.
-	$html = (string) preg_replace(
-		'#<p class="bibliography-builder-heading"( id="[^"]*")?>(.*?)</p>#s',
-		'<p class="bibliography-builder-heading"$1 style="'
-			. 'margin:0 0 0.75em;font-size:1.25em;font-weight:600;text-align:start'
-			. '"><strong>$2</strong></p>',
+	// "paragraph" saves an <h2>-<h6>, which clients size on their own, so it
+	// gets only the alignment.
+	$html = (string) preg_replace_callback(
+		'#<(p|h[2-6]) class="bibliography-builder-heading( bibliography-builder-heading-align-start)?"'
+			. '( id="[^"]*")?>(.*?)</\1>#s',
+		static function ( $parts ) {
+			$align = '' !== $parts[2] ? 'start' : 'center';
+			$open  = '<' . $parts[1] . ' class="bibliography-builder-heading' . $parts[2] . '"' . $parts[3];
+
+			if ( 'p' !== $parts[1] ) {
+				return $open . ' style="text-align:' . $align . '">' . $parts[4] . '</' . $parts[1] . '>';
+			}
+
+			return $open . ' style="margin:0 0 0.75em;font-size:1.25em;font-weight:600;text-align:' . $align . '">'
+				. '<strong>' . $parts[4] . '</strong></p>';
+		},
 		$html,
 		1
 	);

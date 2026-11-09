@@ -52,6 +52,11 @@
 			"enum": [ 0, 2, 3, 4, 5, 6 ],
 			"default": 0
 		},
+		"headingAlign": {
+			"type": "string",
+			"enum": [ "start", "center" ],
+			"default": "center"
+		},
 		"outputJsonLd": {
 			"type": "boolean",
 			"default": true
