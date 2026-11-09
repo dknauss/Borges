@@ -763,6 +763,13 @@ Status:
 
 ### Note and footnote mode (to consider, added 2026-11-09)
 
+**Consider together with [#243](https://github.com/dknauss/Borges/issues/243)**
+(note citations: first notes in core footnotes, then shortened notes and
+ibid.). #243 is the working plan for Stages 2 and 3 and records the two
+blockers below; this entry adds the reader-facing side (an optional
+bibliography, accessibility roles, email and feeds) from the ia.net study.
+Design them as one feature, not two.
+
 Many writers cite with numbered notes rather than a bibliography: a
 superscript number in the text and the note at the foot of the post. iA's
 essays (ia.net, studied 2026-11-09) are a clean example: Markdown-style
@@ -785,11 +792,14 @@ Possible shape, to decide before building:
     note form for the first citation of a work and the short form after it.
     Check how core numbers, renumbers, and sanitizes notes before relying on
     it, and whether its markup can carry `data-bibliography-ref`.
--   **Note text by style.** Chicago 18th ed. full note on first citation, short
-    note after (CMOS 13.32); OSCOLA full citation first, then the short form
-    with a cross-reference ("n 3"). citeproc-php can render CSL citations as
-    well as bibliography entries; whether the bundled styles' `<citation>`
-    layouts are complete enough is to be checked.
+-   **Note text by style.** Chicago: full note on first citation, short note
+    after; OSCOLA: full citation first, then the short form with a
+    cross-reference ("n 3"). Two blockers, from #243: none of the nine
+    bundled CSL styles has a `<citation>` layout (each needs note forms
+    written from its manual), and the bundled citeproc-php cannot tell
+    `subsequent` from `ibid` (one "last cited?" test for both), so Borges
+    must work out note positions itself or fix it upstream in
+    pkp/citeproc-php.
 -   **Bibliography optional.** In a note mode the bibliography block could be
     hidden or omitted, with the notes still carrying JSON-LD and COinS through
     the render-time enrichment, or kept as a "Works cited" list.
@@ -806,7 +816,7 @@ note list; how note numbering interacts with numeric styles' `[n]`; whether to u
 all (Chicago prefers short notes to it; check OSCOLA 5's rule); and how notes appear in
 email and feeds (`includes/email-output.php`).
 
-Status: backlog only; no design or code yet.
+Status: backlog only; no design or code yet. Track the work in #243.
 
 ### Option B: citation child blocks
 

@@ -7,8 +7,14 @@ import { Button, CheckboxControl, PanelBody } from '@wordpress/components';
 import { planCitationUpdates } from '../lib/citation-update';
 
 /**
- * Sidebar panel: how many citations in the post point at this bibliography,
- * and a button that updates them to its current style and numbering.
+ * Sidebar panel: how many in-text citations in the post link to this
+ * bibliography, and a button that updates them to its current style and
+ * numbering.
+ *
+ * The wording is for authors, not developers: "in-text citations" are the
+ * links the Cite tool (the paragraph toolbar's More menu) inserts, "out of
+ * date" is the `stale` count, and "edited by hand" is the `reworded` count
+ * (src/lib/citation-update.js).
  *
  * It lives in its own component so only the panel, not the whole block,
  * re-renders as the post is edited.
@@ -35,8 +41,8 @@ export function CitationUpdatePanel( { clientId, onUpdate } ) {
 			sprintf(
 				/* translators: %d: number of citations. */
 				_n(
-					'%d citation in this post points at this bibliography.',
-					'%d citations in this post point at this bibliography.',
+					'%d in-text citation in this post links to this bibliography.',
+					'%d in-text citations in this post link to this bibliography.',
 					counts.total,
 					'borges-bibliography-builder'
 				),
@@ -49,17 +55,14 @@ export function CitationUpdatePanel( { clientId, onUpdate } ) {
 				? sprintf(
 						/* translators: %d: number of citations. */
 						_n(
-							'%d does not match the current style.',
-							'%d do not match the current style.',
+							'%d is out of date with the current style or numbering.',
+							'%d are out of date with the current style or numbering.',
 							counts.stale,
 							'borges-bibliography-builder'
 						),
 						counts.stale
 					)
-				: __(
-						'Citations made with Cite match the current style.',
-						'borges-bibliography-builder'
-					)
+				: __( 'None need updating.', 'borges-bibliography-builder' )
 		);
 
 		if ( counts.reworded ) {
@@ -67,8 +70,8 @@ export function CitationUpdatePanel( { clientId, onUpdate } ) {
 				sprintf(
 					/* translators: %d: number of citations. */
 					_n(
-						'%d has been reworded.',
-						'%d have been reworded.',
+						'%d was edited by hand.',
+						'%d were edited by hand.',
 						counts.reworded,
 						'borges-bibliography-builder'
 					),
@@ -79,7 +82,7 @@ export function CitationUpdatePanel( { clientId, onUpdate } ) {
 	} else {
 		lines.push(
 			__(
-				'No citations in this post point at this bibliography yet. Use Cite in any paragraph to add one.',
+				"No in-text citations in this post link to this bibliography yet. To add one, select text in a paragraph, then choose Cite from the block toolbar's More menu.",
 				'borges-bibliography-builder'
 			)
 		);
@@ -99,11 +102,11 @@ export function CitationUpdatePanel( { clientId, onUpdate } ) {
 					<CheckboxControl
 						__nextHasNoMarginBottom
 						label={ __(
-							'Also replace citations I reworded',
+							'Also update citations I edited by hand',
 							'borges-bibliography-builder'
 						) }
 						help={ __(
-							'Reworded citations are left alone unless this is ticked.',
+							'Your wording is replaced with the standard citation. Leave this unticked to keep it.',
 							'borges-bibliography-builder'
 						) }
 						checked={ includeReworded }
