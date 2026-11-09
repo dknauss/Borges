@@ -57,6 +57,7 @@
 		"collectCoverageFrom": [
 			"src/**/*.js",
 			"!src/**/*.test.js",
+			"!src/**/*.stories.js",
 			"!src/**/__tests__/**",
 			"!src/**/__fixtures__/**",
 			"!src/**/__snapshots__/**",
