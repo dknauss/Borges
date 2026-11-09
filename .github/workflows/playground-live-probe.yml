@@ -1,0 +1,48 @@
+name: Playground Live Probe
+
+# Opens the README's Playground demo links on playground.wordpress.net in a
+# fresh browser profile and reports whether each boots first time or shows
+# Playground's "Try again" screen, with the blueprint's network requests and
+# console errors. Manual only: it depends on live third-party hosts.
+
+on:
+    workflow_dispatch:
+        inputs:
+            runs:
+                description: Fresh-profile loads per blueprint
+                default: '3'
+    push:
+        branches:
+            - 'claude/project-thread-hnhxfv'
+        paths:
+            - 'scripts/playground-live-probe.mjs'
+            - '.github/workflows/playground-live-probe.yml'
+
+permissions:
+    contents: read
+
+jobs:
+    probe:
+        runs-on: ubuntu-latest
+        timeout-minutes: 45
+        steps:
+            - uses: actions/checkout@v5
+
+            - name: Set up Node.js and dependencies
+              uses: ./.github/actions/setup-node-deps
+
+            - name: Install Chromium
+              run: npx playwright install --with-deps chromium
+
+            - name: Probe the demo links
+              env:
+                  PROBE_RUNS: ${{ github.event.inputs.runs || '3' }}
+              run: node scripts/playground-live-probe.mjs
+
+            - name: Upload screenshots
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: playground-probe
+                  path: probe-*.png
+                  if-no-files-found: ignore
