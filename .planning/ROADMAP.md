@@ -846,6 +846,49 @@ Next steps, in order:
 
 Drop it if the rerun shows no real gap, or if #4419 is fixed upstream.
 
+### More Storybook stories (added 2026-11-09)
+
+Storybook shipped in #287 with stories for the five components that read no
+data store, and the `main` build is published at
+<https://dknauss.github.io/Borges/storybook/>. Every new story is rendered and
+axe-checked in CI by `npm run test:storybook`, so each one below adds an
+accessibility check as well as documentation. How to write one is in
+`docs/storybook.md`.
+
+In order:
+
+1.  **`CitationEntryBody`** (`src/components/citation-entry-body.js`). The
+    entry row in its states: display, hover and focus with the row actions,
+    editing, an annotation, a keep-title-case entry, a parse warning, and a
+    long title that wraps. It reads no store but takes about 25 handlers from
+    `useCitationEditorState`; writing the stories will show which of them
+    group naturally, which feeds the prop-drilling item under "Editor and
+    formatting maintainability follow-ups" above.
+2.  **`CitationPicker`** (`src/formats/citation.js`). The "Cite" format's
+    picker takes its bibliographies as props: one bibliography, several, none
+    (the empty message), and a locator. `CitationEdit` around it calls
+    `useSelect`, so it waits for item 4.
+3.  **Saved bibliography, by style.** Stories that render `save()` output from
+    the `tests/fixtures/save-parity/` fixtures with `src/style.scss`, one per
+    style family and the special cases (MLA's repeated-author hyphens, OSCOLA's
+    tables, annotations shown and hidden, a numeric list). This is the
+    front-end view: a visual catalogue of the styles, and an axe check of the
+    markup readers get. It needs its own decorator, because the editor wrapper
+    in `.storybook/preview.jsx` loads the editor styles.
+4.  **Components that read a store**: `CitationUpdatePanel` and the "Cite"
+    format's `CitationEdit`. Both need a mocked registry (`RegistryProvider`
+    from `@wordpress/data` with the block editor store and a few blocks), set
+    up once as a shared decorator.
+5.  **The Cite / Export panel** (`src/view.js`). Not React: a story renders a
+    saved fixture and runs `buildCiteExportPanels()` and `attachCiteCopy()`
+    on it, so the panel and its copy buttons can be tried and axe-checked.
+
+Not planned: stories for `edit.js` as a whole. It is the composition of the
+pieces above plus the inspector panels, and the Playwright E2E tests already
+cover it in a real editor.
+
+When a step lands, update the table in `docs/storybook.md`.
+
 ### Option B: citation child blocks
 
 Explore a future architecture where each citation becomes a child block instead
