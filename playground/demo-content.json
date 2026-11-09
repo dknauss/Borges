@@ -126,6 +126,7 @@
 		"<strong>Order</strong>: notes and author-date styles sort alphabetically. Numeric styles (IEEE, Vancouver) keep your order; use <em>Move citation up/down</em>.",
 		"<strong>Exports</strong> (block toolbar): copy the bibliography as text, or download BibTeX, BibLaTeX, RIS, or CSL-JSON.",
 		"<strong>Per-entry Cite / Export</strong> (sidebar, off by default): gives readers copy and download links under each entry on the published page. The Chicago Notes-Bibliography example in section 3 has it on.",
+		"<strong>Repeated authors</strong> (sidebar, for MLA, OSCOLA, Chicago, and ABNT): MLA’s three hyphens and OSCOLA’s double em dash can give way to the names written out, and Chicago and ABNT can bring back their older marks, the 3-em dash and the underscore line. Section 3’s Chicago Notes-Bibliography and ABNT examples use them.",
 		"<strong>Machine-readable output</strong> (sidebar): JSON-LD for search engines (on by default), COinS for Zotero, and embedded CSL-JSON. The examples in section 3 show each on and off.",
 		"<strong>Block settings</strong>: like other blocks, a bibliography takes an HTML anchor and extra CSS classes (<em>Advanced</em>), a font size, and top and bottom margin and padding.",
 		"<strong>Front end</strong>: use <em>View Post</em> to see the published bibliography, then open <a href=\"/wp-json/bibliography/v1/posts/1/bibliographies\">its read-only REST data</a>."
@@ -133,7 +134,7 @@
 	"examples": [
 		{
 			"title": "Chicago Notes-Bibliography: per-entry Cite / Export",
-			"description": "A book, a chapter, a journal article, and a webpage, sorted alphabetically. <a href=\"/?p=1#demo-chicago-notes\">View the published page</a> and open <em>Cite / Export</em> under any entry to copy it or download it as RIS, BibTeX, BibLaTeX, or CSL-JSON. <strong>Settings:</strong> Per-entry Cite / Export on, and every machine-readable layer on (JSON-LD, COinS, embedded CSL-JSON); heading <em>Works Cited</em> at level H4.",
+			"description": "A book, a chapter, a journal article, and a webpage, sorted alphabetically. <a href=\"/?p=1#demo-chicago-notes\">View the published page</a> and open <em>Cite / Export</em> under any entry to copy it or download it as RIS, BibTeX, BibLaTeX, or CSL-JSON. <strong>Settings:</strong> Per-entry Cite / Export on, and every machine-readable layer on (JSON-LD, COinS, embedded CSL-JSON); <em>Repeated authors</em> set to the 3-em dash of Chicago’s 17th edition, so the second Borges entry starts “———.” (Chicago 18 writes the name out, the default; needs Borges 1.20.0 or later); heading <em>Works Cited</em> at level H4.",
 			"attributes": {
 				"bibliographyId": "demo-chicago-notes",
 				"citationStyle": "chicago-notes-bibliography",
@@ -143,7 +144,8 @@
 				"outputJsonLd": true,
 				"outputCoins": true,
 				"outputCslJson": true,
-				"outputCiteExport": true
+				"outputCiteExport": true,
+				"repeatedAuthorMark": "dash"
 			},
 			"citations": [
 				{
@@ -397,7 +399,7 @@
 		},
 		{
 			"title": "MLA 9: repeated authors",
-			"description": "Works by one author list the name once, then three hyphens, as MLA asks. <strong>Settings:</strong> COinS on, so Zotero’s browser connector can save every entry; heading <em>Works Cited</em> at level H4.",
+			"description": "Works by one author list the name once, then three hyphens, as MLA asks; screen readers still hear the name. Set <em>Repeated authors</em> in the sidebar to <em>Write the names out</em> to drop the hyphens. <strong>Settings:</strong> COinS on, so Zotero’s browser connector can save every entry; heading <em>Works Cited</em> at level H4.",
 			"attributes": {
 				"bibliographyId": "demo-mla-9",
 				"citationStyle": "mla-9",
@@ -587,7 +589,7 @@
 		},
 		{
 			"title": "OSCOLA: tables of cases, legislation, and treaties",
-			"description": "OSCOLA 5 lists primary sources in their own tables before the secondary sources. Each table’s label sits one level below the block heading. <strong>Settings:</strong> the default output; heading <em>Bibliography</em> at level H4, so the tables are labeled at H5.",
+			"description": "OSCOLA 5 lists primary sources in their own tables before the secondary sources. Each table’s label sits one level below the block heading. Case names, Acts, statutory instruments, and treaties stay roman in their tables, and the statutory instrument carries its SI number (“Air Navigation Order 2016, SI 2016/765”). <strong>Settings:</strong> the default output; heading <em>Bibliography</em> at level H4, so the tables are labeled at H5.",
 			"attributes": {
 				"bibliographyId": "demo-oscola",
 				"citationStyle": "oscola",
@@ -656,7 +658,7 @@
 		},
 		{
 			"title": "ABNT: Brazilian references",
-			"description": "Surnames in capitals, with particles such as “de” after the given name, sorted by surname. <strong>Settings:</strong> the default output; heading <em>Referências</em> at level H4.",
+			"description": "Surnames in capitals, with particles such as “de” after the given name, sorted by surname. The JSON-LD keeps the particle in each person’s name (“Sérgio Buarque de Holanda”). <strong>Settings:</strong> the default output, except <em>Repeated authors</em> set to the underscore line of NBR 6023:2002, so Freyre’s second book starts “______.” (the 2018 revision writes the name out, the default; needs Borges 1.20.0 or later); heading <em>Referências</em> at level H4.",
 			"attributes": {
 				"bibliographyId": "demo-abnt",
 				"citationStyle": "abnt",
@@ -665,7 +667,8 @@
 				"outputJsonLd": true,
 				"outputCoins": false,
 				"outputCslJson": false,
-				"outputCiteExport": false
+				"outputCiteExport": false,
+				"repeatedAuthorMark": "underscore"
 			},
 			"citations": [
 				{
@@ -691,6 +694,14 @@
 					"publisher": "Maia & Schmidt",
 					"publisher-place": "Rio de Janeiro",
 					"issued": { "date-parts": [[1933]] }
+				},
+				{
+					"type": "book",
+					"title": "Sobrados e mucambos",
+					"author": [{ "family": "Freyre", "given": "Gilberto" }],
+					"publisher": "Companhia Editora Nacional",
+					"publisher-place": "São Paulo",
+					"issued": { "date-parts": [[1936]] }
 				}
 			]
 		}
