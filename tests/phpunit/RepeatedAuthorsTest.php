@@ -474,4 +474,50 @@ final class RepeatedAuthorsTest extends TestCase {
 		$this->assertSame( 'style', bibliography_builder_write_setting_defaults()['repeatedAuthorMark'] );
 		$this->assertSame( array( 'style', 'dash', 'underscore', 'none' ), bibliography_builder_repeated_author_mark_values() );
 	}
+
+	public function test_older_marks_need_every_name_to_be_writable() {
+		$nameless    = array(
+			array(
+				'family' => 'Lee',
+				'given'  => 'Kim',
+			),
+			array( 'given' => 'Ann' ),
+		);
+		$suffixed    = array(
+			array(
+				'family' => 'King',
+				'given'  => 'Martin',
+				'suffix' => 'Jr.',
+			),
+		);
+		$given_only  = array( array( 'given' => 'Kim' ) );
+		$family_only = array( array( 'family' => 'Lee' ) );
+
+		$this->assertSame(
+			array( null, null ),
+			self::with_mark(
+				array(
+					self::entry( 'a', $nameless, 'Lee, Kim, and Ann. One.' ),
+					self::entry( 'b', $nameless, 'Lee, Kim, and Ann. Two.' ),
+				),
+				'chicago-author-date',
+				'dash'
+			)
+		);
+		$this->assertSame(
+			array( null, null, null, null, null, 'LEE' ),
+			self::with_mark(
+				array(
+					self::entry( 'a', $suffixed, 'KING, Martin, Jr. One.' ),
+					self::entry( 'b', $suffixed, 'KING, Martin, Jr. Two.' ),
+					self::entry( 'c', $given_only, 'Kim. Three.' ),
+					self::entry( 'd', $given_only, 'Kim. Four.' ),
+					self::entry( 'e', $family_only, 'LEE. Five.' ),
+					self::entry( 'f', $family_only, 'LEE. Six.' ),
+				),
+				'abnt',
+				'underscore'
+			)
+		);
+	}
 }

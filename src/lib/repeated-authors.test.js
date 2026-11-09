@@ -560,3 +560,48 @@ describe( 'the repeatedAuthorMark setting', () => {
 		] );
 	} );
 } );
+
+describe( 'the older marks keep full names whenever in doubt', () => {
+	const run = ( citations, style, markSetting ) =>
+		getRepeatedAuthorPrefixes( citations, style, displayText, {
+			markSetting,
+		} );
+
+	it( 'needs every name to be writable, in Chicago and ABNT', () => {
+		const nameless = [ { family: 'Lee', given: 'Kim' }, { given: 'Ann' } ];
+		const suffixed = [ { family: 'King', given: 'Martin', suffix: 'Jr.' } ];
+		const givenOnly = [ { given: 'Kim' } ];
+		const familyOnly = [ { family: 'Lee' } ];
+
+		expect(
+			run(
+				[
+					entry( 'a', nameless, 'Lee, Kim, and Ann. One.' ),
+					entry( 'b', nameless, 'Lee, Kim, and Ann. Two.' ),
+				],
+				'chicago-author-date',
+				'dash'
+			)
+		).toEqual( [ null, null ] );
+		expect(
+			run(
+				[
+					entry( 'a', suffixed, 'KING, Martin, Jr. One.' ),
+					entry( 'b', suffixed, 'KING, Martin, Jr. Two.' ),
+					entry( 'c', givenOnly, 'Kim. Three.' ),
+					entry( 'd', givenOnly, 'Kim. Four.' ),
+					entry( 'e', familyOnly, 'LEE. Five.' ),
+					entry( 'f', familyOnly, 'LEE. Six.' ),
+				],
+				'abnt',
+				'underscore'
+			)
+		).toEqual( [ null, null, null, null, null, 'LEE' ] );
+	} );
+
+	it( 'treats an unknown style as having no mark', () => {
+		expect( getRepeatedAuthorRule( 'nope', 'dash' ) ).toBeNull();
+		expect( getOptionalRepeatedAuthorMarks( 'nope' ) ).toEqual( [] );
+		expect( getRepeatedAuthorMark( 'apa-7' ) ).toBe( REPEATED_AUTHOR_MARK );
+	} );
+} );
