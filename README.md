@@ -96,6 +96,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.20.0** — The bibliography heading centered by default again, with a Heading Alignment setting and a default themes can override; a Repeated authors setting; Harvard, IEEE, and Vancouver citations pasted as text; cleaner PubMed records; `400` from `/format` when no citations are sent.
 - **1.19.1** — OSCOLA tables of legislation and treaties in roman and statutory instruments with their SI number; name particles kept in JSON-LD author names; the style-change notice dismissed after Update citations.
 - **1.19.0** — In-text and margin citations with a Cite control, page locators, and Update citations after a style change; annotated bibliographies; microformats (`h-cite`) for each entry; full citation records in Yoast SEO’s graph; journal abbreviations in RIS; sentence case in Harvard.
 - **1.18.0** — Sentence case in APA 7, Vancouver, and IEEE, with a per-entry opt-out; journal abbreviations in IEEE and Vancouver; OSCOLA repeated authors; new bibliographies start with an h2 that takes the theme's heading styles; citation links without `nofollow` or `noreferrer`; the bibliography named by its visible heading.
