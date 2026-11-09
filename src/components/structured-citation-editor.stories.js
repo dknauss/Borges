@@ -32,9 +32,15 @@ const ARTICLE_FIELDS = {
  * @param {Object}                               props               Story args.
  * @param {Object}                               props.fields        Initial field values.
  * @param {(key: string, value: string) => void} props.onFieldChange Logs each change.
+ * @param {(type: string) => void}               props.onTypeChange  Logs each type change.
  * @return {Element} The editor.
  */
-function Stateful( { fields: initialFields, onFieldChange, ...props } ) {
+function Stateful( {
+	fields: initialFields,
+	onFieldChange,
+	onTypeChange,
+	...props
+} ) {
 	const [ fields, setFields ] = useState( initialFields );
 
 	return (
@@ -44,6 +50,10 @@ function Stateful( { fields: initialFields, onFieldChange, ...props } ) {
 			onFieldChange={ ( key, value ) => {
 				setFields( ( current ) => ( { ...current, [ key ]: value } ) );
 				onFieldChange( key, value );
+			} }
+			onTypeChange={ ( type ) => {
+				setFields( ( current ) => ( { ...current, type } ) );
+				onTypeChange( type );
 			} }
 		/>
 	);

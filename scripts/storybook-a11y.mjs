@@ -94,11 +94,20 @@ for ( const story of stories ) {
 	await page.goto( `${ base }/iframe.html?id=${ story.id }&viewMode=story`, {
 		waitUntil: 'networkidle',
 	} );
-	await page.locator( '#storybook-root' ).waitFor( { state: 'attached' } );
+	// .storybook/preview.jsx wraps every story in the block's wrapper, so look
+	// inside it: the wrapper itself is never empty.
+	const storyRoot =
+		'#storybook-root > .wp-block-bibliography-builder-bibliography';
+	// A story that throws never renders the wrapper.
+	const rendered = await page
+		.locator( storyRoot )
+		.waitFor( { state: 'attached', timeout: 5000 } )
+		.then( () => true )
+		.catch( () => false );
 
-	const html = await page.locator( '#storybook-root' ).innerHTML();
+	const html = rendered ? await page.locator( storyRoot ).innerHTML() : '';
 	const results = await new AxeBuilder( { page } )
-		.include( '#storybook-root' )
+		.include( rendered ? storyRoot : '#storybook-root' )
 		.analyze();
 
 	const problems = [
