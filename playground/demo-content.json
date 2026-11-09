@@ -134,7 +134,7 @@
 	"examples": [
 		{
 			"title": "Chicago Notes-Bibliography: per-entry Cite / Export",
-			"description": "A book, a chapter, a journal article, and a webpage, sorted alphabetically. <a href=\"/?p=1#demo-chicago-notes\">View the published page</a> and open <em>Cite / Export</em> under any entry to copy it or download it as RIS, BibTeX, BibLaTeX, or CSL-JSON. <strong>Settings:</strong> Per-entry Cite / Export on, and every machine-readable layer on (JSON-LD, COinS, embedded CSL-JSON); <em>Repeated authors</em> set to the 3-em dash of Chicago’s 17th edition, so the second Borges entry starts “———.” (Chicago 18 writes the name out, the default; needs Borges 1.20.0 or later); heading <em>Works Cited</em> at level H4.",
+			"description": "A book, a chapter, a journal article, and a webpage, sorted alphabetically. <a href=\"/?p=1#demo-chicago-notes\">View the published page</a> and open <em>Cite / Export</em> under any entry to copy it or download it as RIS, BibTeX, BibLaTeX, or CSL-JSON. <strong>Settings:</strong> Per-entry Cite / Export on, and every machine-readable layer on (JSON-LD, COinS, embedded CSL-JSON); <em>Repeated authors</em> set to the 3-em dash of Chicago’s 17th edition, so on the published page the second Borges entry begins “———.” instead of repeating his name (Chicago 18 repeats the name, the default; needs Borges 1.20.0 or later); heading <em>Works Cited</em> at level H4.",
 			"attributes": {
 				"bibliographyId": "demo-chicago-notes",
 				"citationStyle": "chicago-notes-bibliography",
@@ -399,12 +399,13 @@
 		},
 		{
 			"title": "MLA 9: repeated authors",
-			"description": "Works by one author list the name once, then three hyphens, as MLA asks; screen readers still hear the name. Set <em>Repeated authors</em> in the sidebar to <em>Write the names out</em> to drop the hyphens. <strong>Settings:</strong> COinS on, so Zotero’s browser connector can save every entry; heading <em>Works Cited</em> at level H4.",
+			"description": "Three books by Borges and one about him. MLA 9 does not repeat an author’s name when the entry above is by the same author: it writes three hyphens instead, so the second and third Borges books begin “‑‑‑.” rather than “Borges, Jorge Luis.” The hyphens appear only on the published page; the editor list keeps the full names so you can edit each entry. <a href=\"/?p=1#demo-mla-9\">View the published page</a> to see them. Screen readers still hear the name. To print the name every time, set <em>Repeated authors</em> in the block sidebar to <em>Write the names out</em>. <strong>Settings:</strong> COinS on, so Zotero’s browser connector can save every entry; heading <em>Works Cited</em> at level H4.",
 			"attributes": {
 				"bibliographyId": "demo-mla-9",
 				"citationStyle": "mla-9",
 				"headingText": "Works Cited",
 				"headingLevel": 4,
+				"anchor": "demo-mla-9",
 				"outputJsonLd": true,
 				"outputCoins": true,
 				"outputCslJson": false,
@@ -658,12 +659,13 @@
 		},
 		{
 			"title": "ABNT: Brazilian references",
-			"description": "Surnames in capitals, with particles such as “de” after the given name, sorted by surname. The JSON-LD keeps the particle in each person’s name (“Sérgio Buarque de Holanda”). <strong>Settings:</strong> the default output, except <em>Repeated authors</em> set to the underscore line of NBR 6023:2002, so Freyre’s second book starts “______.” (the 2018 revision writes the name out, the default; needs Borges 1.20.0 or later); heading <em>Referências</em> at level H4.",
+			"description": "Surnames in capitals, with particles such as “de” after the given name, sorted by surname. The JSON-LD keeps the particle in each person’s name (“Sérgio Buarque de Holanda”). <strong>Settings:</strong> the default output, except <em>Repeated authors</em> set to the underscore line of NBR 6023:2002, so on the <a href=\"/?p=1#demo-abnt\">published page</a> Freyre’s second book begins “______.” instead of repeating his name (the 2018 revision repeats the name, the default; needs Borges 1.20.0 or later); heading <em>Referências</em> at level H4.",
 			"attributes": {
 				"bibliographyId": "demo-abnt",
 				"citationStyle": "abnt",
 				"headingText": "Referências",
 				"headingLevel": 4,
+				"anchor": "demo-abnt",
 				"outputJsonLd": true,
 				"outputCoins": false,
 				"outputCslJson": false,
