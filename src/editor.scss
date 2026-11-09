@@ -73,9 +73,10 @@
 		--bibliography-builder-marker-width: 2.25em;
 	}
 
+	// Alignment comes from style.scss (centered by default, low specificity),
+	// so a theme's override shows in the editor as it does on the front end.
 	.bibliography-builder-heading-preview {
 		margin: 0 0 0.75em;
-		text-align: start;
 	}
 
 	.bibliography-builder-actions {

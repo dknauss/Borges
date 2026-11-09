@@ -14,7 +14,16 @@
 
 .wp-block-bibliography-builder-bibliography .bibliography-builder-heading {
 	margin: 0 0 0.75em;
-	text-align: start;
+}
+
+/*
+ * The heading is centered by default. :where() drops the block wrapper's
+ * specificity to zero, leaving a single class (0,1,0), so any theme rule on
+ * the heading (".bibliography-builder-heading { text-align: start }", or one
+ * scoped to the post content) overrides it without !important.
+ */
+:where(.wp-block-bibliography-builder-bibliography) .bibliography-builder-heading {
+	text-align: center;
 }
 
 /* OSCOLA tables: a label above each group's list (bibliography-groups.js). */

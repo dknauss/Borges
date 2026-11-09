@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The bibliography heading is centered by default.** The rule uses `:where()` around the block wrapper, so it has the specificity of one class and a theme can set its own alignment with any rule on `.bibliography-builder-heading` (Bad Sector keeps it start-aligned this way). The editor preview and the email and feed output follow the same default.
 - **Clearer "Citations in this post" panel.** It now says "in-text citations", "out of date with the current style or numbering", and "edited by hand" instead of code-side terms; with no citations yet it says where Cite is (the block toolbar's More menu); and the checkbox, now "Also update citations I edited by hand", says that your wording will be replaced. The update notice says "hand-edited" to match. ([#269](https://github.com/dknauss/Borges/pull/269))
 
 ### Fixed
