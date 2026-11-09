@@ -24,6 +24,7 @@
 		"test:e2e:playground": "sh ./scripts/test-playground-e2e.sh",
 		"test:e2e:lifecycle": "sh ./scripts/test-lifecycle-e2e.sh",
 		"test:demo-links": "sh ./scripts/check-demo-links.sh",
+		"test:playground-live": "node ./scripts/playground-live-probe.mjs",
 		"test:runtime:local": "sh ./scripts/runtime-matrix/smoke.sh",
 		"test:interop:zotero": "sh ./scripts/test-zotero-interop.sh",
 		"test:a11y": "sh ./scripts/test-a11y.sh",
