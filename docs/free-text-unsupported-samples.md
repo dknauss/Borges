@@ -56,11 +56,7 @@ Why unsupported right now:
 - webpage parsing currently requires a quoted page title
 - source-only URL references are too ambiguous to normalize safely
 
-### Labelled journal articles (IEEE, ABNT, MLA)
-
-```text
-[1] A. B. Smith and C. D. Jones, "A study of things," IEEE Trans. Softw. Eng., vol. 12, no. 3, pp. 34–43, 2001.
-```
+### Labelled journal articles (ABNT, MLA)
 
 ```text
 SMITH, João. Estudo das coisas. Revista de Coisas, v. 12, n. 3, p. 34-43, 2001.
@@ -72,11 +68,13 @@ Hayes, Tom. “William Blake’s Androgynous Ego-Ideal.” ELH, vol. 71, no. 1, 
 
 Why unsupported right now:
 
-- no pattern reads `vol.`/`no.`/`pp.` (or ABNT's `v.`/`n.`/`p.`) labels yet
+- only the IEEE pattern reads `vol.`/`no.`/`pp.` labels, and it needs
+  initials-first names; nothing reads ABNT's `v.`/`n.`/`p.` yet
 - before Phase 0 of `docs/planning/free-text-styles-plan.md` a book pattern
   read these as books, with the labels in the title and the page range as the
-  publisher; they are now declined, until the IEEE, ABNT, and MLA patterns
-  planned there read them
+  publisher; they are now declined. IEEE articles
+  (`A. B. Smith and C. D. Jones, "A study of things," IEEE Trans. Softw. Eng.,
+  vol. 12, no. 3, pp. 34–43, 2001.`) are read since Phase 2
 
 ## Expected behavior
 

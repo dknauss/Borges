@@ -14,6 +14,23 @@
 
 .wp-block-bibliography-builder-bibliography .bibliography-builder-heading {
 	margin: 0 0 0.75em;
+}
+
+/*
+ * The heading is centered by default. :where() drops the block wrapper's
+ * specificity to zero, leaving a single class (0,1,0), so any theme rule on
+ * the heading (".bibliography-builder-heading { text-align: start }", or one
+ * scoped to the post content) overrides it without !important.
+ */
+:where(.wp-block-bibliography-builder-bibliography) .bibliography-builder-heading {
+	text-align: center;
+}
+
+/*
+ * The block's Heading Alignment setting (`headingAlign: "start"`). A choice
+ * made on the block keeps the full selector, so it beats a theme's default.
+ */
+.wp-block-bibliography-builder-bibliography .bibliography-builder-heading-align-start {
 	text-align: start;
 }
 

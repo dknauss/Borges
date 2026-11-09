@@ -2,9 +2,14 @@ import {
 	FIRST_AUTHOR_DASH,
 	FIRST_AUTHOR_DASH_STYLES,
 	REPEATED_AUTHOR_MARK,
+	REPEATED_AUTHOR_MARK_SETTINGS,
 	REPEATED_AUTHOR_STYLES,
+	THREE_EM_DASH,
+	UNDERSCORE_LINE,
+	getOptionalRepeatedAuthorMarks,
 	getRepeatedAuthorMark,
 	getRepeatedAuthorPrefixes,
+	getRepeatedAuthorRule,
 } from './repeated-authors';
 
 function entry( id, author, text, extra = {} ) {
@@ -363,5 +368,240 @@ describe( 'getRepeatedAuthorPrefixes for OSCOLA', () => {
 		expect(
 			oscola( harts, { listOf: ( citation ) => citation.id === 'a' } )
 		).toEqual( [ null, null, 'Hart HLA' ] );
+	} );
+} );
+
+describe( 'the repeatedAuthorMark setting', () => {
+	const withMark = ( citations, style, markSetting ) =>
+		getRepeatedAuthorPrefixes( citations, style, displayText, {
+			firstAuthorDash: true,
+			markSetting,
+		} );
+	const chicago = 'chicago-notes-bibliography';
+
+	it( 'offers Chicago 17’s dash and ABNT’s underscore line', () => {
+		expect( THREE_EM_DASH ).toBe( '———' );
+		expect( UNDERSCORE_LINE ).toBe( '______' );
+		expect( REPEATED_AUTHOR_MARK_SETTINGS ).toEqual( [
+			'style',
+			'dash',
+			'underscore',
+			'none',
+		] );
+		expect( getOptionalRepeatedAuthorMarks( chicago ) ).toEqual( [
+			'dash',
+		] );
+		expect(
+			getOptionalRepeatedAuthorMarks( 'chicago-author-date' )
+		).toEqual( [ 'dash' ] );
+		expect( getOptionalRepeatedAuthorMarks( 'abnt' ) ).toEqual( [
+			'underscore',
+		] );
+		expect( getOptionalRepeatedAuthorMarks( 'apa-7' ) ).toEqual( [] );
+	} );
+
+	it( 'falls back to the style for a mark the style does not offer', () => {
+		expect( getRepeatedAuthorRule( chicago, 'dash' ) ).toBe( 'dash' );
+		expect( getRepeatedAuthorRule( chicago, 'underscore' ) ).toBeNull();
+		expect( getRepeatedAuthorRule( 'abnt', 'underscore' ) ).toBe(
+			'underscore'
+		);
+		expect( getRepeatedAuthorRule( 'mla-9', 'dash' ) ).toBe( 'allAuthors' );
+		expect( getRepeatedAuthorRule( 'mla-9', 'none' ) ).toBeNull();
+		expect( getRepeatedAuthorRule( 'oscola', 'bogus' ) ).toBe(
+			'firstAuthor'
+		);
+		expect( getRepeatedAuthorRule( 'apa-7', 'dash' ) ).toBeNull();
+		expect( getRepeatedAuthorMark( chicago, 'dash' ) ).toBe(
+			THREE_EM_DASH
+		);
+		expect( getRepeatedAuthorMark( 'abnt', 'underscore' ) ).toBe(
+			UNDERSCORE_LINE
+		);
+		expect( getRepeatedAuthorMark( 'mla-9', 'dash' ) ).toBe(
+			REPEATED_AUTHOR_MARK
+		);
+	} );
+
+	it( 'writes the names out with "none", even in MLA and OSCOLA', () => {
+		const list = [
+			entry( 'a', borges, 'Borges, Jorge Luis. Ficciones. 1944.' ),
+			entry( 'b', borges, 'Borges, Jorge Luis. Labyrinths. 1962.' ),
+		];
+
+		expect( withMark( list, 'mla-9', 'none' ) ).toEqual( [ null, null ] );
+		expect( withMark( list, 'mla-9', 'style' ) ).toEqual( [
+			null,
+			'Borges, Jorge Luis',
+		] );
+		expect( withMark( list, chicago, 'style' ) ).toEqual( [ null, null ] );
+	} );
+
+	it( 'writes names as the Chicago styles do for the dash', () => {
+		const two = [
+			{ family: 'Becker', given: 'Thomas J.' },
+			{ family: 'Nakamura', given: 'Yuki' },
+		];
+		const three = [
+			{ family: 'Hughes', given: 'Rebecca' },
+			{ family: 'Iqbal', given: 'Omar' },
+			{ family: 'Jensen', given: 'Lars' },
+		];
+		const eight = [
+			{ family: 'Kim', given: 'Ji-woo' },
+			{ family: 'Lopez', given: 'Ana' },
+			{ family: 'Moreau', given: 'Paul' },
+			...[ 'N', 'O', 'P', 'Q', 'R' ].map( ( family ) => ( {
+				family,
+				given: 'X',
+			} ) ),
+		];
+		const gogh = [
+			{
+				family: 'Gogh',
+				given: 'Vincent',
+				'non-dropping-particle': 'van',
+			},
+		];
+		const king = [
+			{ family: 'King', given: 'Martin Luther', suffix: 'Jr.' },
+		];
+		const twoText = 'Becker, Thomas J., and Yuki Nakamura';
+		const threeText = 'Hughes, Rebecca, Omar Iqbal, and Lars Jensen';
+		const eightText = 'Kim, Ji-woo, Ana Lopez, Paul Moreau, et al';
+
+		expect(
+			withMark(
+				[
+					entry( 'a', two, `${ twoText }. One. 2020.` ),
+					entry( 'b', two, `${ twoText }. 2021. Two.` ),
+					entry( 'c', three, `${ threeText }. Three.` ),
+					entry( 'd', three, `${ threeText }. Four.` ),
+					entry( 'e', eight, `${ eightText }. Five.` ),
+					entry( 'f', eight, `${ eightText }. Six.` ),
+					entry( 'g', gogh, 'Gogh, Vincent van. Seven.' ),
+					entry( 'h', gogh, 'Gogh, Vincent van. Eight.' ),
+					entry( 'i', king, 'King, Martin Luther, Jr. Nine.' ),
+					entry( 'j', king, 'King, Martin Luther, Jr. Ten.' ),
+					// Editors only: Chicago 17's "———, ed." is not applied.
+					entry( 'k', [], 'Okafor, Chidi, ed. Eleven.' ),
+					entry( 'l', [], 'Okafor, Chidi, ed. Twelve.' ),
+				],
+				chicago,
+				'dash'
+			)
+		).toEqual( [
+			null,
+			twoText,
+			null,
+			threeText,
+			null,
+			eightText,
+			null,
+			'Gogh, Vincent van',
+			null,
+			'King, Martin Luther, Jr',
+			null,
+			null,
+		] );
+	} );
+
+	it( 'writes names as ABNT does for the underscore line', () => {
+		const two = [
+			{ family: 'Becker', given: 'Thomas J.' },
+			{ family: 'Nakamura', given: 'Yuki' },
+		];
+		const four = [
+			{ family: 'Kim', given: 'Ji-woo' },
+			{ family: 'Lopez', given: 'Ana' },
+			{ family: 'Moreau', given: 'Paul' },
+			{ family: 'Novak', given: 'Eva' },
+		];
+		const org = [ { literal: 'Open Research Alliance' } ];
+		const accented = [ { family: 'Álvarez', given: 'Marta Inés' } ];
+		const gogh = [
+			{
+				family: 'Gogh',
+				given: 'Vincent',
+				'non-dropping-particle': 'van',
+			},
+		];
+		const twoText = 'BECKER, Thomas J.; NAKAMURA, Yuki';
+
+		expect(
+			withMark(
+				[
+					entry( 'a', two, `${ twoText }. One.` ),
+					entry( 'b', two, `${ twoText }. Two.` ),
+					entry( 'c', four, 'KIM, Ji-woo et al. Three.' ),
+					entry( 'd', four, 'KIM, Ji-woo et al. Four.' ),
+					entry( 'e', org, 'OPEN RESEARCH ALLIANCE. Five.' ),
+					entry( 'f', org, 'OPEN RESEARCH ALLIANCE. Six.' ),
+					entry( 'g', accented, 'ÁLVAREZ, Marta Inés. Seven.' ),
+					entry( 'h', accented, 'ÁLVAREZ, Marta Inés. Eight.' ),
+					// Particles: the CSL processor decides their capitals.
+					entry( 'i', gogh, 'VAN GOGH, Vincent. Nine.' ),
+					entry( 'j', gogh, 'VAN GOGH, Vincent. Ten.' ),
+				],
+				'abnt',
+				'underscore'
+			)
+		).toEqual( [
+			null,
+			twoText,
+			null,
+			'KIM, Ji-woo et al',
+			null,
+			'OPEN RESEARCH ALLIANCE',
+			null,
+			'ÁLVAREZ, Marta Inés',
+			null,
+			null,
+		] );
+	} );
+} );
+
+describe( 'the older marks keep full names whenever in doubt', () => {
+	const run = ( citations, style, markSetting ) =>
+		getRepeatedAuthorPrefixes( citations, style, displayText, {
+			markSetting,
+		} );
+
+	it( 'needs every name to be writable, in Chicago and ABNT', () => {
+		const nameless = [ { family: 'Lee', given: 'Kim' }, { given: 'Ann' } ];
+		const suffixed = [ { family: 'King', given: 'Martin', suffix: 'Jr.' } ];
+		const givenOnly = [ { given: 'Kim' } ];
+		const familyOnly = [ { family: 'Lee' } ];
+
+		expect(
+			run(
+				[
+					entry( 'a', nameless, 'Lee, Kim, and Ann. One.' ),
+					entry( 'b', nameless, 'Lee, Kim, and Ann. Two.' ),
+				],
+				'chicago-author-date',
+				'dash'
+			)
+		).toEqual( [ null, null ] );
+		expect(
+			run(
+				[
+					entry( 'a', suffixed, 'KING, Martin, Jr. One.' ),
+					entry( 'b', suffixed, 'KING, Martin, Jr. Two.' ),
+					entry( 'c', givenOnly, 'Kim. Three.' ),
+					entry( 'd', givenOnly, 'Kim. Four.' ),
+					entry( 'e', familyOnly, 'LEE. Five.' ),
+					entry( 'f', familyOnly, 'LEE. Six.' ),
+				],
+				'abnt',
+				'underscore'
+			)
+		).toEqual( [ null, null, null, null, null, 'LEE' ] );
+	} );
+
+	it( 'treats an unknown style as having no mark', () => {
+		expect( getRepeatedAuthorRule( 'nope', 'dash' ) ).toBeNull();
+		expect( getOptionalRepeatedAuthorMarks( 'nope' ) ).toEqual( [] );
+		expect( getRepeatedAuthorMark( 'apa-7' ) ).toBe( REPEATED_AUTHOR_MARK );
 	} );
 } );

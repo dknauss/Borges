@@ -28,6 +28,8 @@ Install the public release from [WordPress.org](https://wordpress.org/plugins/bo
 - **[Try the released version](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json)** — installs the latest GitHub Release ZIP (the same build published to WordPress.org) through the WordPress Playground CORS proxy. Use this to try the current stable plugin.
 - **[Try the current main build](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint-main.json)** — installs the development build of the `main` branch from the rolling `main-preview` pre-release, which CI refreshes on every push to `main`. Use this to preview unreleased changes ahead of the next release; it is not a stable build.
 
+If Playground stops with “Ooops! WordPress Playground had a hiccup!” or the editor opens blank, choose **Try again** or reload. That comes from Playground itself in Chrome and other Chromium browsers ([WordPress/wordpress-playground#4419](https://github.com/WordPress/wordpress-playground/issues/4419)), not from the demo; in Chrome, DevTools → Application → Service Workers → **Update** clears it for good, and Firefox and Safari aren't affected.
+
 Every demo opens the block editor on a ready-made demo page, with the Welcome Guide out of the way:
 
 - Copy-ready samples of every accepted input: DOIs (bare, `doi:`, and doi.org links), PMIDs, PMCIDs, arXiv IDs (modern, legacy, arxiv.org links, and arXiv DOIs), ISBN-13 and ISBN-10, BibTeX and BibLaTeX entries, and formatted book, article, chapter, and webpage citations. An empty Bibliography block waits below them.
@@ -128,6 +130,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 - **In-text and margin citations** — A **Cite** control in any paragraph (including a theme's margin-note style) links a short citation, such as "Illich, *Tools for Conviviality*, 12", "(Illich 1973, 12)", or "[2]", to its entry in a bibliography on the same post. It is a plain anchor link, so it works without JavaScript. After a style change, **Update citations** rewrites them in the new style, keeping each page number.
 - **Structured editing** — Per-field editing for every citation, whatever its source, plus a plain-text override for the displayed line.
 - **Annotated bibliographies** — Add your own note to any entry (stored in its CSL `annote`) and turn on "Show annotations" to print the notes under their entries. Annotations travel with CSL-JSON, BibTeX, BibLaTeX, and RIS exports and imports.
+- **Repeated authors** — MLA 9's three hyphens and OSCOLA 5's double em dash apply by default. The "Repeated authors" setting can write the names out instead, or bring back Chicago 17's 3-em dash or ABNT's pre-2018 underscore line; screen readers always hear the names.
 - **Semantic output** — `role="doc-bibliography"`, `lang` attributes, and hanging-indent styling without deprecated bibliography-entry ARIA roles.
 - **JSON-LD** — Schema.org structured data for search engines, AI systems, and semantic consumers (on by default). The cited works are nested in one `ItemList`, so none is mistaken for the page itself.
 - **Microformats** — Each entry is an `h-cite` with its title, authors, date, DOI, URL, and container, so IndieWeb tools read the bibliography as citations. Added as the page renders; the `bibliography_builder_enrich_microformats` filter turns it off.
@@ -202,6 +205,7 @@ Returns every Borges Bibliography block found in the post, including nested bloc
       "citationStyle": "chicago-notes-bibliography",
       "headingText": "References",
       "headingLevel": 0,
+      "headingAlign": "center",
       "outputJsonLd": true,
       "outputCoins": false,
       "outputCslJson": false,

@@ -158,6 +158,86 @@ Expected:
 - type: `webpage`
 - author: `WordPress.org`; accessed `2026-10-27`; no issued date
 
+## Supported IEEE samples
+
+Read by `parseIeeeCitation()` (`src/lib/free-text-ieee.js`), first in an IEEE
+bibliography and after the other patterns elsewhere. The first author must be
+initials-first ("C. R. Harris"); an organization is read only before a quoted
+title.
+
+### IEEE article
+
+```text
+C. R. Harris, K. J. Millman, and R. Gommers, “Array programming with NumPy,” Nature, vol. 585, no. 7825, pp. 357–362, Sept. 2020.
+```
+
+Expected:
+
+- type: `article-journal`
+- container-title: `Nature`; volume `585`, issue `7825`, page `357–362`
+- issued: `2020-09`
+
+### IEEE chapter
+
+```text
+J. L. Borges, “The library of Babel,” in Labyrinths, D. A. Yates and J. E. Irby, Eds. New York: New Directions, 1962, pp. 51–58.
+```
+
+Expected:
+
+- type: `chapter`
+- container-title: `Labyrinths`; two editors; publisher-place `New York`
+
+### IEEE web page
+
+```text
+D. Knauss. “The page is an interface.” Marginalia. [Online]. Available: https://m.arginalia.com/the-page-is-an-interface/
+```
+
+Expected:
+
+- type: `webpage`
+- container-title: `Marginalia`
+
+## Supported Vancouver samples
+
+Read by `parseVancouverCitation()` (`src/lib/free-text-vancouver.js`), first
+in a Vancouver bibliography and after the other patterns elsewhere.
+
+### Vancouver article
+
+```text
+Harris CR, Millman KJ, Gommers R. Array programming with NumPy. Nature. 2020 Sep 16;585(7825):357-62.
+```
+
+Expected:
+
+- type: `article-journal`
+- container-title: `Nature`; volume `585`, issue `7825`
+- page: `357-362` (written out from `357-62`)
+
+### Vancouver book
+
+```text
+Cormen TH, Leiserson CE, Rivest RL, Stein C. Introduction to algorithms. 3rd ed. Cambridge, MA: MIT Press; 2009.
+```
+
+Expected:
+
+- type: `book`; edition `3`
+- publisher-place: `Cambridge, MA`; publisher: `MIT Press`
+
+### Vancouver web page
+
+```text
+Knauss D. The page is an interface [Internet]. Marginalia; 2026 Oct 25 [cited 2026 Oct 27]. Available from: https://m.arginalia.com/the-page-is-an-interface/
+```
+
+Expected:
+
+- type: `webpage`
+- issued `2026-10-25`; accessed `2026-10-27`
+
 ## Supported embedded-identifier samples
 
 When a citation carries an inline DOI (`10.\d{4,}/…`) or a labeled PMID, the

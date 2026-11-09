@@ -42,7 +42,8 @@
 			"yearSuffix": false,
 			"locale": "en-US",
 			"inlineCitationMode": "note",
-			"headingPlaceholder": "Bibliography"
+			"headingPlaceholder": "Bibliography",
+			"repeatedAuthorMarks": [ "dash" ]
 		},
 		"chicago-author-date": {
 			"label": "Chicago Author-Date",
@@ -55,7 +56,8 @@
 			"yearSuffix": true,
 			"locale": "en-US",
 			"inlineCitationMode": "parenthetical",
-			"headingPlaceholder": "References"
+			"headingPlaceholder": "References",
+			"repeatedAuthorMarks": [ "dash" ]
 		},
 		"apa-7": {
 			"label": "APA 7",
@@ -178,7 +180,8 @@
 			"yearSuffix": true,
 			"locale": "pt-BR",
 			"inlineCitationMode": "parenthetical",
-			"headingPlaceholder": "Referências"
+			"headingPlaceholder": "Referências",
+			"repeatedAuthorMarks": [ "underscore" ]
 		}
 	}
 }

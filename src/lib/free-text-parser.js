@@ -13,6 +13,8 @@ import {
 	normalizeTrailingSentence,
 } from './free-text-common';
 import { parseHarvardCitation } from './free-text-harvard';
+import { parseIeeeCitation } from './free-text-ieee';
+import { parseVancouverCitation } from './free-text-vancouver';
 
 const QUOTED_TITLE_PATTERN = /[“"](?<title>.+?)(?:,)?[”"]/u;
 
@@ -803,8 +805,8 @@ const LIST_NUMBER_PREFIX = /^(?:\[\d{1,3}\]|\(\d{1,3}\)|\d{1,3}[.)])\s+/u;
 
 /**
  * The patterns, in the order they are tried when no style hint applies. The
- * first match that is not a misread wins. Harvard comes last, so it only
- * reads what the Chicago and APA patterns turn away.
+ * first match that is not a misread wins. Harvard, IEEE, and Vancouver come
+ * last, so they only read what the Chicago and APA patterns turn away.
  */
 const FREE_TEXT_PATTERNS = [
 	parseChapterCitation,
@@ -823,6 +825,8 @@ const FREE_TEXT_PATTERNS = [
 	parseSentenceBookCitation,
 	parseBookCitation,
 	parseHarvardCitation,
+	parseIeeeCitation,
+	parseVancouverCitation,
 ];
 
 /**
@@ -838,6 +842,8 @@ const STYLE_PATTERN_GROUPS = {
 		parseApaBookCitation,
 	],
 	harvard: [ parseHarvardCitation ],
+	ieee: [ parseIeeeCitation ],
+	vancouver: [ parseVancouverCitation ],
 };
 
 /**

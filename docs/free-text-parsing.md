@@ -54,19 +54,23 @@ the parser alone: in the editor, entries with a DOI would be looked up
 instead (8 of the 12 test works have one).
 
 Details recovered (title, authors, year, container, DOI, ISBN, pages,
-publisher), with the number of entries Borges's parser accepted at all:
+publisher), with the number of entries Borges's parser accepted at all. The
+Borges parser figures are from 2026-11-09, after Phases 0 to 2 of
+[`planning/free-text-styles-plan.md`](planning/free-text-styles-plan.md)
+(the plan has the figures from before), with each page's style passed as the
+hint the editor passes:
 
 | Style | 12 works: printed (of 67) | AnyStyle | Borges parser | 36 works: printed (of 130) | AnyStyle | Borges parser |
 |---|---|---|---|---|---|---|
 | Chicago notes-bibliography | 64 | 58 | 40 (12 of 12) | 126 | 110 | 60 (20 of 36) |
 | Chicago author-date | 64 | 58 | 18 (9 of 12) | 126 | 97 | 17 (9 of 36) |
 | APA 7 | 65 | 56 | 38 (8 of 12) | 127 | 83 | 49 (14 of 36) |
-| MLA 9 | 58 | 53 | 13 (9 of 12) | 128 | 105 | 37 (15 of 36) |
-| Harvard | 59 | 51 | 0 (0 of 12) | 113 | 82 | 0 (0 of 36) |
-| IEEE | 64 | 59 | 2 (1 of 12) | 120 | 95 | 7 (16 of 36) |
-| Vancouver | 58 | 46 | 0 (0 of 12) | 123 | 76 | 0 (0 of 36) |
+| MLA 9 | 58 | 53 | 13 (9 of 12) | 128 | 105 | 35 (14 of 36) |
+| Harvard | 59 | 51 | 59 (12 of 12) | 113 | 82 | 108 (36 of 36) |
+| IEEE | 64 | 59 | 64 (12 of 12) | 120 | 95 | 107 (33 of 36) |
+| Vancouver | 58 | 46 | 63 (12 of 12) | 123 | 76 | 124 (36 of 36) |
 | OSCOLA | 48 | 23 | 0 (0 of 12) | 121 | 55 | 0 (0 of 36) |
-| ABNT | 59 | 53 | 3 (2 of 12) | 124 | 82 | 31 (9 of 36) |
+| ABNT | 59 | 53 | 1 (1 of 12) | 124 | 82 | 29 (8 of 36) |
 
 ```mermaid
 xychart-beta
@@ -75,7 +79,7 @@ xychart-beta
     y-axis "Details" 0 --> 67
     bar [64, 64, 65, 58, 59, 64, 58, 48, 59]
     bar [58, 58, 56, 53, 51, 59, 46, 23, 53]
-    bar [40, 18, 38, 13, 0, 2, 0, 0, 3]
+    bar [40, 18, 38, 13, 59, 64, 63, 0, 1]
 ```
 
 Bars, left to right in each group: printed by the style, AnyStyle, Borges's
@@ -83,13 +87,16 @@ parser.
 
 What this shows:
 
-- **Borges's parser is a Chicago and APA parser.** It recognizes the patterns
+- **Borges's parser reads Chicago, APA, Harvard, IEEE, and Vancouver.** It
+  recognizes the patterns
   [`supported-input-style-matrix.md`](supported-input-style-matrix.md)
-  declares (Chicago and APA-like books, articles, chapters, web pages,
-  reviews, theses) and declines the rest. It accepts all twelve Chicago
-  notes-bibliography entries in the small test and 20 of 36 in the larger
-  one, most of APA's twelve, and almost nothing in Harvard, IEEE, Vancouver,
-  OSCOLA, or ABNT.
+  declares and declines the rest. Harvard, IEEE, and Vancouver, added for
+  [#231](https://github.com/dknauss/Borges/issues/231), recover nearly
+  everything their styles print (Vancouver's count passes "printed" because
+  its shortened page ranges, "357-62", are written out to match). It accepts
+  all twelve Chicago notes-bibliography entries in the small test and 20 of
+  36 in the larger one, most of APA's twelve, and almost nothing in OSCOLA or
+  ABNT.
 - **Declining is the intended failure.** An entry the parser doesn't accept
   gets a notice in the editor, not a wrong record, so the zeros are entries
   turned away, not entries mangled. IEEE and ABNT were the exception when these

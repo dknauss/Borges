@@ -262,6 +262,15 @@ final class UtilityFunctionsTest extends TestCase {
 
 		$blocks[0]['attrs']['headingLevel'] = 9;
 		$this->assertSame( 0, bibliography_builder_collect_blocks( $blocks )[0]['headingLevel'] );
+
+		// headingAlign (1.20.0): center unless the block chose start.
+		$this->assertSame( 'center', $result[0]['headingAlign'] );
+
+		$blocks[0]['attrs']['headingAlign'] = 'start';
+		$this->assertSame( 'start', bibliography_builder_collect_blocks( $blocks )[0]['headingAlign'] );
+
+		$blocks[0]['attrs']['headingAlign'] = 'right';
+		$this->assertSame( 'center', bibliography_builder_collect_blocks( $blocks )[0]['headingAlign'] );
 	}
 
 	public function test_collect_blocks_uses_default_citation_style_when_absent() {

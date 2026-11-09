@@ -12,7 +12,7 @@
  * the next editor uses. The frontend view script localizes the visible labels.
  */
 
-import { getHeadingTag } from './lib/heading-level';
+import { getHeadingAlignClass, getHeadingTag } from './lib/heading-level';
 import {
 	LOCALE_INDEPENDENT_SAVE_LABELS,
 	renderBibliographySave,
@@ -22,9 +22,11 @@ export default function save( { attributes } ) {
 	return renderBibliographySave( attributes, {
 		sortEntries: true,
 		headingTag: getHeadingTag( attributes.headingLevel ),
+		headingAlignClass: getHeadingAlignClass( attributes.headingAlign ),
 		entryTag: 'span',
 		includeCiteExport: attributes.outputCiteExport ?? false,
 		repeatedAuthors: true,
+		repeatedAuthorMarkSetting: true,
 		inlineMarkup: true,
 		quoteAwareItalics: true,
 		urlAwareItalics: true,

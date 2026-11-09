@@ -38,9 +38,9 @@ final class StyleDataTest extends TestCase {
 		$this->assertNotEmpty( $styles );
 
 		foreach ( $styles as $key => $style ) {
-			// `groups`, `sentenceCase`, `repeatedAuthors`, and `chronologicalAuthors`
-			// are optional; the tests below check them.
-			unset( $style['groups'], $style['sentenceCase'], $style['repeatedAuthors'], $style['chronologicalAuthors'] );
+			// `groups`, `sentenceCase`, `repeatedAuthors`, `repeatedAuthorMarks`,
+			// and `chronologicalAuthors` are optional; the tests below check them.
+			unset( $style['groups'], $style['sentenceCase'], $style['repeatedAuthors'], $style['repeatedAuthorMarks'], $style['chronologicalAuthors'] );
 
 			$this->assertSame( array_keys( self::FIELDS ), array_keys( $style ), $key );
 			$this->assertIsBool( $style['enabled'], $key );
@@ -168,6 +168,38 @@ final class StyleDataTest extends TestCase {
 			$rules
 		);
 		$this->assertSame( array( 'oscola' ), $chronological );
+	}
+
+	/**
+	 * The older marks a block's `repeatedAuthorMark` setting can pick: Chicago
+	 * 17's 3-em dash for both Chicago styles, NBR 6023:2002's underscore line
+	 * for ABNT. Each is a list of known marks, and `style` and `none` are
+	 * never listed, because every style accepts them.
+	 */
+	public function test_optional_repeated_author_marks_are_well_formed() {
+		$marks = array();
+
+		foreach ( bibliography_builder_get_style_data()['styles'] as $key => $style ) {
+			if ( isset( $style['repeatedAuthorMarks'] ) ) {
+				$this->assertIsArray( $style['repeatedAuthorMarks'], $key );
+				$this->assertNotEmpty( $style['repeatedAuthorMarks'], "$key: omit the list instead of leaving it empty" );
+
+				foreach ( $style['repeatedAuthorMarks'] as $mark ) {
+					$this->assertContains( $mark, array( 'dash', 'underscore' ), $key );
+				}
+
+				$marks[ $key ] = $style['repeatedAuthorMarks'];
+			}
+		}
+
+		$this->assertSame(
+			array(
+				'chicago-notes-bibliography' => array( 'dash' ),
+				'chicago-author-date'        => array( 'dash' ),
+				'abnt'                       => array( 'underscore' ),
+			),
+			$marks
+		);
 		$this->assertSame( "\u{2014}\u{2014}", bibliography_builder_save_repeated_author_mark( 'oscola' ) );
 		$this->assertSame( "\u{2011}\u{2011}\u{2011}", bibliography_builder_save_repeated_author_mark( 'mla-9' ) );
 	}
@@ -242,6 +274,7 @@ final class StyleDataTest extends TestCase {
 					'locale'                    => $style['locale'],
 					'demoteNonDroppingParticle' => $style['demoteNonDroppingParticle'],
 					'repeatedAuthors'           => isset( $style['repeatedAuthors'] ) ? $style['repeatedAuthors'] : '',
+					'repeatedAuthorMarks'       => isset( $style['repeatedAuthorMarks'] ) ? $style['repeatedAuthorMarks'] : array(),
 					'chronologicalAuthors'      => ! empty( $style['chronologicalAuthors'] ),
 				),
 				bibliography_builder_get_save_style_definition( $key ),

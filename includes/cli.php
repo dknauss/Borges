@@ -148,16 +148,18 @@ function bibliography_builder_cli_list_rows( $post ) {
 	return array_map(
 		static function ( $bibliography ) {
 			return array(
-				'index'           => $bibliography['index'],
-				'bibliographyId'  => $bibliography['bibliographyId'],
-				'citationStyle'   => $bibliography['citationStyle'],
-				'entryCount'      => $bibliography['entryCount'],
-				'headingText'     => $bibliography['headingText'],
-				'headingLevel'    => $bibliography['headingLevel'],
-				'outputJsonLd'    => $bibliography['outputJsonLd'],
-				'outputCoins'     => $bibliography['outputCoins'],
-				'outputCslJson'   => $bibliography['outputCslJson'],
-				'showAnnotations' => $bibliography['showAnnotations'],
+				'index'              => $bibliography['index'],
+				'bibliographyId'     => $bibliography['bibliographyId'],
+				'citationStyle'      => $bibliography['citationStyle'],
+				'entryCount'         => $bibliography['entryCount'],
+				'headingText'        => $bibliography['headingText'],
+				'headingLevel'       => $bibliography['headingLevel'],
+				'headingAlign'       => $bibliography['headingAlign'],
+				'outputJsonLd'       => $bibliography['outputJsonLd'],
+				'outputCoins'        => $bibliography['outputCoins'],
+				'outputCslJson'      => $bibliography['outputCslJson'],
+				'showAnnotations'    => $bibliography['showAnnotations'],
+				'repeatedAuthorMark' => $bibliography['repeatedAuthorMark'],
 			);
 		},
 		bibliography_builder_get_bibliographies_for_post( $post )

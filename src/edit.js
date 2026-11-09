@@ -33,6 +33,7 @@ import { EditorCanvasNotices } from './components/editor-canvas-notices';
 import { CitationUpdatePanel } from './components/citation-update-panel';
 import { useCitationUpdates } from './hooks/use-citation-updates';
 import { CitationEntryBody } from './components/citation-entry-body';
+import { RepeatedAuthorMarkControl } from './components/repeated-author-mark-control';
 import { useBlockNotices } from './hooks/use-block-notices';
 import { useCitationEditorState } from './hooks/use-citation-editor-state';
 import { useEntryFocus } from './hooks/use-entry-focus';
@@ -48,7 +49,11 @@ import {
 	getSelectableStyles,
 	getStyleDefinition,
 } from './lib/formatting';
-import { HEADING_LEVELS, getHeadingTag } from './lib/heading-level';
+import {
+	HEADING_LEVELS,
+	getHeadingAlignClass,
+	getHeadingTag,
+} from './lib/heading-level';
 import {
 	FREE_TEXT_LOW_CONFIDENCE_WARNING,
 	SUPPORTED_INPUT_MESSAGE,
@@ -104,11 +109,13 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		citationStyle,
 		headingText,
 		headingLevel = 0,
+		headingAlign = 'center',
 		outputJsonLd = true,
 		outputCoins = false,
 		outputCslJson = false,
 		outputCiteExport = false,
 		showAnnotations = false,
+		repeatedAuthorMark = 'style',
 	} = attributes;
 	const selectableStyles = useMemo( () => getSelectableStyles(), [] );
 	const blockProps = useBlockProps();
@@ -778,6 +785,13 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 									)
 						}
 					/>
+					<RepeatedAuthorMarkControl
+						citationStyle={ citationStyle }
+						value={ repeatedAuthorMark }
+						onChange={ ( value ) =>
+							setAttributes( { repeatedAuthorMark: value } )
+						}
+					/>
 					<TextControl
 						label={ __(
 							'Visible Heading',
@@ -828,6 +842,36 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						}
 						help={ __(
 							'Choose a heading level to put the visible heading in the page outline, where screen reader users navigate by headings. The size does not change with the level.',
+							'borges-bibliography-builder'
+						) }
+					/>
+					<SelectControl
+						label={ __(
+							'Heading Alignment',
+							'borges-bibliography-builder'
+						) }
+						value={ headingAlign === 'start' ? 'start' : 'center' }
+						options={ [
+							{
+								label: __(
+									'Center',
+									'borges-bibliography-builder'
+								),
+								value: 'center',
+							},
+							{
+								label: __(
+									'Start (left in left-to-right languages)',
+									'borges-bibliography-builder'
+								),
+								value: 'start',
+							},
+						] }
+						onChange={ ( value ) =>
+							setAttributes( { headingAlign: value } )
+						}
+						help={ __(
+							'APA, MLA, Chicago, and ABNT center the reference list heading. Choose Start to line it up with the entries and your theme’s headings.',
 							'borges-bibliography-builder'
 						) }
 					/>
@@ -991,7 +1035,15 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 			{ /* Heading */ }
 			{ headingText ? (
-				<HeadingTag className="bibliography-builder-heading bibliography-builder-heading-preview">
+				<HeadingTag
+					className={ [
+						'bibliography-builder-heading',
+						'bibliography-builder-heading-preview',
+						getHeadingAlignClass( headingAlign ),
+					]
+						.filter( Boolean )
+						.join( ' ' ) }
+				>
 					{ headingText }
 				</HeadingTag>
 			) : null }
