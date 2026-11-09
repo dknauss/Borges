@@ -28,6 +28,8 @@ Install the public release from [WordPress.org](https://wordpress.org/plugins/bo
 - **[Try the released version](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json)** — installs the latest GitHub Release ZIP (the same build published to WordPress.org) through the WordPress Playground CORS proxy. Use this to try the current stable plugin.
 - **[Try the current main build](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint-main.json)** — installs the development build of the `main` branch from the rolling `main-preview` pre-release, which CI refreshes on every push to `main`. Use this to preview unreleased changes ahead of the next release; it is not a stable build.
 
+If Playground stops with “Ooops! WordPress Playground had a hiccup!” or the editor opens blank, choose **Try again** or reload. That comes from Playground itself in Chrome and other Chromium browsers ([WordPress/wordpress-playground#4419](https://github.com/WordPress/wordpress-playground/issues/4419)), not from the demo; in Chrome, DevTools → Application → Service Workers → **Update** clears it for good, and Firefox and Safari aren't affected.
+
 Every demo opens the block editor on a ready-made demo page, with the Welcome Guide out of the way:
 
 - Copy-ready samples of every accepted input: DOIs (bare, `doi:`, and doi.org links), PMIDs, PMCIDs, arXiv IDs (modern, legacy, arxiv.org links, and arXiv DOIs), ISBN-13 and ISBN-10, BibTeX and BibLaTeX entries, and formatted book, article, chapter, and webpage citations. An empty Bibliography block waits below them.
