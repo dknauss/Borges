@@ -12,6 +12,11 @@ jobs:
     deploy:
         name: Deploy to WordPress.org SVN
         runs-on: ubuntu-latest
+        # Waits for Dan's approval on the `wordpress-org` environment, which holds
+        # the SVN secrets. The environment must exist with a required reviewer:
+        # GitHub auto-creates a missing one with no protection, and the gate
+        # silently disappears.
+        environment: wordpress-org
 
         steps:
             - name: Checkout
