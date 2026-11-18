@@ -147,6 +147,31 @@ async function savePost( page, title ) {
 	}, title );
 }
 
+/**
+ * Wait until the content the editor would save carries the repeated-author
+ * markup, that is, until the migrated block has replaced the legacy HTML.
+ *
+ * @param {import('@playwright/test').Page} page Page.
+ */
+async function waitForUpgradedContent( page ) {
+	await expect
+		.poll(
+			() =>
+				page.evaluate( () =>
+					window.wp.data
+						.select( 'core/editor' )
+						.getEditedPostContent()
+						.includes( 'bibliography-builder-repeated-author' )
+				),
+			{
+				message:
+					'the editor never replaced the legacy MLA markup with the repeated-author markup',
+				timeout: 15_000,
+			}
+		)
+		.toBe( true );
+}
+
 async function getRawContent( page, id ) {
 	return page.evaluate(
 		async ( postId ) =>
@@ -261,6 +286,12 @@ test( 'an MLA block saved before the hyphens opens valid and re-saves with them'
 	expect( await getBibliographyBlocks( page ) ).toEqual( [
 		{ isValid: true, citations: 2 },
 	] );
+
+	// Until a block changes, the editor saves the post's original HTML, so the
+	// legacy markup is only replaced once the block's own hooks have updated
+	// it, some 50 ms to 700 ms after it appears. Saving sooner kept the legacy
+	// markup (about 1 run in 6 on WordPress 7.2 RC1).
+	await waitForUpgradedContent( page );
 
 	const { link } = await savePost( page, 'Legacy MLA E2E, re-saved' );
 	expect( await getRawContent( page, id ) ).toContain(
