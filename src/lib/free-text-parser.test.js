@@ -556,6 +556,105 @@ describe( 'parseFreeTextCitation', () => {
 		} );
 	} );
 
+	describe( 'webpage dates (#294)', () => {
+		const URL =
+			'https://clinicalgenome.org/site/assets/files/3635/clingen_vcep_protocol_version_11_november2023-1.pdf';
+
+		it( 'reads a last sentence of "Month YYYY" as the issued date, not the site name', () => {
+			const citation = parseFreeTextCitation(
+				`ClinGen. "ClinGen Variant Curation Expert Panel Protocol, Version 11." November 2023. ${ URL }`
+			);
+
+			expect( citation ).toEqual( {
+				csl: {
+					type: 'webpage',
+					title: 'ClinGen Variant Curation Expert Panel Protocol, Version 11',
+					URL,
+					issued: { 'date-parts': [ [ 2023, 11 ] ] },
+					author: [ { literal: 'ClinGen' } ],
+				},
+				confidence: 'low',
+			} );
+		} );
+
+		it.each( [
+			[ 'November 15, 2023', [ 2023, 11, 15 ] ],
+			[ '15 November 2023', [ 2023, 11, 15 ] ],
+			[ 'November 2023', [ 2023, 11 ] ],
+			[ '2023', [ 2023 ] ],
+		] )(
+			'reads a bare "%s" sentence as the issued date',
+			( date, parts ) => {
+				const citation = parseFreeTextCitation(
+					`ClinGen. “Protocol.” ${ date }. ${ URL }`
+				);
+
+				expect( citation.csl.issued ).toEqual( {
+					'date-parts': [ parts ],
+				} );
+				expect( citation.csl[ 'container-title' ] ).toBeUndefined();
+			}
+		);
+
+		it.each( [
+			[ 'November 15, 2023', [ 2023, 11, 15 ] ],
+			[ '15 November 2023', [ 2023, 11, 15 ] ],
+			[ 'November 2023', [ 2023, 11 ] ],
+			[ '2023', [ 2023 ] ],
+		] )(
+			'splits "Site, %s" into the site name and the issued date',
+			( date, parts ) => {
+				const citation = parseFreeTextCitation(
+					`ClinGen. “Protocol.” Clinical Genome Resource, ${ date }. ${ URL }`
+				);
+
+				expect( citation.csl ).toMatchObject( {
+					'container-title': 'Clinical Genome Resource',
+					issued: { 'date-parts': [ parts ] },
+				} );
+			}
+		);
+
+		it( 'reads "Accessed Month YYYY" as the accessed date', () => {
+			const citation = parseFreeTextCitation(
+				`ClinGen. “Protocol.” Clinical Genome Resource. Accessed November 2023. ${ URL }`
+			);
+
+			expect( citation.csl ).toMatchObject( {
+				'container-title': 'Clinical Genome Resource',
+				accessed: { 'date-parts': [ [ 2023, 11 ] ] },
+			} );
+			expect( citation.csl.issued ).toBeUndefined();
+		} );
+
+		it( 'reads "Effective Month YYYY" as the issued date', () => {
+			const citation = parseFreeTextCitation(
+				`Google. “Privacy Policy.” Effective November 2023. https://policies.google.com/privacy.`
+			);
+
+			expect( citation.csl.issued ).toEqual( {
+				'date-parts': [ [ 2023, 11 ] ],
+			} );
+		} );
+
+		it( 'keeps a site name that only looks like a date', () => {
+			const citation = parseFreeTextCitation(
+				`NASA. “Mission Overview.” Mars 2030. https://example.org/mars`
+			);
+
+			expect( citation.csl[ 'container-title' ] ).toBe( 'Mars 2030' );
+			expect( citation.csl.issued ).toBeUndefined();
+		} );
+
+		it( 'rejects an impossible day', () => {
+			const citation = parseFreeTextCitation(
+				`ClinGen. “Protocol.” 40 November 2023. ${ URL }`
+			);
+
+			expect( citation.csl.issued ).toBeUndefined();
+		} );
+	} );
+
 	it( 'parses organization-authored social media citations as webpages with literal authors', () => {
 		const citation = parseFreeTextCitation(
 			'Chicago Manual of Style. “Is the world ready for singular they? We thought so back in 1993.” Facebook, April 17, 2015. https://www.facebook.com/ChicagoManual/posts/10152906193679151.'
