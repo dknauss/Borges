@@ -414,7 +414,12 @@ function formatBackendParseError( format, err ) {
  * @param {Array}        [options.existingDoiValues] Existing normalized or raw DOI
  *                                                   values already present in the
  *                                                   bibliography.
- * @return {Promise<Object>} { entries: Array, errors: Array, truncated: boolean }
+ * @return {Promise<Object>} { entries: Array, errors: Array, truncated: boolean,
+ *                           remainingInput: string, skippedDuplicateCount: number,
+ *                           unreadableLinks: string[] }. `unreadableLinks` lists
+ *                           the plain links no format could read (#293); a link
+ *                           whose DOI or other identifier failed to resolve is
+ *                           not one of them.
  *
  * @since 0.1.0
  */
@@ -613,15 +618,25 @@ export async function parsePastedInput(
 						item.format === 'freetext'
 							? formatFreeTextError( item.value )
 							: formatBackendParseError( item.format, err ),
+					unreadableLink:
+						item.format === 'freetext'
+							? getBareUrl( item.value )
+							: null,
 				};
 			}
 		}
 	);
 
+	const unreadableLinks = [];
+
 	for ( const resolvedItem of resolvedItems ) {
 		if ( resolvedItem.error ) {
 			errors.push( resolvedItem.error );
 			remainingSegments.push( resolvedItem.item.rawValue );
+
+			if ( resolvedItem.unreadableLink ) {
+				unreadableLinks.push( resolvedItem.unreadableLink );
+			}
 			continue;
 		}
 
@@ -638,6 +653,7 @@ export async function parsePastedInput(
 		truncated,
 		remainingInput: remainingSegments.join( '\n\n' ),
 		skippedDuplicateCount,
+		unreadableLinks,
 	};
 }
 

@@ -3,6 +3,7 @@ import { __, _n, sprintf } from '@wordpress/i18n';
 import { partitionDuplicateCitations } from '../lib/deduplicate';
 import {
 	BARE_URL_MANUAL_ENTRY_MESSAGE,
+	BARE_URL_MESSAGE,
 	SUPPORTED_INPUT_MESSAGE,
 } from '../lib/input-support';
 import { sortCitations } from '../lib/sorter';
@@ -27,6 +28,7 @@ function buildParseResultMessage( {
 	truncated,
 	retainedUnparsedItems,
 	formatterFallback,
+	unreadableLinkCount = 0,
 } ) {
 	const parts = [];
 
@@ -112,6 +114,12 @@ function buildParseResultMessage( {
 		);
 	}
 
+	// Say why a link left in the form was not read, so the author knows to
+	// add it under Manual Entry rather than press Add again (#293).
+	if ( unreadableLinkCount > 0 ) {
+		parts.push( BARE_URL_MESSAGE );
+	}
+
 	if ( formatterFallback ) {
 		parts.push( FORMATTER_FALLBACK_MESSAGE );
 	}
@@ -188,14 +196,14 @@ export function useCitationImportActions( {
 		clearNotice();
 
 		try {
-			const { getBareUrl, parsePastedInput } =
-				await import( '../lib/parser' );
+			const { parsePastedInput } = await import( '../lib/parser' );
 			const {
 				entries,
 				errors,
 				truncated,
 				remainingInput = '',
 				skippedDuplicateCount = 0,
+				unreadableLinks = [],
 			} = await parsePastedInput( inputValue, citationStyle, {
 				deferFormatting: true,
 				existingDoiValues: citationsRef.current
@@ -212,10 +220,17 @@ export function useCitationImportActions( {
 				duplicateEntries.length + skippedDuplicateCount;
 			const retainedUnparsedItems = Boolean( remainingInput.trim() );
 			// A lone link that nothing could read: no entry, no duplicate,
-			// and the link is all that is left (#293).
+			// and that link is the only thing left (#293). The parser lists
+			// only plain links, so a DOI or arXiv link whose lookup failed
+			// keeps its own error and stays in the box to retry.
 			const bareUrl =
-				onBareUrl && ! entries.length && ! duplicateCount
-					? getBareUrl( remainingInput )
+				onBareUrl &&
+				! entries.length &&
+				! duplicateCount &&
+				! truncated &&
+				errors.length === 1 &&
+				unreadableLinks.length === 1
+					? unreadableLinks[ 0 ]
 					: null;
 
 			if (
@@ -314,6 +329,7 @@ export function useCitationImportActions( {
 					truncated,
 					retainedUnparsedItems,
 					formatterFallback,
+					unreadableLinkCount: unreadableLinks.length,
 				} );
 				announce(
 					warningResult ? 'warning' : 'success',
@@ -336,6 +352,7 @@ export function useCitationImportActions( {
 						reviewWarningCount: 0,
 						truncated,
 						retainedUnparsedItems,
+						unreadableLinkCount: unreadableLinks.length,
 					} )
 				);
 				queueFocus( { type: 'notice' } );

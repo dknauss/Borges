@@ -25,6 +25,7 @@ jest.mock( '../lib/deduplicate', () => ( {
 
 jest.mock( '../lib/input-support', () => ( {
 	BARE_URL_MANUAL_ENTRY_MESSAGE: 'bare url manual entry',
+	BARE_URL_MESSAGE: 'bare url explanation',
 	SUPPORTED_INPUT_MESSAGE: 'supported input',
 } ) );
 
@@ -47,10 +48,7 @@ jest.mock( '../lib/citation-limits', () => ( {
 	getBibliographyLimitReachedMessage: jest.fn( () => 'reached' ),
 } ) );
 
-jest.mock( '../lib/parser', () => ( {
-	getBareUrl: jest.requireActual( '../lib/parser-identifiers' ).getBareUrl,
-	parsePastedInput: jest.fn(),
-} ) );
+jest.mock( '../lib/parser', () => ( { parsePastedInput: jest.fn() } ) );
 
 jest.mock( '../lib/formatting/csl', () => ( {
 	formatBibliographyEntries: jest.fn( ( items ) =>
@@ -117,13 +115,17 @@ describe( 'useCitationImportActions — a lone pasted link (#293)', () => {
 	const PDF_URL =
 		'https://clinicalgenome.org/site/assets/files/3635/clingen_vcep_protocol_version_11_november2023-1.pdf';
 
-	function mockUnreadable( remainingInput, errorCount = 1 ) {
+	function mockUnreadable(
+		remainingInput,
+		{ errorCount = 1, unreadableLinks = [ PDF_URL ] } = {}
+	) {
 		parsePastedInput.mockResolvedValue( {
 			entries: [],
 			errors: Array( errorCount ).fill( 'bare url error' ),
 			truncated: false,
 			remainingInput,
 			skippedDuplicateCount: 0,
+			unreadableLinks,
 		} );
 		partitionDuplicateCitations.mockReturnValue( {
 			uniqueEntries: [],
@@ -158,7 +160,7 @@ describe( 'useCitationImportActions — a lone pasted link (#293)', () => {
 	} );
 
 	it( 'keeps the error when the link came with other unreadable text', async () => {
-		mockUnreadable( `${ PDF_URL }\n\nNot a citation`, 2 );
+		mockUnreadable( `${ PDF_URL }\n\nNot a citation`, { errorCount: 2 } );
 		const onBareUrl = jest.fn();
 		const args = makeArgs( { inputValue: 'mixed', onBareUrl } );
 		const { result } = renderHook( () => useCitationImportActions( args ) );
@@ -169,6 +171,85 @@ describe( 'useCitationImportActions — a lone pasted link (#293)', () => {
 		expect( args.announce ).toHaveBeenCalledWith(
 			'warning',
 			'bare url error'
+		);
+	} );
+
+	it( 'keeps the lookup error and the link when a DOI link fails to resolve', async () => {
+		const doiLink = 'https://doi.org/10.1234/abcd';
+		mockUnreadable( doiLink, { unreadableLinks: [] } );
+		const onBareUrl = jest.fn();
+		const args = makeArgs( { inputValue: doiLink, onBareUrl } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).not.toHaveBeenCalled();
+		expect( args.announce ).toHaveBeenCalledWith(
+			'warning',
+			'bare url error'
+		);
+		expect( args.updatePasteInput ).toHaveBeenCalledWith( doiLink, {
+			syncDom: true,
+		} );
+	} );
+
+	it( 'explains a leftover link beside a citation it added', async () => {
+		const added = { id: 'new-1', csl: { title: 'Imported' } };
+		parsePastedInput.mockResolvedValue( {
+			entries: [ added ],
+			errors: [ 'bare url error' ],
+			truncated: false,
+			remainingInput: PDF_URL,
+			skippedDuplicateCount: 0,
+			unreadableLinks: [ PDF_URL ],
+		} );
+		partitionDuplicateCitations.mockReturnValue( {
+			uniqueEntries: [ added ],
+			duplicateEntries: [],
+		} );
+		const onBareUrl = jest.fn();
+		const args = makeArgs( {
+			inputValue: 'mixed',
+			onBareUrl,
+			outputCiteExport: false,
+		} );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).not.toHaveBeenCalled();
+		expect( args.setAttributes ).toHaveBeenCalledTimes( 1 );
+		const [ status, message ] = args.announce.mock.calls[ 0 ];
+		expect( status ).toBe( 'warning' );
+		expect( message ).toContain( "Couldn't parse 1 item." );
+		expect( message ).toContain( 'bare url explanation' );
+		expect( args.updatePasteInput ).toHaveBeenCalledWith( PDF_URL, {
+			syncDom: true,
+		} );
+	} );
+
+	it( 'explains a leftover link beside a duplicate', async () => {
+		parsePastedInput.mockResolvedValue( {
+			entries: [],
+			errors: [ 'bare url error' ],
+			truncated: false,
+			remainingInput: PDF_URL,
+			skippedDuplicateCount: 1,
+			unreadableLinks: [ PDF_URL ],
+		} );
+		partitionDuplicateCitations.mockReturnValue( {
+			uniqueEntries: [],
+			duplicateEntries: [],
+		} );
+		const onBareUrl = jest.fn();
+		const args = makeArgs( { inputValue: 'mixed', onBareUrl } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).not.toHaveBeenCalled();
+		expect( args.announce.mock.calls[ 0 ][ 1 ] ).toContain(
+			'bare url explanation'
 		);
 	} );
 

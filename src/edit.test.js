@@ -276,7 +276,6 @@ jest.mock( '@wordpress/element', () => {
 } );
 
 jest.mock( './lib/parser', () => ( {
-	getBareUrl: jest.requireActual( './lib/parser-identifiers' ).getBareUrl,
 	parsePastedInput: jest.fn(),
 	validateAndSanitizeCsl: jest.fn( ( csl ) => csl ),
 } ) );
@@ -1931,6 +1930,7 @@ describe( 'Edit focus management', () => {
 			errors: [ "A link alone isn't enough for a citation." ],
 			truncated: false,
 			remainingInput: pdfUrl,
+			unreadableLinks: [ pdfUrl ],
 		} );
 
 		render( <EditHarness /> );

@@ -2871,6 +2871,7 @@ describe( 'bare links (#293)', () => {
 			expect.stringContaining( "A link alone isn't enough" ),
 		] );
 		expect( result.remainingInput ).toBe( PDF_URL );
+		expect( result.unreadableLinks ).toEqual( [ PDF_URL ] );
 		expect( fetchFn ).not.toHaveBeenCalled();
 		expect( apiFetch ).not.toHaveBeenCalled();
 	} );
@@ -2897,5 +2898,27 @@ describe( 'bare links (#293)', () => {
 			expect.stringContaining( "A link alone isn't enough" ),
 		] );
 		expect( result.remainingInput ).toBe( PDF_URL );
+		expect( result.unreadableLinks ).toEqual( [ PDF_URL ] );
+	} );
+
+	it( 'does not list a DOI link whose lookup failed as an unreadable link', async () => {
+		const doiLink = 'https://doi.org/10.1234/abcd';
+		const fetchFn = jest.fn( async () => ( {
+			ok: false,
+			status: 404,
+			json: async () => ( {} ),
+		} ) );
+
+		const result = await parsePastedInput( doiLink, 'apa-7', {
+			fetchFn,
+		} );
+
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toHaveLength( 1 );
+		expect( result.errors[ 0 ] ).not.toContain(
+			"A link alone isn't enough"
+		);
+		expect( result.remainingInput ).toBe( doiLink );
+		expect( result.unreadableLinks ).toEqual( [] );
 	} );
 } );
