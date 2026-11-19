@@ -276,6 +276,7 @@ jest.mock( '@wordpress/element', () => {
 } );
 
 jest.mock( './lib/parser', () => ( {
+	getBareUrl: jest.requireActual( './lib/parser-identifiers' ).getBareUrl,
 	parsePastedInput: jest.fn(),
 	validateAndSanitizeCsl: jest.fn( ( csl ) => csl ),
 } ) );
@@ -1921,6 +1922,42 @@ describe( 'Edit focus management', () => {
 		expect(
 			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
 		).toBeInTheDocument();
+	} );
+
+	it( 'moves a lone pasted link to Manual Entry with the link filled in (#293)', async () => {
+		const pdfUrl = 'https://example.org/files/report-2023.pdf';
+		parsePastedInput.mockResolvedValue( {
+			entries: [],
+			errors: [ "A link alone isn't enough for a citation." ],
+			truncated: false,
+			remainingInput: pdfUrl,
+		} );
+
+		render( <EditHarness /> );
+
+		await userEvent.type(
+			screen.getByLabelText( 'Add citations' ),
+			pdfUrl
+		);
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
+
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
+			'Manual Entry is open with the link filled in.'
+		);
+		expect(
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
+		).toHaveAttribute( 'aria-pressed', 'true' );
+		expect( screen.getByLabelText( 'Publication Type' ) ).toHaveValue(
+			'webpage'
+		);
+		expect( screen.getByLabelText( 'URL' ) ).toHaveValue( pdfUrl );
+		expect( screen.getByLabelText( 'Title' ) ).toHaveValue( '' );
+
+		await userEvent.click(
+			screen.getAllByRole( 'button', { name: 'Paste / Import' } )[ 0 ]
+		);
+
+		expect( screen.getByLabelText( 'Add citations' ) ).toHaveValue( '' );
 	} );
 
 	it( 'hides and shows the citation form when citations already exist', async () => {

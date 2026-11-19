@@ -41,7 +41,7 @@ const FORMATTER_FALLBACK_MESSAGE = __(
  * @param {Object}                                                      options.pasteZoneRef            First field/focus ref.
  * @param {(target: Object) => void}                                    options.queueFocus              Focus queue helper.
  * @param {(attributes: Object) => void}                                options.setAttributes           Block attribute setter.
- * @return {Object} Manual-entry state and handlers.
+ * @return {Object} Manual-entry state and handlers, plus `prefillManualFields()`.
  */
 export function useManualCitationActions( {
 	announce,
@@ -136,6 +136,20 @@ export function useManualCitationActions( {
 		},
 		[ clearNotice, currentNotice ]
 	);
+
+	/**
+	 * Start a fresh manual entry from known fields, such as a pasted link
+	 * Borges could not read (#293). Unlike a field change, it leaves the
+	 * current notice alone, since that notice explains the prefill.
+	 *
+	 * @param {Object} fields Manual entry fields to set over empty ones.
+	 */
+	const prefillManualFields = useCallback( ( fields ) => {
+		setManualFields( {
+			...createEmptyManualEntryFields(),
+			...fields,
+		} );
+	}, [] );
 
 	const handleManualClear = useCallback( () => {
 		setManualFields( createEmptyManualEntryFields() );
@@ -286,5 +300,6 @@ export function useManualCitationActions( {
 		manualFieldDefinitions,
 		manualFields,
 		manualTypeOptions,
+		prefillManualFields,
 	};
 }

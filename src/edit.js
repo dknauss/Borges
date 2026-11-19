@@ -343,20 +343,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		},
 		[ pasteZoneRef ]
 	);
-	const { handleParse } = useCitationImportActions( {
-		announce,
-		beginAsyncOperation,
-		citationStyle,
-		citationsRef,
-		clearNotice,
-		inputValue,
-		isCurrentAsyncOperation,
-		outputCiteExport,
-		queueFocus,
-		setAttributes,
-		setIsLoading,
-		updatePasteInput,
-	} );
 	const {
 		handleManualAdd,
 		handleManualClear,
@@ -364,6 +350,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		manualFieldDefinitions,
 		manualFields,
 		manualTypeOptions,
+		prefillManualFields,
 	} = useManualCitationActions( {
 		announce,
 		beginAsyncOperation,
@@ -376,6 +363,32 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		pasteZoneRef,
 		queueFocus,
 		setAttributes,
+	} );
+	// A lone pasted link Borges can't read moves to Manual Entry with the
+	// link filled in, as a webpage, so the author only has to add a title
+	// (#293). The import hook announces why after calling this.
+	const openManualEntryWithUrl = useCallback(
+		( url ) => {
+			prefillManualFields( { type: 'webpage', url } );
+			setActiveAddMode( 'manual' );
+			setIsFormOpen( true );
+		},
+		[ prefillManualFields ]
+	);
+	const { handleParse } = useCitationImportActions( {
+		announce,
+		beginAsyncOperation,
+		citationStyle,
+		citationsRef,
+		clearNotice,
+		inputValue,
+		isCurrentAsyncOperation,
+		onBareUrl: openManualEntryWithUrl,
+		outputCiteExport,
+		queueFocus,
+		setAttributes,
+		setIsLoading,
+		updatePasteInput,
 	} );
 
 	const handleDelete = useCallback(

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A link pasted on its own opens Manual Entry.** A plain link, such as a PDF (`https://clinicalgenome.org/…/clingen_vcep_protocol_version_11_november2023-1.pdf`) or a web page whose address holds no DOI, arXiv ID, or catalog or archive.org record, used to get the general "Paste a DOI, PMID…" notice and stay in the box. Now Manual Entry opens as a webpage with the URL filled in, and a notice says that a link alone has no title, author, or date and asks for the title. A link pasted beside other citations gets that explanation as its own error. Borges does not fetch the link: reading a remote PDF would mean calling any host a user pastes (where every lookup today calls a fixed one), and PDF metadata is rarely good enough to cite. The Playground demo's Manual Entry note shows it. ([#293](https://github.com/dknauss/Borges/issues/293))
+
 ## [1.21.0] - 2026-11-09
 
 ### Added

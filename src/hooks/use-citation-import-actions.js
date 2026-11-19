@@ -1,7 +1,10 @@
 import { useCallback } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { partitionDuplicateCitations } from '../lib/deduplicate';
-import { SUPPORTED_INPUT_MESSAGE } from '../lib/input-support';
+import {
+	BARE_URL_MANUAL_ENTRY_MESSAGE,
+	SUPPORTED_INPUT_MESSAGE,
+} from '../lib/input-support';
 import { sortCitations } from '../lib/sorter';
 import { computeExportStrings } from './compute-export-strings';
 import { createCitationId } from '../lib/citation-id';
@@ -146,6 +149,7 @@ function shouldWarnParseResult( {
  * @param {() => void}                                                  options.clearNotice             Notice clearer.
  * @param {string}                                                      options.inputValue              Current paste/import text.
  * @param {(operationId: number) => boolean}                            options.isCurrentAsyncOperation Latest-operation checker.
+ * @param {(url: string) => void}                                       [options.onBareUrl]             Opens Manual Entry with a lone pasted link Borges can't read (#293).
  * @param {boolean}                                                     options.outputCiteExport        Whether Cite/Export is on.
  * @param {(target: Object) => void}                                    options.queueFocus              Focus queue helper.
  * @param {(attributes: Object) => void}                                options.setAttributes           Block attribute setter.
@@ -161,6 +165,7 @@ export function useCitationImportActions( {
 	clearNotice,
 	inputValue,
 	isCurrentAsyncOperation,
+	onBareUrl,
 	outputCiteExport = false,
 	queueFocus,
 	setAttributes,
@@ -183,7 +188,8 @@ export function useCitationImportActions( {
 		clearNotice();
 
 		try {
-			const { parsePastedInput } = await import( '../lib/parser' );
+			const { getBareUrl, parsePastedInput } =
+				await import( '../lib/parser' );
 			const {
 				entries,
 				errors,
@@ -205,6 +211,12 @@ export function useCitationImportActions( {
 			const duplicateCount =
 				duplicateEntries.length + skippedDuplicateCount;
 			const retainedUnparsedItems = Boolean( remainingInput.trim() );
+			// A lone link that nothing could read: no entry, no duplicate,
+			// and the link is all that is left (#293).
+			const bareUrl =
+				onBareUrl && ! entries.length && ! duplicateCount
+					? getBareUrl( remainingInput )
+					: null;
 
 			if (
 				uniqueEntries.length >
@@ -327,6 +339,14 @@ export function useCitationImportActions( {
 					} )
 				);
 				queueFocus( { type: 'notice' } );
+			} else if ( bareUrl ) {
+				// Empty the paste box first: it shares its ref with Manual
+				// Entry's first field, which replaces it on the next render.
+				updatePasteInput( '', { syncDom: true } );
+				onBareUrl( bareUrl );
+				announce( 'info', BARE_URL_MANUAL_ENTRY_MESSAGE );
+				queueFocus( { type: 'notice' } );
+				return;
 			} else if ( errors.length > 0 ) {
 				announce( 'warning', errors[ 0 ] );
 				queueFocus( { type: 'notice' } );
@@ -358,6 +378,7 @@ export function useCitationImportActions( {
 		clearNotice,
 		inputValue,
 		isCurrentAsyncOperation,
+		onBareUrl,
 		outputCiteExport,
 		queueFocus,
 		setAttributes,

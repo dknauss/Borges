@@ -6,6 +6,24 @@ export const SUPPORTED_INPUT_MESSAGE = __(
 );
 
 /**
+ * Error for a pasted link Borges can't read, shown when it comes with other
+ * input. A link pasted on its own opens Manual Entry instead, with
+ * `BARE_URL_MANUAL_ENTRY_MESSAGE` (#293).
+ */
+export const BARE_URL_MESSAGE = __(
+	"A link alone isn't enough for a citation: Borges can't read the title, author, or date from it. Paste the full citation, or add the link under Manual Entry with its title.",
+	'borges-bibliography-builder'
+);
+
+/**
+ * Notice shown when a lone pasted link moves to Manual Entry.
+ */
+export const BARE_URL_MANUAL_ENTRY_MESSAGE = __(
+	"A link alone isn't enough for a citation: Borges can't read the title, author, or date from it. Manual Entry is open with the link filled in. Add the title, and the author and year if the page gives them.",
+	'borges-bibliography-builder'
+);
+
+/**
  * Review warning for a citation read from pasted text by a low-confidence
  * free-text pattern. Stored in the entry's `parseWarnings`; `edit.js` shows
  * its message and the import notice counts it.

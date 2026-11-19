@@ -17,6 +17,7 @@ import { validateAndSanitizeCsl } from './csl-sanitize';
 import { DEFAULT_CITATION_STYLE } from './formatting';
 import { parseFreeTextCitation } from './free-text-parser';
 import {
+	BARE_URL_MESSAGE,
 	FREE_TEXT_LOW_CONFIDENCE_WARNING,
 	SUPPORTED_INPUT_MESSAGE,
 } from './input-support';
@@ -32,6 +33,7 @@ import {
 	OPEN_LIBRARY_WORK_REGEX,
 	getArchiveId,
 	getArxivId,
+	getBareUrl,
 	getCatalogKey,
 	getStandaloneIsbn,
 	normalizeDoiValueForLookup,
@@ -284,6 +286,17 @@ function dropMissingBibtexKey( csl ) {
 
 function formatUnsupportedInputError() {
 	return SUPPORTED_INPUT_MESSAGE;
+}
+
+/**
+ * Error for pasted text no free-text pattern could read. A lone link gets its
+ * own message, since the general one lists formats the link already is not.
+ *
+ * @param {string} value The text that was tried.
+ * @return {string} Error message.
+ */
+function formatFreeTextError( value ) {
+	return getBareUrl( value ) ? BARE_URL_MESSAGE : SUPPORTED_INPUT_MESSAGE;
 }
 
 function formatLatexDocumentError() {
@@ -598,7 +611,7 @@ export async function parsePastedInput(
 					item,
 					error:
 						item.format === 'freetext'
-							? formatUnsupportedInputError()
+							? formatFreeTextError( item.value )
 							: formatBackendParseError( item.format, err ),
 				};
 			}
@@ -642,6 +655,7 @@ export {
 	normalizeLccn,
 	getCatalogKey,
 	getArchiveId,
+	getBareUrl,
 } from './parser-identifiers';
 export {
 	normalizeCrossRefCsl,

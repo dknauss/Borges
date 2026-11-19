@@ -24,6 +24,7 @@ jest.mock( '../lib/deduplicate', () => ( {
 } ) );
 
 jest.mock( '../lib/input-support', () => ( {
+	BARE_URL_MANUAL_ENTRY_MESSAGE: 'bare url manual entry',
 	SUPPORTED_INPUT_MESSAGE: 'supported input',
 } ) );
 
@@ -46,7 +47,10 @@ jest.mock( '../lib/citation-limits', () => ( {
 	getBibliographyLimitReachedMessage: jest.fn( () => 'reached' ),
 } ) );
 
-jest.mock( '../lib/parser', () => ( { parsePastedInput: jest.fn() } ) );
+jest.mock( '../lib/parser', () => ( {
+	getBareUrl: jest.requireActual( '../lib/parser-identifiers' ).getBareUrl,
+	parsePastedInput: jest.fn(),
+} ) );
 
 jest.mock( '../lib/formatting/csl', () => ( {
 	formatBibliographyEntries: jest.fn( ( items ) =>
@@ -106,5 +110,81 @@ describe( 'useCitationImportActions — export-string pre-computation', () => {
 		expect( saved.exportBibtex ).toBe( 'BIBTEX' );
 		expect( saved.exportBiblatex ).toBe( 'BIBLATEX' );
 		expect( saved.formattedText ).toBe( 'Formatted entry' );
+	} );
+} );
+
+describe( 'useCitationImportActions — a lone pasted link (#293)', () => {
+	const PDF_URL =
+		'https://clinicalgenome.org/site/assets/files/3635/clingen_vcep_protocol_version_11_november2023-1.pdf';
+
+	function mockUnreadable( remainingInput, errorCount = 1 ) {
+		parsePastedInput.mockResolvedValue( {
+			entries: [],
+			errors: Array( errorCount ).fill( 'bare url error' ),
+			truncated: false,
+			remainingInput,
+			skippedDuplicateCount: 0,
+		} );
+		partitionDuplicateCitations.mockReturnValue( {
+			uniqueEntries: [],
+			duplicateEntries: [],
+		} );
+	}
+
+	beforeEach( () => {
+		jest.clearAllMocks();
+	} );
+
+	it( 'opens Manual Entry with the link and explains why', async () => {
+		mockUnreadable( PDF_URL );
+		const onBareUrl = jest.fn();
+		const args = makeArgs( { inputValue: PDF_URL, onBareUrl } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).toHaveBeenCalledWith( PDF_URL );
+		expect( args.updatePasteInput ).toHaveBeenCalledTimes( 1 );
+		expect( args.updatePasteInput ).toHaveBeenCalledWith( '', {
+			syncDom: true,
+		} );
+		expect( args.announce ).toHaveBeenCalledWith(
+			'info',
+			'bare url manual entry'
+		);
+		expect( args.queueFocus ).toHaveBeenCalledWith( { type: 'notice' } );
+		expect( args.setAttributes ).not.toHaveBeenCalled();
+		expect( args.setIsLoading ).toHaveBeenLastCalledWith( false );
+	} );
+
+	it( 'keeps the error when the link came with other unreadable text', async () => {
+		mockUnreadable( `${ PDF_URL }\n\nNot a citation`, 2 );
+		const onBareUrl = jest.fn();
+		const args = makeArgs( { inputValue: 'mixed', onBareUrl } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).not.toHaveBeenCalled();
+		expect( args.announce ).toHaveBeenCalledWith(
+			'warning',
+			'bare url error'
+		);
+	} );
+
+	it( 'keeps the error when no Manual Entry handler is given', async () => {
+		mockUnreadable( PDF_URL );
+		const args = makeArgs( { inputValue: PDF_URL } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( args.announce ).toHaveBeenCalledWith(
+			'warning',
+			'bare url error'
+		);
+		expect( args.updatePasteInput ).toHaveBeenCalledWith( PDF_URL, {
+			syncDom: true,
+		} );
 	} );
 } );

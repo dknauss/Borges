@@ -114,3 +114,33 @@ describe( 'useManualCitationActions — export-string pre-computation', () => {
 		expect( saved.formattedText ).toBe( 'Formatted entry' );
 	} );
 } );
+
+describe( 'useManualCitationActions — prefillManualFields (#293)', () => {
+	beforeEach( () => {
+		jest.clearAllMocks();
+	} );
+
+	it( 'starts a fresh entry from the given fields and keeps the notice', () => {
+		const args = makeArgs( {
+			currentNotice: { id: 'bare-url', content: 'why' },
+		} );
+		const { result } = renderHook( () => useManualCitationActions( args ) );
+
+		act( () =>
+			result.current.handleManualFieldChange( 'title', 'Old title' )
+		);
+		args.clearNotice.mockClear();
+		act( () =>
+			result.current.prefillManualFields( {
+				type: 'webpage',
+				url: 'https://example.org/report.pdf',
+			} )
+		);
+
+		expect( result.current.manualFields ).toEqual( {
+			type: 'webpage',
+			url: 'https://example.org/report.pdf',
+		} );
+		expect( args.clearNotice ).not.toHaveBeenCalled();
+	} );
+} );

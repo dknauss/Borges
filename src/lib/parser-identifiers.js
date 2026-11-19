@@ -104,6 +104,36 @@ export function normalizeDoiValueForLookup( value ) {
 }
 
 /**
+ * A plain web address with nothing else around it.
+ *
+ * Only `http` and `https`, and no whitespace, so a citation that ends in a
+ * link is not one. Trailing sentence punctuation is dropped, as
+ * `normalizeUrlValue()` does for the manual entry URL field.
+ */
+const BARE_URL_REGEX = /^https?:\/\/[^\s/?#]+\.[^\s]*$/iu;
+
+/**
+ * Return the URL when `text` is only a web address, else null.
+ *
+ * Used after the other formats have had their turn: a link that holds a DOI,
+ * an arXiv ID, or a catalog or archive.org record is resolved before this is
+ * asked, so what reaches it is a link Borges has no way to read. The editor
+ * then opens Manual Entry with the URL filled in (#293).
+ *
+ * @param {string} text Pasted text.
+ * @return {string|null} The URL without trailing punctuation, or null.
+ */
+export function getBareUrl( text ) {
+	if ( typeof text !== 'string' ) {
+		return null;
+	}
+
+	const url = text.trim().replace( /[).,;]+$/u, '' );
+
+	return BARE_URL_REGEX.test( url ) ? url : null;
+}
+
+/**
  * Scan `chunk` for an embedded DOI, labeled PMID, or PMCID.
  *
  * DOI is preferred over PMID when both are present (DOI resolves via CrossRef

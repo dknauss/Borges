@@ -183,7 +183,7 @@ The free-text parser currently supports a growing set of formatted citations for
 - reviews
 - theses and dissertations
 
-Support is heuristic rather than universal. Unsupported inputs fail closed with a block-local inline Gutenberg notice. Manual entry is now available as a fallback for unsupported formats.
+Support is heuristic rather than universal. Unsupported inputs fail closed with a block-local inline Gutenberg notice. Manual entry is now available as a fallback for unsupported formats. A link pasted on its own, such as a PDF or a web page with no DOI in its address, opens Manual Entry with the link filled in, since a link alone has no title, author, or date to cite; Borges does not fetch it.
 
 ## REST API
 
