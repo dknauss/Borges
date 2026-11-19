@@ -1960,6 +1960,46 @@ describe( 'Edit focus management', () => {
 		expect( screen.getByLabelText( 'Add citations' ) ).toHaveValue( '' );
 	} );
 
+	it( 'keeps an unfinished Manual Entry draft when a lone link is pasted (#293)', async () => {
+		const pdfUrl = 'https://example.org/files/report-2023.pdf';
+		parsePastedInput.mockResolvedValue( {
+			entries: [],
+			errors: [ "A link alone isn't enough for a citation." ],
+			truncated: false,
+			remainingInput: pdfUrl,
+			unreadableLinks: [ pdfUrl ],
+		} );
+
+		render( <EditHarness /> );
+
+		await userEvent.click(
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
+		);
+		await userEvent.type( screen.getByLabelText( 'Title' ), 'Draft' );
+		await userEvent.click(
+			screen.getAllByRole( 'button', { name: 'Paste / Import' } )[ 0 ]
+		);
+		await userEvent.type(
+			screen.getByLabelText( 'Add citations' ),
+			pdfUrl
+		);
+		await userEvent.click( screen.getByRole( 'button', { name: 'Add' } ) );
+
+		expect( await screen.findByRole( 'status' ) ).toHaveTextContent(
+			"A link alone isn't enough for a citation."
+		);
+		expect( screen.getByLabelText( 'Add citations' ) ).toHaveValue(
+			pdfUrl
+		);
+
+		await userEvent.click(
+			screen.getAllByRole( 'button', { name: 'Manual Entry' } )[ 0 ]
+		);
+
+		expect( screen.getByLabelText( 'Title' ) ).toHaveValue( 'Draft' );
+		expect( screen.getByLabelText( 'URL' ) ).toHaveValue( '' );
+	} );
+
 	it( 'hides and shows the citation form when citations already exist', async () => {
 		render(
 			<EditHarness

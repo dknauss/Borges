@@ -366,12 +366,17 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	} );
 	// A lone pasted link Borges can't read moves to Manual Entry with the
 	// link filled in, as a webpage, so the author only has to add a title
-	// (#293). The import hook announces why after calling this.
+	// (#293). The import hook announces why after calling this. An unfinished
+	// manual entry is kept, and the link stays in the paste box instead.
 	const openManualEntryWithUrl = useCallback(
 		( url ) => {
-			prefillManualFields( { type: 'webpage', url } );
+			if ( ! prefillManualFields( { type: 'webpage', url } ) ) {
+				return false;
+			}
+
 			setActiveAddMode( 'manual' );
 			setIsFormOpen( true );
+			return true;
 		},
 		[ prefillManualFields ]
 	);

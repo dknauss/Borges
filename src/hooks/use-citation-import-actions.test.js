@@ -139,7 +139,7 @@ describe( 'useCitationImportActions — a lone pasted link (#293)', () => {
 
 	it( 'opens Manual Entry with the link and explains why', async () => {
 		mockUnreadable( PDF_URL );
-		const onBareUrl = jest.fn();
+		const onBareUrl = jest.fn( () => true );
 		const args = makeArgs( { inputValue: PDF_URL, onBareUrl } );
 		const { result } = renderHook( () => useCitationImportActions( args ) );
 
@@ -159,9 +159,28 @@ describe( 'useCitationImportActions — a lone pasted link (#293)', () => {
 		expect( args.setIsLoading ).toHaveBeenLastCalledWith( false );
 	} );
 
+	it( 'keeps the link in the paste box when Manual Entry holds a draft', async () => {
+		mockUnreadable( PDF_URL );
+		const onBareUrl = jest.fn( () => false );
+		const args = makeArgs( { inputValue: PDF_URL, onBareUrl } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).toHaveBeenCalledWith( PDF_URL );
+		expect( args.announce ).toHaveBeenCalledWith(
+			'warning',
+			'bare url error'
+		);
+		expect( args.updatePasteInput ).toHaveBeenCalledTimes( 1 );
+		expect( args.updatePasteInput ).toHaveBeenCalledWith( PDF_URL, {
+			syncDom: true,
+		} );
+	} );
+
 	it( 'keeps the error when the link came with other unreadable text', async () => {
 		mockUnreadable( `${ PDF_URL }\n\nNot a citation`, { errorCount: 2 } );
-		const onBareUrl = jest.fn();
+		const onBareUrl = jest.fn( () => true );
 		const args = makeArgs( { inputValue: 'mixed', onBareUrl } );
 		const { result } = renderHook( () => useCitationImportActions( args ) );
 
@@ -177,7 +196,7 @@ describe( 'useCitationImportActions — a lone pasted link (#293)', () => {
 	it( 'keeps the lookup error and the link when a DOI link fails to resolve', async () => {
 		const doiLink = 'https://doi.org/10.1234/abcd';
 		mockUnreadable( doiLink, { unreadableLinks: [] } );
-		const onBareUrl = jest.fn();
+		const onBareUrl = jest.fn( () => true );
 		const args = makeArgs( { inputValue: doiLink, onBareUrl } );
 		const { result } = renderHook( () => useCitationImportActions( args ) );
 
@@ -207,7 +226,7 @@ describe( 'useCitationImportActions — a lone pasted link (#293)', () => {
 			uniqueEntries: [ added ],
 			duplicateEntries: [],
 		} );
-		const onBareUrl = jest.fn();
+		const onBareUrl = jest.fn( () => true );
 		const args = makeArgs( {
 			inputValue: 'mixed',
 			onBareUrl,
@@ -241,7 +260,7 @@ describe( 'useCitationImportActions — a lone pasted link (#293)', () => {
 			uniqueEntries: [],
 			duplicateEntries: [],
 		} );
-		const onBareUrl = jest.fn();
+		const onBareUrl = jest.fn( () => true );
 		const args = makeArgs( { inputValue: 'mixed', onBareUrl } );
 		const { result } = renderHook( () => useCitationImportActions( args ) );
 

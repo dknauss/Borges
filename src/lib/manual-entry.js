@@ -146,6 +146,23 @@ export function createEmptyManualEntryFields( preservedType = '' ) {
 	};
 }
 
+/**
+ * Whether the manual entry form holds anything the author typed or ticked.
+ * The publication type alone does not count, since the form starts with one.
+ *
+ * @param {Object} fields Manual entry fields.
+ * @return {boolean} True when replacing the fields would lose the author's work.
+ */
+export function hasManualEntryDraft( fields ) {
+	return Object.entries( fields || {} ).some( ( [ key, value ] ) => {
+		if ( key === 'type' ) {
+			return false;
+		}
+
+		return typeof value === 'string' ? value.trim() !== '' : value === true;
+	} );
+}
+
 export function validateManualEntry( fields ) {
 	if ( ! normalizeFieldValue( fields.type ) ) {
 		return __(

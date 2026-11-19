@@ -5,6 +5,7 @@ import {
 	buildManualCsl,
 	createEmptyManualEntryFields,
 	createManualCitationFromCsl,
+	hasManualEntryDraft,
 	MANUAL_ENTRY_TYPE_OPTIONS,
 	validateManualEntry,
 } from '../lib/manual-entry';
@@ -142,14 +143,26 @@ export function useManualCitationActions( {
 	 * Borges could not read (#293). Unlike a field change, it leaves the
 	 * current notice alone, since that notice explains the prefill.
 	 *
+	 * An unfinished draft is never replaced: the call does nothing and
+	 * returns false, so the caller can leave the link where it was.
+	 *
 	 * @param {Object} fields Manual entry fields to set over empty ones.
+	 * @return {boolean} True when the fields were set.
 	 */
-	const prefillManualFields = useCallback( ( fields ) => {
-		setManualFields( {
-			...createEmptyManualEntryFields(),
-			...fields,
-		} );
-	}, [] );
+	const prefillManualFields = useCallback(
+		( fields ) => {
+			if ( hasManualEntryDraft( manualFields ) ) {
+				return false;
+			}
+
+			setManualFields( {
+				...createEmptyManualEntryFields(),
+				...fields,
+			} );
+			return true;
+		},
+		[ manualFields ]
+	);
 
 	const handleManualClear = useCallback( () => {
 		setManualFields( createEmptyManualEntryFields() );

@@ -36,6 +36,8 @@ jest.mock( '../lib/manual-entry', () => ( {
 		id: 'manual-1',
 		csl,
 	} ) ),
+	hasManualEntryDraft: jest.requireActual( '../lib/manual-entry' )
+		.hasManualEntryDraft,
 	MANUAL_ENTRY_TYPE_OPTIONS: [],
 	validateManualEntry: jest.fn( () => null ),
 } ) );
@@ -120,27 +122,42 @@ describe( 'useManualCitationActions — prefillManualFields (#293)', () => {
 		jest.clearAllMocks();
 	} );
 
+	const LINK = {
+		type: 'webpage',
+		url: 'https://example.org/report.pdf',
+	};
+
 	it( 'starts a fresh entry from the given fields and keeps the notice', () => {
 		const args = makeArgs( {
 			currentNotice: { id: 'bare-url', content: 'why' },
 		} );
 		const { result } = renderHook( () => useManualCitationActions( args ) );
+		let prefilled;
 
-		act( () =>
-			result.current.handleManualFieldChange( 'title', 'Old title' )
-		);
-		args.clearNotice.mockClear();
-		act( () =>
-			result.current.prefillManualFields( {
-				type: 'webpage',
-				url: 'https://example.org/report.pdf',
-			} )
-		);
-
-		expect( result.current.manualFields ).toEqual( {
-			type: 'webpage',
-			url: 'https://example.org/report.pdf',
+		act( () => {
+			prefilled = result.current.prefillManualFields( LINK );
 		} );
+
+		expect( prefilled ).toBe( true );
+		expect( result.current.manualFields ).toEqual( LINK );
 		expect( args.clearNotice ).not.toHaveBeenCalled();
+	} );
+
+	it( 'keeps an unfinished draft and reports that it did', () => {
+		const { result } = renderHook( () =>
+			useManualCitationActions( makeArgs() )
+		);
+		let prefilled;
+
+		act( () =>
+			result.current.handleManualFieldChange( 'title', 'Draft title' )
+		);
+		act( () => {
+			prefilled = result.current.prefillManualFields( LINK );
+		} );
+
+		expect( prefilled ).toBe( false );
+		expect( result.current.manualFields.title ).toBe( 'Draft title' );
+		expect( result.current.manualFields.url ).toBeUndefined();
 	} );
 } );

@@ -157,7 +157,7 @@ function shouldWarnParseResult( {
  * @param {() => void}                                                  options.clearNotice             Notice clearer.
  * @param {string}                                                      options.inputValue              Current paste/import text.
  * @param {(operationId: number) => boolean}                            options.isCurrentAsyncOperation Latest-operation checker.
- * @param {(url: string) => void}                                       [options.onBareUrl]             Opens Manual Entry with a lone pasted link Borges can't read (#293).
+ * @param {(url: string) => boolean}                                    [options.onBareUrl]             Opens Manual Entry with a lone pasted link Borges can't read (#293); false when it kept an unfinished draft instead.
  * @param {boolean}                                                     options.outputCiteExport        Whether Cite/Export is on.
  * @param {(target: Object) => void}                                    options.queueFocus              Focus queue helper.
  * @param {(attributes: Object) => void}                                options.setAttributes           Block attribute setter.
@@ -356,11 +356,12 @@ export function useCitationImportActions( {
 					} )
 				);
 				queueFocus( { type: 'notice' } );
-			} else if ( bareUrl ) {
-				// Empty the paste box first: it shares its ref with Manual
-				// Entry's first field, which replaces it on the next render.
+			} else if ( bareUrl && onBareUrl( bareUrl ) ) {
+				// Manual Entry took the link, so empty the paste box. Its
+				// ref is shared with Manual Entry's first field, but the
+				// state set by onBareUrl() renders after this call, so the
+				// ref still points at the textarea here.
 				updatePasteInput( '', { syncDom: true } );
-				onBareUrl( bareUrl );
 				announce( 'info', BARE_URL_MANUAL_ENTRY_MESSAGE );
 				queueFocus( { type: 'notice' } );
 				return;
