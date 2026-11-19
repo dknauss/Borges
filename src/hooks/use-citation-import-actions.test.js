@@ -24,6 +24,8 @@ jest.mock( '../lib/deduplicate', () => ( {
 } ) );
 
 jest.mock( '../lib/input-support', () => ( {
+	BARE_URL_MANUAL_ENTRY_MESSAGE: 'bare url manual entry',
+	BARE_URL_MESSAGE: 'bare url explanation',
 	SUPPORTED_INPUT_MESSAGE: 'supported input',
 } ) );
 
@@ -106,5 +108,183 @@ describe( 'useCitationImportActions — export-string pre-computation', () => {
 		expect( saved.exportBibtex ).toBe( 'BIBTEX' );
 		expect( saved.exportBiblatex ).toBe( 'BIBLATEX' );
 		expect( saved.formattedText ).toBe( 'Formatted entry' );
+	} );
+} );
+
+describe( 'useCitationImportActions — a lone pasted link (#293)', () => {
+	const PDF_URL =
+		'https://clinicalgenome.org/site/assets/files/3635/clingen_vcep_protocol_version_11_november2023-1.pdf';
+
+	function mockUnreadable(
+		remainingInput,
+		{ errorCount = 1, unreadableLinks = [ PDF_URL ] } = {}
+	) {
+		parsePastedInput.mockResolvedValue( {
+			entries: [],
+			errors: Array( errorCount ).fill( 'bare url error' ),
+			truncated: false,
+			remainingInput,
+			skippedDuplicateCount: 0,
+			unreadableLinks,
+		} );
+		partitionDuplicateCitations.mockReturnValue( {
+			uniqueEntries: [],
+			duplicateEntries: [],
+		} );
+	}
+
+	beforeEach( () => {
+		jest.clearAllMocks();
+	} );
+
+	it( 'opens Manual Entry with the link and explains why', async () => {
+		mockUnreadable( PDF_URL );
+		const onBareUrl = jest.fn( () => true );
+		const args = makeArgs( { inputValue: PDF_URL, onBareUrl } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).toHaveBeenCalledWith( PDF_URL );
+		expect( args.updatePasteInput ).toHaveBeenCalledTimes( 1 );
+		expect( args.updatePasteInput ).toHaveBeenCalledWith( '', {
+			syncDom: true,
+		} );
+		expect( args.announce ).toHaveBeenCalledWith(
+			'info',
+			'bare url manual entry'
+		);
+		expect( args.queueFocus ).toHaveBeenCalledWith( { type: 'notice' } );
+		expect( args.setAttributes ).not.toHaveBeenCalled();
+		expect( args.setIsLoading ).toHaveBeenLastCalledWith( false );
+	} );
+
+	it( 'keeps the link in the paste box when Manual Entry holds a draft', async () => {
+		mockUnreadable( PDF_URL );
+		const onBareUrl = jest.fn( () => false );
+		const args = makeArgs( { inputValue: PDF_URL, onBareUrl } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).toHaveBeenCalledWith( PDF_URL );
+		expect( args.announce ).toHaveBeenCalledWith(
+			'warning',
+			'bare url error'
+		);
+		expect( args.updatePasteInput ).toHaveBeenCalledTimes( 1 );
+		expect( args.updatePasteInput ).toHaveBeenCalledWith( PDF_URL, {
+			syncDom: true,
+		} );
+	} );
+
+	it( 'keeps the error when the link came with other unreadable text', async () => {
+		mockUnreadable( `${ PDF_URL }\n\nNot a citation`, { errorCount: 2 } );
+		const onBareUrl = jest.fn( () => true );
+		const args = makeArgs( { inputValue: 'mixed', onBareUrl } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).not.toHaveBeenCalled();
+		expect( args.announce ).toHaveBeenCalledWith(
+			'warning',
+			'bare url error'
+		);
+	} );
+
+	it( 'keeps the lookup error and the link when a DOI link fails to resolve', async () => {
+		const doiLink = 'https://doi.org/10.1234/abcd';
+		mockUnreadable( doiLink, { unreadableLinks: [] } );
+		const onBareUrl = jest.fn( () => true );
+		const args = makeArgs( { inputValue: doiLink, onBareUrl } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).not.toHaveBeenCalled();
+		expect( args.announce ).toHaveBeenCalledWith(
+			'warning',
+			'bare url error'
+		);
+		expect( args.updatePasteInput ).toHaveBeenCalledWith( doiLink, {
+			syncDom: true,
+		} );
+	} );
+
+	it( 'explains a leftover link beside a citation it added', async () => {
+		const added = { id: 'new-1', csl: { title: 'Imported' } };
+		parsePastedInput.mockResolvedValue( {
+			entries: [ added ],
+			errors: [ 'bare url error' ],
+			truncated: false,
+			remainingInput: PDF_URL,
+			skippedDuplicateCount: 0,
+			unreadableLinks: [ PDF_URL ],
+		} );
+		partitionDuplicateCitations.mockReturnValue( {
+			uniqueEntries: [ added ],
+			duplicateEntries: [],
+		} );
+		const onBareUrl = jest.fn( () => true );
+		const args = makeArgs( {
+			inputValue: 'mixed',
+			onBareUrl,
+			outputCiteExport: false,
+		} );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).not.toHaveBeenCalled();
+		expect( args.setAttributes ).toHaveBeenCalledTimes( 1 );
+		const [ status, message ] = args.announce.mock.calls[ 0 ];
+		expect( status ).toBe( 'warning' );
+		expect( message ).toContain( "Couldn't parse 1 item." );
+		expect( message ).toContain( 'bare url explanation' );
+		expect( args.updatePasteInput ).toHaveBeenCalledWith( PDF_URL, {
+			syncDom: true,
+		} );
+	} );
+
+	it( 'explains a leftover link beside a duplicate', async () => {
+		parsePastedInput.mockResolvedValue( {
+			entries: [],
+			errors: [ 'bare url error' ],
+			truncated: false,
+			remainingInput: PDF_URL,
+			skippedDuplicateCount: 1,
+			unreadableLinks: [ PDF_URL ],
+		} );
+		partitionDuplicateCitations.mockReturnValue( {
+			uniqueEntries: [],
+			duplicateEntries: [],
+		} );
+		const onBareUrl = jest.fn( () => true );
+		const args = makeArgs( { inputValue: 'mixed', onBareUrl } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( onBareUrl ).not.toHaveBeenCalled();
+		expect( args.announce.mock.calls[ 0 ][ 1 ] ).toContain(
+			'bare url explanation'
+		);
+	} );
+
+	it( 'keeps the error when no Manual Entry handler is given', async () => {
+		mockUnreadable( PDF_URL );
+		const args = makeArgs( { inputValue: PDF_URL } );
+		const { result } = renderHook( () => useCitationImportActions( args ) );
+
+		await act( () => result.current.handleParse() );
+
+		expect( args.announce ).toHaveBeenCalledWith(
+			'warning',
+			'bare url error'
+		);
+		expect( args.updatePasteInput ).toHaveBeenCalledWith( PDF_URL, {
+			syncDom: true,
+		} );
 	} );
 } );

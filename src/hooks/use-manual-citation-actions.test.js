@@ -9,6 +9,7 @@ jest.mock( '@wordpress/element', () => {
 	return {
 		useCallback: React.useCallback,
 		useMemo: React.useMemo,
+		useRef: React.useRef,
 		useState: React.useState,
 	};
 } );
@@ -36,6 +37,8 @@ jest.mock( '../lib/manual-entry', () => ( {
 		id: 'manual-1',
 		csl,
 	} ) ),
+	hasManualEntryDraft: jest.requireActual( '../lib/manual-entry' )
+		.hasManualEntryDraft,
 	MANUAL_ENTRY_TYPE_OPTIONS: [],
 	validateManualEntry: jest.fn( () => null ),
 } ) );
@@ -112,5 +115,71 @@ describe( 'useManualCitationActions — export-string pre-computation', () => {
 		expect( saved.exportBibtex ).toBeUndefined();
 		expect( saved.exportBiblatex ).toBeUndefined();
 		expect( saved.formattedText ).toBe( 'Formatted entry' );
+	} );
+} );
+
+describe( 'useManualCitationActions — prefillManualFields (#293)', () => {
+	beforeEach( () => {
+		jest.clearAllMocks();
+	} );
+
+	const LINK = {
+		type: 'webpage',
+		url: 'https://example.org/report.pdf',
+	};
+
+	it( 'starts a fresh entry from the given fields and keeps the notice', () => {
+		const args = makeArgs( {
+			currentNotice: { id: 'bare-url', content: 'why' },
+		} );
+		const { result } = renderHook( () => useManualCitationActions( args ) );
+		let prefilled;
+
+		act( () => {
+			prefilled = result.current.prefillManualFields( LINK );
+		} );
+
+		expect( prefilled ).toBe( true );
+		expect( result.current.manualFields ).toEqual( LINK );
+		expect( args.clearNotice ).not.toHaveBeenCalled();
+	} );
+
+	it( 'sees a draft started after the paste began, through an older callback', () => {
+		const { result } = renderHook( () =>
+			useManualCitationActions( makeArgs() )
+		);
+		// The import hook holds the callback from the render where the
+		// paste started, before the author typed anything.
+		const prefillFromPasteStart = result.current.prefillManualFields;
+		let prefilled;
+
+		act( () =>
+			result.current.handleManualFieldChange( 'title', 'Draft title' )
+		);
+		act( () => {
+			prefilled = prefillFromPasteStart( LINK );
+		} );
+
+		expect( prefilled ).toBe( false );
+		expect( result.current.manualFields.title ).toBe( 'Draft title' );
+		expect( result.current.manualFields.url ).toBeUndefined();
+	} );
+
+	it( 'keeps an unfinished draft and reports that it did', () => {
+		const { result } = renderHook( () =>
+			useManualCitationActions( makeArgs() )
+		);
+		let prefilled;
+
+		act( () =>
+			result.current.handleManualFieldChange( 'title', 'Draft title' )
+		);
+		act( () => {
+			prefilled = result.current.prefillManualFields( LINK );
+		} );
+
+		expect( prefilled ).toBe( false );
+		expect( result.current.manualFields.title ).toBe( 'Draft title' );
+		expect( result.current.manualFields.url ).toBeUndefined();
 	} );
 } );

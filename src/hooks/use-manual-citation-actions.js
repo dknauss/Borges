@@ -1,10 +1,11 @@
 import { __, sprintf } from '@wordpress/i18n';
-import { useCallback, useMemo, useState } from '@wordpress/element';
+import { useCallback, useMemo, useRef, useState } from '@wordpress/element';
 import { findDuplicateCitation } from '../lib/deduplicate';
 import {
 	buildManualCsl,
 	createEmptyManualEntryFields,
 	createManualCitationFromCsl,
+	hasManualEntryDraft,
 	MANUAL_ENTRY_TYPE_OPTIONS,
 	validateManualEntry,
 } from '../lib/manual-entry';
@@ -41,7 +42,7 @@ const FORMATTER_FALLBACK_MESSAGE = __(
  * @param {Object}                                                      options.pasteZoneRef            First field/focus ref.
  * @param {(target: Object) => void}                                    options.queueFocus              Focus queue helper.
  * @param {(attributes: Object) => void}                                options.setAttributes           Block attribute setter.
- * @return {Object} Manual-entry state and handlers.
+ * @return {Object} Manual-entry state and handlers, plus `prefillManualFields()`.
  */
 export function useManualCitationActions( {
 	announce,
@@ -123,6 +124,11 @@ export function useManualCitationActions( {
 	const [ manualFields, setManualFields ] = useState( () =>
 		createEmptyManualEntryFields()
 	);
+	// The latest fields, for callbacks that outlive a render: a paste that
+	// resolves after the author has started a manual draft must see that
+	// draft, not the form as it was when the paste began (#293).
+	const manualFieldsRef = useRef( manualFields );
+	manualFieldsRef.current = manualFields;
 
 	const handleManualFieldChange = useCallback(
 		( field, value ) => {
@@ -136,6 +142,32 @@ export function useManualCitationActions( {
 		},
 		[ clearNotice, currentNotice ]
 	);
+
+	/**
+	 * Start a fresh manual entry from known fields, such as a pasted link
+	 * Borges could not read (#293). Unlike a field change, it leaves the
+	 * current notice alone, since that notice explains the prefill.
+	 *
+	 * An unfinished draft is never replaced: the call does nothing and
+	 * returns false, so the caller can leave the link where it was.
+	 *
+	 * @param {Object} fields Manual entry fields to set over empty ones.
+	 * @return {boolean} True when the fields were set.
+	 */
+	const prefillManualFields = useCallback( ( fields ) => {
+		if ( hasManualEntryDraft( manualFieldsRef.current ) ) {
+			return false;
+		}
+
+		const nextFields = {
+			...createEmptyManualEntryFields(),
+			...fields,
+		};
+
+		manualFieldsRef.current = nextFields;
+		setManualFields( nextFields );
+		return true;
+	}, [] );
 
 	const handleManualClear = useCallback( () => {
 		setManualFields( createEmptyManualEntryFields() );
@@ -286,5 +318,6 @@ export function useManualCitationActions( {
 		manualFieldDefinitions,
 		manualFields,
 		manualTypeOptions,
+		prefillManualFields,
 	};
 }

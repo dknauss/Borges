@@ -2,6 +2,7 @@ import {
 	buildManualCsl,
 	createEmptyManualEntryFields,
 	createManualCitation,
+	hasManualEntryDraft,
 	MANUAL_ENTRY_TYPE_OPTIONS,
 	normalizeDoiValue,
 	normalizeUrlValue,
@@ -277,5 +278,38 @@ describe( 'manual-entry', () => {
 			inputFormat: 'manual',
 			parseWarnings: [],
 		} );
+	} );
+} );
+
+describe( 'hasManualEntryDraft (#293)', () => {
+	it( 'treats an empty form, with or without a type, as no draft', () => {
+		expect( hasManualEntryDraft( createEmptyManualEntryFields() ) ).toBe(
+			false
+		);
+		expect(
+			hasManualEntryDraft( createEmptyManualEntryFields( 'book' ) )
+		).toBe( false );
+		expect(
+			hasManualEntryDraft( {
+				...createEmptyManualEntryFields(),
+				title: '   ',
+			} )
+		).toBe( false );
+		expect( hasManualEntryDraft( undefined ) ).toBe( false );
+	} );
+
+	it.each( [
+		[ 'title', 'A title' ],
+		[ 'authors', 'Smith, Ada' ],
+		[ 'url', 'https://example.org' ],
+		[ 'annotation', 'Note' ],
+		[ 'keepTitleCase', true ],
+	] )( 'counts a filled %s as a draft', ( key, value ) => {
+		expect(
+			hasManualEntryDraft( {
+				...createEmptyManualEntryFields(),
+				[ key ]: value,
+			} )
+		).toBe( true );
 	} );
 } );

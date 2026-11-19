@@ -22,6 +22,7 @@ import {
 	clearDoiMetadataCache,
 	extractEmbeddedIdentifier,
 	getArchiveId,
+	getBareUrl,
 	getCatalogKey,
 	normalizeCrossRefCsl,
 	normalizeIsbn,
@@ -2823,5 +2824,101 @@ describe( 'Internet Archive items', () => {
 		expect( result.errors ).toEqual( [
 			"Couldn't resolve the Internet Archive item. Check the link and try again.",
 		] );
+	} );
+} );
+
+describe( 'bare links (#293)', () => {
+	const PDF_URL =
+		'https://clinicalgenome.org/site/assets/files/3635/clingen_vcep_protocol_version_11_november2023-1.pdf';
+
+	describe( 'getBareUrl', () => {
+		it.each( [
+			[ PDF_URL, PDF_URL ],
+			[ `  ${ PDF_URL }.  `, PDF_URL ],
+			[
+				'http://example.org/page?x=1#top',
+				'http://example.org/page?x=1#top',
+			],
+			[ 'https://example.org', 'https://example.org' ],
+		] )( 'reads %s', ( input, expected ) => {
+			expect( getBareUrl( input ) ).toBe( expected );
+		} );
+
+		it.each( [
+			[ '' ],
+			[ 'example.org/report.pdf' ],
+			[ 'ftp://example.org/report.pdf' ],
+			[ 'https://localhost/report.pdf' ],
+			[ `ClinGen. “Protocol.” ${ PDF_URL }` ],
+			[ `${ PDF_URL }\n${ PDF_URL }` ],
+		] )( 'rejects %j', ( input ) => {
+			expect( getBareUrl( input ) ).toBeNull();
+		} );
+
+		it( 'rejects a non-string', () => {
+			expect( getBareUrl( null ) ).toBeNull();
+		} );
+	} );
+
+	it( 'explains that a lone link is not enough, makes no request, and keeps the link', async () => {
+		const fetchFn = jest.fn();
+		apiFetch.mockClear();
+
+		const result = await parsePastedInput( PDF_URL, 'apa-7', { fetchFn } );
+
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toEqual( [
+			expect.stringContaining( "A link alone isn't enough" ),
+		] );
+		expect( result.remainingInput ).toBe( PDF_URL );
+		expect( result.unreadableLinks ).toEqual( [ PDF_URL ] );
+		expect( fetchFn ).not.toHaveBeenCalled();
+		expect( apiFetch ).not.toHaveBeenCalled();
+	} );
+
+	it( 'still reads a link that holds a DOI as a DOI', () => {
+		const { splitChunkIntoDetectedItems } =
+			jest.requireActual( './parser-segment' );
+
+		expect(
+			splitChunkIntoDetectedItems(
+				'https://www.journals.uchicago.edu/doi/10.1086/725865'
+			)[ 0 ].format
+		).toBe( 'doi' );
+	} );
+
+	it( 'gives a lone link its own error beside a citation it reads', async () => {
+		const result = await parsePastedInput(
+			`Smith, Ada. Example Title. Example Press, 2024.\n\n${ PDF_URL }`,
+			'apa-7'
+		);
+
+		expect( result.entries ).toHaveLength( 1 );
+		expect( result.errors ).toEqual( [
+			expect.stringContaining( "A link alone isn't enough" ),
+		] );
+		expect( result.remainingInput ).toBe( PDF_URL );
+		expect( result.unreadableLinks ).toEqual( [ PDF_URL ] );
+	} );
+
+	it( 'does not list a DOI link whose lookup failed as an unreadable link', async () => {
+		const doiLink = 'https://doi.org/10.1234/abcd';
+		const fetchFn = jest.fn( async () => ( {
+			ok: false,
+			status: 404,
+			json: async () => ( {} ),
+		} ) );
+
+		const result = await parsePastedInput( doiLink, 'apa-7', {
+			fetchFn,
+		} );
+
+		expect( result.entries ).toHaveLength( 0 );
+		expect( result.errors ).toHaveLength( 1 );
+		expect( result.errors[ 0 ] ).not.toContain(
+			"A link alone isn't enough"
+		);
+		expect( result.remainingInput ).toBe( doiLink );
+		expect( result.unreadableLinks ).toEqual( [] );
 	} );
 } );

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A link pasted on its own opens Manual Entry.** A plain link, such as a PDF (`https://clinicalgenome.org/…/clingen_vcep_protocol_version_11_november2023-1.pdf`) or a web page whose address holds no DOI, arXiv ID, or catalog or archive.org record, used to get the general "Paste a DOI, PMID…" notice and stay in the box. Now Manual Entry opens as a webpage with the URL filled in, and a notice says that a link alone has no title, author, or date and asks for the title. An unfinished Manual Entry draft is never replaced: the link then stays in the paste box with that explanation. A link pasted beside other citations gets that explanation as its own error. Borges does not fetch the link: reading a remote PDF would mean calling any host a user pastes (where every lookup today calls a fixed one), and PDF metadata is rarely good enough to cite. The Playground demo's Manual Entry note shows it. ([#293](https://github.com/dknauss/Borges/issues/293))
+
 ### Fixed
 
 - **A pasted webpage citation keeps its date when the date has no day.** In `ClinGen. "ClinGen Variant Curation Expert Panel Protocol, Version 11." November 2023. https://…`, the "November 2023" became the website's name and the entry had no year, because `parseWebpageCitation()` read only the "November 15, 2023" form. A last sentence that is only a date ("November 15, 2023", "15 November 2023", "November 2023", or "2023") is now the entry's date, and the same forms work after a site name ("Clinical Genome Resource, November 2023"), `Accessed`, and `Effective`. Month names must be written out, so a site called "Mars 2030" keeps its name. The Playground demo's formatted citations include the ClinGen example. ([#294](https://github.com/dknauss/Borges/issues/294))

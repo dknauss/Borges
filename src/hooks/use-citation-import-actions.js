@@ -1,7 +1,11 @@
 import { useCallback } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { partitionDuplicateCitations } from '../lib/deduplicate';
-import { SUPPORTED_INPUT_MESSAGE } from '../lib/input-support';
+import {
+	BARE_URL_MANUAL_ENTRY_MESSAGE,
+	BARE_URL_MESSAGE,
+	SUPPORTED_INPUT_MESSAGE,
+} from '../lib/input-support';
 import { sortCitations } from '../lib/sorter';
 import { computeExportStrings } from './compute-export-strings';
 import { createCitationId } from '../lib/citation-id';
@@ -24,6 +28,7 @@ function buildParseResultMessage( {
 	truncated,
 	retainedUnparsedItems,
 	formatterFallback,
+	unreadableLinkCount = 0,
 } ) {
 	const parts = [];
 
@@ -109,6 +114,12 @@ function buildParseResultMessage( {
 		);
 	}
 
+	// Say why a link left in the form was not read, so the author knows to
+	// add it under Manual Entry rather than press Add again (#293).
+	if ( unreadableLinkCount > 0 ) {
+		parts.push( BARE_URL_MESSAGE );
+	}
+
 	if ( formatterFallback ) {
 		parts.push( FORMATTER_FALLBACK_MESSAGE );
 	}
@@ -146,6 +157,7 @@ function shouldWarnParseResult( {
  * @param {() => void}                                                  options.clearNotice             Notice clearer.
  * @param {string}                                                      options.inputValue              Current paste/import text.
  * @param {(operationId: number) => boolean}                            options.isCurrentAsyncOperation Latest-operation checker.
+ * @param {(url: string) => boolean}                                    [options.onBareUrl]             Opens Manual Entry with a lone pasted link Borges can't read (#293); false when it kept an unfinished draft instead.
  * @param {boolean}                                                     options.outputCiteExport        Whether Cite/Export is on.
  * @param {(target: Object) => void}                                    options.queueFocus              Focus queue helper.
  * @param {(attributes: Object) => void}                                options.setAttributes           Block attribute setter.
@@ -161,6 +173,7 @@ export function useCitationImportActions( {
 	clearNotice,
 	inputValue,
 	isCurrentAsyncOperation,
+	onBareUrl,
 	outputCiteExport = false,
 	queueFocus,
 	setAttributes,
@@ -190,6 +203,7 @@ export function useCitationImportActions( {
 				truncated,
 				remainingInput = '',
 				skippedDuplicateCount = 0,
+				unreadableLinks = [],
 			} = await parsePastedInput( inputValue, citationStyle, {
 				deferFormatting: true,
 				existingDoiValues: citationsRef.current
@@ -205,6 +219,19 @@ export function useCitationImportActions( {
 			const duplicateCount =
 				duplicateEntries.length + skippedDuplicateCount;
 			const retainedUnparsedItems = Boolean( remainingInput.trim() );
+			// A lone link that nothing could read: no entry, no duplicate,
+			// and that link is the only thing left (#293). The parser lists
+			// only plain links, so a DOI or arXiv link whose lookup failed
+			// keeps its own error and stays in the box to retry.
+			const bareUrl =
+				onBareUrl &&
+				! entries.length &&
+				! duplicateCount &&
+				! truncated &&
+				errors.length === 1 &&
+				unreadableLinks.length === 1
+					? unreadableLinks[ 0 ]
+					: null;
 
 			if (
 				uniqueEntries.length >
@@ -302,6 +329,7 @@ export function useCitationImportActions( {
 					truncated,
 					retainedUnparsedItems,
 					formatterFallback,
+					unreadableLinkCount: unreadableLinks.length,
 				} );
 				announce(
 					warningResult ? 'warning' : 'success',
@@ -324,9 +352,19 @@ export function useCitationImportActions( {
 						reviewWarningCount: 0,
 						truncated,
 						retainedUnparsedItems,
+						unreadableLinkCount: unreadableLinks.length,
 					} )
 				);
 				queueFocus( { type: 'notice' } );
+			} else if ( bareUrl && onBareUrl( bareUrl ) ) {
+				// Manual Entry took the link, so empty the paste box. Its
+				// ref is shared with Manual Entry's first field, but the
+				// state set by onBareUrl() renders after this call, so the
+				// ref still points at the textarea here.
+				updatePasteInput( '', { syncDom: true } );
+				announce( 'info', BARE_URL_MANUAL_ENTRY_MESSAGE );
+				queueFocus( { type: 'notice' } );
+				return;
 			} else if ( errors.length > 0 ) {
 				announce( 'warning', errors[ 0 ] );
 				queueFocus( { type: 'notice' } );
@@ -358,6 +396,7 @@ export function useCitationImportActions( {
 		clearNotice,
 		inputValue,
 		isCurrentAsyncOperation,
+		onBareUrl,
 		outputCiteExport,
 		queueFocus,
 		setAttributes,

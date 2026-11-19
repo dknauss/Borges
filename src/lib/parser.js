@@ -17,6 +17,7 @@ import { validateAndSanitizeCsl } from './csl-sanitize';
 import { DEFAULT_CITATION_STYLE } from './formatting';
 import { parseFreeTextCitation } from './free-text-parser';
 import {
+	BARE_URL_MESSAGE,
 	FREE_TEXT_LOW_CONFIDENCE_WARNING,
 	SUPPORTED_INPUT_MESSAGE,
 } from './input-support';
@@ -32,6 +33,7 @@ import {
 	OPEN_LIBRARY_WORK_REGEX,
 	getArchiveId,
 	getArxivId,
+	getBareUrl,
 	getCatalogKey,
 	getStandaloneIsbn,
 	normalizeDoiValueForLookup,
@@ -286,6 +288,17 @@ function formatUnsupportedInputError() {
 	return SUPPORTED_INPUT_MESSAGE;
 }
 
+/**
+ * Error for pasted text no free-text pattern could read. A lone link gets its
+ * own message, since the general one lists formats the link already is not.
+ *
+ * @param {string} value The text that was tried.
+ * @return {string} Error message.
+ */
+function formatFreeTextError( value ) {
+	return getBareUrl( value ) ? BARE_URL_MESSAGE : SUPPORTED_INPUT_MESSAGE;
+}
+
 function formatLatexDocumentError() {
 	return __(
 		'This looks like LaTeX, not a bibliography entry. Paste a DOI, PMID, PMCID, arXiv ID, ISBN, BibTeX entry, RIS record, CSL-JSON, or supported citation instead.',
@@ -401,7 +414,12 @@ function formatBackendParseError( format, err ) {
  * @param {Array}        [options.existingDoiValues] Existing normalized or raw DOI
  *                                                   values already present in the
  *                                                   bibliography.
- * @return {Promise<Object>} { entries: Array, errors: Array, truncated: boolean }
+ * @return {Promise<Object>} { entries: Array, errors: Array, truncated: boolean,
+ *                           remainingInput: string, skippedDuplicateCount: number,
+ *                           unreadableLinks: string[] }. `unreadableLinks` lists
+ *                           the plain links no format could read (#293); a link
+ *                           whose DOI or other identifier failed to resolve is
+ *                           not one of them.
  *
  * @since 0.1.0
  */
@@ -598,17 +616,27 @@ export async function parsePastedInput(
 					item,
 					error:
 						item.format === 'freetext'
-							? formatUnsupportedInputError()
+							? formatFreeTextError( item.value )
 							: formatBackendParseError( item.format, err ),
+					unreadableLink:
+						item.format === 'freetext'
+							? getBareUrl( item.value )
+							: null,
 				};
 			}
 		}
 	);
 
+	const unreadableLinks = [];
+
 	for ( const resolvedItem of resolvedItems ) {
 		if ( resolvedItem.error ) {
 			errors.push( resolvedItem.error );
 			remainingSegments.push( resolvedItem.item.rawValue );
+
+			if ( resolvedItem.unreadableLink ) {
+				unreadableLinks.push( resolvedItem.unreadableLink );
+			}
 			continue;
 		}
 
@@ -625,6 +653,7 @@ export async function parsePastedInput(
 		truncated,
 		remainingInput: remainingSegments.join( '\n\n' ),
 		skippedDuplicateCount,
+		unreadableLinks,
 	};
 }
 
@@ -642,6 +671,7 @@ export {
 	normalizeLccn,
 	getCatalogKey,
 	getArchiveId,
+	getBareUrl,
 } from './parser-identifiers';
 export {
 	normalizeCrossRefCsl,
