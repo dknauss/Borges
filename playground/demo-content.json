@@ -113,6 +113,10 @@
 				},
 				{
 					"format": "freetext",
+					"input": "ClinGen. “ClinGen Variant Curation Expert Panel Protocol, Version 11.” November 2023. https://clinicalgenome.org/site/assets/files/3635/clingen_vcep_protocol_version_11_november2023-1.pdf"
+				},
+				{
+					"format": "freetext",
 					"input": "Grafton, A. (1997) The footnote: a curious history. Cambridge, MA: Harvard University Press."
 				},
 				{

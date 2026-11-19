@@ -44,6 +44,55 @@ function parseNamedDate( dateText ) {
 	};
 }
 
+/**
+ * Read the date a webpage citation gives: "November 15, 2023",
+ * "15 November 2023", "November 2023", or "2023".
+ *
+ * Wider than `parseNamedDate()`, which review citations use and which takes
+ * only "Month D, YYYY". Month names must be written out in full, so a site
+ * name such as "Mars 2030" is not read as a date.
+ *
+ * @param {string} dateText Text that may be only a date.
+ * @return {Object|null} CSL date (`date-parts`), or null when it is not a date.
+ */
+function parseWebpageDate( dateText ) {
+	const text = dateText.trim();
+	const namedDate = parseNamedDate( text );
+
+	if ( namedDate ) {
+		return namedDate;
+	}
+
+	const dayFirst = text.match(
+		/^(?<day>\d{1,2})\s+(?<month>[A-Za-z]+)\s+(?<year>\d{4})$/u
+	);
+	const monthYear = text.match( /^(?<month>[A-Za-z]+)\s+(?<year>\d{4})$/u );
+	const match = dayFirst || monthYear;
+
+	if ( match?.groups ) {
+		const month = MONTH_INDEX[ match.groups.month.toLowerCase() ];
+		const day = match.groups.day ? Number( match.groups.day ) : null;
+
+		if ( ! month || ( day !== null && ( day < 1 || day > 31 ) ) ) {
+			return null;
+		}
+
+		return {
+			'date-parts': [
+				day === null
+					? [ Number( match.groups.year ), month ]
+					: [ Number( match.groups.year ), month, day ],
+			],
+		};
+	}
+
+	if ( /^\d{4}$/u.test( text ) ) {
+		return { 'date-parts': [ [ Number( text ) ] ] };
+	}
+
+	return null;
+}
+
 function getTrailingCslFields( trailingText ) {
 	if ( ! trailingText ) {
 		return {};
@@ -679,22 +728,33 @@ function parseWebpageCitation( input ) {
 			/^Last modified\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})(?:,.*)?$/iu
 		);
 		const accessedMatch = lastSegment.match( /^Accessed\s+(.+)$/iu );
+		// "Site, November 15, 2023", "Site, 15 November 2023", "Site,
+		// November 2023", or "Site, 2023". The container is lazy, so the
+		// date's own comma ("November 15, 2023") stays with the date.
 		const datedContainerMatch = lastSegment.match(
-			/^(?<container>.+?),\s+(?<date>[A-Za-z]+\s+\d{1,2},\s+\d{4})$/u
+			/^(?<container>.+?),\s+(?<date>(?:[A-Za-z]+\s+\d{1,2},\s+|\d{1,2}\s+[A-Za-z]+\s+|[A-Za-z]+\s+)?\d{4})$/u
 		);
+		const datedContainerDate = datedContainerMatch?.groups
+			? parseWebpageDate( datedContainerMatch.groups.date )
+			: null;
+		// A last sentence that is only a date ("November 2023.") is when the
+		// page or document was published, not the name of the site (#294).
+		const bareDate = parseWebpageDate( lastSegment );
 
 		if ( effectiveMatch ) {
-			csl.issued = parseNamedDate( effectiveMatch[ 1 ] ) || undefined;
+			csl.issued = parseWebpageDate( effectiveMatch[ 1 ] ) || undefined;
 			segments.pop();
 		} else if ( modifiedMatch ) {
 			csl.issued = parseNamedDate( modifiedMatch[ 1 ] ) || undefined;
 			segments.pop();
 		} else if ( accessedMatch ) {
-			csl.accessed = parseNamedDate( accessedMatch[ 1 ] ) || undefined;
+			csl.accessed = parseWebpageDate( accessedMatch[ 1 ] ) || undefined;
 			segments.pop();
-		} else if ( datedContainerMatch?.groups ) {
-			csl.issued =
-				parseNamedDate( datedContainerMatch.groups.date ) || undefined;
+		} else if ( bareDate ) {
+			csl.issued = bareDate;
+			segments.pop();
+		} else if ( datedContainerDate ) {
+			csl.issued = datedContainerDate;
 			segments[ segments.length - 1 ] =
 				datedContainerMatch.groups.container;
 		}
