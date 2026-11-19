@@ -9,6 +9,7 @@ jest.mock( '@wordpress/element', () => {
 	return {
 		useCallback: React.useCallback,
 		useMemo: React.useMemo,
+		useRef: React.useRef,
 		useState: React.useState,
 	};
 } );
@@ -141,6 +142,27 @@ describe( 'useManualCitationActions — prefillManualFields (#293)', () => {
 		expect( prefilled ).toBe( true );
 		expect( result.current.manualFields ).toEqual( LINK );
 		expect( args.clearNotice ).not.toHaveBeenCalled();
+	} );
+
+	it( 'sees a draft started after the paste began, through an older callback', () => {
+		const { result } = renderHook( () =>
+			useManualCitationActions( makeArgs() )
+		);
+		// The import hook holds the callback from the render where the
+		// paste started, before the author typed anything.
+		const prefillFromPasteStart = result.current.prefillManualFields;
+		let prefilled;
+
+		act( () =>
+			result.current.handleManualFieldChange( 'title', 'Draft title' )
+		);
+		act( () => {
+			prefilled = prefillFromPasteStart( LINK );
+		} );
+
+		expect( prefilled ).toBe( false );
+		expect( result.current.manualFields.title ).toBe( 'Draft title' );
+		expect( result.current.manualFields.url ).toBeUndefined();
 	} );
 
 	it( 'keeps an unfinished draft and reports that it did', () => {

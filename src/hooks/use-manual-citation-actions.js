@@ -1,5 +1,5 @@
 import { __, sprintf } from '@wordpress/i18n';
-import { useCallback, useMemo, useState } from '@wordpress/element';
+import { useCallback, useMemo, useRef, useState } from '@wordpress/element';
 import { findDuplicateCitation } from '../lib/deduplicate';
 import {
 	buildManualCsl,
@@ -124,6 +124,11 @@ export function useManualCitationActions( {
 	const [ manualFields, setManualFields ] = useState( () =>
 		createEmptyManualEntryFields()
 	);
+	// The latest fields, for callbacks that outlive a render: a paste that
+	// resolves after the author has started a manual draft must see that
+	// draft, not the form as it was when the paste began (#293).
+	const manualFieldsRef = useRef( manualFields );
+	manualFieldsRef.current = manualFields;
 
 	const handleManualFieldChange = useCallback(
 		( field, value ) => {
@@ -149,20 +154,20 @@ export function useManualCitationActions( {
 	 * @param {Object} fields Manual entry fields to set over empty ones.
 	 * @return {boolean} True when the fields were set.
 	 */
-	const prefillManualFields = useCallback(
-		( fields ) => {
-			if ( hasManualEntryDraft( manualFields ) ) {
-				return false;
-			}
+	const prefillManualFields = useCallback( ( fields ) => {
+		if ( hasManualEntryDraft( manualFieldsRef.current ) ) {
+			return false;
+		}
 
-			setManualFields( {
-				...createEmptyManualEntryFields(),
-				...fields,
-			} );
-			return true;
-		},
-		[ manualFields ]
-	);
+		const nextFields = {
+			...createEmptyManualEntryFields(),
+			...fields,
+		};
+
+		manualFieldsRef.current = nextFields;
+		setManualFields( nextFields );
+		return true;
+	}, [] );
 
 	const handleManualClear = useCallback( () => {
 		setManualFields( createEmptyManualEntryFields() );
