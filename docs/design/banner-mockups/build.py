@@ -18,6 +18,7 @@ The Google Fonts (all SIL Open Font License) are downloaded into ./fonts/ on
 the first run; that folder is git-ignored.
 """
 import math
+import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -39,15 +40,14 @@ FONT_URLS = {
     'ebgaramond-italic.ttf': 'ebgaramond/v33/SlGFmQSNjdsmc35JDF1K5GRwUjcdlttVFm-rI7e8QI96.ttf',
     'fraunces.ttf': 'fraunces/v38/6NUh8FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0K7iN7hzFUPJH58njr1a03gg7S2nfgRYIctxujDg.ttf',
     'plexsans.ttf': 'ibmplexsans/v23/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1swZSAXcomDVmadSD6llzAA.ttf',
-    'plexmono.ttf': 'ibmplexmono/v23/-F63fjptAgt5VM-kVkqdyU8n5ig.ttf',
+    'spectral-italic.ttf': 'spectral/v15/rnCt-xNNww_2s0amA9M8kn0.ttf',
     'spectral-500.ttf': 'spectral/v15/rnCs-xNNww_2s0amA9vKsV3G.ttf',
 }
 
 
 # The tagline Dan chose on 2026-11-23, shared by every variant. Each variant
-# sets it at the largest size that keeps it inside the frame (about 880px).
+# sets it on one line, inside the frame (about 880px wide at most).
 TAGLINE = 'Structured bibliographies and inline citations in any style.'
-TAGLINE_LINES = ('Structured bibliographies and', 'inline citations in any style.')
 
 
 def ensure_font(name):
@@ -60,6 +60,44 @@ def ensure_font(name):
 
 
 _cache = {}
+
+
+# The handwritten "Borges" from the live banner's source, reused as-is.
+LIVE_BANNER_SVG = HERE.parents[2] / '.wordpress-org' / 'source' / 'bibliography-builder-banner.svg'
+# Bounding box of the signature once its own rotation is applied (measured in
+# Chromium with getBBox), so it can be scaled into a box of our choosing.
+SIG_BOX = (-76.37, -48.62, 855.58, 485.03)
+
+
+def signature(x, y, height, fill):
+    """Return the live banner's signature, scaled to `height` with its top-left at (x, y)."""
+    src = LIVE_BANNER_SVG.read_text()
+    start = src.rindex('<g', 0, src.index('id="sig-borges"'))
+    depth = 0
+    for m in re.finditer(r'<g\b|</g>', src[start:]):
+        depth += 1 if m.group(0) == '<g' else -1
+        if depth == 0:
+            end = start + m.end()
+            break
+    group = src[start:end]
+    inner = group[group.index('>') + 1:group.rindex('</g>')]
+    inner = re.sub(r'\s+id="[^"]*"', '', inner)
+    inner = re.sub(r'\s+', ' ', inner).replace('fill="#000000"', f'fill="{fill}"')
+    bx, by, bw, bh = SIG_BOX
+    k = height / bh
+    # A hairline stroke in the same colour thickens the pen line: inkier, and
+    # still legible on the 772px banner. Width is given in banner pixels.
+    ink_width = 1.8 / (k * 0.43812816 * 0.1)
+    inner = inner.replace('stroke="none"', f'stroke="{fill}" stroke-width="{ink_width:.1f}" stroke-linejoin="round"')
+    # The live banner's own rotation of the signature (about 5.3 degrees).
+    rot = 'matrix(0.43812816,0.04054277,-0.04054277,0.43812816,0,0)'
+    place = f'translate({x - bx * k:.2f},{y - by * k:.2f}) scale({k:.4f})'
+    # Ink-bleed roughness, as in the live banner, in banner pixels.
+    filt = ('<filter id="rough-ink" x="-0.05" y="-0.05" width="1.1" height="1.1">'
+            '<feTurbulence type="fractalNoise" baseFrequency="0.05 0.032" numOctaves="4" seed="7" result="noise"/>'
+            '<feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>'
+            '</filter>')
+    return f'<defs>{filt}</defs><g filter="url(#rough-ink)"><g transform="{place}"><g transform="{rot}">{inner}</g></g></g>', bw * k
 
 
 def text_path(font, text, x, y, size, tracking=0.0, fill='#000', anchor='start'):
@@ -105,11 +143,9 @@ def svg(body, title):
     )
 
 
-# ---------------------------------------------------------------- A: Folio
-def folio():
-    paper, ink, oxblood, line, muted = '#F6F2E9', '#1F2B33', '#8A2B37', '#D8CFBD', '#55524A'
-    b = frame(paper, line)
-    # Three spines on a hairline shelf; the middle one leans, one is oxblood.
+def folio_spines(paper, ink, oxblood):
+    """Three spines on a hairline shelf; one leans, one is oxblood."""
+    b = ''
     b += f'<line x1="140" y1="372" x2="360" y2="372" stroke="{ink}" stroke-width="4"/>'
     b += f'<rect x="168" y="150" width="44" height="220" fill="{ink}"/>'
     b += f'<rect x="222" y="128" width="50" height="242" fill="{oxblood}"/>'
@@ -118,15 +154,41 @@ def folio():
     for x, w, top in ((168, 44, 150), (222, 50, 128)):
         b += f'<rect x="{x}" y="{top + 26}" width="{w}" height="3" fill="{paper}" opacity=".7"/>'
         b += f'<rect x="{x}" y="{top + 36}" width="{w}" height="3" fill="{paper}" opacity=".7"/>'
-    word, _ = text_path('cormorant-600.ttf', 'BORGES', 588, 252, 152, tracking=0.16, fill=ink)
+    return b
+
+
+# ---------------------------------------------------------------- A: Folio
+def folio():
+    paper, ink, oxblood, line, muted = '#F6F2E9', '#1F2B33', '#8A2B37', '#D8CFBD', '#55524A'
+    b = frame(paper, line)
+    b += folio_spines(paper, ink, oxblood)
+    # The tagline sits on one line, and BORGES is letterspaced to exactly the
+    # tagline's width, so the two lines form one justified block.
+    tag, tag_w = text_path('ebgaramond-italic.ttf', TAGLINE, 592, 362, 38, fill=muted)
+    _, plain_w = text_path('cormorant-600.ttf', 'BORGES', 0, 0, 148)
+    tracking = (tag_w - plain_w) / 5 / 148
+    word, _ = text_path('cormorant-600.ttf', 'BORGES', 590, 252, 148, tracking=tracking, fill=ink)
     b += word
     b += f'<rect x="592" y="290" width="112" height="6" fill="{oxblood}"/>'
-    # On one line the tagline runs well past the wordmark; two lines keep the
-    # text block as wide as BORGES, which suits the centred, bookish setting.
-    for n, line in enumerate(TAGLINE_LINES):
-        tag, _ = text_path('ebgaramond-italic.ttf', line, 592, 356 + n * 50, 42, fill=muted)
-        b += tag
+    b += tag
     return svg(b, 'Borges Bibliography Builder')
+
+
+# ---------------------------------------- A2: Folio with the inky signature
+def folio_signature():
+    """Folio, with the live banner's handwritten Borges in place of the capitals."""
+    paper, ink, oxblood, line, muted = '#F6F2E9', '#1F2B33', '#8A2B37', '#D8CFBD', '#55524A'
+    b = frame(paper, line)
+    b += folio_spines(paper, ink, oxblood)
+    sig, _ = signature(582, SIG_TOP, SIG_HEIGHT, ink)
+    b += sig
+    b += f'<rect x="592" y="{RULE_Y}" width="112" height="6" fill="{oxblood}"/>'
+    tag, _ = text_path('ebgaramond-italic.ttf', TAGLINE, 592, RULE_Y + 66, 38, fill=muted)
+    b += tag
+    return svg(b, 'Borges Bibliography Builder')
+
+
+SIG_TOP, SIG_HEIGHT, RULE_Y = -8, 360, 326
 
 
 # ---------------------------------------------------------------- B: Hexagon
@@ -168,14 +230,13 @@ def index():
     word, _ = text_path('spectral-500.ttf', 'Borges', 586, 252, 162, tracking=0.02, fill=ink)
     b += word
     b += f'<rect x="592" y="290" width="112" height="6" fill="{terra}"/>'
-    # A monospace face is wide: one line would need about 24px (12px on the
-    # 772px banner), so the tagline breaks after "and" instead.
-    for n, line in enumerate(TAGLINE_LINES):
-        tag, _ = text_path('plexmono.ttf', line, 592, 354 + n * 46, 32, fill=muted)
-        b += tag
+    # On one line a monospace tagline would shrink to about 12px on the 772px
+    # banner, so this variant sets it in Spectral Italic instead.
+    tag, _ = text_path('spectral-italic.ttf', TAGLINE, 592, 360, 36, fill=muted)
+    b += tag
     return svg(b, 'Borges Bibliography Builder')
 
 
-for name, fn in (('a-folio', folio), ('b-hexagon', hexagon), ('c-index', index)):
+for name, fn in (('a-folio', folio), ('a2-folio-signature', folio_signature), ('b-hexagon', hexagon), ('c-index', index)):
     (OUT / f'borges-banner-{name}.svg').write_text(fn())
     print('wrote', name)

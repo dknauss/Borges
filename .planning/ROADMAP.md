@@ -389,10 +389,10 @@ Ideas (added 2026-11-23):
     hairline frame, a divider, an icon panel, a wordmark, a short accent rule,
     one tagline) with their own fonts and colours: A · Folio (Cormorant
     Garamond, ink and oxblood, book spines), B · Hexagon (Fraunces, night blue
-    and brass, a Library of Babel gallery), and C · Index (Spectral and IBM Plex
-    Mono, ink and terracotta, a hanging-indent bibliography). All three carry the
-    tagline "Structured bibliographies and inline citations in any style." Dan
-    prefers A · Folio. The folder's `README.md` gives the reasoning and the
+    and brass, a Library of Babel gallery), and C · Index (Spectral, ink and terracotta, a hanging-indent bibliography), plus A2, Folio
+    with the live banner's handwritten signature. All carry the tagline
+    "Structured bibliographies and inline citations in any style." on one line.
+    Dan prefers Folio. The folder's `README.md` gives the reasoning and the
     steps to adopt it. Not scheduled; the current banners stay until Dan decides
     to make the swap.
 
