@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **New WordPress.org banner, icon, and favicon.** A quieter "Folio" design replaces the handwritten-signature banner: BORGES in Cormorant Garamond letterspaced over the tagline "Structured bibliographies and inline citations in any style." in EB Garamond Italic, beside three book spines in ink and oxblood on warm paper. `npm run assets:brand` (`scripts/build_brand_assets.py`) builds the banners, the square icon (SVG, 128, 256, and 512px), and a favicon set. The old art and its scripts are archived in `docs/design/archive/original-art/`, which never ships or deploys. ([#298](https://github.com/dknauss/Borges/pull/298))
+
 - **A link pasted on its own opens Manual Entry.** A plain link, such as a PDF (`https://clinicalgenome.org/…/clingen_vcep_protocol_version_11_november2023-1.pdf`) or a web page whose address holds no DOI, arXiv ID, or catalog or archive.org record, used to get the general "Paste a DOI, PMID…" notice and stay in the box. Now Manual Entry opens as a webpage with the URL filled in, and a notice says that a link alone has no title, author, or date and asks for the title. An unfinished Manual Entry draft is never replaced: the link then stays in the paste box with that explanation. A link pasted beside other citations gets that explanation as its own error. Borges does not fetch the link: reading a remote PDF would mean calling any host a user pastes (where every lookup today calls a fixed one), and PDF metadata is rarely good enough to cite. The Playground demo's Manual Entry note shows it. ([#293](https://github.com/dknauss/Borges/issues/293))
 
 ### Fixed

@@ -41,3 +41,6 @@ tools/style-reference/results/
 
 # Captured by tools/yoast-nlweb-trace.
 tools/yoast-nlweb-trace/results/
+
+# Retired brand art and its old generators, kept as they were.
+docs/design/archive/

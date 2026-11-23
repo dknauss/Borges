@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Background -->
+  <rect width="256" height="256" fill="white"/>
+
+  <!-- Shelf base -->
+  <rect x="44" y="200" width="168" height="8" rx="1" fill="#C4973E"/>
+
+  <!-- Book 1 (left) — leaning inward toward the stack -->
+  <g transform="translate(56, 52) rotate(4, 42, 148)">
+    <!-- Book body -->
+    <rect x="0" y="0" width="42" height="148" rx="2" fill="#2D3136"/>
+    <!-- Spine edge -->
+    <rect x="0" y="0" width="5" height="148" rx="1" fill="#23272B"/>
+    <!-- Spine label -->
+    <rect x="12" y="68" width="20" height="8" rx="1.5" fill="white" opacity="0.85"/>
+  </g>
+
+  <!-- Book 2 (center) — showing blue/slate page block or inner cover -->
+  <g transform="translate(102, 44)">
+    <!-- Blue visible face (page edges or inner cover) -->
+    <rect x="0" y="0" width="14" height="156" rx="1" fill="#7B8FA1"/>
+    <!-- Dark cover over most of it -->
+    <rect x="10" y="0" width="40" height="156" rx="2" fill="#2D3136"/>
+    <!-- Spine edge -->
+    <rect x="10" y="0" width="5" height="156" rx="1" fill="#23272B"/>
+    <!-- Spine label -->
+    <rect x="22" y="72" width="20" height="8" rx="1.5" fill="white" opacity="0.85"/>
+  </g>
+
+  <!-- Book 3 (right) — dark, slightly shorter -->
+  <g transform="translate(156, 56)">
+    <!-- Book body -->
+    <rect x="0" y="0" width="42" height="144" rx="2" fill="#2D3136"/>
+    <!-- Spine edge -->
+    <rect x="0" y="0" width="5" height="144" rx="1" fill="#23272B"/>
+    <!-- Spine label -->
+    <rect x="12" y="66" width="20" height="8" rx="1.5" fill="white" opacity="0.85"/>
+  </g>
+</svg>

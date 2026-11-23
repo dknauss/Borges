@@ -1,7 +1,7 @@
 """Build the Borges WordPress.org banner mockups as outlined SVG.
 
-These are roadmap ideas, not live assets: see README.md beside this file and
-"WordPress.org asset follow-up" in .planning/ROADMAP.md.
+This is the design exploration. Folio (A) was adopted on 2026-11-23; the live
+assets are built by scripts/build_brand_assets.py, not by this file.
 
 The layout follows Dan's Keel banner: a hairline frame, a vertical divider,
 the icon centred in the left panel, then the wordmark, a short accent rule,
@@ -18,7 +18,6 @@ The Google Fonts (all SIL Open Font License) are downloaded into ./fonts/ on
 the first run; that folder is git-ignored.
 """
 import math
-import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -61,43 +60,6 @@ def ensure_font(name):
 
 _cache = {}
 
-
-# The handwritten "Borges" from the live banner's source, reused as-is.
-LIVE_BANNER_SVG = HERE.parents[2] / '.wordpress-org' / 'source' / 'bibliography-builder-banner.svg'
-# Bounding box of the signature once its own rotation is applied (measured in
-# Chromium with getBBox), so it can be scaled into a box of our choosing.
-SIG_BOX = (-76.37, -48.62, 855.58, 485.03)
-
-
-def signature(x, y, height, fill):
-    """Return the live banner's signature, scaled to `height` with its top-left at (x, y)."""
-    src = LIVE_BANNER_SVG.read_text()
-    start = src.rindex('<g', 0, src.index('id="sig-borges"'))
-    depth = 0
-    for m in re.finditer(r'<g\b|</g>', src[start:]):
-        depth += 1 if m.group(0) == '<g' else -1
-        if depth == 0:
-            end = start + m.end()
-            break
-    group = src[start:end]
-    inner = group[group.index('>') + 1:group.rindex('</g>')]
-    inner = re.sub(r'\s+id="[^"]*"', '', inner)
-    inner = re.sub(r'\s+', ' ', inner).replace('fill="#000000"', f'fill="{fill}"')
-    bx, by, bw, bh = SIG_BOX
-    k = height / bh
-    # A hairline stroke in the same colour thickens the pen line: inkier, and
-    # still legible on the 772px banner. Width is given in banner pixels.
-    ink_width = 1.8 / (k * 0.43812816 * 0.1)
-    inner = inner.replace('stroke="none"', f'stroke="{fill}" stroke-width="{ink_width:.1f}" stroke-linejoin="round"')
-    # The live banner's own rotation of the signature (about 5.3 degrees).
-    rot = 'matrix(0.43812816,0.04054277,-0.04054277,0.43812816,0,0)'
-    place = f'translate({x - bx * k:.2f},{y - by * k:.2f}) scale({k:.4f})'
-    # Ink-bleed roughness, as in the live banner, in banner pixels.
-    filt = ('<filter id="rough-ink" x="-0.05" y="-0.05" width="1.1" height="1.1">'
-            '<feTurbulence type="fractalNoise" baseFrequency="0.05 0.032" numOctaves="4" seed="7" result="noise"/>'
-            '<feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>'
-            '</filter>')
-    return f'<defs>{filt}</defs><g filter="url(#rough-ink)"><g transform="{place}"><g transform="{rot}">{inner}</g></g></g>', bw * k
 
 
 def text_path(font, text, x, y, size, tracking=0.0, fill='#000', anchor='start'):
@@ -174,23 +136,6 @@ def folio():
     return svg(b, 'Borges Bibliography Builder')
 
 
-# ---------------------------------------- A2: Folio with the inky signature
-def folio_signature():
-    """Folio, with the live banner's handwritten Borges in place of the capitals."""
-    paper, ink, oxblood, line, muted = '#F6F2E9', '#1F2B33', '#8A2B37', '#D8CFBD', '#55524A'
-    b = frame(paper, line)
-    b += folio_spines(paper, ink, oxblood)
-    sig, _ = signature(582, SIG_TOP, SIG_HEIGHT, ink)
-    b += sig
-    b += f'<rect x="592" y="{RULE_Y}" width="112" height="6" fill="{oxblood}"/>'
-    tag, _ = text_path('ebgaramond-italic.ttf', TAGLINE, 592, RULE_Y + 66, 38, fill=muted)
-    b += tag
-    return svg(b, 'Borges Bibliography Builder')
-
-
-SIG_TOP, SIG_HEIGHT, RULE_Y = -8, 360, 326
-
-
 # ---------------------------------------------------------------- B: Hexagon
 def hexagon():
     night, bone, brass, line, muted = '#14252E', '#F1EADB', '#C9A24D', '#2C4552', '#A9B7BD'
@@ -237,6 +182,6 @@ def index():
     return svg(b, 'Borges Bibliography Builder')
 
 
-for name, fn in (('a-folio', folio), ('a2-folio-signature', folio_signature), ('b-hexagon', hexagon), ('c-index', index)):
+for name, fn in (('a-folio', folio), ('b-hexagon', hexagon), ('c-index', index)):
     (OUT / f'borges-banner-{name}.svg').write_text(fn())
     print('wrote', name)

@@ -382,19 +382,18 @@ Low-priority polish:
     and `banner-1544x500-{locale}.png`, including RTL where useful) after
     localized branding/copy and official language-pack availability justify them
 
-Ideas (added 2026-11-23):
+Completed (2026-11-23):
 
--   **Minimalist rebrand of the banner and icon.** Three mockups in
-    `docs/design/banner-mockups/` take the restraint of the Keel banner (a
-    hairline frame, a divider, an icon panel, a wordmark, a short accent rule,
-    one tagline) with their own fonts and colours: A · Folio (Cormorant
-    Garamond, ink and oxblood, book spines), B · Hexagon (Fraunces, night blue
-    and brass, a Library of Babel gallery), and C · Index (Spectral, ink and terracotta, a hanging-indent bibliography), plus A2, Folio
-    with the live banner's handwritten signature. All carry the tagline
-    "Structured bibliographies and inline citations in any style." on one line.
-    Dan prefers Folio. The folder's `README.md` gives the reasoning and the
-    steps to adopt it. Not scheduled; the current banners stay until Dan decides
-    to make the swap.
+-   **Minimalist "Folio" rebrand of the banner, icon, and favicon.** Following
+    the restraint of the Keel banner (a hairline frame, a divider, an icon
+    panel, a wordmark, a short accent rule, one tagline), with its own fonts
+    and colours: BORGES in Cormorant Garamond letterspaced to the EB Garamond
+    Italic tagline "Structured bibliographies and inline citations in any
+    style.", and three book spines in ink and oxblood on warm paper.
+    `scripts/build_brand_assets.py` (`npm run assets:brand`) builds every file.
+    The alternatives Dan considered are in `docs/design/banner-mockups/`; the
+    retired art is in `docs/design/archive/original-art/`, outside the release
+    package and the WordPress.org deploy.
 
 ## Compatibility and runtime coverage backlog
 
