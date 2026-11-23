@@ -408,7 +408,7 @@ Multisite runtime smoke coverage is included in CI. SQLite is not currently part
 - [Runtime matrix smoke script](./scripts/runtime-matrix/smoke.sh)
 - [Brand assets](./.wordpress-org/)
 
-WordPress.org branding assets live in [.wordpress-org](./.wordpress-org/), editable source files live in [.wordpress-org/source](./.wordpress-org/source/), and maintainer-facing deploy notes live in [docs/wporg-svn-checklist.md](./docs/wporg-svn-checklist.md).
+WordPress.org branding assets live in [.wordpress-org](./.wordpress-org/), and their SVG masters and the favicon set live in [.wordpress-org/source](./.wordpress-org/source/). All of them are built by `npm run assets:brand` ([scripts/build_brand_assets.py](./scripts/build_brand_assets.py)). The art they replaced in November 2026 is archived in [docs/design/archive/original-art](./docs/design/archive/original-art/), and maintainer-facing deploy notes live in [docs/wporg-svn-checklist.md](./docs/wporg-svn-checklist.md).
 
 ### Playground Blueprint maintenance
 

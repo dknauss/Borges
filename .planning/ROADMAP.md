@@ -382,6 +382,19 @@ Low-priority polish:
     and `banner-1544x500-{locale}.png`, including RTL where useful) after
     localized branding/copy and official language-pack availability justify them
 
+Completed (2026-11-23):
+
+-   **Minimalist "Folio" rebrand of the banner, icon, and favicon.** Following
+    the restraint of the Keel banner (a hairline frame, a divider, an icon
+    panel, a wordmark, a short accent rule, one tagline), with its own fonts
+    and colours: BORGES in Cormorant Garamond letterspaced to the EB Garamond
+    Italic tagline "Structured bibliographies and inline citations in any
+    style.", and three book spines in ink and oxblood on warm paper.
+    `scripts/build_brand_assets.py` (`npm run assets:brand`) builds every file.
+    The alternatives Dan considered are in `docs/design/banner-mockups/`; the
+    retired art is in `docs/design/archive/original-art/`, outside the release
+    package and the WordPress.org deploy.
+
 ## Compatibility and runtime coverage backlog
 
 Completed:

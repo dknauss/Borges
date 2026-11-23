@@ -31,8 +31,9 @@ const usesVitest = ( entry ) =>
 const baseConfig = defaultConfig.filter( ( entry ) => ! usesVitest( entry ) );
 
 module.exports = [
-	// Storybook's static build (npm run storybook:build) is minified output.
-	{ ignores: [ 'storybook-static/**' ] },
+	// Storybook's static build (npm run storybook:build) is minified output;
+	// the retired brand-art generators are archived as they were.
+	{ ignores: [ 'storybook-static/**', 'docs/design/archive/**' ] },
 
 	...baseConfig,
 
