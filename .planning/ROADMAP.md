@@ -390,9 +390,11 @@ Ideas (added 2026-11-23):
     one tagline) with their own fonts and colours: A · Folio (Cormorant
     Garamond, ink and oxblood, book spines), B · Hexagon (Fraunces, night blue
     and brass, a Library of Babel gallery), and C · Index (Spectral and IBM Plex
-    Mono, ink and terracotta, a hanging-indent bibliography; the recommended
-    one). The folder's `README.md` gives the reasoning and the steps to adopt
-    one. Not scheduled; the current banners stay until Dan picks a direction.
+    Mono, ink and terracotta, a hanging-indent bibliography). All three carry the
+    tagline "Structured bibliographies and inline citations in any style." Dan
+    prefers A · Folio. The folder's `README.md` gives the reasoning and the
+    steps to adopt it. Not scheduled; the current banners stay until Dan decides
+    to make the swap.
 
 ## Compatibility and runtime coverage backlog
 

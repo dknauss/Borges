@@ -44,6 +44,12 @@ FONT_URLS = {
 }
 
 
+# The tagline Dan chose on 2026-11-23, shared by every variant. Each variant
+# sets it at the largest size that keeps it inside the frame (about 880px).
+TAGLINE = 'Structured bibliographies and inline citations in any style.'
+TAGLINE_LINES = ('Structured bibliographies and', 'inline citations in any style.')
+
+
 def ensure_font(name):
     """Download a font into ./fonts/ unless it is already there."""
     path = FONTS / name
@@ -115,8 +121,11 @@ def folio():
     word, _ = text_path('cormorant-600.ttf', 'BORGES', 588, 252, 152, tracking=0.16, fill=ink)
     b += word
     b += f'<rect x="592" y="290" width="112" height="6" fill="{oxblood}"/>'
-    tag, _ = text_path('ebgaramond-italic.ttf', 'Structured bibliographies for the block editor.', 592, 362, 42, fill=muted)
-    b += tag
+    # On one line the tagline runs well past the wordmark; two lines keep the
+    # text block as wide as BORGES, which suits the centred, bookish setting.
+    for n, line in enumerate(TAGLINE_LINES):
+        tag, _ = text_path('ebgaramond-italic.ttf', line, 592, 356 + n * 50, 42, fill=muted)
+        b += tag
     return svg(b, 'Borges Bibliography Builder')
 
 
@@ -137,7 +146,7 @@ def hexagon():
     word, _ = text_path('fraunces.ttf', 'Borges', 586, 254, 176, tracking=0.0, fill=bone)
     b += word
     b += f'<rect x="592" y="292" width="112" height="6" fill="{brass}"/>'
-    tag, _ = text_path('plexsans.ttf', 'Every citation in its place.', 592, 362, 40, fill=muted)
+    tag, _ = text_path('plexsans.ttf', TAGLINE, 592, 360, 34, fill=muted)
     b += tag
     return svg(b, 'Borges Bibliography Builder')
 
@@ -159,8 +168,11 @@ def index():
     word, _ = text_path('spectral-500.ttf', 'Borges', 586, 252, 162, tracking=0.02, fill=ink)
     b += word
     b += f'<rect x="592" y="290" width="112" height="6" fill="{terra}"/>'
-    tag, _ = text_path('plexmono.ttf', 'Paste a DOI. Get a bibliography.', 592, 360, 34, fill=muted)
-    b += tag
+    # A monospace face is wide: one line would need about 24px (12px on the
+    # 772px banner), so the tagline breaks after "and" instead.
+    for n, line in enumerate(TAGLINE_LINES):
+        tag, _ = text_path('plexmono.ttf', line, 592, 354 + n * 46, 32, fill=muted)
+        b += tag
     return svg(b, 'Borges Bibliography Builder')
 
 

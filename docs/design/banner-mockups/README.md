@@ -3,7 +3,12 @@
 Three minimalist banner ideas for a possible Borges rebrand, drawn on 2026-11-23.
 None of them is in use: the live banners are still the ones in `.wordpress-org/`.
 They are tracked as an idea under "WordPress.org asset follow-up" in
-`.planning/ROADMAP.md`.
+`.planning/ROADMAP.md`. **Dan's preferred direction is A · Folio.**
+
+All three share the tagline Dan chose: "Structured bibliographies and inline
+citations in any style." A and C set it on two lines (C's monospace face would
+otherwise have to shrink to about 12px on the 772px banner, and A's italic would
+run well past the wordmark); B fits it on one.
 
 ![The three variants at 772x250](borges-banners-compare-772.png)
 
@@ -11,24 +16,23 @@ They are tracked as an idea under "WordPress.org asset follow-up" in
 
 The layout borrows the restraint of Dan's Keel banner: a hairline frame, a
 vertical divider, the icon centred in the left panel, then the wordmark, a short
-accent rule, and one line of tagline. Nothing else. The fonts and colours are
+accent rule, and a short tagline. Nothing else. The fonts and colours are
 deliberately different from Keel's (Barlow, grey and steel blue), so the two
 plugins read as siblings, not twins.
 
 ## The variants
 
-| Variant | Wordmark / tagline fonts | Colours | Icon | Tagline |
+| Variant | Wordmark / tagline fonts | Colours | Icon | First-draft tagline |
 |---|---|---|---|---|
 | A · Folio | Cormorant Garamond SemiBold caps, EB Garamond Italic | ink `#1F2B33`, oxblood `#8A2B37`, paper `#F6F2E9` | three book spines on a shelf | Structured bibliographies for the block editor. |
 | B · Hexagon | Fraunces (144 pt optical size), IBM Plex Sans | night `#14252E`, bone `#F1EADB`, brass `#C9A24D` | a hexagonal gallery from "The Library of Babel" with one book pulled | Every citation in its place. |
 | C · Index | Spectral Medium, IBM Plex Mono | ink `#1E1F21`, terracotta `#B4532A`, paper `#FBFAF7` | a small bibliography with hanging indents | Paste a DOI. Get a bibliography. |
 
-- **A** is the smallest step from today's branding, since the spines echo the
-  current icon.
+- **A** (preferred) is the smallest step from today's branding, since the spines
+  echo the current icon, and its book-face type suits a bibliography plugin.
 - **B** is the only dark banner, so it stands out most in the directory, and it
   leans hardest into the Borges reference.
-- **C** was the recommendation: its icon shows what the plugin does even at icon
-  size (128px), and the tagline states the main workflow.
+- **C** shows what the plugin does in its icon, even at icon size (128px).
 
 Mixing is possible, for example B's colours with C's icon.
 
