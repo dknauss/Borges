@@ -382,6 +382,18 @@ Low-priority polish:
     and `banner-1544x500-{locale}.png`, including RTL where useful) after
     localized branding/copy and official language-pack availability justify them
 
+Ideas (added 2026-11-23):
+
+-   **Minimalist rebrand of the banner and icon.** Three mockups in
+    `docs/design/banner-mockups/` take the restraint of the Keel banner (a
+    hairline frame, a divider, an icon panel, a wordmark, a short accent rule,
+    one tagline) with their own fonts and colours: A · Folio (Cormorant
+    Garamond, ink and oxblood, book spines), B · Hexagon (Fraunces, night blue
+    and brass, a Library of Babel gallery), and C · Index (Spectral and IBM Plex
+    Mono, ink and terracotta, a hanging-indent bibliography; the recommended
+    one). The folder's `README.md` gives the reasoning and the steps to adopt
+    one. Not scheduled; the current banners stay until Dan picks a direction.
+
 ## Compatibility and runtime coverage backlog
 
 Completed:
