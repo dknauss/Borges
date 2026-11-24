@@ -25,6 +25,7 @@ artifacts
 playground
 package.json
 package-lock.json
+.npmrc
 composer.json
 composer.lock
 psalm.xml
