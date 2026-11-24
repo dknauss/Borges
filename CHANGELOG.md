@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Software entries print their version and access date.** A `software` entry went through each style's book form, so its `version` was dropped in every style, and an undated online entry printed "n.d." with no access date (and, in Chicago, IEEE, Vancouver, and ABNT, no URL). Every bundled style now has a software form from its manual: APA 7's `Title (Version 1.0) [Computer software]`, Chicago's `Version 1.0` with "Accessed …" in place of "n.d.", Cite Them Right's `[Computer program]`, *Citing Medicine*'s `[computer program]`, and the version element in MLA 9, IEEE, OSCOLA, and ABNT. The editor and the REST write routes share the formatter, so both are fixed; saved entries change when they are next formatted.
+
 - **A pasted webpage citation keeps its date when the date has no day.** In `ClinGen. "ClinGen Variant Curation Expert Panel Protocol, Version 11." November 2023. https://…`, the "November 2023" became the website's name and the entry had no year, because `parseWebpageCitation()` read only the "November 15, 2023" form. A last sentence that is only a date ("November 15, 2023", "15 November 2023", "November 2023", or "2023") is now the entry's date, and the same forms work after a site name ("Clinical Genome Resource, November 2023"), `Accessed`, and `Effective`. Month names must be written out, so a site called "Mars 2030" keeps its name. The Playground demo's formatted citations include the ClinGen example. ([#294](https://github.com/dknauss/Borges/issues/294))
 
 ## [1.21.0] - 2026-11-09

@@ -19,3 +19,6 @@ book-no-author-no-date	A Handbook of Bookbinding. Boston: Guild Press, [s. d.].
 legal-case	Smith v Jones. UKSC 12, 2019.
 legislation	Copyright, Designs and Patents Act. 1988.
 regulation	Air Navigation Order 2016. 2016. (SI 2016/765).
+software-undated-online	WORDPRESS.ORG. Migrate to WordPress.com. Versão 1.0. [s. d.]. Disponível em: https://wordpress.org/plugins/wpcom-migration/. Acesso em: 24 nov. 2026.
+software-dated	MACFARLANE, John. Pandoc. Versão 3.1.11. [S. l.]: Pandoc, 2024. Disponível em: https://github.com/jgm/pandoc. Acesso em: 24 nov. 2026.
+software-undated-offline	CORPORATION FOR DIGITAL SCHOLARSHIP. Zotero. [S. l.]: Corporation for Digital Scholarship, [s. d.].

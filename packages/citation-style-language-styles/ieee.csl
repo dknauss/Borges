@@ -199,6 +199,32 @@
             <text macro="online"/>
           </group>
         </else-if>
+        <else-if type="software">
+          <group delimiter=" ">
+            <group delimiter=", " suffix=".">
+              <text macro="creators"/>
+              <text variable="title"/>
+              <group delimiter=" ">
+                <text term="version" text-case="capitalize-first"/>
+                <text variable="version"/>
+              </group>
+            </group>
+            <group delimiter=", " suffix=".">
+              <text variable="container-title"/>
+              <text macro="place-publisher"/>
+              <choose>
+                <if variable="issued">
+                  <text macro="year"/>
+                </if>
+                <else-if variable="accessed" match="none">
+                  <text term="no date" form="short"/>
+                </else-if>
+              </choose>
+            </group>
+            <text macro="accessed" suffix="."/>
+            <text macro="online"/>
+          </group>
+        </else-if>
         <else-if type="thesis">
           <group delimiter=", " suffix=".">
             <text macro="creators"/>

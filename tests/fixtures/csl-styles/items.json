@@ -252,5 +252,33 @@
 		"title": "Air Navigation Order 2016",
 		"number": "SI 2016/765",
 		"issued": { "date-parts": [[2016]] }
+	},
+	{
+		"id": "software-undated-online",
+		"type": "software",
+		"title": "Migrate to WordPress.com",
+		"author": [{ "literal": "WordPress.org" }],
+		"version": "1.0",
+		"URL": "https://wordpress.org/plugins/wpcom-migration/",
+		"accessed": { "date-parts": [[2026, 11, 24]] }
+	},
+	{
+		"id": "software-dated",
+		"type": "software",
+		"title": "Pandoc",
+		"author": [{ "family": "MacFarlane", "given": "John" }],
+		"version": "3.1.11",
+		"publisher": "Pandoc",
+		"container-title": "GitHub",
+		"URL": "https://github.com/jgm/pandoc",
+		"issued": { "date-parts": [[2024, 1, 5]] },
+		"accessed": { "date-parts": [[2026, 11, 24]] }
+	},
+	{
+		"id": "software-undated-offline",
+		"type": "software",
+		"title": "Zotero",
+		"author": [{ "literal": "Corporation for Digital Scholarship" }],
+		"publisher": "Corporation for Digital Scholarship"
 	}
 ]
