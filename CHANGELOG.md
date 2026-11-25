@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A pasted webpage citation keeps its date when the date has no day.** In `ClinGen. "ClinGen Variant Curation Expert Panel Protocol, Version 11." November 2023. https://…`, the "November 2023" became the website's name and the entry had no year, because `parseWebpageCitation()` read only the "November 15, 2023" form. A last sentence that is only a date ("November 15, 2023", "15 November 2023", "November 2023", or "2023") is now the entry's date, and the same forms work after a site name ("Clinical Genome Resource, November 2023"), `Accessed`, and `Effective`. Month names must be written out, so a site called "Mars 2030" keeps its name. The Playground demo's formatted citations include the ClinGen example. ([#294](https://github.com/dknauss/Borges/issues/294))
 
+- **No more PHP 8.5 deprecation notices from formatting.** On PHP 8.5 (WordPress Playground now runs 8.5), each `/format` request logged thousands of notices for `ReflectionProperty::setAccessible()` and `SplObjectStorage::attach()`/`contains()` from the reusable citeproc-php renderer. It now calls `setAccessible()` only below PHP 8.1, where it is still needed, and uses `offsetSet()`/`offsetExists()`. Four notices remain, once per request, from citeproc-php 2.7.1 itself ([pkp/citeproc-php#203](https://github.com/pkp/citeproc-php/issues/203)); see `docs/external-eccentricities.md`. The runtime matrix adds Apache with PHP 8.5 and latest WordPress.
+
 ## [1.21.0] - 2026-11-09
 
 ### Added
