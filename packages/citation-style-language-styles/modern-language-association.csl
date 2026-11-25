@@ -134,6 +134,23 @@
         <else-if type="article-journal article-magazine article-newspaper review review-book webpage post post-weblog" match="any">
           <text variable="container-title"/>
         </else-if>
+        <else-if type="software">
+          <text variable="container-title"/>
+          <choose>
+            <if variable="container-title">
+              <group delimiter=" ">
+                <text term="version"/>
+                <text variable="version"/>
+              </group>
+            </if>
+            <else>
+              <group delimiter=" ">
+                <text term="version" text-case="capitalize-first"/>
+                <text variable="version"/>
+              </group>
+            </else>
+          </choose>
+        </else-if>
         <else-if type="book report" match="any">
           <choose>
             <if variable="author">
