@@ -5,7 +5,7 @@
  * Description:       Create accessible bibliographies from DOI, PubMed, BibTeX, CSL-JSON, and free text; export RIS.
  * Version:           1.21.0
  * Requires at least: 6.4
- * Tested up to:      7.1
+ * Tested up to:      7.2
  * Requires PHP:      7.4
  * Author:            Dan Knauss
  * Author URI:        https://dan.knauss.ca/
