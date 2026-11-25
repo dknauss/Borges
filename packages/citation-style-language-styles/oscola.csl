@@ -257,6 +257,14 @@
                 </if>
               </choose>
               <text macro="edition"/>
+              <choose>
+                <if type="software">
+                  <group delimiter=" ">
+                    <text term="version"/>
+                    <text variable="version"/>
+                  </group>
+                </if>
+              </choose>
               <text macro="publisher-year"/>
             </group>
             <text macro="online"/>

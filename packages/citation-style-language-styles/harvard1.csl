@@ -253,6 +253,24 @@
               </if>
             </choose>
           </else-if>
+          <else-if type="software">
+            <group delimiter=" " suffix=".">
+              <choose>
+                <if variable="author editor translator" match="any">
+                  <text macro="title"/>
+                </if>
+              </choose>
+              <group delimiter=" " prefix="(" suffix=")">
+                <text term="version" text-case="capitalize-first"/>
+                <text variable="version"/>
+              </group>
+              <text value="[Computer program]"/>
+            </group>
+            <group delimiter=", " suffix=".">
+              <text variable="container-title"/>
+              <text macro="publisher"/>
+            </group>
+          </else-if>
           <else-if type="article">
             <choose>
               <if variable="author editor translator" match="any">

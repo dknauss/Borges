@@ -236,6 +236,37 @@
               </else>
             </choose>
           </else-if>
+          <else-if type="software">
+            <group delimiter=" " suffix=".">
+              <text term="version" text-case="capitalize-first"/>
+              <text variable="version"/>
+            </group>
+            <choose>
+              <if variable="issued accessed" match="any">
+                <group delimiter=", " suffix=".">
+                  <text variable="container-title"/>
+                  <text variable="publisher"/>
+                  <choose>
+                    <if variable="issued">
+                      <text macro="year"/>
+                    </if>
+                  </choose>
+                </group>
+                <choose>
+                  <if variable="issued" match="none">
+                    <text macro="accessed" suffix="."/>
+                  </if>
+                </choose>
+              </if>
+              <else>
+                <group delimiter=", " suffix=".">
+                  <text variable="container-title"/>
+                  <text variable="publisher"/>
+                  <text macro="year"/>
+                </group>
+              </else>
+            </choose>
+          </else-if>
           <else-if type="chapter paper-conference entry entry-encyclopedia entry-dictionary" match="any">
             <group delimiter=", " suffix=".">
               <group delimiter=" ">

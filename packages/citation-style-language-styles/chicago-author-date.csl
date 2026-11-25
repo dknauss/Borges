@@ -200,6 +200,21 @@
               </else-if>
             </choose>
           </else-if>
+          <else-if type="software">
+            <group delimiter=" " suffix=".">
+              <text term="version" text-case="capitalize-first"/>
+              <text variable="version"/>
+            </group>
+            <group delimiter=", " suffix=".">
+              <text variable="container-title"/>
+              <text macro="publisher"/>
+            </group>
+            <choose>
+              <if variable="issued" match="none">
+                <text macro="accessed" suffix="."/>
+              </if>
+            </choose>
+          </else-if>
           <else-if type="chapter paper-conference entry entry-encyclopedia entry-dictionary" match="any">
             <group delimiter=", " suffix=".">
               <group delimiter=" ">

@@ -31,6 +31,8 @@ Each style follows its manual's current edition, last checked on 2026-10-05. Whe
 
 **OSCOLA tables.** OSCOLA 5 (§§1.6–1.7) lists primary sources in tables before the bibliography. When an OSCOLA block holds a `legal_case`, `legislation`, `bill`, `regulation`, or `treaty`, `save()` splits it into groups declared in `includes/styles.json` (`groups`): Cases ("Re X" and "In re X" filed under X), Legislation (`legislation` and `bill`, then `regulation`, so statutory instruments follow statutes), Treaties, and Secondary Sources (every other type, one list). Case names, the short titles of Acts and statutory instruments, and treaty names stay roman (each group's `romanTitles`); secondary sources italicize titles as usual. A statutory instrument (`regulation`) prints its SI number after the title: "Air Navigation Order 2016, SI 2016/765" (OSCOLA 5 §2.5). Each group is a `<div>` with a label one level below the block heading (a `<p>` when the heading is a paragraph or an `h6`) and a list named by it. A block of secondary sources alone stays one list. Not yet done: tables split by jurisdiction, statute sections as sub-entries, and "R v" cases filed under the defendant's name (they file under R). See `docs/planning/oscola-grouping-plan.md`.
 
+**Software.** A `software` entry prints its `version` and, when it has no `issued` date, its `accessed` date wherever the manual gives one, rather than falling through to the book form, which dropped both: APA 7 `Title (Version 1.0) [Computer software]` (§10.10); Chicago `Title. Version 1.0. Publisher, year.`, or `Accessed …` in place of "n.d." when undated (14.169, 14.175); MLA 9 version as a core element after the container; Cite Them Right `Title (Version 1.0) [Computer program]`; IEEE `Title, Version 1.0. Publisher, year. Accessed: …`; *Citing Medicine* `Title [computer program]. Version 1.0. … [cited …]`; OSCOLA `(version 1.0, Publisher year)`; ABNT `Versão 1.0.` The version label is each locale's `version` term.
+
 Deviations shared by every style, all forced by how the block stores and renders entries:
 
 - **Titles keep their stored capitalization** in Chicago, MLA, OSCOLA, and ABNT. APA, Harvard, IEEE, and Vancouver print a converted copy in sentence case (next items but one). ABNT's capitalized first word for title-first entries is not applied. The block re-applies italics by finding the stored title text in the formatted entry, so a case-transformed title would lose its italics.
@@ -91,7 +93,8 @@ The corpus covers:
 - webpages with and without a date;
 - a thesis, a report, a conference paper and a preprint;
 - an entry with no author and no date;
-- a case and a statute.
+- a case and a statute;
+- software with a version, online with an access date and no date, dated with a publisher and a host, and offline with no date.
 
 After an intended change:
 
