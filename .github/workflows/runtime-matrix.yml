@@ -150,6 +150,13 @@ jobs:
                       db_engine: mysql
                       http_port: '8895'
                       db_port: '33075'
+                    - name: apache-php85-wplatest
+                      server: apache
+                      php: '8.5'
+                      wp: latest
+                      db_engine: mysql
+                      http_port: '8902'
+                      db_port: '33082'
                     - name: nginx-php81-wp67
                       server: nginx
                       php: '8.1'

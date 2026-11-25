@@ -84,13 +84,13 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 			$this->snapshot       = self::restore_plan( self::snapshot_style_tree( $this->parsed_context ) );
 
 			$this->results_property = new ReflectionProperty( \Seboettg\CiteProc\Context::class, 'results' );
-			$this->results_property->setAccessible( true );
+			self::make_accessible( $this->results_property );
 
 			$this->cited_count_property = new ReflectionProperty(
 				\Seboettg\CiteProc\Rendering\Layout::class,
 				'numberOfCitedItems'
 			);
-			$this->cited_count_property->setAccessible( true );
+			self::make_accessible( $this->cited_count_property );
 
 			return;
 		}
@@ -123,6 +123,23 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 	}
 
 	// phpcs:enable WordPress.NamingConventions.ValidVariableName
+
+	/**
+	 * Let reflection read and write a non-public property.
+	 *
+	 * Reflection reaches every property without this since PHP 8.1, and PHP
+	 * 8.5 deprecates setAccessible(), so it is called only on older versions.
+	 * SplObjectStorage below uses offsetSet() and offsetExists() for the same
+	 * reason: PHP 8.5 deprecates attach() and contains().
+	 *
+	 * @param ReflectionProperty $property Property to open.
+	 * @return void
+	 */
+	private static function make_accessible( ReflectionProperty $property ) {
+		if ( PHP_VERSION_ID < 80100 ) {
+			$property->setAccessible( true );
+		}
+	}
 
 	/**
 	 * Record every property of every object reachable from the parsed style:
@@ -164,17 +181,17 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 		}
 
 		foreach ( $skip as $object ) {
-			$seen->attach( $object );
+			$seen->offsetSet( $object, null );
 		}
 
 		while ( array() !== $queue ) {
 			$object = array_pop( $queue );
 
-			if ( $seen->contains( $object ) ) {
+			if ( $seen->offsetExists( $object ) ) {
 				continue;
 			}
 
-			$seen->attach( $object );
+			$seen->offsetSet( $object, null );
 
 			for ( $class = new ReflectionClass( $object ); $class; $class = $class->getParentClass() ) {
 				foreach ( $class->getProperties() as $property ) {
@@ -182,7 +199,7 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 						continue;
 					}
 
-					$property->setAccessible( true );
+					self::make_accessible( $property );
 
 					if ( ! $property->isInitialized( $object ) ) {
 						continue;
