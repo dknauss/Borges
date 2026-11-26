@@ -504,7 +504,7 @@
 		},
 		{
 			"title": "IEEE",
-			"description": "Numbered entries keep the order you give them. Select the block and use <em>Move citation up/down</em> to renumber. Journals print by their abbreviated titles, from each record's short title. <strong>Settings:</strong> the defaults, in a numbered list.",
+			"description": "Numbered entries keep the order you give them. Select the block and use <em>Move citation up/down</em> to renumber. Journals print by their abbreviated titles, from each record's short title. Quoted titles print in sentence case, and well-known places keep their capitals, so Borges’s chapter reads “The library of Babel.” For other names, click the entry and tick <em>Keep title capitalization as entered</em>. <strong>Settings:</strong> the defaults, in a numbered list.",
 			"attributes": {
 				"bibliographyId": "demo-ieee",
 				"citationStyle": "ieee",
@@ -550,6 +550,20 @@
 					"page": "97-111",
 					"DOI": "10.1093/comjnl/27.2.97",
 					"issued": { "date-parts": [[1984]] }
+				},
+				{
+					"type": "chapter",
+					"title": "The Library of Babel",
+					"author": [{ "family": "Borges", "given": "Jorge Luis" }],
+					"translator": [{ "family": "Irby", "given": "James E." }],
+					"container-title": "Labyrinths: Selected Stories and Other Writings",
+					"editor": [
+						{ "family": "Yates", "given": "Donald A." },
+						{ "family": "Irby", "given": "James E." }
+					],
+					"publisher": "New Directions",
+					"publisher-place": "New York",
+					"issued": { "date-parts": [[1962]] }
 				}
 			]
 		},

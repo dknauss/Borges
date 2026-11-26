@@ -9,7 +9,7 @@
  * from the release package's own vendor/.
  *
  * Prints "styles-ok <count>" or the first differences, one per line.
- * PHP 7.4-compatible on purpose.
+ * PHP 8.1-compatible on purpose.
  *
  * @package BibliographyBuilder
  */

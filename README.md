@@ -4,7 +4,7 @@
 
 [![License: GPL v2+](https://img.shields.io/badge/License-GPLv2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html) [![Latest Release](https://img.shields.io/github/v/release/dknauss/Borges)](https://github.com/dknauss/Borges/releases) [![Security Policy](https://img.shields.io/badge/security-policy-4c1)](SECURITY.md) [![Docs](https://img.shields.io/badge/docs-available-0a7ea4.svg)](docs/)
 [![WordPress tested](https://img.shields.io/badge/WordPress-6.4%E2%80%937.2-21759b.svg?logo=wordpress&logoColor=white)](https://github.com/dknauss/Borges/actions/workflows/runtime-matrix.yml)
-[![PHP tested](https://img.shields.io/badge/PHP-7.4%E2%80%938.5-777bb4.svg?logo=php&logoColor=white)](https://github.com/dknauss/Borges/actions/workflows/runtime-matrix.yml)
+[![PHP tested](https://img.shields.io/badge/PHP-8.1%E2%80%938.5-777bb4.svg?logo=php&logoColor=white)](https://github.com/dknauss/Borges/actions/workflows/runtime-matrix.yml)
 [![CI](https://github.com/dknauss/Borges/actions/workflows/ci.yml/badge.svg)](https://github.com/dknauss/Borges/actions/workflows/ci.yml)
 [![Runtime matrix](https://github.com/dknauss/Borges/actions/workflows/runtime-matrix.yml/badge.svg)](https://github.com/dknauss/Borges/actions/workflows/runtime-matrix.yml)
 [![CodeQL](https://github.com/dknauss/Borges/actions/workflows/codeql.yml/badge.svg)](https://github.com/dknauss/Borges/actions/workflows/codeql.yml)
@@ -71,7 +71,7 @@ Both demo Blueprints explicitly request PHP `intl` support because editor-time C
 ## Compatibility
 
 - **WordPress** 6.4+; tested up to WordPress 7.2.
-- **PHP** 7.4+.
+- **PHP** 8.1+.
 - **Multisite** — supported and covered by CI smoke testing.
 
 Developer-facing CI/runtime coverage details are listed in the development section below.
@@ -368,7 +368,6 @@ GitHub Actions currently runs:
 
 The GitHub Actions runtime matrix currently covers:
 
-- Apache + PHP 7.4 + WordPress 6.4
 - Apache + PHP 8.1 + WordPress 6.4
 - Apache + PHP 8.1 + WordPress 6.7
 - Apache + PHP 8.2 + latest WordPress
@@ -380,7 +379,7 @@ The GitHub Actions runtime matrix currently covers:
 - Nginx + PHP 8.2 + latest WordPress
 - Nginx + PHP 8.3 + latest WordPress
 
-Pull requests run a four-cell subset: Apache with PHP 7.4 and WordPress 6.4, Apache with PHP 8.3 and latest WordPress (single site and Multisite), and Nginx with PHP 8.3. Pushes to `main` run all eleven.
+Pull requests run a four-cell subset: Apache with PHP 8.1 and WordPress 6.4, Apache with PHP 8.3 and latest WordPress (single site and Multisite), and Nginx with PHP 8.3. Pushes to `main` run all ten.
 
 Every cell tests the packaged release, built with `npm run package:release` and including its production `vendor/`, not the source checkout. Each cell:
 
