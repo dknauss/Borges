@@ -25,43 +25,54 @@ const path = require( 'path' );
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:9401';
 const OUTPUT_DIR = path.resolve( __dirname, '../.wordpress-org' );
 
+// Real works, matching the Playground demo content (playground/demo-content.json),
+// so the WordPress.org gallery shows a believable bibliography rather than
+// placeholder entries.
 const SAMPLE_BIBTEX = [
-	'@article{smith2024,',
-	'  author = {Smith, Ada and Jones, Brian},',
-	'  title = {Advances in Citation Management for Academic Publishing},',
-	'  journal = {Journal of Digital Scholarship},',
-	'  year = {2024},',
-	'  volume = {12},',
-	'  number = {3},',
-	'  pages = {117--134},',
-	'  doi = {10.1234/jds.2024.0042}',
+	'@article{knuth1984literate,',
+	'  author = {Knuth, Donald E.},',
+	'  title = {Literate Programming},',
+	'  journal = {The Computer Journal},',
+	'  year = {1984},',
+	'  volume = {27},',
+	'  number = {2},',
+	'  pages = {97--111},',
+	'  doi = {10.1093/comjnl/27.2.97}',
 	'}',
 	'',
-	'@book{williams2023,',
-	'  author = {Williams, Carol},',
-	'  title = {The Oxford Handbook of Research Methods},',
-	'  publisher = {Oxford University Press},',
-	'  year = {2023},',
-	'  address = {Oxford},',
-	'  isbn = {978-0-19-123456-7}',
+	'@book{illich1973tools,',
+	'  author = {Illich, Ivan},',
+	'  title = {Tools for Conviviality},',
+	'  publisher = {Harper \\& Row},',
+	'  address = {New York},',
+	'  year = {1973}',
 	'}',
 	'',
-	'@inbook{chen2022,',
-	'  author = {Chen, David},',
-	'  title = {Statistical Approaches to Literature Review},',
-	'  booktitle = {Methods in Modern Scholarship},',
-	'  editor = {Taylor, Elena},',
-	'  publisher = {Cambridge University Press},',
-	'  year = {2022},',
-	'  pages = {45--78}',
+	'@book{grafton1997footnote,',
+	'  author = {Grafton, Anthony},',
+	'  title = {The Footnote: A Curious History},',
+	'  publisher = {Harvard University Press},',
+	'  address = {Cambridge, MA},',
+	'  year = {1997}',
+	'}',
+	'',
+	'@incollection{borges1962babel,',
+	'  author = {Borges, Jorge Luis},',
+	'  title = {The Library of Babel},',
+	'  booktitle = {Labyrinths: Selected Stories and Other Writings},',
+	'  editor = {Yates, Donald A. and Irby, James E.},',
+	'  publisher = {New Directions},',
+	'  address = {New York},',
+	'  year = {1962}',
 	'}',
 ].join( '\n' );
 
-// A deliberately untagged, identifier-free reference. The free-text parser
-// imports it heuristically (inputFormat 'freetext'), which is what surfaces the
-// structured-field "Edit fields" affordance used for screenshot 5.
+// A real reference pasted as plain text, with no DOI or other identifier. The
+// free-text parser imports it heuristically (inputFormat 'freetext'), which is
+// what surfaces the structured-field "Edit fields" affordance used for
+// screenshot 5.
 const SAMPLE_FREETEXT =
-	'Doe, Jane. "A Note on Untagged References Without Identifiers." Journal of Worked Examples, vol. 4, 2021, pp. 10-20.';
+	'Vannevar Bush, "As We May Think," The Atlantic Monthly 176, no. 1 (1945): 101-108.';
 
 function shot( name ) {
 	return `${ OUTPUT_DIR }/${ name }`;
@@ -290,7 +301,7 @@ async function addCitations( page, editorFrame, text ) {
 	// The free-text entry exposes an "Edit fields for …" button on hover.
 	const freetextEntry = editorFrame
 		.locator( '.bibliography-builder-entry, li' )
-		.filter( { hasText: /Untagged References/i } )
+		.filter( { hasText: /As We May Think/i } )
 		.first();
 	if ( await freetextEntry.isVisible().catch( () => false ) ) {
 		await freetextEntry.scrollIntoViewIfNeeded();
@@ -369,6 +380,14 @@ async function addCitations( page, editorFrame, text ) {
 		await settingsEntry.hover();
 		await page.waitForTimeout( 300 );
 	}
+	// Turning the toggle on scrolls the sidebar down to it. Scroll back up so
+	// the shot starts at the block card and the Citation Style control.
+	await page
+		.locator( '.block-editor-block-card' )
+		.first()
+		.evaluate( ( el ) => el.scrollIntoView( { block: 'start' } ) )
+		.catch( () => {} );
+	await page.waitForTimeout( 300 );
 	await page.screenshot( { path: shot( 'screenshot-7.png' ) } );
 	console.log( 'Screenshot 7: Block settings sidebar' );
 
@@ -377,7 +396,13 @@ async function addCitations( page, editorFrame, text ) {
 		.getByRole( 'button', { name: /Copy bibliography/i } )
 		.first();
 	if ( await copyBibliography.isVisible().catch( () => false ) ) {
-		await copyBibliography.scrollIntoViewIfNeeded();
+		// Put the top of the Exports panel at the top of the sidebar, so the
+		// shot shows its buttons rather than the settings above them.
+		await copyBibliography.evaluate( ( el ) =>
+			( el.closest( '.components-panel__body' ) || el ).scrollIntoView( {
+				block: 'start',
+			} )
+		);
 		await page.waitForTimeout( 400 );
 		await page.screenshot( { path: shot( 'screenshot-8.png' ) } );
 		console.log( 'Screenshot 8: Exports panel' );
