@@ -3,7 +3,7 @@ Contributors: dpknauss
 Donate link: https://github.com/sponsors/dknauss
 Tags: bibliography, citations, references, academic, apa
 Requires at least: 6.4
-Tested up to: 7.1
+Tested up to: 7.2
 Stable tag: 1.21.0
 Requires PHP: 8.1
 License: GPLv2 or later
@@ -110,7 +110,7 @@ Yes, including network activation. If you run into trouble on a particular netwo
 
 = What PHP and WordPress versions are supported? =
 
-PHP 8.1 or later and WordPress 6.4 or later. Borges is tested up to WordPress 7.1.
+PHP 8.1 or later and WordPress 6.4 or later. Borges is tested up to WordPress 7.2.
 
 = Can developers read or change bibliographies over the REST API or WP-CLI? =
 
