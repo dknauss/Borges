@@ -15,7 +15,7 @@
 		</ignoreFiles>
 	</projectFiles>
 	<issueHandlers>
-		<!-- The plugin supports PHP 7.4, where #[\Override] is only a comment
+		<!-- The plugin supports PHP 8.1, which predates #[\Override] (8.3),
 		     and compatibility scanners flag it. -->
 		<MissingOverrideAttribute errorLevel="suppress" />
 	</issueHandlers>

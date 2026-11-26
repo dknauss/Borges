@@ -5,7 +5,7 @@
  *
  * Usage: wp eval-file /smoke/check-blocks.php <post_id>
  * Prints "blocks-ok <count>" or "blocks-invalid <index>".
- * PHP 7.4-compatible on purpose.
+ * PHP 8.1-compatible on purpose.
  *
  * @package BibliographyBuilder
  */

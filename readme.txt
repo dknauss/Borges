@@ -5,7 +5,7 @@ Tags: bibliography, citations, references, academic, apa
 Requires at least: 6.4
 Tested up to: 7.1
 Stable tag: 1.21.0
-Requires PHP: 7.4
+Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -110,7 +110,7 @@ Yes, including network activation. If you run into trouble on a particular netwo
 
 = What PHP and WordPress versions are supported? =
 
-PHP 7.4 or later and WordPress 6.4 or later. Borges is tested up to WordPress 7.1.
+PHP 8.1 or later and WordPress 6.4 or later. Borges is tested up to WordPress 7.1.
 
 = Can developers read or change bibliographies over the REST API or WP-CLI? =
 
@@ -203,6 +203,9 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 * Internet Archive terms of use: https://archive.org/about/terms.php
 
 == Changelog ==
+
+= 1.22.0 =
+* **Changed:** Borges now requires PHP 8.1 or later. PHP 7.4 and 8.0 no longer get security fixes. Sites on an older PHP version stay on 1.21.0, because WordPress doesn’t offer an update that needs a newer PHP than the server runs.
 
 = 1.21.0 =
 * **Fixed:** bibliographies sent by email, such as WordPress.com and Jetpack newsletters, which build emails from the saved post, no longer show bullets and an indent. Saved lists now carry the no-bullet style inline; numbered lists keep their numbers, and nothing changes on the web. Existing posts stay valid and pick up the change when next saved in the editor.
@@ -300,6 +303,9 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 For 1.9.1 and earlier, see the full [changelog on GitHub](https://github.com/dknauss/Borges/blob/main/CHANGELOG.md).
 
 == Upgrade Notice ==
+
+= 1.22.0 =
+Requires PHP 8.1 or later. Sites running PHP 7.4 or 8.0 stay on 1.21.0: WordPress won’t offer this update until the server runs PHP 8.1 or newer. Existing blocks stay valid. No configuration changes required.
 
 = 1.21.0 =
 Bibliographies in emails built from the saved post (WordPress.com and Jetpack newsletters) no longer show bullets. Existing blocks stay valid and pick up the change when next saved. No configuration changes required.

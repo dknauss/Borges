@@ -25,7 +25,7 @@ The plan adds three things:
 | --- | --- | --- |
 | Style goldens | Each style's output for the 20-item corpus, byte for byte | `tests/phpunit/CslStyleGoldenTest.php`, `tests/fixtures/csl-styles/` |
 | Entry independence | No entry depends on the entries rendered before it | same test |
-| PHP version parity | The goldens on PHP 7.4–8.4 | `scripts/runtime-matrix/smoke.sh` |
+| PHP version parity | The goldens on PHP 8.1–8.5 | `scripts/runtime-matrix/smoke.sh` |
 | Style data | `styles.json` against `block.json`, the CSL files, and locales | `tests/phpunit/StyleDataTest.php` |
 | Sort conformance | Borges's sort against citeproc-js's bibliography order | `src/lib/sorter.conformance.test.js` |
 | Save parity | The PHP `save()` port against the JS output | save-parity fixtures |

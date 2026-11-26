@@ -10,7 +10,7 @@
  * Usage: wp eval-file /smoke/check-abilities.php <post_id> --user=admin
  * Prints "abilities-ok <entryCount>", "abilities-skip" (no Abilities API), or
  * "abilities-fail <reason>".
- * PHP 7.4-compatible on purpose.
+ * PHP 8.1-compatible on purpose.
  *
  * @package BibliographyBuilder
  */
