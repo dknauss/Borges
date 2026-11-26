@@ -27,13 +27,13 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - name: apache-php74-wp64
+                    - name: apache-php81-wp64
                       server: apache
-                      php: '7.4'
+                      php: '8.1'
                       wp: '6.4'
                       db_engine: mysql
-                      http_port: '8891'
-                      db_port: '33071'
+                      http_port: '8892'
+                      db_port: '33072'
                     - name: apache-php83-wplatest
                       server: apache
                       php: '8.3'
@@ -108,13 +108,6 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - name: apache-php74-wp64
-                      server: apache
-                      php: '7.4'
-                      wp: '6.4'
-                      db_engine: mysql
-                      http_port: '8891'
-                      db_port: '33071'
                     - name: apache-php81-wp64
                       server: apache
                       php: '8.1'

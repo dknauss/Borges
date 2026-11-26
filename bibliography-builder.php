@@ -6,7 +6,7 @@
  * Version:           1.21.0
  * Requires at least: 6.4
  * Tested up to:      7.1
- * Requires PHP:      7.4
+ * Requires PHP:      8.1
  * Author:            Dan Knauss
  * Author URI:        https://dan.knauss.ca/
  * License:           GPL-2.0-or-later
