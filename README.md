@@ -97,6 +97,7 @@ Editor-time PMID and formatting results are cached in the object cache and in sh
 
 ## Recent Release Highlights
 
+- **1.22.0** — Requires PHP 8.1; software entries print their version and access date in every style; a link pasted on its own opens Manual Entry; webpage citations keep a day-less date; no PHP 8.5 deprecation notices from formatting.
 - **1.21.0** — Bibliographies in emails built from the saved post (WordPress.com and Jetpack newsletters) without bullets; heading alignment in the block toolbar.
 - **1.20.0** — A Repeated authors setting (names written out, Chicago's 3-em dash, ABNT's underscore line); Harvard, IEEE, and Vancouver citations paste as text; the heading centered again, with a Heading Alignment setting; cleaner PubMed records; `/format` answers `400` without `cslItems`.
 - **1.19.1** — OSCOLA tables of legislation and treaties in roman and statutory instruments with their SI number; name particles kept in JSON-LD author names; the style-change notice dismissed after Update citations.
