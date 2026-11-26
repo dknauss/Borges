@@ -49,6 +49,9 @@ final class SentenceCaseTest extends TestCase {
 			'phrase after colon'    => array( 'Treaties: First Nations and the Crown', 'Treaties: First Nations and the crown', 'Treaties: First Nations and the crown' ),
 			'word also common'      => array( 'The New Deal in South Carolina', 'The new deal in South Carolina', 'The new deal in South Carolina' ),
 			'ambiguous left out'    => array( 'A March Through Turkey', 'A march through turkey', 'A march through turkey' ),
+			'place of legend'       => array( 'The Library of Babel', 'The library of Babel', 'The library of Babel' ),
+			'cities'                => array( 'Modernism in Paris, Vienna, and London', 'Modernism in Paris, Vienna, and London', 'Modernism in Paris, Vienna, and London' ),
+			'city left out'         => array( 'Reading in Bath', 'Reading in bath', 'Reading in bath' ),
 		);
 	}
 
