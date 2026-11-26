@@ -1,143 +1,146 @@
 === Borges Bibliography Builder ===
 Contributors: dpknauss
 Donate link: https://github.com/sponsors/dknauss
-Tags: bibliography, citation, doi, bibtex, academic
+Tags: bibliography, citations, references, academic, apa
 Requires at least: 6.4
 Tested up to: 7.1
 Stable tag: 1.21.0
-Requires PHP: 7.4
+Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Create accessible, structured bibliographies from DOI, PubMed, BibTeX, RIS, CSL-JSON, free text, and manual entries — with RIS export.
+Build correct bibliographies in APA, Chicago, MLA, and six more styles. Paste a DOI or citation, and Borges formats, sorts, and links it for you.
 
 == Description ==
 
-Named for Jorge Luis Borges (1899–1986), the Argentine writer and librarian known for stories about infinite libraries, imaginary books, and labyrinths of knowledge, Borges Bibliography Builder brings order to scholarly references in WordPress.
+**Structured bibliographies and inline citations in any style.**
 
-The **Borges Bibliography Builder** transforms DOI(s), PubMed/PMID records, BibTeX, RIS, CSL-JSON, manual entries, and supported free-text citations into a semantically rich, deduplicated, auto-sorted reference list with RIS export for citation managers.
+Borges turns a DOI, a PubMed ID, an ISBN, an export from Zotero or EndNote, or a citation you copied from somewhere else into a clean, correctly formatted bibliography in the style your field uses. Add in-text citations that link to their entries, switch styles with one click, and everything updates to match.
 
-**One-click import.** Paste a DOI and Crossref resolves the metadata instantly. Paste a PubMed/PMID identifier and Borges resolves it through an authenticated WordPress REST proxy to NCBI/PMC citation metadata. Paste BibTeX, RIS, or formatted citations for books, articles, chapters, webpages, reviews, and theses.
+Borges is for writers, scholars, students, journals, libraries, and anyone publishing with sources on WordPress. There is nothing to configure and no account to create. Your bibliographies are saved as plain HTML in your posts, so they stay readable even if you switch the plugin off.
 
-**Nine citation styles.** Choose from Chicago Notes-Bibliography, Chicago Author-Date, APA 7, MLA 9, Harvard, Vancouver, IEEE, OSCOLA, and ABNT (Associação Brasileira de Normas Técnicas / NBR 6023:2025) — all with automatic sorting per style rules, following each manual's current edition. Each style is a [Citation Style Language](https://citationstyles.org/) (CSL) file written for Borges and rendered by the citeproc-php engine.
+**[Try it in your browser](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json)** before you install. It opens a demo post in a disposable WordPress site.
 
-**In-text and margin citations.** Choose Cite in any paragraph to link a short citation, such as "(Illich 1973, 12)" or a Chicago short note, to its entry in a bibliography on the same post. It works in running text and in a theme's margin-note paragraph style, and it is a plain link, so readers need no JavaScript. When you change the bibliography's style, Update citations rewrites them to match, keeping each page number and leaving citations you reworded alone.
+= What you can do =
 
-**Portable.** Static HTML output survives plugin deactivation. No shortcodes. No database tables.
+**Paste it, done.** Drop in a DOI, a PubMed ID, an arXiv ID, an ISBN, a BibTeX or RIS export from your reference manager, or a citation typed in any style. Borges looks up the details and fills in the fields. Paste up to 50 at once.
 
-**Accessible by default.** Semantic list markup, keyboard-operable editing and entry reordering (Alt+Arrow for numeric styles), visible focus, and optional Block Accessibility Checks integration (requires that plugin at version 4.0 or later) help your bibliographies meet accessibility expectations.
+**Use the style your field requires.** Chicago (notes-bibliography and author-date), APA 7, MLA 9, Harvard, Vancouver, IEEE, OSCOLA, and ABNT, each following its current manual. Sorting, numbering, and repeated-author rules are handled for you.
 
-**Reference-manager friendly.** Export and reuse your bibliography in common research workflows. Borges supports CSL-JSON, BibTeX, BibLaTeX, RIS, DOI links, JSON-LD, and optional COinS metadata for compatibility with tools such as Zotero, Mendeley, EndNote, JabRef, BibDesk, and other citation managers.
+**Cite as you write.** Choose Cite in any paragraph to add a short citation, such as "(Illich 1973, 12)" or a Chicago short note, that links to its entry in the bibliography. It works in running text and in margin notes, and readers need no JavaScript to follow it.
 
-**Annotated bibliographies.** Add your own note to any entry, in as many paragraphs as you need, and turn on "Show annotations" to print each note under its entry. Notes are stored with the citation data (CSL `annote`), so they travel with CSL-JSON, BibTeX, BibLaTeX, and RIS. Off by default; existing bibliographies are unchanged.
+**Change styles without retyping.** Switch from APA to Chicago and the whole bibliography reformats in seconds. Update citations rewrites your in-text citations to match, keeping every page number and leaving any you reworded alone.
 
-**Repeated authors your way.** MLA's three hyphens and OSCOLA's double em dash apply by default. A block setting can write the names out instead, or use Chicago 17's 3-em dash or ABNT's pre-2018 underscore line. Screen readers always hear the names.
+**Fix anything by hand.** Edit any field of any entry, or build a citation from scratch with a simple form.
 
-**Reader-facing cite & export.** Optionally add a per-entry Cite / Export panel to the published bibliography: a disclosure under each entry with a copy button and one-click downloads in RIS, CSL-JSON, BibTeX, and BibLaTeX. The panel is built on the page, so newsletters and feeds carry a clean bibliography without it. Off by default; enable it per block.
+**Write annotated bibliographies.** Add a note of any length under any entry, and turn on Show annotations to publish it. Notes travel with your exports.
 
-**Try it first.** Launch a disposable demo in [WordPress Playground](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/dknauss/Borges/main/playground/blueprint.json) before installing it on your site.
+**Let readers cite you back.** Turn on a Cite / Export button under each entry, and readers can copy the citation or download it for Zotero, EndNote, Mendeley, or BibTeX.
 
-**Translation-ready.** Plugin interface strings use the `borges-bibliography-builder` text domain, and official WordPress.org language packs are generated as community translations are approved on translate.wordpress.org.
+**Accessible by default.** Real list markup, full keyboard support (including Alt+Arrow to reorder numbered entries), visible focus, and screen-reader-friendly output. Works with the Block Accessibility Checks plugin to catch problems before you publish.
 
-**Support development.** If Borges saves you time by bringing order to your citations and joy to your heart, you can [sponsor the author](https://github.com/sponsors/dknauss) to support ongoing maintenance.
+**Recognized by search engines and research tools.** Each entry carries structured data (JSON-LD, COinS, and microformats) that Google, Zotero, and citation crawlers read, so your sources are recognized as sources.
+
+**Bring your reference manager.** Import from and export to Zotero, Mendeley, EndNote, JabRef, BibDesk, and LaTeX workflows in BibTeX, BibLaTeX, RIS, and CSL-JSON.
+
+**Email and newsletter ready.** Bibliographies read correctly in Jetpack and WordPress.com newsletters and in feeds.
+
+**No lock-in, no bloat.** No shortcodes, no database tables, no settings to manage, and nothing loaded on pages without a bibliography. Deactivate Borges and your bibliographies stay put.
+
+= Why "Borges"? =
+
+Borges is named for Jorge Luis Borges (1899–1986), the Argentine writer and librarian who imagined an infinite library of every possible book. This one is smaller, and it's sorted.
+
+If Borges saves you time and brings a little order to your citations, you can [sponsor its development](https://github.com/sponsors/dknauss).
 
 == Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/borges-bibliography-builder/`, or install directly through the WordPress plugin screen.
-2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Add the "Bibliography" block to any post or page.
-4. Paste DOI(s), PubMed/PMID identifiers, BibTeX, RIS, CSL-JSON, or supported citations for books, articles, chapters, and webpages — or add citations manually.
+1. In your WordPress dashboard, go to Plugins > Add New, search for "Borges Bibliography Builder", and click Install Now. You can also upload the plugin files to `/wp-content/plugins/borges-bibliography-builder/`.
+2. Activate the plugin.
+3. Add the Bibliography block to any post or page.
+4. Paste a DOI or a formatted citation, and Borges does the rest.
 
 == Frequently Asked Questions ==
 
-= Which translations are available? =
+= Which citation styles does Borges support? =
 
-The WordPress.org plugin page's Languages list is the canonical list of currently published language packs. English (US) is the source language and is not counted as a translated locale; other locales appear after their Stable plugin translations are approved on translate.wordpress.org and a language pack is generated.
+Nine: Chicago Notes-Bibliography, Chicago Author-Date, APA 7, MLA 9, Harvard, Vancouver, IEEE, OSCOLA, and ABNT (NBR 6023:2025). Each follows its manual's current edition, including its sorting, numbering, and repeated-author rules. Every style is a [Citation Style Language](https://citationstyles.org/) file written for Borges.
 
-The package includes seed PO/MO files for translator review and import in French (`fr_FR`), German (`de_DE`), Dutch (`nl_NL`), Swedish (`sv_SE`), Spanish (`es_ES`), Italian (`it_IT`), Portuguese (`pt_PT`), Polish (`pl_PL`), Russian (`ru_RU`), Japanese (`ja`), Simplified Chinese (`zh_CN`), Korean (`ko_KR`), Serbian (`sr_RS`), Croatian (`hr`), Brazilian Portuguese (`pt_BR`), Hindi (`hi_IN`), Bengali (`bn_BD`), Tamil (`ta_IN`), and Telugu (`te`). These files cover plugin interface strings only and should not be read as official WordPress.org language-pack availability.
+= Can I paste citations from Zotero, EndNote, Mendeley, or Google Scholar? =
 
-= What citation input formats does the Borges Bibliography Builder support? =
+Yes. Export BibTeX or RIS from any of them (a single record or a whole `.ris` file) and paste it in. You can also paste a formatted citation copied from Google Scholar, a library catalog, or another document. If it includes a DOI or PubMed ID, Borges looks up the full record; otherwise it reads the citation into fields for you to check.
 
-Bare DOIs, DOI URLs, PubMed/PMID identifiers, PubMed Central PMCIDs, arXiv IDs and links, ISBNs, OCLC numbers, LCCNs, Open Library edition IDs, Internet Archive item links and ARKs, BibTeX and BibLaTeX, RIS (single records or a whole `.ris` export), CSL-JSON, manual citation entries, and supported formatted citations for books, articles, chapters, webpages, reviews, and theses/dissertations. Free-text citations that include an inline DOI or labeled PMID are routed through the DOI/PubMed resolvers before falling back to the heuristic parser. You can paste multiple entries at once, up to 50 per paste, and each bibliography holds up to 200 citations in total.
+To take a bibliography back out, download it as BibTeX, BibLaTeX, RIS, or CSL-JSON. Zotero can also pick up entries straight from the published page.
+
+= What happens to my bibliographies if I deactivate or delete Borges? =
+
+They stay in your posts. Bibliographies are saved as plain HTML, not in a database table the plugin owns, so they remain readable with Borges switched off. Deleting the plugin removes only its own cached lookup data and leaves your content untouched.
+
+= Can my readers cite or download my sources? =
+
+Yes, if you want them to. Turn on the per-entry Cite / Export panel in the block settings, and readers can copy any citation or download it as RIS, BibTeX, BibLaTeX, or CSL-JSON. It's off by default, uses a tiny script with no dependencies, and stays out of newsletters and feeds.
+
+= Is Borges accessible? =
+
+Yes. Bibliographies use real list markup and a labeled heading, and every editing action works from the keyboard. Screen readers hear repeated authors' names even where a style prints a dash. With Block Accessibility Checks 4.0 or later active, the block also warns you about a missing heading, citations linked only by a bare URL or DOI, and an empty bibliography.
+
+= What can I paste in? =
+
+Bare DOIs and DOI links, PubMed PMIDs and PubMed Central PMCIDs, arXiv IDs and links, ISBNs, OCLC numbers, LCCNs, Open Library edition IDs, Internet Archive items, BibTeX and BibLaTeX, RIS, CSL-JSON, and formatted citations for books, articles, chapters, webpages, reviews, and theses. You can paste up to 50 entries at once, and each bibliography holds up to 200.
+
+= Can I edit the bibliography heading and the entries? =
+
+Yes. Set the heading text and level in the block settings, and center it or align it to the start from the block toolbar. Edit any entry field by field, or reorder entries by hand in numbered styles such as IEEE and Vancouver.
 
 = Does the ABNT style implement NBR 6023:2025? =
 
 Yes. The ABNT option targets Associação Brasileira de Normas Técnicas bibliography formatting under NBR 6023:2025, uses the `pt-BR` locale, and defaults new ABNT bibliographies to the heading `Referências`. Always verify institutional or journal-specific ABNT variants before submission.
 
-= What happens if I deactivate the Borges Bibliography Builder? =
-
-Your bibliographies remain fully readable. The block uses static HTML output, so all formatted citations stay in your post content.
-
-= What happens if I delete the Borges Bibliography Builder? =
-
-Your bibliographies stay in your posts — they are saved as static HTML, not in a database table the plugin owns. When you delete the plugin, Borges removes only its own cached lookup data (transient and object-cache entries) and leaves your content untouched.
-
 = ISBN lookups sometimes fail with a Google Books error. What can I do? =
 
-Borges looks ISBNs up in Open Library first and falls back to Google Books. Without an API key, Google Books lookups share Google's anonymous daily quota with every other keyless caller, and that quota can run out. Create a key restricted to the Books API in the Google Cloud console and add it to `wp-config.php`:
+Borges looks ISBNs up in Open Library first and falls back to Google Books, whose free anonymous quota sometimes runs out. Create a Google Books API key and add it to `wp-config.php`:
 
 `define( 'BIBLIOGRAPHY_BUILDER_GOOGLE_BOOKS_API_KEY', 'your-key' );`
 
-Developers can supply or override it with the `bibliography_builder_google_books_api_key` filter instead. Borges stores no settings, so there is no settings screen for it.
+Developers can supply it with the `bibliography_builder_google_books_api_key` filter instead.
 
-= Does the Borges Bibliography Builder work with Zotero, Mendeley, EndNote, and other citation managers? =
+= Does Borges work on WordPress Multisite? =
 
-Yes. Borges is built around portable bibliography formats rather than lock-in. Zotero can use DOI links, BibTeX, RIS, CSL-JSON, and optional COinS metadata. Mendeley and EndNote are best supported through BibTeX/RIS exports, with DOI-backed entries also friendly to browser importers. JabRef, BibDesk, and LaTeX/Biber workflows can use UTF-8 BibTeX or BibLaTeX. CSL-JSON is available for citeproc and scholarly data workflows.
-
-= Why would I enable CSL-JSON? =
-
-Enable CSL-JSON if you want your bibliography data to be reusable by scholarly tools, scripts, or services without scraping the visible citation text.
-
-= Can I export the bibliography data? =
-
-Yes. In the editor you can download the whole bibliography as CSL-JSON, BibTeX, BibLaTeX, or RIS, copy any single citation, or copy the full bibliography as plain text. You can also enable a per-entry Cite / Export panel that places the same RIS, CSL-JSON, BibTeX, and BibLaTeX downloads — plus the citation text — directly on the published page for your readers. The reader-facing panel is built on the page by a small script (no other script dependencies), stays out of newsletters and feeds, and is off by default.
-
-= Can I access bibliography data via API? =
-
-Yes. The plugin exposes read-only REST endpoints at `/wp-json/bibliography/v1/posts/<post_id>/bibliographies` and `/wp-json/bibliography/v1/posts/<post_id>/bibliographies/<index>` (or the block's `bibliographyId` in place of the index). Published posts are readable publicly; non-public posts require permission to edit the post. The single-bibliography route also supports `format=json`, `format=text`, and `format=csl-json`. Users who can edit the post can also validate a bibliography's entries, list likely duplicates, and preview it in another citation style (`/validate`, `/duplicates`, and `/preview?style=` under the block's index or `bibliographyId`); none of these saves anything. Editor-only authenticated endpoints handle CSL formatting and PubMed/PMID resolution; they do not persist citations by themselves. A site can also opt in to write routes that add, change, remove, and reorder citations, change block settings, and switch the citation style over REST. They are off unless a developer enables them with the `bibliography_builder_enable_write_routes` filter; see `docs/rest-write-routes.md` in the GitHub repository.
-
-= Does the Borges Bibliography Builder work on WordPress Multisite? =
-
-Yes. Borges works on WordPress Multisite, including network activation. If you encounter issues on a specific network configuration, please report them.
+Yes, including network activation. If you run into trouble on a particular network setup, please report it.
 
 = What PHP and WordPress versions are supported? =
 
-PHP 7.4+ and WordPress 6.4+. Borges Bibliography Builder is tested up to WordPress 7.1.
+PHP 8.1 or later and WordPress 6.4 or later. Borges is tested up to WordPress 7.1.
 
-= Does Borges work with the Block Accessibility Checks plugin? =
+= Can developers read or change bibliographies over the REST API or WP-CLI? =
 
-Yes, and the integration is entirely optional. When Block Accessibility Checks 4.0 or later is active, the Bibliography block registers four authoring-time checks: an error when the block contains no citations, and warnings for a missing heading, for citations whose link text is a bare URL or DOI, and for having every machine-readable metadata output disabled. You can adjust each check's severity, or turn it off, from the Block Accessibility Checks settings screen.
+Yes. Borges offers read-only REST endpoints for every bibliography in a post (as JSON, plain text, or CSL-JSON), WordPress Abilities, and `wp borges` commands. Write routes that add, change, and restyle citations are available when a developer turns them on with the `bibliography_builder_enable_write_routes` filter. See the [REST API section of the README](https://github.com/dknauss/Borges#rest-api) for details.
 
-Version 4.0 replaced the plugin's registration API, so the integration requires 4.0 or later. On Block Accessibility Checks 3.x the integration stays dormant and no bibliography checks appear. Borges itself is unaffected and works normally whether that plugin is outdated or not installed at all.
+= Which translations are available? =
+
+The Languages list on this page shows the published language packs. Borges's interface is translation-ready, and new languages appear as community translations are approved on translate.wordpress.org. See [Language Support](https://github.com/dknauss/Borges#language-support) in the README for the seed translation files included with the plugin.
 
 == Screenshots ==
 
-1. Front-end bibliography output with hanging indents, italic titles, and linked DOIs, styled by the active theme.
-2. Discover the Bibliography block in the block inserter by searching for "Bibliography."
-3. Paste DOIs, PubMed/PMID identifiers, BibTeX, RIS, CSL-JSON, or free-text citations into the import form; hover any entry to reveal copy, edit, and delete actions.
-4. Switch to Manual Entry to build a citation field by field — Publication Type, Author, Title, Container, Publisher, Year, Pages, DOI, and URL.
-5. Correct imported or free-text citations in place with the structured field editor — fix individual fields without retyping the whole entry.
-6. For numbered styles such as IEEE and Vancouver, reorder entries with the up and down controls (or Alt+Arrow keys) to set citation numbering.
-7. Choose the citation style, the visible heading and its heading level, and toggle metadata output — JSON-LD, COinS, CSL-JSON, and the per-entry Cite / Export panel — from the block settings sidebar.
-8. Export the whole bibliography from the sidebar: copy as plain text, or download CSL-JSON, BibTeX, BibLaTeX, or RIS.
-9. Readers can expand the per-entry Cite / Export panel on the published page to copy a citation or download it as RIS, CSL-JSON, BibTeX, or BibLaTeX.
+1. A finished bibliography on the published page: hanging indents, italic titles, and linked DOIs, styled by your theme.
+2. Find the Bibliography block by searching for "Bibliography" in the block inserter.
+3. Paste DOIs, PubMed IDs, BibTeX, RIS, or plain citations, and Borges fills in the details. Hover any entry to copy, edit, or delete it.
+4. No identifier? Build a citation field by field with Manual Entry.
+5. Fix any field of an imported citation in place, without retyping the whole entry.
+6. Set the numbering for IEEE and Vancouver by moving entries up and down, with the mouse or Alt+Arrow keys.
+7. Pick the citation style, the heading, and what readers and search engines get, all from the block sidebar.
+8. Take your bibliography with you: copy it as text, or download CSL-JSON, BibTeX, BibLaTeX, or RIS.
+9. Readers can open Cite / Export under any entry to copy the citation or download it for their reference manager.
 
-== Performance & Footprint ==
+== Lightweight by design ==
 
-Borges is a static-output block. Formatted bibliography HTML, JSON-LD, and COinS are baked into your post content when you save, so the citeproc formatting engine and the DOI/PubMed lookups run **only in the editor** — never on the front end.
+Borges formats your bibliography in the editor and saves it as plain HTML in your post, so published pages do almost no extra work.
 
-As a page renders, a light filter adds what the saved JSON-LD cannot know, such as the page's own URL for each entry's identifier, and extra identifiers and fields from the stored citations. It also marks each entry as an `h-cite` microformat for IndieWeb tools. It makes no database queries or remote requests.
+* **No added database queries** on published pages, however many citations a page holds.
+* **About 4 KB of front-end assets** (a small script and stylesheet), loaded only on pages with a bibliography.
+* **Nothing left behind.** No settings, custom tables, post types, or scheduled tasks. Lookups made while editing are cached briefly and cleared on delete.
 
-What this means for a published page:
-
-* **Zero added database queries** — no matter how many bibliographies or citations the page contains. Query load does not grow with your content.
-* **No `render_callback`, no REST calls, no shortcodes** on the front end. Output is static HTML from the block's `save()`.
-* **No long-lived settings** — the plugin registers no settings or autoloaded options, no custom tables, no custom post types, and no cron events. Editor-time PMID and formatting results are cached in the object cache and in short-lived, non-autoloaded transients, written only while editing. DOI imports are deduped in a browser-session cache, not stored server-side.
-* **Tiny front-end payload** — only a small view script (~1.4 KB, with no dependencies) and stylesheet (~2.9 KB) load, and only on pages that actually contain a bibliography.
-
-Installed footprint is roughly **1.9 MB** (the bundled citeproc-php formatting engine, translations, and editor/front-end assets account for the total). The latest v1.7.0 downloadable ZIP is **553,699 bytes** (about 541 KB compressed).
-
-Because output is static, your bibliographies remain intact as plain HTML even if the plugin is deactivated.
+Details, including installed size, are in the [Footprint & Performance section of the README](https://github.com/dknauss/Borges#footprint--performance).
 
 == Known Limitations ==
 
@@ -200,6 +203,9 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 * Internet Archive terms of use: https://archive.org/about/terms.php
 
 == Changelog ==
+
+= 1.22.0 =
+* **Changed:** Borges now requires PHP 8.1 or later. PHP 7.4 and 8.0 no longer get security fixes. Sites on an older PHP version stay on 1.21.0, because WordPress doesn’t offer an update that needs a newer PHP than the server runs.
 
 = 1.21.0 =
 * **Fixed:** bibliographies sent by email, such as WordPress.com and Jetpack newsletters, which build emails from the saved post, no longer show bullets and an indent. Saved lists now carry the no-bullet style inline; numbered lists keep their numbers, and nothing changes on the web. Existing posts stay valid and pick up the change when next saved in the editor.
@@ -297,6 +303,9 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 For 1.9.1 and earlier, see the full [changelog on GitHub](https://github.com/dknauss/Borges/blob/main/CHANGELOG.md).
 
 == Upgrade Notice ==
+
+= 1.22.0 =
+Requires PHP 8.1 or later. Sites running PHP 7.4 or 8.0 stay on 1.21.0: WordPress won’t offer this update until the server runs PHP 8.1 or newer. Existing blocks stay valid. No configuration changes required.
 
 = 1.21.0 =
 Bibliographies in emails built from the saved post (WordPress.com and Jetpack newsletters) no longer show bullets. Existing blocks stay valid and pick up the change when next saved. No configuration changes required.

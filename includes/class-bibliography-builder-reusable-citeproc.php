@@ -83,14 +83,14 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 			$this->parsed_context = self::getContext();
 			$this->snapshot       = self::restore_plan( self::snapshot_style_tree( $this->parsed_context ) );
 
+			// Reflection reads and writes non-public properties without
+			// setAccessible() since PHP 8.1, and PHP 8.5 deprecates it.
 			$this->results_property = new ReflectionProperty( \Seboettg\CiteProc\Context::class, 'results' );
-			$this->results_property->setAccessible( true );
 
 			$this->cited_count_property = new ReflectionProperty(
 				\Seboettg\CiteProc\Rendering\Layout::class,
 				'numberOfCitedItems'
 			);
-			$this->cited_count_property->setAccessible( true );
 
 			return;
 		}
@@ -149,7 +149,8 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 
 		$skip = array( $context, $context->getLocale() );
 		/**
-		 * Objects already visited.
+		 * Objects already visited. Uses offsetSet() and offsetExists(), since
+		 * PHP 8.5 deprecates attach() and contains().
 		 *
 		 * @var SplObjectStorage<object, mixed> $seen
 		 */
@@ -164,25 +165,23 @@ final class Bibliography_Builder_Reusable_CiteProc extends \Seboettg\CiteProc\Ci
 		}
 
 		foreach ( $skip as $object ) {
-			$seen->attach( $object );
+			$seen->offsetSet( $object, null );
 		}
 
 		while ( array() !== $queue ) {
 			$object = array_pop( $queue );
 
-			if ( $seen->contains( $object ) ) {
+			if ( $seen->offsetExists( $object ) ) {
 				continue;
 			}
 
-			$seen->attach( $object );
+			$seen->offsetSet( $object, null );
 
 			for ( $class = new ReflectionClass( $object ); $class; $class = $class->getParentClass() ) {
 				foreach ( $class->getProperties() as $property ) {
 					if ( $property->isStatic() || $property->getDeclaringClass()->getName() !== $class->getName() ) {
 						continue;
 					}
-
-					$property->setAccessible( true );
 
 					if ( ! $property->isInitialized( $object ) ) {
 						continue;
