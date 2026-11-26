@@ -69,7 +69,7 @@ These are upstream behaviors, not Borges bugs. The literal-name and cross-entry 
 
 On PHP 8.4 and later, loading citeproc-php 2.7.1 logs four "Implicitly marking parameter … as nullable is deprecated" notices, once per request, when the classes are compiled: `ChooseIf::match()` and `Constraint::validate()` / `AbstractConstraint::validate()` (`$citationNumber`), and `DatePart::renderWithoutAffixes()` (`$parent`). PHPUnit reports the same four as "Deprecations: 4". They are upstream ([pkp/citeproc-php#203](https://github.com/pkp/citeproc-php/issues/203), open; still unfixed on `master` and `develop` as of 2026-11-25, and 2.7.1 is the latest release), harmless, and do not repeat per entry. Borges does not patch `vendor/`; update the package when a release fixes them.
 
-Borges's own PHP 8.5 notices were different and are fixed: `Bibliography_Builder_Reusable_CiteProc` called `ReflectionProperty::setAccessible()` (deprecated in 8.5, a no-op since 8.1) and `SplObjectStorage::attach()`/`contains()` (deprecated in 8.5) for every property of every style object, thousands of notices per `/format` request. It now calls `setAccessible()` only below PHP 8.1 and uses `offsetSet()`/`offsetExists()`.
+Borges's own PHP 8.5 notices were different and are fixed: `Bibliography_Builder_Reusable_CiteProc` called `ReflectionProperty::setAccessible()` (deprecated in 8.5, a no-op since 8.1) and `SplObjectStorage::attach()`/`contains()` (deprecated in 8.5) for every property of every style object, thousands of notices per `/format` request. It now never calls `setAccessible()`, since Borges requires PHP 8.1, and uses `offsetSet()`/`offsetExists()`.
 
 ## Build: the formatter renders from `vendor/`, not `packages/`
 

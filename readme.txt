@@ -5,7 +5,7 @@ Tags: bibliography, citations, references, academic, apa
 Requires at least: 6.4
 Tested up to: 7.1
 Stable tag: 1.22.0
-Requires PHP: 7.4
+Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -110,7 +110,7 @@ Yes, including network activation. If you run into trouble on a particular netwo
 
 = What PHP and WordPress versions are supported? =
 
-PHP 7.4 or later and WordPress 6.4 or later. Borges is tested up to WordPress 7.1.
+PHP 8.1 or later and WordPress 6.4 or later. Borges is tested up to WordPress 7.1.
 
 = Can developers read or change bibliographies over the REST API or WP-CLI? =
 
@@ -207,6 +207,7 @@ OCLC numbers, LCCNs, and Open Library edition IDs connect through the plugin's a
 = 1.22.0 =
 * **Changed:** Borges now requires PHP 8.1 or later. PHP 7.4 and 8.0 no longer get security fixes. Sites on an older PHP version stay on 1.21.0, because WordPress doesn’t offer an update that needs a newer PHP than the server runs.
 * **Changed:** a link pasted on its own, such as a PDF or a web page with no DOI, opens Manual Entry as a webpage with the URL filled in, and asks for the title. Borges doesn’t fetch the link.
+* **Fixed:** titles in sentence-case styles keep the names of well-known places, such as Babel, London, and Kyoto.
 * **Fixed:** software entries print their version and access date in every bundled style, from the editor and the REST write routes alike. Saved entries change when they’re next formatted.
 * **Fixed:** a pasted webpage citation keeps a date with no day, such as “November 2023”.
 * **Fixed:** no more PHP 8.5 deprecation notices from formatting.

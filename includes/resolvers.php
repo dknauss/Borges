@@ -571,8 +571,8 @@ function bibliography_builder_arxiv_atom_to_csl( $body, $id ) {
 	}
 
 	// arXiv's Atom never declares a DOCTYPE. Refusing one outright closes off
-	// entity expansion even on PHP 7.4 hosts with a pre-2.9 libxml, where
-	// external entities were not yet disabled by default.
+	// entity expansion even on hosts with a pre-2.9 libxml, where external
+	// entities were not yet disabled by default.
 	if ( false !== stripos( (string) $body, '<!DOCTYPE' ) || false !== stripos( (string) $body, '<!ENTITY' ) ) {
 		return null;
 	}
